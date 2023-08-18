@@ -3,10 +3,7 @@ package com.spartanlabs.webtools
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.chrome.ChromeDriver
-import org.apache.commons.io.FileUtils
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeOptions
-import java.io.File
 import javax.imageio.ImageIO
 
 class WebViewer {
@@ -25,4 +22,3 @@ class WebViewer {
         } as TakesScreenshot).getScreenshotAs(OutputType.FILE)
     infix fun screenshot(url:String) = ImageIO.read(getPage(url))
 }
-infix fun File.saveTo(fileName:String) = FileUtils.copyFile(this, File("$fileName.png"))

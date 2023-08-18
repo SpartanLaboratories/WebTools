@@ -233,4 +233,3 @@ class Connector {
         private val log = LoggerFactory.getLogger(Connector::class.java)
     }
 }
-infix fun BufferedImage.to(fileName:String) = saveImage(this, fileName)

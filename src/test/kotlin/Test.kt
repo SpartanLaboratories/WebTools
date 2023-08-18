@@ -1,15 +1,10 @@
 package com.spartanlabs.webtools.test
 
-import com.spartanlabs.generaltools.capitalizeEveryWord
-import com.spartanlabs.generaltools.saveImage
-import org.junit.jupiter.api.Test
+import com.spartanlabs.generaltools.cropImage
 import com.spartanlabs.webtools.Connector
 import com.spartanlabs.webtools.WebViewer
-import com.spartanlabs.webtools.saveTo
-import com.spartanlabs.webtools.to
-import java.awt.image.BufferedImage
+import org.junit.jupiter.api.Test
 import javax.imageio.ImageIO
-import com.spartanlabs.generaltools.cropImage
 
 class Test{
     companion object
@@ -22,7 +17,7 @@ class Test{
         Connector() download bearImage to "$resources/test image file"
     }
     @Test fun saveWebpageAsImage():Unit{
-        WebViewer() getPage bearImage saveTo "$resources/testWebpageScreenshot"
+        WebViewer() getPage bearImage to "$resources/testWebpageScreenshot"
     }
     @Test fun getMirrorPage():Unit{
         val mirrorPage = "https://poe.ninja/economy/standard/currency/mirror-of-kalandra"
@@ -33,8 +28,5 @@ class Test{
             width = 330,    height = 320
         ) to "$resources/mirrorImage"
 
-    }
-    @Test fun listToString(){
-        println(listOf("a","b").toString().let { it.substring(1,it.length-1) })
     }
 }
