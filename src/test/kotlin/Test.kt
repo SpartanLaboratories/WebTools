@@ -1,10 +1,10 @@
 package com.spartanlabs.webtools.test
 
 import com.spartanlabs.generaltools.cropImage
+import com.spartanlabs.generaltools.to
 import com.spartanlabs.webtools.Connector
 import com.spartanlabs.webtools.WebViewer
 import org.junit.jupiter.api.Test
-import javax.imageio.ImageIO
 
 class Test{
     companion object
@@ -17,13 +17,12 @@ class Test{
         Connector() download bearImage to "$resources/test image file"
     }
     @Test fun saveWebpageAsImage():Unit{
-        WebViewer() getPage bearImage to "$resources/testWebpageScreenshot"
+        WebViewer() screenshot bearImage to "$resources/testWebpageScreenshot"
     }
     @Test fun getMirrorPage():Unit{
         val mirrorPage = "https://poe.ninja/economy/standard/currency/mirror-of-kalandra"
-        val image = ImageIO.read(WebViewer() getPage mirrorPage)
         cropImage(
-            image = ImageIO.read(WebViewer() getPage mirrorPage),
+            image = WebViewer() screenshot mirrorPage,
             x = 145,        y = 285,
             width = 330,    height = 320
         ) to "$resources/mirrorImage"

@@ -1,13 +1,12 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
-
 plugins {
     kotlin("jvm") version "1.8.0"
     `java-library`
     `maven-publish`
+    idea
 }
 
 group = "com.spartanlabs"
-version = "1.1.2"
+version = "1.1.2-D2"
 
 repositories {
     mavenCentral()
@@ -35,12 +34,10 @@ kotlin {
 
 publishing{
     publications{
-        create<MavenPublication>("webtools") {
-            from(components["java"])
-            pom{
-
-            }
-        }
+        create<MavenPublication>("webtools").from(components["java"])
+        create<MavenPublication>("generaltools-snapshot"){
+            version = "LATEST"
+        }.from(components["java"])
     }
     repositories{
         maven("C:/Users/spartak/Documents/Programming/libraries")

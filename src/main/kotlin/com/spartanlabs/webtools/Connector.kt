@@ -4,7 +4,6 @@ import com.mashape.unirest.http.Unirest
 import com.mashape.unirest.http.exceptions.UnirestException
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
-import com.spartanlabs.generaltools.saveImage
 import java.awt.image.BufferedImage
 import java.io.*
 import java.net.MalformedURLException
@@ -151,33 +150,6 @@ class Connector {
         }
     }
 
-    /**
-     * Saves the Image at the given url to a file with the given name
-     * @param imageUrl - the url of the image that you are trying to send
-     * @param destinationFile - the file to which you are trying to online.save an image to
-     * @return The file to which the image was saved.
-     */
-    /*
-    fun saveImage(imageUrl: String, destinationFile: String): File {
-        log.info("Saving an image from url: {},\tto file: {}", imageUrl, destinationFile)
-        try {
-            val `is` = Jsoup.connect(imageUrl).ignoreContentType(true).execute().bodyStream()
-            val os: OutputStream = FileOutputStream(destinationFile)
-            val b = ByteArray(2048)
-            var length: Int
-            while (`is`.read(b).also { length = it } != -1) os.write(b, 0, length)
-            `is`.close()
-            os.close()
-        } catch (e: IOException) {
-            log.error("Could not online.save image from url: $imageUrl")
-            e.printStackTrace()
-        }
-        return File(destinationFile)
-    }
-
-    infix fun saveImage(imageURL:String) = this.also{savedURL = imageURL}
-    infix fun to(fileName:String) = saveImage(savedURL, fileName)
-     */
     infix fun download(imageUrl:String):BufferedImage =
         Jsoup.connect(imageUrl).ignoreContentType(true).execute().bodyStream().let {
             val image = ImageIO.read(it)
