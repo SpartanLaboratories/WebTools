@@ -11,6 +11,14 @@ import java.io.File
 import java.io.OutputStream
 import javax.imageio.ImageIO
 
+/**
+ * A Web Image screenshotting Utility
+ * So far only has 2 main methods,
+ * `download(url:String)` which returns a file
+ * and `screenshot(url:String) which returns an image
+ * These can be followed by com.spartanlabs.generictools.to in order
+ * to specify the file to which you want the downloaded picture to be saved
+ */
 class WebViewer {
     init{
         System.setProperty("webdriver.chrome.driver", "C:/Users/spartak/Documents/Programming/Kotlin Workspace/IdeaProjects/WebTools/src/main/resources/chromedriver-win64/chromedriver.exe")
@@ -42,7 +50,7 @@ class WebViewer {
             .addArguments("--headless")
         ).apply{
             get(url)
-            Thread.sleep(4800)
+            Thread.sleep(800)
         } as TakesScreenshot).getScreenshotAs(OutputType.FILE)
     }
     infix fun getPage(url:String) = getChromePage(url)

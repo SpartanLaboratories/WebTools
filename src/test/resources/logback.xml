@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+
+<configuration>
+  <import class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"/>
+  <import class="ch.qos.logback.core.ConsoleAppender"/>
+  <import class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
+  
+  <statusListener class="OnConsoleStatusListener"/>
+  <property name="LOGS" value="./logs"/>
+
+  <appender name="STDOUT" class="ConsoleAppender">
+    <encoder class="PatternLayoutEncoder">
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="RfAppender"
+            class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOGS}/spring-boot-logger.log</file>
+            <encoder
+              class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+              <Pattern>%d %p %c{1} [%t] %m%n</Pattern>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <!-- rollover daily and when size reached the specified amount -->
+                <fileNamePattern>${LOGS}/%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>10MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+  </appender>
+  <root level="info">
+      <appender-ref ref="STDOUT"/>
+      <appender-ref ref="RfAppender"/>
+  </root>
+</configuration>

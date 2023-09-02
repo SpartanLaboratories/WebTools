@@ -5,6 +5,8 @@ import com.spartanlabs.generaltools.to
 import com.spartanlabs.webtools.Connector
 import com.spartanlabs.webtools.WebViewer
 import org.junit.jupiter.api.Test
+import org.opentest4j.TestAbortedException
+import java.net.MalformedURLException
 
 class Test{
     companion object
@@ -24,8 +26,21 @@ class Test{
         cropImage(
             image = WebViewer() screenshot mirrorPage,
             x = 145,        y = 285,
-            width = 330,    height = 320
+            width = 525,    height = 320
         ) to "$resources/mirrorImage"
 
+    }
+    @Test fun skrapeTest():Unit{
+        genericConnectionTest(Connector()::skrape)
+    }
+    @Test fun getTest():Unit{
+        genericConnectionTest(Connector()::get)
+    }
+    private fun genericConnectionTest(connectionFunction:(String)->Unit){
+        try {
+            connectionFunction("google.com")
+            throw TestAbortedException("$connectionFunction failed to identify malformed url")
+        }catch (_:MalformedURLException){}catch (_:IllegalArgumentException){}
+        connectionFunction("https://google.com")
     }
 }

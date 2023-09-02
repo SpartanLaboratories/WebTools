@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.spartanlabs"
-version = "1.1.2-D2"
+version = "1.1.3"
 
 repositories {
     mavenCentral()
@@ -15,13 +15,13 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("it.skrape:skrapeit:1.1.5")
     implementation("org.jsoup:jsoup:1.15.4")
     implementation("com.mashape.unirest:unirest-java:1.4.9")
 
     implementation("org.seleniumhq.selenium:selenium-java:4.0.0")   // Screenshot utility
 
-    api("com.spartanlabs:GeneralTools:1.0.9")
-
+    api("com.spartanlabs:GeneralTools:1.0.12")
 }
 
 tasks.test {
@@ -34,7 +34,7 @@ kotlin {
 
 publishing{
     publications{
-        create<MavenPublication>("webtools").from(components["java"])
+        //create<MavenPublication>("webtools").from(components["java"])
         create<MavenPublication>("generaltools-snapshot"){
             version = "LATEST"
         }.from(components["java"])

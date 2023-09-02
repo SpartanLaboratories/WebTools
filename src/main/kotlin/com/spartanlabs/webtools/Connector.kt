@@ -2,10 +2,14 @@ package com.spartanlabs.webtools
 
 import com.mashape.unirest.http.Unirest
 import com.mashape.unirest.http.exceptions.UnirestException
+import it.skrape.fetcher.HttpFetcher
+import it.skrape.fetcher.response
+import it.skrape.fetcher.skrape
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.*
+import java.net.ConnectException
 import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLConnection
@@ -192,14 +196,50 @@ class Connector {
      * or null if unable to GET
      */
     infix fun get(URL: String): String? {
-        log.debug("Attempting a GET action on url: {}", URL)
+        requireValidURL(URL)
         try {
             return Unirest.get(URL).asString().body
-        } catch (e: UnirestException) {
+        } catch (e: UnirestException){
             e.printStackTrace()
         }
         return null
     }
+
+
+
+    /**
+     * Reads the given URL using the Skrape library
+     */
+    infix fun skrape(url:String) = testAndSkrape(url,::getScrapeResults).responseBody
+    /**
+     *Takes a URL, validates it, and perform a skrape request
+     * @throws IllegalArgumentException if the url is invalid
+     * @return a skrape Result
+     */
+    private fun <T> testAndSkrape(url:String, func:(String)->T):T {
+        requireValidURL(url)
+        return func(url)
+    }
+
+    /**
+     * Wrapper around the skrape library skrape call
+     */
+    @Throws(java.lang.IllegalArgumentException::class)
+    private fun getScrapeResults(URL:String) = skrape(HttpFetcher){
+        request{url=URL}
+        response{this}
+    }
+    private fun requireValidURL(urlName: String) = require(urlName.isValidURL()){ "Given value: \"$urlName\" is not a valid url" }
+    /**
+     * Checks if the receiver is a valid URL.
+     * @return true if the String forms a valid URL
+     * <br> false if it does not
+     */
+    private fun String.isValidURL():Boolean = try {
+        URL(this)
+        true
+    }   catch (_:MalformedURLException) { false }
+        catch(_:ConnectException)       { false }
 
     companion object {
         private val log = LoggerFactory.getLogger(Connector::class.java)

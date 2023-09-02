@@ -45,3 +45,9 @@ bin/
 src/main/resources/Chrome/
 src\main\resources\Chrome\App\AppInfo\
 src/main/resources/chromedriver-win64/LICENSE.chromedriver
+src/main/resources/chromedriver-win64.zip
+src/main/resources/geckodriver-v0.33.0-win64.zip
+src/main/resources/GoogleChromePortable64_116.0.5845.97_online.paf.exe
+src/test/resources/mirrorImage.png
+src/test/resources/testWebpageScreenshot.png
+logs/spring-boot-logger.log
