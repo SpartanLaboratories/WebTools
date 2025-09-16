@@ -21,7 +21,7 @@ import javax.imageio.ImageIO
  */
 class WebViewer {
     init{
-        System.setProperty("webdriver.chrome.driver", "C:/Users/spartak/Documents/Programming/Kotlin Workspace/IdeaProjects/WebTools/src/main/resources/chromedriver-win64/chromedriver.exe")
+        System.setProperty("webdriver.chrome.driver", "D:/Documents/Programming/WebTools/chromedriver-win64/chromedriver.exe")
         System.setProperty("webdriver.gecko.driver", "C:/Users/spartak/Documents/Programming/Kotlin Workspace/IdeaProjects/WebTools/src/main/resources/firefoxdriver/firefoxdriver.exe")
         //System.setProperty("webdriver.http.factory", "jdk-http-client")
     }

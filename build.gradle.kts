@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "2.1.10"
     `java-library`
     `maven-publish`
     idea
@@ -10,7 +10,7 @@ version = "1.1.3"
 
 repositories {
     mavenCentral()
-    maven("C:/Users/spartak/Documents/Programming/libraries")
+    maven("D:/Documents/Programming")
 }
 
 dependencies {
@@ -21,7 +21,7 @@ dependencies {
 
     implementation("org.seleniumhq.selenium:selenium-java:4.0.0")   // Screenshot utility
 
-    api("com.spartanlabs:GeneralTools:1.0.12")
+    api("com.spartanlabs:GeneralTools:1.2.0c")
 }
 
 tasks.test {
@@ -29,17 +29,17 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(23)
 }
 
 publishing{
     publications{
         //create<MavenPublication>("webtools").from(components["java"])
-        create<MavenPublication>("generaltools-snapshot"){
+        create<MavenPublication>("webtools-snapshot"){
             version = "LATEST"
         }.from(components["java"])
     }
     repositories{
-        maven("C:/Users/spartak/Documents/Programming/libraries")
+        maven("D:/Documents/Programming")
     }
 }
