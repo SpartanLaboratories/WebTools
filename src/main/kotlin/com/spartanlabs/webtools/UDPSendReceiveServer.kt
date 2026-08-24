@@ -50,10 +50,10 @@ class UDPSendReceiveServer(
 
     fun stopListening() {
         listening = false
+        listenSocket.close()
     }
     override fun close() {
         stopListening()
-        listenSocket.close()
         sendSocket.close()
         listenerThread?.join(1000)
     }
