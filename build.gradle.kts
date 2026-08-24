@@ -1,16 +1,10 @@
 plugins {
-    kotlin("jvm") version "2.1.10"
-    `java-library`
-    `maven-publish`
-    idea
+    `kotlin-dsl`
+    id("com.vanniktech.maven.publish") version "0.36.0"
 }
-
-group = "com.spartanlabs"
-version = "1.1.3"
 
 repositories {
     mavenCentral()
-    maven("D:/Documents/Programming")
 }
 
 dependencies {
@@ -28,18 +22,34 @@ tasks.test {
     useJUnitPlatform()
 }
 
-kotlin {
-    jvmToolchain(23)
-}
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+    coordinates("io.github.spartanlaboratories", "WebTools", "1.0.0")
 
-publishing{
-    publications{
-        //create<MavenPublication>("webtools").from(components["java"])
-        create<MavenPublication>("webtools"){
-            version = "LATEST"
-        }.from(components["java"])
-    }
-    repositories{
-        maven("D:/Documents/Programming")
+    pom {
+        name.set("Web Tools")
+        description.set("A compilation of internet IO tools.")
+        inceptionYear.set("2026")
+        url.set("https://github.com/SpartanLaboratories/WebTools")
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+        developers {
+            developer {
+                id.set("SpaSinghOut")
+                name.set("Spartak Singh")
+                url.set("https://github.com/SpaSinghOut")
+            }
+        }
+        scm {
+            url.set("https://github.com/SpartanLaboratories/WebTools/")
+            connection.set("scm:git:git://github.com/SpartanLaboratories/WebTools.git")
+            developerConnection.set("scm:git:ssh://git@github.com/SpartanLaboratories/WebTools.git")
+        }
     }
 }
