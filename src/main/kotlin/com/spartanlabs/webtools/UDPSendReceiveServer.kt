@@ -6,7 +6,7 @@ import java.net.InetAddress
 import java.net.SocketException
 
 class UDPSendReceiveServer(
-    private val targetAddress: InetAddress = resolveLocalAddress(),
+    private val targetAddress: InetAddress,
     private val sendPort: Int,
     private val listenPort: Int
 ) : AutoCloseable {
@@ -18,8 +18,8 @@ class UDPSendReceiveServer(
     private var listening = false
     private var listenerThread: Thread? = null
 
-    fun send(byteArray: ByteArray,  address: InetAddress) = sendSocket.send(DatagramPacket(byteArray, byteArray.size, address, sendPort))
-    fun send(message  : String,     address: InetAddress) = send(message.toByteArray(), address)
+    fun send(byteArray: ByteArray) = sendSocket.send(DatagramPacket(byteArray, byteArray.size, targetAddress, sendPort))
+    fun send(message  : String) = send(message.toByteArray())
 
     /**
      * Starts a background thread that blocks on [listenSocket]'s receive,
@@ -58,15 +58,4 @@ class UDPSendReceiveServer(
         listenerThread?.join(1000)
     }
 
-    companion object {
-        fun resolveLocalAddress(): InetAddress =
-            try {
-                DatagramSocket().use { probe ->
-                    probe.connect(InetAddress.getByName("8.8.8.8"), 80)
-                    probe.localAddress
-                }
-            } catch (e: Exception) {
-                InetAddress.getLoopbackAddress()
-            }
-    }
 }
