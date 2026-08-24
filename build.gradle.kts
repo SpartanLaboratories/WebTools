@@ -21,7 +21,7 @@ dependencies {
 
     implementation("org.seleniumhq.selenium:selenium-java:4.0.0")   // Screenshot utility
 
-    api("com.spartanlabs:GeneralTools:1.2.0c")
+    api("io.github.spartanlaboratories:GeneralTools:1.0.2")
 }
 
 tasks.test {
@@ -35,7 +35,7 @@ kotlin {
 publishing{
     publications{
         //create<MavenPublication>("webtools").from(components["java"])
-        create<MavenPublication>("webtools-snapshot"){
+        create<MavenPublication>("webtools"){
             version = "LATEST"
         }.from(components["java"])
     }
