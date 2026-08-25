@@ -32,9 +32,13 @@ class UDPSendReceiveServer(
             val buffer = ByteArray(1024)
             while (listening) {
                 try {
+                    // Create the datagram packet that is going to contain the received message
                     val packet = DatagramPacket(buffer, buffer.size)
+                    // Read the message and store it in the datagram packet we just created
                     listenSocket.receive(packet)
+                    // Convert the packet into a String
                     val message = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+                    // Take action based on the received message
                     onMessage(message, packet.address)
                 } catch (e: SocketException) {
                     break // socket was closed - stop listening
