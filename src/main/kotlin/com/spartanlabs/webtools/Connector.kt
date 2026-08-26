@@ -8,7 +8,9 @@ import it.skrape.fetcher.skrape
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
-import java.io.*
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 import java.net.ConnectException
 import java.net.MalformedURLException
 import java.net.URL
@@ -43,7 +45,6 @@ class Connector {
     init {
         Unirest.setTimeouts(0, 0)
         log.info("Connector was created successfully")
-
     }
 
     /**
@@ -239,7 +240,7 @@ class Connector {
         URL(this)
         true
     }   catch (_:MalformedURLException) { false }
-        catch(_:ConnectException)       { false }
+    catch(_:ConnectException)       { false }
 
     companion object {
         private val log = LoggerFactory.getLogger(Connector::class.java)

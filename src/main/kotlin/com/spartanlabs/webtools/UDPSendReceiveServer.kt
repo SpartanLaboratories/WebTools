@@ -1,5 +1,6 @@
 package com.spartanlabs.webtools
 
+import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -18,7 +19,10 @@ class UDPSendReceiveServer(
     private var listening = false
     private var listenerThread: Thread? = null
 
-    fun send(byteArray: ByteArray) = sendSocket.send(DatagramPacket(byteArray, byteArray.size, targetAddress, sendPort))
+    fun send(byteArray: ByteArray) {
+        log.trace("Sending {} byte(s) to {}:{}", byteArray.size, targetAddress, sendPort)
+        sendSocket.send(DatagramPacket(byteArray, byteArray.size, targetAddress, sendPort))
+    }
     fun send(message  : String) = send(message.toByteArray())
 
     /**
@@ -27,6 +31,7 @@ class UDPSendReceiveServer(
      * [onMessage] along with the sender's address.
      */
     fun startListening(onMessage: (message: String, senderAddress: InetAddress) -> Unit) {
+        log.info("Starting to listen on port {}", listenPort)
         listening = true
         listenerThread = Thread {
             val buffer = ByteArray(1024)
@@ -38,12 +43,14 @@ class UDPSendReceiveServer(
                     listenSocket.receive(packet)
                     // Convert the packet into a String
                     val message = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+                    log.debug("Received message from {}: {}", packet.address, message)
                     // Take action based on the received message
                     onMessage(message, packet.address)
                 } catch (e: SocketException) {
+                    log.debug("Listen socket on port {} was closed, stopping listener", listenPort)
                     break // socket was closed - stop listening
                 } catch (e: Exception) {
-                    println("Failed to handle incoming datagram: ${e.message}")
+                    log.warn("Failed to handle incoming datagram: {}", e.message, e)
                 }
             }
         }.apply {
@@ -53,13 +60,18 @@ class UDPSendReceiveServer(
     }
 
     fun stopListening() {
+        log.info("Stopping listener on port {}", listenPort)
         listening = false
         listenSocket.close()
     }
     override fun close() {
+        log.debug("Closing UDPSendReceiveServer for port {}", listenPort)
         stopListening()
         sendSocket.close()
         listenerThread?.join(1000)
     }
 
+    companion object {
+        private val log = LoggerFactory.getLogger(UDPSendReceiveServer::class.java)
+    }
 }
