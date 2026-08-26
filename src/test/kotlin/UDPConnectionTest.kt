@@ -1,5 +1,4 @@
-package com.spartanlabs.webtools
-
+import com.spartanlabs.webtools.UDPConnection
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.concurrent.CountDownLatch

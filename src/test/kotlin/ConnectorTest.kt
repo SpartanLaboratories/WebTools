@@ -1,5 +1,4 @@
-package com.spartanlabs.webtools
-
+import com.spartanlabs.webtools.Connector
 import org.slf4j.LoggerFactory
 import kotlin.test.Test
 import kotlin.test.assertFailsWith

@@ -86,6 +86,12 @@ class Connector {
         log.debug("A connection is ready to be opened")
     }
 
+    /**
+     * Parses a raw URL string into a [URL] instance.
+     * @param urlName the url string to parse
+     * @return the parsed [URL]
+     * @throws IllegalArgumentException if [urlName] is not a well-formed URL
+     */
     private infix fun getURL(urlName: String): URL {
         return try {
             val url = URL(urlName)
@@ -97,6 +103,11 @@ class Connector {
         }
     }
 
+    /**
+     * Opens a raw [URLConnection] to the given [url].
+     * @param url the url to connect to
+     * @return the opened connection, or `null` if it could not be opened
+     */
     private infix fun openConnection(url: URL): URLConnection? {
         log.trace("Attempting to open connection")
         return try {
@@ -110,6 +121,11 @@ class Connector {
         }
     }
 
+    /**
+     * Creates a [BufferedReader][reader] over the currently-open [connection]'s
+     * input stream. Does nothing observable if the stream cannot be opened,
+     * beyond logging the failure - callers should check [readerState] afterward.
+     */
     private fun createReader() {
         log.trace("Attempting to create a Buffered Reader from an opened URL connection")
         try {
@@ -122,6 +138,10 @@ class Connector {
         }
     }
 
+    /**
+     * Checks whether [reader] was successfully created and is ready to be read from.
+     * @return `true` if [reader] is non-null and ready; `false` otherwise
+     */
     private fun readerState(): Boolean {
         log.trace("Checking reader state")
         return try {
@@ -155,6 +175,11 @@ class Connector {
         }
     }
 
+    /**
+     * Downloads and decodes an image from the given URL.
+     * @param imageUrl the url of the image to download
+     * @return the downloaded image
+     */
     infix fun download(imageUrl:String):BufferedImage =
         Jsoup.connect(imageUrl).ignoreContentType(true).execute().bodyStream().let {
             val image = ImageIO.read(it)
@@ -187,7 +212,13 @@ class Connector {
         data = reader!!.readLine()
         return data!!
     }
+    /**
+     * Checks whether another line is available to read from the current connection.
+     * @return `true` if [next] can be called again without throwing
+     */
     operator fun hasNext() = reader!!.ready()
+
+    /** Allows a [Connector] to be iterated directly, e.g. in a `for` loop over its lines. */
     operator fun iterator() = this
 
     /**
@@ -230,6 +261,11 @@ class Connector {
         request{url=URL}
         response{this}
     }
+    /**
+     * Validates that [urlName] is a well-formed URL.
+     * @param urlName the url string to validate
+     * @throws IllegalArgumentException if [urlName] is not a valid url
+     */
     private fun requireValidURL(urlName: String) = require(urlName.isValidURL()){ "Given value: \"$urlName\" is not a valid url" }
     /**
      * Checks if the receiver is a valid URL.
@@ -243,6 +279,7 @@ class Connector {
     catch(_:ConnectException)       { false }
 
     companion object {
+        /** Shared slf4j logger for all [Connector] instances. */
         private val log = LoggerFactory.getLogger(Connector::class.java)
     }
 }
