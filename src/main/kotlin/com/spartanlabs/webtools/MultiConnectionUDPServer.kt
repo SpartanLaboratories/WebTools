@@ -15,8 +15,13 @@ import java.net.SocketException
  * common listen port (9998). The server replies with a `TXRXON <sendPort> <receivePort>`
  * message on the common send port (9999) telling the client which dedicated ports
  * to use for further communication.
+ *
+ * This class is abstract because it does not itself decide what to do once a client
+ * has finished the handshake - subclasses must implement [onClientConnect] to react
+ * to newly registered connections (e.g. by calling [UDPConnection.actuate] on them,
+ * tracking them, notifying other parts of the application, etc.).
  */
-class MultiConnectionUDPServer {
+abstract class MultiConnectionUDPServer {
     /** Guard flag for the common listener loop. Currently always `true` for the lifetime of the instance. */
     private val listening = true
     /** Background thread that services [commonListenSocket]. */
@@ -53,6 +58,8 @@ class MultiConnectionUDPServer {
                             val connection = addConnection(message[1], address)
                             val declarationResponse = "$address TXRXON ${connection.sendPort} ${connection.receivePort}"
                             pushToAddress(declarationResponse, address)
+                            log.debug("Notifying subclass of new connection '{}'", connection.name)
+                            onClientConnect(connection)
                         }
                     }
                 } catch (e: SocketException) {
@@ -86,6 +93,18 @@ class MultiConnectionUDPServer {
         connections.add(connection)
         return connection
     }
+
+    /**
+     * Called once a client has completed the `Iam` handshake and its dedicated
+     * [UDPConnection] has been registered and told which ports to use. Subclasses
+     * decide what to do with the newly connected client here - for example calling
+     * [UDPConnection.actuate] to start listening on it, or storing a reference to it.
+     *
+     * Invoked on the common listener thread, so implementations should return quickly
+     * and hand off any lengthy work to another thread.
+     * @param connection the connection that was just registered
+     */
+    abstract fun onClientConnect(connection: UDPConnection)
 
     /**
      * Starts listening on every currently-registered connection's dedicated port pair.

@@ -9,7 +9,9 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.SocketTimeoutException
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -23,10 +25,22 @@ class MultiConnectionUDPServerTest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerTest::class.java)
 
+    // Connections handed to onClientConnect(), in the order they were registered.
+    // Backed by a CopyOnWriteArrayList since it's written from the server's listener
+    // thread and read from the test thread.
+    private val connectedClients = CopyOnWriteArrayList<UDPConnection>()
+
+    // MultiConnectionUDPServer is abstract, so tests supply their own onClientConnect
+    // implementation - here it just records the connection for later assertions.
     // The server binds fixed ports (9998/9999) in its constructor, so we deliberately
     // create only a single instance for the whole test class to avoid port conflicts
     // between test methods.
-    private val server = MultiConnectionUDPServer()
+    private val server = object : MultiConnectionUDPServer() {
+        override fun onClientConnect(connection: UDPConnection) {
+            log.debug("Test recorded onClientConnect for '{}'", connection.name)
+            connectedClients.add(connection)
+        }
+    }
 
     @Test
     @Order(1)
@@ -59,6 +73,13 @@ class MultiConnectionUDPServerTest {
             log.debug("Received handshake reply: {}", reply)
 
             assertTrue(reply.contains("TXRXON"), "Expected a TXRXON reply, got: $reply")
+
+            // onClientConnect() is invoked from the listener thread right after the reply
+            // is sent, so give it a brief moment to run before asserting on it.
+            Thread.sleep(200)
+            assertEquals(1, connectedClients.size, "Expected onClientConnect to fire exactly once")
+            assertEquals("testclient", connectedClients[0].name)
+            assertEquals(localAddress, connectedClients[0].address)
         } finally {
             clientListenSocket.close()
             clientSendSocket.close()

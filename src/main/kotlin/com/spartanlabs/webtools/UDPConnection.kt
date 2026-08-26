@@ -12,7 +12,7 @@ import java.net.InetAddress
  * @property sendPort the local port this connection sends messages to on the peer
  * @property receivePort the local port this connection listens on for incoming messages
  */
-internal class UDPConnection(val name:String, val address: InetAddress, val sendPort: Int, val receivePort: Int) {
+class UDPConnection(val name:String, val address: InetAddress, val sendPort: Int, val receivePort: Int) {
     /** The underlying socket pair used to actually send and receive datagrams. */
     private val server = UDPSendReceiveServer(address, sendPort, receivePort)
 
