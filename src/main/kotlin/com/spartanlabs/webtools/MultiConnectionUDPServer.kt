@@ -119,6 +119,23 @@ class MultiConnectionUDPServer {
         connections.forEach { connection -> pushToAddress(message, connection.address) }
     }
 
+    /**
+     * Shuts the server down: terminates every registered [UDPConnection] (releasing
+     * their dedicated ports), then stops the common listener thread and releases the
+     * common listen port so the server can no longer accept new handshakes.
+     *
+     * Once called, this instance should be discarded - there is no corresponding
+     * "restart" operation.
+     */
+    fun stop() {
+        log.info("Stopping server: terminating {} connection(s)", connections.size)
+        connections.forEach { connection -> connection.terminate() }
+        // Give the listener thread a chance to exit on its own before we force it via socket closure below.
+        commonListenerThread?.join(1000)
+        log.info("Closing common listen socket on port {}", commonListenSocket.localPort)
+        commonListenSocket.close()
+    }
+
     companion object {
         /** Shared slf4j logger for all [MultiConnectionUDPServer] instances. */
         private val log = LoggerFactory.getLogger(MultiConnectionUDPServer::class.java)

@@ -23,7 +23,7 @@ dependencies {
 
     implementation("org.seleniumhq.selenium:selenium-java:4.0.0")   // Screenshot utility
 
-    api("io.github.spartanlaboratories:GeneralTools:1.0.2")
+    api("io.github.spartanlaboratories:GeneralTools:2.0.0")
 }
 
 tasks.test {
@@ -33,7 +33,7 @@ tasks.test {
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    coordinates("io.github.spartanlaboratories", "WebTools", "1.0.1")
+    coordinates("io.github.spartanlaboratories", "WebTools", "1.0.2")
 
     pom {
         name.set("Web Tools")
