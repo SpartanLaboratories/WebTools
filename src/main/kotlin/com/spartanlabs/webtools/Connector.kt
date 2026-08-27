@@ -18,20 +18,28 @@ import java.net.URLConnection
 import javax.imageio.ImageIO
 
 /**
- * This class handles the lowest level online actions.
- * These are not bot actions and this class does not interact
- * as a bot with discord api. It only contains internet
- * browsing logic. For bot actions that use online data see
- * this class' wrapper class OnlineAction.
- * @see OnlineAction
+ * A single-connection web client that reads a page's html line by line.
  *
- * @author Spartak
+ * A `Connector` holds at most one open connection at a time. Call [open] to
+ * establish it, read through it with [next]/[hasNext] (or by iterating the
+ * `Connector` itself), then release it with [close]. A second [open] call
+ * blocks until the current connection is closed, so a `Connector` is safe to
+ * share between threads but serializes them.
+ *
+ * Stateless one-shot helpers ([get], [skrape], [download]) do not use the
+ * shared connection and can be called at any time.
  */
 class Connector {
+    /** Reader over the currently-open [connection]'s input stream, or `null` before the first [open]. */
     private var reader: BufferedReader? = null
-    private var connection: URLConnection? = null
-    private lateinit var savedURL: String
 
+    /** The currently-open connection, or `null` if none was opened or it could not be opened. */
+    private var connection: URLConnection? = null
+
+    /**
+     * Whether a connection is currently open and therefore whether a new [open]
+     * call must wait. Written by [open] and [close] from arbitrary threads.
+     */
     @Volatile
     private var isOpen = false
 
@@ -49,8 +57,8 @@ class Connector {
 
     /**
      * Opens a new connection with the given URL.
-     * If another [.open] call is made before the current
-     * connection is closed with [.close] then the new connection
+     * If another [open] call is made before the current
+     * connection is closed with [close] then the new connection
      * will wait indefinitely until the current connection closes.
      * @param urlName the url that you are trying to access
      * @return Whether a connection was successfully established
@@ -222,10 +230,11 @@ class Connector {
     operator fun iterator() = this
 
     /**
-     * Performs a GET request on a given URL
-     * @param URL that you want to send a GET request to
-     * @return the result of the GET request as a String
-     * or null if unable to GET
+     * Performs a GET request on a given URL.
+     * @param URL the url that you want to send a GET request to
+     * @return the result of the GET request as a String,
+     * or `null` if unable to GET
+     * @throws IllegalArgumentException if [URL] is not a valid url
      */
     infix fun get(URL: String): String? {
         requireValidURL(URL)
@@ -240,13 +249,18 @@ class Connector {
 
 
     /**
-     * Reads the given URL using the Skrape library
+     * Reads the given URL using the Skrape library.
+     * @param url the url to scrape
+     * @return the response body of the scraped page
+     * @throws IllegalArgumentException if [url] is not a valid url
      */
     infix fun skrape(url:String) = testAndSkrape(url,::getScrapeResults).responseBody
     /**
-     *Takes a URL, validates it, and perform a skrape request
+     * Takes a URL, validates it, and performs a skrape request.
+     * @param url the url to validate and scrape
+     * @param func the scrape operation to apply to the validated url
+     * @return whatever [func] returns, typically a skrape Result
      * @throws IllegalArgumentException if the url is invalid
-     * @return a skrape Result
      */
     private fun <T> testAndSkrape(url:String, func:(String)->T):T {
         requireValidURL(url)
@@ -254,7 +268,9 @@ class Connector {
     }
 
     /**
-     * Wrapper around the skrape library skrape call
+     * Wrapper around the skrape library skrape call.
+     * @param URL the url to fetch
+     * @return the raw skrape response
      */
     @Throws(java.lang.IllegalArgumentException::class)
     private fun getScrapeResults(URL:String) = skrape(HttpFetcher){

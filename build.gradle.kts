@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm").version("2.2.0")
     id("com.vanniktech.maven.publish") version "0.36.0"
+    kotlin("kapt") version "2.2.0"
 }
 
 repositories {
@@ -24,6 +25,7 @@ dependencies {
     implementation("org.seleniumhq.selenium:selenium-java:4.0.0")   // Screenshot utility
 
     api("io.github.spartanlaboratories:GeneralTools:2.0.0")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {
@@ -33,7 +35,7 @@ tasks.test {
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    coordinates("io.github.spartanlaboratories", "WebTools", "1.0.2")
+    coordinates("io.github.spartanlaboratories", "WebTools", "1.0.3")
 
     pom {
         name.set("Web Tools")
