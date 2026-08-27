@@ -1,3 +1,7 @@
+---
+apply: always
+---
+
 Apply these strict rules to all code generation, refactoring, and test design.
 
 ## 1. Paradigm & Style
