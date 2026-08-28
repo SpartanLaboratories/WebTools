@@ -124,7 +124,7 @@ abstract class MultiConnectionUDPServer {
      * @return the newly created and registered connection
      */
     private fun addConnection(name: String, address: InetAddress): UDPConnection {
-        val portOffset = connections.size + 2
+        val portOffset = connections.size * 2 + 2
         log.info("Adding a new connection '{}' for address {}", name, address)
         return UDPConnection(name, address, COMMON_SEND_PORT - portOffset, COMMON_SEND_PORT - portOffset - 1)
             .also { connection -> connections.add(connection) }
