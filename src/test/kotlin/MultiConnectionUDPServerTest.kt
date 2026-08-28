@@ -44,25 +44,27 @@ class MultiConnectionUDPServerTest {
 
     @Test
     @Order(1)
-    fun `pushToAll does not throw when there are no connections`() {
+    fun `pushToAll succeeds when there are no connections`() {
         log.info("Verifying pushToAll is a no-op with zero connections")
-        assertTrue(runCatching { server.pushToAll("no one is listening") }.isSuccess)
+        assertTrue(server.pushToAll("no one is listening").isSuccess)
     }
 
     @Test
     @Order(2)
     fun `an Iam handshake registers a new connection and gets a TXRXON reply`() {
         log.info("Starting Iam handshake test")
-        val localAddress = resolveLocalAddress()
+        // resolveLocalAddress() now reports failure rather than silently substituting
+        // loopback, so the test recovers explicitly instead of masking a routing problem.
+        val localAddress = resolveLocalAddress().getOrDefault(InetAddress.getLoopbackAddress())
 
         // Listen on the server's common send port (9999) to catch the handshake reply.
-        val clientListenSocket = DatagramSocket(9999)
+        val clientListenSocket = DatagramSocket(MultiConnectionUDPServer.COMMON_SEND_PORT)
         val clientSendSocket = DatagramSocket()
 
         try {
             val handshake = "Iam testclient $localAddress"
             val outBytes = handshake.toByteArray(Charsets.UTF_8)
-            clientSendSocket.send(DatagramPacket(outBytes, outBytes.size, localAddress, 9998))
+            clientSendSocket.send(DatagramPacket(outBytes, outBytes.size, localAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
 
             val inBuffer = ByteArray(1024)
             val inPacket = DatagramPacket(inBuffer, inBuffer.size)
@@ -90,18 +92,18 @@ class MultiConnectionUDPServerTest {
     @Order(3)
     fun `stop terminates connections and closes the common listen socket`() {
         log.info("Verifying stop() shuts the server down cleanly")
-        assertTrue(runCatching { server.stop() }.isSuccess, "stop() should not throw")
+        assertTrue(server.stop().isSuccess, "stop() should report success")
 
         // After stopping, the server's common listen socket is closed, so a fresh
         // handshake attempt should get no TXRXON reply at all.
         val loopback = InetAddress.getLoopbackAddress()
         val clientSendSocket = DatagramSocket()
-        val clientListenSocket = DatagramSocket(9999)
+        val clientListenSocket = DatagramSocket(MultiConnectionUDPServer.COMMON_SEND_PORT)
 
         try {
             val handshake = "Iam clientAfterStop $loopback"
             val outBytes = handshake.toByteArray(Charsets.UTF_8)
-            clientSendSocket.send(DatagramPacket(outBytes, outBytes.size, loopback, 9998))
+            clientSendSocket.send(DatagramPacket(outBytes, outBytes.size, loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
 
             clientListenSocket.soTimeout = 500
             assertFailsWith<SocketTimeoutException>("Expected no reply once the server has stopped") {

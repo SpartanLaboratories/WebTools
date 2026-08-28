@@ -23,19 +23,22 @@ class UDPConnectionTest {
         val latch = CountDownLatch(1)
         var received: String? = null
 
-        connectionB.actuate { message ->
-            log.debug("Connection B received: {}", message)
-            received = message
-            latch.countDown()
-        }
+        assertTrue(
+            connectionB.actuate { message ->
+                log.debug("Connection B received: {}", message)
+                received = message
+                latch.countDown()
+            }.isSuccess,
+            "Expected connection B to actuate"
+        )
 
-        connectionA.push("ping from A")
+        assertTrue(connectionA.push("ping from A").isSuccess, "Expected the push to succeed")
 
         assertTrue(latch.await(5, TimeUnit.SECONDS), "Expected message to be received within timeout")
         assertEquals("ping from A", received)
 
-        connectionA.terminate()
-        connectionB.terminate()
+        assertTrue(connectionA.terminate().isSuccess, "Expected connection A to terminate cleanly")
+        assertTrue(connectionB.terminate().isSuccess, "Expected connection B to terminate cleanly")
     }
 
     @Test
@@ -43,6 +46,6 @@ class UDPConnectionTest {
         val connection = UDPConnection("named-connection", loopback, 41302, 41303)
         assertEquals("named-connection", connection.name)
         assertEquals(loopback, connection.address)
-        connection.terminate()
+        assertTrue(connection.terminate().isSuccess)
     }
 }

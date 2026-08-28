@@ -35,7 +35,7 @@ tasks.test {
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    coordinates("io.github.spartanlaboratories", "WebTools", "1.0.3")
+    coordinates("io.github.spartanlaboratories", "WebTools", "2.0.0")
 
     pom {
         name.set("Web Tools")

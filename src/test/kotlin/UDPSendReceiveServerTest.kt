@@ -6,7 +6,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class UDPSendReceiveServerTest {
@@ -26,13 +25,16 @@ class UDPSendReceiveServerTest {
         val latch = CountDownLatch(1)
         var received: String? = null
 
-        receiver.startListening { message, _ ->
-            log.debug("Test received: {}", message)
-            received = message
-            latch.countDown()
-        }
+        assertTrue(
+            receiver.startListening { message, _ ->
+                log.debug("Test received: {}", message)
+                received = message
+                latch.countDown()
+            }.isSuccess,
+            "Expected the listener to start"
+        )
 
-        sender.send("hello world")
+        assertTrue(sender.send("hello world").isSuccess, "Expected the message to be sent")
 
         val completed = latch.await(5, TimeUnit.SECONDS)
         assertTrue(completed, "Expected message to be received within timeout")
@@ -54,16 +56,17 @@ class UDPSendReceiveServerTest {
         var messageCount = 0
         receiver.startListening { _, _ -> messageCount++ }
 
-        receiver.stopListening()
+        assertTrue(receiver.stopListening().isSuccess, "Expected the listener to stop cleanly")
         Thread.sleep(200)
 
-        sender.send("should not arrive")
+        // The datagram still leaves the sender; it simply has nothing bound to arrive at.
+        assertTrue(sender.send("should not arrive").isSuccess)
         Thread.sleep(300)
 
         assertEquals(0, messageCount)
-        assertFalse(false) // listener stopped cleanly, no exception thrown
 
+        // shutDown() reports its outcome, unlike close(), which AutoCloseable pins to Unit.
+        assertTrue(sender.shutDown().isSuccess, "Expected the sender to shut down cleanly")
         receiver.close()
-        sender.close()
     }
 }

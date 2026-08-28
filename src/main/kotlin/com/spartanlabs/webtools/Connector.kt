@@ -1,7 +1,6 @@
 package com.spartanlabs.webtools
 
 import com.mashape.unirest.http.Unirest
-import com.mashape.unirest.http.exceptions.UnirestException
 import it.skrape.fetcher.HttpFetcher
 import it.skrape.fetcher.response
 import it.skrape.fetcher.skrape
@@ -9,10 +8,10 @@ import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.BufferedReader
-import java.io.IOException
+import java.io.EOFException
 import java.io.InputStreamReader
-import java.net.ConnectException
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 import java.net.URLConnection
 import javax.imageio.ImageIO
@@ -28,12 +27,23 @@ import javax.imageio.ImageIO
  *
  * Stateless one-shot helpers ([get], [skrape], [download]) do not use the
  * shared connection and can be called at any time.
+ *
+ * Every operation that can fail returns a [Result] rather than throwing or
+ * returning `null`, so callers decide how to recover:
+ * ```
+ * val connector = Connector()
+ * connector.open("https://example.com")
+ *     .flatMap { connector.next() }
+ *     .onSuccess { line -> println(line) }
+ *     .onFailure { cause -> log.warn("could not read page", cause) }
+ * connector.close()
+ * ```
  */
 class Connector {
-    /** Reader over the currently-open [connection]'s input stream, or `null` before the first [open]. */
+    /** Reader over the currently-open [connection]'s input stream, or `null` when no connection is open. */
     private var reader: BufferedReader? = null
 
-    /** The currently-open connection, or `null` if none was opened or it could not be opened. */
+    /** The currently-open connection, or `null` when no connection is open. */
     private var connection: URLConnection? = null
 
     /**
@@ -44,12 +54,13 @@ class Connector {
     private var isOpen = false
 
     /**
-     * The current line of the html of the most recently
-     * established connection.
+     * The most recent line read by [next] from the currently-open connection, or
+     * `null` if nothing has been read since the last [open].
      */
-    protected var data: String? = null
+    var currentLine: String? = null
+        private set
 
-    /** Creates a new Connector  */
+    /** Creates a new Connector. */
     init {
         Unirest.setTimeouts(0, 0)
         log.info("Connector was created successfully")
@@ -57,245 +68,241 @@ class Connector {
 
     /**
      * Opens a new connection with the given URL.
-     * If another [open] call is made before the current
-     * connection is closed with [close] then the new connection
-     * will wait indefinitely until the current connection closes.
+     *
+     * If another [open] call is made before the current connection is closed with
+     * [close] then the new connection will wait indefinitely until the current
+     * connection closes. The connection is only marked open when every step
+     * succeeds, so a failed [open] leaves this `Connector` reusable.
+     *
      * @param urlName the url that you are trying to access
-     * @return Whether a connection was successfully established
+     * @return [Result.success] once the connection is open and ready to be read
+     * from; [Result.failure] holding a [MalformedURLException] if [urlName] is not
+     * a valid url, an [java.io.IOException] if the connection or its input stream
+     * could not be opened, or an [InterruptedException] if the wait for the
+     * previous connection to close was interrupted
      */
     @Synchronized
-    infix fun open(urlName: String): Boolean {
+    infix fun open(urlName: String): Result<Unit> {
         log.info("Starting attempt to connect to url: {}", urlName)
-        waitForTurn()
-        val url = getURL(urlName)
-        // This is to try to appear as a browser user since some websites reject the connection otherwise
-        System.setProperty("http.agent", "Mozilla/4.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0")
-        connection = openConnection(url)
-        isOpen = true
-        createReader()
-        return readerState()
+        return waitForTurn()
+            .flatMap { parseUrl(urlName) }
+            .flatMap { url -> connect(url) }
+            .flatMap { established -> readerFor(established).map { newReader -> established to newReader } }
+            .map { (established, newReader) ->
+                connection = established
+                reader = newReader
+                currentLine = null
+                isOpen = true
+                log.info("A connection to {} is open", urlName)
+            }
+            .onFailure { cause -> log.error("Failed to open a connection to {}: {}", urlName, cause.message, cause) }
     }
 
     /**
-     * Blocks the thread if there is a connection that is still open.
-     * If a second connection is opened, the first one may close the reader
-     * prior to the second one being done using it.
+     * Blocks the calling thread while a previously-opened connection is still open.
+     *
+     * If a second connection were opened eagerly, the first one could close the
+     * reader before the second was done using it.
+     *
+     * @return [Result.success] once no connection is open, or [Result.failure]
+     * holding the [InterruptedException] if the wait was interrupted
      */
-    private fun waitForTurn() {
-        while (isOpen) {
-            log.trace("Waiting on current connection to: {} to close", connection!!.url)
-            try {
-                Thread.sleep(100)
-            } catch (e: InterruptedException) {
-                log.error("An error occured while waiting for a connection to close")
-                e.printStackTrace()
+    private fun waitForTurn(): Result<Unit> =
+        runCatching {
+            while (isOpen) {
+                log.trace("Waiting on the current connection to {} to close", connection?.url)
+                Thread.sleep(TURN_POLL_INTERVAL_MILLIS)
             }
+            log.debug("A connection is ready to be opened")
+        }.onFailure { cause ->
+            // Re-assert the interrupt so callers further up the stack can still observe it.
+            if (cause is InterruptedException) Thread.currentThread().interrupt()
+            log.error("Interrupted while waiting for the current connection to close")
         }
-        log.debug("A connection is ready to be opened")
-    }
 
     /**
      * Parses a raw URL string into a [URL] instance.
+     *
+     * Normalises the several unrelated exception types the JDK can raise for bad
+     * input into a single [MalformedURLException] so callers only have one failure
+     * type to match on.
+     *
      * @param urlName the url string to parse
-     * @return the parsed [URL]
-     * @throws IllegalArgumentException if [urlName] is not a well-formed URL
+     * @return the parsed [URL], or a [MalformedURLException] failure if [urlName]
+     * is not a well-formed absolute url
      */
-    private infix fun getURL(urlName: String): URL {
-        return try {
-            val url = URL(urlName)
-            log.trace("URL formed successfully")
-            url
-        } catch (e: MalformedURLException) {
-            log.error("Invalid URL provided: {}", urlName)
-            throw IllegalArgumentException("Given URL is not valid")
-        }
-    }
+    private infix fun parseUrl(urlName: String): Result<URL> =
+        runCatching { URI(urlName).toURL() }
+            .onSuccess { url -> log.trace("URL formed successfully: {}", url) }
+            .recoverCatching { cause ->
+                log.error("Invalid URL provided: {}", urlName)
+                throw MalformedURLException("Given value \"$urlName\" is not a valid url").apply { initCause(cause) }
+            }
 
     /**
      * Opens a raw [URLConnection] to the given [url].
      * @param url the url to connect to
-     * @return the opened connection, or `null` if it could not be opened
+     * @return the opened connection, or an [java.io.IOException] failure if it could not be opened
      */
-    private infix fun openConnection(url: URL): URLConnection? {
+    private infix fun connect(url: URL): Result<URLConnection> {
         log.trace("Attempting to open connection")
-        return try {
-            url.openConnection().also{
-                log.trace("Successfully opened a url connection")
-            }
-        } catch (e: IOException) {
-            log.error("A connection to the URL: {} could not be opened", url)
-            e.printStackTrace()
-            null
-        }
+        // Some websites reject the connection unless it looks like it came from a browser.
+        System.setProperty("http.agent", BROWSER_USER_AGENT)
+        return runCatching { url.openConnection() }
+            .onSuccess { log.trace("Successfully opened a url connection") }
+            .onFailure { cause -> log.error("A connection to the URL {} could not be opened", url, cause) }
     }
 
     /**
-     * Creates a [BufferedReader][reader] over the currently-open [connection]'s
-     * input stream. Does nothing observable if the stream cannot be opened,
-     * beyond logging the failure - callers should check [readerState] afterward.
+     * Creates a [BufferedReader] over the given connection's input stream.
+     * @param established the connection to read from
+     * @return the reader, or an [java.io.IOException] failure if the input stream could not be opened
      */
-    private fun createReader() {
-        log.trace("Attempting to create a Buffered Reader from an opened URL connection")
-        try {
-            val `is` = connection!!.getInputStream()
-            reader = BufferedReader(InputStreamReader(`is`))
-            log.trace("A reader was successfully created")
-        } catch (e: IOException) {
-            log.error("Could not create a reader for the url connection: {}", connection!!.url)
-            e.printStackTrace()
-        }
-    }
+    private infix fun readerFor(established: URLConnection): Result<BufferedReader> =
+        runCatching { BufferedReader(InputStreamReader(established.getInputStream())) }
+            .onSuccess { log.trace("A reader was successfully created") }
+            .onFailure { cause ->
+                log.error("Could not create a reader for the url connection {}", established.url, cause)
+            }
 
     /**
-     * Checks whether [reader] was successfully created and is ready to be read from.
-     * @return `true` if [reader] is non-null and ready; `false` otherwise
+     * Closes the currently established connection. Must be called before another
+     * connection can be established.
+     *
+     * The connection is released even if closing the underlying reader fails, so a
+     * failed close never leaves this `Connector` permanently blocked in [open].
+     *
+     * @return [Result.success] if the reader closed cleanly (or was already closed),
+     * or [Result.failure] holding the [java.io.IOException] it raised
      */
-    private fun readerState(): Boolean {
-        log.trace("Checking reader state")
-        return try {
-            if (reader == null) {
-                log.error("A newly opened connection's reader is null")
-                return false
+    fun close(): Result<Unit> =
+        runCatching { reader?.close() }
+            .map { }
+            .also {
+                // Released unconditionally: a reader we failed to close is still a reader
+                // we will never read from again, and holding isOpen would deadlock open().
+                reader = null
+                connection = null
+                currentLine = null
+                isOpen = false
             }
-            if (!reader!!.ready()) {
-                log.error("A reader was created but is not ready")
-                log.error(data)
-                return false
-            }
-            log.trace("Reader was validated")
-            true
-        } catch (e: IOException) {
-            log.warn("An error occured while checking the reader state")
-            false
-        }
-    }
-
-    /**
-     * Closes the currently established connection. Must be called before another connection can be established.
-     */
-    fun close() {
-        try {
-            reader!!.close()
-            isOpen = false
-        } catch (e: IOException) {
-            log.error("An error occurred while trying to close the reader.")
-            e.printStackTrace()
-        }
-    }
+            .onSuccess { log.debug("Connection closed and released") }
+            .onFailure { cause -> log.error("An error occurred while trying to close the reader", cause) }
 
     /**
      * Downloads and decodes an image from the given URL.
      * @param imageUrl the url of the image to download
-     * @return the downloaded image
+     * @return the downloaded image, or [Result.failure] if [imageUrl] is invalid,
+     * unreachable, or does not decode to a known image format
      */
-    infix fun download(imageUrl:String):BufferedImage =
-        Jsoup.connect(imageUrl).ignoreContentType(true).execute().bodyStream().let {
-            val image = ImageIO.read(it)
-            it.close()
-            image
+    infix fun download(imageUrl: String): Result<BufferedImage> =
+        parseUrl(imageUrl)
+            .flatMap { url ->
+                runCatching {
+                    Jsoup.connect(url.toString()).ignoreContentType(true).execute().bodyStream().use { stream ->
+                        requireNotNull(ImageIO.read(stream)) { "No registered image reader could decode $url" }
+                    }
+                }
+            }
+            .onSuccess { log.info("Downloaded an image from {}", imageUrl) }
+            .onFailure { cause -> log.error("Could not download an image from {}", imageUrl, cause) }
+
+    /**
+     * Skips the specified number of lines in the html data of the currently-open
+     * connection, stopping at the first line that could not be read.
+     *
+     * @param lines the number of lines that you want skipped; values `<= 0` skip nothing
+     * @return [Result.success] if every line was skipped, or the failure from the
+     * first line that could not be read
+     */
+    fun next(lines: Int): Result<Unit> =
+        (1..lines).fold(Result.success(Unit)) { skipped, _ -> skipped.flatMap { next().map { } } }
+            .onFailure { cause -> log.warn("Could not skip {} line(s): {}", lines, cause.message) }
+
+    /**
+     * Goes to the next line in the html data of the currently-open connection.
+     *
+     * @return the next line, or [Result.failure] holding an [IllegalArgumentException]
+     * if no connection is open, an [EOFException] if the stream is exhausted, or an
+     * [java.io.IOException] if the read itself failed
+     */
+    operator fun next(): Result<String> =
+        runCatching {
+            val openReader = requireNotNull(reader) { "No connection is open - call open(url) first" }
+            openReader.readLine() ?: throw EOFException("No more lines left to read")
         }
+            .onSuccess { line ->
+                currentLine = line
+                log.trace("Read a line of {} character(s)", line.length)
+            }
+            .onFailure { cause -> log.debug("next() could not read a line: {}", cause.message) }
 
-    /**
-     * Skip the specified number of lines in the html data of the
-     * most recently established connection
-     * @param lines - the number of lines that you want skipped
-     * @throws IOException if there aren't that many lines left in the html
-     */
-    @Throws(IOException::class)
-    fun next(lines: Int) {
-        var lines = lines
-        while (lines-- > 0) next()
-    }
-
-    /**
-     * Goes to the next line in the html data of the most
-     * recently established connection and returns the value
-     * of that line as a new String
-     * @return the next line
-     * @throws IOException if there are no more lines left
-     */
-    @Throws(IOException::class)
-    operator fun next() : String{
-        log.info("Attemped next(). Data was: $data ")
-        data = reader!!.readLine()
-        return data!!
-    }
     /**
      * Checks whether another line is available to read from the current connection.
-     * @return `true` if [next] can be called again without throwing
+     *
+     * Deliberately returns a plain [Boolean] rather than a `Result` to satisfy
+     * Kotlin's iterator convention; a missing or unreadable reader simply reports
+     * `false`, and [next] surfaces the underlying cause.
+     *
+     * @return `true` if [next] is expected to succeed
      */
-    operator fun hasNext() = reader!!.ready()
+    operator fun hasNext(): Boolean = runCatching { reader?.ready() ?: false }.getOrDefault(false)
 
-    /** Allows a [Connector] to be iterated directly, e.g. in a `for` loop over its lines. */
+    /**
+     * Allows a [Connector] to be iterated directly, e.g. in a `for` loop over its lines.
+     * Because [next] returns a [Result], the loop variable is a `Result<String>`.
+     */
     operator fun iterator() = this
 
     /**
      * Performs a GET request on a given URL.
-     * @param URL the url that you want to send a GET request to
-     * @return the result of the GET request as a String,
-     * or `null` if unable to GET
-     * @throws IllegalArgumentException if [URL] is not a valid url
+     * @param url the url that you want to send a GET request to
+     * @return the body of the response, or [Result.failure] if [url] is invalid,
+     * the request failed, or the response had no body
      */
-    infix fun get(URL: String): String? {
-        requireValidURL(URL)
-        try {
-            return Unirest.get(URL).asString().body
-        } catch (e: UnirestException){
-            e.printStackTrace()
-        }
-        return null
-    }
-
-
+    infix fun get(url: String): Result<String> =
+        parseUrl(url)
+            .flatMap { valid ->
+                runCatching {
+                    requireNotNull(Unirest.get(valid.toString()).asString().body) {
+                        "GET $valid returned no body"
+                    }
+                }
+            }
+            .onSuccess { log.info("GET {} succeeded", url) }
+            .onFailure { cause -> log.error("GET {} failed: {}", url, cause.message, cause) }
 
     /**
      * Reads the given URL using the Skrape library.
      * @param url the url to scrape
-     * @return the response body of the scraped page
-     * @throws IllegalArgumentException if [url] is not a valid url
+     * @return the response body of the scraped page, or [Result.failure] if [url]
+     * is invalid or the page could not be fetched
      */
-    infix fun skrape(url:String) = testAndSkrape(url,::getScrapeResults).responseBody
-    /**
-     * Takes a URL, validates it, and performs a skrape request.
-     * @param url the url to validate and scrape
-     * @param func the scrape operation to apply to the validated url
-     * @return whatever [func] returns, typically a skrape Result
-     * @throws IllegalArgumentException if the url is invalid
-     */
-    private fun <T> testAndSkrape(url:String, func:(String)->T):T {
-        requireValidURL(url)
-        return func(url)
-    }
+    infix fun skrape(url: String): Result<String> =
+        parseUrl(url)
+            .flatMap { valid -> runCatching { scrapeResponseBody(valid.toString()) } }
+            .onSuccess { log.info("Scraped {}", url) }
+            .onFailure { cause -> log.error("Could not scrape {}: {}", url, cause.message, cause) }
 
     /**
-     * Wrapper around the skrape library skrape call.
-     * @param URL the url to fetch
-     * @return the raw skrape response
+     * Wrapper around the skrape library's `skrape` call.
+     * @param target the url to fetch
+     * @return the raw response body of the fetched page
      */
-    @Throws(java.lang.IllegalArgumentException::class)
-    private fun getScrapeResults(URL:String) = skrape(HttpFetcher){
-        request{url=URL}
-        response{this}
+    private fun scrapeResponseBody(target: String): String = skrape(HttpFetcher) {
+        request { url = target }
+        response { responseBody }
     }
-    /**
-     * Validates that [urlName] is a well-formed URL.
-     * @param urlName the url string to validate
-     * @throws IllegalArgumentException if [urlName] is not a valid url
-     */
-    private fun requireValidURL(urlName: String) = require(urlName.isValidURL()){ "Given value: \"$urlName\" is not a valid url" }
-    /**
-     * Checks if the receiver is a valid URL.
-     * @return true if the String forms a valid URL
-     * <br> false if it does not
-     */
-    private fun String.isValidURL():Boolean = try {
-        URL(this)
-        true
-    }   catch (_:MalformedURLException) { false }
-    catch(_:ConnectException)       { false }
 
     companion object {
         /** Shared slf4j logger for all [Connector] instances. */
         private val log = LoggerFactory.getLogger(Connector::class.java)
+
+        /** How long [waitForTurn] sleeps between checks of [isOpen]. */
+        private const val TURN_POLL_INTERVAL_MILLIS = 100L
+
+        /** Sent as `http.agent` so servers that reject non-browser clients still respond. */
+        private const val BROWSER_USER_AGENT =
+            "Mozilla/4.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0"
     }
 }
