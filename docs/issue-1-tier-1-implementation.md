@@ -6,11 +6,21 @@ channel* address replies to the datagram's real source, so both work from behind
 The per-client dedicated data channel (`UDPConnection` / `UDPSendReceiveServer`) is **not**
 touched here; that is Tier 2.
 
-**Status:** planning only — no Tier 1 code written yet. The test-hierarchy prep (§3
-Option B) is already done: commit `test: adopt the 5-level testing hierarchy for the
-existing suite`.
+**Status:** IMPLEMENTED on branch `fix/issue-1-handshake-datagram-source`. The
+test-hierarchy prep (§3) landed first on `refactor/test-level-hierarchy`. The sections
+below describe what was built; a few details shifted in the final code (noted inline).
 **Release:** rides the in-progress `2.0.0` break (`build.gradle.kts` → `2.0.0a`). No further
 version bump in these commits.
+
+**As-built deltas from this plan:**
+- Kept `HANDSHAKE_VERB` / `HANDSHAKE_NAME_INDEX` names; added `HANDSHAKE_REPLY_VERB`,
+  `HANDSHAKE_MIN_TOKENS`, `DEDICATED_PORT_BASE`; removed `COMMON_SEND_PORT` (public) and
+  `HANDSHAKE_ADDRESS_INDEX`.
+- `commonListenSocket` renamed to `commonSocket` (it now both sends and receives).
+- §1.5 retransmit de-dup: included.
+- `pushToAddress` → `replyToOrigin`; added `txrxonReply()` / `registrationFor()` helpers.
+- Test file: 6 ordered tests (handshake, payload-token-ignored, pushToAll-to-origin,
+  malformed-Iam, stop) using one `DatagramSocket` per client.
 
 ---
 

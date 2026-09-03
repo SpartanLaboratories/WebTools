@@ -29,10 +29,17 @@ The `ab53747` "step ports down by 2" fix is a patch on top of design #4 and beco
 
 ---
 
-## 2. Tier 1 — correctness fix (in scope for 2.0.0 regardless of Tier 2 choice)
+## 2. Tier 1 — correctness fix — DONE
 
-Goal: the handshake completes for any client that can send a UDP datagram to the server,
-NAT'd or not. No reliance on client self-reported address.
+Implemented on branch `fix/issue-1-handshake-datagram-source`. See
+[`issue-1-tier-1-implementation.md`](./issue-1-tier-1-implementation.md) for the detail.
+Summary of what shipped: the server learns the client endpoint from the datagram source,
+replies on the receiving socket, the protocol is now `Iam <name>` → bare `TXRXON`,
+`commonSendSocket` / `COMMON_SEND_PORT` are gone, `pushToAll` targets each client's learned
+origin, and a retransmitted `Iam` reuses its ports instead of allocating a new pair.
+
+Goal (met): the handshake completes for any client that can send a UDP datagram to the
+server, NAT'd or not. No reliance on client self-reported address.
 
 1. **Thread the packet through.** Change `handshakeLoop()` to pass the `DatagramPacket`
    (or an extracted `InetSocketAddress` + token list) into `handleHandshake()`.
@@ -106,9 +113,10 @@ call sites before implementation.
 
 ## 5. Suggested sequencing
 
-1. Land Tier 1 as one commit (small, self-contained, testable on loopback).
-2. Decide B1 vs B2.
-3. Land Tier 2 refactor + tests.
-4. Add `README.md` with a protocol/architecture section (currently missing; required by repo
-   guidelines once the protocol changes).
-5. Coordinate the client-repo change; tag 2.0.0.
+1. ~~Land Tier 1 as one commit (small, self-contained, testable on loopback).~~ **Done**
+   (`fix/issue-1-handshake-datagram-source`), `README.md` created in the same change.
+2. Coordinate the client-repo change (`Iam <name>` + parse bare `TXRXON` from the send
+   socket) in `MyGameTools` / `MyGameServer`.
+3. Decide Tier 2 B1 vs B2.
+4. Land Tier 2 refactor + tests.
+5. Tag 2.0.0.

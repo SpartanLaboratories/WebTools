@@ -2,7 +2,6 @@ package com.spartanlabs.testing.integration.webtools
 
 import com.spartanlabs.webtools.MultiConnectionUDPServer
 import com.spartanlabs.webtools.UDPConnection
-import com.spartanlabs.webtools.resolveLocalAddress
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
@@ -17,10 +16,12 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 // PER_CLASS lifecycle so JUnit reuses a single test instance (and therefore a single
-// MultiConnectionUDPServer bound to the fixed 9998/9999 ports) across all test methods.
+// MultiConnectionUDPServer bound to the fixed common port) across all test methods.
 // Tests are explicitly ordered because `stop()` closes the shared server's socket and
 // must run last, after the tests that rely on it still being open.
 @Tag("integration")
@@ -30,6 +31,11 @@ class MultiConnectionUDPServerTest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerTest::class.java)
 
+    // The handshake reply is now addressed to the datagram's source, so a client only needs
+    // one socket - the one it sends the `Iam` from also receives the `TXRXON`. Sending over
+    // loopback means the server observes this exact address as the packet source.
+    private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()
+
     // Connections handed to onClientConnect(), in the order they were registered.
     // Backed by a CopyOnWriteArrayList since it's written from the server's listener
     // thread and read from the test thread.
@@ -37,14 +43,28 @@ class MultiConnectionUDPServerTest {
 
     // MultiConnectionUDPServer is abstract, so tests supply their own onClientConnect
     // implementation - here it just records the connection for later assertions.
-    // The server binds fixed ports (9998/9999) in its constructor, so we deliberately
-    // create only a single instance for the whole test class to avoid port conflicts
-    // between test methods.
+    // The server binds a fixed common port in its constructor, so we deliberately create
+    // only a single instance for the whole test class to avoid port conflicts between
+    // test methods.
     private val server = object : MultiConnectionUDPServer() {
         override fun onClientConnect(connection: UDPConnection) {
             log.debug("Test recorded onClientConnect for '{}'", connection.name)
             connectedClients.add(connection)
         }
+    }
+
+    /**
+     * Sends [payload] to the server's common port from [client] and returns the reply text.
+     * [client] is left open and its receive timeout set, so callers can keep reading from it
+     * (e.g. to catch a later [MultiConnectionUDPServer.pushToAll] broadcast).
+     */
+    private fun handshakeFrom(client: DatagramSocket, payload: String): String {
+        val out = payload.toByteArray(Charsets.UTF_8)
+        client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+        client.soTimeout = REPLY_TIMEOUT_MILLIS
+        val reply = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
+        client.receive(reply)
+        return String(reply.data, 0, reply.length, Charsets.UTF_8).trim()
     }
 
     @Test
@@ -56,68 +76,117 @@ class MultiConnectionUDPServerTest {
 
     @Test
     @Order(2)
-    fun `an Iam handshake registers a new connection and gets a TXRXON reply`() {
+    fun `an Iam handshake registers a connection and replies with a bare TXRXON to the datagram source`() {
         log.info("Starting Iam handshake test")
-        // resolveLocalAddress() now reports failure rather than silently substituting
-        // loopback, so the test recovers explicitly instead of masking a routing problem.
-        val localAddress = resolveLocalAddress().getOrDefault(InetAddress.getLoopbackAddress())
+        val before = connectedClients.size
 
-        // Listen on the server's common send port (9999) to catch the handshake reply.
-        val clientListenSocket = DatagramSocket(MultiConnectionUDPServer.COMMON_SEND_PORT)
-        val clientSendSocket = DatagramSocket()
-
-        try {
-            val handshake = "Iam testclient $localAddress"
-            val outBytes = handshake.toByteArray(Charsets.UTF_8)
-            clientSendSocket.send(DatagramPacket(outBytes, outBytes.size, localAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-
-            val inBuffer = ByteArray(1024)
-            val inPacket = DatagramPacket(inBuffer, inBuffer.size)
-            clientListenSocket.soTimeout = 5000
-            clientListenSocket.receive(inPacket)
-
-            val reply = String(inPacket.data, 0, inPacket.length, Charsets.UTF_8).trim()
+        DatagramSocket().use { client ->
+            val reply = handshakeFrom(client, "Iam testclient")
             log.debug("Received handshake reply: {}", reply)
 
-            assertTrue(reply.contains("TXRXON"), "Expected a TXRXON reply, got: $reply")
+            assertTrue(reply.startsWith("$HANDSHAKE_REPLY_VERB "), "Expected a bare TXRXON reply, got: $reply")
+            assertEquals(3, reply.split(' ').size, "Reply must be '$HANDSHAKE_REPLY_VERB <sendPort> <receivePort>'")
+            assertFalse(reply.contains("/"), "Reply must not carry an address prefix any more: $reply")
 
             // onClientConnect() is invoked from the listener thread right after the reply
             // is sent, so give it a brief moment to run before asserting on it.
-            Thread.sleep(200)
-            assertEquals(1, connectedClients.size, "Expected onClientConnect to fire exactly once")
-            assertEquals("testclient", connectedClients[0].name)
-            assertEquals(localAddress, connectedClients[0].address)
-        } finally {
-            clientListenSocket.close()
-            clientSendSocket.close()
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+            assertEquals(before + 1, connectedClients.size, "Expected exactly one new connection")
+            val registered = connectedClients.last()
+            assertEquals("testclient", registered.name)
+            // The address is learned from the datagram, so a loopback handshake yields loopback.
+            assertEquals(serverAddress, registered.address)
         }
     }
 
     @Test
     @Order(3)
-    fun `stop terminates connections and closes the common listen socket`() {
+    fun `the client-claimed address token in the payload is ignored`() {
+        log.info("Verifying the server trusts the datagram source, not the payload")
+        val before = connectedClients.size
+
+        DatagramSocket().use { client ->
+            // 203.0.113.0/24 is TEST-NET-3: a syntactically valid address that is never us.
+            val reply = handshakeFrom(client, "Iam liarclient 203.0.113.7")
+            assertTrue(reply.startsWith("$HANDSHAKE_REPLY_VERB "), "Expected a TXRXON reply, got: $reply")
+
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+            assertEquals(before + 1, connectedClients.size)
+            val registered = connectedClients.last()
+            assertEquals("liarclient", registered.name)
+            assertEquals(serverAddress, registered.address, "Address must come from the datagram, not the payload")
+            assertNotEquals(InetAddress.getByName("203.0.113.7"), registered.address)
+        }
+    }
+
+    @Test
+    @Order(4)
+    fun `pushToAll delivers to each client's learned handshake origin`() {
+        log.info("Verifying pushToAll reaches the socket the handshake came from")
+
+        DatagramSocket().use { client ->
+            handshakeFrom(client, "Iam pushclient")
+
+            assertTrue(server.pushToAll("broadcast-1").isSuccess)
+
+            val received = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
+            client.receive(received) // receive timeout already set by handshakeFrom
+            assertEquals("broadcast-1", String(received.data, 0, received.length, Charsets.UTF_8).trim())
+        }
+    }
+
+    @Test
+    @Order(5)
+    fun `a malformed Iam with no name is rejected without wedging the listener`() {
+        log.info("Verifying a nameless Iam neither registers nor kills the server")
+        val before = connectedClients.size
+
+        DatagramSocket().use { client ->
+            val out = "Iam".toByteArray(Charsets.UTF_8)
+            client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+            client.soTimeout = NO_REPLY_TIMEOUT_MILLIS
+            assertFailsWith<SocketTimeoutException>("A malformed handshake must not get a reply") {
+                client.receive(DatagramPacket(ByteArray(64), 64))
+            }
+        }
+        Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+        assertEquals(before, connectedClients.size, "A malformed handshake must not register a connection")
+
+        // The listener survived: a well-formed handshake right after still gets a reply.
+        DatagramSocket().use { recovered ->
+            assertTrue(handshakeFrom(recovered, "Iam recoverclient").startsWith("$HANDSHAKE_REPLY_VERB "))
+        }
+    }
+
+    @Test
+    @Order(6)
+    fun `stop terminates connections and closes the common socket`() {
         log.info("Verifying stop() shuts the server down cleanly")
         assertTrue(server.stop().isSuccess, "stop() should report success")
 
-        // After stopping, the server's common listen socket is closed, so a fresh
-        // handshake attempt should get no TXRXON reply at all.
-        val loopback = InetAddress.getLoopbackAddress()
-        val clientSendSocket = DatagramSocket()
-        val clientListenSocket = DatagramSocket(MultiConnectionUDPServer.COMMON_SEND_PORT)
-
-        try {
-            val handshake = "Iam clientAfterStop $loopback"
-            val outBytes = handshake.toByteArray(Charsets.UTF_8)
-            clientSendSocket.send(DatagramPacket(outBytes, outBytes.size, loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-
-            clientListenSocket.soTimeout = 500
+        // After stopping, the common socket is closed, so a fresh handshake gets no reply.
+        DatagramSocket().use { client ->
+            val out = "Iam clientAfterStop".toByteArray(Charsets.UTF_8)
+            client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+            client.soTimeout = NO_REPLY_TIMEOUT_MILLIS
             assertFailsWith<SocketTimeoutException>("Expected no reply once the server has stopped") {
-                clientListenSocket.receive(DatagramPacket(ByteArray(1024), 1024))
+                client.receive(DatagramPacket(ByteArray(1024), 1024))
             }
             log.debug("Confirmed no reply was received after stop()")
-        } finally {
-            clientSendSocket.close()
-            clientListenSocket.close()
         }
+    }
+
+    private companion object {
+        const val HANDSHAKE_REPLY_VERB = "TXRXON"
+        const val RECEIVE_BUFFER_BYTES = 1024
+
+        /** How long to wait for a handshake reply that should arrive. */
+        const val REPLY_TIMEOUT_MILLIS = 5000
+
+        /** How long to wait before concluding no reply is coming. */
+        const val NO_REPLY_TIMEOUT_MILLIS = 500
+
+        /** Grace period for the listener thread's post-reply `onClientConnect` call to run. */
+        const val POST_HANDSHAKE_SETTLE_MILLIS = 200L
     }
 }
