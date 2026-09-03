@@ -1,5 +1,8 @@
+package com.spartanlabs.testing.component.webtools
+
 import com.spartanlabs.webtools.Connector
 import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
+import org.junit.jupiter.api.Tag
 import org.slf4j.LoggerFactory
 import java.io.EOFException
 import java.net.MalformedURLException
@@ -10,6 +13,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
+// Level 2 - isolated behaviour of the Connector component; every assertion here is about
+// how Connector maps outcomes to Result, with no successful external side effect.
+@Tag("component")
 class ConnectorTest {
 
     private val log = LoggerFactory.getLogger(ConnectorTest::class.java)

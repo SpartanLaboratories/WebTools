@@ -1,5 +1,7 @@
+package com.spartanlabs.testing.integration.webtools
 
 import com.spartanlabs.webtools.UDPSendReceiveServer
+import org.junit.jupiter.api.Tag
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.concurrent.CountDownLatch
@@ -8,6 +10,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+// Level 3 - drives real UDP sockets over loopback through the send/receive server.
+@Tag("integration")
 class UDPSendReceiveServerTest {
 
     private val log = LoggerFactory.getLogger(UDPSendReceiveServerTest::class.java)

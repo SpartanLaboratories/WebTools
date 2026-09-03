@@ -32,6 +32,25 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// Level-scoped test tasks (see CLAUDE.md "Testing - 5-Level Hierarchy"). `test` still runs
+// every level; these let CI run or gate a single level on its own via the JUnit @Tag each
+// test class in src/test/kotlin/com/spartanlabs/testing/<level>/ carries.
+val componentTest by tasks.registering(Test::class) {
+    description = "Level 2 - isolated component behaviour tests (@Tag(\"component\"))."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform { includeTags("component") }
+}
+
+val integrationTest by tasks.registering(Test::class) {
+    description = "Level 3 - integration & external interface tests (@Tag(\"integration\"))."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform { includeTags("integration") }
+}
+
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()

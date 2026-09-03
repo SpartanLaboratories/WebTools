@@ -1,4 +1,7 @@
+package com.spartanlabs.testing.integration.webtools
+
 import com.spartanlabs.webtools.UDPConnection
+import org.junit.jupiter.api.Tag
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.util.concurrent.CountDownLatch
@@ -7,6 +10,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+// Level 3 - exchanges real datagrams between two UDPConnection instances over loopback.
+@Tag("integration")
 class UDPConnectionTest {
 
     private val log = LoggerFactory.getLogger(UDPConnectionTest::class.java)

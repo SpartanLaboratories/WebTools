@@ -1,7 +1,11 @@
-package com.spartanlabs.webtools
+package com.spartanlabs.testing.integration.webtools
 
+import com.spartanlabs.webtools.MultiConnectionUDPServer
+import com.spartanlabs.webtools.UDPConnection
+import com.spartanlabs.webtools.resolveLocalAddress
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 import org.slf4j.LoggerFactory
@@ -19,6 +23,7 @@ import kotlin.test.assertTrue
 // MultiConnectionUDPServer bound to the fixed 9998/9999 ports) across all test methods.
 // Tests are explicitly ordered because `stop()` closes the shared server's socket and
 // must run last, after the tests that rely on it still being open.
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class MultiConnectionUDPServerTest {
