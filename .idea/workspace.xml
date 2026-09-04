@@ -4,28 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a0ab99d7-4b1f-40a7-a955-1531084a5cf0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/ResultExtensions.kt" afterDir="false" />
+    <list default="true" id="a0ab99d7-4b1f-40a7-a955-1531084a5cf0" name="Changes" comment="Necessary Bug Fix&#10;Each connection use to step down the ports by one which would cause overlapping ports per connection. Now it steps down the ports by 2.">
+      <change afterPath="$PROJECT_DIR$/docs/issue-3-public-client-handshake-plan.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/HandshakeWireFormat.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/MultiConnectionUDPClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/kotlinc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/Connector.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/Connector.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/General.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/General.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/MultiConnectionUDPServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/MultiConnectionUDPServer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/UDPConnection.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/UDPConnection.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/UDPSendReceiveServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/UDPSendReceiveServer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/ConnectorTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/ConnectorTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/MultiConnectionUDPServerTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/MultiConnectionUDPServerTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/Test.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/UDPConnectionTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/UDPConnectionTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/UDPSendReceiveServerTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/UDPSendReceiveServerTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/Connection.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/Connection.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/HandshakeProtocol.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/com/spartanlabs/webtools/HandshakeProtocol.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="62" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -91,6 +93,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SpaSinghOut&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SpartanLaboratories/WebTools.git&quot;,
+    &quot;accountId&quot;: &quot;1bf90c7f-1e11-4c50-a481-80c3d9180eee&quot;
+  }
+}</component>
   <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\spart\.gradle\wrapper\dists\gradle-9.0.0-all\bslsdt4hlv6gkyka2jcuzrejl\gradle-9.0.0" javaHome="C:\Program Files\Java\jdk-23" gradleVersion="9.0.0" />
   <component name="KotlinCodeInsightWorkspaceSettings">
     <option name="optimizeImportsOnTheFly" value="true" />
@@ -104,23 +118,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.6178125262687497" />
-      <entry key="MS500" value="2.568146298022974" />
-      <entry key="S2" value="2.8812497456315946" />
-      <entry key="S5" value="2.951563794935117" />
-      <entry key="S10" value="2.9758529695919655" />
-      <entry key="S30" value="3.7278739064372193" />
-      <entry key="S60" value="8.551754212863237" />
-      <entry key="M2" value="18.27087385096525" />
-      <entry key="M5" value="31.095933649769673" />
-      <entry key="M10" value="38.385904096300266" />
-      <entry key="M15" value="42.75762597196016" />
-      <entry key="M30" value="51.4683012493191" />
-      <entry key="H1" value="59.87305702330516" />
-      <entry key="H2" value="65.99418150601299" />
-      <entry key="H4" value="69.72505380879777" />
-      <entry key="D1" value="73.24616166690627" />
-      <entry key="W1" value="73.89124618267884" />
+      <entry key="MS100" value="1.001189526703573" />
+      <entry key="MS500" value="1.541765204085764" />
+      <entry key="S2" value="4.716244890902573" />
+      <entry key="S5" value="8.918118169961945" />
+      <entry key="S10" value="14.780502926108722" />
+      <entry key="S30" value="29.10170337102265" />
+      <entry key="S60" value="37.6746574117354" />
+      <entry key="M2" value="43.82725274084191" />
+      <entry key="M5" value="48.43499179249915" />
+      <entry key="M10" value="50.55342180148625" />
+      <entry key="M15" value="52.77782699108449" />
+      <entry key="M30" value="62.55327347060582" />
+      <entry key="H1" value="79.58972049985773" />
+      <entry key="H2" value="96.89555840606472" />
+      <entry key="H4" value="109.53123245038476" />
+      <entry key="D1" value="122.93969505655478" />
+      <entry key="W1" value="125.55434268619005" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -142,23 +156,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.5400101354795028" />
-      <entry key="MS500" value="2.544269602147321" />
-      <entry key="S2" value="2.87458382263984" />
-      <entry key="S5" value="2.948834563977959" />
-      <entry key="S10" value="2.9744774969847" />
-      <entry key="S30" value="3.7273146231157703" />
-      <entry key="S60" value="8.551151349823233" />
-      <entry key="M2" value="18.270246410536505" />
-      <entry key="M5" value="31.095509744768574" />
-      <entry key="M10" value="38.38563473499067" />
-      <entry key="M15" value="42.75741390676237" />
-      <entry key="M30" value="51.46815430049287" />
-      <entry key="H1" value="59.872961475998075" />
-      <entry key="H2" value="65.99412537469316" />
-      <entry key="H4" value="69.72502315542006" />
-      <entry key="D1" value="73.24615614743607" />
-      <entry key="W1" value="73.89124538339179" />
+      <entry key="MS100" value="0.0022269079276081745" />
+      <entry key="MS500" value="0.793533977078044" />
+      <entry key="S2" value="4.4219918595448195" />
+      <entry key="S5" value="8.786292649576996" />
+      <entry key="S10" value="14.710727382660473" />
+      <entry key="S30" value="29.076399939726407" />
+      <entry key="S60" value="37.66140260051464" />
+      <entry key="M2" value="43.82038857130364" />
+      <entry key="M5" value="48.4321692771041" />
+      <entry key="M10" value="50.55199268032502" />
+      <entry key="M15" value="52.776862513282154" />
+      <entry key="M30" value="62.55276247807594" />
+      <entry key="H1" value="79.58943596241068" />
+      <entry key="H2" value="96.89539996386597" />
+      <entry key="H4" value="109.53114703216019" />
+      <entry key="D1" value="122.93967969058086" />
+      <entry key="W1" value="125.55434045909418" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -198,9 +212,11 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "full.screen.before.presentation.mode": "false",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "feat/issue-3-public-client-handshake",
     "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/Documents/Programming/WebTools",
     "node.js.detected.package.eslint": "true",
@@ -211,7 +227,8 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.40574712",
-    "settings.editor.selected.configurable": "ml.llm.AIAssistantPromptsLibrary"
+    "settings.editor.selected.configurable": "ml.llm.AIAssistantPromptsLibrary",
+    "to.speed.mode.migration.done": "true"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -383,8 +400,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.WebTools [publish]" />
-        <item itemvalue="Gradle.WebTools [test]" />
         <item itemvalue="Gradle.WebTools [build]" />
+        <item itemvalue="Gradle.WebTools [test]" />
         <item itemvalue="Gradle.WebTools [buildDependents]" />
         <item itemvalue="Gradle.UDPSendReceiveServerTest (1)" />
       </list>
@@ -414,6 +431,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="Necessary Bug Fix&#10;Each connection use to step down the ports by one which would cause overlapping ports per connection. Now it steps down the ports by 2." />
+    <option name="LAST_COMMIT_MESSAGE" value="Necessary Bug Fix&#10;Each connection use to step down the ports by one which would cause overlapping ports per connection. Now it steps down the ports by 2." />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
