@@ -4,8 +4,8 @@ import org.slf4j.LoggerFactory
 import java.net.InetAddress
 
 /**
- * Represents a single dedicated, named UDP connection to a client, backed by a
- * [UDPSendReceiveServer] bound to its own send/receive port pair.
+ * The production [Connection]: a single dedicated, named UDP connection to a
+ * client, backed by a [UDPSendReceiveServer] bound to its own send/receive port pair.
  *
  * Every fallible operation returns a [Result], so a connection that cannot be
  * actuated, pushed to, or terminated reports why rather than throwing.
@@ -16,7 +16,12 @@ import java.net.InetAddress
  * @property sendPort the local port this connection sends messages to on the peer
  * @property receivePort the local port this connection listens on for incoming messages
  */
-class UDPConnection(val name: String, val address: InetAddress, val sendPort: Int, val receivePort: Int) {
+class UDPConnection(
+    override val name: String,
+    override val address: InetAddress,
+    override val sendPort: Int,
+    override val receivePort: Int,
+) : Connection {
     /** The underlying socket pair used to actually send and receive datagrams. */
     private val server = UDPSendReceiveServer(address, sendPort, receivePort)
 
@@ -29,7 +34,7 @@ class UDPConnection(val name: String, val address: InetAddress, val sendPort: In
      * @param onMessage callback invoked with the decoded text of each message received
      * @return [Result.success] once the connection is listening, or the failure that prevented it
      */
-    fun actuate(onMessage: (message: String) -> Unit): Result<Unit> {
+    override fun actuate(onMessage: (message: String) -> Unit): Result<Unit> {
         log.info("Actuating connection '{}'", name)
         return server.startListening { message, senderAddress ->
             log.trace("Connection '{}' received message from {}: {}", name, senderAddress, message)
@@ -42,7 +47,7 @@ class UDPConnection(val name: String, val address: InetAddress, val sendPort: In
      * Once this succeeds, this connection can no longer send or receive messages.
      * @return [Result.success] if the sockets were released, or the failure that prevented it
      */
-    fun terminate(): Result<Unit> {
+    override fun terminate(): Result<Unit> {
         log.info("Terminating connection '{}'", name)
         return server.shutDown()
             .onFailure { cause -> log.error("Could not cleanly terminate connection '{}'", name, cause) }
@@ -53,7 +58,7 @@ class UDPConnection(val name: String, val address: InetAddress, val sendPort: In
      * @param message the text to send
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
-    fun push(message: String): Result<Unit> {
+    override fun push(message: String): Result<Unit> {
         log.trace("Connection '{}' pushing message: {}", name, message)
         return server.send(message)
             .onFailure { cause -> log.error("Connection '{}' could not push a message", name, cause) }
