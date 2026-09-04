@@ -12,7 +12,7 @@ Published to Maven Central as `io.github.spartanlaboratories:WebTools`.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:WebTools:2.0.0c")
+    implementation("io.github.spartanlaboratories:WebTools:2.0.1")
 }
 ```
 
