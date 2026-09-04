@@ -29,6 +29,8 @@ Requires JDK 11 or newer. Built with Kotlin 2.2.
 | `Connection` | Interface for one named connection to a peer (`actuate` / `push` / `terminate` / `keepAlive`). |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
 | `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract - subclass and implement `onClientConnect`. |
+| `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `KA`). |
+| `MultiConnectionUDPClient` | The client-side counterpart to `MultiConnectionUDPServer`: one socket, one owned listener thread, one dispatch thread - performs the handshake, then delivers the rest of the session via callback. |
 
 ## UDP handshake protocol
 
@@ -58,6 +60,25 @@ A server behind symmetric NAT still needs a rendezvous/relay (out of scope). Bac
 [issue #1](https://github.com/SpartanLaboratories/WebTools/issues/1),
 [`docs/issue-1-nat-traversal-plan.md`](docs/issue-1-nat-traversal-plan.md),
 [`docs/issue-1-tier-2-plan.md`](docs/issue-1-tier-2-plan.md).
+
+### Client-side usage
+
+`MultiConnectionUDPClient` performs the handshake and then owns a background
+listener thread and dispatch thread for the rest of the session, so a consumer
+never hand-rolls the receive loop or the "one socket for everything" invariant:
+
+```kotlin
+val client = MultiConnectionUDPClient(serverAddress)
+client.handshake("alice").getOrThrow()
+client.start { message -> /* handle inbound data; runs on client's dispatch thread */ }
+client.send("hello")
+client.sendKeepAlive()   // call on a ~20s idle cadence
+// ...
+client.stop()
+```
+
+Inbound `KA` datagrams (a server may send one via `Connection.keepAlive()`) are dropped
+automatically and never reach the `start` callback.
 
 ## Build & test
 

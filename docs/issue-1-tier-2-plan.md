@@ -857,8 +857,9 @@ behavioural rewrite in commit 2 diffs cleanly.
   shows a slow consumer starving others.
 - An owned-loop keepalive scheduler on top of the one-shot `keepAlive()` — only
   if a caller without its own scheduler needs it.
-- A client-side `Connection` / `MultiConnectionUDPClient` type in WebTools so the
-  downstream repos stop hand-rolling the socket — larger, separate work.
+- [x] A client-side `Connection` / `MultiConnectionUDPClient` type in WebTools so
+  the downstream repos stop hand-rolling the socket — shipped by
+  [`docs/issue-3-public-client-handshake-plan.md`](./issue-3-public-client-handshake-plan.md).
 - STUN/TURN/relay for a server behind symmetric NAT — separate, much larger; not
   tracked by issue #1.
 - A `4b` e2e harness for the other WebTools components (`Connector`, `WebViewer`)

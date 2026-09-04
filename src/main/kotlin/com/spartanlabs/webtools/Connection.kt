@@ -41,6 +41,11 @@ interface Connection {
 
     /**
      * Sends a message to [peer] over the server's shared socket.
+     *
+     * This is how a subclass sends to one specific client over the shared channel -
+     * key connections by name or [peer] and call [push] on the one you want;
+     * [MultiConnectionUDPServer.pushToAll] is the broadcast-to-everyone path, not
+     * the only per-client path.
      * @param message the text to send
      * @return [Result.success] if the message was sent, or the failure that prevented it
      */
