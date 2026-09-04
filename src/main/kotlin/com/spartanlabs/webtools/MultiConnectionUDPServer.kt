@@ -5,12 +5,11 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetSocketAddress
 import java.net.SocketException
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * A UDP server that accepts handshakes from any number of clients on a single
  * well-known "common" port, and hands each accepted client off to its own
- * dedicated [UDPConnection] on a private port pair.
+ * dedicated [Connection] on a private port pair.
  *
  * A client registers itself by sending an `Iam <name>` message to the common
  * listen port ([COMMON_LISTEN_PORT]). The server replies - from that same socket,
@@ -22,8 +21,12 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * This class is abstract because it does not itself decide what to do once a client
  * has finished the handshake - subclasses must implement [onClientConnect] to react
- * to newly registered connections (e.g. by calling [UDPConnection.actuate] on them,
+ * to newly registered connections (e.g. by calling [Connection.actuate] on them,
  * tracking them, notifying other parts of the application, etc.).
+ *
+ * The handshake rules themselves live in [HandshakeProtocol] (pure) and
+ * [HandshakeCoordinator] (the state machine); this class only binds them to a
+ * real socket and a real [UDPConnection] factory.
  *
  * ### Known limitation
  * The per-client dedicated [UDPConnection] still binds a fixed port pair and the
@@ -48,24 +51,21 @@ abstract class MultiConnectionUDPServer {
     private val commonSocket = DatagramSocket(COMMON_LISTEN_PORT)
 
     /**
-     * All clients that have completed the `Iam` handshake, in registration order.
-     * Copy-on-write because it is appended to from the listener thread while
-     * [start], [pushToAll] and [stop] read it from caller threads.
+     * The handshake state machine, wired to this server's real socket (for replies)
+     * and a real [UDPConnection] factory (for accepted clients).
      */
-    private val registrations = CopyOnWriteArrayList<Registration>()
-
-    /**
-     * A registered client: its dedicated [connection] plus the exact [origin]
-     * (address and source port) its `Iam` datagram arrived from. Every
-     * common-channel datagram addressed to this client is sent to [origin] so it
-     * rides the NAT binding the handshake opened.
-     */
-    private class Registration(val connection: UDPConnection, val origin: InetSocketAddress)
+    private val coordinator = HandshakeCoordinator(
+        newConnection = { name, origin, ports ->
+            UDPConnection(name, origin.address, ports.sendPort, ports.receivePort)
+        },
+        reply = ::replyToOrigin,
+        onRegistered = ::onClientConnect,
+    )
 
     /**
      * Starts the common listener thread, which handles incoming `Iam` handshake
-     * messages by registering a new [UDPConnection] and replying with the
-     * dedicated ports the client should use.
+     * messages by registering a new [Connection] and replying with the dedicated
+     * ports the client should use.
      */
     init {
         log.info("Starting common listener thread on port {}", commonSocket.localPort)
@@ -93,7 +93,7 @@ abstract class MultiConnectionUDPServer {
                 val text = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
                 log.trace("The message is {}", text)
                 origin to text.split(' ')
-            }.flatMap { (origin, message) -> handleHandshake(origin, message) }
+            }.flatMap { (origin, tokens) -> coordinator.handle(origin, tokens) }
                 .onFailure { cause ->
                     if (cause is SocketException) {
                         log.debug("Common listen socket was closed, stopping listener")
@@ -106,82 +106,16 @@ abstract class MultiConnectionUDPServer {
     }
 
     /**
-     * Handles one already-split message received from [origin] on the common listen
-     * port. Messages whose verb is not recognised are ignored rather than treated
-     * as failures.
-     *
-     * @param origin the address and port the datagram was received from - where the
-     * reply is sent
-     * @param message the whitespace-split datagram text
-     * @return [Result.success] if the message was handled (or harmlessly ignored),
-     * or [Result.failure] if a recognised message was malformed or its reply could
-     * not be delivered
-     */
-    private fun handleHandshake(origin: InetSocketAddress, message: List<String>): Result<Unit> =
-        when (message.firstOrNull()) {
-            HANDSHAKE_VERB -> runCatching {
-                log.info("Normal Communication Detected: {}", HANDSHAKE_VERB)
-                require(message.size >= HANDSHAKE_MIN_TOKENS) {
-                    "Expected '$HANDSHAKE_VERB <name>' but got ${message.size} token(s)"
-                }
-                // Any token past the name is a leftover client-claimed address; it is
-                // deliberately ignored now that the origin comes from the datagram itself.
-                if (message.size > HANDSHAKE_MIN_TOKENS) {
-                    log.debug("Ignoring {} extra handshake token(s)", message.size - HANDSHAKE_MIN_TOKENS)
-                }
-                message[HANDSHAKE_NAME_INDEX]
-            }.flatMap { name ->
-                registrationFor(origin)?.let { existing ->
-                    // A retransmitted Iam from an already-registered origin must not burn a
-                    // second dedicated port pair - just repeat the reply it already earned.
-                    log.info("Repeating handshake reply for already-registered origin {}", origin)
-                    replyToOrigin(txrxonReply(existing.connection), origin)
-                } ?: run {
-                    val connection = addConnection(name, origin)
-                    replyToOrigin(txrxonReply(connection), origin).map {
-                        log.debug("Notifying subclass of new connection '{}'", connection.name)
-                        onClientConnect(connection)
-                    }
-                }
-            }
-
-            else -> Result.success(Unit).also { log.trace("Ignoring unrecognised message: {}", message) }
-        }
-
-    /** Builds the `TXRXON <sendPort> <receivePort>` reply body for [connection]. */
-    private fun txrxonReply(connection: UDPConnection): String =
-        "$HANDSHAKE_REPLY_VERB ${connection.sendPort} ${connection.receivePort}"
-
-    /** The existing registration whose origin matches [origin], or `null` if this is a new client. */
-    private fun registrationFor(origin: InetSocketAddress): Registration? =
-        registrations.firstOrNull { it.origin == origin }
-
-    /**
-     * Registers a new [UDPConnection] for a client that has just completed the
-     * `Iam` handshake, allocating it a fresh, unused pair of dedicated ports
-     * below [DEDICATED_PORT_BASE].
-     * @param name the client-supplied name from its `Iam` message
-     * @param origin the address and port the client's handshake was received from
-     * @return the newly created and registered connection
-     */
-    private fun addConnection(name: String, origin: InetSocketAddress): UDPConnection {
-        val portOffset = registrations.size * 2 + 2
-        log.info("Adding a new connection '{}' for {}", name, origin)
-        return UDPConnection(name, origin.address, DEDICATED_PORT_BASE - portOffset, DEDICATED_PORT_BASE - portOffset - 1)
-            .also { connection -> registrations.add(Registration(connection, origin)) }
-    }
-
-    /**
      * Called once a client has completed the `Iam` handshake and its dedicated
-     * [UDPConnection] has been registered and told which ports to use. Subclasses
+     * [Connection] has been registered and told which ports to use. Subclasses
      * decide what to do with the newly connected client here - for example calling
-     * [UDPConnection.actuate] to start listening on it, or storing a reference to it.
+     * [Connection.actuate] to start listening on it, or storing a reference to it.
      *
      * Invoked on the common listener thread, so implementations should return quickly
      * and hand off any lengthy work to another thread.
      * @param connection the connection that was just registered
      */
-    abstract fun onClientConnect(connection: UDPConnection)
+    abstract fun onClientConnect(connection: Connection)
 
     /**
      * Starts listening on every currently-registered connection's dedicated port pair.
@@ -190,8 +124,8 @@ abstract class MultiConnectionUDPServer {
      * @return [Result.success] if every connection was actuated, or the first failure encountered
      */
     fun start(onClientMessage: (String) -> Unit): Result<Unit> {
-        log.info("Starting {} connection(s)", registrations.size)
-        return registrations.fold(Result.success(Unit)) { started, registration ->
+        log.info("Starting {} connection(s)", coordinator.size)
+        return coordinator.snapshot().fold(Result.success(Unit)) { started, registration ->
             started.flatMap { registration.connection.actuate(onClientMessage) }
         }
     }
@@ -225,14 +159,14 @@ abstract class MultiConnectionUDPServer {
      * @return [Result.success] if the message reached every client, or the first failure encountered
      */
     fun pushToAll(message: String): Result<Unit> {
-        log.info("Pushing message to all {} connection(s)", registrations.size)
-        return registrations.fold(Result.success(Unit)) { pushed, registration ->
+        log.info("Pushing message to all {} connection(s)", coordinator.size)
+        return coordinator.snapshot().fold(Result.success(Unit)) { pushed, registration ->
             pushed.flatMap { replyToOrigin(message, registration.origin) }
         }
     }
 
     /**
-     * Shuts the server down: terminates every registered [UDPConnection] (releasing
+     * Shuts the server down: terminates every registered [Connection] (releasing
      * their dedicated ports), then stops the common listener thread and releases the
      * common socket so the server can no longer accept new handshakes.
      *
@@ -243,8 +177,8 @@ abstract class MultiConnectionUDPServer {
      * @return [Result.success] if every step succeeded, or the first failure encountered
      */
     fun stop(): Result<Unit> {
-        log.info("Stopping server: terminating {} connection(s)", registrations.size)
-        val connectionsTerminated = registrations.fold(Result.success(Unit)) { terminated, registration ->
+        log.info("Stopping server: terminating {} connection(s)", coordinator.size)
+        val connectionsTerminated = coordinator.snapshot().fold(Result.success(Unit)) { terminated, registration ->
             // Each connection is terminated regardless of its predecessors' outcome; only
             // the reported Result short-circuits, not the release of the ports.
             registration.connection.terminate().let { outcome -> terminated.flatMap { outcome } }
@@ -272,25 +206,6 @@ abstract class MultiConnectionUDPServer {
          * server's `TXRXON` reply and [pushToAll] broadcasts are sent back out from.
          */
         const val COMMON_LISTEN_PORT = 9998
-
-        /**
-         * Ceiling below which each connection's dedicated `(send, receive)` port
-         * pair is allocated: registration *n* (zero-based) gets
-         * `DEDICATED_PORT_BASE - 2n - 2` and `DEDICATED_PORT_BASE - 2n - 3`.
-         */
-        private const val DEDICATED_PORT_BASE = 9999
-
-        /** The verb that opens a client handshake. */
-        private const val HANDSHAKE_VERB = "Iam"
-
-        /** The verb of the server's handshake reply. */
-        private const val HANDSHAKE_REPLY_VERB = "TXRXON"
-
-        /** Index of the client-supplied name within a split handshake message. */
-        private const val HANDSHAKE_NAME_INDEX = 1
-
-        /** Fewest tokens a valid handshake can carry: the verb plus the name. */
-        private const val HANDSHAKE_MIN_TOKENS = 2
 
         /** Size of the reusable buffer incoming datagrams are read into. */
         private const val RECEIVE_BUFFER_BYTES = 1024

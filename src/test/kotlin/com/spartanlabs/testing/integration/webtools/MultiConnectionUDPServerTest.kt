@@ -1,7 +1,8 @@
 package com.spartanlabs.testing.integration.webtools
 
+import com.spartanlabs.webtools.Connection
 import com.spartanlabs.webtools.MultiConnectionUDPServer
-import com.spartanlabs.webtools.UDPConnection
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
@@ -39,7 +40,7 @@ class MultiConnectionUDPServerTest {
     // Connections handed to onClientConnect(), in the order they were registered.
     // Backed by a CopyOnWriteArrayList since it's written from the server's listener
     // thread and read from the test thread.
-    private val connectedClients = CopyOnWriteArrayList<UDPConnection>()
+    private val connectedClients = CopyOnWriteArrayList<Connection>()
 
     // MultiConnectionUDPServer is abstract, so tests supply their own onClientConnect
     // implementation - here it just records the connection for later assertions.
@@ -47,7 +48,7 @@ class MultiConnectionUDPServerTest {
     // only a single instance for the whole test class to avoid port conflicts between
     // test methods.
     private val server = object : MultiConnectionUDPServer() {
-        override fun onClientConnect(connection: UDPConnection) {
+        override fun onClientConnect(connection: Connection) {
             log.debug("Test recorded onClientConnect for '{}'", connection.name)
             connectedClients.add(connection)
         }
@@ -65,6 +66,18 @@ class MultiConnectionUDPServerTest {
         val reply = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
         client.receive(reply)
         return String(reply.data, 0, reply.length, Charsets.UTF_8).trim()
+    }
+
+    /** Sends [payload] and asserts the server sends nothing back within [NO_REPLY_TIMEOUT_MILLIS]. */
+    private fun assertNoReplyTo(payload: String) {
+        DatagramSocket().use { client ->
+            val out = payload.toByteArray(Charsets.UTF_8)
+            client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+            client.soTimeout = NO_REPLY_TIMEOUT_MILLIS
+            assertFailsWith<SocketTimeoutException>("payload \"$payload\" must get no reply") {
+                client.receive(DatagramPacket(ByteArray(64), 64))
+            }
+        }
     }
 
     @Test
@@ -121,7 +134,50 @@ class MultiConnectionUDPServerTest {
 
     @Test
     @Order(4)
-    fun `pushToAll delivers to each client's learned handshake origin`() {
+    fun `a retransmitted Iam from the same origin repeats the ports and does not re-register`() {
+        log.info("Verifying handshake retransmit is idempotent")
+        val before = connectedClients.size
+
+        DatagramSocket().use { client ->
+            val first = handshakeFrom(client, "Iam repeatclient")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+            assertEquals(before + 1, connectedClients.size)
+
+            // Same socket -> same source port -> same origin as far as the server is concerned.
+            val second = handshakeFrom(client, "Iam repeatclient")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+            assertEquals(first, second, "A retransmit must get the same TXRXON ports")
+            assertEquals(before + 1, connectedClients.size, "A retransmit must not register a second connection")
+        }
+    }
+
+    @Test
+    @Order(5)
+    fun `distinct clients get disjoint dedicated port pairs`() {
+        log.info("Verifying dedicated port pairs never overlap between clients")
+
+        DatagramSocket().use { a ->
+            DatagramSocket().use { b ->
+                val replyA = handshakeFrom(a, "Iam clientA").split(' ')
+                val replyB = handshakeFrom(b, "Iam clientB").split(' ')
+                val portsA = setOf(replyA[1].toInt(), replyA[2].toInt())
+                val portsB = setOf(replyB[1].toInt(), replyB[2].toInt())
+
+                assertEquals(2, portsA.size, "clientA's send/receive ports must differ: $portsA")
+                assertEquals(2, portsB.size, "clientB's send/receive ports must differ: $portsB")
+                assertEquals(
+                    emptySet(),
+                    portsA intersect portsB,
+                    "clientA $portsA and clientB $portsB must not share a port",
+                )
+            }
+        }
+    }
+
+    @Test
+    @Order(6)
+    fun `pushToAll delivers to a client's learned handshake origin`() {
         log.info("Verifying pushToAll reaches the socket the handshake came from")
 
         DatagramSocket().use { client ->
@@ -136,19 +192,12 @@ class MultiConnectionUDPServerTest {
     }
 
     @Test
-    @Order(5)
+    @Order(7)
     fun `a malformed Iam with no name is rejected without wedging the listener`() {
         log.info("Verifying a nameless Iam neither registers nor kills the server")
         val before = connectedClients.size
 
-        DatagramSocket().use { client ->
-            val out = "Iam".toByteArray(Charsets.UTF_8)
-            client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-            client.soTimeout = NO_REPLY_TIMEOUT_MILLIS
-            assertFailsWith<SocketTimeoutException>("A malformed handshake must not get a reply") {
-                client.receive(DatagramPacket(ByteArray(64), 64))
-            }
-        }
+        assertNoReplyTo("Iam")
         Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
         assertEquals(before, connectedClients.size, "A malformed handshake must not register a connection")
 
@@ -159,21 +208,55 @@ class MultiConnectionUDPServerTest {
     }
 
     @Test
-    @Order(6)
+    @Order(8)
+    fun `empty, whitespace and unrecognised-verb datagrams are ignored`() {
+        log.info("Verifying non-handshake datagrams get no reply and no registration")
+        val before = connectedClients.size
+
+        listOf("", "   ", "HELLO world", "TXRXON 1 2").forEach(::assertNoReplyTo)
+
+        Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+        assertEquals(before, connectedClients.size)
+        DatagramSocket().use { recovered ->
+            assertTrue(handshakeFrom(recovered, "Iam afterjunk").startsWith("$HANDSHAKE_REPLY_VERB "))
+        }
+    }
+
+    @Test
+    @Order(9)
+    fun `an oversized Iam datagram does not wedge the listener`() {
+        log.info("Verifying an over-buffer datagram is survivable")
+
+        DatagramSocket().use { client ->
+            // Larger than the server's receive buffer; UDP truncates rather than erroring.
+            val oversized = ("Iam " + "z".repeat(4096)).toByteArray(Charsets.UTF_8)
+            client.send(
+                DatagramPacket(oversized, oversized.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT),
+            )
+        }
+        Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+        DatagramSocket().use { recovered ->
+            assertTrue(handshakeFrom(recovered, "Iam afteroversized").startsWith("$HANDSHAKE_REPLY_VERB "))
+        }
+    }
+
+    @Test
+    @Order(20)
     fun `stop terminates connections and closes the common socket`() {
         log.info("Verifying stop() shuts the server down cleanly")
         assertTrue(server.stop().isSuccess, "stop() should report success")
 
         // After stopping, the common socket is closed, so a fresh handshake gets no reply.
-        DatagramSocket().use { client ->
-            val out = "Iam clientAfterStop".toByteArray(Charsets.UTF_8)
-            client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-            client.soTimeout = NO_REPLY_TIMEOUT_MILLIS
-            assertFailsWith<SocketTimeoutException>("Expected no reply once the server has stopped") {
-                client.receive(DatagramPacket(ByteArray(1024), 1024))
-            }
-            log.debug("Confirmed no reply was received after stop()")
-        }
+        assertNoReplyTo("Iam clientAfterStop")
+        log.debug("Confirmed no reply was received after stop()")
+    }
+
+    @AfterAll
+    fun releaseCommonPort() {
+        // Belt-and-braces: if the ordered stop() test was filtered or failed, still free
+        // port 9998 so a later test class binding the same port is not blocked.
+        runCatching { server.stop() }
     }
 
     private companion object {

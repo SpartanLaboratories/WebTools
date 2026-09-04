@@ -26,8 +26,9 @@ Requires JDK 11 or newer. Built with Kotlin 2.2.
 | `WebViewer` | Headless-Chrome screenshot utility - `screenshot(url)` returns a `BufferedImage`. |
 | `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
 | `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop. |
-| `UDPConnection` | One named, dedicated UDP connection to a peer, backed by a `UDPSendReceiveServer`. |
-| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `UDPConnection`. Abstract - subclass and implement `onClientConnect`. |
+| `Connection` | Interface for one named, dedicated connection to a peer (`actuate` / `push` / `terminate`). |
+| `UDPConnection` | The production `Connection`, backed by a `UDPSendReceiveServer`. |
+| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract - subclass and implement `onClientConnect`. |
 
 ## UDP handshake protocol
 
@@ -53,12 +54,16 @@ Full data-path traversal is tracked in
 ## Build & test
 
 ```sh
-./gradlew build          # compile + full test suite
-./gradlew test           # every test level
-./gradlew componentTest  # Level 2 only - isolated component behaviour
-./gradlew integrationTest # Level 3 only - real sockets / external interfaces
+./gradlew build              # compile + full test suite
+./gradlew test               # every test level, one JVM
+./gradlew gatingTest         # Level 1  - fast pre-commit checks
+./gradlew componentTest      # Level 2  - isolated component behaviour
+./gradlew integrationTest    # Level 3  - real sockets / external interfaces
+./gradlew deterministicTest  # Level 4a - pure input->output mappings
+./gradlew nonfunctionalTest  # Level 4c - robustness / security properties
+./gradlew uatTest            # Level 5  - manual acceptance (mostly @Disabled)
 ```
 
 Tests are organised by the project's 5-level testing hierarchy under
-`src/test/kotlin/com/spartanlabs/testing/<level>/` and tagged (`component`, `integration`)
-so a level can be run or gated on its own.
+`src/test/kotlin/com/spartanlabs/testing/<level>/` and JUnit-tagged, so any level can be run
+or gated on its own. Shared fixtures live under `testing/support/`.
