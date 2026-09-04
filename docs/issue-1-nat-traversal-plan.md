@@ -66,7 +66,12 @@ worthwhile as an incremental commit toward Tier 2.
 
 ## 3. Tier 2 — real NAT traversal (choose one)
 
-### Option B1 — single-socket multiplex  *(recommended)*
+**Decision: Option B1 (single-socket multiplex) was chosen and implemented.** See
+[`issue-1-tier-2-plan.md`](./issue-1-tier-2-plan.md) for the full design and
+file-by-file breakdown. The handshake reply landed as the single token
+`REGISTERED` (not the `OK`/token placeholder sketched below). Shipped as `2.0.0c`.
+
+### Option B1 — single-socket multiplex  *(chosen, implemented)*
 
 - The server owns **one** `DatagramSocket` (the common port). All clients share it.
 - Connections are keyed by source `(InetAddress, port)` in a map.
@@ -118,6 +123,8 @@ call sites before implementation.
    Published to Maven Central as `2.0.0b`.
 2. Coordinate the client-repo change (`Iam <name>` + parse bare `TXRXON` from the send
    socket) in `MyGameTools` / `MyGameServer`.
-3. Decide Tier 2 B1 vs B2.
-4. Land Tier 2 refactor + tests.
-5. Tag 2.0.0.
+3. ~~Decide Tier 2 B1 vs B2.~~ **Done** — B1 (see `issue-1-tier-2-plan.md`).
+4. ~~Land Tier 2 refactor + tests.~~ **Done** — `2.0.0c`, single-socket multiplex,
+   reply token `REGISTERED`, `KA` keepalive, `e2e` test level added.
+5. Tag 2.0.0 — **pending** downstream (`MyGameTools` / `MyGameServer`) integration
+   on `2.0.0c` and cross-NAT UAT (`issue-1-tier-2-uat.md`) sign-off.

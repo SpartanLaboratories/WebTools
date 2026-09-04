@@ -1,11 +1,10 @@
 package com.spartanlabs.testing.deterministic.webtools
 
 import com.spartanlabs.webtools.HandshakeProtocol
-import com.spartanlabs.webtools.HandshakeProtocol.PortPair
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -63,50 +62,35 @@ class HandshakeProtocolTest {
         assertEquals(0, HandshakeProtocol.extraTokenCount(emptyList()))
     }
 
-    // --- portPairFor ---
+    // --- reply / keepalive tokens ---
 
     @Test
-    fun `portPairFor maps the first indices to the documented pairs`() {
-        assertEquals(PortPair(9997, 9996), HandshakeProtocol.portPairFor(0))
-        assertEquals(PortPair(9995, 9994), HandshakeProtocol.portPairFor(1))
-        assertEquals(PortPair(9993, 9992), HandshakeProtocol.portPairFor(2))
+    fun `REGISTERED_REPLY and KEEPALIVE_TOKEN are the exact literals`() {
+        assertEquals("REGISTERED", HandshakeProtocol.REGISTERED_REPLY)
+        assertEquals("KA", HandshakeProtocol.KEEPALIVE_TOKEN)
     }
 
+    // --- isHandshake ---
+
     @Test
-    fun `portPairFor send is always one above receive`() {
-        repeat(50) { index ->
-            val pair = HandshakeProtocol.portPairFor(index)
-            assertEquals(pair.receivePort + 1, pair.sendPort, "at index $index")
-        }
+    fun `isHandshake truth table`() {
+        assertTrue(HandshakeProtocol.isHandshake(listOf("Iam", "x")))
+        assertTrue(HandshakeProtocol.isHandshake(listOf("Iam")))
+        assertFalse(HandshakeProtocol.isHandshake(listOf("iam", "x")))
+        assertFalse(HandshakeProtocol.isHandshake(listOf("")))
+        assertFalse(HandshakeProtocol.isHandshake(listOf("HELLO")))
+        assertFalse(HandshakeProtocol.isHandshake(listOf("KA")))
+        assertFalse(HandshakeProtocol.isHandshake(emptyList()))
     }
 
-    @Test
-    fun `portPairFor never reuses a port across the first 100 indices`() {
-        val seen = mutableSetOf<Int>()
-        repeat(100) { index ->
-            val pair = HandshakeProtocol.portPairFor(index)
-            assertTrue(seen.add(pair.sendPort), "sendPort ${pair.sendPort} reused at index $index")
-            assertTrue(seen.add(pair.receivePort), "receivePort ${pair.receivePort} reused at index $index")
-        }
-    }
+    // --- isKeepAlive ---
 
     @Test
-    fun `portPairFor rejects a negative index`() {
-        assertFailsWith<IllegalArgumentException> { HandshakeProtocol.portPairFor(-1) }
-    }
-
-    // --- txrxonReply ---
-
-    @Test
-    fun `txrxonReply renders TXRXON send receive`() {
-        assertEquals("TXRXON 5000 5001", HandshakeProtocol.txrxonReply(PortPair(5000, 5001)))
-    }
-
-    @Test
-    fun `the loose txrxonReply overload matches the PortPair form`() {
-        assertEquals(
-            HandshakeProtocol.txrxonReply(PortPair(1, 2)),
-            HandshakeProtocol.txrxonReply(1, 2),
-        )
+    fun `isKeepAlive truth table`() {
+        assertTrue(HandshakeProtocol.isKeepAlive("KA"))
+        assertFalse(HandshakeProtocol.isKeepAlive("ka"))
+        assertFalse(HandshakeProtocol.isKeepAlive("KA x"))
+        assertFalse(HandshakeProtocol.isKeepAlive(""))
+        assertFalse(HandshakeProtocol.isKeepAlive("Iam x"))
     }
 }

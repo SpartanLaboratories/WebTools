@@ -4,6 +4,7 @@ import com.spartanlabs.webtools.HandshakeProtocol
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 // Level 1 - a fast pre-commit smoke over the handshake rules. No I/O, sub-millisecond.
@@ -22,17 +23,20 @@ class HandshakeProtocolGatingTest {
     }
 
     @Test
-    fun `consecutive connections get non-overlapping ports`() {
-        val first = HandshakeProtocol.portPairFor(0)
-        val second = HandshakeProtocol.portPairFor(1)
-        assertEquals(
-            emptySet(),
-            setOf(first.sendPort, first.receivePort) intersect setOf(second.sendPort, second.receivePort),
-        )
+    fun `the handshake reply is the single token REGISTERED`() {
+        assertEquals("REGISTERED", HandshakeProtocol.REGISTERED_REPLY)
     }
 
     @Test
-    fun `the reply body has the TXRXON shape`() {
-        assertEquals("TXRXON 9997 9996", HandshakeProtocol.txrxonReply(HandshakeProtocol.portPairFor(0)))
+    fun `isHandshake matches only an Iam-led token list`() {
+        assertTrue(HandshakeProtocol.isHandshake(listOf("Iam", "alice")))
+        assertFalse(HandshakeProtocol.isHandshake(listOf("HELLO", "there")))
+        assertFalse(HandshakeProtocol.isHandshake(emptyList()))
+    }
+
+    @Test
+    fun `isKeepAlive matches only the bare KA token`() {
+        assertTrue(HandshakeProtocol.isKeepAlive("KA"))
+        assertFalse(HandshakeProtocol.isKeepAlive("Iam x"))
     }
 }

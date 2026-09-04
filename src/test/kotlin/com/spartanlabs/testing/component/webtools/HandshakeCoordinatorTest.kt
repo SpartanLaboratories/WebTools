@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.component.webtools
 
 import com.spartanlabs.testing.support.webtools.FakeConnection
+import com.spartanlabs.webtools.ClientChannel
 import com.spartanlabs.webtools.HandshakeCoordinator
 import com.spartanlabs.webtools.HandshakeProtocol
 import org.junit.jupiter.api.Tag
@@ -8,10 +9,12 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-// Level 2 - the handshake state machine in isolation. Its three collaborators (connection
-// factory, reply sink, registration callback) are recording fakes, so no socket is bound.
+// Level 2 - the handshake state machine + inbound router in isolation. Its collaborators
+// (connection factory, byte sink, registration callback, dispatch) are recording fakes and
+// the dispatch is synchronous, so no socket or thread is involved.
 @Tag("component")
 class HandshakeCoordinatorTest {
 
@@ -19,127 +22,167 @@ class HandshakeCoordinatorTest {
     private val originA = InetSocketAddress(loopback, 40001)
     private val originB = InetSocketAddress(loopback, 40002)
 
-    private val created = mutableListOf<Triple<String, InetSocketAddress, HandshakeProtocol.PortPair>>()
+    private val created = mutableListOf<Pair<String, InetSocketAddress>>()
     private val createdConnections = mutableListOf<FakeConnection>()
-    private val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+    private val createdChannels = mutableListOf<ClientChannel>()
+    private val sent = mutableListOf<Pair<String, InetSocketAddress>>()
     private val registeredNames = mutableListOf<String>()
-    private var replyResult: Result<Unit> = Result.success(Unit)
+    private var sendResult: Result<Unit> = Result.success(Unit)
 
-    // Overridable so a test can hand back connections whose actuate()/terminate() fail.
-    private var connectionFactory: (name: String, ports: HandshakeProtocol.PortPair) -> FakeConnection =
-        { name, ports -> FakeConnection(name, ports.sendPort, ports.receivePort) }
+    private var connectionFactory: (name: String, peer: InetSocketAddress) -> FakeConnection =
+        { name, peer -> FakeConnection(name, peer) }
 
     private fun newCoordinator() = HandshakeCoordinator(
-        newConnection = { name, origin, ports ->
-            created += Triple(name, origin, ports)
-            connectionFactory(name, ports).also { createdConnections += it }
+        newConnection = { name, peer, channel ->
+            created += name to peer
+            createdChannels += channel
+            connectionFactory(name, peer).also { createdConnections += it }
         },
-        reply = { body, origin ->
-            replies += body to origin
-            replyResult
+        sender = { bytes, to ->
+            sent += String(bytes, Charsets.UTF_8) to to
+            sendResult
         },
         onRegistered = { registeredNames += it.name },
+        dispatch = { it() },
     )
 
-    private fun iam(name: String, vararg extra: String) = listOf("Iam", name, *extra)
-
-    /** Registers [count] clients on distinct origins so the fan-out methods have something to iterate. */
     private fun HandshakeCoordinator.registerClients(count: Int) {
-        repeat(count) { handle(InetSocketAddress(loopback, 41000 + it), iam("client$it")) }
+        repeat(count) { accept(InetSocketAddress(loopback, 41000 + it), "Iam client$it") }
     }
 
     @Test
-    fun `a message whose verb is not Iam is ignored with no side effects`() {
+    fun `a first Iam registers, replies REGISTERED to the origin, and notifies`() {
         val coordinator = newCoordinator()
 
-        assertTrue(coordinator.handle(originA, listOf("HELLO", "there")).isSuccess)
+        assertTrue(coordinator.accept(originA, "Iam alice").isSuccess)
 
-        assertEquals(0, coordinator.size)
-        assertTrue(created.isEmpty())
-        assertTrue(replies.isEmpty())
-        assertTrue(registeredNames.isEmpty())
-    }
-
-    @Test
-    fun `a nameless Iam fails and registers nothing`() {
-        val coordinator = newCoordinator()
-
-        assertTrue(coordinator.handle(originA, listOf("Iam")).isFailure)
-
-        assertEquals(0, coordinator.size)
-        assertTrue(created.isEmpty())
-        assertTrue(replies.isEmpty())
-        assertTrue(registeredNames.isEmpty())
-    }
-
-    @Test
-    fun `a first Iam allocates the first port pair, replies, and notifies`() {
-        val coordinator = newCoordinator()
-
-        assertTrue(coordinator.handle(originA, iam("alice")).isSuccess)
-
-        val expectedPorts = HandshakeProtocol.portPairFor(0)
         assertEquals(1, coordinator.size)
-        assertEquals(Triple("alice", originA, expectedPorts), created.single())
-        assertEquals(HandshakeProtocol.txrxonReply(expectedPorts) to originA, replies.single())
+        assertEquals("alice" to originA, created.single())
+        assertEquals("REGISTERED" to originA, sent.single())
         assertEquals(listOf("alice"), registeredNames)
     }
 
     @Test
-    fun `a retransmit from the same origin repeats the reply and does not re-register`() {
+    fun `newConnection is passed the coordinator itself as the ClientChannel`() {
         val coordinator = newCoordinator()
 
-        coordinator.handle(originA, iam("alice"))
-        coordinator.handle(originA, iam("alice"))
+        coordinator.accept(originA, "Iam alice")
+
+        assertEquals(coordinator, createdChannels.single())
+    }
+
+    @Test
+    fun `a retransmit from the same origin repeats REGISTERED and does not re-register`() {
+        val coordinator = newCoordinator()
+
+        coordinator.accept(originA, "Iam alice")
+        coordinator.accept(originA, "Iam alice")
 
         assertEquals(1, coordinator.size)
         assertEquals(1, created.size)
         assertEquals(listOf("alice"), registeredNames, "onRegistered must fire once, not per retransmit")
-        assertEquals(2, replies.size)
-        assertEquals(replies[0], replies[1], "the retransmit reply must be identical")
-    }
-
-    @Test
-    fun `a second distinct origin gets the next port pair`() {
-        val coordinator = newCoordinator()
-
-        coordinator.handle(originA, iam("alice"))
-        coordinator.handle(originB, iam("bob"))
-
-        assertEquals(2, coordinator.size)
-        assertEquals(HandshakeProtocol.portPairFor(0), created[0].third)
-        assertEquals(HandshakeProtocol.portPairFor(1), created[1].third)
-        assertEquals(listOf("alice", "bob"), registeredNames)
+        assertEquals(listOf("REGISTERED" to originA, "REGISTERED" to originA), sent)
     }
 
     @Test
     fun `tokens after the name are ignored`() {
         val coordinator = newCoordinator()
 
-        assertTrue(coordinator.handle(originA, iam("carol", "10.0.0.9", "junk")).isSuccess)
+        assertTrue(coordinator.accept(originA, "Iam carol 10.0.0.9 junk").isSuccess)
 
         assertEquals("carol", created.single().first)
         assertEquals(1, coordinator.size)
     }
 
     @Test
+    fun `a nameless Iam fails and registers nothing`() {
+        val coordinator = newCoordinator()
+
+        assertTrue(coordinator.accept(originA, "Iam").isFailure)
+
+        assertEquals(0, coordinator.size)
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
     fun `when the reply fails the client is still registered but onRegistered is not called`() {
         val coordinator = newCoordinator()
-        replyResult = Result.failure(RuntimeException("send failed"))
+        sendResult = Result.failure(RuntimeException("send failed"))
 
-        assertTrue(coordinator.handle(originA, iam("dave")).isFailure)
+        assertTrue(coordinator.accept(originA, "Iam dave").isFailure)
 
-        assertEquals(1, coordinator.size, "the connection is registered before the reply is attempted")
+        assertEquals(1, coordinator.size)
         assertEquals(1, created.size)
-        assertTrue(registeredNames.isEmpty(), "onRegistered runs only after a successful reply")
+        assertTrue(registeredNames.isEmpty(), "onRegistered runs only after a successful send")
+    }
+
+    @Test
+    fun `accept routes application data to the bound handler via dispatch`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val received = mutableListOf<String>()
+        coordinator.bind(originA, received::add)
+
+        assertTrue(coordinator.accept(originA, "hello world").isSuccess)
+
+        assertEquals(listOf("hello world"), received)
+    }
+
+    @Test
+    fun `accept drops a KA datagram - no dispatch, success`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val received = mutableListOf<String>()
+        coordinator.bind(originA, received::add)
+
+        assertTrue(coordinator.accept(originA, HandshakeProtocol.KEEPALIVE_TOKEN).isSuccess)
+
+        assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `a datagram for an unregistered origin is dropped`() {
+        val coordinator = newCoordinator()
+
+        assertTrue(coordinator.accept(originA, "hello").isSuccess)
+    }
+
+    @Test
+    fun `a datagram for a registered-but-not-actuated origin is dropped`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        assertTrue(coordinator.accept(originA, "hello").isSuccess)
+    }
+
+    @Test
+    fun `a throwing handler does not propagate out of accept`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.bind(originA) { error("boom") }
+
+        assertTrue(coordinator.accept(originA, "hello").isSuccess)
+    }
+
+    @Test
+    fun `bind then unbind toggles delivery`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val received = mutableListOf<String>()
+        coordinator.bind(originA, received::add)
+        coordinator.unbind(originA)
+
+        coordinator.accept(originA, "hello")
+
+        assertTrue(received.isEmpty())
     }
 
     @Test
     fun `snapshot reflects registration order`() {
         val coordinator = newCoordinator()
 
-        coordinator.handle(originA, iam("alice"))
-        coordinator.handle(originB, iam("bob"))
+        coordinator.accept(originA, "Iam alice")
+        coordinator.accept(originB, "Iam bob")
 
         assertEquals(listOf("alice", "bob"), coordinator.snapshot().map { it.connection.name })
     }
@@ -156,11 +199,10 @@ class HandshakeCoordinatorTest {
 
     @Test
     fun `actuateAll reports the first actuation failure`() {
-        connectionFactory = { name, ports ->
+        connectionFactory = { name, peer ->
             FakeConnection(
                 name,
-                ports.sendPort,
-                ports.receivePort,
+                peer,
                 actuateResult = if (name == "client1") Result.failure(RuntimeException("boom")) else Result.success(Unit),
             )
         }
@@ -171,35 +213,31 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `broadcast sends the message to every registered origin`() {
+    fun `broadcast sends the message to every registered peer`() {
         val coordinator = newCoordinator()
         coordinator.registerClients(3)
-        replies.clear() // drop the TXRXON handshake replies
+        sent.clear()
 
         assertTrue(coordinator.broadcast("ping").isSuccess)
 
-        assertEquals(
-            List(3) { "ping" to InetSocketAddress(loopback, 41000 + it) },
-            replies,
-        )
+        assertEquals(List(3) { "ping" to InetSocketAddress(loopback, 41000 + it) }, sent)
     }
 
     @Test
-    fun `broadcast reports the first reply failure`() {
+    fun `broadcast reports the first send failure`() {
         val coordinator = newCoordinator()
         coordinator.registerClients(2)
-        replyResult = Result.failure(RuntimeException("send failed"))
+        sendResult = Result.failure(RuntimeException("send failed"))
 
         assertTrue(coordinator.broadcast("ping").isFailure)
     }
 
     @Test
     fun `terminateAll terminates every connection even when one fails`() {
-        connectionFactory = { name, ports ->
+        connectionFactory = { name, peer ->
             FakeConnection(
                 name,
-                ports.sendPort,
-                ports.receivePort,
+                peer,
                 terminateResult = if (name == "client1") Result.failure(RuntimeException("stuck")) else Result.success(Unit),
             )
         }
@@ -208,10 +246,19 @@ class HandshakeCoordinatorTest {
 
         val outcome = coordinator.terminateAll()
 
-        assertTrue(outcome.isFailure, "the failing connection is reported")
-        assertTrue(
-            createdConnections.all { it.terminateCalls == 1 },
-            "every connection is terminated regardless of an earlier failure",
-        )
+        assertTrue(outcome.isFailure)
+        assertTrue(createdConnections.all { it.terminateCalls == 1 })
+    }
+
+    @Test
+    fun `broadcast targets are never a payload-claimed address`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam spoofer 8.8.8.8")
+        sent.clear()
+
+        coordinator.broadcast("ping")
+
+        assertEquals(listOf("ping" to originA), sent)
+        assertFalse(sent.any { it.second.hostString == "8.8.8.8" })
     }
 }
