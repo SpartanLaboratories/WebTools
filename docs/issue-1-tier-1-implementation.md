@@ -266,6 +266,45 @@ Tier 1's test edits (§2.2) apply on top of the moved file.
 
 ---
 
+## 3a. Concurrency topology
+
+`MultiConnectionUDPServer` has one long-lived daemon thread plus whatever caller
+threads invoke its public API. `commonSocket` is *received* on only by the
+listener thread but *sent* on from any thread; `Registrations` is copy-on-write.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant L as Listener thread
+    participant K as HandshakeCoordinator
+    participant S as commonSocket
+    participant A as App / caller thread
+    participant U as Subclass.onClientConnect
+
+    Note over L: constructed with the server, daemon
+    loop until stop()
+        C->>S: Iam <name>  (UDP)
+        L->>S: receive() -> (origin, tokens)
+        L->>K: handle(origin, tokens)
+        alt new origin
+            K->>K: portPairFor(size); newConnection(...)
+            K->>S: send(TXRXON s r -> origin)
+            S-->>C: TXRXON s r
+            K->>U: onRegistered(connection)
+        else known origin (retransmit)
+            K->>S: send(same TXRXON -> origin)
+            S-->>C: TXRXON s r
+        end
+    end
+
+    A->>K: pushToAll(msg) -> broadcast(msg)
+    K->>S: send(msg -> each origin)   %% concurrent with L's receive()
+    A->>K: stop() -> terminateAll(); close(S)
+    Note over L: receive() throws SocketException -> loop exits
+```
+
+---
+
 ## 4. Verification
 
 - `./gradlew test` — all tests green (Level 1–3 in one run today).

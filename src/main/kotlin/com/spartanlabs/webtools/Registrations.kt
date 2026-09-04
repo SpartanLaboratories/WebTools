@@ -4,10 +4,12 @@ import java.net.InetSocketAddress
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * One client that has completed the `Iam` handshake: its dedicated [connection]
- * plus the exact [origin] (address and source port) its handshake datagram
- * arrived from. Every common-channel datagram to this client is addressed to
- * [origin] so it rides the NAT binding the handshake opened.
+ * One client that has completed the `Iam` handshake.
+ *
+ * @property connection the dedicated connection minted for this client
+ * @property origin the exact address and source port the client's handshake
+ * datagram arrived from; every common-channel datagram to this client is
+ * addressed here so it rides the NAT binding the handshake opened
  */
 internal class Registration(val connection: Connection, val origin: InetSocketAddress)
 
@@ -24,18 +26,25 @@ internal class Registrations {
     /** How many clients are currently registered. */
     val size: Int get() = entries.size
 
-    /** Appends [registration] as the newest entry. */
+    /**
+     * Appends [registration] as the newest entry.
+     * @param registration the completed handshake to record
+     */
     fun add(registration: Registration) {
         entries.add(registration)
     }
 
     /**
-     * The registration whose origin equals [origin] by value, or `null` if this
-     * origin has not completed a handshake.
+     * Looks a client up by its handshake origin.
+     * @param origin the address and source port to match, compared by value
+     * @return the registration for that origin, or `null` if it has not completed a handshake
      */
     fun findByOrigin(origin: InetSocketAddress): Registration? =
         entries.firstOrNull { it.origin == origin }
 
-    /** A stable snapshot of every registration, oldest first. */
+    /**
+     * A stable snapshot of every registration, oldest first.
+     * @return an immutable copy that is unaffected by later [add] calls
+     */
     fun snapshot(): List<Registration> = entries.toList()
 }

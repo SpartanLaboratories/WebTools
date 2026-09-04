@@ -28,6 +28,21 @@ import java.net.SocketException
  * [HandshakeCoordinator] (the state machine); this class only binds them to a
  * real socket and a real [UDPConnection] factory.
  *
+ * ### Construction side effects
+ * Instantiating a subclass **binds the OS UDP port [COMMON_LISTEN_PORT]** and
+ * starts a daemon listener thread. Construction throws [java.net.SocketException]
+ * (typically [java.net.BindException]) if that port is already in use, so only one
+ * instance can exist per JVM/host at a time. Call [stop] to release the port; the
+ * instance is single-use afterwards.
+ *
+ * ### Concurrency
+ * The daemon listener thread runs [HandshakeCoordinator.handle] - and therefore
+ * [onClientConnect] - while caller threads invoke [start], [pushToAll] and [stop].
+ * [commonSocket] is received on only by the listener thread but sent on from any
+ * thread (the JDK allows a concurrent send during a receive); the registration
+ * list is copy-on-write. See the sequence diagram in
+ * `docs/issue-1-tier-1-implementation.md`.
+ *
  * ### Known limitation
  * The per-client dedicated [UDPConnection] still binds a fixed port pair and the
  * server may transmit on it before the client has opened a matching NAT binding,
@@ -120,7 +135,8 @@ abstract class MultiConnectionUDPServer {
     /**
      * Starts listening on every currently-registered connection's dedicated port pair.
      * @param onClientMessage callback invoked with the raw message body whenever any
-     * connection receives a datagram
+     * connection receives a datagram; it runs on that connection's own receive thread,
+     * not the caller's, so it must be thread-safe and return quickly
      * @return [Result.success] if every connection was actuated, or the first failure encountered
      */
     fun start(onClientMessage: (String) -> Unit): Result<Unit> {

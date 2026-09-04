@@ -47,8 +47,10 @@ internal object HandshakeProtocol {
     }
 
     /**
-     * How many tokens past the client name [tokens] carries - all of which are
-     * ignored. Zero for a clean `Iam <name>`; never negative.
+     * How many tokens past the client name a handshake line carries - all of which
+     * are ignored. Zero for a clean `Iam <name>`; never negative.
+     * @param tokens the handshake line split on spaces
+     * @return the count of ignored trailing tokens, `>= 0`
      */
     fun extraTokenCount(tokens: List<String>): Int = (tokens.size - MIN_TOKENS).coerceAtLeast(0)
 
@@ -76,6 +78,11 @@ internal object HandshakeProtocol {
      */
     fun txrxonReply(ports: PortPair): String = "$REPLY_VERB ${ports.sendPort} ${ports.receivePort}"
 
-    /** Renders the reply body from a loose [sendPort] / [receivePort]. */
+    /**
+     * Renders the reply body from a loose send/receive port.
+     * @param sendPort the port the client should send to
+     * @param receivePort the port the client should listen on
+     * @return `TXRXON <sendPort> <receivePort>`
+     */
     fun txrxonReply(sendPort: Int, receivePort: Int): String = txrxonReply(PortPair(sendPort, receivePort))
 }

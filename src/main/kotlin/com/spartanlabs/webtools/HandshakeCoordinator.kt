@@ -29,7 +29,10 @@ internal class HandshakeCoordinator(
     /** How many clients have completed the handshake. */
     val size: Int get() = registrations.size
 
-    /** A stable snapshot of every completed handshake, oldest first. */
+    /**
+     * A stable snapshot of every completed handshake, oldest first.
+     * @return an immutable copy, safe to iterate while new handshakes arrive
+     */
     fun snapshot(): List<Registration> = registrations.snapshot()
 
     /**
@@ -43,6 +46,9 @@ internal class HandshakeCoordinator(
      * that is already registered re-sends its existing reply and does nothing
      * else, so a client retransmit never burns a second port pair.
      *
+     * @param origin the address and source port the datagram was received from -
+     * where every reply for this client is sent
+     * @param tokens the whitespace-split datagram text
      * @return [Result.success] if the message was handled or harmlessly ignored,
      * or [Result.failure] if a recognised handshake was malformed or its reply
      * could not be delivered
@@ -72,6 +78,7 @@ internal class HandshakeCoordinator(
     /**
      * Actuates every registered connection with [onMessage], stopping at the first
      * failure.
+     * @param onMessage the callback each connection invokes for every datagram it receives
      * @return [Result.success] if every connection was actuated, or the first failure
      */
     fun actuateAll(onMessage: (message: String) -> Unit): Result<Unit> =
@@ -80,8 +87,9 @@ internal class HandshakeCoordinator(
         }
 
     /**
-     * Sends [message] to every registered client's handshake origin through the
+     * Sends a message to every registered client's handshake origin through the
      * injected reply sink, stopping at the first failure.
+     * @param message the text to send to every client
      * @return [Result.success] if the message reached every client, or the first failure
      */
     fun broadcast(message: String): Result<Unit> =

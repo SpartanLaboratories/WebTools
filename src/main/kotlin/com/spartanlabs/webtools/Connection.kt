@@ -23,7 +23,8 @@ interface Connection {
 
     /**
      * Begins listening for incoming messages on this connection's receive port.
-     * @param onMessage callback invoked with the decoded text of each message received
+     * @param onMessage callback invoked with the decoded text of each message received;
+     * it runs on this connection's background receive thread, not the caller's
      * @return [Result.success] once the connection is listening, or the failure that prevented it
      */
     fun actuate(onMessage: (message: String) -> Unit): Result<Unit>
