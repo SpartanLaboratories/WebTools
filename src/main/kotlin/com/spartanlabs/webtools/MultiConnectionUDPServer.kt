@@ -125,9 +125,7 @@ abstract class MultiConnectionUDPServer {
      */
     fun start(onClientMessage: (String) -> Unit): Result<Unit> {
         log.info("Starting {} connection(s)", coordinator.size)
-        return coordinator.snapshot().fold(Result.success(Unit)) { started, registration ->
-            started.flatMap { registration.connection.actuate(onClientMessage) }
-        }
+        return coordinator.actuateAll(onClientMessage)
     }
 
     /**
@@ -160,9 +158,7 @@ abstract class MultiConnectionUDPServer {
      */
     fun pushToAll(message: String): Result<Unit> {
         log.info("Pushing message to all {} connection(s)", coordinator.size)
-        return coordinator.snapshot().fold(Result.success(Unit)) { pushed, registration ->
-            pushed.flatMap { replyToOrigin(message, registration.origin) }
-        }
+        return coordinator.broadcast(message)
     }
 
     /**
@@ -178,11 +174,7 @@ abstract class MultiConnectionUDPServer {
      */
     fun stop(): Result<Unit> {
         log.info("Stopping server: terminating {} connection(s)", coordinator.size)
-        val connectionsTerminated = coordinator.snapshot().fold(Result.success(Unit)) { terminated, registration ->
-            // Each connection is terminated regardless of its predecessors' outcome; only
-            // the reported Result short-circuits, not the release of the ports.
-            registration.connection.terminate().let { outcome -> terminated.flatMap { outcome } }
-        }
+        val connectionsTerminated = coordinator.terminateAll()
         listening = false
         // Give the listener thread a chance to exit on its own before we force it via socket closure below.
         val listenerJoined = runCatching { commonListenerThread?.join(LISTENER_JOIN_TIMEOUT_MILLIS) }

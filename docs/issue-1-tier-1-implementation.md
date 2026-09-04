@@ -37,12 +37,16 @@ therefore extracted:
 
 | Level | Package | Class | Covers |
 |-------|---------|-------|--------|
-| 1 gating | `testing.gating.webtools` | `HandshakeProtocolGatingTest` (4) | fast parse / port-disjointness / reply-shape smoke |
-| 2 component | `testing.component.webtools` | `HandshakeCoordinatorTest` (8), `RegistrationsTest` (5) | state machine (new-vs-dedup, port allocation, reply-failure path, order) and the collection, socket-free via `FakeConnection` |
+| 1 gating | `testing.gating.webtools` | `HandshakeProtocolGatingTest` (4), `HandshakeCoordinatorGatingTest` (3) | fast socket-free smoke: parse / port-disjointness / reply-shape, and register / retransmit-no-reregister / `findByOrigin` |
+| 2 component | `testing.component.webtools` | `HandshakeCoordinatorTest` (13), `RegistrationsTest` (5) | state machine (new-vs-dedup, port allocation, reply-failure path, order) and the fan-out methods (`actuateAll` / `broadcast` / `terminateAll` incl. partial-failure), plus the collection; socket-free via `FakeConnection` |
 | 3 integration | `testing.integration.webtools` | `MultiConnectionUDPServerTest` (10) | end-to-end over real UDP: reply-to-source, bare `TXRXON`, payload-token-ignored, **retransmit dedup**, **multi-client disjoint ports**, `pushToAll`-to-origin, malformed / empty / unknown-verb / oversized datagrams, `stop` |
 | 4a deterministic | `testing.deterministic.webtools` | `HandshakeProtocolTest` (15) | exhaustive input→output for every `HandshakeProtocol` function |
 | 4c non-functional | `testing.nonfunctional.webtools` | `HandshakeNonFunctionalTest` (2) | retransmit-storm bounded allocation; reply target is never a payload-claimed address |
 | 5 UAT | `testing.uat.webtools` | `MultiConnectionUDPServerUatTest` (2, `@Disabled`) | manual two-host cross-NAT procedure — see [`issue-1-tier-1-uat.md`](./issue-1-tier-1-uat.md) |
+
+The `stop()` / `start()` / `pushToAll()` fan-out folds were moved onto `HandshakeCoordinator`
+as `terminateAll()` / `actuateAll()` / `broadcast()` so the "terminate every connection even
+if one fails" contract is unit-tested with failing fakes rather than only on the happy path.
 
 Shared fixture: `testing.support.webtools.FakeConnection`. New Gradle tasks:
 `gatingTest`, `deterministicTest`, `nonfunctionalTest`, `uatTest` (joining `componentTest` /

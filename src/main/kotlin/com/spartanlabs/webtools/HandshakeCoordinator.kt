@@ -69,6 +69,37 @@ internal class HandshakeCoordinator(
             else -> Result.success(Unit).also { log.trace("Ignoring unrecognised message: {}", tokens) }
         }
 
+    /**
+     * Actuates every registered connection with [onMessage], stopping at the first
+     * failure.
+     * @return [Result.success] if every connection was actuated, or the first failure
+     */
+    fun actuateAll(onMessage: (message: String) -> Unit): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
+            actuated.flatMap { registration.connection.actuate(onMessage) }
+        }
+
+    /**
+     * Sends [message] to every registered client's handshake origin through the
+     * injected reply sink, stopping at the first failure.
+     * @return [Result.success] if the message reached every client, or the first failure
+     */
+    fun broadcast(message: String): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
+            sent.flatMap { reply(message, registration.origin) }
+        }
+
+    /**
+     * Terminates every registered connection, releasing its ports. Every connection
+     * is terminated even if an earlier one failed; only the reported [Result]
+     * short-circuits to the first failure.
+     * @return [Result.success] if every connection terminated cleanly, or the first failure
+     */
+    fun terminateAll(): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { terminated, registration ->
+            registration.connection.terminate().let { outcome -> terminated.flatMap { outcome } }
+        }
+
     private fun replyBodyFor(connection: Connection): String =
         HandshakeProtocol.txrxonReply(connection.sendPort, connection.receivePort)
 

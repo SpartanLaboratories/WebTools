@@ -20,14 +20,19 @@ class HandshakeCoordinatorTest {
     private val originB = InetSocketAddress(loopback, 40002)
 
     private val created = mutableListOf<Triple<String, InetSocketAddress, HandshakeProtocol.PortPair>>()
+    private val createdConnections = mutableListOf<FakeConnection>()
     private val replies = mutableListOf<Pair<String, InetSocketAddress>>()
     private val registeredNames = mutableListOf<String>()
     private var replyResult: Result<Unit> = Result.success(Unit)
 
+    // Overridable so a test can hand back connections whose actuate()/terminate() fail.
+    private var connectionFactory: (name: String, ports: HandshakeProtocol.PortPair) -> FakeConnection =
+        { name, ports -> FakeConnection(name, ports.sendPort, ports.receivePort) }
+
     private fun newCoordinator() = HandshakeCoordinator(
         newConnection = { name, origin, ports ->
             created += Triple(name, origin, ports)
-            FakeConnection(name, ports.sendPort, ports.receivePort, origin.address)
+            connectionFactory(name, ports).also { createdConnections += it }
         },
         reply = { body, origin ->
             replies += body to origin
@@ -37,6 +42,11 @@ class HandshakeCoordinatorTest {
     )
 
     private fun iam(name: String, vararg extra: String) = listOf("Iam", name, *extra)
+
+    /** Registers [count] clients on distinct origins so the fan-out methods have something to iterate. */
+    private fun HandshakeCoordinator.registerClients(count: Int) {
+        repeat(count) { handle(InetSocketAddress(loopback, 41000 + it), iam("client$it")) }
+    }
 
     @Test
     fun `a message whose verb is not Iam is ignored with no side effects`() {
@@ -132,5 +142,76 @@ class HandshakeCoordinatorTest {
         coordinator.handle(originB, iam("bob"))
 
         assertEquals(listOf("alice", "bob"), coordinator.snapshot().map { it.connection.name })
+    }
+
+    @Test
+    fun `actuateAll actuates every registered connection`() {
+        val coordinator = newCoordinator()
+        coordinator.registerClients(3)
+
+        assertTrue(coordinator.actuateAll { }.isSuccess)
+
+        assertTrue(createdConnections.all { it.actuateCalls == 1 })
+    }
+
+    @Test
+    fun `actuateAll reports the first actuation failure`() {
+        connectionFactory = { name, ports ->
+            FakeConnection(
+                name,
+                ports.sendPort,
+                ports.receivePort,
+                actuateResult = if (name == "client1") Result.failure(RuntimeException("boom")) else Result.success(Unit),
+            )
+        }
+        val coordinator = newCoordinator()
+        coordinator.registerClients(3)
+
+        assertTrue(coordinator.actuateAll { }.isFailure)
+    }
+
+    @Test
+    fun `broadcast sends the message to every registered origin`() {
+        val coordinator = newCoordinator()
+        coordinator.registerClients(3)
+        replies.clear() // drop the TXRXON handshake replies
+
+        assertTrue(coordinator.broadcast("ping").isSuccess)
+
+        assertEquals(
+            List(3) { "ping" to InetSocketAddress(loopback, 41000 + it) },
+            replies,
+        )
+    }
+
+    @Test
+    fun `broadcast reports the first reply failure`() {
+        val coordinator = newCoordinator()
+        coordinator.registerClients(2)
+        replyResult = Result.failure(RuntimeException("send failed"))
+
+        assertTrue(coordinator.broadcast("ping").isFailure)
+    }
+
+    @Test
+    fun `terminateAll terminates every connection even when one fails`() {
+        connectionFactory = { name, ports ->
+            FakeConnection(
+                name,
+                ports.sendPort,
+                ports.receivePort,
+                terminateResult = if (name == "client1") Result.failure(RuntimeException("stuck")) else Result.success(Unit),
+            )
+        }
+        val coordinator = newCoordinator()
+        coordinator.registerClients(3)
+
+        val outcome = coordinator.terminateAll()
+
+        assertTrue(outcome.isFailure, "the failing connection is reported")
+        assertTrue(
+            createdConnections.all { it.terminateCalls == 1 },
+            "every connection is terminated regardless of an earlier failure",
+        )
     }
 }
