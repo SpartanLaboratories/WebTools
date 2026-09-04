@@ -4,9 +4,9 @@
 *"Handshake replies to the client-claimed address, not the datagram source: breaks any NAT'd client"*
 
 **Status:** planning only, no code written yet.
-**Target release:** 2.0.0 (already an in-progress major break — `build.gradle.kts` coordinates
-`io.github.spartanlaboratories:WebTools:2.0.0a`), so the wire-protocol change needs no extra
-major bump beyond what 2.0.0 already implies.
+**Target release:** the in-progress 2.0.0 major break. Tier 1 ships as `2.0.0b`
+(`build.gradle.kts` coordinates `io.github.spartanlaboratories:WebTools:2.0.0b`), so the
+wire-protocol change needs no extra major bump beyond what 2.0.0 already implies.
 
 ---
 
@@ -115,6 +115,7 @@ call sites before implementation.
 
 1. ~~Land Tier 1 as one commit (small, self-contained, testable on loopback).~~ **Done**
    (`fix/issue-1-handshake-datagram-source`), `README.md` created in the same change.
+   Published to Maven Central as `2.0.0b`.
 2. Coordinate the client-repo change (`Iam <name>` + parse bare `TXRXON` from the send
    socket) in `MyGameTools` / `MyGameServer`.
 3. Decide Tier 2 B1 vs B2.

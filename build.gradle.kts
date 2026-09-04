@@ -68,7 +68,7 @@ listOf(
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    coordinates("io.github.spartanlaboratories", "WebTools", "2.0.0a")
+    coordinates("io.github.spartanlaboratories", "WebTools", "2.0.0b")
 
     pom {
         name.set("Web Tools")

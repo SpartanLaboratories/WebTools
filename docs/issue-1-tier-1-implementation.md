@@ -9,8 +9,8 @@ touched here; that is Tier 2.
 **Status:** IMPLEMENTED on branch `fix/issue-1-handshake-datagram-source`. The
 test-hierarchy prep (§3) landed first on `refactor/test-level-hierarchy`. The sections
 below describe what was built; a few details shifted in the final code (noted inline).
-**Release:** rides the in-progress `2.0.0` break (`build.gradle.kts` → `2.0.0a`). No further
-version bump in these commits.
+**Release:** rides the in-progress `2.0.0` break; Tier 1 ships as `2.0.0b`
+(`build.gradle.kts` → `2.0.0b`), published to Maven Central.
 
 **As-built deltas from this plan:**
 - `commonListenSocket` renamed to `commonSocket` (it now both sends and receives);
@@ -308,7 +308,7 @@ sequenceDiagram
 ## 4. Verification
 
 - `./gradlew test` — all tests green (Level 1–3 in one run today).
-- `./gradlew build` — `com.vanniktech.maven.publish` config still resolves; version stays `2.0.0a`.
+- `./gradlew build` — `com.vanniktech.maven.publish` config still resolves; version bumped to `2.0.0b`.
 - The loopback tests mechanically prove the core of the fix: the reply returns to the
   datagram's **source port**, not a fixed 9999, and the payload address token no longer
   influences `connection.address`.
