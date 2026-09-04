@@ -268,6 +268,12 @@ Tier 1's test edits (§2.2) apply on top of the moved file.
 
 ## 3a. Concurrency topology
 
+> **Superseded for Tier 2.** As of `2.0.0c` (Issue #1 Tier 2, single-socket
+> multiplex) there are no dedicated per-client ports and a single-threaded
+> dispatch executor runs the message handlers. The canonical topology is now the
+> Mermaid diagram in [`issue-1-tier-2-plan.md`](./issue-1-tier-2-plan.md) §2.1.
+> The diagram below describes the Tier 1 (`2.0.0b`) design only.
+
 `MultiConnectionUDPServer` has one long-lived daemon thread plus whatever caller
 threads invoke its public API. `commonSocket` is *received* on only by the
 listener thread but *sent* on from any thread; `Registrations` is copy-on-write.

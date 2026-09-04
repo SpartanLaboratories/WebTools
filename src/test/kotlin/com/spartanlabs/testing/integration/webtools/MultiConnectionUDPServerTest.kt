@@ -12,67 +12,62 @@ import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-// PER_CLASS lifecycle so JUnit reuses a single test instance (and therefore a single
-// MultiConnectionUDPServer bound to the fixed common port) across all test methods.
-// Tests are explicitly ordered because `stop()` closes the shared server's socket and
-// must run last, after the tests that rely on it still being open.
+// PER_CLASS lifecycle so JUnit reuses a single MultiConnectionUDPServer bound to the fixed
+// common port across all methods. Ordered because stop() closes the shared socket last.
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class MultiConnectionUDPServerTest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerTest::class.java)
-
-    // The handshake reply is now addressed to the datagram's source, so a client only needs
-    // one socket - the one it sends the `Iam` from also receives the `TXRXON`. Sending over
-    // loopback means the server observes this exact address as the packet source.
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()
 
-    // Connections handed to onClientConnect(), in the order they were registered.
-    // Backed by a CopyOnWriteArrayList since it's written from the server's listener
-    // thread and read from the test thread.
     private val connectedClients = CopyOnWriteArrayList<Connection>()
 
-    // MultiConnectionUDPServer is abstract, so tests supply their own onClientConnect
-    // implementation - here it just records the connection for later assertions.
-    // The server binds a fixed common port in its constructor, so we deliberately create
-    // only a single instance for the whole test class to avoid port conflicts between
-    // test methods.
+    // Per-connection-name inbound message queues, populated by the shared handler bound via start().
+    private val inbound = ConcurrentHashMap<String, LinkedBlockingQueue<String>>()
+
     private val server = object : MultiConnectionUDPServer() {
         override fun onClientConnect(connection: Connection) {
-            log.debug("Test recorded onClientConnect for '{}'", connection.name)
             connectedClients.add(connection)
+            inbound.getOrPut(connection.name) { LinkedBlockingQueue() }
+            connection.actuate { message -> inbound.getValue(connection.name).add(message) }
         }
     }
 
-    /**
-     * Sends [payload] to the server's common port from [client] and returns the reply text.
-     * [client] is left open and its receive timeout set, so callers can keep reading from it
-     * (e.g. to catch a later [MultiConnectionUDPServer.pushToAll] broadcast).
-     */
-    private fun handshakeFrom(client: DatagramSocket, payload: String): String {
+    private fun DatagramSocket.sendToServer(payload: String) {
         val out = payload.toByteArray(Charsets.UTF_8)
-        client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-        client.soTimeout = REPLY_TIMEOUT_MILLIS
-        val reply = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
-        client.receive(reply)
-        return String(reply.data, 0, reply.length, Charsets.UTF_8).trim()
+        send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
     }
 
-    /** Sends [payload] and asserts the server sends nothing back within [NO_REPLY_TIMEOUT_MILLIS]. */
+    private fun DatagramSocket.receiveText(): String {
+        soTimeout = REPLY_TIMEOUT_MILLIS
+        val p = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
+        receive(p)
+        return String(p.data, 0, p.length, Charsets.UTF_8).trim()
+    }
+
+    private fun handshakeFrom(client: DatagramSocket, payload: String): String {
+        client.sendToServer(payload)
+        return client.receiveText()
+    }
+
     private fun assertNoReplyTo(payload: String) {
         DatagramSocket().use { client ->
-            val out = payload.toByteArray(Charsets.UTF_8)
-            client.send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+            client.sendToServer(payload)
             client.soTimeout = NO_REPLY_TIMEOUT_MILLIS
             assertFailsWith<SocketTimeoutException>("payload \"$payload\" must get no reply") {
                 client.receive(DatagramPacket(ByteArray(64), 64))
@@ -80,196 +75,180 @@ class MultiConnectionUDPServerTest {
         }
     }
 
+    private fun connectionNamed(name: String): Connection =
+        connectedClients.first { it.name == name }
+
     @Test
     @Order(1)
     fun `pushToAll succeeds when there are no connections`() {
-        log.info("Verifying pushToAll is a no-op with zero connections")
         assertTrue(server.pushToAll("no one is listening").isSuccess)
     }
 
     @Test
     @Order(2)
-    fun `an Iam handshake registers a connection and replies with a bare TXRXON to the datagram source`() {
-        log.info("Starting Iam handshake test")
+    fun `an Iam handshake registers a connection and replies with the bare token REGISTERED`() {
         val before = connectedClients.size
-
         DatagramSocket().use { client ->
-            val reply = handshakeFrom(client, "Iam testclient")
-            log.debug("Received handshake reply: {}", reply)
+            val reply = handshakeFrom(client, "Iam alpha")
+            assertEquals("REGISTERED", reply)
+            assertFalse(reply.contains("/"))
+            assertFalse(reply.any { it.isDigit() })
 
-            assertTrue(reply.startsWith("$HANDSHAKE_REPLY_VERB "), "Expected a bare TXRXON reply, got: $reply")
-            assertEquals(3, reply.split(' ').size, "Reply must be '$HANDSHAKE_REPLY_VERB <sendPort> <receivePort>'")
-            assertFalse(reply.contains("/"), "Reply must not carry an address prefix any more: $reply")
-
-            // onClientConnect() is invoked from the listener thread right after the reply
-            // is sent, so give it a brief moment to run before asserting on it.
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
-            assertEquals(before + 1, connectedClients.size, "Expected exactly one new connection")
-            val registered = connectedClients.last()
-            assertEquals("testclient", registered.name)
-            // The address is learned from the datagram, so a loopback handshake yields loopback.
-            assertEquals(serverAddress, registered.address)
+            assertEquals(before + 1, connectedClients.size)
+            val registered = connectionNamed("alpha")
+            assertEquals(InetSocketAddress(serverAddress, client.localPort), registered.peer)
         }
     }
 
     @Test
     @Order(3)
     fun `the client-claimed address token in the payload is ignored`() {
-        log.info("Verifying the server trusts the datagram source, not the payload")
-        val before = connectedClients.size
-
         DatagramSocket().use { client ->
-            // 203.0.113.0/24 is TEST-NET-3: a syntactically valid address that is never us.
-            val reply = handshakeFrom(client, "Iam liarclient 203.0.113.7")
-            assertTrue(reply.startsWith("$HANDSHAKE_REPLY_VERB "), "Expected a TXRXON reply, got: $reply")
-
+            assertEquals("REGISTERED", handshakeFrom(client, "Iam beta 203.0.113.7"))
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
-            assertEquals(before + 1, connectedClients.size)
-            val registered = connectedClients.last()
-            assertEquals("liarclient", registered.name)
-            assertEquals(serverAddress, registered.address, "Address must come from the datagram, not the payload")
-            assertNotEquals(InetAddress.getByName("203.0.113.7"), registered.address)
+            assertEquals(
+                InetSocketAddress(serverAddress, client.localPort),
+                connectionNamed("beta").peer,
+            )
         }
     }
 
     @Test
     @Order(4)
-    fun `a retransmitted Iam from the same origin repeats the ports and does not re-register`() {
-        log.info("Verifying handshake retransmit is idempotent")
+    fun `a retransmitted Iam from the same origin repeats REGISTERED and does not re-register`() {
         val before = connectedClients.size
-
         DatagramSocket().use { client ->
-            val first = handshakeFrom(client, "Iam repeatclient")
+            assertEquals("REGISTERED", handshakeFrom(client, "Iam gamma"))
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
             assertEquals(before + 1, connectedClients.size)
 
-            // Same socket -> same source port -> same origin as far as the server is concerned.
-            val second = handshakeFrom(client, "Iam repeatclient")
+            assertEquals("REGISTERED", handshakeFrom(client, "Iam gamma"))
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
-
-            assertEquals(first, second, "A retransmit must get the same TXRXON ports")
-            assertEquals(before + 1, connectedClients.size, "A retransmit must not register a second connection")
+            assertEquals(before + 1, connectedClients.size)
         }
     }
 
     @Test
     @Order(5)
-    fun `distinct clients get disjoint dedicated port pairs`() {
-        log.info("Verifying dedicated port pairs never overlap between clients")
+    fun `an actuated client's app datagram is delivered to its handler and push rides the one mapping`() {
+        DatagramSocket().use { client ->
+            handshakeFrom(client, "Iam delta")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-        DatagramSocket().use { a ->
-            DatagramSocket().use { b ->
-                val replyA = handshakeFrom(a, "Iam clientA").split(' ')
-                val replyB = handshakeFrom(b, "Iam clientB").split(' ')
-                val portsA = setOf(replyA[1].toInt(), replyA[2].toInt())
-                val portsB = setOf(replyB[1].toInt(), replyB[2].toInt())
+            client.sendToServer("hello-from-delta")
+            assertEquals("hello-from-delta", inbound.getValue("delta").poll(5, TimeUnit.SECONDS))
 
-                assertEquals(2, portsA.size, "clientA's send/receive ports must differ: $portsA")
-                assertEquals(2, portsB.size, "clientB's send/receive ports must differ: $portsB")
-                assertEquals(
-                    emptySet(),
-                    portsA intersect portsB,
-                    "clientA $portsA and clientB $portsB must not share a port",
-                )
-            }
+            assertTrue(connectionNamed("delta").push("hello-from-server").isSuccess)
+            assertEquals("hello-from-server", client.receiveText())
         }
     }
 
     @Test
     @Order(6)
-    fun `pushToAll delivers to a client's learned handshake origin`() {
-        log.info("Verifying pushToAll reaches the socket the handshake came from")
-
+    fun `keepAlive puts a KA on the wire and an inbound KA is consumed without reaching the handler`() {
         DatagramSocket().use { client ->
-            handshakeFrom(client, "Iam pushclient")
+            handshakeFrom(client, "Iam epsilon")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-            assertTrue(server.pushToAll("broadcast-1").isSuccess)
+            assertTrue(connectionNamed("epsilon").keepAlive().isSuccess)
+            assertEquals("KA", client.receiveText())
 
-            val received = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
-            client.receive(received) // receive timeout already set by handshakeFrom
-            assertEquals("broadcast-1", String(received.data, 0, received.length, Charsets.UTF_8).trim())
+            client.sendToServer("KA")
+            client.sendToServer("real-message")
+            assertEquals("real-message", inbound.getValue("epsilon").poll(5, TimeUnit.SECONDS))
+            assertNull(inbound.getValue("epsilon").poll(200, TimeUnit.MILLISECONDS))
         }
     }
 
     @Test
     @Order(7)
-    fun `a malformed Iam with no name is rejected without wedging the listener`() {
-        log.info("Verifying a nameless Iam neither registers nor kills the server")
-        val before = connectedClients.size
+    fun `pushToAll reaches every registered client socket`() {
+        DatagramSocket().use { a ->
+            DatagramSocket().use { b ->
+                handshakeFrom(a, "Iam zeta1")
+                handshakeFrom(b, "Iam zeta2")
+                Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-        assertNoReplyTo("Iam")
-        Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
-        assertEquals(before, connectedClients.size, "A malformed handshake must not register a connection")
-
-        // The listener survived: a well-formed handshake right after still gets a reply.
-        DatagramSocket().use { recovered ->
-            assertTrue(handshakeFrom(recovered, "Iam recoverclient").startsWith("$HANDSHAKE_REPLY_VERB "))
+                assertTrue(server.pushToAll("broadcast-1").isSuccess)
+                assertEquals("broadcast-1", a.receiveText())
+                assertEquals("broadcast-1", b.receiveText())
+            }
         }
     }
 
     @Test
     @Order(8)
-    fun `empty, whitespace and unrecognised-verb datagrams are ignored`() {
-        log.info("Verifying non-handshake datagrams get no reply and no registration")
-        val before = connectedClients.size
+    fun `a datagram from client A is delivered only to A's handler`() {
+        DatagramSocket().use { a ->
+            DatagramSocket().use { b ->
+                handshakeFrom(a, "Iam theta1")
+                handshakeFrom(b, "Iam theta2")
+                Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-        listOf("", "   ", "HELLO world", "TXRXON 1 2").forEach(::assertNoReplyTo)
-
-        Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
-        assertEquals(before, connectedClients.size)
-        DatagramSocket().use { recovered ->
-            assertTrue(handshakeFrom(recovered, "Iam afterjunk").startsWith("$HANDSHAKE_REPLY_VERB "))
+                a.sendToServer("only-for-a")
+                assertEquals("only-for-a", inbound.getValue("theta1").poll(5, TimeUnit.SECONDS))
+                assertNull(inbound.getValue("theta2").poll(200, TimeUnit.MILLISECONDS))
+            }
         }
     }
 
     @Test
     @Order(9)
-    fun `an oversized Iam datagram does not wedge the listener`() {
-        log.info("Verifying an over-buffer datagram is survivable")
+    fun `data from an unregistered socket is silently dropped and the listener survives`() {
+        DatagramSocket().use { stranger ->
+            stranger.sendToServer("i-never-said-Iam")
+        }
+        Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+        DatagramSocket().use { recovered ->
+            assertEquals("REGISTERED", handshakeFrom(recovered, "Iam afterstranger"))
+        }
+    }
 
+    @Test
+    @Order(10)
+    fun `the server can push to a client that has sent nothing since its Iam`() {
         DatagramSocket().use { client ->
-            // Larger than the server's receive buffer; UDP truncates rather than erroring.
+            handshakeFrom(client, "Iam quiet")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+            assertTrue(connectionNamed("quiet").push("unsolicited").isSuccess)
+            assertEquals("unsolicited", client.receiveText())
+        }
+    }
+
+    @Test
+    @Order(11)
+    fun `malformed empty unknown-verb and oversized datagrams do not wedge the listener`() {
+        listOf("", "   ", "HELLO world", "Iam").forEach(::assertNoReplyTo)
+        DatagramSocket().use { client ->
             val oversized = ("Iam " + "z".repeat(4096)).toByteArray(Charsets.UTF_8)
             client.send(
                 DatagramPacket(oversized, oversized.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT),
             )
         }
         Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
-
         DatagramSocket().use { recovered ->
-            assertTrue(handshakeFrom(recovered, "Iam afteroversized").startsWith("$HANDSHAKE_REPLY_VERB "))
+            assertEquals("REGISTERED", handshakeFrom(recovered, "Iam afterjunk"))
         }
     }
 
     @Test
     @Order(20)
-    fun `stop terminates connections and closes the common socket`() {
-        log.info("Verifying stop() shuts the server down cleanly")
-        assertTrue(server.stop().isSuccess, "stop() should report success")
-
-        // After stopping, the common socket is closed, so a fresh handshake gets no reply.
+    fun `stop terminates connections closes the socket and shuts the executor`() {
+        assertTrue(server.stop().isSuccess)
         assertNoReplyTo("Iam clientAfterStop")
-        log.debug("Confirmed no reply was received after stop()")
     }
 
     @AfterAll
     fun releaseCommonPort() {
-        // Belt-and-braces: if the ordered stop() test was filtered or failed, still free
-        // port 9998 so a later test class binding the same port is not blocked.
         runCatching { server.stop() }
     }
 
     private companion object {
-        const val HANDSHAKE_REPLY_VERB = "TXRXON"
         const val RECEIVE_BUFFER_BYTES = 1024
-
-        /** How long to wait for a handshake reply that should arrive. */
         const val REPLY_TIMEOUT_MILLIS = 5000
-
-        /** How long to wait before concluding no reply is coming. */
         const val NO_REPLY_TIMEOUT_MILLIS = 500
-
-        /** Grace period for the listener thread's post-reply `onClientConnect` call to run. */
         const val POST_HANDSHAKE_SETTLE_MILLIS = 200L
     }
 }

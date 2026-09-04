@@ -2,33 +2,31 @@ package com.spartanlabs.webtools
 
 /**
  * The pure, socket-free rules of the [MultiConnectionUDPServer] handshake: how an
- * `Iam` line is parsed and validated, how each connection's dedicated port pair
- * is allocated, and how the `TXRXON` reply body is rendered.
+ * `Iam` line is parsed and validated, the single-token `REGISTERED` reply, and the
+ * `KA` keepalive token.
  *
  * Everything here is a deterministic function of its arguments with no I/O and no
  * state, so it can be tested exhaustively without binding a socket.
+ *
+ * Note: an application layered on top of this protocol that legitimately sends the
+ * exact two-byte payload [KEEPALIVE_TOKEN] as a message will have it silently
+ * swallowed by the server - application protocols control their own payloads.
  */
 internal object HandshakeProtocol {
     /** The verb that opens a client handshake: `Iam <name>`. */
     const val VERB = "Iam"
 
-    /** The verb of the server's handshake reply: `TXRXON <sendPort> <receivePort>`. */
-    const val REPLY_VERB = "TXRXON"
+    /** The entire server handshake reply: a single token, no arguments. */
+    const val REGISTERED_REPLY = "REGISTERED"
 
-    /**
-     * Ceiling below which each connection's dedicated `(send, receive)` port pair
-     * is allocated. See [portPairFor].
-     */
-    const val DEDICATED_PORT_BASE = 9999
+    /** The token a client sends on an idle interval to keep its NAT mapping warm. */
+    const val KEEPALIVE_TOKEN = "KA"
 
     /** Index of the client-supplied name within a whitespace-split handshake line. */
     private const val NAME_INDEX = 1
 
     /** Fewest tokens a valid handshake can carry: the verb plus the name. */
     private const val MIN_TOKENS = 2
-
-    /** A dedicated `(send, receive)` port pair for one connection. */
-    data class PortPair(val sendPort: Int, val receivePort: Int)
 
     /**
      * Extracts the client name from the whitespace-split text of an `Iam` datagram.
@@ -55,34 +53,17 @@ internal object HandshakeProtocol {
     fun extraTokenCount(tokens: List<String>): Int = (tokens.size - MIN_TOKENS).coerceAtLeast(0)
 
     /**
-     * The dedicated port pair for the connection registered at zero-based [index].
-     *
-     * Registration *n* gets `DEDICATED_PORT_BASE - 2n - 2` for send and one below
-     * it for receive. Stepping by two guarantees successive registrations never
-     * share a port (the bug fixed in commit `ab53747`).
-     *
-     * @param index the zero-based registration order of the connection
-     * @return its `(send, receive)` port pair
-     * @throws IllegalArgumentException if [index] is negative
+     * True if [tokens] opens a handshake (verb match only; validity is
+     * [parseHandshake]'s job).
+     * @param tokens the datagram text split on spaces
+     * @return true if [tokens] begins with the handshake verb
      */
-    fun portPairFor(index: Int): PortPair {
-        require(index >= 0) { "index must be >= 0, was $index" }
-        val offset = index * 2 + 2
-        return PortPair(DEDICATED_PORT_BASE - offset, DEDICATED_PORT_BASE - offset - 1)
-    }
+    fun isHandshake(tokens: List<String>): Boolean = tokens.firstOrNull() == VERB
 
     /**
-     * Renders the handshake reply body a client should receive.
-     * @param ports the client's dedicated port pair
-     * @return `TXRXON <sendPort> <receivePort>`
+     * True if [text] is a bare keepalive datagram (to be dropped, never dispatched).
+     * @param text the trimmed datagram text
+     * @return true if [text] is exactly the bare keepalive token
      */
-    fun txrxonReply(ports: PortPair): String = "$REPLY_VERB ${ports.sendPort} ${ports.receivePort}"
-
-    /**
-     * Renders the reply body from a loose send/receive port.
-     * @param sendPort the port the client should send to
-     * @param receivePort the port the client should listen on
-     * @return `TXRXON <sendPort> <receivePort>`
-     */
-    fun txrxonReply(sendPort: Int, receivePort: Int): String = txrxonReply(PortPair(sendPort, receivePort))
+    fun isKeepAlive(text: String): Boolean = text == KEEPALIVE_TOKEN
 }

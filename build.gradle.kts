@@ -28,9 +28,10 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-// Serialises the test tasks that bind the fixed common UDP port (9998) - `test` and
-// `integrationTest` - so Gradle never runs two of them in parallel workers and hits a
-// BindException. Level tasks that touch no socket are unaffected.
+// Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
+// `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
+// them in parallel workers and hits a BindException. Level tasks that touch no socket
+// are unaffected.
 abstract class CommonUdpPortLock : BuildService<BuildServiceParameters.None>
 val commonUdpPortLock =
     gradle.sharedServices.registerIfAbsent("commonUdpPortLock", CommonUdpPortLock::class) {
@@ -45,12 +46,13 @@ tasks.test {
 // Level-scoped test tasks (see CLAUDE.md "Testing - 5-Level Hierarchy"). `test` still runs
 // every level; each task below runs exactly one level, selected by the JUnit @Tag that every
 // test class under src/test/kotlin/com/spartanlabs/testing/<level>/ carries, so CI can run or
-// gate a single level on its own. (No Level 4b task: the repo has no end-to-end tests yet.)
+// gate a single level on its own.
 listOf(
     "gating" to "Level 1 - local pre-commit gating tests",
     "component" to "Level 2 - isolated component behaviour tests",
     "integration" to "Level 3 - integration & external interface tests",
     "deterministic" to "Level 4a - deterministic input-to-output tests",
+    "e2e" to "Level 4b - end-to-end system integration tests",
     "nonfunctional" to "Level 4c - non-functional (robustness / security / performance) tests",
     "uat" to "Level 5 - user-acceptance evaluation (manual; mostly @Disabled)",
 ).forEach { (tag, describe) ->
@@ -60,15 +62,15 @@ listOf(
         testClassesDirs = sourceSets["test"].output.classesDirs
         classpath = sourceSets["test"].runtimeClasspath
         useJUnitPlatform { includeTags(tag) }
-        // Only the integration level binds the fixed common port.
-        if (tag == "integration") usesService(commonUdpPortLock)
+        // The integration, e2e, and nonfunctional levels bind the fixed common port.
+        if (tag == "integration" || tag == "e2e" || tag == "nonfunctional") usesService(commonUdpPortLock)
     }
 }
 
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
-    coordinates("io.github.spartanlaboratories", "WebTools", "2.0.0b")
+    coordinates("io.github.spartanlaboratories", "WebTools", "2.0.0c")
 
     pom {
         name.set("Web Tools")

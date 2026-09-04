@@ -6,12 +6,18 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * One client that has completed the `Iam` handshake.
  *
- * @property connection the dedicated connection minted for this client
- * @property origin the exact address and source port the client's handshake
- * datagram arrived from; every common-channel datagram to this client is
- * addressed here so it rides the NAT binding the handshake opened
+ * @property connection the connection minted for this client; its
+ * [Connection.peer] is the origin every datagram to this client is addressed to
+ * @property onMessage the currently bound message handler, or `null` if the
+ * client has not been actuated; written by `actuate` / `terminate` and read by
+ * the listener thread, hence `@Volatile`
  */
-internal class Registration(val connection: Connection, val origin: InetSocketAddress)
+internal class Registration(val connection: Connection) {
+    val origin: InetSocketAddress get() = connection.peer
+
+    @Volatile
+    var onMessage: ((String) -> Unit)? = null
+}
 
 /**
  * The set of completed handshakes, in registration order.

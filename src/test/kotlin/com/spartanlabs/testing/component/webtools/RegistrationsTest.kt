@@ -8,6 +8,7 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 
@@ -18,7 +19,7 @@ class RegistrationsTest {
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
 
     private fun registration(port: Int) =
-        Registration(FakeConnection("client-$port", port, port + 1, loopback), InetSocketAddress(loopback, port))
+        Registration(FakeConnection("client-$port", InetSocketAddress(loopback, port)))
 
     @Test
     fun `add grows the size`() {
@@ -32,14 +33,18 @@ class RegistrationsTest {
     }
 
     @Test
-    fun `findByOrigin returns the entry with that origin`() {
-        val registrations = Registrations()
-        val first = registration(1000)
-        val second = registration(2000)
-        registrations.add(first)
-        registrations.add(second)
+    fun `origin reads through to the connection peer`() {
+        val entry = registration(1234)
+        assertEquals(InetSocketAddress(loopback, 1234), entry.origin)
+    }
 
-        assertSame(second, registrations.findByOrigin(InetSocketAddress(loopback, 2000)))
+    @Test
+    fun `onMessage defaults null and is settable`() {
+        val entry = registration(1000)
+        assertNull(entry.onMessage)
+        val handler: (String) -> Unit = {}
+        entry.onMessage = handler
+        assertNotNull(entry.onMessage)
     }
 
     @Test
@@ -47,7 +52,6 @@ class RegistrationsTest {
         val registrations = Registrations()
         registrations.add(registration(1000))
 
-        // A freshly constructed but equal InetSocketAddress still matches.
         assertSame(
             registrations.snapshot().single(),
             registrations.findByOrigin(InetSocketAddress(loopback, 1000)),
@@ -71,6 +75,6 @@ class RegistrationsTest {
         val snapshot = registrations.snapshot()
         registrations.add(registration(3))
 
-        assertEquals(listOf(1, 2), snapshot.map { it.origin.port }, "order preserved, later add not visible")
+        assertEquals(listOf(1, 2), snapshot.map { it.origin.port })
     }
 }
