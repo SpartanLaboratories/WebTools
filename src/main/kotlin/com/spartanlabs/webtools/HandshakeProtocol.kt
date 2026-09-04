@@ -11,16 +11,21 @@ package com.spartanlabs.webtools
  * Note: an application layered on top of this protocol that legitimately sends the
  * exact two-byte payload [KEEPALIVE_TOKEN] as a message will have it silently
  * swallowed by the server - application protocols control their own payloads.
+ *
+ * The public subset of these tokens (and the keepalive check) is published as
+ * [HandshakeWireFormat]; this object additionally owns the server-only inbound
+ * parsing ([parseHandshake], [extraTokenCount], [isHandshake]) that a client
+ * never needs.
  */
 internal object HandshakeProtocol {
     /** The verb that opens a client handshake: `Iam <name>`. */
-    const val VERB = "Iam"
+    const val VERB = HandshakeWireFormat.HANDSHAKE_VERB
 
     /** The entire server handshake reply: a single token, no arguments. */
-    const val REGISTERED_REPLY = "REGISTERED"
+    const val REGISTERED_REPLY = HandshakeWireFormat.REGISTERED_REPLY
 
     /** The token a client sends on an idle interval to keep its NAT mapping warm. */
-    const val KEEPALIVE_TOKEN = "KA"
+    const val KEEPALIVE_TOKEN = HandshakeWireFormat.KEEPALIVE_TOKEN
 
     /** Index of the client-supplied name within a whitespace-split handshake line. */
     private const val NAME_INDEX = 1
@@ -65,5 +70,5 @@ internal object HandshakeProtocol {
      * @param text the trimmed datagram text
      * @return true if [text] is exactly the bare keepalive token
      */
-    fun isKeepAlive(text: String): Boolean = text == KEEPALIVE_TOKEN
+    fun isKeepAlive(text: String): Boolean = HandshakeWireFormat.isKeepAlive(text)
 }
