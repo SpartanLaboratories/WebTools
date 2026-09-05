@@ -1,6 +1,6 @@
-package com.spartanlabs.testing.component.webtools
+package com.spartanlabs.testing.component.webtools.scraping
 
-import com.spartanlabs.webtools.Connector
+import com.spartanlabs.webtools.scraping.Connector
 import org.junit.jupiter.api.Assertions.assertTimeoutPreemptively
 import org.junit.jupiter.api.Tag
 import org.slf4j.LoggerFactory

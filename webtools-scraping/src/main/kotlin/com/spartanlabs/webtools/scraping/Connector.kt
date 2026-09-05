@@ -1,4 +1,4 @@
-package com.spartanlabs.webtools
+package com.spartanlabs.webtools.scraping
 
 import com.mashape.unirest.http.Unirest
 import it.skrape.fetcher.HttpFetcher

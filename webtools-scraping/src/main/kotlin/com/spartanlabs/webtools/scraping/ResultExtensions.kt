@@ -1,6 +1,6 @@
-package com.spartanlabs.webtools.udp
+package com.spartanlabs.webtools.scraping
 
-// Deliberately duplicated in webtools-scraping. This is one internal two-line helper;
+// Deliberately duplicated in webtools-udp. This is one internal two-line helper;
 // a shared webtools-core artifact just to host it would not earn its keep. Keep the two
 // copies identical.
 
