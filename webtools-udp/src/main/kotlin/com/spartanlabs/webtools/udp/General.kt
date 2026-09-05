@@ -5,7 +5,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 
 /** Shared slf4j logger for this file's top-level functions. */
-private val log = LoggerFactory.getLogger("com.spartanlabs.webtools.General")
+private val log = LoggerFactory.getLogger("com.spartanlabs.webtools.udp.General")
 
 /** Host the address probe is pointed at; never actually contacted, since UDP connect sends nothing. */
 private const val PROBE_HOST = "8.8.8.8"

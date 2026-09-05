@@ -6,7 +6,7 @@ import java.net.InetSocketAddress
 /**
  * A socket-free [ClientChannel] test fixture. Records every [send] (as the decoded
  * UTF-8 string plus its target), every [bind] / [deregister], and lets a test invoke a
- * bound handler directly. Backs the socket-free [com.spartanlabs.webtools.UDPConnection]
+ * bound handler directly. Backs the socket-free [com.spartanlabs.webtools.udp.UDPConnection]
  * tests.
  */
 internal class FakeClientChannel(
