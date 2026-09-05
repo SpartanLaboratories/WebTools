@@ -7,8 +7,9 @@
   scraping, headless-browser screenshots) into one artifact, so every consumer
   that wants the UDP layer also drags in Selenium, skrapeit, jsoup and unirest.
 - **Branch:** `refactor/split-into-three-modules` (off `master`).
-- **Commit(s):** the 5-commit sequence in §8, landed. See §10 for deviations.
-- **PR:** TBD.
+- **Commit(s):** the 5-commit sequence in §8 (plus one follow-up fixing two
+  stale flat-package string refs). See §10 for deviations.
+- **PR:** `SpartanLaboratories/WebTools#16`.
 - **Status:** implemented on the branch; `./gradlew build` green (135 tests: 119
   udp + 11 scraping + 5 browser; 0 failures, 5 `@Disabled` UAT). Awaiting PR.
 - **Issue:** filed as `SpartanLaboratories/WebTools#15`.
