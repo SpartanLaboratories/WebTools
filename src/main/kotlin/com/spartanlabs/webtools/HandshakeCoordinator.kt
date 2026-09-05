@@ -10,12 +10,15 @@ import java.net.InetSocketAddress
  *
  * - the **handshake state machine** - a first `Iam` from a new origin registers a
  *   [Connection] and replies with the single token `REGISTERED`; a retransmit from
- *   a known origin just re-sends `REGISTERED`;
+ *   a known origin just re-sends `REGISTERED`; a first `Iam` from a name that is
+ *   already registered under a different, now-stale origin (e.g. after a NAT
+ *   rebind) supersedes it - the stale registration is terminated and removed
+ *   before the new one is added;
  * - the **inbound-datagram router** - [accept] classifies every datagram as a
  *   handshake, a keepalive (dropped), or application data (handed to the dispatch
  *   executor for the bound handler);
  * - the [ClientChannel] implementation the connections it mints delegate to for
- *   sending, binding, and unbinding.
+ *   sending, binding, and deregistering.
  *
  * @param newConnection builds the connection for a new client, given its name,
  * handshake origin, and the [ClientChannel] it should delegate to (always `this`)
@@ -71,6 +74,16 @@ internal class HandshakeCoordinator(
                 log.info("Repeating handshake reply for already-registered origin {}", origin)
                 send(REGISTERED_BYTES, origin)
             } ?: run {
+                // A same-name registration under a different origin is a stale entry (e.g. a NAT
+                // rebind), not a distinct client - supersede it directly against Registrations,
+                // rather than relying solely on stale.connection.terminate(), so pruning stays
+                // correct even for fakes whose terminate() doesn't reach back into this registry.
+                registrations.findByName(name)?.let { stale ->
+                    log.info("Superseding stale registration for '{}': {} -> {}", name, stale.origin, origin)
+                    registrations.removeByOrigin(stale.origin)
+                    stale.connection.terminate()
+                        .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
+                }
                 val connection = newConnection(name, origin, this)
                 registrations.add(Registration(connection))
                 log.info("Registered connection '{}' for {}", name, origin)
@@ -99,8 +112,10 @@ internal class HandshakeCoordinator(
         registrations.findByOrigin(peer)?.onMessage = onMessage
     }
 
-    override fun unbind(peer: InetSocketAddress) {
-        registrations.findByOrigin(peer)?.onMessage = null
+    override fun deregister(peer: InetSocketAddress) {
+        if (registrations.removeByOrigin(peer)) {
+            log.info("Deregistered connection for {}", peer)
+        }
     }
 
     /**

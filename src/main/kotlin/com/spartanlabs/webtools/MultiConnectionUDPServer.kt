@@ -140,6 +140,9 @@ abstract class MultiConnectionUDPServer {
 
     /**
      * Broadcasts a message to every registered client's endpoint over the common socket.
+     * "Registered" here means *currently* registered - a connection that has been
+     * `terminate()`d, or superseded by a same-name reconnect from a new origin, is
+     * pruned and no longer addressed.
      * @param message the text to send to all clients
      * @return [Result.success] if the message reached every client, or the first failure
      */
@@ -149,9 +152,9 @@ abstract class MultiConnectionUDPServer {
     }
 
     /**
-     * Shuts the server down: unbinds every registered [Connection]'s handler, then
-     * stops the common listener thread, releases the common socket, and shuts the
-     * dispatch executor.
+     * Shuts the server down: terminates (fully deregisters) every registered
+     * [Connection], leaving `Registrations` empty, then stops the common listener
+     * thread, releases the common socket, and shuts the dispatch executor.
      *
      * Every step runs even if an earlier one failed, so a partial failure never
      * leaks a bound port. Once called, this instance should be discarded.

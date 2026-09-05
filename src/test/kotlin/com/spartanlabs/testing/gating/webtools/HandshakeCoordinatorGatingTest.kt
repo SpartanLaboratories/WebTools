@@ -51,6 +51,17 @@ class HandshakeCoordinatorGatingTest {
     }
 
     @Test
+    fun `a new Iam under an existing name from a different origin supersedes, not accumulates`() {
+        val coordinator = coordinator(mutableListOf())
+        val otherOrigin = InetSocketAddress(loopback, 40002)
+
+        coordinator.accept(origin, "Iam alice")
+        coordinator.accept(otherOrigin, "Iam alice")
+
+        assertEquals(1, coordinator.size)
+    }
+
+    @Test
     fun `a KA from a registered origin is dropped with no dispatch`() {
         val replies = mutableListOf<Pair<String, InetSocketAddress>>()
         val coordinator = coordinator(replies)

@@ -9,8 +9,9 @@ import java.util.concurrent.CopyOnWriteArrayList
  * @property connection the connection minted for this client; its
  * [Connection.peer] is the origin every datagram to this client is addressed to
  * @property onMessage the currently bound message handler, or `null` if the
- * client has not been actuated; written by `actuate` / `terminate` and read by
- * the listener thread, hence `@Volatile`
+ * client has not been actuated; written by `actuate`, cleared by removal from
+ * `Registrations` on `terminate`, and read by the listener thread, hence
+ * `@Volatile`
  */
 internal class Registration(val connection: Connection) {
     val origin: InetSocketAddress get() = connection.peer
@@ -24,7 +25,9 @@ internal class Registration(val connection: Connection) {
  *
  * Backed by a copy-on-write list because entries are appended from
  * [MultiConnectionUDPServer]'s listener thread while caller threads iterate it.
- * Holds no sockets, so it is unit-testable on its own.
+ * Holds no sockets, so it is unit-testable on its own. Entries are pruned via
+ * [removeByOrigin] when a connection terminates or is superseded by a
+ * same-name reconnect from a new origin - see [HandshakeCoordinator].
  */
 internal class Registrations {
     private val entries = CopyOnWriteArrayList<Registration>()
@@ -47,6 +50,24 @@ internal class Registrations {
      */
     fun findByOrigin(origin: InetSocketAddress): Registration? =
         entries.firstOrNull { it.origin == origin }
+
+    /**
+     * Looks a client up by its registered name.
+     * @param name the name to match, compared by value
+     * @return the registration currently held under that name, or `null`
+     */
+    fun findByName(name: String): Registration? =
+        entries.firstOrNull { it.connection.name == name }
+
+    /**
+     * Removes the registration for [origin], if one exists.
+     * @param origin the handshake origin to remove
+     * @return `true` if an entry was removed, `false` if none matched (already gone, or never existed)
+     */
+    fun removeByOrigin(origin: InetSocketAddress): Boolean {
+        val match = entries.firstOrNull { it.origin == origin } ?: return false
+        return entries.remove(match)
+    }
 
     /**
      * A stable snapshot of every registration, oldest first.

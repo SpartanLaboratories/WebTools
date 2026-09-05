@@ -25,6 +25,8 @@ interface Connection {
      * Registers [onMessage] as the handler for datagrams from this client. No
      * socket is bound - the server already owns the one shared socket; this only
      * routes inbound datagrams whose source matches [peer] to [onMessage].
+     * Calling this on a connection that has been [terminate]d is a silent no-op
+     * (see [terminate]).
      * @param onMessage callback invoked with the decoded text of each message received;
      * it runs on the server's single-threaded dispatch executor, not the caller's
      * thread, so it must return promptly - a slow handler delays delivery to other clients
@@ -33,9 +35,18 @@ interface Connection {
     fun actuate(onMessage: (message: String) -> Unit): Result<Unit>
 
     /**
-     * Unregisters this connection's message handler. Inbound datagrams from
-     * [peer] are dropped afterwards until [actuate] is called again.
-     * @return [Result.success] if the handler was unregistered, or the failure that prevented it
+     * Fully deregisters this connection: its message handler is cleared and its
+     * registration is removed from the server entirely, so it is no longer
+     * addressed by [MultiConnectionUDPServer.pushToAll] and any subsequent
+     * datagram from [peer] is dropped as unregistered. This is final - calling
+     * [actuate] again afterward is a silent no-op, since there is no longer a
+     * registration to bind against; the client must complete a fresh `Iam`
+     * handshake to be registered again.
+     *
+     * Call this whenever a connection becomes stale from the application's point
+     * of view - e.g. an application-level refusal (over capacity, banned, etc.)
+     * discovered only after the WebTools-level handshake already completed.
+     * @return [Result.success] once deregistered, or the failure that prevented it
      */
     fun terminate(): Result<Unit>
 

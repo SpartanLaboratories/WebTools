@@ -234,6 +234,48 @@ class MultiConnectionUDPServerTest {
     }
 
     @Test
+    @Order(12)
+    fun `terminate removes a connection from pushToAll's targets`() {
+        DatagramSocket().use { kappa ->
+            DatagramSocket().use { survivor ->
+                handshakeFrom(kappa, "Iam kappa")
+                handshakeFrom(survivor, "Iam kappaSurvivor")
+                Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+                assertTrue(connectionNamed("kappa").terminate().isSuccess)
+
+                assertTrue(server.pushToAll("kappa-broadcast").isSuccess)
+                assertEquals("kappa-broadcast", survivor.receiveText())
+                kappa.soTimeout = NO_REPLY_TIMEOUT_MILLIS
+                assertFailsWith<SocketTimeoutException> {
+                    kappa.receive(DatagramPacket(ByteArray(64), 64))
+                }
+            }
+        }
+    }
+
+    @Test
+    @Order(13)
+    fun `a same-name reconnect from a new origin supersedes the stale registration`() {
+        DatagramSocket().use { stale ->
+            handshakeFrom(stale, "Iam lambda")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+            DatagramSocket().use { fresh ->
+                handshakeFrom(fresh, "Iam lambda")
+                Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+                assertTrue(server.pushToAll("lambda-broadcast").isSuccess)
+                assertEquals("lambda-broadcast", fresh.receiveText())
+                stale.soTimeout = NO_REPLY_TIMEOUT_MILLIS
+                assertFailsWith<SocketTimeoutException> {
+                    stale.receive(DatagramPacket(ByteArray(64), 64))
+                }
+            }
+        }
+    }
+
+    @Test
     @Order(20)
     fun `stop terminates connections closes the socket and shuts the executor`() {
         assertTrue(server.stop().isSuccess)

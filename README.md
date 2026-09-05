@@ -50,6 +50,13 @@ per-client ports (it is hostable behind a single-port container or L4 UDP load b
 retransmitted `Iam` from the same source is answered with another `REGISTERED` and does not
 re-register. Tokens after `<name>` are ignored.
 
+A fresh `Iam` under a name that is already registered under a different
+origin (e.g. after a NAT rebind) supersedes that stale registration; the old
+origin is no longer addressed by `pushToAll`. `Connection.terminate()` fully
+deregisters the connection, not just its message handler - e.g. an
+application-level refusal discovered after the handshake already completed
+should call it so the refused client is not addressed by future broadcasts.
+
 The client must send the token `KA` on that socket every ~20 s of idle time to hold its NAT
 mapping open; `Connection.keepAlive()` is the shared helper that sends one `KA` datagram
 (the server drops inbound `KA` without dispatching it). A server-side `Connection.keepAlive()`

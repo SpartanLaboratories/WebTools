@@ -61,14 +61,14 @@ class UDPConnectionTest {
     }
 
     @Test
-    fun `terminate unbinds peer`() {
+    fun `terminate deregisters peer`() {
         val channel = FakeClientChannel()
         val connection = connection(channel)
         connection.actuate {}
 
         assertTrue(connection.terminate().isSuccess)
 
-        assertEquals(listOf(peer), channel.unbound)
+        assertEquals(listOf(peer), channel.deregistered)
     }
 
     @Test
