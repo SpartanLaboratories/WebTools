@@ -1,36 +1,68 @@
 # WebTools
 
-A small Kotlin/JVM library of internet I/O helpers: web page reading and scraping,
-headless-browser screenshots, and a lightweight UDP connection layer.
+A small Kotlin/JVM collection of internet I/O helpers, published as **three
+independent, single-concern artifacts** — depend only on the one you need:
+
+| Artifact | Package | Purpose | Third-party runtime deps |
+|---|---|---|---|
+| `io.github.spartanlaboratories:webtools-udp` | `com.spartanlabs.webtools.udp` | Multi-client UDP connection layer + NAT-traversal handshake | none (slf4j-api only) |
+| `io.github.spartanlaboratories:webtools-scraping` | `com.spartanlabs.webtools.scraping` | `Connector` — open/read a URL line by line, plus one-shot `get` / `skrape` / image `download` | skrapeit, jsoup, unirest |
+| `io.github.spartanlaboratories:webtools-browser` | `com.spartanlabs.webtools.browser` | `WebViewer` — headless-browser screenshots | selenium-java |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover.
 
 ## Install
 
-Published to Maven Central as `io.github.spartanlaboratories:WebTools`.
-
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:WebTools:2.0.1")
+    implementation("io.github.spartanlaboratories:webtools-udp:1.0.0")
+    // and/or
+    implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
+    implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
 }
 ```
 
 Requires JDK 11 or newer. Built with Kotlin 2.2.
 
+### Migrating from `io.github.spartanlaboratories:WebTools` (≤ 2.0.1a)
+
+The combined `WebTools` artifact is retired at its final version `2.0.1a` and receives no
+further releases. To move off it:
+
+1. Replace the `WebTools` dependency with whichever of the three modules you actually use.
+2. Update imports: `com.spartanlabs.webtools.Foo` → `com.spartanlabs.webtools.{udp,scraping,browser}.Foo`.
+3. `WebTools` carried an unused `api` dependency on `GeneralTools`; if you relied on it
+   transitively, depend on it directly now.
+4. `webtools-browser` no longer ships webdriver binaries — [Selenium
+   Manager](https://www.selenium.dev/documentation/selenium_manager/) resolves the driver at
+   runtime (needs a local Chrome/Chromium install and, on first run, network access).
+
 ## Components
+
+### `webtools-udp`
+
+| Type | Purpose |
+|------|---------|
+| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`. |
+| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. |
+| `Connection` | Interface for one named connection to a peer (`actuate` / `push` / `terminate` / `keepAlive`). |
+| `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
+| `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop. |
+| `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `KA`). |
+| `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
+
+### `webtools-scraping`
 
 | Type | Purpose |
 |------|---------|
 | `Connector` | Single-connection web client: open a URL and read it line by line; plus one-shot `get`, `skrape`, and image `download` helpers. |
-| `WebViewer` | Headless-Chrome screenshot utility - `screenshot(url)` returns a `BufferedImage`. |
-| `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
-| `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop. |
-| `Connection` | Interface for one named connection to a peer (`actuate` / `push` / `terminate` / `keepAlive`). |
-| `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
-| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract - subclass and implement `onClientConnect`. |
-| `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `KA`). |
-| `MultiConnectionUDPClient` | The client-side counterpart to `MultiConnectionUDPServer`: one socket, one owned listener thread, one dispatch thread - performs the handshake, then delivers the rest of the session via callback. |
+
+### `webtools-browser`
+
+| Type | Purpose |
+|------|---------|
+| `WebViewer` | Headless-Chrome screenshot utility — `screenshot(url)` returns a `Result<BufferedImage>`, `getPage(url)` a `Result<File>`. Driver provisioned by Selenium Manager. |
 
 ## UDP handshake protocol
 
@@ -89,18 +121,23 @@ automatically and never reach the `start` callback.
 
 ## Build & test
 
+The repo is a Gradle multi-module build; the three modules are `:webtools-udp`,
+`:webtools-scraping`, `:webtools-browser`.
+
 ```sh
-./gradlew build              # compile + full test suite
-./gradlew test               # every test level, one JVM
-./gradlew gatingTest         # Level 1  - fast pre-commit checks
-./gradlew componentTest      # Level 2  - isolated component behaviour
-./gradlew integrationTest    # Level 3  - real sockets / external interfaces
-./gradlew deterministicTest  # Level 4a - pure input->output mappings
-./gradlew e2eTest            # Level 4b - full-stack flows
-./gradlew nonfunctionalTest  # Level 4c - robustness / security properties
-./gradlew uatTest            # Level 5  - manual acceptance (mostly @Disabled)
+./gradlew build                    # compile + full test suite, every module
+./gradlew :webtools-udp:build      # one module only
+./gradlew test                     # every test level, one JVM per module
+./gradlew gatingTest               # Level 1  - fast pre-commit checks (all modules)
+./gradlew componentTest            # Level 2  - isolated component behaviour
+./gradlew integrationTest          # Level 3  - real sockets / external interfaces
+./gradlew deterministicTest        # Level 4a - pure input->output mappings
+./gradlew e2eTest                  # Level 4b - full-stack flows
+./gradlew nonfunctionalTest        # Level 4c - robustness / security properties
+./gradlew uatTest                  # Level 5  - manual acceptance (mostly @Disabled)
 ```
 
-Tests are organised by the project's 5-level testing hierarchy under
-`src/test/kotlin/com/spartanlabs/testing/<level>/` and JUnit-tagged, so any level can be run
-or gated on its own. Shared fixtures live under `testing/support/`.
+Each module organises its tests by the project's 5-level testing hierarchy under
+`<module>/src/test/kotlin/com/spartanlabs/testing/<level>/webtools/<module>/` and JUnit-tags
+them, so any level can be run or gated on its own. Shared fixtures live under
+`testing/support/`.
