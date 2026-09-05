@@ -7,9 +7,11 @@
   scraping, headless-browser screenshots) into one artifact, so every consumer
   that wants the UDP layer also drags in Selenium, skrapeit, jsoup and unirest.
 - **Branch:** `refactor/split-into-three-modules` (off `master`).
-- **Commit(s):** TBD — sequence in §8.
+- **Commit(s):** the 5-commit sequence in §8, landed. See §10 for deviations.
 - **PR:** TBD.
-- **Status:** planning complete. All decisions (D0–D6) settled — see below.
+- **Status:** implemented on the branch; `./gradlew build` green (135 tests: 119
+  udp + 11 scraping + 5 browser; 0 failures, 5 `@Disabled` UAT). Awaiting PR.
+- **Issue:** filed as `SpartanLaboratories/WebTools#15`.
 - **Target artifacts / versions (settled):**
   - `io.github.spartanlaboratories:webtools-udp:1.0.0`
   - `io.github.spartanlaboratories:webtools-scraping:1.0.0`
@@ -118,7 +120,7 @@ module (history preserved per file).
 
 | Module | Package | Runtime deps | Notes |
 |---|---|---|---|
-| `webtools-udp` | `com.spartanlabs.webtools.udp` (+ `.udp.internal` for `ClientChannel`, `CommonChannel`, `HandshakeCoordinator`, `HandshakeProtocol`, `Registrations`) | `api(slf4j-api)` | No third-party runtime deps at all. Drops the unused `GeneralTools` `api` dep. |
+| `webtools-udp` | `com.spartanlabs.webtools.udp` (flat — see §10; the five collaborators stay `internal`, which already hides them from consumers) | `api(slf4j-api)` | No third-party runtime deps at all. Drops the unused `GeneralTools` `api` dep. |
 | `webtools-scraping` | `com.spartanlabs.webtools.scraping` | `api(slf4j-api)`, `implementation(skrapeit 1.1.5, jsoup 1.15.4, unirest-java 1.4.9)` | `Connector` unchanged apart from its package + its own copy of `flatMap`. |
 | `webtools-browser` | `com.spartanlabs.webtools.browser` | `api(slf4j-api)`, `implementation(selenium-java)` | See D5 (Selenium version) and D6 (`WebViewer` cleanup). **No** committed driver binaries. |
 
@@ -426,3 +428,29 @@ keeps its final `2.0.1a` and is not part of this scheme going forward.
     Selenium-Manager driver requirement (needs Chrome installed; network access
     on first run to fetch the driver).
   - New tests per §4.4.
+
+---
+
+## 10. Deviations from the plan as implemented
+
+- **§2.1 / §3.1 — no `.udp.internal` sub-package.** All twelve `webtools-udp`
+  sources sit flat in `com.spartanlabs.webtools.udp`. Adding a second package for
+  the five `internal` collaborators would add cross-package imports and rename
+  churn for no consumer-visible benefit — `internal` already hides them from the
+  published API. The flat layout also matches how the code was structured before
+  the split (flat package, `internal` markers).
+- **§4.4 — `WebViewer` gating test shape.** `WebViewer` has no pure logic to
+  unit-test (URL handling is Selenium's), so the gating test pins the one
+  browser-free contract there is: `getPage`/`screenshot` reject a blank URL as a
+  `Result.failure` *before* launching a driver (`require(url.isNotBlank())`),
+  plus the settle-time constant. Real-render coverage is the `@Disabled` UAT.
+- **`WebViewer` rewrite not tracked as a git rename.** The D6 cleanup changed
+  enough of the file (58 lines removed, 85 added) that Git records it as a
+  delete + add rather than a rename. Intentional — the commit message carries the
+  provenance.
+- **Three unreferenced test fixtures deleted** (`mirrorImage.png`, `test image
+  file.png`, `testWebpageScreenshot.png`) — no `.kt` file referenced them; not
+  worth relocating dead weight.
+- **Driver binaries removed from HEAD only.** `git rm` drops them going forward
+  but they remain in history (~30 MB). A history rewrite (`git filter-repo`) is
+  out of scope for a published repo and was not done.
