@@ -8,9 +8,10 @@ import java.net.InetSocketAddress
  * [MultiConnectionUDPServer].
  *
  * It owns no socket and no thread of its own. [push] and [keepAlive] address
- * [peer] over the server's single shared socket; [actuate] / [terminate] register
- * and unregister this connection's message handler in the server's registry. Every
- * fallible operation returns a [Result].
+ * [peer] over the server's single shared socket; [actuate] registers this
+ * connection's message handler in the server's registry, while [terminate] now
+ * fully deregisters it - not just unregisters the handler. Every fallible
+ * operation returns a [Result].
  *
  * Instances are minted only by [MultiConnectionUDPServer]'s internal factory -
  * the constructor is `internal`. Standalone bidirectional-socket users take
@@ -36,7 +37,7 @@ class UDPConnection internal constructor(
             .onFailure { log.error("Could not actuate connection '{}'", name, it) }
 
     override fun terminate(): Result<Unit> =
-        runCatching { channel.unbind(peer) }
+        runCatching { channel.deregister(peer) }
             .onFailure { log.error("Could not terminate connection '{}'", name, it) }
 
     override fun push(message: String): Result<Unit> =

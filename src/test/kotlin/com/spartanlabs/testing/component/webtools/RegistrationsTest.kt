@@ -8,9 +8,11 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 // Level 2 - the registration collection in isolation; FakeConnection keeps it socket-free.
 @Tag("component")
@@ -64,6 +66,48 @@ class RegistrationsTest {
         registrations.add(registration(1000))
 
         assertNull(registrations.findByOrigin(InetSocketAddress(loopback, 9999)))
+    }
+
+    @Test
+    fun `findByName returns the matching entry`() {
+        val registrations = Registrations()
+        registrations.add(registration(1000))
+
+        assertSame(
+            registrations.snapshot().single(),
+            registrations.findByName("client-1000"),
+        )
+    }
+
+    @Test
+    fun `findByName returns null when no name matches`() {
+        val registrations = Registrations()
+        registrations.add(registration(1000))
+
+        assertNull(registrations.findByName("nobody"))
+    }
+
+    @Test
+    fun `removeByOrigin removes the matching entry and returns true`() {
+        val registrations = Registrations()
+        registrations.add(registration(1000))
+        registrations.add(registration(2000))
+
+        assertTrue(registrations.removeByOrigin(InetSocketAddress(loopback, 1000)))
+
+        assertEquals(1, registrations.size)
+        assertNull(registrations.findByOrigin(InetSocketAddress(loopback, 1000)))
+        assertEquals(listOf(2000), registrations.snapshot().map { it.origin.port })
+    }
+
+    @Test
+    fun `removeByOrigin returns false and leaves the list untouched when nothing matches`() {
+        val registrations = Registrations()
+        registrations.add(registration(1000))
+
+        assertFalse(registrations.removeByOrigin(InetSocketAddress(loopback, 9999)))
+
+        assertEquals(1, registrations.size)
     }
 
     @Test

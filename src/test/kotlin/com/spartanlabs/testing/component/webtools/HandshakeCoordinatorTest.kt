@@ -4,12 +4,14 @@ import com.spartanlabs.testing.support.webtools.FakeConnection
 import com.spartanlabs.webtools.ClientChannel
 import com.spartanlabs.webtools.HandshakeCoordinator
 import com.spartanlabs.webtools.HandshakeProtocol
+import com.spartanlabs.webtools.UDPConnection
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 // Level 2 - the handshake state machine + inbound router in isolation. Its collaborators
@@ -165,16 +167,107 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `bind then unbind toggles delivery`() {
+    fun `bind then deregister removes the registration entirely`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         val received = mutableListOf<String>()
         coordinator.bind(originA, received::add)
-        coordinator.unbind(originA)
+        coordinator.deregister(originA)
 
         coordinator.accept(originA, "hello")
-
         assertTrue(received.isEmpty())
+        assertEquals(0, coordinator.size)
+
+        // A fresh Iam from the now-deregistered origin must be treated as brand-new,
+        // not a retransmit - newConnection is invoked again.
+        created.clear()
+        coordinator.accept(originA, "Iam alice")
+        assertEquals(1, created.size)
+    }
+
+    @Test
+    fun `a new Iam under an existing name from a different origin supersedes the stale registration`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val stale = createdConnections.single()
+        sent.clear()
+
+        coordinator.accept(originB, "Iam alice")
+
+        assertEquals(1, coordinator.size)
+        assertEquals(1, stale.terminateCalls)
+        val surviving = coordinator.snapshot().single()
+        assertEquals("alice", surviving.connection.name)
+        assertEquals(originB, surviving.connection.peer)
+
+        sent.clear()
+        coordinator.broadcast("ping")
+        assertEquals(listOf("ping" to originB), sent)
+    }
+
+    @Test
+    fun `terminating the real connection removes it from Registrations end to end`() {
+        connectionFactory = { name, peer -> FakeConnection(name, peer) }
+        var realConnection: UDPConnection? = null
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, channel ->
+                UDPConnection(name, peer, channel).also { realConnection = it }
+            },
+            sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
+            onRegistered = { registeredNames += it.name },
+            dispatch = { it() },
+        )
+
+        coordinator.accept(originA, "Iam alice")
+        assertEquals(1, coordinator.size)
+
+        assertTrue(realConnection!!.terminate().isSuccess)
+
+        assertEquals(0, coordinator.size)
+        assertTrue(coordinator.accept(originA, "hello").isSuccess)
+        assertNull(coordinator.snapshot().firstOrNull { it.origin == originA })
+    }
+
+    @Test
+    fun `actuate after terminate on a real connection is a silent no-op`() {
+        var realConnection: UDPConnection? = null
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, channel ->
+                UDPConnection(name, peer, channel).also { realConnection = it }
+            },
+            sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
+            onRegistered = { registeredNames += it.name },
+            dispatch = { it() },
+        )
+
+        coordinator.accept(originA, "Iam alice")
+        assertTrue(realConnection!!.terminate().isSuccess)
+        assertEquals(0, coordinator.size)
+
+        val received = mutableListOf<String>()
+        assertTrue(realConnection!!.actuate(received::add).isSuccess, "actuate after terminate must not throw")
+
+        assertEquals(0, coordinator.size)
+        assertTrue(coordinator.accept(originA, "hello").isSuccess)
+        assertTrue(received.isEmpty(), "a re-bound handler must never fire once the registration is gone")
+    }
+
+    @Test
+    fun `terminateAll on real connections empties Registrations`() {
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, channel -> UDPConnection(name, peer, channel) },
+            sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
+            onRegistered = { registeredNames += it.name },
+            dispatch = { it() },
+        )
+
+        coordinator.accept(originA, "Iam alice")
+        coordinator.accept(originB, "Iam bob")
+        assertEquals(2, coordinator.size)
+
+        assertTrue(coordinator.terminateAll().isSuccess)
+
+        assertEquals(0, coordinator.size)
     }
 
     @Test

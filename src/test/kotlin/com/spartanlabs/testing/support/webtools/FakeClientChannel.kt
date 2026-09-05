@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 
 /**
  * A socket-free [ClientChannel] test fixture. Records every [send] (as the decoded
- * UTF-8 string plus its target), every [bind] / [unbind], and lets a test invoke a
+ * UTF-8 string plus its target), every [bind] / [deregister], and lets a test invoke a
  * bound handler directly. Backs the socket-free [com.spartanlabs.webtools.UDPConnection]
  * tests.
  */
@@ -17,7 +17,7 @@ internal class FakeClientChannel(
 
     val sent = mutableListOf<Sent>()
     val bound = mutableMapOf<InetSocketAddress, (String) -> Unit>()
-    val unbound = mutableListOf<InetSocketAddress>()
+    val deregistered = mutableListOf<InetSocketAddress>()
 
     override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
         sent += Sent(String(bytes, Charsets.UTF_8), to)
@@ -28,8 +28,8 @@ internal class FakeClientChannel(
         bound[peer] = onMessage
     }
 
-    override fun unbind(peer: InetSocketAddress) {
-        unbound += peer
+    override fun deregister(peer: InetSocketAddress) {
+        deregistered += peer
         bound.remove(peer)
     }
 
