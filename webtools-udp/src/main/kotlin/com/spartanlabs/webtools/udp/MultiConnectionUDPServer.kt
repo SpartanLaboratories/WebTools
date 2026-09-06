@@ -28,6 +28,20 @@ import java.util.concurrent.Executors
  * The handshake rules live in [HandshakeProtocol] (pure) and [HandshakeCoordinator]
  * (the state machine + inbound router); this class binds them to a real socket.
  *
+ * ### Binary application payloads
+ * Post-handshake application data may be raw bytes: [Connection.push] takes a
+ * `ByteArray`, [Connection.actuateBytes] / [startBytes] register a raw-bytes
+ * inbound handler, and [pushToAll] has a `ByteArray` overload. Delivery is an
+ * exact-length copy of the datagram body - no UTF-8 decode, no `.trim()`. The
+ * `Iam`/`KA` classifier still runs on the trimmed UTF-8 view of *every* inbound
+ * datagram, so a binary payload that decodes/trims to a control token is
+ * intercepted and never delivered; lead every binary application datagram with a
+ * byte that cannot start `Iam`/`KA` and is not ASCII whitespace (e.g. `0x00`, or
+ * any byte `>= 0x80`). An inbound datagram over 65507 bytes is delivered
+ * truncated, not rejected; on send ([Connection.push] / [pushToAll]), a payload
+ * over the OS datagram limit fails the `Result` (cause logged) rather than being
+ * sent. Keep frames under the path MTU (~1200 bytes) for real-network use.
+ *
  * ### Construction side effects
  * Instantiating a subclass **binds the OS UDP port [COMMON_LISTEN_PORT]** and
  * starts a daemon listener thread plus a single daemon dispatch thread.
@@ -101,7 +115,7 @@ abstract class MultiConnectionUDPServer {
         val buffer = ByteArray(RECEIVE_BUFFER_BYTES)
         while (listening) {
             commonChannel.receive(buffer)
-                .flatMap { (origin, text) -> coordinator.accept(origin, text) }
+                .flatMap { inbound -> coordinator.accept(inbound.origin, inbound.bytes, inbound.text) }
                 .onFailure { cause ->
                     if (cause is SocketException) {
                         log.debug("Common listen socket was closed, stopping listener")
@@ -139,6 +153,21 @@ abstract class MultiConnectionUDPServer {
     }
 
     /**
+     * Binds [onClientMessage] as the raw-bytes handler on every currently-registered
+     * connection: each receives an exact-length, undecoded, untrimmed copy of every
+     * application datagram (at most 65507 bytes - a larger inbound datagram is
+     * truncated, not rejected). Mutually exclusive with [start] per connection (last
+     * call wins). No socket is started - the one shared socket is already running.
+     * @param onClientMessage callback invoked with the raw datagram body; it runs on
+     * the single-threaded dispatch executor, not the caller's thread, so it must return quickly
+     * @return [Result.success] if every connection was actuated, or the first failure
+     */
+    fun startBytes(onClientMessage: (ByteArray) -> Unit): Result<Unit> {
+        log.info("Actuating (bytes) {} connection(s)", coordinator.size)
+        return coordinator.actuateAllBytes(onClientMessage)
+    }
+
+    /**
      * Broadcasts a message to every registered client's endpoint over the common socket.
      * "Registered" here means *currently* registered - a connection that has been
      * `terminate()`d, or superseded by a same-name reconnect from a new origin, is
@@ -149,6 +178,19 @@ abstract class MultiConnectionUDPServer {
     fun pushToAll(message: String): Result<Unit> {
         log.info("Pushing message to all {} connection(s)", coordinator.size)
         return coordinator.broadcast(message)
+    }
+
+    /**
+     * Broadcasts [bytes] verbatim to every registered client's endpoint over the
+     * common socket - no encoding, no trim. Raw-bytes mirror of [pushToAll]`(String)`.
+     * A payload above the OS datagram limit fails the [Result] (cause logged)
+     * rather than being sent.
+     * @param bytes the raw payload to send to all clients
+     * @return [Result.success] if the datagram reached every client, or the first failure
+     */
+    fun pushToAll(bytes: ByteArray): Result<Unit> {
+        log.info("Pushing datagram to all {} connection(s)", coordinator.size)
+        return coordinator.broadcast(bytes)
     }
 
     /**
@@ -188,8 +230,14 @@ abstract class MultiConnectionUDPServer {
          */
         const val COMMON_LISTEN_PORT = 9998
 
-        /** Size of the reusable buffer incoming datagrams are read into. */
-        private const val RECEIVE_BUFFER_BYTES = 1024
+        /**
+         * Size of the reusable buffer incoming datagrams are read into - the
+         * maximum UDP payload over IPv4, so a well-formed datagram is never
+         * truncated on receive. Per-datagram delivery is a `copyOf(length)`, so the
+         * copy cost still tracks the real payload size; the only fixed cost is this
+         * one backing array per server.
+         */
+        private const val RECEIVE_BUFFER_BYTES = 65507
 
         /** How long [stop] waits for the common listener thread to notice it should stop. */
         private const val LISTENER_JOIN_TIMEOUT_MILLIS = 1000L

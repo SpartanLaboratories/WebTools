@@ -6,6 +6,23 @@ package com.spartanlabs.webtools.udp
  * confirms it, and the keepalive token (both directions) — without the
  * server's internal inbound-parsing rules ([HandshakeProtocol] stays internal
  * for those).
+ *
+ * ### Binary application payloads
+ * Application data after the handshake may be raw binary - [Connection.push] and
+ * [Connection.actuateBytes], or [MultiConnectionUDPClient.send] and
+ * [MultiConnectionUDPClient.startBytes], each have a `ByteArray` form. The `Iam` /
+ * `KA` classifier runs on the trimmed UTF-8 view of **every** inbound datagram,
+ * in both directions, so a binary payload that decodes and trims to exactly
+ * [KEEPALIVE_TOKEN], or begins with the [HANDSHAKE_VERB] token followed by a
+ * space, is intercepted by the control-traffic machinery and never delivered to
+ * an application handler. Mitigation: lead every binary application datagram with
+ * a byte that cannot start [HANDSHAKE_VERB] or [KEEPALIVE_TOKEN] and is not ASCII
+ * whitespace - e.g. `0x00`, or any byte `>= 0x80` used as a version/format tag.
+ * The maximum datagram the library will receive whole is 65507 bytes; a larger
+ * one is truncated, not rejected. On the send side a payload above the OS
+ * datagram limit fails the returned `Result` (cause logged) rather than being
+ * sent; for real-network use keep frames under the path MTU (~1200 bytes) to
+ * avoid IP fragmentation.
  */
 object HandshakeWireFormat {
     /** The verb that opens a client handshake: `Iam <name>`. */

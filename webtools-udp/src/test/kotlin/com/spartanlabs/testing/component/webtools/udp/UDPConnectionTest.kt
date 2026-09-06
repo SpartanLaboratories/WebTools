@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -69,6 +70,38 @@ class UDPConnectionTest {
         assertTrue(connection.terminate().isSuccess)
 
         assertEquals(listOf(peer), channel.deregistered)
+    }
+
+    @Test
+    fun `push bytes forwards the exact bytes to channel send with peer`() {
+        val channel = FakeClientChannel()
+        val payload = byteArrayOf(0x00, 0x7F, -0x01, 0x0A)
+
+        assertTrue(connection(channel).push(payload).isSuccess)
+
+        val (bytes, to) = channel.sentBytes.single()
+        assertContentEquals(payload, bytes)
+        assertEquals(peer, to)
+    }
+
+    @Test
+    fun `push String is a UTF-8 wrapper over push bytes`() {
+        val channel = FakeClientChannel()
+        val message = "héllo-世界"
+
+        connection(channel).push(message)
+
+        assertContentEquals(message.toByteArray(Charsets.UTF_8), channel.sentBytes.single().first)
+    }
+
+    @Test
+    fun `actuateBytes binds the bytes handler for peer and propagates the Result`() {
+        val channel = FakeClientChannel()
+        val handler: (ByteArray) -> Unit = {}
+
+        assertTrue(connection(channel).actuateBytes(handler).isSuccess)
+
+        assertEquals(handler, channel.boundBytes[peer])
     }
 
     @Test

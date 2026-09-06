@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -28,6 +29,7 @@ class HandshakeCoordinatorTest {
     private val createdConnections = mutableListOf<FakeConnection>()
     private val createdChannels = mutableListOf<ClientChannel>()
     private val sent = mutableListOf<Pair<String, InetSocketAddress>>()
+    private val sentBytes = mutableListOf<Pair<ByteArray, InetSocketAddress>>()
     private val registeredNames = mutableListOf<String>()
     private var sendResult: Result<Unit> = Result.success(Unit)
 
@@ -42,6 +44,7 @@ class HandshakeCoordinatorTest {
         },
         sender = { bytes, to ->
             sent += String(bytes, Charsets.UTF_8) to to
+            sentBytes += bytes to to
             sendResult
         },
         onRegistered = { registeredNames += it.name },
@@ -341,6 +344,105 @@ class HandshakeCoordinatorTest {
 
         assertTrue(outcome.isFailure)
         assertTrue(createdConnections.all { it.terminateCalls == 1 })
+    }
+
+    @Test
+    fun `accept routes application data to a bound bytes handler with the exact undecoded bytes`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val received = mutableListOf<ByteArray>()
+        coordinator.bindBytes(originA, received::add)
+        val payload = byteArrayOf(0x00, 0x20, 0x4B)
+
+        assertTrue(coordinator.accept(originA, payload, String(payload, Charsets.UTF_8).trim()).isSuccess)
+
+        assertContentEquals(payload, received.single())
+    }
+
+    @Test
+    fun `a bytes payload that trims to KA is still dropped as a keepalive`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val bytesSeen = mutableListOf<ByteArray>()
+        coordinator.bindBytes(originA, bytesSeen::add)
+        val payload = " KA ".toByteArray(Charsets.UTF_8)
+
+        assertTrue(coordinator.accept(originA, payload, String(payload, Charsets.UTF_8).trim()).isSuccess)
+
+        assertTrue(bytesSeen.isEmpty())
+    }
+
+    @Test
+    fun `a bytes payload whose text begins with Iam is classified as a handshake, not delivered`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val bytesSeen = mutableListOf<ByteArray>()
+        coordinator.bindBytes(originA, bytesSeen::add)
+        val payload = "Iam bob".toByteArray(Charsets.UTF_8)
+
+        coordinator.accept(originB, payload, String(payload, Charsets.UTF_8).trim())
+
+        assertTrue(bytesSeen.isEmpty())
+    }
+
+    @Test
+    fun `bindBytes clears a text handler and bind clears a bytes handler`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val textSeen = mutableListOf<String>()
+        val bytesSeen = mutableListOf<ByteArray>()
+
+        coordinator.bind(originA, textSeen::add)
+        coordinator.bindBytes(originA, bytesSeen::add)
+        coordinator.accept(originA, "hello".toByteArray(Charsets.UTF_8), "hello")
+        assertTrue(textSeen.isEmpty())
+        assertEquals(1, bytesSeen.size)
+
+        coordinator.bind(originA, textSeen::add)
+        coordinator.accept(originA, "world".toByteArray(Charsets.UTF_8), "world")
+        assertEquals(listOf("world"), textSeen)
+        assertEquals(1, bytesSeen.size)
+    }
+
+    @Test
+    fun `deliverData with no handler bound drops a binary datagram`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), " ").isSuccess)
+    }
+
+    @Test
+    fun `a throwing bytes handler does not propagate out of accept`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.bindBytes(originA) { error("boom") }
+
+        assertTrue(coordinator.accept(originA, byteArrayOf(1, 2, 3), "x").isSuccess)
+    }
+
+    @Test
+    fun `actuateAllBytes actuates every registered connection via actuateBytes`() {
+        val coordinator = newCoordinator()
+        coordinator.registerClients(3)
+
+        assertTrue(coordinator.actuateAllBytes { }.isSuccess)
+
+        assertTrue(createdConnections.all { it.lastOnBytes != null })
+    }
+
+    @Test
+    fun `broadcast bytes sends the exact bytes to every registered peer at the observed origin`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam spoofer 8.8.8.8")
+        sentBytes.clear()
+        val payload = byteArrayOf(0x00, -0x80, 0x0A)
+
+        assertTrue(coordinator.broadcast(payload).isSuccess)
+
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(payload, bytes)
+        assertEquals(originA, to)
     }
 
     @Test

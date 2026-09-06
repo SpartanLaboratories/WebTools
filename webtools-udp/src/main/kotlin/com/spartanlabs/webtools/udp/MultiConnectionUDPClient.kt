@@ -74,6 +74,17 @@ import java.util.concurrent.Executors
  * See the sequence diagram in docs/issue-3-public-client-handshake-plan.md §2.2
  * for the canonical handshake/listener/dispatch flow.
  *
+ * ### Binary application payloads
+ * Application data may be raw bytes: [send] takes a `ByteArray` and [startBytes]
+ * arms the listener with a raw-bytes handler that receives an exact-length,
+ * undecoded, untrimmed copy of every datagram. The `KA` classifier still runs on
+ * the trimmed UTF-8 view of every inbound datagram, so a binary payload that
+ * decodes/trims to `KA` is dropped; lead binary application datagrams with a byte
+ * that is not ASCII whitespace and cannot start `KA` (e.g. `0x00`, or `>= 0x80`).
+ * An inbound datagram over 65507 bytes is delivered truncated, not rejected; on
+ * send, a payload over the OS datagram limit fails the `Result`. Keep frames
+ * under the path MTU (~1200 bytes) for real-network use.
+ *
  * @param serverAddress the server's address to hand shake with and send to
  * @param serverPort the server's common listen port; defaults to
  * [MultiConnectionUDPServer.COMMON_LISTEN_PORT]
@@ -144,13 +155,46 @@ class MultiConnectionUDPClient(
      * @return [Result.success] once the listener thread is running, or the failure
      * that prevented starting it
      */
-    fun start(onMessage: (message: String) -> Unit): Result<Unit> {
+    fun start(onMessage: (message: String) -> Unit): Result<Unit> =
+        startWith { _, text -> dispatch { onMessage(text) } }
+
+    /**
+     * Raw-bytes counterpart to [start]: dispatches an exact-length, undecoded,
+     * untrimmed copy of every non-keepalive datagram to [onMessage]. Mutually
+     * exclusive with [start] - last call wins - and carries the same one-shot
+     * ordering contract (call after [handshake], call once).
+     *
+     * The `KA` classifier still runs on the trimmed UTF-8 view of every inbound
+     * datagram, so a binary payload that decodes/trims to `KA` is dropped and
+     * never delivered; lead binary application datagrams with a byte that is not
+     * ASCII whitespace and cannot start `KA` (e.g. `0x00`, or any byte `>= 0x80`).
+     * The delivered copy is at most 65507 bytes; a larger inbound datagram is
+     * delivered truncated to that length, not rejected.
+     * @param onMessage invoked with the raw body of every non-keepalive datagram;
+     * runs on the dispatch executor, not the caller's thread. A thrown exception is
+     * caught, logged, and does not stop the listener.
+     * @return [Result.success] once the listener thread is running, or the failure
+     * that prevented starting it
+     */
+    fun startBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> =
+        startWith { bytes, _ -> dispatch { onMessage(bytes) } }
+
+    /**
+     * Hand delivery to the single-threaded executor so a slow handler never stalls
+     * the listener thread. The inner runCatching keeps a throwing handler from
+     * killing the dispatch thread.
+     */
+    private fun dispatch(block: () -> Unit) {
+        dispatchExecutor.execute { runCatching(block).onFailure { log.warn("Message handler threw", it) } }
+    }
+
+    private fun startWith(deliver: (bytes: ByteArray, text: String) -> Unit): Result<Unit> {
         listening = true
         return runCatching {
             // Undo handshake()'s bounded wait - the session listener must block
             // indefinitely, not time out every idle interval.
             socket.soTimeout = 0
-            listenerThread = Thread { receiveLoop(onMessage) }.apply {
+            listenerThread = Thread { receiveLoop(deliver) }.apply {
                 name = "mcupc-listener"
                 isDaemon = true
                 start()
@@ -162,23 +206,21 @@ class MultiConnectionUDPClient(
     }
 
     /** Body of the listener thread: classify-and-drop `KA`, dispatch everything else. */
-    private fun receiveLoop(onMessage: (String) -> Unit) {
+    private fun receiveLoop(deliver: (bytes: ByteArray, text: String) -> Unit) {
         val buffer = ByteArray(RECEIVE_BUFFER_BYTES)
         while (listening) {
             runCatching {
                 val packet = DatagramPacket(buffer, buffer.size)
                 socket.receive(packet)
-                String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
-            }.onSuccess { text ->
+                // Exact-length copy: the next receive() reuses buffer, so a slice handed
+                // to the dispatch executor would be a data race.
+                val bytes = packet.data.copyOf(packet.length)
+                bytes to String(bytes, Charsets.UTF_8).trim()
+            }.onSuccess { (bytes, text) ->
                 if (HandshakeWireFormat.isKeepAlive(text)) {
                     log.trace("Dropped keepalive from server")
                 } else {
-                    // Hand delivery to the single-threaded executor so a slow onMessage
-                    // never stalls the listener thread. The inner runCatching keeps a
-                    // throwing handler from killing the dispatch thread.
-                    dispatchExecutor.execute {
-                        runCatching { onMessage(text) }.onFailure { log.warn("Message handler threw", it) }
-                    }
+                    deliver(bytes, text)
                 }
             }.onFailure { cause ->
                 if (cause is SocketException) {
@@ -197,9 +239,21 @@ class MultiConnectionUDPClient(
      * @param message the text to send
      * @return [Result.success] if the message was sent, or the failure that prevented it
      */
-    fun send(message: String): Result<Unit> = runCatching {
-        val payload = message.toByteArray(Charsets.UTF_8)
-        socket.send(DatagramPacket(payload, payload.size, serverAddress, serverPort))
+    fun send(message: String): Result<Unit> = send(message.toByteArray(Charsets.UTF_8))
+
+    /**
+     * Sends [bytes] to the server as one raw datagram over the shared socket - the
+     * payload is placed on the wire verbatim, no encoding, no trim. Safe to call
+     * from any thread. [send]`(String)` is a UTF-8 wrapper over this.
+     *
+     * A payload above the OS datagram limit fails the returned [Result] (the
+     * cause is logged) rather than being sent; for real-network use keep frames
+     * under the path MTU (~1200 bytes) to avoid IP fragmentation.
+     * @param bytes the raw datagram payload
+     * @return [Result.success] if the datagram was sent, or the failure that prevented it
+     */
+    fun send(bytes: ByteArray): Result<Unit> = runCatching {
+        socket.send(DatagramPacket(bytes, bytes.size, serverAddress, serverPort))
     }.onFailure { log.error("Could not send to {}:{}", serverAddress, serverPort, it) }
 
     /**
@@ -237,7 +291,14 @@ class MultiConnectionUDPClient(
     private companion object {
         private val log = LoggerFactory.getLogger(MultiConnectionUDPClient::class.java)
         private const val HANDSHAKE_TIMEOUT_MILLIS = 4000
-        private const val RECEIVE_BUFFER_BYTES = 1024
+
+        /**
+         * Size of the datagram receive buffer - the maximum UDP payload over IPv4,
+         * so a well-formed datagram is never truncated. Shared by [receiveLoop] and
+         * the one-shot [handshake] buffer; the larger size is harmless for the
+         * latter's single allocation.
+         */
+        private const val RECEIVE_BUFFER_BYTES = 65507
         private const val LISTENER_JOIN_TIMEOUT_MILLIS = 1000L
     }
 }

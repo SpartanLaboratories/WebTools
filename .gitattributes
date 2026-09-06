@@ -1,0 +1,4 @@
+# Kotlin/Gradle sources are LF in the repo regardless of contributor platform,
+# so an editor that rewrites a file with CRLF cannot inflate its diff.
+*.kt   text eol=lf
+*.kts  text eol=lf

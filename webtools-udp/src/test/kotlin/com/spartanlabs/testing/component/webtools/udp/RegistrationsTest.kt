@@ -50,6 +50,24 @@ class RegistrationsTest {
     }
 
     @Test
+    fun `onBytes defaults null and is settable independently of onMessage`() {
+        val entry = registration(1000)
+        assertNull(entry.onBytes)
+
+        val bytesHandler: (ByteArray) -> Unit = {}
+        entry.onBytes = bytesHandler
+        assertNotNull(entry.onBytes)
+        // At the Registration level, setting onBytes does not touch onMessage - the
+        // mutual-exclusion nulling lives in HandshakeCoordinator.bind / bindBytes.
+        assertNull(entry.onMessage)
+
+        val textHandler: (String) -> Unit = {}
+        entry.onMessage = textHandler
+        assertNotNull(entry.onMessage)
+        assertNotNull(entry.onBytes)
+    }
+
+    @Test
     fun `findByOrigin matches by value, not object identity`() {
         val registrations = Registrations()
         registrations.add(registration(1000))

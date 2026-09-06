@@ -32,11 +32,24 @@ internal class FakeConnection(
     var lastOnMessage: ((String) -> Unit)? = null
         private set
 
+    /** The last handler passed to [actuateBytes], or `null` if never actuated with bytes. */
+    var lastOnBytes: ((ByteArray) -> Unit)? = null
+        private set
+
     val pushed = mutableListOf<String>()
+
+    /** Every payload passed to [push]`(ByteArray)`, in call order. */
+    val pushedBytes = mutableListOf<ByteArray>()
 
     override fun actuate(onMessage: (message: String) -> Unit): Result<Unit> {
         actuateCalls++
         lastOnMessage = onMessage
+        return actuateResult
+    }
+
+    override fun actuateBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> {
+        actuateCalls++
+        lastOnBytes = onMessage
         return actuateResult
     }
 
@@ -47,6 +60,11 @@ internal class FakeConnection(
 
     override fun push(message: String): Result<Unit> {
         pushed += message
+        return pushResult
+    }
+
+    override fun push(bytes: ByteArray): Result<Unit> {
+        pushedBytes += bytes
         return pushResult
     }
 

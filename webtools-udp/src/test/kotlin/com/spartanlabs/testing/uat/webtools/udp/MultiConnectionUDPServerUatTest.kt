@@ -35,6 +35,21 @@ class MultiConnectionUDPServerUatTest {
     }
 
     @Test
+    @Disabled("Manual: two hosts on different networks. See docs/issue-1-tier-2-uat.md section 2.")
+    fun `a NAT'd client round-trips a raw binary blob through an actuateBytes echo handler`() {
+        // 1. Run a MultiConnectionUDPServer subclass on a host with a public, routable IP
+        //    whose onClientConnect calls connection.actuateBytes { connection.push(it) } - a
+        //    verbatim binary echo.
+        // 2. From a machine behind a home router, send "Iam uatbin" to <publicIP>:9998 from a
+        //    single UDP socket; after REGISTERED, send one datagram of a known binary blob
+        //    from that same socket - e.g. bytes 0x01..0xFF with an embedded 0x00 and a
+        //    trailing 0x0A (a leading byte >= 0x80 keeps it clear of the Iam/KA classifier).
+        // PASS: that same socket receives a datagram byte-identical to the blob within 2 s -
+        //       no length change, no UTF-8 reshaping, no leading/trailing bytes stripped.
+        // FAIL: timeout, or the returned payload differs from the blob sent.
+    }
+
+    @Test
     @Disabled("Manual: multi-minute mapping longevity. See docs/issue-1-tier-2-uat.md section 4.")
     fun `the NAT mapping survives a multi-minute session driven by keepalives`() {
         // Run a 5-minute session: the server calls Connection.keepAlive() on a ~20 s

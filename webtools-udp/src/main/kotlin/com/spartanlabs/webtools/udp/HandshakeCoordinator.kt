@@ -51,18 +51,27 @@ internal class HandshakeCoordinator(
      * is application data routed to the bound handler.
      *
      * @param origin the datagram's post-NAT source - where any reply is addressed
+     * @param bytes the exact-length datagram body, handed verbatim to a bound
+     * bytes handler; classification still runs off [text]
      * @param text the trimmed datagram text
      * @return [Result.success] if handled or harmlessly ignored, or [Result.failure]
      * if a recognised handshake was malformed or its reply could not be delivered
      */
-    fun accept(origin: InetSocketAddress, text: String): Result<Unit> = when {
+    fun accept(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> = when {
         HandshakeProtocol.isKeepAlive(text) ->
             Result.success(Unit).also { log.trace("Keepalive from {}", origin) }
 
         HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
 
-        else -> deliverData(origin, text)
+        else -> deliverData(origin, bytes, text)
     }
+
+    /**
+     * Two-argument [accept] overload retained for callers that only have the
+     * datagram text - delegates with `bytes` derived from a UTF-8 encode of [text].
+     */
+    fun accept(origin: InetSocketAddress, text: String): Result<Unit> =
+        accept(origin, text.toByteArray(Charsets.UTF_8), text)
 
     private fun handleHandshake(origin: InetSocketAddress, tokens: List<String>): Result<Unit> =
         HandshakeProtocol.parseHandshake(tokens).flatMap { name ->
@@ -91,16 +100,26 @@ internal class HandshakeCoordinator(
             }
         }
 
-    private fun deliverData(origin: InetSocketAddress, text: String): Result<Unit> {
+    private fun deliverData(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
         val registration = registrations.findByOrigin(origin)
             ?: return Result.success(Unit).also { log.debug("Dropped datagram from unregistered {}", origin) }
-        val handler = registration.onMessage
-            ?: return Result.success(Unit).also { log.debug("No handler bound for {}, dropping", origin) }
+        // A bytes handler, if bound, wins over a text handler - the two are mutually
+        // exclusive in practice (bind/bindBytes null the other) but check bytes first.
+        val bytesHandler = registration.onBytes
+        val textHandler = registration.onMessage
         // Hand delivery to the single-threaded executor so a slow handler never stalls the
         // listener thread (and therefore the handshake). The inner runCatching keeps a
         // throwing handler from killing the dispatch thread.
-        return runCatching {
-            dispatch { runCatching { handler(text) }.onFailure { log.warn("Handler for {} threw", origin, it) } }
+        return when {
+            bytesHandler != null -> runCatching {
+                dispatch { runCatching { bytesHandler(bytes) }.onFailure { log.warn("Handler for {} threw", origin, it) } }
+            }
+
+            textHandler != null -> runCatching {
+                dispatch { runCatching { textHandler(text) }.onFailure { log.warn("Handler for {} threw", origin, it) } }
+            }
+
+            else -> Result.success(Unit).also { log.debug("No handler bound for {}, dropping", origin) }
         }
     }
 
@@ -109,7 +128,17 @@ internal class HandshakeCoordinator(
     override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> = sender(bytes, to)
 
     override fun bind(peer: InetSocketAddress, onMessage: (String) -> Unit) {
-        registrations.findByOrigin(peer)?.onMessage = onMessage
+        registrations.findByOrigin(peer)?.let {
+            it.onMessage = onMessage
+            it.onBytes = null
+        }
+    }
+
+    override fun bindBytes(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit) {
+        registrations.findByOrigin(peer)?.let {
+            it.onBytes = onMessage
+            it.onMessage = null
+        }
     }
 
     override fun deregister(peer: InetSocketAddress) {
@@ -130,16 +159,36 @@ internal class HandshakeCoordinator(
         }
 
     /**
+     * Binds [onMessage] as the raw-bytes handler on every registered connection,
+     * stopping at the first failure. Mirror of [actuateAll] for the binary path.
+     * @param onMessage the callback each connection invokes with an exact-length
+     * copy of every datagram it receives
+     * @return [Result.success] if every connection was actuated, or the first failure
+     */
+    fun actuateAllBytes(onMessage: (ByteArray) -> Unit): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
+            actuated.flatMap { registration.connection.actuateBytes(onMessage) }
+        }
+
+    /**
      * Sends a message to every registered client's endpoint, stopping at the first failure.
      * @param message the text to send to every client
      * @return [Result.success] if the message reached every client, or the first failure
      */
-    fun broadcast(message: String): Result<Unit> {
-        val bytes = message.toByteArray(Charsets.UTF_8)
-        return registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
+    fun broadcast(message: String): Result<Unit> = broadcast(message.toByteArray(Charsets.UTF_8))
+
+    /**
+     * Sends [bytes] verbatim to every registered client's endpoint, stopping at
+     * the first failure. Raw-bytes mirror of [broadcast]`(String)`. A payload
+     * above the OS datagram limit fails the [Result] for that client (cause
+     * logged) rather than being sent.
+     * @param bytes the raw payload to send to every client
+     * @return [Result.success] if the datagram reached every client, or the first failure
+     */
+    fun broadcast(bytes: ByteArray): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
             sent.flatMap { send(bytes, registration.connection.peer) }
         }
-    }
 
     /**
      * Terminates every registered connection. Every connection is terminated even

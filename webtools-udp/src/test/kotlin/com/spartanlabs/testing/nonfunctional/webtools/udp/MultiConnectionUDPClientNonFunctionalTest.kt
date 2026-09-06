@@ -125,6 +125,87 @@ class MultiConnectionUDPClientNonFunctionalTest {
         assertTrue(checkSeen.await(10, TimeUnit.SECONDS), "dispatch thread survived $THROWING_BURST throwing messages")
     }
 
+    @Test
+    fun `per-session order preserved under a burst of binary frames via startBytes`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val seen = ConcurrentLinkedQueue<Int>()
+        val done = CountDownLatch(BURST)
+        assertTrue(
+            client.startBytes { bytes ->
+                seen += ((bytes[1].toInt() and 0xFF) shl 8) or (bytes[2].toInt() and 0xFF)
+                done.countDown()
+            }.isSuccess,
+        )
+
+        repeat(BURST) { i ->
+            peer.sendTo(origin, byteArrayOf(0x00, (i shr 8).toByte(), i.toByte()))
+        }
+        assertTrue(done.await(10, TimeUnit.SECONDS), "all $BURST binary frames delivered")
+        assertEquals((0 until BURST).toList(), seen.toList())
+    }
+
+    @Test
+    fun `a KA storm from the peer creates no calls to the bytes handler and does not wedge the listener`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val dispatched = ConcurrentLinkedQueue<ByteArray>()
+        val realSeen = CountDownLatch(1)
+        assertTrue(
+            client.startBytes { bytes ->
+                dispatched += bytes
+                if (bytes.contentEquals(byteArrayOf(0x00, 0x01))) realSeen.countDown()
+            }.isSuccess,
+        )
+
+        repeat(STORM_SIZE) { peer.sendTo(origin, "KA".toByteArray()) }
+        peer.sendTo(origin, byteArrayOf(0x00, 0x01))
+
+        assertTrue(realSeen.await(10, TimeUnit.SECONDS), "listener not wedged by the KA storm")
+        assertEquals(1, dispatched.size)
+    }
+
+    @Test
+    fun `a throwing bytes handler never kills the dispatch thread across many frames`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val checkSeen = CountDownLatch(1)
+        assertTrue(
+            client.startBytes { bytes ->
+                if (bytes.contentEquals(byteArrayOf(0x00, 0x63))) checkSeen.countDown() else throw IllegalStateException("throws")
+            }.isSuccess,
+        )
+
+        repeat(THROWING_BURST) { peer.sendTo(origin, byteArrayOf(0x00, 0x01)) }
+        peer.sendTo(origin, byteArrayOf(0x00, 0x63))
+
+        assertTrue(checkSeen.await(10, TimeUnit.SECONDS), "dispatch thread survived $THROWING_BURST throwing frames")
+    }
+
+    @Test
+    fun `an 8 KiB binary payload round-trips whole via startBytes`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val received = ConcurrentLinkedQueue<ByteArray>()
+        assertTrue(client.startBytes { received += it }.isSuccess)
+
+        val big = ByteArray(8192) { ((it % 250) + 1).toByte() } // no 0x00, no whitespace-only trims
+        peer.sendTo(origin, big)
+
+        val deadline = System.currentTimeMillis() + 10000
+        while (received.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)
+        assertEquals(8192, received.firstOrNull()?.size)
+        assertTrue(received.first().contentEquals(big))
+    }
+
+    private fun DatagramSocket.sendTo(target: InetSocketAddress, bytes: ByteArray) {
+        send(DatagramPacket(bytes, bytes.size, target.address, target.port))
+    }
+
     private companion object {
         const val BURST = 500
         const val STORM_SIZE = 100
