@@ -12,14 +12,15 @@
 - **Module:** `webtools-udp` only (`io.github.spartanlaboratories:webtools-udp`,
   package `com.spartanlabs.webtools.udp`). No other module is touched.
 - **Branch:** `feat/issue-8-binary-datagram-path` (off `master`).
-- **Commit:** TBD — this plan document is to be committed **in the same commit as
-  the first stage of the implementation it describes** (§8, commit 1) so
-  `git log --follow` binds the two.
-- **PR:** TBD.
-- **Status:** planning only. No code written. All design decisions are settled —
-  see §9 (the user took the recommendation on each of D1 interface
-  evolution/version, D2 receive-buffer size, D3 inbound callback shape). Ready to
-  implement literally.
+- **Commit:** `5fe3f94` (`feat: expose a raw binary datagram path on the
+  webtools-udp send/receive surface (Issue #8)` — implementation + tests + this
+  plan doc), followed by `175e92f` (`build: bump webtools-udp to 1.1.0`).
+- **PR:** [#17](https://github.com/SpartanLaboratories/WebTools/pull/17), merged
+  to `master` as `cbef98d`.
+- **Status:** landed. Implemented as designed; the four QA-remediation additions
+  in §11 were folded in. Design decisions settled in §9 (the user took the
+  recommendation on each of D1 interface evolution/version, D2 receive-buffer
+  size, D3 inbound callback shape).
 - **Target version:** `webtools-udp` `1.0.0` → **`1.1.0`** (non-breaking
   addition; see §7).
 - **Related:** `docs/issue-3-public-client-handshake-plan.md` (current wire
