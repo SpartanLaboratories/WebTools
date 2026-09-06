@@ -8,9 +8,13 @@ package com.spartanlabs.webtools.udp
  * Everything here is a deterministic function of its arguments with no I/O and no
  * state, so it can be tested exhaustively without binding a socket.
  *
- * Note: an application layered on top of this protocol that legitimately sends the
- * exact two-byte payload [KEEPALIVE_TOKEN] as a message will have it silently
- * swallowed by the server - application protocols control their own payloads.
+ * Note: an application layered on top of this protocol that legitimately sends a
+ * message which, after trimming ASCII whitespace, is exactly [KEEPALIVE_TOKEN] -
+ * or whose UTF-8 decode begins with the [VERB] token followed by a space - will
+ * have it swallowed by the classifier before it reaches an application handler. This applies equally to a
+ * raw binary payload whose decoded/trimmed bytes collide with a control token;
+ * application protocols control their own payloads (lead binary datagrams with a
+ * byte `>= 0x80` or `0x00` to sidestep it).
  *
  * The public subset of these tokens (and the keepalive check) is published as
  * [HandshakeWireFormat]; this object additionally owns the server-only inbound

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -78,6 +79,34 @@ class HandshakeCoordinatorGatingTest {
 
         assertTrue(coordinator.accept(origin, "hello").isSuccess)
         assertEquals(0, coordinator.size)
+    }
+
+    @Test
+    fun `a bound bytes handler receives the exact undecoded application bytes`() {
+        val coordinator = coordinator(mutableListOf())
+        coordinator.accept(origin, "Iam alice")
+        val received = mutableListOf<ByteArray>()
+        coordinator.bindBytes(origin, received::add)
+        // leading 0x00, an embedded ASCII-whitespace byte, and a trailing 0x0A - all of
+        // which String(..).trim() would reshape on the text path.
+        val payload = byteArrayOf(0x00, 0x20, 0x4B, 0x0A)
+
+        coordinator.accept(origin, payload, String(payload, Charsets.UTF_8).trim())
+
+        assertContentEquals(payload, received.single())
+    }
+
+    @Test
+    fun `a payload trimming to KA is still dropped when a bytes handler is bound`() {
+        val coordinator = coordinator(mutableListOf())
+        coordinator.accept(origin, "Iam alice")
+        val received = mutableListOf<ByteArray>()
+        coordinator.bindBytes(origin, received::add)
+        val payload = " KA ".toByteArray(Charsets.UTF_8)
+
+        assertTrue(coordinator.accept(origin, payload, String(payload, Charsets.UTF_8).trim()).isSuccess)
+
+        assertTrue(received.isEmpty())
     }
 
     @Test

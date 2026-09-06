@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -42,6 +43,17 @@ class MultiConnectionUDPClientTest {
     private fun DatagramSocket.sendTo(target: InetSocketAddress, text: String) {
         val out = text.toByteArray(Charsets.UTF_8)
         send(DatagramPacket(out, out.size, target.address, target.port))
+    }
+
+    private fun DatagramSocket.sendBytesTo(target: InetSocketAddress, bytes: ByteArray) {
+        send(DatagramPacket(bytes, bytes.size, target.address, target.port))
+    }
+
+    private fun DatagramSocket.receiveBytes(timeoutMillis: Int = RECEIVE_TIMEOUT_MILLIS): ByteArray {
+        soTimeout = timeoutMillis
+        val packet = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
+        receive(packet)
+        return packet.data.copyOf(packet.length)
     }
 
     /** Handshakes [client] against [peer], replying REGISTERED, returning the client's origin. */
@@ -247,6 +259,78 @@ class MultiConnectionUDPClientTest {
         // send() deterministically proves the "fails cleanly once closing" half of the
         // contract without depending on race timing.
         assertTrue(client.send("after-stop").isFailure)
+    }
+
+    @Test
+    fun `send bytes puts the exact bytes on the wire including leading-trailing spaces and an embedded zero`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val payload = byteArrayOf(0x20, 0x41, 0x00, 0x42, 0x20)
+
+        assertTrue(client.send(payload).isSuccess)
+
+        assertContentEquals(payload, peer.receiveBytes())
+    }
+
+    @Test
+    fun `after startBytes an inbound datagram is delivered with no trim and exact length`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val received = ConcurrentLinkedQueue<ByteArray>()
+        assertTrue(client.startBytes { received += it }.isSuccess)
+
+        val payload = byteArrayOf(0x20, -0x3D, 0x28, 0x20) // spaces around invalid UTF-8 (C3 28)
+        peer.sendBytesTo(origin, payload)
+        awaitQueueContainsBytes(received, payload)
+    }
+
+    @Test
+    fun `a binary payload ending in newline or space survives intact via startBytes`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val received = ConcurrentLinkedQueue<ByteArray>()
+        assertTrue(client.startBytes { received += it }.isSuccess)
+
+        val payload = byteArrayOf(0x00, 0x7F, 0x0A)
+        peer.sendBytesTo(origin, payload)
+        awaitQueueContainsBytes(received, payload)
+    }
+
+    @Test
+    fun `a bare KA is still dropped when the listener was armed with startBytes`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val received = ConcurrentLinkedQueue<ByteArray>()
+        assertTrue(client.startBytes { received += it }.isSuccess)
+
+        peer.sendTo(origin, "KA")
+        peer.sendBytesTo(origin, byteArrayOf(0x00, 0x01))
+        awaitQueueContainsBytes(received, byteArrayOf(0x00, 0x01))
+        assertFalse(received.any { it.contentEquals("KA".toByteArray()) })
+    }
+
+    @Test
+    fun `send String still round-trips as UTF-8`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        assertTrue(client.send("hello-server").isSuccess)
+        val (_, text) = peer.receiveText()
+        assertEquals("hello-server", text)
+    }
+
+    private fun awaitQueueContainsBytes(
+        queue: ConcurrentLinkedQueue<ByteArray>,
+        value: ByteArray,
+        timeoutMillis: Long = 5000,
+    ) {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        while (queue.none { it.contentEquals(value) } && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20)
+        }
+        assertTrue(queue.any { it.contentEquals(value) }, "expected bytes to be delivered within ${timeoutMillis}ms")
     }
 
     private fun <T> awaitQueueContains(queue: ConcurrentLinkedQueue<T>, value: T, timeoutMillis: Long = 5000) {

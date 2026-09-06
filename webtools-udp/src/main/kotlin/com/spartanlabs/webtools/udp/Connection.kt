@@ -26,13 +26,43 @@ interface Connection {
      * socket is bound - the server already owns the one shared socket; this only
      * routes inbound datagrams whose source matches [peer] to [onMessage].
      * Calling this on a connection that has been [terminate]d is a silent no-op
-     * (see [terminate]).
+     * (see [terminate]). The handler receives the trimmed UTF-8 text of each
+     * datagram; for a binary protocol use [actuateBytes] instead.
      * @param onMessage callback invoked with the decoded text of each message received;
      * it runs on the server's single-threaded dispatch executor, not the caller's
      * thread, so it must return promptly - a slow handler delays delivery to other clients
      * @return [Result.success] once the handler is registered, or the failure that prevented it
      */
     fun actuate(onMessage: (message: String) -> Unit): Result<Unit>
+
+    /**
+     * Registers [onMessage] as the raw-bytes handler for datagrams from this
+     * client: it is handed an exact-length copy of each inbound datagram body -
+     * no UTF-8 decode, no `.trim()`.
+     *
+     * Mutually exclusive with [actuate] - the last call wins; binding a bytes
+     * handler clears any text handler and vice versa. A consumer that wants both
+     * views decodes inside the bytes handler.
+     *
+     * Handshake (`Iam`) and keepalive (`KA`) datagrams are filtered upstream and
+     * never delivered here. Note the classifier runs on the trimmed UTF-8 view of
+     * every datagram, so a binary payload that decodes/trims to a control token is
+     * still intercepted - lead binary application datagrams with a byte that
+     * cannot start `Iam`/`KA` and is not ASCII whitespace (e.g. `0x00` or any byte
+     * `>= 0x80`).
+     *
+     * The delivered copy is at most 65507 bytes (the maximum UDP payload over
+     * IPv4); an inbound datagram larger than that is delivered truncated to that
+     * length, not rejected.
+     *
+     * The default implementation is a lossy UTF-8 round-trip over [actuate];
+     * [UDPConnection] overrides it to deliver the datagram bytes verbatim.
+     * @param onMessage callback invoked with an exact-length copy of each datagram;
+     * it runs on the server's single-threaded dispatch executor, so it must return promptly
+     * @return [Result.success] once the handler is registered, or the failure that prevented it
+     */
+    fun actuateBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> =
+        actuate { onMessage(it.toByteArray(Charsets.UTF_8)) }
 
     /**
      * Fully deregisters this connection: its message handler is cleared and its
@@ -51,7 +81,10 @@ interface Connection {
     fun terminate(): Result<Unit>
 
     /**
-     * Sends a message to [peer] over the server's shared socket.
+     * Sends [message] as the body of one datagram to [peer] over the server's
+     * shared socket. This is the abstract send primitive; the default
+     * [push]`(ByteArray)` delegates to it via a UTF-8 decode unless an implementor
+     * overrides that overload to send raw bytes.
      *
      * This is how a subclass sends to one specific client over the shared channel -
      * key connections by name or [peer] and call [push] on the one you want;
@@ -61,6 +94,22 @@ interface Connection {
      * @return [Result.success] if the message was sent, or the failure that prevented it
      */
     fun push(message: String): Result<Unit>
+
+    /**
+     * Sends [bytes] as one raw datagram to [peer] over the server's shared socket:
+     * the payload is placed on the wire verbatim - no encoding, no trim.
+     *
+     * The default implementation round-trips through [push]`(String)` and is
+     * therefore lossy for non-UTF-8 payloads; [UDPConnection] overrides it to send
+     * the bytes unchanged.
+     *
+     * A payload larger than the OS datagram limit fails the [Result] (the cause is
+     * logged) rather than being sent; for real-network use keep frames under the
+     * path MTU (~1200 bytes) to avoid IP fragmentation.
+     * @param bytes the raw datagram payload
+     * @return [Result.success] if the datagram was sent, or the failure that prevented it
+     */
+    fun push(bytes: ByteArray): Result<Unit> = push(String(bytes, Charsets.UTF_8))
 
     /**
      * Sends one minimal keepalive datagram to [peer] to keep its NAT mapping

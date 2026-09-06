@@ -8,10 +8,21 @@ import java.net.InetSocketAddress
 /**
  * One datagram received on the common socket, already decoded.
  *
+ * `internal` and only ever read field-wise (never compared, hashed, or `copy`d),
+ * so the `ByteArray`-in-`data class` identity `equals`/`hashCode` caveat is a
+ * non-issue here.
+ *
  * @property origin the post-NAT source address and port the datagram arrived from
- * @property text the trimmed UTF-8 text of the datagram body
+ * @property bytes an exact-length copy of the datagram body, decoupled from the
+ * reused receive buffer - used only for delivery to a raw-bytes handler
+ * @property text the trimmed UTF-8 text of the datagram body - identical to the
+ * value the classifier has always seen
  */
-internal data class Inbound(val origin: InetSocketAddress, val text: String)
+internal data class Inbound(
+    val origin: InetSocketAddress,
+    val bytes: ByteArray,
+    val text: String,
+)
 
 /**
  * Wraps the single [DatagramSocket] [MultiConnectionUDPServer] uses for **all**
@@ -51,8 +62,11 @@ internal class CommonChannel(port: Int) {
         val packet = DatagramPacket(buffer, buffer.size)
         socket.receive(packet)
         val origin = InetSocketAddress(packet.address, packet.port)
-        val text = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
-        Inbound(origin, text)
+        // Right-sized copy: the next receive() reuses packet.data, so a slice of the
+        // live buffer handed to the dispatch executor would be a data race.
+        val bytes = packet.data.copyOf(packet.length)
+        val text = String(bytes, Charsets.UTF_8).trim() // unchanged semantics
+        Inbound(origin, bytes, text)
     }.onFailure { log.trace("receive() failed: {}", it.message) }
 
     /**

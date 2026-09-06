@@ -36,12 +36,19 @@ class UDPConnection internal constructor(
         runCatching { channel.bind(peer, onMessage) }
             .onFailure { log.error("Could not actuate connection '{}'", name, it) }
 
+    override fun actuateBytes(onMessage: (ByteArray) -> Unit): Result<Unit> =
+        runCatching { channel.bindBytes(peer, onMessage) }
+            .onFailure { log.error("Could not actuate (bytes) connection '{}'", name, it) }
+
     override fun terminate(): Result<Unit> =
         runCatching { channel.deregister(peer) }
             .onFailure { log.error("Could not terminate connection '{}'", name, it) }
 
     override fun push(message: String): Result<Unit> =
-        channel.send(message.toByteArray(Charsets.UTF_8), peer)
+        push(message.toByteArray(Charsets.UTF_8))
+
+    override fun push(bytes: ByteArray): Result<Unit> =
+        channel.send(bytes, peer)
             .onFailure { log.error("Connection '{}' could not push a message", name, it) }
 
     override fun keepAlive(): Result<Unit> =

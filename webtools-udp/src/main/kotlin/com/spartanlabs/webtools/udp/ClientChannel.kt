@@ -27,6 +27,18 @@ internal interface ClientChannel {
     fun bind(peer: InetSocketAddress, onMessage: (String) -> Unit)
 
     /**
+     * Registers [onMessage] as the raw-bytes handler for datagrams whose source is
+     * [peer]: it receives an exact-length, undecoded, untrimmed copy of each
+     * datagram body. No-op if [peer] is not a currently-registered client.
+     *
+     * Mutually exclusive with [bind]: binding a bytes handler clears any text
+     * handler for [peer], and vice versa.
+     * @param peer the client endpoint whose datagrams [onMessage] should receive
+     * @param onMessage the handler, invoked on the server's dispatch executor
+     */
+    fun bindBytes(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit)
+
+    /**
      * Fully removes the registration for [peer]: clears any bound handler and
      * drops the entry from the registry entirely, so it is no longer addressed
      * by broadcast/target-all operations and cannot be rebound via [bind]

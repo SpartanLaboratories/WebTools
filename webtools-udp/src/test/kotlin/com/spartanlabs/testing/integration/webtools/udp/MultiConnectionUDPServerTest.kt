@@ -19,9 +19,11 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -272,6 +274,52 @@ class MultiConnectionUDPServerTest {
                     stale.receive(DatagramPacket(ByteArray(64), 64))
                 }
             }
+        }
+    }
+
+    // --- Issue #8: server-boundary binary path. Ordered after every text case above and
+    // before stop(); each uses its own fresh client socket and its own client name, and
+    // re-actuates only its own connection, so the shared ordered suite is undisturbed.
+
+    @Test
+    @Order(14)
+    fun `a re-actuated bytes handler receives a client datagram byte-identical with no trim or decode`() {
+        DatagramSocket().use { client ->
+            handshakeFrom(client, "Iam mu")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+            // bindBytes (via actuateBytes) nulls the text handler the fixture's
+            // onClientConnect bound for this one connection only - no other client is touched.
+            val bytesInbound = LinkedBlockingQueue<ByteArray>()
+            assertTrue(connectionNamed("mu").actuateBytes { bytesInbound.add(it) }.isSuccess)
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+            // embedded 0x00 and trailing 0x0A: String(..).trim() + UTF-8 decode would corrupt this.
+            val payload = byteArrayOf(0x00, 0x01, 0x4B, 0x41, 0x0A)
+            client.send(
+                DatagramPacket(payload, payload.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT),
+            )
+
+            val delivered = bytesInbound.poll(5, TimeUnit.SECONDS)
+            assertNotNull(delivered)
+            assertContentEquals(payload, delivered)
+        }
+    }
+
+    @Test
+    @Order(15)
+    fun `pushToAll with a ByteArray puts the payload on a real client socket verbatim`() {
+        DatagramSocket().use { client ->
+            handshakeFrom(client, "Iam nu")
+            Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
+
+            val payload = byteArrayOf(0x20, 0x00, 0x4B, 0x41, 0x0A, 0x20)
+            assertTrue(server.pushToAll(payload).isSuccess)
+
+            client.soTimeout = REPLY_TIMEOUT_MILLIS
+            val packet = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
+            client.receive(packet)
+            assertContentEquals(payload, packet.data.copyOf(packet.length))
         }
     }
 

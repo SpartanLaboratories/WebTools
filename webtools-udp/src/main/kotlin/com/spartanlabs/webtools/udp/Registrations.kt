@@ -8,16 +8,23 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * @property connection the connection minted for this client; its
  * [Connection.peer] is the origin every datagram to this client is addressed to
- * @property onMessage the currently bound message handler, or `null` if the
- * client has not been actuated; written by `actuate`, cleared by removal from
- * `Registrations` on `terminate`, and read by the listener thread, hence
- * `@Volatile`
+ * @property onMessage the currently bound text message handler, or `null` if the
+ * client has not been actuated with a text handler; written by `actuate`, cleared
+ * by removal from `Registrations` on `terminate`, and read by the listener thread,
+ * hence `@Volatile`
+ * @property onBytes the currently bound raw-bytes message handler, or `null`.
+ * [onMessage] and [onBytes] are mutually exclusive - [HandshakeCoordinator.bind] /
+ * [HandshakeCoordinator.bindBytes] set one and null the other; the listener thread
+ * reads whichever is non-null, hence `@Volatile`
  */
 internal class Registration(val connection: Connection) {
     val origin: InetSocketAddress get() = connection.peer
 
     @Volatile
     var onMessage: ((String) -> Unit)? = null
+
+    @Volatile
+    var onBytes: ((ByteArray) -> Unit)? = null
 }
 
 /**

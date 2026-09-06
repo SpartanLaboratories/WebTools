@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:1.0.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:1.1.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -45,8 +45,8 @@ further releases. To move off it:
 | Type | Purpose |
 |------|---------|
 | `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`. |
-| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. |
-| `Connection` | Interface for one named connection to a peer (`actuate` / `push` / `terminate` / `keepAlive`). |
+| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. |
+| `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive`). |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
 | `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop. |
 | `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `KA`). |
@@ -100,6 +100,29 @@ A server behind symmetric NAT still needs a rendezvous/relay (out of scope). Bac
 [`docs/issue-1-nat-traversal-plan.md`](docs/issue-1-nat-traversal-plan.md),
 [`docs/issue-1-tier-2-plan.md`](docs/issue-1-tier-2-plan.md).
 
+### Binary application payloads
+
+Post-handshake application data is not limited to text. `Connection.push(ByteArray)`
+(server → client), `MultiConnectionUDPClient.send(ByteArray)` (client → server), and
+`MultiConnectionUDPServer.pushToAll(ByteArray)` put the payload on the wire **verbatim** —
+no encoding, no trim. `Connection.actuateBytes` / `MultiConnectionUDPClient.startBytes` /
+`MultiConnectionUDPServer.startBytes` register an inbound handler that receives an
+**exact-length, undecoded, untrimmed** copy of each datagram. The text and bytes handlers
+are mutually exclusive per connection — the last `actuate` / `actuateBytes` (or `start` /
+`startBytes`) call wins.
+
+Caveat: the `Iam` / `KA` classifier runs on the trimmed UTF-8 view of **every** inbound
+datagram, in both directions, and cannot be turned off (a retransmitted `Iam` or a `KA`
+legitimately arrives mid-session). A binary payload whose UTF-8 decode, after trimming
+ASCII whitespace, is exactly `KA` or begins with `Iam ` is intercepted by the
+control-traffic machinery and never delivered. Mitigation: lead every binary application
+datagram with a byte that cannot start `Iam` / `KA` and is not ASCII whitespace — e.g.
+`0x00`, or any byte `>= 0x80` used as a version/format tag.
+
+The library receives datagrams up to **65507 bytes** (the maximum UDP payload over IPv4)
+whole; a larger payload is truncated. For real-network use keep frames under the path MTU
+(**~1200 bytes**) to avoid IP fragmentation and the loss that comes with it.
+
 ### Client-side usage
 
 `MultiConnectionUDPClient` performs the handshake and then owns a background
@@ -112,6 +135,10 @@ client.handshake("alice").getOrThrow()
 client.start { message -> /* handle inbound data; runs on client's dispatch thread */ }
 client.send("hello")
 client.sendKeepAlive()   // call on a ~20s idle cadence
+
+// or, for a binary protocol:
+client.startBytes { bytes -> /* exact datagram body, no decode, no trim */ }
+client.send(byteArrayOf(0x00, /* version tag */ 0x01, 0x02, 0x03))
 // ...
 client.stop()
 ```
