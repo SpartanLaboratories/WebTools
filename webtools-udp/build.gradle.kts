@@ -1,6 +1,10 @@
 // webtools-udp - a multi-client UDP connection layer with a NAT-traversal handshake.
 // Runtime dependencies: slf4j-api only (inherited from the root build).
 
+// Explicit per-module version, overriding the root allprojects { version = "1.0.0" }.
+// 1.1.0: non-breaking addition of the raw binary datagram send/receive path (Issue #8).
+version = "1.1.0"
+
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
 // them in parallel workers and hits a BindException. Level tasks that touch no socket
