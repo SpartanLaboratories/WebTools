@@ -17,6 +17,8 @@ internal class FakeConnection(
     private val terminateResult: Result<Unit> = Result.success(Unit),
     private val pushResult: Result<Unit> = Result.success(Unit),
     private val keepAliveResult: Result<Unit> = Result.success(Unit),
+    private val startKeepAliveResult: Result<Unit> = Result.success(Unit),
+    private val stopKeepAliveResult: Result<Unit> = Result.success(Unit),
 ) : Connection {
 
     var actuateCalls = 0
@@ -26,6 +28,16 @@ internal class FakeConnection(
         private set
 
     var keepAliveCalls = 0
+        private set
+
+    var startKeepAliveCalls = 0
+        private set
+
+    var stopKeepAliveCalls = 0
+        private set
+
+    /** The interval passed to the last [startKeepAlive]`(Long)` call, or `null`. */
+    var lastStartKeepAliveInterval: Long? = null
         private set
 
     /** The last handler passed to [actuate], or `null` if never actuated. */
@@ -71,5 +83,16 @@ internal class FakeConnection(
     override fun keepAlive(): Result<Unit> {
         keepAliveCalls++
         return keepAliveResult
+    }
+
+    override fun startKeepAlive(intervalMillis: Long): Result<Unit> {
+        startKeepAliveCalls++
+        lastStartKeepAliveInterval = intervalMillis
+        return startKeepAliveResult
+    }
+
+    override fun stopKeepAlive(): Result<Unit> {
+        stopKeepAliveCalls++
+        return stopKeepAliveResult
     }
 }

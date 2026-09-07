@@ -28,7 +28,11 @@ import java.net.InetSocketAddress
  *   [Registration.timedOut] latch on every inbound datagram, and
  *   [sweepIdleConnections] reports connections idle beyond the threshold via
  *   `onDisconnect(_, TIMEOUT)`. It also routes the
- *   `SUPERSEDED` / `TERMINATED` reasons through the same callback.
+ *   `SUPERSEDED` / `TERMINATED` reasons through the same callback;
+ * - the **keepalive scheduler seam** - [scheduleKeepAlive] arms an idle-aware
+ *   `KA` timer per connection (refreshing off [Registration.lastOutboundAt],
+ *   which [send] stamps once any keepalive is armed), cancelled on [deregister]
+ *   or a same-name supersede.
  *
  * @param newConnection builds the connection for a new client, given its name,
  * handshake origin, and the [ClientChannel] it should delegate to (always `this`)
@@ -46,6 +50,8 @@ import java.net.InetSocketAddress
  * expected to marshal onto the dispatch executor itself
  * @param idleTimeoutMillis idle threshold in milliseconds; `0` (the default)
  * disables liveness tracking entirely - no per-datagram refresh, no sweep
+ * @param keepAliveSchedule the timer seam backing [scheduleKeepAlive] /
+ * [cancelKeepAlive]; a [KeepAliveScheduler] in production, a fake in tests
  */
 internal class HandshakeCoordinator(
     private val newConnection: (name: String, peer: InetSocketAddress, channel: ClientChannel) -> Connection,
@@ -55,10 +61,18 @@ internal class HandshakeCoordinator(
     private val dispatch: (block: () -> Unit) -> Unit,
     private val onDisconnect: (connection: Connection, reason: DisconnectReason) -> Unit,
     private val idleTimeoutMillis: Long,
+    private val keepAliveSchedule: KeepAliveSchedule,
 ) : ClientChannel {
     private val registrations = Registrations()
 
     private val livenessTracked = idleTimeoutMillis > 0L
+
+    /**
+     * Flipped `true` the first time [scheduleKeepAlive] runs and never flipped
+     * back. While `false`, [send] does no extra per-datagram work.
+     */
+    @Volatile
+    private var keepAliveTracked = false
 
     /** Cleared by [stopNotifying] so `stop()` teardown fires no disconnect callbacks. */
     @Volatile
@@ -156,6 +170,7 @@ internal class HandshakeCoordinator(
                 registrations.findByName(name)?.let { stale ->
                     log.info("Superseding stale registration for '{}': {} -> {}", name, stale.origin, origin)
                     registrations.removeByOrigin(stale.origin)
+                    keepAliveSchedule.cancel(stale.origin)
                     if (notifyingDisconnects) onDisconnect(stale.connection, DisconnectReason.SUPERSEDED)
                     stale.connection.terminate()
                         .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
@@ -192,7 +207,31 @@ internal class HandshakeCoordinator(
 
     // --- ClientChannel ---
 
-    override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> = sender(bytes, to)
+    override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
+        // Only pay the origin scan once a keepalive is armed anywhere (default-cost-zero,
+        // mirroring livenessTracked); keepAliveTracked never flips back to false.
+        if (keepAliveTracked) registrations.findByOrigin(to)?.let { it.lastOutboundAt = System.nanoTime() }
+        return sender(bytes, to)
+    }
+
+    override fun scheduleKeepAlive(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
+        keepAliveTracked = true
+        return keepAliveSchedule.schedule(peer, intervalMillis) {
+            val reg = registrations.findByOrigin(peer) ?: return@schedule
+            if (KeepAlive.isDue(reg.lastOutboundAt, System.nanoTime(), intervalMillis)) {
+                send(HandshakeProtocol.KEEPALIVE_TOKEN.toByteArray(Charsets.UTF_8), peer)
+                    .onFailure { log.warn("Scheduled keepalive to {} failed", peer, it) }
+            }
+        }
+    }
+
+    override fun cancelKeepAlive(peer: InetSocketAddress): Result<Unit> =
+        runCatching { keepAliveSchedule.cancel(peer) }
+
+    /** Shuts the keepalive scheduler; called by `MultiConnectionUDPServer.stop()`. */
+    fun shutKeepAlive() {
+        keepAliveSchedule.shutdown()
+    }
 
     override fun bind(peer: InetSocketAddress, onMessage: (String) -> Unit) {
         registrations.findByOrigin(peer)?.let {
@@ -211,6 +250,7 @@ internal class HandshakeCoordinator(
     override fun deregister(peer: InetSocketAddress) {
         val reg = registrations.findByOrigin(peer)
         if (registrations.removeByOrigin(peer)) {
+            keepAliveSchedule.cancel(peer)
             log.info("Deregistered connection for {}", peer)
             if (notifyingDisconnects && reg != null) {
                 onDisconnect(reg.connection, DisconnectReason.TERMINATED)

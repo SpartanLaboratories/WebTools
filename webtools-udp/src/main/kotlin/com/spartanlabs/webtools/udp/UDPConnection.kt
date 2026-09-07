@@ -11,7 +11,9 @@ import java.net.InetSocketAddress
  * [peer] over the server's single shared socket; [actuate] registers this
  * connection's message handler in the server's registry, while [terminate] now
  * fully deregisters it - not just unregisters the handler. Every fallible
- * operation returns a [Result].
+ * operation returns a [Result]. A scheduled keepalive ([startKeepAlive]) runs on
+ * the server's shared `mcups-keepalive` thread - still not one owned here - and is
+ * cancelled by [terminate].
  *
  * Instances are minted only by [MultiConnectionUDPServer]'s internal factory -
  * the constructor is `internal`. Standalone bidirectional-socket users take
@@ -54,6 +56,28 @@ class UDPConnection internal constructor(
     override fun keepAlive(): Result<Unit> =
         channel.send(KEEPALIVE_BYTES, peer)
             .onFailure { log.error("Connection '{}' could not send a keepalive", name, it) }
+
+    /**
+     * Unlike the [Connection] default, this production implementation **does**
+     * support a scheduled keepalive: it delegates to the server's shared
+     * `mcups-keepalive` executor via [ClientChannel], which sends an idle-aware `KA`
+     * to [peer] on the given cadence. A non-positive [intervalMillis] surfaces as
+     * the [ClientChannel]'s [IllegalArgumentException] failure. The schedule is
+     * cancelled by [stopKeepAlive] and by [terminate].
+     */
+    override fun startKeepAlive(intervalMillis: Long): Result<Unit> =
+        channel.scheduleKeepAlive(peer, intervalMillis)
+            .onFailure { log.error("Connection '{}' could not start a scheduled keepalive", name, it) }
+
+    /**
+     * Unlike the [Connection] default no-op, this production implementation cancels
+     * the keepalive armed by [startKeepAlive] on the server's shared
+     * `mcups-keepalive` executor via [ClientChannel]. Idempotent; [terminate] also
+     * does this.
+     */
+    override fun stopKeepAlive(): Result<Unit> =
+        channel.cancelKeepAlive(peer)
+            .onFailure { log.error("Connection '{}' could not stop its scheduled keepalive", name, it) }
 
     private companion object {
         private val log = LoggerFactory.getLogger(UDPConnection::class.java)

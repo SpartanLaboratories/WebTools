@@ -101,6 +101,15 @@ import java.util.concurrent.TimeUnit
  * ([DisconnectReason.TERMINATED]) also flow through [onClientDisconnect].
  * [stop] teardown does not.
  *
+ * ### Scheduled keepalive
+ * Opt-in and per-connection: [Connection.startKeepAlive]`(intervalMillis)` arms an
+ * idle-aware background keepalive that sends one `KA` to that client every
+ * ~`intervalMillis` of output silence (application traffic defers it), and
+ * [Connection.stopKeepAlive] / [Connection.terminate] / [stop] cancel it. The
+ * one-shot [Connection.keepAlive] primitive is unchanged. Server -> client
+ * keepalives refresh only endpoint-independent (cone) NAT mappings - the
+ * authoritative keepalive is still the client's own. No wire-format change.
+ *
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
  * classify (`Iam` / `KA` / data) -> run the socket-free handshake state machine
@@ -110,8 +119,15 @@ import java.util.concurrent.TimeUnit
  * third daemon thread - `mcups-liveness`, a [ScheduledExecutorService] - exists
  * **only when [idleTimeoutMillis] > 0**; it runs the idle-connection sweep and
  * never runs application code (the [onClientDisconnect] hook is handed to
- * `mcups-dispatch`). The
- * dispatch executor is a **single** daemon thread (`mcups-dispatch`) that invokes
+ * `mcups-dispatch`). A fourth daemon thread - `mcups-keepalive`, also a
+ * [ScheduledExecutorService] - exists **only once a consumer calls
+ * [Connection.startKeepAlive]**; it sends `KA` datagrams and runs no application
+ * code. It is a dedicated executor, *not* the `mcups-liveness` one: liveness
+ * exists only for `idleTimeoutMillis > 0` and has a different cadence and
+ * lifecycle. See the scheduled-keepalive sequence diagram in
+ * docs/issue-12-scheduled-keepalive-plan.md §2.8.
+ *
+ * The dispatch executor is a **single** daemon thread (`mcups-dispatch`) that invokes
  * [Connection] message handlers, so per-client message order is preserved and a
  * slow handler cannot stall the listener or the handshake. Accepted trade-off:
  * a slow handler delays delivery to *other* clients - handlers must return
@@ -154,6 +170,14 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         Executors.newSingleThreadExecutor { r -> Thread(r, "mcups-dispatch").apply { isDaemon = true } }
 
     /**
+     * The opt-in scheduled-keepalive executor - a single `mcups-keepalive` daemon
+     * thread. Constructed unconditionally as an object, but its executor/thread is
+     * created lazily on the first [Connection.startKeepAlive] call, so a server
+     * whose consumers never opt in spawns no keepalive thread.
+     */
+    private val keepAliveScheduler = KeepAliveScheduler("mcups-keepalive")
+
+    /**
      * The handshake state machine + inbound router, wired to this server's real
      * socket and a real [UDPConnection] factory.
      */
@@ -170,6 +194,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
             }
         },
         idleTimeoutMillis = idleTimeoutMillis,
+        keepAliveSchedule = keepAliveScheduler,
     )
 
     /**
@@ -359,7 +384,8 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      * Shuts the server down: terminates (fully deregisters) every registered
      * [Connection], leaving `Registrations` empty, then stops the common listener
      * thread, releases the common socket, shuts the `mcups-liveness` executor (if
-     * one was started), and shuts the dispatch executor.
+     * one was started), shuts the `mcups-keepalive` executor (if one was started),
+     * and shuts the dispatch executor.
      *
      * Fires no [onClientDisconnect] callbacks: [stop] calls the coordinator's
      * `stopNotifying()` before `terminateAll()`, so a full server shutdown is not
@@ -385,10 +411,12 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         val socketClosed = commonChannel.closeResult()
         val livenessStopped = runCatching { livenessExecutor?.shutdownNow(); Unit }
             .onFailure { log.warn("Could not cleanly shut the liveness executor", it) }
+        val keepAliveStopped = runCatching { coordinator.shutKeepAlive() }
+            .onFailure { log.warn("Could not cleanly shut the keepalive scheduler", it) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
         return connectionsTerminated.flatMap { listenerJoined }.flatMap { socketClosed }
-            .flatMap { livenessStopped }.flatMap { executorStopped }
+            .flatMap { livenessStopped }.flatMap { keepAliveStopped }.flatMap { executorStopped }
     }
 
     companion object {

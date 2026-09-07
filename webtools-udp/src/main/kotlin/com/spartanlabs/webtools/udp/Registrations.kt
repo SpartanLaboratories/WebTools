@@ -21,6 +21,12 @@ import java.util.concurrent.CopyOnWriteArrayList
  * the listener thread via [HandshakeCoordinator.accept], read by the liveness
  * sweep thread, hence `@Volatile`. Only ever used as a `nanoTime` difference -
  * never as an absolute time.
+ * @property lastOutboundAt monotonic `System.nanoTime()` of the last datagram the
+ * server sent to this origin (data, broadcast, or `KA`); seeded at construction.
+ * Written by the listener / dispatch threads via [HandshakeCoordinator.send],
+ * read by the `mcups-keepalive` thread, hence `@Volatile`. Only meaningful once a
+ * scheduled keepalive is armed for the connection; a `nanoTime` difference, never
+ * an absolute.
  * @property timedOut fire-once latch: set true when `onClientDisconnect(TIMEOUT)`
  * has been dispatched for this registration, cleared by any later inbound
  * datagram. Written by both the sweep thread and the listener thread, hence
@@ -37,6 +43,9 @@ internal class Registration(val connection: Connection) {
 
     @Volatile
     var lastInboundAt: Long = System.nanoTime()
+
+    @Volatile
+    var lastOutboundAt: Long = System.nanoTime()
 
     @Volatile
     var timedOut: Boolean = false

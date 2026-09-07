@@ -11,7 +11,11 @@
 // 1.4.0: refusable handshake + opaque credential channel - Iam <name> <credential>,
 // the open admit(name, peer, credential): Admission hook, and the REFUSED <reason>
 // reply surfaced as HandshakeRefusedException (Issue #11).
-version = "1.4.0"
+// 1.5.0: opt-in idle-aware scheduled keepalive - MultiConnectionUDPClient.startKeepAlive /
+// stopKeepAlive and Connection.startKeepAlive / stopKeepAlive, each backed by a lazily-created
+// daemon ScheduledExecutorService; the one-shot sendKeepAlive() / keepAlive() primitives
+// unchanged; no wire change (Issue #12).
+version = "1.5.0"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

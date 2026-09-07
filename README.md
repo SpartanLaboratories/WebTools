@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:1.4.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:1.5.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -45,8 +45,8 @@ further releases. To move off it:
 | Type | Purpose |
 |------|---------|
 | `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`; optionally override `admit` to screen/refuse handshakes and validate an opaque credential, override `onClientDisconnect`, and set `idleTimeoutMillis` for idle-connection detection. |
-| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. |
-| `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive`). |
+| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. `startKeepAlive` / `stopKeepAlive` run an opt-in, library-timed keepalive. |
+| `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive` / `startKeepAlive` / `stopKeepAlive`). |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
 | `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop — receives datagrams up to 65507 bytes (configurable via `receiveBufferBytes`), truncating larger ones. |
 | `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `REFUSED`, `KA`). |
@@ -102,12 +102,14 @@ application-level refusal discovered *after* the handshake already completed
 should call it so the refused client is not addressed by future broadcasts.
 
 The client must send the token `KA` on that socket every ~20 s of idle time to hold its NAT
-mapping open; `Connection.keepAlive()` is the shared helper that sends one `KA` datagram
-(the server drops inbound `KA` without dispatching it, though when idle detection is enabled
+mapping open. The client may either call `MultiConnectionUDPClient.sendKeepAlive()` on its
+own timer, or call `MultiConnectionUDPClient.startKeepAlive()` once and let the library time
+it (idle-aware — application traffic defers the next `KA`). `Connection.keepAlive()` is the
+server-side one-shot equivalent and `Connection.startKeepAlive()` its library-timed form.
+The server drops inbound `KA` without dispatching it, though when idle detection is enabled
 an inbound `KA` — like any inbound datagram — refreshes that client's server-side liveness
-timestamp). A server-side `Connection.keepAlive()`
-is server → client and refreshes cone NATs only — the authoritative keepalive is the
-client's.
+timestamp. A server-side keepalive is server → client and refreshes cone NATs only — the
+authoritative keepalive is the client's. See [Scheduled keepalive](#scheduled-keepalive).
 
 A server behind symmetric NAT still needs a rendezvous/relay (out of scope). Background:
 [issue #1](https://github.com/SpartanLaboratories/WebTools/issues/1),
@@ -207,6 +209,32 @@ client (`Iam <name> <cred>`) against an old server still registers (the old serv
 the trailing token — so auth is *not* enforced until both ends are on `1.4.0`+). `admit`
 runs inline on the listener thread, so keep it fast and local.
 
+### Scheduled keepalive
+
+Both sides have an **opt-in, idle-aware** library-managed keepalive so a consumer never
+hand-rolls the `~20 s` idle timer around the one-shot primitive:
+
+```kotlin
+// client
+client.startKeepAlive()          // default 20 s; or startKeepAlive(intervalMillis)
+client.stopKeepAlive()           // also done by client.stop()
+
+// server, per connection
+override fun onClientConnect(connection: Connection) {
+    connection.startKeepAlive()   // server → client KA; also stopped by terminate() / stop()
+}
+```
+
+It is idle-aware: a `KA` goes out only after `intervalMillis` of **output** silence on that
+path, so application traffic defers it (a scheduled `KA` may lag up to one quarter-interval,
+max 5 s, past the interval). Each side lazily creates **one** daemon `ScheduledExecutorService`
+(`mcupc-keepalive` / `mcups-keepalive`) on the first `startKeepAlive` call and shuts it in
+`stop()` — a consumer that never opts in pays for no thread. The one-shot
+`sendKeepAlive()` / `keepAlive()` primitives are unchanged and still own no timer. **No
+wire-format change** — the `KA` datagram is byte-identical either way. Server → client
+keepalives refresh only endpoint-independent (cone) NAT mappings; the authoritative keepalive
+is still the client's own.
+
 ### Client-side usage
 
 `MultiConnectionUDPClient` performs the handshake and then owns a background
@@ -218,7 +246,8 @@ val client = MultiConnectionUDPClient(serverAddress)
 client.handshake("alice").getOrThrow()
 client.start { message -> /* handle inbound data; runs on client's dispatch thread */ }
 client.send("hello")
-client.sendKeepAlive()   // call on a ~20s idle cadence
+client.startKeepAlive()   // library times it; no caller timer needed
+// client.sendKeepAlive() is still available for callers who want to drive the cadence themselves
 
 // or, for a binary protocol:
 client.startBytes { bytes -> /* exact datagram body, no decode, no trim */ }

@@ -10,6 +10,10 @@ import java.net.InetSocketAddress
  * server's single shared UDP socket. The interface exists so the server's
  * registration and handshake logic can be exercised against a socket-free fake.
  *
+ * [UDPConnection] is still socket-free and owns no thread of its own; an opt-in
+ * scheduled keepalive ([startKeepAlive]) borrows the server's shared
+ * `mcups-keepalive` thread rather than starting one per connection.
+ *
  * @property name a human-readable identifier for this connection, typically
  * supplied by the client during the handshake
  * @property peer the client's post-NAT endpoint, learned from its `Iam` datagram;
@@ -114,7 +118,8 @@ interface Connection {
     /**
      * Sends one minimal keepalive datagram to [peer] to keep its NAT mapping
      * warm. A one-shot: the caller schedules it (recommended ~20 s idle
-     * cadence). Owns no timer or thread.
+     * cadence). Owns no timer or thread. For a library-managed cadence use
+     * [startKeepAlive].
      *
      * Direction caveat: this handle lives on the **server** side, so this is a
      * server->client datagram. It refreshes the mapping timer on
@@ -125,4 +130,41 @@ interface Connection {
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
     fun keepAlive(): Result<Unit>
+
+    /**
+     * Starts an opt-in, idle-aware background keepalive for this connection: every
+     * ~[intervalMillis] of output silence toward [peer] the server sends one `KA`
+     * datagram, until [stopKeepAlive], [terminate], or server `stop()`.
+     *
+     * Server -> client keepalives refresh endpoint-independent (full-cone /
+     * restricted-cone) NAT mappings and verify the send path; they do **not**
+     * reliably refresh port-restricted or symmetric NATs - the authoritative
+     * keepalive is still the client's own (see [keepAlive]). A convenience over
+     * [keepAlive], which is unchanged and still owns no timer.
+     *
+     * The default implementation returns [Result.failure] - only the production
+     * [UDPConnection] supports a scheduled keepalive.
+     *
+     * @param intervalMillis output-idle time before a keepalive is sent; must be > 0.
+     * Defaults to [HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS] (20 s).
+     * @return [Result.success] once armed, or the failure that prevented it
+     */
+    fun startKeepAlive(intervalMillis: Long): Result<Unit> =
+        Result.failure(UnsupportedOperationException("This Connection does not support a scheduled keepalive"))
+
+    /**
+     * Starts the scheduled keepalive at the recommended interval
+     * ([HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS], 20 s).
+     * @return [Result.success] once armed, or the failure that prevented it
+     * @see startKeepAlive
+     */
+    fun startKeepAlive(): Result<Unit> = startKeepAlive(HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
+
+    /**
+     * Stops the background keepalive started by [startKeepAlive]. Idempotent; a no-op
+     * if none is running or the implementation does not support one. [terminate] and
+     * server `stop()` also do this.
+     * @return [Result.success] once cancelled
+     */
+    fun stopKeepAlive(): Result<Unit> = Result.success(Unit)
 }
