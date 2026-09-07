@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:1.1.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:1.2.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -48,7 +48,7 @@ further releases. To move off it:
 | `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. |
 | `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive`). |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
-| `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop. |
+| `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop — receives datagrams up to 65507 bytes (configurable via `receiveBufferBytes`), truncating larger ones. |
 | `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `KA`). |
 | `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
 
@@ -119,9 +119,14 @@ control-traffic machinery and never delivered. Mitigation: lead every binary app
 datagram with a byte that cannot start `Iam` / `KA` and is not ASCII whitespace — e.g.
 `0x00`, or any byte `>= 0x80` used as a version/format tag.
 
-The library receives datagrams up to **65507 bytes** (the maximum UDP payload over IPv4)
-whole; a larger payload is truncated. For real-network use keep frames under the path MTU
-(**~1200 bytes**) to avoid IP fragmentation and the loss that comes with it.
+Every receive path in this module — `MultiConnectionUDPServer`, `MultiConnectionUDPClient`,
+and `UDPSendReceiveServer` — accepts datagrams up to **65507 bytes** (the maximum UDP
+payload over IPv4) whole; a larger payload is truncated, not rejected. Each constructor
+takes an optional `receiveBufferBytes` (512..65507, default 65507) to shrink the
+per-instance receive buffer when datagrams are known to be small; a datagram larger than
+the configured size is truncated and a WARN is logged. For real-network use keep frames
+under the path MTU (**~1200 bytes**) to avoid IP fragmentation and the loss that comes with
+it.
 
 ### Client-side usage
 
