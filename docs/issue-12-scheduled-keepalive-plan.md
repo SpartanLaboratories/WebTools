@@ -20,12 +20,20 @@
   convenience only.
 - **Branch:** `feat/issue-12-scheduled-keepalive` (off `master`, deleted after
   merge).
-- **Commit:** TBD (see §10 — the plan document rides in the first implementation
-  commit so `git log --follow docs/issue-12-scheduled-keepalive-plan.md` binds
-  plan to implementation).
-- **PR:** TBD.
-- **Status:** planning only. All five design decisions are resolved (§8) — §3 is
-  executable as written. **Open decisions: none.**
+- **Commits:**
+  - `63b2524` — `feat:` all `src/main` changes, `KeepAlive.kt`,
+    `KeepAliveScheduler.kt`, `README.md`, the test-support fixtures + **this plan
+    document** (committed with the first implementation stage per §10, so
+    `git log --follow docs/issue-12-scheduled-keepalive-plan.md` binds plan to
+    implementation).
+  - `1108673` — `test:` the §5 suite, all levels.
+  - `f6a0dd4` — `build:` bump `webtools-udp` to `1.5.0` (§3.13).
+- **PR:** [#25](https://github.com/SpartanLaboratories/WebTools/pull/25), merged as
+  `eb14321`.
+- **Status:** **done.** Merged to `master` 2026-09-07. Full suite green across all
+  levels (gating, component, integration, deterministic, e2e, nonfunctional, uat;
+  8 skipped = `@Disabled` Level-5 manual scenarios). All five design decisions are
+  resolved (§8) — **Open decisions: none.**
 - **Target version:** `webtools-udp` `1.4.0` → **`1.5.0`** (purely additive — new
   members only, nothing removed or changed; see §7).
 - **Related (boundaries noted, not designed here):**
