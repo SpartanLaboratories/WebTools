@@ -1,5 +1,6 @@
 package com.spartanlabs.testing.deterministic.webtools.udp
 
+import com.spartanlabs.webtools.udp.Handshake
 import com.spartanlabs.webtools.udp.HandshakeProtocol
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
@@ -15,13 +16,25 @@ class HandshakeProtocolTest {
     // --- parseHandshake ---
 
     @Test
-    fun `parseHandshake returns the name for a clean Iam`() {
-        assertEquals("bob", HandshakeProtocol.parseHandshake(listOf("Iam", "bob")).getOrThrow())
+    fun `parseHandshake returns name and empty credential for a clean Iam`() {
+        assertEquals(Handshake("bob", ""), HandshakeProtocol.parseHandshake(listOf("Iam", "bob")).getOrThrow())
     }
 
     @Test
-    fun `parseHandshake returns only the name when extra tokens follow`() {
-        assertEquals("bob", HandshakeProtocol.parseHandshake(listOf("Iam", "bob", "1.2.3.4", "x")).getOrThrow())
+    fun `parseHandshake returns name and the opaque credential token`() {
+        assertEquals(
+            Handshake("bob", "tok"),
+            HandshakeProtocol.parseHandshake(listOf("Iam", "bob", "tok")).getOrThrow(),
+        )
+    }
+
+    @Test
+    fun `parseHandshake keeps only name and credential when extra tokens follow`() {
+        assertEquals(
+            Handshake("bob", "tok"),
+            HandshakeProtocol.parseHandshake(listOf("Iam", "bob", "tok", "x", "y")).getOrThrow(),
+        )
+        assertEquals(2, HandshakeProtocol.extraTokenCount(listOf("Iam", "bob", "tok", "x", "y")))
     }
 
     @Test
@@ -47,13 +60,15 @@ class HandshakeProtocolTest {
     // --- extraTokenCount ---
 
     @Test
-    fun `extraTokenCount is zero for a clean handshake`() {
+    fun `extraTokenCount truth table shifted by the credential slot`() {
         assertEquals(0, HandshakeProtocol.extraTokenCount(listOf("Iam", "bob")))
+        assertEquals(0, HandshakeProtocol.extraTokenCount(listOf("Iam", "bob", "tok")))
+        assertEquals(1, HandshakeProtocol.extraTokenCount(listOf("Iam", "bob", "tok", "z")))
     }
 
     @Test
-    fun `extraTokenCount counts every token past the name`() {
-        assertEquals(2, HandshakeProtocol.extraTokenCount(listOf("Iam", "bob", "x", "y")))
+    fun `extraTokenCount counts every token past the credential slot`() {
+        assertEquals(2, HandshakeProtocol.extraTokenCount(listOf("Iam", "bob", "tok", "x", "y")))
     }
 
     @Test

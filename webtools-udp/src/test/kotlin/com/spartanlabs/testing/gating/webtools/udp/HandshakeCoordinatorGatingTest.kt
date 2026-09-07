@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.gating.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
 import com.spartanlabs.webtools.udp.Registration
@@ -24,18 +25,59 @@ class HandshakeCoordinatorGatingTest {
     private val origin = InetSocketAddress(loopback, 40001)
 
     private val disconnects = mutableListOf<Pair<String, com.spartanlabs.webtools.udp.DisconnectReason>>()
+    private val created = mutableListOf<String>()
+    private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
 
     private fun coordinator(
         replies: MutableList<Pair<String, InetSocketAddress>>,
         idleTimeoutMillis: Long = 0L,
+        admit: (String, InetSocketAddress, String) -> Admission = { _, _, _ -> Admission.Admitted },
     ) = HandshakeCoordinator(
-        newConnection = { name, peer, _ -> FakeConnection(name, peer) },
+        newConnection = { name, peer, _ -> created += name; FakeConnection(name, peer) },
         sender = { bytes, to -> replies += String(bytes, Charsets.UTF_8) to to; Result.success(Unit) },
         onRegistered = {},
+        admit = { name, peer, credential -> admitCalls += Triple(name, peer, credential); admit(name, peer, credential) },
         dispatch = { it() },
         onDisconnect = { connection, reason -> disconnects += connection.name to reason },
         idleTimeoutMillis = idleTimeoutMillis,
     )
+
+    @Test
+    fun `admit refusing a name replies REFUSED, registers nothing, and mints no connection`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies) { name, _, _ ->
+            if (name == "banned") Admission.Refused("banned") else Admission.Admitted
+        }
+
+        assertTrue(coordinator.accept(origin, "Iam banned").isSuccess)
+
+        assertEquals(0, coordinator.size)
+        assertTrue(created.isEmpty())
+        assertEquals(listOf("REFUSED banned" to origin), replies)
+    }
+
+    @Test
+    fun `an admitted Iam with a credential registers and the credential reaches admit`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
+
+        coordinator.accept(origin, "Iam alice tok")
+
+        assertEquals(1, coordinator.size)
+        assertEquals(listOf("REGISTERED" to origin), replies)
+        assertEquals(Triple("alice", origin, "tok"), admitCalls.single())
+    }
+
+    @Test
+    fun `the default admit lambda accepts every well-formed Iam unchanged`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
+
+        coordinator.accept(origin, "Iam alice")
+
+        assertEquals(1, coordinator.size)
+        assertEquals(listOf("REGISTERED" to origin), replies)
+    }
 
     @Test
     fun `a first Iam registers the client and sends one REGISTERED reply to the origin`() {

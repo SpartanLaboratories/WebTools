@@ -14,7 +14,14 @@ class HandshakeProtocolGatingTest {
 
     @Test
     fun `a well-formed Iam parses to its name`() {
-        assertEquals("alice", HandshakeProtocol.parseHandshake(listOf("Iam", "alice")).getOrThrow())
+        assertEquals("alice", HandshakeProtocol.parseHandshake(listOf("Iam", "alice")).getOrThrow().name)
+    }
+
+    @Test
+    fun `a well-formed Iam with a credential parses to name and credential`() {
+        val parsed = HandshakeProtocol.parseHandshake(listOf("Iam", "alice", "tok")).getOrThrow()
+        assertEquals("alice", parsed.name)
+        assertEquals("tok", parsed.credential)
     }
 
     @Test

@@ -18,6 +18,61 @@ class HandshakeWireFormatTest {
         assertEquals("Iam bob", HandshakeWireFormat.handshakeMessage("bob"))
     }
 
+    @Test
+    fun `handshakeMessage credential truth table`() {
+        assertEquals("Iam bob", HandshakeWireFormat.handshakeMessage("bob"))
+        assertEquals("Iam bob", HandshakeWireFormat.handshakeMessage("bob", ""))
+        assertEquals("Iam bob tok", HandshakeWireFormat.handshakeMessage("bob", "tok"))
+        val longToken = "A".repeat(200)
+        assertEquals("Iam bob $longToken", HandshakeWireFormat.handshakeMessage("bob", longToken))
+    }
+
+    // --- REFUSED_REPLY ---
+
+    @Test
+    fun `REFUSED_REPLY is the exact literal`() {
+        assertEquals("REFUSED", HandshakeWireFormat.REFUSED_REPLY)
+    }
+
+    // --- isRefused ---
+
+    @Test
+    fun `isRefused truth table`() {
+        assertTrue(HandshakeWireFormat.isRefused("REFUSED"))
+        assertTrue(HandshakeWireFormat.isRefused("REFUSED x"))
+        assertTrue(HandshakeWireFormat.isRefused("REFUSED a b c"))
+        assertFalse(HandshakeWireFormat.isRefused("REFUSEDX"))
+        assertFalse(HandshakeWireFormat.isRefused("refused"))
+        assertFalse(HandshakeWireFormat.isRefused(""))
+        assertFalse(HandshakeWireFormat.isRefused("REGISTERED"))
+        assertFalse(HandshakeWireFormat.isRefused(" REFUSED"))
+    }
+
+    // --- refusalReason ---
+
+    @Test
+    fun `refusalReason truth table`() {
+        assertEquals("", HandshakeWireFormat.refusalReason("REFUSED"))
+        assertEquals("full", HandshakeWireFormat.refusalReason("REFUSED full"))
+        assertEquals("over   capacity", HandshakeWireFormat.refusalReason("REFUSED  over   capacity "))
+    }
+
+    // --- refusedMessage ---
+
+    @Test
+    fun `refusedMessage collapses whitespace and drops a blank reason`() {
+        assertEquals("REFUSED", HandshakeWireFormat.refusedMessage(""))
+        assertEquals("REFUSED", HandshakeWireFormat.refusedMessage("   "))
+        assertEquals("REFUSED over capacity", HandshakeWireFormat.refusedMessage("over capacity"))
+        assertEquals("REFUSED line1 line2 end", HandshakeWireFormat.refusedMessage("line1\nline2\t end"))
+    }
+
+    @Test
+    fun `refusalReason round-trips a clean reason through refusedMessage`() {
+        val reason = "invalid credential for guarded"
+        assertEquals(reason, HandshakeWireFormat.refusalReason(HandshakeWireFormat.refusedMessage(reason)))
+    }
+
     // --- isRegistered ---
 
     @Test
