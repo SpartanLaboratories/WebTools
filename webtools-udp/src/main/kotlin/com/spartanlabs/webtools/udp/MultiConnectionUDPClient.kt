@@ -55,7 +55,8 @@ import java.util.concurrent.Executors
  * Call [handshake] once, then [start] once. Calling [start] before a successful
  * [handshake], or calling either twice, is undefined behaviour - matching the
  * level of guarding [MultiConnectionUDPServer] itself applies to its own
- * lifecycle.
+ * lifecycle. A [handshake] that fails - including a refusal surfaced as a
+ * [HandshakeRefusedException] - leaves the client safe to [stop] and discard.
  *
  * This class does **not** implement [AutoCloseable], matching
  * [MultiConnectionUDPServer]: lifecycle is [start]/[stop], not `use { }`.
@@ -127,15 +128,31 @@ class MultiConnectionUDPClient @JvmOverloads constructor(
     val localPort: Int get() = socket.localPort
 
     /**
-     * Sends `Iam <name>` and blocks (up to [timeoutMillis]) for the server's
-     * `REGISTERED` reply, on this same socket. One-shot; call once, before [start].
+     * Sends `Iam <name>` (or `Iam <name> <credential>`) and blocks (up to
+     * [timeoutMillis]) for the server's reply, on this same socket. One-shot;
+     * call once, before [start].
+     *
+     * This call is one-shot: a [HandshakeRefusedException] raised for a bad
+     * credential will recur on a retry with the same credential; a refusal for
+     * capacity ([Admission.Refused]) may not.
      * @param name this client's chosen name
      * @param timeoutMillis how long to wait for the server's reply before failing
-     * @return [Result.success] once the server has replied `REGISTERED`, or the
-     * failure that prevented it (including a timeout - the server never replied)
+     * @param credential an opaque token forwarded verbatim in the `Iam` line to
+     * the server's [MultiConnectionUDPServer.admit]; the default (empty string)
+     * sends the plain `Iam <name>`. Must be whitespace-free (base64url-encode a
+     * structured or binary credential).
+     * @return [Result.success] once the server has replied `REGISTERED`; or
+     * [Result.failure] holding a [HandshakeRefusedException] if the server replied
+     * `REFUSED <reason>`; or the failure that prevented it (including a timeout -
+     * the server never replied)
      */
-    fun handshake(name: String, timeoutMillis: Int = HANDSHAKE_TIMEOUT_MILLIS): Result<Unit> = runCatching {
-        val payload = HandshakeWireFormat.handshakeMessage(name).toByteArray(Charsets.UTF_8)
+    @JvmOverloads
+    fun handshake(
+        name: String,
+        timeoutMillis: Int = HANDSHAKE_TIMEOUT_MILLIS,
+        credential: String = "",
+    ): Result<Unit> = runCatching {
+        val payload = HandshakeWireFormat.handshakeMessage(name, credential).toByteArray(Charsets.UTF_8)
         socket.send(DatagramPacket(payload, payload.size, serverAddress, serverPort))
 
         socket.soTimeout = timeoutMillis
@@ -144,10 +161,11 @@ class MultiConnectionUDPClient @JvmOverloads constructor(
         socket.receive(reply) // throws SocketTimeoutException if the server never answers
         String(reply.data, 0, reply.length, Charsets.UTF_8).trim()
     }.flatMap { reply ->
-        if (HandshakeWireFormat.isRegistered(reply)) {
-            Result.success(Unit)
-        } else {
-            Result.failure(
+        when {
+            HandshakeWireFormat.isRegistered(reply) -> Result.success(Unit)
+            HandshakeWireFormat.isRefused(reply) ->
+                Result.failure(HandshakeRefusedException(HandshakeWireFormat.refusalReason(reply)))
+            else -> Result.failure(
                 IllegalStateException("Expected '${HandshakeWireFormat.REGISTERED_REPLY}' but got '$reply'"),
             )
         }

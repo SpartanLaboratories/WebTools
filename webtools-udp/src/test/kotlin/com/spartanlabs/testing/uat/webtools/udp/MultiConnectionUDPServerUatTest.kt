@@ -81,6 +81,24 @@ class MultiConnectionUDPServerUatTest {
     }
 
     @Test
+    @Disabled("Manual: two hosts on different networks. Issue #11 - refusable handshake + credential.")
+    fun `a NAT'd client is screened by admit - bad token refused, good token connects, capacity refused`() {
+        // 1. Run a MultiConnectionUDPServer subclass on a host with a public, routable IP,
+        //    wired to a GameTools-style admit(name, peer, credential): validate the token
+        //    against an auth service AND enforce a small capacity cap (e.g. 1).
+        // 2. From a NAT'd machine, MultiConnectionUDPClient.handshake("player", credential = "<bad>").
+        //    PASS (a): the client's handshake fails with HandshakeRefusedException("<reason>")
+        //              within the handshake timeout - a clear verdict, not a hang.
+        // 3. Retry with a valid token: handshake("player", credential = "<good>").
+        //    PASS (b): connects and a session round-trips.
+        // 4. From a second NAT'd machine, handshake with a valid token while the cap is full.
+        //    PASS (c): HandshakeRefusedException("server full"), immediate and clear.
+        // 5. From a third host, send `Iam player <junk>` (spoofing the connected name) directly.
+        //    PASS (d): the first machine's session keeps flowing - it is not knocked offline.
+        // FAIL: any refusal manifests as a timeout/hang, or step 5 evicts the legitimate player.
+    }
+
+    @Test
     @Disabled("Manual: multi-minute mapping longevity. See docs/issue-1-tier-2-uat.md section 4.")
     fun `the NAT mapping survives a multi-minute session driven by keepalives`() {
         // Run a 5-minute session: the server calls Connection.keepAlive() on a ~20 s

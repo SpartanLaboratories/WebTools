@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:1.3.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:1.4.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -44,12 +44,13 @@ further releases. To move off it:
 
 | Type | Purpose |
 |------|---------|
-| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`; optionally override `onClientDisconnect` and set `idleTimeoutMillis` for idle-connection detection. |
+| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`; optionally override `admit` to screen/refuse handshakes and validate an opaque credential, override `onClientDisconnect`, and set `idleTimeoutMillis` for idle-connection detection. |
 | `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. |
 | `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive`). |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
 | `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop — receives datagrams up to 65507 bytes (configurable via `receiveBufferBytes`), truncating larger ones. |
-| `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `KA`). |
+| `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `REFUSED`, `KA`). |
+| `Admission` / `HandshakeRefusedException` | `admit`'s return type (`Admitted` / `Refused(reason)`); the typed failure a refused client's `handshake` surfaces. |
 | `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
 
 ### `webtools-scraping`
@@ -72,7 +73,9 @@ further releases. To move off it:
 | Direction | Message | Sent to |
 |-----------|---------|---------|
 | client → server | `Iam <name>` | `COMMON_LISTEN_PORT` (`9998`) |
+| client → server | `Iam <name> <credential>` (optional opaque, whitespace-free token) | `COMMON_LISTEN_PORT` (`9998`) |
 | server → client | `REGISTERED` (single token, no arguments) | the **source address and port** of the client's `Iam` datagram |
+| server → client | `REFUSED <reason>` (handshake refused; bare `REFUSED` if no reason) | the **source address and port** of the client's `Iam` datagram |
 | client ↔ server | application data | port `9998`, from/to the same socket the client sent `Iam` from |
 | client → server | `KA` (keepalive, ~20 s idle cadence) | port `9998`, from the same socket |
 
@@ -80,13 +83,22 @@ Every server → client datagram is addressed to the client's observed post-NAT 
 to anything in a payload, so **the data path traverses NAT** and the server binds no
 per-client ports (it is hostable behind a single-port container or L4 UDP load balancer). A
 retransmitted `Iam` from the same source is answered with another `REGISTERED` and does not
-re-register. Tokens after `<name>` are ignored.
+re-register. `<credential>` (`tokens[2]`, optional) is passed to `admit` verbatim; any token
+after it is ignored.
 
-A fresh `Iam` under a name that is already registered under a different
+Before a new handshake is accepted the server calls `admit(name, peer, credential)` →
+`Admission`; returning `Admission.Refused(reason)` replies `REFUSED <reason>` to the client
+(surfaced client-side as a typed `HandshakeRefusedException`), registers nothing, and fires
+no `onClientConnect`. This replaces the old "call `Connection.terminate()` after the fact"
+workaround for a refuse-at-connect decision. `admit` is only consulted for a first `Iam`
+from an unknown origin, and runs *before* any same-name supersede, so a refused newcomer
+cannot evict a legitimate incumbent.
+
+A fresh, admitted `Iam` under a name that is already registered under a different
 origin (e.g. after a NAT rebind) supersedes that stale registration; the old
 origin is no longer addressed by `pushToAll`. `Connection.terminate()` fully
 deregisters the connection, not just its message handler - e.g. an
-application-level refusal discovered after the handshake already completed
+application-level refusal discovered *after* the handshake already completed
 should call it so the refused client is not addressed by future broadcasts.
 
 The client must send the token `KA` on that socket every ~20 s of idle time to hold its NAT
@@ -158,6 +170,42 @@ connection stays addressable by `pushToAll` so the application can run its own g
 and call `terminate()` when ready (which then produces a second `TERMINATED` call). A
 same-name supersede fires `SUPERSEDED`. `stop()` teardown fires nothing. With the default
 `idleTimeoutMillis = 0` there is no extra thread and no per-datagram cost.
+
+### Handshake screening & credentials
+
+By default the server accepts every well-formed `Iam`. Override
+`admit(name, peer, credential): Admission` to screen a handshake before it is registered —
+validate the credential, enforce a capacity gate, reject a banned name:
+
+```kotlin
+val server = object : MultiConnectionUDPServer() {
+    override fun admit(name: String, peer: InetSocketAddress, credential: String): Admission =
+        when {
+            isBanned(name)              -> Admission.Refused("banned")
+            !tokenValid(name, credential) -> Admission.Refused("invalid credential")
+            connections.size >= capacity  -> Admission.Refused("server full")
+            else                          -> Admission.Admitted
+        }
+    override fun onClientConnect(connection: Connection) { /* ... */ }
+}
+```
+
+```kotlin
+val client = MultiConnectionUDPClient(serverAddress)
+client.handshake("alice", credential = base64UrlToken).fold(
+    onSuccess = { client.start { msg -> /* ... */ } },
+    onFailure = { ex -> if (ex is HandshakeRefusedException) showError(ex.reason) },
+)
+```
+
+The credential is **one whitespace-free token**, opaque to the library (base64url-encode a
+structured or binary value), passed to `admit` verbatim; an absent credential arrives as the
+empty string. It rides **in cleartext** — the library gives you a channel, not
+confidentiality. Back-compat is total in every direction: an old client (`Iam <name>`)
+against a new server registers with an empty credential and the default `admit`; a new
+client (`Iam <name> <cred>`) against an old server still registers (the old server ignores
+the trailing token — so auth is *not* enforced until both ends are on `1.4.0`+). `admit`
+runs inline on the listener thread, so keep it fast and local.
 
 ### Client-side usage
 

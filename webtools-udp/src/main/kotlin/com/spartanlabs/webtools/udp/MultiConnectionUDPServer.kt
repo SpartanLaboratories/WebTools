@@ -1,6 +1,7 @@
 package com.spartanlabs.webtools.udp
 
 import org.slf4j.LoggerFactory
+import java.net.InetSocketAddress
 import java.net.SocketException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -11,9 +12,12 @@ import java.util.concurrent.TimeUnit
  * A UDP server that multiplexes **all** traffic for any number of clients over a
  * single well-known "common" socket ([COMMON_LISTEN_PORT]).
  *
- * A client registers by sending `Iam <name>` to the common port from a socket it
- * keeps open. The server replies - from that same socket, addressed straight back
- * to the datagram's source address and port - with the single token `REGISTERED`.
+ * A client registers by sending `Iam <name>` (optionally `Iam <name> <credential>`
+ * with an opaque trailing token) to the common port from a socket it keeps open.
+ * The server screens every new handshake through [admit] and either replies -
+ * from that same socket, addressed straight back to the datagram's source address
+ * and port - with the single token `REGISTERED`, or refuses it with
+ * `REFUSED <reason>` (registering nothing, firing no [onClientConnect]).
  * From then on the client sends and receives everything (application data,
  * broadcasts, keepalives) over that one socket to port [COMMON_LISTEN_PORT], and
  * the server addresses every datagram back to the client's observed post-NAT
@@ -31,6 +35,19 @@ import java.util.concurrent.TimeUnit
  *
  * The handshake rules live in [HandshakeProtocol] (pure) and [HandshakeCoordinator]
  * (the state machine + inbound router); this class binds them to a real socket.
+ *
+ * ### Handshake screening & credentials
+ * Override [admit] to accept or refuse a handshake before it is registered. The
+ * default admits every well-formed `Iam` - identical to pre-`1.4.0` behaviour.
+ * [admit] returns [Admission.Admitted] or [Admission.Refused]`(reason)`; on a
+ * refusal the server sends `REFUSED <reason>` back to the `Iam` origin, mints no
+ * [Connection], adds no registration, and does not call [onClientConnect] - the
+ * client surfaces it as a typed [HandshakeRefusedException]. This removes the old
+ * "reply `REGISTERED`, then silently drop" workaround for capacity/auth refusals.
+ * A client may carry an opaque, whitespace-free `<credential>` token in its `Iam`
+ * line (`Iam <name> <credential>`); it is passed to [admit] verbatim, never
+ * interpreted by the library, and rides in cleartext. [admit] runs **inline on
+ * the common listener thread**, so it must return promptly.
  *
  * ### Binary application payloads
  * Post-handshake application data may be raw bytes: [Connection.push] takes a
@@ -87,7 +104,9 @@ import java.util.concurrent.TimeUnit
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
  * classify (`Iam` / `KA` / data) -> run the socket-free handshake state machine
- * inline, drop the keepalive, or hand the payload to the dispatch executor. A
+ * inline, drop the keepalive, or hand the payload to the dispatch executor. The
+ * [admit] screen runs inline on this listener thread too (like [onClientConnect]),
+ * so a slow [admit] stalls demultiplexing for every client. A
  * third daemon thread - `mcups-liveness`, a [ScheduledExecutorService] - exists
  * **only when [idleTimeoutMillis] > 0**; it runs the idle-connection sweep and
  * never runs application code (the [onClientDisconnect] hook is handed to
@@ -142,6 +161,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         newConnection = { name, peer, channel -> UDPConnection(name, peer, channel) },
         sender = commonChannel::send,
         onRegistered = ::onClientConnect,
+        admit = ::admit,
         dispatch = { block -> dispatchExecutor.execute(block) },
         onDisconnect = { connection, reason ->
             dispatchExecutor.execute {
@@ -225,6 +245,40 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      * @param connection the connection that was just registered
      */
     abstract fun onClientConnect(connection: Connection)
+
+    /**
+     * Screens an incoming `Iam` handshake before it is accepted. The default
+     * admits every well-formed handshake - today's behaviour. Override to validate
+     * [credential] (an opaque token the client supplied, empty if it sent none) or
+     * to refuse for application reasons (over capacity, banned): return
+     * [Admission.Refused] and the client receives `REFUSED <reason>` as a typed
+     * [HandshakeRefusedException], with nothing registered and no
+     * [onClientConnect] call. This replaces the old "reply `REGISTERED` then
+     * silently drop the client" pattern for a connect-time refusal.
+     *
+     * Runs **inline on the common listener thread** (like [onClientConnect]), so it
+     * must return promptly - a blocking credential lookup stalls inbound handling
+     * for every client. Do fast, local checks here; hand a slow verification to
+     * another thread and gate on its cached result.
+     *
+     * Called only for a first `Iam` from an unknown origin - not for a retransmit
+     * from an already-registered origin. Called for a same-name reconnect from a
+     * **new** origin *before* the stale registration is superseded, so refusing it
+     * leaves the existing connection intact.
+     *
+     * A thrown exception is caught, logged, and the handshake is dropped (no
+     * reply, no registration); the client sees a timeout and may retry.
+     *
+     * @param name the client's chosen name
+     * @param peer the client's observed post-NAT origin
+     * @param credential the opaque token from `Iam <name> <credential>`, verbatim;
+     * the empty string if the client sent `Iam <name>`. A custom implementation
+     * must tolerate arbitrary/garbage credential strings (a legacy client may put
+     * an unrelated trailing token there).
+     * @return [Admission.Admitted] to accept, [Admission.Refused] to reject
+     */
+    open fun admit(name: String, peer: InetSocketAddress, credential: String): Admission =
+        Admission.Admitted
 
     /**
      * Called when a registered client connection stops being addressable - see

@@ -28,38 +28,50 @@ internal object HandshakeProtocol {
     /** The entire server handshake reply: a single token, no arguments. */
     const val REGISTERED_REPLY = HandshakeWireFormat.REGISTERED_REPLY
 
+    /** The verb of the server's handshake-refused reply: `REFUSED <reason>`. */
+    const val REFUSED_REPLY = HandshakeWireFormat.REFUSED_REPLY
+
     /** The token a client sends on an idle interval to keep its NAT mapping warm. */
     const val KEEPALIVE_TOKEN = HandshakeWireFormat.KEEPALIVE_TOKEN
 
     /** Index of the client-supplied name within a whitespace-split handshake line. */
     private const val NAME_INDEX = 1
 
+    /** Index of the optional client-supplied opaque credential token. */
+    private const val CREDENTIAL_INDEX = 2
+
     /** Fewest tokens a valid handshake can carry: the verb plus the name. */
     private const val MIN_TOKENS = 2
 
     /**
-     * Extracts the client name from the whitespace-split text of an `Iam` datagram.
+     * Parses the whitespace-split text of an `Iam` datagram into its name and
+     * optional opaque credential.
      *
-     * The caller is expected to have already matched [VERB]; any token after the
-     * name is a legacy client-claimed address and is ignored (see [extraTokenCount]).
+     * The caller is expected to have already matched [VERB]. `tokens[2]`, if
+     * present, is the opaque credential handed verbatim to
+     * [MultiConnectionUDPServer.admit]; it is absent -> `""`. Any token past the
+     * credential slot is ignored (see [extraTokenCount]).
      *
      * @param tokens the handshake line split on spaces
-     * @return the client name, or [Result.failure] holding an [IllegalArgumentException]
-     * if [tokens] is not a well-formed `Iam <name>` line
+     * @return the parsed [Handshake] (name + credential, `""` if none), or
+     * [Result.failure] holding an [IllegalArgumentException] if [tokens] is not a
+     * well-formed `Iam <name>` line
      */
-    fun parseHandshake(tokens: List<String>): Result<String> = runCatching {
+    fun parseHandshake(tokens: List<String>): Result<Handshake> = runCatching {
         require(tokens.firstOrNull() == VERB) { "Not an $VERB message: $tokens" }
         require(tokens.size >= MIN_TOKENS) { "Expected '$VERB <name>' but got ${tokens.size} token(s)" }
-        tokens[NAME_INDEX]
+        Handshake(tokens[NAME_INDEX], tokens.getOrElse(CREDENTIAL_INDEX) { "" })
     }
 
     /**
-     * How many tokens past the client name a handshake line carries - all of which
-     * are ignored. Zero for a clean `Iam <name>`; never negative.
+     * How many tokens past the optional credential slot a handshake line carries -
+     * all of which are ignored. Zero for a clean `Iam <name>` or
+     * `Iam <name> <credential>`; never negative.
      * @param tokens the handshake line split on spaces
      * @return the count of ignored trailing tokens, `>= 0`
      */
-    fun extraTokenCount(tokens: List<String>): Int = (tokens.size - MIN_TOKENS).coerceAtLeast(0)
+    fun extraTokenCount(tokens: List<String>): Int =
+        (tokens.size - (CREDENTIAL_INDEX + 1)).coerceAtLeast(0)
 
     /**
      * True if [tokens] opens a handshake (verb match only; validity is
@@ -76,3 +88,11 @@ internal object HandshakeProtocol {
      */
     fun isKeepAlive(text: String): Boolean = HandshakeWireFormat.isKeepAlive(text)
 }
+
+/**
+ * The parsed content of a client `Iam` handshake line.
+ * @property name the client's chosen name (`tokens[1]`)
+ * @property credential the opaque credential token (`tokens[2]`), or the empty
+ * string when the client sent a bare `Iam <name>`; never interpreted by the library
+ */
+internal data class Handshake(val name: String, val credential: String)

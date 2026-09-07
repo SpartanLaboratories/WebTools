@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
@@ -39,6 +40,7 @@ class HandshakeNonFunctionalTest {
             newConnection = { name, peer, _ -> FakeConnection(name, peer) },
             sender = { _, target -> replyTargets += target; Result.success(Unit) },
             onRegistered = {},
+            admit = { _, _, _ -> Admission.Admitted },
             dispatch = { it() },
             onDisconnect = { _, _ -> },
             idleTimeoutMillis = 0L,
@@ -58,6 +60,7 @@ class HandshakeNonFunctionalTest {
             newConnection = { name, peer, _ -> created++; FakeConnection(name, peer) },
             sender = { _, _ -> replies++; Result.success(Unit) },
             onRegistered = {},
+            admit = { _, _, _ -> Admission.Admitted },
             dispatch = { it() },
             onDisconnect = { _, _ -> },
             idleTimeoutMillis = 0L,

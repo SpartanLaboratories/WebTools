@@ -8,12 +8,16 @@ import java.net.InetSocketAddress
  * injected collaborators so it can be tested with no real I/O. It is four things
  * at once:
  *
- * - the **handshake state machine** - a first `Iam` from a new origin registers a
- *   [Connection] and replies with the single token `REGISTERED`; a retransmit from
- *   a known origin just re-sends `REGISTERED`; a first `Iam` from a name that is
- *   already registered under a different, now-stale origin (e.g. after a NAT
- *   rebind) supersedes it - the stale registration is terminated and removed
- *   before the new one is added;
+ * - the **handshake state machine** - a first `Iam` from a new origin is screened
+ *   by [admit] before anything else; on [Admission.Refused] the server replies
+ *   `REFUSED <reason>`, registers nothing, and does not fire [onRegistered].
+ *   Otherwise it registers a [Connection] and replies with the single token
+ *   `REGISTERED`; a retransmit from a known origin just re-sends `REGISTERED`
+ *   (no re-screening); a first `Iam` from a name that is already registered under
+ *   a different, now-stale origin (e.g. after a NAT rebind) supersedes it - but
+ *   only once [admit] has admitted the newcomer, so a refused name-spoof cannot
+ *   evict the incumbent - the stale registration is terminated and removed before
+ *   the new one is added;
  * - the **inbound-datagram router** - [accept] classifies every datagram as a
  *   handshake, a keepalive (dropped), or application data (handed to the dispatch
  *   executor for the bound handler);
@@ -31,6 +35,11 @@ import java.net.InetSocketAddress
  * @param sender sends raw bytes to a client endpoint; its [Result] is propagated
  * @param onRegistered invoked exactly once per newly registered client, after its
  * `REGISTERED` reply has been sent - never for a retransmitted handshake
+ * @param admit the pre-accept screen for a first `Iam` from an unknown origin,
+ * given the parsed name, origin, and opaque credential (`""` if none). Invoked
+ * inline on the listener thread before any supersede or registration; expected to
+ * return promptly. [Admission.Refused] short-circuits to a `REFUSED <reason>`
+ * reply with nothing registered; a thrown exception drops the handshake.
  * @param dispatch hands a block to the server's single-threaded dispatch executor
  * @param onDisconnect invoked when a registered connection stops being
  * addressable (`TIMEOUT` / `SUPERSEDED` / `TERMINATED`); called inline, so it is
@@ -42,6 +51,7 @@ internal class HandshakeCoordinator(
     private val newConnection: (name: String, peer: InetSocketAddress, channel: ClientChannel) -> Connection,
     private val sender: (bytes: ByteArray, to: InetSocketAddress) -> Result<Unit>,
     private val onRegistered: (Connection) -> Unit,
+    private val admit: (name: String, peer: InetSocketAddress, credential: String) -> Admission,
     private val dispatch: (block: () -> Unit) -> Unit,
     private val onDisconnect: (connection: Connection, reason: DisconnectReason) -> Unit,
     private val idleTimeoutMillis: Long,
@@ -110,15 +120,35 @@ internal class HandshakeCoordinator(
         accept(origin, text.toByteArray(Charsets.UTF_8), text)
 
     private fun handleHandshake(origin: InetSocketAddress, tokens: List<String>): Result<Unit> =
-        HandshakeProtocol.parseHandshake(tokens).flatMap { name ->
+        HandshakeProtocol.parseHandshake(tokens).flatMap { (name, credential) ->
             val extra = HandshakeProtocol.extraTokenCount(tokens)
             if (extra > 0) log.debug("Ignoring {} extra handshake token(s)", extra)
 
             registrations.findByOrigin(origin)?.let {
                 // Retransmitted Iam from a known origin - repeat the token it already earned.
+                // No re-screening: admit() runs once, at first registration - re-running a
+                // non-deterministic admit() (e.g. a capacity gate) on a stray retransmit could
+                // refuse an already-admitted client and desync the two sides.
                 log.info("Repeating handshake reply for already-registered origin {}", origin)
                 send(REGISTERED_BYTES, origin)
             } ?: run {
+                // Screen the newcomer BEFORE supersede / registration / reply. Because this runs
+                // ahead of findByName(name), a Refused newcomer never reaches the supersede code,
+                // so an attacker spoofing an existing name from a fresh origin cannot evict the
+                // legitimate incumbent.
+                val admission = runCatching { admit(name, origin, credential) }.getOrElse { cause ->
+                    log.warn("admit(...) threw for '{}' from {} - dropping the handshake", name, origin, cause)
+                    return@flatMap Result.failure(cause)
+                }
+                if (admission is Admission.Refused) {
+                    log.info("Refused handshake for '{}' from {}: {}", name, origin, admission.reason)
+                    // A REFUSED datagram that went out is a successful server action, not a failure.
+                    return@flatMap send(
+                        HandshakeWireFormat.refusedMessage(admission.reason).toByteArray(Charsets.UTF_8),
+                        origin,
+                    )
+                }
+
                 // A same-name registration under a different origin is a stale entry (e.g. a NAT
                 // rebind), not a distinct client - supersede it directly against Registrations,
                 // rather than relying solely on stale.connection.terminate(), so pruning stays

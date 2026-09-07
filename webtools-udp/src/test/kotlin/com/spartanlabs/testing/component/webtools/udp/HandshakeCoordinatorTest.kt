@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.ClientChannel
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
@@ -35,6 +36,17 @@ class HandshakeCoordinatorTest {
     private var sendResult: Result<Unit> = Result.success(Unit)
     private var idleTimeoutMillis: Long = 0L
 
+    private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
+    private var admissionToReturn: Admission = Admission.Admitted
+    private var admitThrows = false
+
+    private val recordingAdmit: (name: String, peer: InetSocketAddress, credential: String) -> Admission =
+        { name, peer, credential ->
+            admitCalls += Triple(name, peer, credential)
+            if (admitThrows) error("admit boom")
+            admissionToReturn
+        }
+
     private var connectionFactory: (name: String, peer: InetSocketAddress) -> FakeConnection =
         { name, peer -> FakeConnection(name, peer) }
 
@@ -50,6 +62,7 @@ class HandshakeCoordinatorTest {
             sendResult
         },
         onRegistered = { registeredNames += it.name },
+        admit = recordingAdmit,
         dispatch = { it() },
         onDisconnect = { connection, reason -> disconnects += connection.name to reason },
         idleTimeoutMillis = idleTimeoutMillis,
@@ -94,13 +107,110 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `tokens after the name are ignored`() {
+    fun `the credential slot is claimed and only tokens past it are ignored`() {
         val coordinator = newCoordinator()
 
         assertTrue(coordinator.accept(originA, "Iam carol 10.0.0.9 junk").isSuccess)
 
         assertEquals("carol", created.single().first)
+        assertEquals(Triple("carol", originA, "10.0.0.9"), admitCalls.single())
+        assertEquals(1, HandshakeProtocol.extraTokenCount("Iam carol 10.0.0.9 junk".split(' ')))
         assertEquals(1, coordinator.size)
+    }
+
+    @Test
+    fun `admit receives the parsed credential`() {
+        val coordinator = newCoordinator()
+
+        coordinator.accept(originA, "Iam alice tok123")
+
+        assertEquals(Triple("alice", originA, "tok123"), admitCalls.last())
+    }
+
+    @Test
+    fun `admit receives an empty credential for a bare Iam`() {
+        val coordinator = newCoordinator()
+
+        coordinator.accept(originA, "Iam alice")
+
+        assertEquals(Triple("alice", originA, ""), admitCalls.single())
+    }
+
+    @Test
+    fun `a refused handshake registers nothing, sends REFUSED, and reports success`() {
+        val coordinator = newCoordinator()
+        admissionToReturn = Admission.Refused("nope")
+
+        assertTrue(coordinator.accept(originA, "Iam alice").isSuccess)
+
+        assertTrue(created.isEmpty())
+        assertEquals(0, coordinator.size)
+        assertEquals(listOf("REFUSED nope" to originA), sent)
+        assertTrue(registeredNames.isEmpty())
+    }
+
+    @Test
+    fun `a refusal reason with spaces round-trips onto the wire`() {
+        val coordinator = newCoordinator()
+        admissionToReturn = Admission.Refused("over capacity now")
+
+        coordinator.accept(originA, "Iam alice")
+
+        assertEquals(listOf("REFUSED over capacity now" to originA), sent)
+    }
+
+    @Test
+    fun `a refused newcomer does not evict the incumbent`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        sent.clear()
+        admissionToReturn = Admission.Refused("x")
+
+        coordinator.accept(originB, "Iam alice")
+
+        assertEquals(1, coordinator.size)
+        assertEquals(originA, coordinator.snapshot().single().origin)
+        assertTrue(disconnects.isEmpty())
+        assertEquals(1, created.size)
+        sent.clear()
+        coordinator.broadcast("ping")
+        assertEquals(listOf("ping" to originA), sent)
+    }
+
+    @Test
+    fun `an admitted newcomer under an existing name still supersedes`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        admitCalls.clear()
+
+        coordinator.accept(originB, "Iam alice")
+
+        assertEquals(
+            listOf("alice" to com.spartanlabs.webtools.udp.DisconnectReason.SUPERSEDED),
+            disconnects,
+        )
+        assertEquals(Triple("alice", originB, ""), admitCalls.single())
+    }
+
+    @Test
+    fun `a retransmit from a registered origin does not re-consult admit`() {
+        val coordinator = newCoordinator()
+
+        coordinator.accept(originA, "Iam alice")
+        coordinator.accept(originA, "Iam alice")
+
+        assertEquals(1, admitCalls.size)
+    }
+
+    @Test
+    fun `a throwing admit drops the handshake with no reply and no registration`() {
+        val coordinator = newCoordinator()
+        admitThrows = true
+
+        assertTrue(coordinator.accept(originA, "Iam alice").isFailure)
+
+        assertEquals(0, coordinator.size)
+        assertTrue(sent.isEmpty())
     }
 
     @Test
@@ -222,6 +332,7 @@ class HandshakeCoordinatorTest {
             },
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
+            admit = recordingAdmit,
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
@@ -246,6 +357,7 @@ class HandshakeCoordinatorTest {
             },
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
+            admit = recordingAdmit,
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
@@ -269,6 +381,7 @@ class HandshakeCoordinatorTest {
             newConnection = { name, peer, channel -> UDPConnection(name, peer, channel) },
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
+            admit = recordingAdmit,
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
@@ -579,6 +692,7 @@ class HandshakeCoordinatorTest {
             newConnection = { name, peer, channel -> UDPConnection(name, peer, channel).also { realConnection = it } },
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
+            admit = recordingAdmit,
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
@@ -611,6 +725,7 @@ class HandshakeCoordinatorTest {
             newConnection = { name, peer, _ -> FakeConnection(name, peer) },
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
+            admit = recordingAdmit,
             dispatch = { it() },
             onDisconnect = { connection, reason ->
                 disconnects += connection.name to reason
