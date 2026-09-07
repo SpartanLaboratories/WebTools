@@ -12,17 +12,19 @@
 - **Module:** `webtools-udp` only (`io.github.spartanlaboratories:webtools-udp`,
   package `com.spartanlabs.webtools.udp`). No other module is touched. No wire /
   protocol change.
-- **Branch:** `feat/issue-9-receive-buffer` (off `master`).
-- **Commit:** TBD — the implementation (first stage) and **this plan document**
-  land in the same commit so `git log --follow docs/issue-9-receive-buffer-plan.md`
-  binds the two.
-- **PR:** TBD.
-- **Status:** implemented on `feat/issue-9-receive-buffer`, uncommitted. Production
-  changes (§3.1–§3.6), README, and the full test suite (§5) are in the working tree;
-  all 171 `:webtools-udp:test` cases pass and the §2.3 `javap` signature check is
-  done (every pre-1.2.0 constructor signature preserved). Awaiting the maintainer's
-  go-ahead to commit / open the PR. Open decisions were **resolved by the
-  maintainer** — see §8.
+- **Branch:** `feat/issue-9-receive-buffer` (off `master`, deleted after merge).
+- **Commits:**
+  - `0477c4f` — `feat:` production changes (§3.1–§3.5, incl. README) + **this plan
+    document** (so `git log --follow docs/issue-9-receive-buffer-plan.md` binds
+    plan to implementation).
+  - `9a6dccd` — `test:` the §5 suite, all levels.
+  - `03a7cb3` — `build:` bump `webtools-udp` to `1.2.0` (§3.6).
+- **PR:** [#19](https://github.com/SpartanLaboratories/WebTools/pull/19), merged as
+  `078f1da`.
+- **Status:** **done.** Merged to `master` 2026-09-06. All 171 `:webtools-udp:test`
+  cases pass; the §2.3 `javap` signature check confirmed every pre-1.2.0
+  constructor signature is preserved. #9 closed with the #8-relationship comment
+  (D2). Open decisions were **resolved by the maintainer** — see §8.
 - **Target version:** `webtools-udp` `1.1.0` → **`1.2.0`** (see §7).
 - **Related:**
   - `docs/issue-8-binary-datagram-path-plan.md` — **§2.5 / §9 D2 already raised
