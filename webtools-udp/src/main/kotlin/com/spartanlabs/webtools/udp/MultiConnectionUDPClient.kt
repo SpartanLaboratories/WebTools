@@ -88,12 +88,27 @@ import java.util.concurrent.Executors
  * @param serverAddress the server's address to hand shake with and send to
  * @param serverPort the server's common listen port; defaults to
  * [MultiConnectionUDPServer.COMMON_LISTEN_PORT]
+ * @param receiveBufferBytes size of the datagram receive buffer, 512..65507;
+ * defaults to 65507 so no well-formed datagram is truncated. A datagram larger
+ * than this is delivered truncated, not rejected (a WARN is logged).
  * @throws java.net.SocketException if an ephemeral local port could not be bound
+ * @throws IllegalArgumentException if [receiveBufferBytes] is outside 512..65507
  */
-class MultiConnectionUDPClient(
+class MultiConnectionUDPClient @JvmOverloads constructor(
     private val serverAddress: InetAddress,
     private val serverPort: Int = MultiConnectionUDPServer.COMMON_LISTEN_PORT,
+    private val receiveBufferBytes: Int = MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
 ) {
+    init {
+        require(
+            receiveBufferBytes in
+                MultiConnectionUDPServer.MIN_RECEIVE_BUFFER_BYTES..MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES,
+        ) {
+            "receiveBufferBytes must be ${MultiConnectionUDPServer.MIN_RECEIVE_BUFFER_BYTES}.." +
+                "${MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES}, was $receiveBufferBytes"
+        }
+    }
+
     /** The one socket used for the handshake and the entire session afterward. */
     private val socket = DatagramSocket()
 
@@ -124,7 +139,7 @@ class MultiConnectionUDPClient(
         socket.send(DatagramPacket(payload, payload.size, serverAddress, serverPort))
 
         socket.soTimeout = timeoutMillis
-        val buffer = ByteArray(RECEIVE_BUFFER_BYTES)
+        val buffer = ByteArray(receiveBufferBytes)
         val reply = DatagramPacket(buffer, buffer.size)
         socket.receive(reply) // throws SocketTimeoutException if the server never answers
         String(reply.data, 0, reply.length, Charsets.UTF_8).trim()
@@ -207,11 +222,18 @@ class MultiConnectionUDPClient(
 
     /** Body of the listener thread: classify-and-drop `KA`, dispatch everything else. */
     private fun receiveLoop(deliver: (bytes: ByteArray, text: String) -> Unit) {
-        val buffer = ByteArray(RECEIVE_BUFFER_BYTES)
+        val buffer = ByteArray(receiveBufferBytes)
         while (listening) {
             runCatching {
                 val packet = DatagramPacket(buffer, buffer.size)
                 socket.receive(packet)
+                // Dead at the default 65507 buffer; fires only for a lowered buffer.
+                if (packet.length == buffer.size && buffer.size < MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES) {
+                    log.warn(
+                        "Datagram from {} filled the {}-byte receive buffer and may have been truncated",
+                        packet.socketAddress, buffer.size,
+                    )
+                }
                 // Exact-length copy: the next receive() reuses buffer, so a slice handed
                 // to the dispatch executor would be a data race.
                 val bytes = packet.data.copyOf(packet.length)
@@ -291,14 +313,6 @@ class MultiConnectionUDPClient(
     private companion object {
         private val log = LoggerFactory.getLogger(MultiConnectionUDPClient::class.java)
         private const val HANDSHAKE_TIMEOUT_MILLIS = 4000
-
-        /**
-         * Size of the datagram receive buffer - the maximum UDP payload over IPv4,
-         * so a well-formed datagram is never truncated. Shared by [receiveLoop] and
-         * the one-shot [handshake] buffer; the larger size is harmless for the
-         * latter's single allocation.
-         */
-        private const val RECEIVE_BUFFER_BYTES = 65507
         private const val LISTENER_JOIN_TIMEOUT_MILLIS = 1000L
     }
 }

@@ -1,6 +1,9 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.CommonChannel
+import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -94,6 +97,43 @@ class CommonChannelTest {
             val inbound = receiver.receive(ByteArray(65507)).getOrThrow()
             assertEquals(4096, inbound.bytes.size)
             assertContentEquals(big, inbound.bytes)
+        } finally {
+            receiver.closeResult()
+            sender.closeResult()
+        }
+    }
+
+    @Test
+    fun `receive logs a warning when a datagram fills a sub-maximum buffer`() {
+        val receiver = CommonChannel(0)
+        val sender = CommonChannel(0)
+        try {
+            val to = InetSocketAddress(loopback, receiver.localPort)
+            assertTrue(sender.send(ByteArray(4096) { 1 }, to).isSuccess)
+
+            captureLogsOf(CommonChannel::class.java) { events ->
+                val inbound = receiver.receive(ByteArray(1024)).getOrThrow()
+                assertEquals(1024, inbound.bytes.size)
+                assertTrue(events.hasWarnContaining("may have been truncated"))
+            }
+        } finally {
+            receiver.closeResult()
+            sender.closeResult()
+        }
+    }
+
+    @Test
+    fun `receive does not warn at a full-size 65507 buffer`() {
+        val receiver = CommonChannel(0)
+        val sender = CommonChannel(0)
+        try {
+            val to = InetSocketAddress(loopback, receiver.localPort)
+            assertTrue(sender.send(ByteArray(4096) { 1 }, to).isSuccess)
+
+            captureLogsOf(CommonChannel::class.java) { events ->
+                receiver.receive(ByteArray(MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES)).getOrThrow()
+                assertTrue(events.none { it.formattedMessage.contains("may have been truncated") })
+            }
         } finally {
             receiver.closeResult()
             sender.closeResult()

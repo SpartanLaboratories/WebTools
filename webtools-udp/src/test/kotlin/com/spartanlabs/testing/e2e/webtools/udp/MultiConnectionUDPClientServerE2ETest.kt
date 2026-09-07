@@ -121,6 +121,32 @@ class MultiConnectionUDPClientServerE2ETest {
         }
     }
 
+    @Test
+    fun `a large world-state-style payload round-trips client to server and back intact at the default buffer`() {
+        val server = TestServer()
+        val client = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
+        try {
+            assertTrue(client.handshake("bulk").isSuccess)
+            Thread.sleep(SETTLE_MILLIS)
+
+            val clientInbound = ConcurrentLinkedQueue<String>()
+            assertTrue(client.start { message -> clientInbound += message }.isSuccess)
+
+            // ~8 KiB, well over the old 1024 ceiling - mirrors issue #9's per-tick world-state delta.
+            val payload = buildString { repeat(820) { append("world-state-delta-row-").append(it % 100).append(';') } }
+            assertTrue(payload.toByteArray(Charsets.UTF_8).size > 8192)
+
+            assertTrue(client.send(payload).isSuccess)
+            awaitQueueContains(server.handlerInbound.getValue("bulk"), payload)
+
+            assertTrue(server.connectionsByName.getValue("bulk").push(payload).isSuccess)
+            awaitQueueContains(clientInbound, payload)
+        } finally {
+            assertTrue(client.stop().isSuccess)
+            assertTrue(server.stop().isSuccess)
+        }
+    }
+
     private fun <T> awaitQueueContains(queue: ConcurrentLinkedQueue<T>, value: T, timeoutMillis: Long = 5000) {
         val deadline = System.currentTimeMillis() + timeoutMillis
         while (!queue.contains(value) && System.currentTimeMillis() < deadline) {

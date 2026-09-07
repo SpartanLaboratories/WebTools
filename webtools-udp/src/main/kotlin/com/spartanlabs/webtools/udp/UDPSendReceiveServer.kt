@@ -15,15 +15,34 @@ import java.net.SocketException
  * which must return `Unit` to satisfy [AutoCloseable] and therefore logs its
  * failures instead. Use [shutDown] when you want the outcome as a value.
  *
+ * ### Maximum payload
+ * A received datagram is decoded whole up to **65507 bytes** (the maximum UDP
+ * payload over IPv4, and the default [receiveBufferBytes]). A datagram larger
+ * than the configured buffer is delivered **truncated, not rejected** (a WARN is
+ * logged). For real-network use keep frames under the path MTU (**~1200 bytes**)
+ * to avoid IP fragmentation and the loss it brings.
+ *
  * @param targetAddress the address messages sent via [send] are delivered to
  * @param sendPort the port on [targetAddress] that messages sent via [send] are delivered to
  * @param listenPort the local port this server binds to receive incoming datagrams
+ * @param receiveBufferBytes size of the datagram receive buffer, 512..65507; defaults to 65507
  */
-class UDPSendReceiveServer(
+class UDPSendReceiveServer @JvmOverloads constructor(
     private val targetAddress: InetAddress,
     private val sendPort: Int,
-    private val listenPort: Int
+    private val listenPort: Int,
+    private val receiveBufferBytes: Int = MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
 ) : AutoCloseable {
+
+    init {
+        require(
+            receiveBufferBytes in
+                MultiConnectionUDPServer.MIN_RECEIVE_BUFFER_BYTES..MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES,
+        ) {
+            "receiveBufferBytes must be ${MultiConnectionUDPServer.MIN_RECEIVE_BUFFER_BYTES}.." +
+                "${MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES}, was $receiveBufferBytes"
+        }
+    }
 
     /** Socket used exclusively for outgoing datagrams. */
     private val sendSocket = DatagramSocket()
@@ -88,13 +107,20 @@ class UDPSendReceiveServer(
      * @param onMessage invoked with the decoded text and sender of each datagram
      */
     private fun receiveLoop(onMessage: (message: String, senderAddress: InetAddress) -> Unit) {
-        val buffer = ByteArray(RECEIVE_BUFFER_BYTES)
+        val buffer = ByteArray(receiveBufferBytes)
         while (listening) {
             val handled = runCatching {
                 // Create the datagram packet that is going to contain the received message
                 val packet = DatagramPacket(buffer, buffer.size)
                 // Read the message and store it in the datagram packet we just created
                 listenSocket.receive(packet)
+                // Dead at the default 65507 buffer; fires only when a smaller buffer is configured.
+                if (packet.length == buffer.size && buffer.size < MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES) {
+                    log.warn(
+                        "Datagram from {} filled the {}-byte receive buffer and may have been truncated",
+                        packet.socketAddress, buffer.size,
+                    )
+                }
                 // Convert the packet into a String
                 val message = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
                 log.debug("Received message from {}: {}", packet.address, message)
@@ -160,9 +186,6 @@ class UDPSendReceiveServer(
     companion object {
         /** Shared slf4j logger for all [UDPSendReceiveServer] instances. */
         private val log = LoggerFactory.getLogger(UDPSendReceiveServer::class.java)
-
-        /** Size of the reusable buffer incoming datagrams are read into. */
-        private const val RECEIVE_BUFFER_BYTES = 1024
 
         /** How long [shutDown] waits for the listener thread to notice it should stop. */
         private const val LISTENER_JOIN_TIMEOUT_MILLIS = 1000L

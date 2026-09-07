@@ -61,6 +61,13 @@ internal class CommonChannel(port: Int) {
     fun receive(buffer: ByteArray): Result<Inbound> = runCatching {
         val packet = DatagramPacket(buffer, buffer.size)
         socket.receive(packet)
+        // Dead at the default 65507 buffer; fires only when a consumer has opted into a smaller buffer.
+        if (packet.length == buffer.size && buffer.size < MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES) {
+            log.warn(
+                "Datagram from {} filled the {}-byte receive buffer and may have been truncated",
+                packet.socketAddress, buffer.size,
+            )
+        }
         val origin = InetSocketAddress(packet.address, packet.port)
         // Right-sized copy: the next receive() reuses packet.data, so a slice of the
         // live buffer handed to the dispatch executor would be a data race.

@@ -42,13 +42,25 @@ import java.util.concurrent.Executors
  * over the OS datagram limit fails the `Result` (cause logged) rather than being
  * sent. Keep frames under the path MTU (~1200 bytes) for real-network use.
  *
+ * The receive buffer size is a constructor parameter [receiveBufferBytes],
+ * defaulting to [DEFAULT_RECEIVE_BUFFER_BYTES] (65507) so that by default no
+ * well-formed datagram is ever truncated on receive. A datagram larger than the
+ * configured size is delivered truncated, not rejected; when a datagram fills a
+ * sub-maximum buffer a WARN is logged. The "over 65507 bytes is delivered
+ * truncated" wording above stays accurate for the default configuration.
+ *
  * ### Construction side effects
  * Instantiating a subclass **binds the OS UDP port [COMMON_LISTEN_PORT]** and
  * starts a daemon listener thread plus a single daemon dispatch thread.
  * Construction throws [java.net.SocketException] (typically
  * [java.net.BindException]) if that port is already in use, so only one instance
  * can exist per JVM/host at a time. Call [stop] to release the port; the instance
- * is single-use afterwards.
+ * is single-use afterwards. Construction throws [IllegalArgumentException] if
+ * [receiveBufferBytes] is outside [MIN_RECEIVE_BUFFER_BYTES]..[MAX_UDP_PAYLOAD_BYTES].
+ *
+ * @param receiveBufferBytes size of the datagram receive buffer,
+ * [MIN_RECEIVE_BUFFER_BYTES]..[MAX_UDP_PAYLOAD_BYTES]; defaults to
+ * [DEFAULT_RECEIVE_BUFFER_BYTES] (65507) so no well-formed datagram is truncated
  *
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
@@ -65,7 +77,15 @@ import java.util.concurrent.Executors
  * See the sequence diagram in `docs/issue-1-tier-2-plan.md` §2.1 for the canonical
  * end-to-end flow.
  */
-abstract class MultiConnectionUDPServer {
+abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
+    private val receiveBufferBytes: Int = DEFAULT_RECEIVE_BUFFER_BYTES,
+) {
+    init {
+        require(receiveBufferBytes in MIN_RECEIVE_BUFFER_BYTES..MAX_UDP_PAYLOAD_BYTES) {
+            "receiveBufferBytes must be $MIN_RECEIVE_BUFFER_BYTES..$MAX_UDP_PAYLOAD_BYTES, was $receiveBufferBytes"
+        }
+    }
+
     /** Guard flag for the common listener loop, cleared by [stop]. */
     @Volatile
     private var listening = true
@@ -112,7 +132,7 @@ abstract class MultiConnectionUDPServer {
      * failure is logged and skipped so one malformed datagram cannot kill the server.
      */
     private fun receiveLoop() {
-        val buffer = ByteArray(RECEIVE_BUFFER_BYTES)
+        val buffer = ByteArray(receiveBufferBytes)
         while (listening) {
             commonChannel.receive(buffer)
                 .flatMap { inbound -> coordinator.accept(inbound.origin, inbound.bytes, inbound.text) }
@@ -231,13 +251,24 @@ abstract class MultiConnectionUDPServer {
         const val COMMON_LISTEN_PORT = 9998
 
         /**
-         * Size of the reusable buffer incoming datagrams are read into - the
-         * maximum UDP payload over IPv4, so a well-formed datagram is never
-         * truncated on receive. Per-datagram delivery is a `copyOf(length)`, so the
-         * copy cost still tracks the real payload size; the only fixed cost is this
-         * one backing array per server.
+         * Maximum UDP payload over IPv4 (65535 - 8 UDP - 20 IP): the largest a
+         * `receiveBufferBytes` may be, and the size at which no datagram is ever
+         * truncated on receive.
          */
-        private const val RECEIVE_BUFFER_BYTES = 65507
+        const val MAX_UDP_PAYLOAD_BYTES = 65507
+
+        /**
+         * Smallest permitted `receiveBufferBytes`. Comfortably holds every
+         * handshake / keepalive token and a small application payload with
+         * headroom; a buffer below this is almost certainly a misconfiguration.
+         */
+        const val MIN_RECEIVE_BUFFER_BYTES = 512
+
+        /**
+         * Default `receiveBufferBytes` - equal to [MAX_UDP_PAYLOAD_BYTES], so by
+         * default no well-formed datagram is ever truncated on receive.
+         */
+        const val DEFAULT_RECEIVE_BUFFER_BYTES = MAX_UDP_PAYLOAD_BYTES
 
         /** How long [stop] waits for the common listener thread to notice it should stop. */
         private const val LISTENER_JOIN_TIMEOUT_MILLIS = 1000L
