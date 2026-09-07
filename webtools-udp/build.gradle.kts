@@ -3,7 +3,9 @@
 
 // Explicit per-module version, overriding the root allprojects { version = "1.0.0" }.
 // 1.1.0: non-breaking addition of the raw binary datagram send/receive path (Issue #8).
-version = "1.1.0"
+// 1.2.0: configurable receiveBufferBytes on all three receive types (default 65507);
+// UDPSendReceiveServer no longer truncates at 1024; documented receive ceiling everywhere (Issue #9).
+version = "1.2.0"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
