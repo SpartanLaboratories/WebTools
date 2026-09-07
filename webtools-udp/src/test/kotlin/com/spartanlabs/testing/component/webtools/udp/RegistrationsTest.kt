@@ -80,6 +80,20 @@ class RegistrationsTest {
     }
 
     @Test
+    fun `lastOutboundAt is seeded near nanoTime at construction and is independently mutable`() {
+        val before = System.nanoTime()
+        val entry = registration(1000)
+        val after = System.nanoTime()
+
+        assertTrue(entry.lastOutboundAt in before..after, "seeded within the construction window")
+
+        entry.lastOutboundAt = 456L
+        assertEquals(456L, entry.lastOutboundAt)
+        // independent of lastInboundAt
+        assertTrue(entry.lastInboundAt != 456L)
+    }
+
+    @Test
     fun `timedOut defaults false and is settable`() {
         val entry = registration(1000)
         assertFalse(entry.timedOut)

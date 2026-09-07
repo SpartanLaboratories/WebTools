@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.testing.support.webtools.udp.FakeKeepAliveSchedule
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
@@ -44,6 +45,7 @@ class HandshakeNonFunctionalTest {
             dispatch = { it() },
             onDisconnect = { _, _ -> },
             idleTimeoutMillis = 0L,
+            keepAliveSchedule = FakeKeepAliveSchedule(),
         )
 
         coordinator.accept(origin, "Iam spoofer 8.8.8.8 1.1.1.1")
@@ -64,6 +66,7 @@ class HandshakeNonFunctionalTest {
             dispatch = { it() },
             onDisconnect = { _, _ -> },
             idleTimeoutMillis = 0L,
+            keepAliveSchedule = FakeKeepAliveSchedule(),
         )
 
         repeat(STORM_SIZE) { coordinator.accept(origin, "Iam stormclient") }

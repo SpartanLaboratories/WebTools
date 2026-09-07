@@ -105,4 +105,19 @@ class MultiConnectionUDPServerUatTest {
         // schedule and the client sends its own "KA" every ~20 s of idle time.
         // PASS: data still flows both ways at the end of the session.
     }
+
+    @Test
+    @Disabled("Manual: two hosts on different networks. Issue #12 - the opt-in scheduled keepalive.")
+    fun `a NAT'd client that only calls startKeepAlive - no manual timer - stays reachable for 5-10 minutes idle`() {
+        // 1. Run a MultiConnectionUDPServer subclass on a host with a public, routable IP.
+        // 2. From a NAT'd machine: MultiConnectionUDPClient.handshake("uatka") -> start { } ->
+        //    startKeepAlive()  and NOTHING ELSE - no application traffic, no hand-rolled
+        //    ScheduledExecutorService, no manual sendKeepAlive().
+        // 3. Idle the client for 5-10 minutes. The server calls pushToAll every ~30 s throughout.
+        // PASS: every pushToAll lands on the client for the whole window (no mid-session
+        //       unreachability), and the client code contains no keepalive timer of its own.
+        // 4. client.stop() ends it cleanly - no leaked mcupc-keepalive thread.
+        // FAIL: any pushToAll is lost after the carrier/CPE NAT idle window, i.e. the 20 s
+        //       default (or the interval + pollInterval worst case) did not hold the mapping open.
+    }
 }

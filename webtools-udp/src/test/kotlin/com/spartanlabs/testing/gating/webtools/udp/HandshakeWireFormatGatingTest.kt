@@ -48,4 +48,9 @@ class HandshakeWireFormatGatingTest {
         assertTrue(HandshakeWireFormat.isKeepAlive("KA"))
         assertFalse(HandshakeWireFormat.isKeepAlive("Iam x"))
     }
+
+    @Test
+    fun `the default keepalive interval is 20 seconds`() {
+        assertEquals(20_000L, HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
+    }
 }

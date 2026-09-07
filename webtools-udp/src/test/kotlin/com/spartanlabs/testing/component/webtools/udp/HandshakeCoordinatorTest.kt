@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.testing.support.webtools.udp.FakeKeepAliveSchedule
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.ClientChannel
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
@@ -35,6 +36,7 @@ class HandshakeCoordinatorTest {
     private val disconnects = mutableListOf<Pair<String, com.spartanlabs.webtools.udp.DisconnectReason>>()
     private var sendResult: Result<Unit> = Result.success(Unit)
     private var idleTimeoutMillis: Long = 0L
+    private val keepAliveSchedule = FakeKeepAliveSchedule()
 
     private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
     private var admissionToReturn: Admission = Admission.Admitted
@@ -66,6 +68,7 @@ class HandshakeCoordinatorTest {
         dispatch = { it() },
         onDisconnect = { connection, reason -> disconnects += connection.name to reason },
         idleTimeoutMillis = idleTimeoutMillis,
+        keepAliveSchedule = keepAliveSchedule,
     )
 
     private fun HandshakeCoordinator.registerClients(count: Int) {
@@ -336,6 +339,7 @@ class HandshakeCoordinatorTest {
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
+            keepAliveSchedule = keepAliveSchedule,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -361,6 +365,7 @@ class HandshakeCoordinatorTest {
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
+            keepAliveSchedule = keepAliveSchedule,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -385,6 +390,7 @@ class HandshakeCoordinatorTest {
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
+            keepAliveSchedule = keepAliveSchedule,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -696,6 +702,7 @@ class HandshakeCoordinatorTest {
             dispatch = { it() },
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
+            keepAliveSchedule = keepAliveSchedule,
         )
         coordinator.accept(originA, "Iam alice")
 
@@ -732,6 +739,7 @@ class HandshakeCoordinatorTest {
                 if (connection.name == "client0") error("boom")
             },
             idleTimeoutMillis = idleTimeoutMillis,
+            keepAliveSchedule = keepAliveSchedule,
         )
         coordinator.registerClients(3)
         val past = System.nanoTime() - 1_000_000_000L
@@ -740,5 +748,119 @@ class HandshakeCoordinatorTest {
         coordinator.sweepIdleConnections()
 
         assertEquals(setOf("client0", "client1", "client2"), disconnects.map { it.first }.toSet())
+    }
+
+    // --- scheduled keepalive (Issue #12) ---
+
+    @Test
+    fun `send does not touch lastOutboundAt before the first scheduleKeepAlive`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+        reg.lastOutboundAt = 7L
+
+        coordinator.send("hi".toByteArray(Charsets.UTF_8), originA)
+        coordinator.broadcast("hey")
+
+        assertEquals(7L, reg.lastOutboundAt)
+    }
+
+    @Test
+    fun `scheduleKeepAlive turns tracking on so a later send advances lastOutboundAt`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+        assertTrue(coordinator.scheduleKeepAlive(originA, 300L).isSuccess)
+        assertEquals(300L, keepAliveSchedule.scheduled.getValue(originA).intervalMillis)
+
+        reg.lastOutboundAt = 7L
+        coordinator.send("hi".toByteArray(Charsets.UTF_8), originA)
+        assertTrue(reg.lastOutboundAt > 7L)
+
+        reg.lastOutboundAt = 7L
+        coordinator.broadcast("hey")
+        assertTrue(reg.lastOutboundAt > 7L)
+    }
+
+    @Test
+    fun `the recorded tick sends exactly one KA when lastOutboundAt is in the past`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleKeepAlive(originA, 300L)
+        coordinator.snapshot().single().lastOutboundAt = System.nanoTime() - 1_000_000_000L
+        sent.clear()
+
+        keepAliveSchedule.tick(originA)
+
+        assertEquals(listOf(HandshakeProtocol.KEEPALIVE_TOKEN to originA), sent)
+    }
+
+    @Test
+    fun `the recorded tick sends nothing when lastOutboundAt is fresh`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleKeepAlive(originA, 300L)
+        coordinator.snapshot().single().lastOutboundAt = System.nanoTime()
+        sent.clear()
+
+        keepAliveSchedule.tick(originA)
+
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
+    fun `the tick is a no-op for a peer whose registration has been removed`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleKeepAlive(originA, 300L)
+        val tick = keepAliveSchedule.scheduleCalls.single().tick
+        coordinator.deregister(originA)
+        sent.clear()
+
+        tick() // must not throw, must not send
+
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
+    fun `deregister cancels the keepalive schedule for that peer`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleKeepAlive(originA, 300L)
+
+        coordinator.deregister(originA)
+
+        assertTrue(originA in keepAliveSchedule.cancels)
+    }
+
+    @Test
+    fun `a same-name supersede cancels the stale origin's keepalive schedule`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleKeepAlive(originA, 300L)
+
+        coordinator.accept(originB, "Iam alice")
+
+        assertTrue(originA in keepAliveSchedule.cancels)
+    }
+
+    @Test
+    fun `shutKeepAlive shuts the schedule`() {
+        val coordinator = newCoordinator()
+
+        coordinator.shutKeepAlive()
+
+        assertEquals(1, keepAliveSchedule.shutdownCalls)
+    }
+
+    @Test
+    fun `a tick whose send fails logs rather than throws`() {
+        sendResult = Result.failure(RuntimeException("send down"))
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleKeepAlive(originA, 300L)
+        coordinator.snapshot().single().lastOutboundAt = System.nanoTime() - 1_000_000_000L
+
+        keepAliveSchedule.tick(originA) // must not throw
     }
 }
