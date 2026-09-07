@@ -46,4 +46,23 @@ internal interface ClientChannel {
      * @param peer the client endpoint to deregister
      */
     fun deregister(peer: InetSocketAddress)
+
+    /**
+     * Arms (or re-arms) an idle-aware background keepalive toward [peer]: every
+     * ~[intervalMillis] of output silence one `KA` datagram is sent, until
+     * [cancelKeepAlive], the registration is removed, or the server stops. Last
+     * call wins - a repeat call replaces the schedule.
+     * @param peer the client endpoint to keep alive
+     * @param intervalMillis output-idle time before a keepalive is sent; must be > 0
+     * @return [Result.success] once armed, or the failure that prevented it
+     */
+    fun scheduleKeepAlive(peer: InetSocketAddress, intervalMillis: Long): Result<Unit>
+
+    /**
+     * Cancels the scheduled keepalive for [peer]. Idempotent - a no-op if none is
+     * armed.
+     * @param peer the client endpoint whose keepalive to cancel
+     * @return [Result.success] once cancelled, or the failure that prevented it
+     */
+    fun cancelKeepAlive(peer: InetSocketAddress): Result<Unit>
 }

@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.SocketException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -40,12 +41,18 @@ import java.util.concurrent.Executors
  * through a dispatch executor - only steady-state message delivery, after
  * [start], is asynchronous.
  *
+ * A third daemon thread (`mcupc-keepalive`, a `ScheduledExecutorService`) exists
+ * **only once [startKeepAlive] has been called**; it sends `KA` datagrams on an
+ * idle-aware cadence and is shut by [stop].
+ * See the scheduled-keepalive sequence diagram in docs/issue-12-scheduled-keepalive-plan.md §2.8.
+ *
  * Boundary-Ring notes (mirrors [CommonChannel]'s):
  * - One UDP socket carries the handshake and the entire session.
  * - The JDK permits a concurrent [DatagramSocket.send] while a
  *   [DatagramSocket.receive] is in progress.
  * - [socket] is received on only by the listener thread, but sent on from any
- *   thread ([send], [sendKeepAlive]); the listener thread itself never sends.
+ *   thread ([send], [sendKeepAlive], the `mcupc-keepalive` tick); the listener
+ *   thread itself never sends.
  *
  * ### Construction side effects
  * Instantiating this class **binds an ephemeral OS UDP port** immediately - a
@@ -71,6 +78,9 @@ import java.util.concurrent.Executors
  * observes the now-closed socket and returns [Result.failure]. [start] and
  * [handshake] themselves are not safe to race against each other or against a
  * second concurrent call to either - see the "Ordering contract" below.
+ * [startKeepAlive] / [stopKeepAlive] are safe from any thread and may race [stop]:
+ * a [startKeepAlive] after [stop] fails its [Result]; an in-flight keepalive tick
+ * either sends or observes the closed socket and fails its own [Result].
  *
  * See the sequence diagram in docs/issue-3-public-client-handshake-plan.md §2.2
  * for the canonical handshake/listener/dispatch flow.
@@ -92,14 +102,32 @@ import java.util.concurrent.Executors
  * @param receiveBufferBytes size of the datagram receive buffer, 512..65507;
  * defaults to 65507 so no well-formed datagram is truncated. A datagram larger
  * than this is delivered truncated, not rejected (a WARN is logged).
+ * @param keepAlive the scheduled-keepalive timer seam backing [startKeepAlive] /
+ * [stopKeepAlive]; the public constructor supplies a real [KeepAliveScheduler]
+ * (`mcupc-keepalive`), tests inject a fake. Mirrors
+ * [HandshakeCoordinator]'s injected `keepAliveSchedule`.
  * @throws java.net.SocketException if an ephemeral local port could not be bound
  * @throws IllegalArgumentException if [receiveBufferBytes] is outside 512..65507
  */
-class MultiConnectionUDPClient @JvmOverloads constructor(
+class MultiConnectionUDPClient internal constructor(
     private val serverAddress: InetAddress,
-    private val serverPort: Int = MultiConnectionUDPServer.COMMON_LISTEN_PORT,
-    private val receiveBufferBytes: Int = MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
+    private val serverPort: Int,
+    private val receiveBufferBytes: Int,
+    private val keepAlive: KeepAliveSchedule,
 ) {
+    /**
+     * The public client constructor - unchanged three-parameter surface. Delegates
+     * to the `internal` seam constructor with a real [KeepAliveScheduler]
+     * (`mcupc-keepalive`), whose executor/thread stays lazy until the first
+     * [startKeepAlive].
+     */
+    @JvmOverloads
+    constructor(
+        serverAddress: InetAddress,
+        serverPort: Int = MultiConnectionUDPServer.COMMON_LISTEN_PORT,
+        receiveBufferBytes: Int = MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
+    ) : this(serverAddress, serverPort, receiveBufferBytes, KeepAliveScheduler("mcupc-keepalive"))
+
     init {
         require(
             receiveBufferBytes in
@@ -123,6 +151,17 @@ class MultiConnectionUDPClient @JvmOverloads constructor(
     /** Single daemon thread that runs the [start] callback, off the listener thread. */
     private val dispatchExecutor: ExecutorService =
         Executors.newSingleThreadExecutor { r -> Thread(r, "mcupc-dispatch").apply { isDaemon = true } }
+
+    /**
+     * Monotonic `nanoTime` of the last datagram this client put on the wire (data
+     * or `KA`); read by the keepalive tick, written by [send], hence `@Volatile`.
+     * Only ever used as a `nanoTime` difference.
+     */
+    @Volatile
+    private var lastOutboundAtNanos: Long = System.nanoTime()
+
+    /** The fixed server endpoint - the keepalive schedule's key. */
+    private val serverEndpoint = InetSocketAddress(serverAddress, serverPort)
 
     /** The local port [socket] is bound to - the same port every datagram, in both directions, uses. */
     val localPort: Int get() = socket.localPort
@@ -294,17 +333,55 @@ class MultiConnectionUDPClient @JvmOverloads constructor(
      */
     fun send(bytes: ByteArray): Result<Unit> = runCatching {
         socket.send(DatagramPacket(bytes, bytes.size, serverAddress, serverPort))
+        // Stamped only after a successful send: a failed send must not defer the next KA,
+        // since nothing reached the wire. Every outbound datagram funnels through here -
+        // send(String) and sendKeepAlive() included - so any traffic defers a scheduled KA.
+        lastOutboundAtNanos = System.nanoTime()
     }.onFailure { log.error("Could not send to {}:{}", serverAddress, serverPort, it) }
 
     /**
      * Sends one minimal `KA` keepalive datagram, one-shot (mirrors
-     * [Connection.keepAlive]).
+     * [Connection.keepAlive]). For a library-managed cadence use [startKeepAlive].
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
     fun sendKeepAlive(): Result<Unit> = send(HandshakeWireFormat.KEEPALIVE_TOKEN)
 
     /**
-     * Stops the listener thread, closes the socket, and shuts the dispatch executor.
+     * Starts an opt-in, idle-aware background keepalive: every ~[intervalMillis] of
+     * output silence this client sends one `KA` on the shared socket to hold its NAT
+     * mapping open, until [stopKeepAlive] or [stop]. Application sends reset the
+     * idle timer, so a busy client sends no redundant keepalives.
+     *
+     * A convenience over [sendKeepAlive] - it removes the hand-rolled timer every
+     * consumer otherwise writes. [sendKeepAlive] itself is unchanged and still owns
+     * no timer. Calling this again replaces the schedule (last call wins). Backed by
+     * one daemon thread (`mcupc-keepalive`) created on the first call.
+     *
+     * @param intervalMillis output-idle time before a keepalive is sent; must be
+     * > 0. Defaults to [HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS]
+     * (20 s). A keepalive may go out up to one quarter-interval (max 5 s) late.
+     * @return [Result.success] once the schedule is armed; [Result.failure] with an
+     * [IllegalArgumentException] for a non-positive interval, or an
+     * [IllegalStateException] if [stop] has already run.
+     */
+    @JvmOverloads
+    fun startKeepAlive(intervalMillis: Long = HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS): Result<Unit> =
+        keepAlive.schedule(serverEndpoint, intervalMillis) {
+            if (KeepAlive.isDue(lastOutboundAtNanos, System.nanoTime(), intervalMillis)) {
+                sendKeepAlive().onFailure { log.warn("Scheduled keepalive send failed", it) }
+            }
+        }.onFailure { log.error("Could not start the scheduled keepalive", it) }
+
+    /**
+     * Stops the background keepalive started by [startKeepAlive]. Idempotent and safe
+     * to call even if [startKeepAlive] was never called. [stop] also does this.
+     * @return [Result.success] once the schedule is cancelled
+     */
+    fun stopKeepAlive(): Result<Unit> = runCatching { keepAlive.cancel(serverEndpoint) }
+
+    /**
+     * Stops the listener thread, shuts the keepalive scheduler (if [startKeepAlive]
+     * armed one), closes the socket, and shuts the dispatch executor.
      * Every step runs even if an earlier one failed, so a partial failure never
      * leaks the bound port. Once called, this instance should be discarded.
      * @return [Result.success] if every step succeeded, or the first failure encountered
@@ -321,11 +398,14 @@ class MultiConnectionUDPClient @JvmOverloads constructor(
                 if (cause is InterruptedException) Thread.currentThread().interrupt()
                 log.warn("Interrupted while waiting for the listener thread to stop")
             }
+        // Shut the keepalive scheduler before the socket so a scheduled KA never races a close.
+        val keepAliveStopped = runCatching { keepAlive.shutdown() }
+            .onFailure { log.warn("Could not cleanly shut the keepalive scheduler", it) }
         val socketClosed = runCatching { socket.close() }
             .onFailure { cause -> log.error("Could not close the client socket", cause) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
-        return listenerJoined.flatMap { socketClosed }.flatMap { executorStopped }
+        return listenerJoined.flatMap { keepAliveStopped }.flatMap { socketClosed }.flatMap { executorStopped }
     }
 
     private companion object {

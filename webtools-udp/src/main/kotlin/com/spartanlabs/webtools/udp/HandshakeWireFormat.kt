@@ -25,6 +25,13 @@ package com.spartanlabs.webtools.udp
  * that happens to read `REFUSED ...` mid-session is delivered normally (the
  * session classifier only checks `KA`). Same caveat class as `REGISTERED` / `KA`.
  *
+ * ### Managed keepalive cadence
+ * The `KA` cadence is also available as a library-managed scheduler -
+ * [MultiConnectionUDPClient.startKeepAlive] / [Connection.startKeepAlive],
+ * defaulting to [DEFAULT_KEEPALIVE_INTERVAL_MILLIS]. This changes no wire format:
+ * the one-shot [MultiConnectionUDPClient.sendKeepAlive] / [Connection.keepAlive]
+ * tokens are unchanged and the datagram is byte-identical either way.
+ *
  * ### Binary application payloads
  * Application data after the handshake may be raw binary - [Connection.push] and
  * [Connection.actuateBytes], or [MultiConnectionUDPClient.send] and
@@ -63,6 +70,13 @@ object HandshakeWireFormat {
      * (see `MultiConnectionUDPServer`'s `idleTimeoutMillis`).
      */
     const val KEEPALIVE_TOKEN = "KA"
+
+    /**
+     * The recommended output-idle interval, in milliseconds, between keepalive
+     * datagrams on a NAT'd path (~20 s). The default for
+     * [MultiConnectionUDPClient.startKeepAlive] and [Connection.startKeepAlive].
+     */
+    const val DEFAULT_KEEPALIVE_INTERVAL_MILLIS = 20_000L
 
     /**
      * Builds the `Iam <name>` (or `Iam <name> <credential>`) datagram body a

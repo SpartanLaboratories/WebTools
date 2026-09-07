@@ -11,9 +11,17 @@ import java.net.InetSocketAddress
  */
 internal class FakeClientChannel(
     private val sendResult: Result<Unit> = Result.success(Unit),
+    private val scheduleKeepAliveResult: Result<Unit> = Result.success(Unit),
+    private val cancelKeepAliveResult: Result<Unit> = Result.success(Unit),
 ) : ClientChannel {
 
     data class Sent(val text: String, val to: InetSocketAddress)
+
+    /** Every [scheduleKeepAlive] call, as `(peer, intervalMillis)`, in order. */
+    val keepAliveSchedules = mutableListOf<Pair<InetSocketAddress, Long>>()
+
+    /** Every [cancelKeepAlive] call's peer, in order. */
+    val keepAliveCancels = mutableListOf<InetSocketAddress>()
 
     /** Every [send], decoded as UTF-8 text plus its target. */
     val sent = mutableListOf<Sent>()
@@ -44,6 +52,16 @@ internal class FakeClientChannel(
         deregistered += peer
         bound.remove(peer)
         boundBytes.remove(peer)
+    }
+
+    override fun scheduleKeepAlive(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
+        keepAliveSchedules += peer to intervalMillis
+        return scheduleKeepAliveResult
+    }
+
+    override fun cancelKeepAlive(peer: InetSocketAddress): Result<Unit> {
+        keepAliveCancels += peer
+        return cancelKeepAliveResult
     }
 
     /** Invokes the text handler bound for [peer] with [message], as the server would. */

@@ -34,6 +34,9 @@ internal object HandshakeProtocol {
     /** The token a client sends on an idle interval to keep its NAT mapping warm. */
     const val KEEPALIVE_TOKEN = HandshakeWireFormat.KEEPALIVE_TOKEN
 
+    /** The recommended output-idle interval between keepalive datagrams (~20 s). */
+    const val DEFAULT_KEEPALIVE_INTERVAL_MILLIS = HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS
+
     /** Index of the client-supplied name within a whitespace-split handshake line. */
     private const val NAME_INDEX = 1
 
