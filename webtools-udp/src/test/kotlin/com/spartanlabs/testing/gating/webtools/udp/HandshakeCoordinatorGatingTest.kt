@@ -23,11 +23,18 @@ class HandshakeCoordinatorGatingTest {
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
     private val origin = InetSocketAddress(loopback, 40001)
 
-    private fun coordinator(replies: MutableList<Pair<String, InetSocketAddress>>) = HandshakeCoordinator(
+    private val disconnects = mutableListOf<Pair<String, com.spartanlabs.webtools.udp.DisconnectReason>>()
+
+    private fun coordinator(
+        replies: MutableList<Pair<String, InetSocketAddress>>,
+        idleTimeoutMillis: Long = 0L,
+    ) = HandshakeCoordinator(
         newConnection = { name, peer, _ -> FakeConnection(name, peer) },
         sender = { bytes, to -> replies += String(bytes, Charsets.UTF_8) to to; Result.success(Unit) },
         onRegistered = {},
         dispatch = { it() },
+        onDisconnect = { connection, reason -> disconnects += connection.name to reason },
+        idleTimeoutMillis = idleTimeoutMillis,
     )
 
     @Test
@@ -107,6 +114,39 @@ class HandshakeCoordinatorGatingTest {
         assertTrue(coordinator.accept(origin, payload, String(payload, Charsets.UTF_8).trim()).isSuccess)
 
         assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `an overdue registration is reported exactly once, and a KA between sweeps re-arms it`() {
+        val coordinator = coordinator(mutableListOf(), idleTimeoutMillis = 1L)
+        coordinator.accept(origin, "Iam alice")
+        val reg = coordinator.snapshot().single()
+        reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
+
+        coordinator.sweepIdleConnections()
+        coordinator.sweepIdleConnections()
+        assertEquals(1, disconnects.size)
+
+        coordinator.accept(origin, HandshakeProtocol.KEEPALIVE_TOKEN)
+        reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
+        coordinator.sweepIdleConnections()
+        assertEquals(2, disconnects.size)
+    }
+
+    @Test
+    fun `with detection disabled the sweep never reports and accept leaves lastInboundAt untouched`() {
+        val coordinator = coordinator(mutableListOf(), idleTimeoutMillis = 0L)
+        coordinator.accept(origin, "Iam alice")
+        val reg = coordinator.snapshot().single()
+        val seeded = reg.lastInboundAt
+        reg.lastInboundAt = seeded - 10_000_000_000L
+        val forced = reg.lastInboundAt
+
+        coordinator.accept(origin, "hello")
+        coordinator.sweepIdleConnections()
+
+        assertEquals(forced, reg.lastInboundAt)
+        assertTrue(disconnects.isEmpty())
     }
 
     @Test

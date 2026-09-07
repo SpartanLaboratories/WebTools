@@ -16,6 +16,15 @@ import java.util.concurrent.CopyOnWriteArrayList
  * [onMessage] and [onBytes] are mutually exclusive - [HandshakeCoordinator.bind] /
  * [HandshakeCoordinator.bindBytes] set one and null the other; the listener thread
  * reads whichever is non-null, hence `@Volatile`
+ * @property lastInboundAt monotonic `System.nanoTime()` of the last inbound
+ * datagram from this origin (data or `KA`); seeded at construction. Written by
+ * the listener thread via [HandshakeCoordinator.accept], read by the liveness
+ * sweep thread, hence `@Volatile`. Only ever used as a `nanoTime` difference -
+ * never as an absolute time.
+ * @property timedOut fire-once latch: set true when `onClientDisconnect(TIMEOUT)`
+ * has been dispatched for this registration, cleared by any later inbound
+ * datagram. Written by both the sweep thread and the listener thread, hence
+ * `@Volatile`.
  */
 internal class Registration(val connection: Connection) {
     val origin: InetSocketAddress get() = connection.peer
@@ -25,6 +34,12 @@ internal class Registration(val connection: Connection) {
 
     @Volatile
     var onBytes: ((ByteArray) -> Unit)? = null
+
+    @Volatile
+    var lastInboundAt: Long = System.nanoTime()
+
+    @Volatile
+    var timedOut: Boolean = false
 }
 
 /**

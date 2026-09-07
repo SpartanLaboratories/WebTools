@@ -40,6 +40,8 @@ class HandshakeNonFunctionalTest {
             sender = { _, target -> replyTargets += target; Result.success(Unit) },
             onRegistered = {},
             dispatch = { it() },
+            onDisconnect = { _, _ -> },
+            idleTimeoutMillis = 0L,
         )
 
         coordinator.accept(origin, "Iam spoofer 8.8.8.8 1.1.1.1")
@@ -57,6 +59,8 @@ class HandshakeNonFunctionalTest {
             sender = { _, _ -> replies++; Result.success(Unit) },
             onRegistered = {},
             dispatch = { it() },
+            onDisconnect = { _, _ -> },
+            idleTimeoutMillis = 0L,
         )
 
         repeat(STORM_SIZE) { coordinator.accept(origin, "Iam stormclient") }

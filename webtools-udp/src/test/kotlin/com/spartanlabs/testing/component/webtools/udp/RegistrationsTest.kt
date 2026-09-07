@@ -68,6 +68,26 @@ class RegistrationsTest {
     }
 
     @Test
+    fun `lastInboundAt is seeded near nanoTime at construction and is independently mutable`() {
+        val before = System.nanoTime()
+        val entry = registration(1000)
+        val after = System.nanoTime()
+
+        assertTrue(entry.lastInboundAt in before..after, "seeded within the construction window")
+
+        entry.lastInboundAt = 123L
+        assertEquals(123L, entry.lastInboundAt)
+    }
+
+    @Test
+    fun `timedOut defaults false and is settable`() {
+        val entry = registration(1000)
+        assertFalse(entry.timedOut)
+        entry.timedOut = true
+        assertTrue(entry.timedOut)
+    }
+
+    @Test
     fun `findByOrigin matches by value, not object identity`() {
         val registrations = Registrations()
         registrations.add(registration(1000))

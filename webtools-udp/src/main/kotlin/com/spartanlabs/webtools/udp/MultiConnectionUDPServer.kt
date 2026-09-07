@@ -4,6 +4,8 @@ import org.slf4j.LoggerFactory
 import java.net.SocketException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 /**
  * A UDP server that multiplexes **all** traffic for any number of clients over a
@@ -19,7 +21,9 @@ import java.util.concurrent.Executors
  * opened, the data path traverses NAT and the server binds no per-client ports.
  *
  * A client sends the token `KA` on an idle interval (~20 s recommended) to keep
- * its NAT mapping warm; the server consumes inbound `KA` without dispatching it.
+ * its NAT mapping warm; the server consumes inbound `KA` without dispatching it,
+ * but - when idle detection is enabled (see below) - an inbound `KA` also
+ * refreshes that client's per-connection liveness timestamp.
  *
  * This class is abstract because it does not itself decide what to do once a
  * client has finished the handshake - subclasses implement [onClientConnect]
@@ -56,16 +60,38 @@ import java.util.concurrent.Executors
  * [java.net.BindException]) if that port is already in use, so only one instance
  * can exist per JVM/host at a time. Call [stop] to release the port; the instance
  * is single-use afterwards. Construction throws [IllegalArgumentException] if
- * [receiveBufferBytes] is outside [MIN_RECEIVE_BUFFER_BYTES]..[MAX_UDP_PAYLOAD_BYTES].
+ * [receiveBufferBytes] is outside [MIN_RECEIVE_BUFFER_BYTES]..[MAX_UDP_PAYLOAD_BYTES],
+ * or if [idleTimeoutMillis] is negative. A positive [idleTimeoutMillis] also
+ * starts the `mcups-liveness` daemon thread.
  *
  * @param receiveBufferBytes size of the datagram receive buffer,
  * [MIN_RECEIVE_BUFFER_BYTES]..[MAX_UDP_PAYLOAD_BYTES]; defaults to
  * [DEFAULT_RECEIVE_BUFFER_BYTES] (65507) so no well-formed datagram is truncated
+ * @param idleTimeoutMillis opt-in idle-connection threshold in milliseconds; `0`
+ * (the default, [DISABLED_IDLE_TIMEOUT]) disables idle detection entirely - no
+ * extra thread, no per-datagram work. Must be `>= 0`; a negative value throws
+ * [IllegalArgumentException]; `0` disables detection.
+ *
+ * ### Connection liveness
+ * With a positive [idleTimeoutMillis], every registered connection carries the
+ * monotonic time of its last inbound datagram (application data or `KA`), and a
+ * dedicated `mcups-liveness` daemon thread periodically reports any connection
+ * idle beyond the threshold via [onClientDisconnect] with
+ * [DisconnectReason.TIMEOUT]. This is **notify-only**: the registration stays in
+ * place and addressable by [pushToAll] until the application calls
+ * [Connection.terminate] itself. A same-name supersede
+ * ([DisconnectReason.SUPERSEDED]) and an application [Connection.terminate]
+ * ([DisconnectReason.TERMINATED]) also flow through [onClientDisconnect].
+ * [stop] teardown does not.
  *
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
  * classify (`Iam` / `KA` / data) -> run the socket-free handshake state machine
- * inline, drop the keepalive, or hand the payload to the dispatch executor. The
+ * inline, drop the keepalive, or hand the payload to the dispatch executor. A
+ * third daemon thread - `mcups-liveness`, a [ScheduledExecutorService] - exists
+ * **only when [idleTimeoutMillis] > 0**; it runs the idle-connection sweep and
+ * never runs application code (the [onClientDisconnect] hook is handed to
+ * `mcups-dispatch`). The
  * dispatch executor is a **single** daemon thread (`mcups-dispatch`) that invokes
  * [Connection] message handlers, so per-client message order is preserved and a
  * slow handler cannot stall the listener or the handshake. Accepted trade-off:
@@ -75,14 +101,19 @@ import java.util.concurrent.Executors
  * registration list is copy-on-write.
  *
  * See the sequence diagram in `docs/issue-1-tier-2-plan.md` §2.1 for the canonical
- * end-to-end flow.
+ * end-to-end flow, and `docs/issue-10-connection-liveness-plan.md` §2.8 for the
+ * idle-sweep sequence.
  */
 abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     private val receiveBufferBytes: Int = DEFAULT_RECEIVE_BUFFER_BYTES,
+    private val idleTimeoutMillis: Long = DISABLED_IDLE_TIMEOUT,
 ) {
     init {
         require(receiveBufferBytes in MIN_RECEIVE_BUFFER_BYTES..MAX_UDP_PAYLOAD_BYTES) {
             "receiveBufferBytes must be $MIN_RECEIVE_BUFFER_BYTES..$MAX_UDP_PAYLOAD_BYTES, was $receiveBufferBytes"
+        }
+        require(idleTimeoutMillis >= 0L) {
+            "idleTimeoutMillis must be >= 0 (0 disables idle detection), was $idleTimeoutMillis"
         }
     }
 
@@ -112,7 +143,43 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         sender = commonChannel::send,
         onRegistered = ::onClientConnect,
         dispatch = { block -> dispatchExecutor.execute(block) },
+        onDisconnect = { connection, reason ->
+            dispatchExecutor.execute {
+                runCatching { onClientDisconnect(connection, reason) }
+                    .onFailure { log.warn("onClientDisconnect threw for '{}'", connection.name, it) }
+            }
+        },
+        idleTimeoutMillis = idleTimeoutMillis,
     )
+
+    /**
+     * Optional idle-connection sweep executor - a single `mcups-liveness` daemon
+     * thread, created only when [idleTimeoutMillis] > 0.
+     */
+    private val livenessExecutor: ScheduledExecutorService? =
+        if (idleTimeoutMillis > 0)
+            Executors.newSingleThreadScheduledExecutor { r ->
+                Thread(r, "mcups-liveness").apply { isDaemon = true }
+            }
+        else null
+
+    init {
+        livenessExecutor?.let { exec ->
+            val interval = Liveness.sweepIntervalMillis(idleTimeoutMillis)
+            // scheduleWithFixedDelay (not AtFixedRate): a delay between runs prevents sweep
+            // pile-up if one sweep is stalled by a GC or scheduler pause.
+            exec.scheduleWithFixedDelay(
+                {
+                    // runCatching is load-bearing: a ScheduledExecutorService silently cancels a
+                    // repeating task forever the first time it throws, which would disable idle
+                    // detection permanently - so every sweep must swallow its own failure.
+                    runCatching { coordinator.sweepIdleConnections() }
+                        .onFailure { log.warn("Liveness sweep failed; detection continues", it) }
+                },
+                interval, interval, TimeUnit.MILLISECONDS,
+            )
+        }
+    }
 
     /**
      * Starts the common listener thread, which demultiplexes every inbound
@@ -158,6 +225,27 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      * @param connection the connection that was just registered
      */
     abstract fun onClientConnect(connection: Connection)
+
+    /**
+     * Called when a registered client connection stops being addressable - see
+     * [DisconnectReason]. Runs on the single-threaded dispatch executor
+     * (`mcups-dispatch`), not the caller's thread, so it must return promptly.
+     *
+     * The default implementation does nothing; override to react (e.g. start a
+     * reconnect grace window on [DisconnectReason.TIMEOUT], then keep the entities
+     * alive and rebind on a resume token).
+     *
+     * Notify-only: [DisconnectReason.TIMEOUT] does **not** remove the registration
+     * or call [Connection.terminate] - the connection stays addressable by
+     * [pushToAll] until the application decides. A subsequent [Connection.terminate]
+     * then produces a second call here with [DisconnectReason.TERMINATED].
+     *
+     * Not called during [stop]; a full server shutdown is not a per-connection event.
+     *
+     * @param connection the connection that stopped being addressable
+     * @param reason why
+     */
+    open fun onClientDisconnect(connection: Connection, reason: DisconnectReason) {}
 
     /**
      * Binds [onClientMessage] as the message handler on every currently-registered
@@ -216,7 +304,12 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     /**
      * Shuts the server down: terminates (fully deregisters) every registered
      * [Connection], leaving `Registrations` empty, then stops the common listener
-     * thread, releases the common socket, and shuts the dispatch executor.
+     * thread, releases the common socket, shuts the `mcups-liveness` executor (if
+     * one was started), and shuts the dispatch executor.
+     *
+     * Fires no [onClientDisconnect] callbacks: [stop] calls the coordinator's
+     * `stopNotifying()` before `terminateAll()`, so a full server shutdown is not
+     * reported as a per-connection event.
      *
      * Every step runs even if an earlier one failed, so a partial failure never
      * leaks a bound port. Once called, this instance should be discarded.
@@ -225,6 +318,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      */
     fun stop(): Result<Unit> {
         log.info("Stopping server: terminating {} connection(s)", coordinator.size)
+        coordinator.stopNotifying()
         val connectionsTerminated = coordinator.terminateAll()
         listening = false
         val listenerJoined = runCatching { commonListenerThread?.join(LISTENER_JOIN_TIMEOUT_MILLIS) }
@@ -235,9 +329,12 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
             }
         log.info("Closing common socket on port {}", commonChannel.localPort)
         val socketClosed = commonChannel.closeResult()
+        val livenessStopped = runCatching { livenessExecutor?.shutdownNow(); Unit }
+            .onFailure { log.warn("Could not cleanly shut the liveness executor", it) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
-        return connectionsTerminated.flatMap { listenerJoined }.flatMap { socketClosed }.flatMap { executorStopped }
+        return connectionsTerminated.flatMap { listenerJoined }.flatMap { socketClosed }
+            .flatMap { livenessStopped }.flatMap { executorStopped }
     }
 
     companion object {
@@ -269,6 +366,13 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
          * default no well-formed datagram is ever truncated on receive.
          */
         const val DEFAULT_RECEIVE_BUFFER_BYTES = MAX_UDP_PAYLOAD_BYTES
+
+        /**
+         * Default [idleTimeoutMillis]: `0`, i.e. idle-connection detection is off.
+         * When enabling it, a value around 3x the ~20 s `KA` cadence (~60_000) is
+         * a sane starting point.
+         */
+        const val DISABLED_IDLE_TIMEOUT = 0L
 
         /** How long [stop] waits for the common listener thread to notice it should stop. */
         private const val LISTENER_JOIN_TIMEOUT_MILLIS = 1000L

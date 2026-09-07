@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:1.2.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:1.3.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -44,7 +44,7 @@ further releases. To move off it:
 
 | Type | Purpose |
 |------|---------|
-| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`. |
+| `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`; optionally override `onClientDisconnect` and set `idleTimeoutMillis` for idle-connection detection. |
 | `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. |
 | `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive`). |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
@@ -91,7 +91,9 @@ should call it so the refused client is not addressed by future broadcasts.
 
 The client must send the token `KA` on that socket every ~20 s of idle time to hold its NAT
 mapping open; `Connection.keepAlive()` is the shared helper that sends one `KA` datagram
-(the server drops inbound `KA` without dispatching it). A server-side `Connection.keepAlive()`
+(the server drops inbound `KA` without dispatching it, though when idle detection is enabled
+an inbound `KA` — like any inbound datagram — refreshes that client's server-side liveness
+timestamp). A server-side `Connection.keepAlive()`
 is server → client and refreshes cone NATs only — the authoritative keepalive is the
 client's.
 
@@ -127,6 +129,35 @@ per-instance receive buffer when datagrams are known to be small; a datagram lar
 the configured size is truncated and a WARN is logged. For real-network use keep frames
 under the path MTU (**~1200 bytes**) to avoid IP fragmentation and the loss that comes with
 it.
+
+### Connection liveness
+
+By default the server tracks no per-connection idle time and never signals that a client has
+gone silent (a crashed / powered-off / out-of-range client stays addressable until an
+explicit `Connection.terminate()` or a same-name supersede). Pass a positive
+`idleTimeoutMillis` to opt in: a dedicated `mcups-liveness` daemon thread then reports any
+connection with no inbound datagram (application data **or** `KA`) within the threshold via
+`onClientDisconnect(connection, reason)`:
+
+```kotlin
+val server = object : MultiConnectionUDPServer(idleTimeoutMillis = 60_000) {
+    override fun onClientConnect(connection: Connection) { /* ... */ }
+    override fun onClientDisconnect(connection: Connection, reason: DisconnectReason) {
+        when (reason) {
+            DisconnectReason.TIMEOUT    -> startReconnectGraceWindow(connection) // do NOT terminate
+            DisconnectReason.SUPERSEDED -> rebindSession(connection)
+            DisconnectReason.TERMINATED -> releaseSession(connection)
+        }
+    }
+}
+```
+
+`onClientDisconnect` runs on the dispatch thread (`mcups-dispatch`), not the caller's. It is
+**notify-only**: `TIMEOUT` does not remove the registration or call `terminate()` — the
+connection stays addressable by `pushToAll` so the application can run its own grace window
+and call `terminate()` when ready (which then produces a second `TERMINATED` call). A
+same-name supersede fires `SUPERSEDED`. `stop()` teardown fires nothing. With the default
+`idleTimeoutMillis = 0` there is no extra thread and no per-datagram cost.
 
 ### Client-side usage
 

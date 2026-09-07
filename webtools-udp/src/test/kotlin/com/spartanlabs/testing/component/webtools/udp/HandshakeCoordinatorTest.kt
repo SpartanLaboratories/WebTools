@@ -31,7 +31,9 @@ class HandshakeCoordinatorTest {
     private val sent = mutableListOf<Pair<String, InetSocketAddress>>()
     private val sentBytes = mutableListOf<Pair<ByteArray, InetSocketAddress>>()
     private val registeredNames = mutableListOf<String>()
+    private val disconnects = mutableListOf<Pair<String, com.spartanlabs.webtools.udp.DisconnectReason>>()
     private var sendResult: Result<Unit> = Result.success(Unit)
+    private var idleTimeoutMillis: Long = 0L
 
     private var connectionFactory: (name: String, peer: InetSocketAddress) -> FakeConnection =
         { name, peer -> FakeConnection(name, peer) }
@@ -49,6 +51,8 @@ class HandshakeCoordinatorTest {
         },
         onRegistered = { registeredNames += it.name },
         dispatch = { it() },
+        onDisconnect = { connection, reason -> disconnects += connection.name to reason },
+        idleTimeoutMillis = idleTimeoutMillis,
     )
 
     private fun HandshakeCoordinator.registerClients(count: Int) {
@@ -219,6 +223,8 @@ class HandshakeCoordinatorTest {
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
             dispatch = { it() },
+            onDisconnect = { connection, reason -> disconnects += connection.name to reason },
+            idleTimeoutMillis = idleTimeoutMillis,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -241,6 +247,8 @@ class HandshakeCoordinatorTest {
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
             dispatch = { it() },
+            onDisconnect = { connection, reason -> disconnects += connection.name to reason },
+            idleTimeoutMillis = idleTimeoutMillis,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -262,6 +270,8 @@ class HandshakeCoordinatorTest {
             sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
             onRegistered = { registeredNames += it.name },
             dispatch = { it() },
+            onDisconnect = { connection, reason -> disconnects += connection.name to reason },
+            idleTimeoutMillis = idleTimeoutMillis,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -455,5 +465,165 @@ class HandshakeCoordinatorTest {
 
         assertEquals(listOf("ping" to originA), sent)
         assertFalse(sent.any { it.second.hostString == "8.8.8.8" })
+    }
+
+    // --- connection liveness (Issue #10) ---
+
+    private val TIMEOUT = com.spartanlabs.webtools.udp.DisconnectReason.TIMEOUT
+    private val SUPERSEDED = com.spartanlabs.webtools.udp.DisconnectReason.SUPERSEDED
+    private val TERMINATED = com.spartanlabs.webtools.udp.DisconnectReason.TERMINATED
+
+    @Test
+    fun `accept refreshes lastInboundAt for data, KA and a retransmitted Iam when tracking is on`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+
+        listOf("hello", HandshakeProtocol.KEEPALIVE_TOKEN, "Iam alice").forEach { datagram ->
+            reg.lastInboundAt = 0L
+            coordinator.accept(originA, datagram)
+            assertTrue(reg.lastInboundAt > 0L, "'$datagram' must refresh lastInboundAt")
+        }
+    }
+
+    @Test
+    fun `accept does not touch lastInboundAt when tracking is off`() {
+        idleTimeoutMillis = 0L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+        reg.lastInboundAt = 42L
+
+        coordinator.accept(originA, "hello")
+        coordinator.accept(originA, HandshakeProtocol.KEEPALIVE_TOKEN)
+
+        assertEquals(42L, reg.lastInboundAt)
+    }
+
+    @Test
+    fun `sweepIdleConnections reports an overdue registration once and leaves it registered`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+        // 1s ago in nanos - well past the 200 ms idle threshold set above (idiom reused below).
+        reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
+
+        coordinator.sweepIdleConnections()
+        coordinator.sweepIdleConnections()
+
+        assertEquals(listOf("alice" to TIMEOUT), disconnects)
+        assertEquals(1, coordinator.size)
+        assertEquals(originA, coordinator.snapshot().single().origin)
+        sent.clear()
+        coordinator.broadcast("ping")
+        assertEquals(listOf("ping" to originA), sent)
+    }
+
+    @Test
+    fun `a KA between sweeps clears the timedOut latch and a later sweep re-reports`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+
+        reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
+        coordinator.sweepIdleConnections()
+        coordinator.accept(originA, HandshakeProtocol.KEEPALIVE_TOKEN)
+        reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
+        coordinator.sweepIdleConnections()
+
+        assertEquals(listOf("alice" to TIMEOUT, "alice" to TIMEOUT), disconnects)
+    }
+
+    @Test
+    fun `a not-yet-overdue registration is not reported`() {
+        idleTimeoutMillis = 10_000L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        coordinator.sweepIdleConnections()
+
+        assertTrue(disconnects.isEmpty())
+    }
+
+    @Test
+    fun `sweep never reports when tracking is off`() {
+        idleTimeoutMillis = 0L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.snapshot().single().lastInboundAt = System.nanoTime() - 10_000_000_000L
+
+        coordinator.sweepIdleConnections()
+
+        assertTrue(disconnects.isEmpty())
+    }
+
+    @Test
+    fun `a same-name Iam from a new origin fires SUPERSEDED and not TERMINATED`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        coordinator.accept(originB, "Iam alice")
+
+        assertEquals(listOf("alice" to SUPERSEDED), disconnects)
+    }
+
+    @Test
+    fun `a real terminate fires TERMINATED`() {
+        idleTimeoutMillis = 200L
+        var realConnection: UDPConnection? = null
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, channel -> UDPConnection(name, peer, channel).also { realConnection = it } },
+            sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
+            onRegistered = { registeredNames += it.name },
+            dispatch = { it() },
+            onDisconnect = { connection, reason -> disconnects += connection.name to reason },
+            idleTimeoutMillis = idleTimeoutMillis,
+        )
+        coordinator.accept(originA, "Iam alice")
+
+        assertTrue(realConnection!!.terminate().isSuccess)
+
+        assertEquals(listOf("alice" to TERMINATED), disconnects)
+    }
+
+    @Test
+    fun `after stopNotifying neither terminateAll nor deregister fires anything`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.accept(originB, "Iam bob")
+
+        coordinator.stopNotifying()
+        coordinator.terminateAll()
+        coordinator.deregister(originA)
+
+        assertTrue(disconnects.isEmpty())
+    }
+
+    @Test
+    fun `a throwing onDisconnect does not stop the sweep reporting other overdue registrations`() {
+        idleTimeoutMillis = 200L
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, _ -> FakeConnection(name, peer) },
+            sender = { bytes, to -> sent += String(bytes, Charsets.UTF_8) to to; sendResult },
+            onRegistered = { registeredNames += it.name },
+            dispatch = { it() },
+            onDisconnect = { connection, reason ->
+                disconnects += connection.name to reason
+                if (connection.name == "client0") error("boom")
+            },
+            idleTimeoutMillis = idleTimeoutMillis,
+        )
+        coordinator.registerClients(3)
+        val past = System.nanoTime() - 1_000_000_000L
+        coordinator.snapshot().forEach { it.lastInboundAt = past }
+
+        coordinator.sweepIdleConnections()
+
+        assertEquals(setOf("client0", "client1", "client2"), disconnects.map { it.first }.toSet())
     }
 }

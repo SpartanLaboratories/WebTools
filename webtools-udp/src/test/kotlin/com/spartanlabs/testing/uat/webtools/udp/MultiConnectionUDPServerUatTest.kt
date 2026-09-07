@@ -64,6 +64,23 @@ class MultiConnectionUDPServerUatTest {
     }
 
     @Test
+    @Disabled("Manual: two hosts on different networks. Issue #10 - idle-connection detection over a real path.")
+    fun `a crashed NAT'd client is reported via onClientDisconnect TIMEOUT and its entities are held`() {
+        // 1. Run a MultiConnectionUDPServer subclass on a host with a public, routable IP,
+        //    constructed with idleTimeoutMillis = 60_000; onClientDisconnect records the
+        //    (connection, reason) and, on TIMEOUT, starts a grace window WITHOUT calling
+        //    connection.terminate().
+        // 2. From a NAT'd machine, handshake as "uatlive", start a session, then physically
+        //    pull the client's network connection (or kill -9 the client process).
+        // PASS: onClientDisconnect(_, TIMEOUT) fires within ~65 s; the connection is still in
+        //       the roster and still addressed by pushToAll (entities held, not terminated).
+        // 3. Reconnect the client under the same name "uatlive" within the grace window.
+        // PASS: the server observes onClientDisconnect(stale, SUPERSEDED) then
+        //       onClientConnect(fresh) and the session rebinds.
+        // FAIL: no TIMEOUT within ~90 s, or the connection was removed/terminated by the library.
+    }
+
+    @Test
     @Disabled("Manual: multi-minute mapping longevity. See docs/issue-1-tier-2-uat.md section 4.")
     fun `the NAT mapping survives a multi-minute session driven by keepalives`() {
         // Run a 5-minute session: the server calls Connection.keepAlive() on a ~20 s
