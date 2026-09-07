@@ -17,14 +17,23 @@
 - **Module:** `webtools-udp` only (`io.github.spartanlaboratories:webtools-udp`,
   package `com.spartanlabs.webtools.udp`). No wire / protocol change. No change to
   `MultiConnectionUDPClient`, `Connection`, `UDPConnection`, `UDPSendReceiveServer`.
-- **Branch:** `feat/issue-10-connection-liveness` (off `master`).
-- **Commit:** `TBD` — this plan document is committed **in the same commit as the
-  first implementation stage** (§10) so `git log --follow
-  docs/issue-10-connection-liveness-plan.md` binds plan to implementation.
-- **PR:** `TBD`.
-- **Status:** **ready to execute.** All six design decisions resolved by the
-  maintainer (§8), each in favour of the plan's recommendation. The only
-  outstanding fields are the post-merge commit / PR SHAs.
+- **Branch:** `feat/issue-10-connection-liveness` (off `master`, deleted after merge).
+- **Commits:**
+  - `ff61c62` — `feat:` production changes (§3.1–§3.6, incl. README) + **this plan
+    document** (so `git log --follow docs/issue-10-connection-liveness-plan.md`
+    binds plan to implementation).
+  - `5a24211` — `test:` the §5 suite, all five levels, incl. the `@JvmOverloads`
+    constructor-set assertion.
+  - `927d582` — `build:` bump `webtools-udp` to `1.3.0` (§3.9).
+- **PR:** [#21](https://github.com/SpartanLaboratories/WebTools/pull/21), merged as
+  `357e1e2`.
+- **Status:** **done.** Merged to `master` 2026-09-06. Full suite green — 199
+  passed, 0 failed, 6 expected `@Disabled` manual-UAT skips; the §2.3 `javap`
+  signature check confirmed `<init>()`, `<init>(int)`, `<init>(int, long)` are
+  all present (locked by a CI test). #10 commented with the library-side
+  resolution and left open for the maintainer to close (downstream
+  `SessionRegistry` adoption tracked separately). All six design decisions were
+  resolved by the maintainer (§8), each in favour of the plan's recommendation.
 - **Target version:** `webtools-udp` `1.2.0` → **`1.3.0`** (non-breaking additive
   change; see §7).
 - **Related (boundaries noted, not designed here):**
