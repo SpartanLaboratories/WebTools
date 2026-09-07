@@ -31,7 +31,12 @@ object HandshakeWireFormat {
     /** The entire server handshake reply: a single token, no arguments. */
     const val REGISTERED_REPLY = "REGISTERED"
 
-    /** The token either side sends on an idle interval to keep a NAT mapping warm. */
+    /**
+     * The token either side sends on an idle interval to keep a NAT mapping warm.
+     * On the server, besides being dropped, an inbound `KA` also refreshes that
+     * client's per-connection liveness timestamp when idle detection is enabled
+     * (see `MultiConnectionUDPServer`'s `idleTimeoutMillis`).
+     */
     const val KEEPALIVE_TOKEN = "KA"
 
     /**
