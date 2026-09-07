@@ -33,11 +33,20 @@
   directions (§7).
 - **Branch:** `feat/issue-11-handshake-refusal-and-credential` (off `master`,
   deleted after merge).
-- **Commit:** `TBD` — this plan document is committed **in the same commit as
-  the first implementation stage** (§9) so `git log --follow` binds the two.
-- **PR:** `TBD`.
-- **Status:** planning only. No code written. All design decisions resolved
-  from the issue + current source — see §8; **Open decisions is empty**.
+- **Commits:**
+  - `f4fed5a` — `feat:` all `src/main` changes, `Admission.kt`,
+    `HandshakeRefusedException.kt`, `README.md` + **this plan document**
+    (committed with the first implementation stage per §9, so
+    `git log --follow docs/issue-11-handshake-refusal-and-credential-plan.md`
+    binds plan to implementation).
+  - `8aa2c13` — `test:` the §5 suite, all seven levels.
+  - `7956ce1` — `build:` bump `webtools-udp` to `1.4.0` (§9).
+- **PR:** [#23](https://github.com/SpartanLaboratories/WebTools/pull/23), merged as
+  `0fee3da`.
+- **Status:** **done.** Merged to `master` 2026-09-07. Full suite green across all
+  7 levels (gating, component, integration, deterministic, e2e, nonfunctional,
+  uat). All design decisions resolved from the issue + current source — see §8;
+  **Open decisions is empty**.
 - **Target version:** `webtools-udp` `1.3.0` → **`1.4.0`** (purely additive; no
   signature removed or changed — see §7). Matches the #10 precedent (`1.3.0`,
   additive).
@@ -901,12 +910,7 @@ overridden with a one-line instruction if the maintainer disagrees.
 - The plan document rides in commit 1 (the first implementation stage) so
   `git log --follow docs/issue-11-handshake-refusal-and-credential-plan.md`
   permanently binds plan to implementation.
-- **Commit trailer** on every commit:
-  ```
-  Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
-  Claude-Session: https://claude.ai/code/session_01WXBJw9mbV1AeRuqcoSwcvt
-  ```
-- **PR description** ends with:
-  `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
-- Do not commit, push, or open the PR until the maintainer asks; open it against
-  `master`.
+- **Commit trailer:** none. Attribution is off for this repo — commits carry no
+  `Co-Authored-By` / `Claude-Session` trailer.
+- **PR description:** no attribution footer.
+- Open the PR against `master`.
