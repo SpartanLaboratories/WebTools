@@ -1,5 +1,7 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
@@ -313,6 +315,27 @@ class MultiConnectionUDPClientTest {
     }
 
     @Test
+    fun `a configured receiveBufferBytes reaches the listener loop - a larger datagram is truncated and warned`() {
+        val peer = fakePeer()
+        val client = MultiConnectionUDPClient(loopback, peer.localPort, 2048).also { clients += it }
+        val origin = handshakeSucceeds(client, peer)
+        val received = ConcurrentLinkedQueue<String>()
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            assertTrue(client.start { received += it }.isSuccess)
+            peer.sendTo(origin, "z".repeat(4096))
+            awaitQueueNotEmpty(received)
+
+            assertTrue(received.first().toByteArray(Charsets.UTF_8).size <= 2048, "delivered text truncated to the buffer")
+            val deadline = System.currentTimeMillis() + 2000
+            while (!events.hasWarnContaining("may have been truncated") && System.currentTimeMillis() < deadline) {
+                Thread.sleep(20)
+            }
+            assertTrue(events.hasWarnContaining("may have been truncated"), "truncation WARN was logged")
+        }
+    }
+
+    @Test
     fun `send String still round-trips as UTF-8`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
@@ -331,6 +354,12 @@ class MultiConnectionUDPClientTest {
             Thread.sleep(20)
         }
         assertTrue(queue.any { it.contentEquals(value) }, "expected bytes to be delivered within ${timeoutMillis}ms")
+    }
+
+    private fun awaitQueueNotEmpty(queue: ConcurrentLinkedQueue<*>, timeoutMillis: Long = 5000) {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        while (queue.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)
+        assertTrue(queue.isNotEmpty(), "expected a delivery within ${timeoutMillis}ms")
     }
 
     private fun <T> awaitQueueContains(queue: ConcurrentLinkedQueue<T>, value: T, timeoutMillis: Long = 5000) {

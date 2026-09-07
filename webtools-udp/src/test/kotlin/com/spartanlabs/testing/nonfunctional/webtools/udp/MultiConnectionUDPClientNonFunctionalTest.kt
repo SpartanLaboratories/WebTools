@@ -202,6 +202,23 @@ class MultiConnectionUDPClientNonFunctionalTest {
         assertTrue(received.first().contentEquals(big))
     }
 
+    @Test
+    fun `a ~60 KiB payload round-trips whole via startBytes - locks the documented 65507 ceiling`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val origin = handshakeSucceeds(client, peer)
+        val received = ConcurrentLinkedQueue<ByteArray>()
+        assertTrue(client.startBytes { received += it }.isSuccess)
+
+        val big = ByteArray(60_000) { ((it % 250) + 1).toByte() }
+        peer.sendTo(origin, big)
+
+        val deadline = System.currentTimeMillis() + 10000
+        while (received.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)
+        assertEquals(60_000, received.firstOrNull()?.size)
+        assertTrue(received.first().contentEquals(big))
+    }
+
     private fun DatagramSocket.sendTo(target: InetSocketAddress, bytes: ByteArray) {
         send(DatagramPacket(bytes, bytes.size, target.address, target.port))
     }

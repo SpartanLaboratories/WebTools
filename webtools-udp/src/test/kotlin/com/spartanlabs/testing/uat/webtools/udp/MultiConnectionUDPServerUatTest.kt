@@ -50,6 +50,20 @@ class MultiConnectionUDPServerUatTest {
     }
 
     @Test
+    @Disabled("Manual: two hosts on different networks. Issue #9 - large-payload receipt over a real path.")
+    fun `world-state delta frames larger than 1 KB are received intact over a real network path`() {
+        // 1. Run a MultiConnectionUDPServer subclass on a host with a public, routable IP;
+        //    its onClientConnect echoes each datagram back verbatim (actuateBytes { push(it) }).
+        // 2. From a NAT'd machine, handshake, then send frames of increasing size:
+        //    ~1.2 KB, ~4 KB, ~16 KB, ~60 KB (all under the documented 65507 ceiling).
+        // PASS: every frame <= ~1200 bytes returns byte-identical; frames well above the path
+        //       MTU show the expected IP-fragmentation loss trade-off (some do not return),
+        //       matching the README "keep frames under ~1200 bytes" guidance.
+        // FAIL: a frame <= ~1200 bytes is truncated or lost, or the ~60 KB frame that does
+        //       arrive is not byte-identical (a receive-buffer regression).
+    }
+
+    @Test
     @Disabled("Manual: multi-minute mapping longevity. See docs/issue-1-tier-2-uat.md section 4.")
     fun `the NAT mapping survives a multi-minute session driven by keepalives`() {
         // Run a 5-minute session: the server calls Connection.keepAlive() on a ~20 s
