@@ -20,7 +20,7 @@
 // transport-level PING/PONG round trip yielding a smoothed RTT, RTT-variance, and windowed
 // packet-loss ratio (LinkQuality); off by default; one lazily-created daemon
 // ScheduledExecutorService per side. New wire tokens PING/PONG, additive (Issue #13).
-version = "1.5.0"
+version = "1.6.0"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
