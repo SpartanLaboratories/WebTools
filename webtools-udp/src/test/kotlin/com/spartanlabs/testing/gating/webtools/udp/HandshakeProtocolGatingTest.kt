@@ -46,4 +46,18 @@ class HandshakeProtocolGatingTest {
         assertTrue(HandshakeProtocol.isKeepAlive("KA"))
         assertFalse(HandshakeProtocol.isKeepAlive("Iam x"))
     }
+
+    @Test
+    fun `isProbeRequest matches a bare or tokened PING`() {
+        assertTrue(HandshakeProtocol.isProbeRequest("PING"))
+        assertTrue(HandshakeProtocol.isProbeRequest("PING 42"))
+        assertFalse(HandshakeProtocol.isProbeRequest("PONG 42"))
+    }
+
+    @Test
+    fun `isProbeReply matches a bare or tokened PONG`() {
+        assertTrue(HandshakeProtocol.isProbeReply("PONG"))
+        assertTrue(HandshakeProtocol.isProbeReply("PONG 42"))
+        assertFalse(HandshakeProtocol.isProbeReply("PING 42"))
+    }
 }

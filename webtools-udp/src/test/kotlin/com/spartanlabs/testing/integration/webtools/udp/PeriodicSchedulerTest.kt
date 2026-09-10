@@ -1,6 +1,6 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
-import com.spartanlabs.webtools.udp.KeepAliveScheduler
+import com.spartanlabs.webtools.udp.PeriodicScheduler
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -11,22 +11,22 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-// Level 3 - KeepAliveScheduler driving a real ScheduledExecutorService (no socket).
+// Level 3 - PeriodicScheduler driving a real ScheduledExecutorService (no socket).
 @Tag("integration")
-class KeepAliveSchedulerTest {
+class PeriodicSchedulerTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
     private val keyA = InetSocketAddress(loopback, 56001)
     private val keyB = InetSocketAddress(loopback, 56002)
-    private val threadName = "test-keepalive-${System.nanoTime()}"
-    private var scheduler: KeepAliveScheduler? = null
+    private val threadName = "test-periodic-${System.nanoTime()}"
+    private var scheduler: PeriodicScheduler? = null
 
     @AfterTest
     fun cleanup() {
         scheduler?.shutdown()
     }
 
-    private fun newScheduler() = KeepAliveScheduler(threadName).also { scheduler = it }
+    private fun newScheduler() = PeriodicScheduler(threadName).also { scheduler = it }
 
     private fun await(timeoutMillis: Long, condition: () -> Boolean): Boolean {
         val deadline = System.currentTimeMillis() + timeoutMillis
@@ -90,7 +90,7 @@ class KeepAliveSchedulerTest {
         assertTrue(ticks.get() <= frozen + 1, "ticks stopped after shutdown")
         assertNull(
             Thread.getAllStackTraces().keys.firstOrNull { it.name == threadName && it.isAlive },
-            "no live keepalive thread after shutdown",
+            "no live periodic thread after shutdown",
         )
     }
 

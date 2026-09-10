@@ -108,4 +108,26 @@ class HandshakeProtocolTest {
         assertFalse(HandshakeProtocol.isKeepAlive(""))
         assertFalse(HandshakeProtocol.isKeepAlive("Iam x"))
     }
+
+    // --- isProbeRequest / isProbeReply (delegate to HandshakeWireFormat) ---
+
+    @Test
+    fun `isProbeRequest truth table`() {
+        assertTrue(HandshakeProtocol.isProbeRequest("PING"))
+        assertTrue(HandshakeProtocol.isProbeRequest("PING 42"))
+        assertFalse(HandshakeProtocol.isProbeRequest("ping"))
+        assertFalse(HandshakeProtocol.isProbeRequest("PINGX"))
+        assertFalse(HandshakeProtocol.isProbeRequest(""))
+        assertFalse(HandshakeProtocol.isProbeRequest("PONG 42"))
+    }
+
+    @Test
+    fun `isProbeReply truth table`() {
+        assertTrue(HandshakeProtocol.isProbeReply("PONG"))
+        assertTrue(HandshakeProtocol.isProbeReply("PONG 42"))
+        assertFalse(HandshakeProtocol.isProbeReply("pong"))
+        assertFalse(HandshakeProtocol.isProbeReply("PONGX"))
+        assertFalse(HandshakeProtocol.isProbeReply(""))
+        assertFalse(HandshakeProtocol.isProbeReply("PING 42"))
+    }
 }

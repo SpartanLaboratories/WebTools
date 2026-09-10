@@ -31,6 +31,11 @@ import java.util.concurrent.CopyOnWriteArrayList
  * has been dispatched for this registration, cleared by any later inbound
  * datagram. Written by both the sweep thread and the listener thread, hence
  * `@Volatile`.
+ * @property linkQuality the per-connection link-quality accumulator, or `null`
+ * until the first [HandshakeCoordinator.scheduleProbe] for this connection creates
+ * it. Written there and by `completeProbe` on the listener thread, read by the
+ * `mcups-probe` thread and by consumer calls to [Connection.linkQuality], hence
+ * `@Volatile`.
  */
 internal class Registration(val connection: Connection) {
     val origin: InetSocketAddress get() = connection.peer
@@ -49,6 +54,9 @@ internal class Registration(val connection: Connection) {
 
     @Volatile
     var timedOut: Boolean = false
+
+    @Volatile
+    var linkQuality: LinkQualityTracker? = null
 }
 
 /**

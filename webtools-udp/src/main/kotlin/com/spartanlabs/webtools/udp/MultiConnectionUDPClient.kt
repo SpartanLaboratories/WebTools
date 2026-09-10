@@ -46,13 +46,19 @@ import java.util.concurrent.Executors
  * idle-aware cadence and is shut by [stop].
  * See the scheduled-keepalive sequence diagram in docs/issue-12-scheduled-keepalive-plan.md §2.8.
  *
+ * A fourth daemon thread (`mcupc-probe`, also a `ScheduledExecutorService`) exists
+ * **only once [startProbe] has been called**; it sends `PING <seq>` datagrams on a
+ * fixed cadence for the link-quality probe and is shut by [stop].
+ * See docs/issue-13-link-quality-probe-plan.md §2.9.
+ *
  * Boundary-Ring notes (mirrors [CommonChannel]'s):
  * - One UDP socket carries the handshake and the entire session.
  * - The JDK permits a concurrent [DatagramSocket.send] while a
  *   [DatagramSocket.receive] is in progress.
  * - [socket] is received on only by the listener thread, but sent on from any
- *   thread ([send], [sendKeepAlive], the `mcupc-keepalive` tick); the listener
- *   thread itself never sends.
+ *   thread ([send], [sendKeepAlive], the `mcupc-keepalive` tick, the `mcupc-probe`
+ *   tick); the listener thread itself never sends application data - it answers an
+ *   inbound `PING` with a `PONG` inline.
  *
  * ### Construction side effects
  * Instantiating this class **binds an ephemeral OS UDP port** immediately - a
@@ -81,6 +87,8 @@ import java.util.concurrent.Executors
  * [startKeepAlive] / [stopKeepAlive] are safe from any thread and may race [stop]:
  * a [startKeepAlive] after [stop] fails its [Result]; an in-flight keepalive tick
  * either sends or observes the closed socket and fails its own [Result].
+ * [startProbe] / [stopProbe] carry the same contract: safe from any thread, and a
+ * [startProbe] after [stop] fails its [Result].
  *
  * See the sequence diagram in docs/issue-3-public-client-handshake-plan.md §2.2
  * for the canonical handshake/listener/dispatch flow.
@@ -103,9 +111,12 @@ import java.util.concurrent.Executors
  * defaults to 65507 so no well-formed datagram is truncated. A datagram larger
  * than this is delivered truncated, not rejected (a WARN is logged).
  * @param keepAlive the scheduled-keepalive timer seam backing [startKeepAlive] /
- * [stopKeepAlive]; the public constructor supplies a real [KeepAliveScheduler]
+ * [stopKeepAlive]; the public constructor supplies a real [PeriodicScheduler]
  * (`mcupc-keepalive`), tests inject a fake. Mirrors
  * [HandshakeCoordinator]'s injected `keepAliveSchedule`.
+ * @param probe the link-quality probe timer seam backing [startProbe] /
+ * [stopProbe]; the public constructor supplies a real [PeriodicScheduler]
+ * (`mcupc-probe`), tests inject a fake.
  * @throws java.net.SocketException if an ephemeral local port could not be bound
  * @throws IllegalArgumentException if [receiveBufferBytes] is outside 512..65507
  */
@@ -113,20 +124,24 @@ class MultiConnectionUDPClient internal constructor(
     private val serverAddress: InetAddress,
     private val serverPort: Int,
     private val receiveBufferBytes: Int,
-    private val keepAlive: KeepAliveSchedule,
+    private val keepAlive: PeriodicSchedule,
+    private val probe: PeriodicSchedule,
 ) {
     /**
      * The public client constructor - unchanged three-parameter surface. Delegates
-     * to the `internal` seam constructor with a real [KeepAliveScheduler]
-     * (`mcupc-keepalive`), whose executor/thread stays lazy until the first
-     * [startKeepAlive].
+     * to the `internal` seam constructor with real [PeriodicScheduler] instances
+     * (`mcupc-keepalive`, `mcupc-probe`), whose executors/threads stay lazy until
+     * the first [startKeepAlive] / [startProbe].
      */
     @JvmOverloads
     constructor(
         serverAddress: InetAddress,
         serverPort: Int = MultiConnectionUDPServer.COMMON_LISTEN_PORT,
         receiveBufferBytes: Int = MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
-    ) : this(serverAddress, serverPort, receiveBufferBytes, KeepAliveScheduler("mcupc-keepalive"))
+    ) : this(
+        serverAddress, serverPort, receiveBufferBytes,
+        PeriodicScheduler("mcupc-keepalive"), PeriodicScheduler("mcupc-probe"),
+    )
 
     init {
         require(
@@ -160,8 +175,17 @@ class MultiConnectionUDPClient internal constructor(
     @Volatile
     private var lastOutboundAtNanos: Long = System.nanoTime()
 
-    /** The fixed server endpoint - the keepalive schedule's key. */
+    /** The fixed server endpoint - the keepalive and probe schedules' key. */
     private val serverEndpoint = InetSocketAddress(serverAddress, serverPort)
+
+    /**
+     * The link-quality estimator, created lazily on the first [startProbe]; `null`
+     * => no probe ever armed => zero cost. Written on the first [startProbe] and
+     * read by the listener thread and by consumer calls to [linkQuality], hence
+     * `@Volatile`.
+     */
+    @Volatile
+    private var linkQualityTracker: LinkQualityTracker? = null
 
     /** The local port [socket] is bound to - the same port every datagram, in both directions, uses. */
     val localPort: Int get() = socket.localPort
@@ -296,10 +320,19 @@ class MultiConnectionUDPClient internal constructor(
                 val bytes = packet.data.copyOf(packet.length)
                 bytes to String(bytes, Charsets.UTF_8).trim()
             }.onSuccess { (bytes, text) ->
-                if (HandshakeWireFormat.isKeepAlive(text)) {
-                    log.trace("Dropped keepalive from server")
-                } else {
-                    deliver(bytes, text)
+                when {
+                    HandshakeWireFormat.isKeepAlive(text) -> log.trace("Dropped keepalive from server")
+
+                    HandshakeWireFormat.isProbeRequest(text) ->
+                        send(HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)))
+                            .onFailure { log.debug("Could not answer a PING", it) }
+
+                    HandshakeWireFormat.isProbeReply(text) ->
+                        // Non-numeric / bare PONG token: ignore rather than throw on the listener thread - an old or spoofed peer must not break the probe.
+                        HandshakeWireFormat.probeToken(text).toLongOrNull()
+                            ?.let { seq -> linkQualityTracker?.completeProbe(seq) }
+
+                    else -> deliver(bytes, text)
                 }
             }.onFailure { cause ->
                 if (cause is SocketException) {
@@ -380,8 +413,53 @@ class MultiConnectionUDPClient internal constructor(
     fun stopKeepAlive(): Result<Unit> = runCatching { keepAlive.cancel(serverEndpoint) }
 
     /**
+     * Starts an opt-in link-quality probe: every [intervalMillis] this client sends
+     * one `PING <seq>` to the server, and each matching `PONG` updates a smoothed
+     * RTT / jitter / packet-loss estimate readable via [linkQuality]. Off until
+     * called; runs until [stopProbe] or [stop]. Backed by one daemon thread
+     * (`mcupc-probe`) created on the first call. Calling this again re-arms it (last
+     * call wins). Call after [handshake] - probes sent before registration go
+     * unanswered and register as loss.
+     *
+     * The probe requires both ends on `1.6.0`+: a pre-`1.6.0` server does not
+     * answer `PING`, so `packetLossRatio` climbs toward `1.0` and a consumer that
+     * opted in against such a server should not have.
+     *
+     * @param intervalMillis probe period; must be > 0. Default
+     * [HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS] (1 s).
+     * @return [Result.success] once armed; [Result.failure] with
+     * [IllegalArgumentException] for a non-positive interval or [IllegalStateException]
+     * if [stop] has already run.
+     */
+    @JvmOverloads
+    fun startProbe(intervalMillis: Long = HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS): Result<Unit> {
+        val tracker = linkQualityTracker ?: LinkQualityTracker().also { linkQualityTracker = it }
+        tracker.probeIntervalMillis = intervalMillis
+        return probe.schedule(serverEndpoint, intervalMillis) {
+            tracker.sweep()
+            send(HandshakeWireFormat.probeRequestMessage(tracker.beginProbe().toString()))
+                .onFailure { log.warn("Scheduled probe send failed", it) }
+        }.onFailure { log.error("Could not start the link-quality probe", it) }
+    }
+
+    /**
+     * Stops the probe started by [startProbe]. Idempotent; [stop] also does this.
+     * The last [linkQuality] snapshot remains readable.
+     * @return [Result.success] once the schedule is cancelled
+     */
+    fun stopProbe(): Result<Unit> = runCatching { probe.cancel(serverEndpoint) }
+
+    /**
+     * The latest link-quality snapshot, or `null` until the first `PONG` has come
+     * back.
+     * @return the current [LinkQuality], or `null`
+     */
+    fun linkQuality(): LinkQuality? = linkQualityTracker?.snapshot()
+
+    /**
      * Stops the listener thread, shuts the keepalive scheduler (if [startKeepAlive]
-     * armed one), closes the socket, and shuts the dispatch executor.
+     * armed one), shuts the probe scheduler (if [startProbe] armed one), closes the
+     * socket, and shuts the dispatch executor.
      * Every step runs even if an earlier one failed, so a partial failure never
      * leaks the bound port. Once called, this instance should be discarded.
      * @return [Result.success] if every step succeeded, or the first failure encountered
@@ -401,11 +479,15 @@ class MultiConnectionUDPClient internal constructor(
         // Shut the keepalive scheduler before the socket so a scheduled KA never races a close.
         val keepAliveStopped = runCatching { keepAlive.shutdown() }
             .onFailure { log.warn("Could not cleanly shut the keepalive scheduler", it) }
+        // Shut the probe scheduler before the socket so a scheduled PING never races a close.
+        val probeStopped = runCatching { probe.shutdown() }
+            .onFailure { log.warn("Could not cleanly shut the probe scheduler", it) }
         val socketClosed = runCatching { socket.close() }
             .onFailure { cause -> log.error("Could not close the client socket", cause) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
-        return listenerJoined.flatMap { keepAliveStopped }.flatMap { socketClosed }.flatMap { executorStopped }
+        return listenerJoined.flatMap { keepAliveStopped }.flatMap { probeStopped }
+            .flatMap { socketClosed }.flatMap { executorStopped }
     }
 
     private companion object {

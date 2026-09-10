@@ -120,4 +120,24 @@ class MultiConnectionUDPServerUatTest {
         // FAIL: any pushToAll is lost after the carrier/CPE NAT idle window, i.e. the 20 s
         //       default (or the interval + pollInterval worst case) did not hold the mapping open.
     }
+
+    @Test
+    @Disabled("Manual: real WAN/NAT path with `tc netem` available. Issue #13 - the link-quality probe.")
+    fun `linkQuality tracks an independent ping and reacts to injected jitter and loss`() {
+        // 1. Run a MultiConnectionUDPServer subclass on a host with a public, routable IP.
+        // 2. From a NAT'd machine: MultiConnectionUDPClient.handshake("uatprobe") -> start { } ->
+        //    startProbe(), then log client.linkQuality() once a second for several minutes.
+        // 3. Alongside, run the OS `ping` to the same server and note its RTT.
+        // PASS (a): rttMillis tracks the independent `ping` RTT within a small margin, and
+        //           packetLossRatio stays ~0.0 on a clean path.
+        // 4. Inject jitter: `tc qdisc add dev <if> root netem delay 40ms 20ms` on the path.
+        // PASS (b): rttVarianceMillis rises to reflect the added jitter; rttMillis rises by ~40ms.
+        // 5. Inject loss: `tc qdisc change dev <if> root netem loss 20%`.
+        // PASS (c): packetLossRatio rises toward ~0.20 within a few loss horizons, then recovers
+        //           to ~0.0 within a few horizons after the netem rule is removed.
+        // PASS (overall): the numbers are usable for sizing an interpolation delay
+        //           (rttMillis + k * rttVarianceMillis) and an adaptive send rate.
+        // FAIL: rttMillis is wildly off the `ping` ground truth, variance/loss do not move with
+        //       the injected impairment, or loss never recovers after the impairment stops.
+    }
 }

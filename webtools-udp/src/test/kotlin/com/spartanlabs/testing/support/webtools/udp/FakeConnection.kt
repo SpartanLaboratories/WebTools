@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.support.webtools.udp
 
 import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.LinkQuality
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
@@ -19,6 +20,9 @@ internal class FakeConnection(
     private val keepAliveResult: Result<Unit> = Result.success(Unit),
     private val startKeepAliveResult: Result<Unit> = Result.success(Unit),
     private val stopKeepAliveResult: Result<Unit> = Result.success(Unit),
+    private val startProbeResult: Result<Unit> = Result.success(Unit),
+    private val stopProbeResult: Result<Unit> = Result.success(Unit),
+    var linkQuality: LinkQuality? = null,
 ) : Connection {
 
     var actuateCalls = 0
@@ -36,8 +40,18 @@ internal class FakeConnection(
     var stopKeepAliveCalls = 0
         private set
 
+    var startProbeCalls = 0
+        private set
+
+    var stopProbeCalls = 0
+        private set
+
     /** The interval passed to the last [startKeepAlive]`(Long)` call, or `null`. */
     var lastStartKeepAliveInterval: Long? = null
+        private set
+
+    /** The interval passed to the last [startProbe]`(Long)` call, or `null`. */
+    var lastStartProbeInterval: Long? = null
         private set
 
     /** The last handler passed to [actuate], or `null` if never actuated. */
@@ -95,4 +109,17 @@ internal class FakeConnection(
         stopKeepAliveCalls++
         return stopKeepAliveResult
     }
+
+    override fun startProbe(intervalMillis: Long): Result<Unit> {
+        startProbeCalls++
+        lastStartProbeInterval = intervalMillis
+        return startProbeResult
+    }
+
+    override fun stopProbe(): Result<Unit> {
+        stopProbeCalls++
+        return stopProbeResult
+    }
+
+    override fun linkQuality(): LinkQuality? = linkQuality
 }

@@ -1,24 +1,25 @@
 package com.spartanlabs.testing.support.webtools.udp
 
-import com.spartanlabs.webtools.udp.KeepAliveSchedule
+import com.spartanlabs.webtools.udp.PeriodicSchedule
 import java.net.InetSocketAddress
 
 /**
- * A socket-free, timer-free [KeepAliveSchedule] test fixture. Records every
+ * A socket-free, timer-free [PeriodicSchedule] test fixture. Records every
  * [schedule] (keeping the `tick` so a test can invoke it synchronously),
  * [cancel], and [shutdown], and returns a configurable [Result] from [schedule].
- * Lets the coordinator / client keepalive logic be driven with no real executor.
+ * Lets the coordinator / client keepalive and probe logic be driven with no real
+ * executor.
  *
  * @param scheduleResult the [Result] every [schedule] call returns, unless
  * [failAfterShutdown] has kicked in
  * @param failAfterShutdown when `true`, a [schedule] call made after [shutdown]
- * fails with [IllegalStateException] - the real `KeepAliveScheduler`'s shut-down
+ * fails with [IllegalStateException] - the real `PeriodicScheduler`'s shut-down
  * latch, without a real executor
  */
-internal class FakeKeepAliveSchedule(
+internal class FakePeriodicSchedule(
     private val scheduleResult: Result<Unit> = Result.success(Unit),
     private val failAfterShutdown: Boolean = false,
-) : KeepAliveSchedule {
+) : PeriodicSchedule {
 
     data class Scheduled(val key: InetSocketAddress, val intervalMillis: Long, val tick: () -> Unit)
 
@@ -36,7 +37,7 @@ internal class FakeKeepAliveSchedule(
         val entry = Scheduled(key, intervalMillis, tick)
         scheduleCalls += entry
         if (failAfterShutdown && shutdownCalls > 0) {
-            return Result.failure(IllegalStateException("keepalive scheduler already shut down"))
+            return Result.failure(IllegalStateException("periodic scheduler already shut down"))
         }
         if (scheduleResult.isSuccess) scheduled[key] = entry
         return scheduleResult
