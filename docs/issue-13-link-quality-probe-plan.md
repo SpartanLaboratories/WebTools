@@ -22,15 +22,24 @@
   them once a consumer opts in.
 - **Branch:** `feat/issue-13-link-quality-probe` (off `master`, deleted after
   merge).
-- **Commit / PR (do not exist yet — the executor fills these in):**
-  - The plan document is committed **in the same commit as the first
-    implementation stage** (§9) so `git log --follow
-    docs/issue-13-link-quality-probe-plan.md` binds plan to implementation.
-  - `Commit: TBD`
-  - `PR: TBD`
-- **Status:** planning only. **Open decisions: none** — all four (§8) were
-  resolved by the maintainer in favour of the recommended option; §3 / §5 / §10
-  are executable as written.
+- **Commits:**
+  - `d028d59` — `feat:` all `src/main` changes, `Rtt.kt`,
+    `LinkQualityTracker.kt`, `LinkQuality.kt`, the `KeepAliveScheduler.kt` →
+    `PeriodicScheduler.kt` rename, `README.md`, the `build.gradle.kts`
+    version-comment block, the renamed test-support fixtures + **this plan
+    document** (committed with the first implementation stage per §10, so
+    `git log --follow docs/issue-13-link-quality-probe-plan.md` binds plan to
+    implementation).
+  - `6d6137c` — `test:` the §5 suite, all levels, plus the
+    coordinator-constructor updates and the `KeepAliveScheduler*Test` renames.
+  - `919e02c` — `build:` bump `webtools-udp` to `1.6.0` (§3.16).
+- **PR:** [#27](https://github.com/SpartanLaboratories/WebTools/pull/27), merged as
+  `604934c`.
+- **Status:** **done.** Merged to `master` 2026-09-10 as `webtools-udp` `1.6.0`
+  (not yet published to Maven Central). Full suite green across all levels
+  (gating, component, integration, deterministic, e2e, nonfunctional, uat;
+  Level-5 manual scenarios `@Disabled`). **Open decisions: none** — all four (§8)
+  were resolved by the maintainer in favour of the recommended option.
 - **Target version:** `webtools-udp` `1.5.0` → **`1.6.0`** (additive: new public
   value type, new public methods with default/`@JvmOverloads` bodies, new public
   constants and wire helpers; nothing removed or changed; see §7).
