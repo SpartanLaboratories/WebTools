@@ -110,6 +110,20 @@ import java.util.concurrent.TimeUnit
  * keepalives refresh only endpoint-independent (cone) NAT mappings - the
  * authoritative keepalive is still the client's own. No wire-format change.
  *
+ * ### Link quality (RTT & packet loss)
+ * Opt-in and per-connection: [Connection.startProbe]`(intervalMillis)` arms a
+ * periodic transport-level `PING`/`PONG` round trip toward that client, yielding a
+ * smoothed RTT, an RTT-variance (jitter proxy), and a windowed packet-loss ratio
+ * as a single [LinkQuality] snapshot readable via [Connection.linkQuality] (`null`
+ * until the first `PONG` resolves). Off by default (one `mcups-probe` daemon
+ * thread, created lazily on the first [Connection.startProbe]); cancelled by
+ * [Connection.stopProbe] / [Connection.terminate] / [stop]. The server also
+ * answers any inbound `PING` from a registered origin with a `PONG` inline on the
+ * listener thread, so a client can measure even if no server-side probe is armed.
+ * `PING` / `PONG` are additive wire tokens, transport-consumed on both sides, and
+ * `packetLossRatio` is lagging and windowed - not a fast congestion signal. See
+ * the sequence diagram in docs/issue-13-link-quality-probe-plan.md §2.9.
+ *
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
  * classify (`Iam` / `KA` / data) -> run the socket-free handshake state machine
@@ -125,7 +139,11 @@ import java.util.concurrent.TimeUnit
  * code. It is a dedicated executor, *not* the `mcups-liveness` one: liveness
  * exists only for `idleTimeoutMillis > 0` and has a different cadence and
  * lifecycle. See the scheduled-keepalive sequence diagram in
- * docs/issue-12-scheduled-keepalive-plan.md §2.8.
+ * docs/issue-12-scheduled-keepalive-plan.md §2.8. A fifth daemon thread -
+ * `mcups-probe`, also a [ScheduledExecutorService] - exists **only once a consumer
+ * calls [Connection.startProbe]**; it sends `PING` datagrams and runs no
+ * application code, and is again a dedicated executor so the probe and keepalive
+ * lifecycles stay independent. See docs/issue-13-link-quality-probe-plan.md §2.9.
  *
  * The dispatch executor is a **single** daemon thread (`mcups-dispatch`) that invokes
  * [Connection] message handlers, so per-client message order is preserved and a
@@ -175,7 +193,17 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      * created lazily on the first [Connection.startKeepAlive] call, so a server
      * whose consumers never opt in spawns no keepalive thread.
      */
-    private val keepAliveScheduler = KeepAliveScheduler("mcups-keepalive")
+    private val keepAliveScheduler = PeriodicScheduler("mcups-keepalive")
+
+    /**
+     * The opt-in link-quality probe scheduler - a single `mcups-probe` daemon
+     * thread. Constructed unconditionally as an object, but its executor/thread is
+     * created lazily on the first [Connection.startProbe] call, so a server whose
+     * consumers never opt in spawns no probe thread. A separate instance from
+     * [keepAliveScheduler] so the two features' cancellation and shutdown stay
+     * independent.
+     */
+    private val probeScheduler = PeriodicScheduler("mcups-probe")
 
     /**
      * The handshake state machine + inbound router, wired to this server's real
@@ -195,6 +223,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         },
         idleTimeoutMillis = idleTimeoutMillis,
         keepAliveSchedule = keepAliveScheduler,
+        probeSchedule = probeScheduler,
     )
 
     /**
@@ -384,8 +413,8 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      * Shuts the server down: terminates (fully deregisters) every registered
      * [Connection], leaving `Registrations` empty, then stops the common listener
      * thread, releases the common socket, shuts the `mcups-liveness` executor (if
-     * one was started), shuts the `mcups-keepalive` executor (if one was started),
-     * and shuts the dispatch executor.
+     * one was started), shuts the `mcups-keepalive` and `mcups-probe` executors
+     * (if either was started), and shuts the dispatch executor.
      *
      * Fires no [onClientDisconnect] callbacks: [stop] calls the coordinator's
      * `stopNotifying()` before `terminateAll()`, so a full server shutdown is not
@@ -413,10 +442,13 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
             .onFailure { log.warn("Could not cleanly shut the liveness executor", it) }
         val keepAliveStopped = runCatching { coordinator.shutKeepAlive() }
             .onFailure { log.warn("Could not cleanly shut the keepalive scheduler", it) }
+        val probeStopped = runCatching { coordinator.shutProbe() }
+            .onFailure { log.warn("Could not cleanly shut the probe scheduler", it) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
         return connectionsTerminated.flatMap { listenerJoined }.flatMap { socketClosed }
-            .flatMap { livenessStopped }.flatMap { keepAliveStopped }.flatMap { executorStopped }
+            .flatMap { livenessStopped }.flatMap { keepAliveStopped }.flatMap { probeStopped }
+            .flatMap { executorStopped }
     }
 
     companion object {

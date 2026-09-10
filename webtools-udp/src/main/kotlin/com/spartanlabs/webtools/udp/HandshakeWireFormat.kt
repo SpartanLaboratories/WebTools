@@ -32,6 +32,17 @@ package com.spartanlabs.webtools.udp
  * the one-shot [MultiConnectionUDPClient.sendKeepAlive] / [Connection.keepAlive]
  * tokens are unchanged and the datagram is byte-identical either way.
  *
+ * ### Link-quality probe
+ * An opt-in transport-level round-trip probe adds two additive tokens:
+ * `PING <token>` opens the round trip and `PONG <token>` echoes the token
+ * verbatim. Both are consumed by the transport on either side - like `KA` they
+ * are never dispatched to an application handler - and both are off unless a
+ * consumer calls [MultiConnectionUDPClient.startProbe] / [Connection.startProbe].
+ * The responder answers an inbound `PING` with a `PONG` unconditionally (a client
+ * always, a server only for a registered origin), so the peer can measure even if
+ * this side never opted in. This adds no obligation to any existing token: an old
+ * peer never sends `PING`/`PONG` and a new peer only sends them once opted in.
+ *
  * ### Binary application payloads
  * Application data after the handshake may be raw binary - [Connection.push] and
  * [Connection.actuateBytes], or [MultiConnectionUDPClient.send] and
@@ -40,9 +51,12 @@ package com.spartanlabs.webtools.udp
  * in both directions, so a binary payload that decodes and trims to exactly
  * [KEEPALIVE_TOKEN], or begins with the [HANDSHAKE_VERB] token followed by a
  * space, is intercepted by the control-traffic machinery and never delivered to
- * an application handler. Mitigation: lead every binary application datagram with
- * a byte that cannot start [HANDSHAKE_VERB] or [KEEPALIVE_TOKEN] and is not ASCII
- * whitespace - e.g. `0x00`, or any byte `>= 0x80` used as a version/format tag.
+ * an application handler. The same applies to a datagram that trims to exactly
+ * [PROBE_REQUEST_VERB] / [PROBE_REPLY_VERB] or begins `PING `/`PONG `.
+ * Mitigation: lead every binary application datagram with a byte that cannot
+ * start [HANDSHAKE_VERB], [KEEPALIVE_TOKEN], [PROBE_REQUEST_VERB] or
+ * [PROBE_REPLY_VERB] and is not ASCII whitespace - e.g. `0x00`, or any byte
+ * `>= 0x80` used as a version/format tag.
  * The maximum datagram the library will receive whole is 65507 bytes; a larger
  * one is truncated, not rejected. On the send side a payload above the OS
  * datagram limit fails the returned `Result` (cause logged) rather than being
@@ -138,4 +152,59 @@ object HandshakeWireFormat {
      * @return true if [text] is exactly the keepalive token
      */
     fun isKeepAlive(text: String): Boolean = text == KEEPALIVE_TOKEN
+
+    /** The verb that opens a transport-level round-trip probe: `PING <token>`. */
+    const val PROBE_REQUEST_VERB = "PING"
+
+    /** The verb of the probe echo: `PONG <token>`, the token copied verbatim. */
+    const val PROBE_REPLY_VERB = "PONG"
+
+    /**
+     * The default probe interval, in milliseconds (1 s), for
+     * [MultiConnectionUDPClient.startProbe] and [Connection.startProbe]. One tiny
+     * datagram per second per probed connection; a consumer that wants lighter
+     * passes a larger interval. The probe is off unless a consumer opts in.
+     */
+    const val DEFAULT_PROBE_INTERVAL_MILLIS = 1_000L
+
+    /**
+     * Builds the `PING <token>` datagram body that opens a probe round trip.
+     * @param token the prober's sequence number for this probe
+     * @return the `PING <token>` datagram body
+     */
+    fun probeRequestMessage(token: String): String = "$PROBE_REQUEST_VERB $token"
+
+    /**
+     * Builds the `PONG <token>` echo, [token] copied verbatim from the `PING`.
+     * @param token the token carried by the `PING` being answered
+     * @return the `PONG <token>` datagram body
+     */
+    fun probeReplyMessage(token: String): String = "$PROBE_REPLY_VERB $token"
+
+    /**
+     * True if [text] is a probe request (bare `PING` or `PING <token>`), to be
+     * answered with a `PONG` and never dispatched to application code.
+     * @param text the trimmed datagram text
+     * @return true if [text] is a `PING` datagram
+     */
+    fun isProbeRequest(text: String): Boolean =
+        text == PROBE_REQUEST_VERB || text.startsWith("$PROBE_REQUEST_VERB ")
+
+    /**
+     * True if [text] is a probe echo (bare `PONG` or `PONG <token>`), consumed by
+     * the prober and never dispatched to application code.
+     * @param text the trimmed datagram text
+     * @return true if [text] is a `PONG` datagram
+     */
+    fun isProbeReply(text: String): Boolean =
+        text == PROBE_REPLY_VERB || text.startsWith("$PROBE_REPLY_VERB ")
+
+    /**
+     * The token carried by a `PING`/`PONG` line - everything after the verb,
+     * trimmed; `""` if bare.
+     * @param text the trimmed datagram text
+     * @return the probe token, or the empty string for a bare `PING`/`PONG`
+     */
+    fun probeToken(text: String): String =
+        text.removePrefix(PROBE_REQUEST_VERB).removePrefix(PROBE_REPLY_VERB).trim()
 }

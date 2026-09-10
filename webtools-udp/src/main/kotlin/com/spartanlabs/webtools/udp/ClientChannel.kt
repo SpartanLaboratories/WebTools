@@ -65,4 +65,34 @@ internal interface ClientChannel {
      * @return [Result.success] once cancelled, or the failure that prevented it
      */
     fun cancelKeepAlive(peer: InetSocketAddress): Result<Unit>
+
+    /**
+     * Arms (or re-arms) an opt-in link-quality probe toward [peer]: every
+     * [intervalMillis] one `PING <seq>` is sent, and each matching `PONG` updates a
+     * per-connection smoothed RTT / jitter / loss estimate readable via
+     * [linkQualityOf]. Last call wins - a repeat call replaces the schedule. Runs
+     * until [cancelProbe], the registration is removed, or the server stops.
+     * @param peer the client endpoint to probe
+     * @param intervalMillis probe period; must be > 0
+     * @return [Result.success] once armed; [Result.failure] with an
+     * [IllegalStateException] if [peer] is not registered, or the failure that
+     * prevented arming the schedule
+     */
+    fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit>
+
+    /**
+     * Cancels the link-quality probe for [peer]. Idempotent - a no-op if none is
+     * armed.
+     * @param peer the client endpoint whose probe to cancel
+     * @return [Result.success] once cancelled, or the failure that prevented it
+     */
+    fun cancelProbe(peer: InetSocketAddress): Result<Unit>
+
+    /**
+     * The latest link-quality snapshot for [peer], or `null` if no probe is
+     * running or none has resolved yet.
+     * @param peer the client endpoint whose link quality to read
+     * @return the current [LinkQuality], or `null`
+     */
+    fun linkQualityOf(peer: InetSocketAddress): LinkQuality?
 }

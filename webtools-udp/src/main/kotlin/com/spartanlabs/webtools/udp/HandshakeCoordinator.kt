@@ -32,7 +32,12 @@ import java.net.InetSocketAddress
  * - the **keepalive scheduler seam** - [scheduleKeepAlive] arms an idle-aware
  *   `KA` timer per connection (refreshing off [Registration.lastOutboundAt],
  *   which [send] stamps once any keepalive is armed), cancelled on [deregister]
- *   or a same-name supersede.
+ *   or a same-name supersede;
+ * - the **link-quality probe seam** - [scheduleProbe] arms a periodic `PING`
+ *   timer per connection, folds each `PONG` into the connection's
+ *   [Registration.linkQuality] estimator, answers an inbound `PING` from a
+ *   registered origin with a `PONG`, and is cancelled on [deregister] or a
+ *   same-name supersede.
  *
  * @param newConnection builds the connection for a new client, given its name,
  * handshake origin, and the [ClientChannel] it should delegate to (always `this`)
@@ -51,7 +56,9 @@ import java.net.InetSocketAddress
  * @param idleTimeoutMillis idle threshold in milliseconds; `0` (the default)
  * disables liveness tracking entirely - no per-datagram refresh, no sweep
  * @param keepAliveSchedule the timer seam backing [scheduleKeepAlive] /
- * [cancelKeepAlive]; a [KeepAliveScheduler] in production, a fake in tests
+ * [cancelKeepAlive]; a [PeriodicScheduler] in production, a fake in tests
+ * @param probeSchedule the timer seam backing [scheduleProbe] / [cancelProbe]; a
+ * separate [PeriodicScheduler] instance in production, a fake in tests
  */
 internal class HandshakeCoordinator(
     private val newConnection: (name: String, peer: InetSocketAddress, channel: ClientChannel) -> Connection,
@@ -61,7 +68,8 @@ internal class HandshakeCoordinator(
     private val dispatch: (block: () -> Unit) -> Unit,
     private val onDisconnect: (connection: Connection, reason: DisconnectReason) -> Unit,
     private val idleTimeoutMillis: Long,
-    private val keepAliveSchedule: KeepAliveSchedule,
+    private val keepAliveSchedule: PeriodicSchedule,
+    private val probeSchedule: PeriodicSchedule,
 ) : ClientChannel {
     private val registrations = Registrations()
 
@@ -121,6 +129,22 @@ internal class HandshakeCoordinator(
         HandshakeProtocol.isKeepAlive(text) ->
             Result.success(Unit).also { log.trace("Keepalive from {}", origin) }
 
+        HandshakeProtocol.isProbeRequest(text) -> {
+            val reg = registrations.findByOrigin(origin)
+            if (reg == null) {
+                Result.success(Unit).also { log.debug("PING from unregistered {}, dropped", origin) }
+            } else {
+                send(HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)).toByteArray(Charsets.UTF_8), origin)
+            }
+        }
+
+        HandshakeProtocol.isProbeReply(text) -> {
+            // Non-numeric / bare PONG token: ignore rather than throw on the listener thread - an old or spoofed peer must not break the probe.
+            HandshakeWireFormat.probeToken(text).toLongOrNull()
+                ?.let { seq -> registrations.findByOrigin(origin)?.linkQuality?.completeProbe(seq) }
+            Result.success(Unit)
+        }
+
         HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
 
         else -> deliverData(origin, bytes, text)
@@ -171,6 +195,7 @@ internal class HandshakeCoordinator(
                     log.info("Superseding stale registration for '{}': {} -> {}", name, stale.origin, origin)
                     registrations.removeByOrigin(stale.origin)
                     keepAliveSchedule.cancel(stale.origin)
+                    probeSchedule.cancel(stale.origin)
                     if (notifyingDisconnects) onDisconnect(stale.connection, DisconnectReason.SUPERSEDED)
                     stale.connection.terminate()
                         .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
@@ -233,6 +258,31 @@ internal class HandshakeCoordinator(
         keepAliveSchedule.shutdown()
     }
 
+    override fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
+        val reg = registrations.findByOrigin(peer)
+            ?: return Result.failure(IllegalStateException("No registration for $peer"))
+        val tracker = reg.linkQuality ?: LinkQualityTracker().also { reg.linkQuality = it }
+        tracker.probeIntervalMillis = intervalMillis
+        return probeSchedule.schedule(peer, intervalMillis) {
+            // Re-fetch: a concurrent terminate()/supersede may have dropped the registration.
+            val live = registrations.findByOrigin(peer)?.linkQuality ?: return@schedule
+            live.sweep()
+            send(HandshakeWireFormat.probeRequestMessage(live.beginProbe().toString()).toByteArray(Charsets.UTF_8), peer)
+                .onFailure { log.warn("Scheduled probe to {} failed", peer, it) }
+        }
+    }
+
+    override fun cancelProbe(peer: InetSocketAddress): Result<Unit> =
+        runCatching { probeSchedule.cancel(peer) }
+
+    override fun linkQualityOf(peer: InetSocketAddress): LinkQuality? =
+        registrations.findByOrigin(peer)?.linkQuality?.snapshot()
+
+    /** Shuts the probe scheduler; called by `MultiConnectionUDPServer.stop()`. */
+    fun shutProbe() {
+        probeSchedule.shutdown()
+    }
+
     override fun bind(peer: InetSocketAddress, onMessage: (String) -> Unit) {
         registrations.findByOrigin(peer)?.let {
             it.onMessage = onMessage
@@ -251,6 +301,7 @@ internal class HandshakeCoordinator(
         val reg = registrations.findByOrigin(peer)
         if (registrations.removeByOrigin(peer)) {
             keepAliveSchedule.cancel(peer)
+            probeSchedule.cancel(peer)
             log.info("Deregistered connection for {}", peer)
             if (notifyingDisconnects && reg != null) {
                 onDisconnect(reg.connection, DisconnectReason.TERMINATED)

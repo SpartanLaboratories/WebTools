@@ -12,7 +12,9 @@ import java.net.InetSocketAddress
  *
  * [UDPConnection] is still socket-free and owns no thread of its own; an opt-in
  * scheduled keepalive ([startKeepAlive]) borrows the server's shared
- * `mcups-keepalive` thread rather than starting one per connection.
+ * `mcups-keepalive` thread rather than starting one per connection, and an opt-in
+ * link-quality probe ([startProbe]) likewise borrows the server's shared
+ * `mcups-probe` thread and updates a per-connection estimator.
  *
  * @property name a human-readable identifier for this connection, typically
  * supplied by the client during the handshake
@@ -167,4 +169,46 @@ interface Connection {
      * @return [Result.success] once cancelled
      */
     fun stopKeepAlive(): Result<Unit> = Result.success(Unit)
+
+    /**
+     * Starts an opt-in link-quality probe toward [peer]: every [intervalMillis] the
+     * server sends one `PING`, and each `PONG` updates a smoothed RTT / jitter /
+     * loss estimate readable via [linkQuality]. Runs until [stopProbe], [terminate],
+     * or server `stop()`. Server -> client `PING` reaches the client whenever the
+     * session is live (the client is actively holding its own mapping open); the
+     * same cone-NAT caveat as [keepAlive] applies if the client has gone silent.
+     *
+     * The probe requires both ends on `1.6.0`+: a pre-`1.6.0` peer does not answer
+     * `PING`, so `packetLossRatio` climbs toward `1.0` and a consumer that opted in
+     * against such a peer should not have.
+     *
+     * The default returns [Result.failure] - only the production [UDPConnection]
+     * supports a probe.
+     * @param intervalMillis probe period; must be > 0.
+     * @return [Result.success] once armed, or the failure that prevented it
+     */
+    fun startProbe(intervalMillis: Long): Result<Unit> =
+        Result.failure(UnsupportedOperationException("This Connection does not support a link-quality probe"))
+
+    /**
+     * Starts the probe at the default interval
+     * ([HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS], 1 s).
+     * @return [Result.success] once armed, or the failure that prevented it
+     * @see startProbe
+     */
+    fun startProbe(): Result<Unit> = startProbe(HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS)
+
+    /**
+     * Stops the probe started by [startProbe]. Idempotent; [terminate] and server
+     * `stop()` also do this. The last [linkQuality] snapshot remains readable.
+     * @return [Result.success] once cancelled
+     */
+    fun stopProbe(): Result<Unit> = Result.success(Unit)
+
+    /**
+     * The latest link-quality snapshot for this connection, or `null` if no probe
+     * is running or none has resolved yet.
+     * @return the current [LinkQuality], or `null`
+     */
+    fun linkQuality(): LinkQuality? = null
 }

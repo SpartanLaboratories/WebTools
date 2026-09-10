@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.support.webtools.udp
 
 import com.spartanlabs.webtools.udp.ClientChannel
+import com.spartanlabs.webtools.udp.LinkQuality
 import java.net.InetSocketAddress
 
 /**
@@ -13,6 +14,9 @@ internal class FakeClientChannel(
     private val sendResult: Result<Unit> = Result.success(Unit),
     private val scheduleKeepAliveResult: Result<Unit> = Result.success(Unit),
     private val cancelKeepAliveResult: Result<Unit> = Result.success(Unit),
+    private val scheduleProbeResult: Result<Unit> = Result.success(Unit),
+    private val cancelProbeResult: Result<Unit> = Result.success(Unit),
+    var linkQuality: LinkQuality? = null,
 ) : ClientChannel {
 
     data class Sent(val text: String, val to: InetSocketAddress)
@@ -22,6 +26,15 @@ internal class FakeClientChannel(
 
     /** Every [cancelKeepAlive] call's peer, in order. */
     val keepAliveCancels = mutableListOf<InetSocketAddress>()
+
+    /** Every [scheduleProbe] call, as `(peer, intervalMillis)`, in order. */
+    val probeSchedules = mutableListOf<Pair<InetSocketAddress, Long>>()
+
+    /** Every [cancelProbe] call's peer, in order. */
+    val probeCancels = mutableListOf<InetSocketAddress>()
+
+    /** Every [linkQualityOf] call's peer, in order. */
+    val linkQualityQueries = mutableListOf<InetSocketAddress>()
 
     /** Every [send], decoded as UTF-8 text plus its target. */
     val sent = mutableListOf<Sent>()
@@ -62,6 +75,21 @@ internal class FakeClientChannel(
     override fun cancelKeepAlive(peer: InetSocketAddress): Result<Unit> {
         keepAliveCancels += peer
         return cancelKeepAliveResult
+    }
+
+    override fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
+        probeSchedules += peer to intervalMillis
+        return scheduleProbeResult
+    }
+
+    override fun cancelProbe(peer: InetSocketAddress): Result<Unit> {
+        probeCancels += peer
+        return cancelProbeResult
+    }
+
+    override fun linkQualityOf(peer: InetSocketAddress): LinkQuality? {
+        linkQualityQueries += peer
+        return linkQuality
     }
 
     /** Invokes the text handler bound for [peer] with [message], as the server would. */

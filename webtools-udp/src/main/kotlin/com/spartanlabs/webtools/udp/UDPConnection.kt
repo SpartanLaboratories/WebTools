@@ -13,7 +13,8 @@ import java.net.InetSocketAddress
  * fully deregisters it - not just unregisters the handler. Every fallible
  * operation returns a [Result]. A scheduled keepalive ([startKeepAlive]) runs on
  * the server's shared `mcups-keepalive` thread - still not one owned here - and is
- * cancelled by [terminate].
+ * cancelled by [terminate]. An opt-in link-quality probe ([startProbe]) likewise
+ * runs on the server's shared `mcups-probe` thread and is cancelled by [terminate].
  *
  * Instances are minted only by [MultiConnectionUDPServer]'s internal factory -
  * the constructor is `internal`. Standalone bidirectional-socket users take
@@ -78,6 +79,30 @@ class UDPConnection internal constructor(
     override fun stopKeepAlive(): Result<Unit> =
         channel.cancelKeepAlive(peer)
             .onFailure { log.error("Connection '{}' could not stop its scheduled keepalive", name, it) }
+
+    /**
+     * Unlike the [Connection] default, this production implementation **does**
+     * support a link-quality probe: it delegates to the server's shared
+     * `mcups-probe` executor via [ClientChannel], which sends a periodic `PING` to
+     * [peer] and folds each `PONG` into a per-connection estimator. A non-positive
+     * [intervalMillis] or an unregistered [peer] surfaces as the [ClientChannel]'s
+     * failure. The schedule is cancelled by [stopProbe] and by [terminate].
+     */
+    override fun startProbe(intervalMillis: Long): Result<Unit> =
+        channel.scheduleProbe(peer, intervalMillis)
+            .onFailure { log.error("Connection '{}' could not start a link-quality probe", name, it) }
+
+    /**
+     * Unlike the [Connection] default no-op, this production implementation cancels
+     * the probe armed by [startProbe] on the server's shared `mcups-probe`
+     * executor via [ClientChannel]. Idempotent; [terminate] also does this.
+     */
+    override fun stopProbe(): Result<Unit> =
+        channel.cancelProbe(peer)
+            .onFailure { log.error("Connection '{}' could not stop its probe", name, it) }
+
+    /** The latest link-quality snapshot for this connection, delegated to [ClientChannel]. */
+    override fun linkQuality(): LinkQuality? = channel.linkQualityOf(peer)
 
     private companion object {
         private val log = LoggerFactory.getLogger(UDPConnection::class.java)

@@ -37,6 +37,15 @@ internal object HandshakeProtocol {
     /** The recommended output-idle interval between keepalive datagrams (~20 s). */
     const val DEFAULT_KEEPALIVE_INTERVAL_MILLIS = HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS
 
+    /** The verb that opens a transport-level round-trip probe: `PING <token>`. */
+    const val PROBE_REQUEST_VERB = HandshakeWireFormat.PROBE_REQUEST_VERB
+
+    /** The verb of the probe echo: `PONG <token>`. */
+    const val PROBE_REPLY_VERB = HandshakeWireFormat.PROBE_REPLY_VERB
+
+    /** The default probe interval between `PING` datagrams (1 s). */
+    const val DEFAULT_PROBE_INTERVAL_MILLIS = HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS
+
     /** Index of the client-supplied name within a whitespace-split handshake line. */
     private const val NAME_INDEX = 1
 
@@ -90,6 +99,20 @@ internal object HandshakeProtocol {
      * @return true if [text] is exactly the bare keepalive token
      */
     fun isKeepAlive(text: String): Boolean = HandshakeWireFormat.isKeepAlive(text)
+
+    /**
+     * True if [text] is a probe request (bare `PING` or `PING <token>`).
+     * @param text the trimmed datagram text
+     * @return true if [text] is a `PING` datagram
+     */
+    fun isProbeRequest(text: String): Boolean = HandshakeWireFormat.isProbeRequest(text)
+
+    /**
+     * True if [text] is a probe echo (bare `PONG` or `PONG <token>`).
+     * @param text the trimmed datagram text
+     * @return true if [text] is a `PONG` datagram
+     */
+    fun isProbeReply(text: String): Boolean = HandshakeWireFormat.isProbeReply(text)
 }
 
 /**

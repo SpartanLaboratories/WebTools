@@ -15,6 +15,11 @@
 // stopKeepAlive and Connection.startKeepAlive / stopKeepAlive, each backed by a lazily-created
 // daemon ScheduledExecutorService; the one-shot sendKeepAlive() / keepAlive() primitives
 // unchanged; no wire change (Issue #12).
+// 1.6.0: opt-in per-connection link-quality probe - MultiConnectionUDPClient.startProbe /
+// stopProbe / linkQuality and Connection.startProbe / stopProbe / linkQuality, a periodic
+// transport-level PING/PONG round trip yielding a smoothed RTT, RTT-variance, and windowed
+// packet-loss ratio (LinkQuality); off by default; one lazily-created daemon
+// ScheduledExecutorService per side. New wire tokens PING/PONG, additive (Issue #13).
 version = "1.5.0"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
