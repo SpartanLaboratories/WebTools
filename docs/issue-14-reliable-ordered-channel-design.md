@@ -11,9 +11,11 @@
   an implementation plan. It exists for the maintainer to read before giving a
   go / no-go. There is no file-by-file breakdown and no test matrix — those belong
   in the implementation plan that would follow a "go".
-- **Branch:** none yet. If greenlit, work would open on a `2.x` integration branch
-  (see §12); this document would move onto that branch with the first stage.
-- **Commit:** TBD. **PR:** TBD.
+- **Branch:** landed via `docs/issue-14-reliable-channel-design` (off `master`,
+  deleted after merge). If greenlit for implementation, work opens on a `2.x`
+  integration branch (see §12) and this document moves onto it with the first stage.
+- **Commit:** `6107d0d` (`docs:` add this design-options doc). **PR:**
+  [#29](https://github.com/SpartanLaboratories/WebTools/pull/29).
 - **Status:** **decision made (2026-09-09)** — the maintainer accepted the
   recommended option for every decision D1–D10 (§13). WebTools **takes this on** as
   the headline feature of **`webtools-udp` `2.0.0`**. Next step: an implementation
