@@ -53,4 +53,29 @@ class HandshakeWireFormatGatingTest {
     fun `the default keepalive interval is 20 seconds`() {
         assertEquals(20_000L, HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
     }
+
+    @Test
+    fun `the probe verbs and default interval are the exact literals`() {
+        assertEquals("PING", HandshakeWireFormat.PROBE_REQUEST_VERB)
+        assertEquals("PONG", HandshakeWireFormat.PROBE_REPLY_VERB)
+        assertEquals(1_000L, HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS)
+    }
+
+    @Test
+    fun `probe request and reply helpers round-trip the token`() {
+        assertEquals("PING 42", HandshakeWireFormat.probeRequestMessage("42"))
+        assertEquals("PONG 42", HandshakeWireFormat.probeReplyMessage("42"))
+
+        assertTrue(HandshakeWireFormat.isProbeRequest("PING"))
+        assertTrue(HandshakeWireFormat.isProbeRequest(HandshakeWireFormat.probeRequestMessage("42")))
+        assertTrue(HandshakeWireFormat.isProbeReply("PONG"))
+        assertTrue(HandshakeWireFormat.isProbeReply(HandshakeWireFormat.probeReplyMessage("42")))
+        assertFalse(HandshakeWireFormat.isProbeRequest("PINGX"))
+        assertFalse(HandshakeWireFormat.isProbeReply("hello"))
+
+        assertEquals("42", HandshakeWireFormat.probeToken("PING 42"))
+        assertEquals("42", HandshakeWireFormat.probeToken("PONG 42"))
+        assertEquals("", HandshakeWireFormat.probeToken("PING"))
+        assertEquals("", HandshakeWireFormat.probeToken("PONG"))
+    }
 }

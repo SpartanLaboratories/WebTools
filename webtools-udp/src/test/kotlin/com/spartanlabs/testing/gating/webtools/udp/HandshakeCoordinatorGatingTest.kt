@@ -1,7 +1,7 @@
 package com.spartanlabs.testing.gating.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
-import com.spartanlabs.testing.support.webtools.udp.FakeKeepAliveSchedule
+import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
@@ -41,7 +41,8 @@ class HandshakeCoordinatorGatingTest {
         dispatch = { it() },
         onDisconnect = { connection, reason -> disconnects += connection.name to reason },
         idleTimeoutMillis = idleTimeoutMillis,
-        keepAliveSchedule = FakeKeepAliveSchedule(),
+        keepAliveSchedule = FakePeriodicSchedule(),
+        probeSchedule = FakePeriodicSchedule(),
     )
 
     @Test

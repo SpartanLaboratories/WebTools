@@ -1,7 +1,7 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
-import com.spartanlabs.testing.support.webtools.udp.FakeKeepAliveSchedule
+import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.ClientChannel
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
@@ -14,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -36,7 +37,8 @@ class HandshakeCoordinatorTest {
     private val disconnects = mutableListOf<Pair<String, com.spartanlabs.webtools.udp.DisconnectReason>>()
     private var sendResult: Result<Unit> = Result.success(Unit)
     private var idleTimeoutMillis: Long = 0L
-    private val keepAliveSchedule = FakeKeepAliveSchedule()
+    private val keepAliveSchedule = FakePeriodicSchedule()
+    private val probeSchedule = FakePeriodicSchedule()
 
     private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
     private var admissionToReturn: Admission = Admission.Admitted
@@ -69,6 +71,7 @@ class HandshakeCoordinatorTest {
         onDisconnect = { connection, reason -> disconnects += connection.name to reason },
         idleTimeoutMillis = idleTimeoutMillis,
         keepAliveSchedule = keepAliveSchedule,
+        probeSchedule = probeSchedule,
     )
 
     private fun HandshakeCoordinator.registerClients(count: Int) {
@@ -340,6 +343,7 @@ class HandshakeCoordinatorTest {
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
+            probeSchedule = probeSchedule,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -366,6 +370,7 @@ class HandshakeCoordinatorTest {
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
+            probeSchedule = probeSchedule,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -391,6 +396,7 @@ class HandshakeCoordinatorTest {
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
+            probeSchedule = probeSchedule,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -703,6 +709,7 @@ class HandshakeCoordinatorTest {
             onDisconnect = { connection, reason -> disconnects += connection.name to reason },
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
+            probeSchedule = probeSchedule,
         )
         coordinator.accept(originA, "Iam alice")
 
@@ -740,6 +747,7 @@ class HandshakeCoordinatorTest {
             },
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
+            probeSchedule = probeSchedule,
         )
         coordinator.registerClients(3)
         val past = System.nanoTime() - 1_000_000_000L
@@ -862,5 +870,99 @@ class HandshakeCoordinatorTest {
         coordinator.snapshot().single().lastOutboundAt = System.nanoTime() - 1_000_000_000L
 
         keepAliveSchedule.tick(originA) // must not throw
+    }
+
+    // --- link-quality probe (Issue #13) ---
+
+    @Test
+    fun `an inbound PING from a registered origin is answered with exactly one PONG and nothing is dispatched`() {
+        val dispatched = mutableListOf<String>()
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.bind(originA) { dispatched += it }
+        sent.clear()
+
+        assertTrue(coordinator.accept(originA, "PING 7").isSuccess)
+
+        assertEquals(listOf("PONG 7" to originA), sent)
+        assertTrue(dispatched.isEmpty())
+    }
+
+    @Test
+    fun `an inbound PING from an unregistered origin is dropped with no send`() {
+        val coordinator = newCoordinator()
+        sent.clear()
+
+        assertTrue(coordinator.accept(originA, "PING 1").isSuccess)
+
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
+    fun `scheduleProbe then the recorded tick sends one PING and creates the estimator`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        assertTrue(coordinator.scheduleProbe(originA, 300L).isSuccess)
+        assertEquals(300L, probeSchedule.scheduled.getValue(originA).intervalMillis)
+        sent.clear()
+
+        probeSchedule.tick(originA)
+
+        assertEquals(1, sent.size)
+        assertTrue(HandshakeProtocol.isProbeRequest(sent.single().first), "was ${sent.single().first}")
+        assertEquals(originA, sent.single().second)
+        assertNotNull(coordinator.snapshot().single().linkQuality)
+    }
+
+    @Test
+    fun `an inbound PONG for a live probe populates linkQualityOf`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleProbe(originA, 300L)
+        probeSchedule.tick(originA)
+        val token = sent.last().first.substringAfter(' ').trim()
+
+        assertTrue(coordinator.accept(originA, "PONG $token").isSuccess)
+
+        assertNotNull(coordinator.linkQualityOf(originA))
+    }
+
+    @Test
+    fun `scheduleProbe for an unknown peer fails`() {
+        val coordinator = newCoordinator()
+
+        assertTrue(coordinator.scheduleProbe(originA, 300L).isFailure)
+    }
+
+    @Test
+    fun `deregister cancels the probe schedule for that peer`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleProbe(originA, 300L)
+
+        coordinator.deregister(originA)
+
+        assertTrue(originA in probeSchedule.cancels)
+    }
+
+    @Test
+    fun `a same-name supersede cancels the stale origin's probe schedule`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        coordinator.scheduleProbe(originA, 300L)
+
+        coordinator.accept(originB, "Iam alice")
+
+        assertTrue(originA in probeSchedule.cancels)
+    }
+
+    @Test
+    fun `shutProbe shuts the probe schedule`() {
+        val coordinator = newCoordinator()
+
+        coordinator.shutProbe()
+
+        assertEquals(1, probeSchedule.shutdownCalls)
     }
 }

@@ -114,8 +114,8 @@ class MultiConnectionUDPServerKeepAliveNonFunctionalTest {
     @Test
     fun `an intermittently failing send never cancels the repeating keepalive task`() {
         // The server here can't inject a failing sender, so drive the repeating-task robustness
-        // through KeepAliveScheduler directly: a tick that throws every other call keeps firing.
-        val scheduler = com.spartanlabs.webtools.udp.KeepAliveScheduler("nf-keepalive")
+        // through PeriodicScheduler directly: a tick that throws every other call keeps firing.
+        val scheduler = com.spartanlabs.webtools.udp.PeriodicScheduler("nf-keepalive")
         val key = java.net.InetSocketAddress(serverAddress, 57000)
         val calls = java.util.concurrent.atomic.AtomicInteger()
         try {

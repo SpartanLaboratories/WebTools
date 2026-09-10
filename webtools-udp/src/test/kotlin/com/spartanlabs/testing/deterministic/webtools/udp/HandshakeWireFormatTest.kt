@@ -93,4 +93,49 @@ class HandshakeWireFormatTest {
         assertFalse(HandshakeWireFormat.isKeepAlive(""))
         assertFalse(HandshakeWireFormat.isKeepAlive("Iam x"))
     }
+
+    // --- probe helpers ---
+
+    @Test
+    fun `probeRequestMessage and probeReplyMessage build the verb plus token`() {
+        assertEquals("PING 42", HandshakeWireFormat.probeRequestMessage("42"))
+        assertEquals("PONG 42", HandshakeWireFormat.probeReplyMessage("42"))
+    }
+
+    @Test
+    fun `isProbeRequest truth table`() {
+        assertTrue(HandshakeWireFormat.isProbeRequest("PING"))
+        assertTrue(HandshakeWireFormat.isProbeRequest("PING 42"))
+        assertFalse(HandshakeWireFormat.isProbeRequest("PINGX"))
+        assertFalse(HandshakeWireFormat.isProbeRequest("hello"))
+        assertFalse(HandshakeWireFormat.isProbeRequest("PONG 42"))
+    }
+
+    @Test
+    fun `isProbeReply truth table`() {
+        assertTrue(HandshakeWireFormat.isProbeReply("PONG"))
+        assertTrue(HandshakeWireFormat.isProbeReply("PONG 42"))
+        assertFalse(HandshakeWireFormat.isProbeReply("PONGX"))
+        assertFalse(HandshakeWireFormat.isProbeReply("hello"))
+        assertFalse(HandshakeWireFormat.isProbeReply("PING 42"))
+    }
+
+    @Test
+    fun `probeToken truth table`() {
+        assertEquals("42", HandshakeWireFormat.probeToken("PING 42"))
+        // Leading / trailing / multi-space around the token are all trimmed away.
+        assertEquals("42", HandshakeWireFormat.probeToken("PONG  42 "))
+        assertEquals("", HandshakeWireFormat.probeToken("PING"))
+        // Edge case: the token text is itself "PONG". removePrefix strips the leading
+        // "PING", the second removePrefix does not match (the remainder starts with a
+        // space), and trim() yields the bare word - locked in as current behaviour.
+        assertEquals("PONG", HandshakeWireFormat.probeToken("PING PONG"))
+    }
+
+    @Test
+    fun `probeToken round-trips the token built by probeRequestMessage`() {
+        for (token in listOf("0", "42", "4711", "9007199254740993")) {
+            assertEquals(token, HandshakeWireFormat.probeToken(HandshakeWireFormat.probeRequestMessage(token)))
+        }
+    }
 }
