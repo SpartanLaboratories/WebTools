@@ -27,7 +27,18 @@
 // cross-major peer fails handshake() cleanly (IncompatibleProtocolException). Removes the
 // HandshakeWireFormat KA/PING/PONG token API and the Issue #8 "lead byte >= 0x80" burden.
 // 0xA0/0xA1 reserved for the Stage-2 reliable engine.
-version = "2.0.0-alpha1"
+// 2.0.0-alpha2: internal reliable-ordered engine (Issue #14, Stage 2 of the 2.0 series) -
+// 0xA0/0xA1 promoted from reserved to live DatagramType entries (RELIABLE_DATA / RELIABLE_ACK);
+// new internal reliable header codec (ReliableWireFormat), RFC 1982 uint16 serial-number
+// arithmetic (SerialSequence), a private per-channel RTO estimator on the Issue #13 Rtt pure
+// functions with Karn's algorithm (ReliableRtoEstimator), a rolling outbound retransmit
+// sequence buffer with the fixed in-flight window (ReliableRetransmitBuffer), a bounded
+// inbound reorder buffer (ReliableReorderBuffer), and the orchestrating ReliableChannelEngine -
+// all internal, socket-free, and unwired. No new production capability in HandshakeCoordinator /
+// MultiConnectionUDPClient; the two newly-live tags still WARN-drop exactly as a reserved tag
+// did in alpha1 - only enough of a touch to keep both files compiling against the wider
+// DatagramType enum. Public channel API + real socket wiring is Stage 3.
+version = "2.0.0-alpha2"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

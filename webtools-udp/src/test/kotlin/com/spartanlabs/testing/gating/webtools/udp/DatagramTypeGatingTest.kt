@@ -12,23 +12,27 @@ import kotlin.test.assertNull
 class DatagramTypeGatingTest {
 
     @Test
-    fun `the four live tags are the exact literal bytes`() {
+    fun `the six live tags are the exact literal bytes`() {
         assertEquals(0x80.toByte(), DatagramType.KEEPALIVE.tag)
         assertEquals(0x81.toByte(), DatagramType.PROBE_PING.tag)
         assertEquals(0x82.toByte(), DatagramType.PROBE_PONG.tag)
         assertEquals(0x90.toByte(), DatagramType.UNRELIABLE.tag)
+        assertEquals(0xA0.toByte(), DatagramType.RELIABLE_DATA.tag)
+        assertEquals(0xA1.toByte(), DatagramType.RELIABLE_ACK.tag)
     }
 
     @Test
     fun `ofTagByte resolves a live tag to its entry`() {
         assertEquals(DatagramType.KEEPALIVE, DatagramType.ofTagByte(0x80.toByte()))
         assertEquals(DatagramType.UNRELIABLE, DatagramType.ofTagByte(0x90.toByte()))
+        assertEquals(DatagramType.RELIABLE_DATA, DatagramType.ofTagByte(0xA0.toByte()))
+        assertEquals(DatagramType.RELIABLE_ACK, DatagramType.ofTagByte(0xA1.toByte()))
     }
 
     @Test
-    fun `ofTagByte is null for null, an unframed byte, and a Stage-2 reserved tag`() {
+    fun `ofTagByte is null for null, an unframed byte, and a still-reserved tag`() {
         assertNull(DatagramType.ofTagByte(null))
         assertNull(DatagramType.ofTagByte(0x00.toByte()))
-        assertNull(DatagramType.ofTagByte(0xA0.toByte()))
+        assertNull(DatagramType.ofTagByte(0xA2.toByte()))
     }
 }

@@ -20,7 +20,9 @@ package com.spartanlabs.webtools.udp
  * | `0x83`–`0x8F` | *reserved*   | control    | future transport control (MTU probe, graceful close, …) |
  * | `0x90`        | [UNRELIABLE] | app data   | Stage 1    |
  * | `0x91`–`0x9F` | *reserved*   | app data   | future unreliable variants (unreliable-sequenced, newest-wins) |
- * | `0xA0`–`0xAF` | *reserved*   | app data   | the Stage-2 reliable engine (`0xA0` reliable data, `0xA1` reliable ack) |
+ * | `0xA0`        | [RELIABLE_DATA] | app data | Stage 2 |
+ * | `0xA1`        | [RELIABLE_ACK] | app data | Stage 2 |
+ * | `0xA2`–`0xAF` | *reserved*   | app data   | reliable-channel control (SACK ranges, window updates, channel open/close) |
  * | `0xB0`–`0xFF` | *reserved*   | —          | unallocated |
  *
  * Every live tag is `>= 0x80`, so it cannot collide with the ASCII first byte of
@@ -45,15 +47,20 @@ enum class DatagramType(val tag: Byte) {
     PROBE_PONG(0x82.toByte()),
 
     /** `0x90` — an unreliable application-data frame: `[0x90][channel:1][payload…]`. */
-    UNRELIABLE(0x90.toByte());
-    // 0xA0 RELIABLE_DATA / 0xA1 RELIABLE_ACK — reserved here, promoted to live entries in Stage 2.
+    UNRELIABLE(0x90.toByte()),
+
+    /** `0xA0` — a reliable-ordered data frame: header (see `ReliableWireFormat`) + payload. */
+    RELIABLE_DATA(0xA0.toByte()),
+
+    /** `0xA1` — a standalone reliable ack (no seq, no payload). */
+    RELIABLE_ACK(0xA1.toByte());
 
     companion object {
         private val byTag: Map<Byte, DatagramType> = entries.associateBy { it.tag }
 
         /**
          * The live [DatagramType] for [b], or `null` for a reserved, out-of-range,
-         * or `null` byte (`0x00`–`0x7F`, `0x83`–`0x8F`, `0x91`–`0xFF`).
+         * or `null` byte (`0x00`–`0x7F`, `0x83`–`0x8F`, `0x91`–`0x9F`, `0xA2`–`0xFF`).
          * @param b byte 0 of a datagram, or `null` for an empty datagram
          * @return the matching type, or `null` when [b] is not a live tag
          */

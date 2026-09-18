@@ -24,6 +24,10 @@ package com.spartanlabs.webtools.udp
  * [FRAMED_PROTOCOL_VERSION] (`REGISTERED 2`) and a mismatch fails
  * `MultiConnectionUDPClient.handshake` cleanly with an
  * [IncompatibleProtocolException].
+ *
+ * The `0xA0`/`0xA1` reliable-channel frames this object's value-space table
+ * reserves are encoded/decoded by `ReliableWireFormat`, not here — see that
+ * type for the reliable header layout.
  */
 object TransportWireFormat {
     /** The wire-protocol major this build speaks; the token in the `REGISTERED 2` reply. */

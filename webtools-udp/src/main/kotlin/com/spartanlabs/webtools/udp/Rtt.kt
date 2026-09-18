@@ -11,6 +11,9 @@ internal object Rtt {
     private const val SRTT_ALPHA = 0.125
     private const val RTTVAR_BETA = 0.25
 
+    // RFC 6298 §2 RTO gain: RTO = SRTT + K * RTTVAR, K = 4.
+    private const val RTO_K = 4.0
+
     /** How many probe intervals an unacked probe may age before it is declared lost. */
     const val LOSS_HORIZON_INTERVALS = 3L
 
@@ -67,4 +70,18 @@ internal object Rtt {
         val ageMillis = (nowNanos - sentAtNanos) / 1_000_000L
         return ageMillis >= LOSS_HORIZON_INTERVALS * intervalMillis
     }
+
+    /**
+     * RFC 6298 §2 RTO: `SRTT + K * RTTVAR`, K = 4, clamped to `[floorMillis,
+     * capMillis]`. No separate clock-granularity term — the configurable floor
+     * already covers "RTO too small," including going below the RFC's 1 s
+     * default deliberately (real-time games use far less).
+     * @param srttMillis the current smoothed RTT
+     * @param rttVarMillis the current smoothed RTT variation
+     * @param floorMillis the minimum RTO to return, however small SRTT/RTTVAR are
+     * @param capMillis the maximum RTO to return, however large SRTT/RTTVAR grow
+     * @return the RTO in milliseconds, clamped to `[floorMillis, capMillis]`
+     */
+    fun rtoMillis(srttMillis: Double, rttVarMillis: Double, floorMillis: Long, capMillis: Long): Double =
+        (srttMillis + RTO_K * rttVarMillis).coerceIn(floorMillis.toDouble(), capMillis.toDouble())
 }

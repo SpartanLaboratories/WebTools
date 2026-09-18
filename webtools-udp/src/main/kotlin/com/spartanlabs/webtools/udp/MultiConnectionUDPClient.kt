@@ -353,6 +353,15 @@ class MultiConnectionUDPClient internal constructor(
                             deliver(payload, String(payload, Charsets.UTF_8).trim())
                         } ?: log.warn("Malformed 0x90 datagram from server, dropping")
 
+                    // The Stage-2 reliable engine (ReliableChannelEngine) is internal and unwired -
+                    // no production capability here yet (Stage 3); mirrors the existing debug-log
+                    // branch below for a reserved tag rather than silently losing it.
+                    DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK ->
+                        log.debug(
+                            "Unhandled datagram type 0x{} from server, dropping",
+                            Integer.toHexString(bytes.getOrNull(0)?.toInt()?.and(0xFF) ?: 0),
+                        )
+
                     null -> {
                         val byte0 = bytes.getOrNull(0)?.toInt()?.and(0xFF)
                         if (byte0 != null && byte0 >= 0x80) {
