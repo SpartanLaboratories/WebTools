@@ -26,9 +26,10 @@
   implementation commit, so `git log --follow` binds plan to code.
 - **Branch:** `feat/issue-14-reliable-engine` (off `feat/2.0-framed-transport`,
   deleted after merge).
-- **Commits:** `Commit: TBD` (feat) / `Commit: TBD` (test) / `Commit: TBD` (build).
-- **PR:** `PR: TBD`.
-- **Status:** implemented, pending review/merge.
+- **Commits:** `Commit: b04238a` (feat) / `Commit: 3cfbc5f` (test) / `Commit: 6a1b064` (build).
+- **PR:** `PR: #32`, merged into `feat/2.0-framed-transport` as `3519276`.
+- **Status:** done — on `feat/2.0-framed-transport` as `webtools-udp` 2.0.0-alpha2,
+  not published to Maven Central; Issue #14 stays open for Stages 3-4.
 - **Target version:** `webtools-udp` `2.0.0-alpha1` → **`2.0.0-alpha2`** (§8).
   Purely additive at the wire level (`0xA0`/`0xA1` promoted from reserved to
   live tags) and purely additive at the source level (new `internal` types
