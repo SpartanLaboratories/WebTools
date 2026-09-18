@@ -4,6 +4,7 @@ import com.spartanlabs.webtools.udp.Rtt
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -73,5 +74,40 @@ class RttTest {
         assertFalse(Rtt.isProbeLost(now - 10_000 * ms, now, -5L))
         assertFalse(Rtt.isProbeLost(now + 50 * ms, now, 300L))
         assertFalse(Rtt.isProbeLost(0L, Long.MAX_VALUE, Long.MAX_VALUE))
+    }
+
+    // --- rtoMillis: RFC 6298 SRTT + K*RTTVAR, clamped to [floor, cap] ---
+
+    @Test
+    fun `rtoMillis applies the RFC 6298 SRTT plus 4 times RTTVAR formula when it falls inside the clamp`() {
+        // 100 + 4*20 = 180, well inside [50, 5000].
+        assertEquals(180.0, Rtt.rtoMillis(srttMillis = 100.0, rttVarMillis = 20.0, floorMillis = 50L, capMillis = 5_000L), tol)
+    }
+
+    @Test
+    fun `rtoMillis is floor-dominated when the formula falls below the floor`() {
+        assertEquals(200.0, Rtt.rtoMillis(srttMillis = 1.0, rttVarMillis = 0.0, floorMillis = 200L, capMillis = 5_000L), tol)
+    }
+
+    @Test
+    fun `rtoMillis is cap-dominated when the formula exceeds the cap`() {
+        assertEquals(
+            5_000.0,
+            Rtt.rtoMillis(srttMillis = 10_000.0, rttVarMillis = 10_000.0, floorMillis = 200L, capMillis = 5_000L),
+            tol,
+        )
+    }
+
+    @Test
+    fun `rtoMillis is exactly the floor and exactly the cap at the clamp boundaries`() {
+        assertEquals(200.0, Rtt.rtoMillis(srttMillis = 200.0, rttVarMillis = 0.0, floorMillis = 200L, capMillis = 5_000L), tol)
+        assertEquals(5_000.0, Rtt.rtoMillis(srttMillis = 5_000.0, rttVarMillis = 0.0, floorMillis = 200L, capMillis = 5_000L), tol)
+    }
+
+    @Test
+    fun `rtoMillis throws for a floor greater than the cap - an invalid, not silently-resolved, configuration`() {
+        assertFailsWith<IllegalArgumentException> {
+            Rtt.rtoMillis(srttMillis = 100.0, rttVarMillis = 0.0, floorMillis = 5_000L, capMillis = 200L)
+        }
     }
 }

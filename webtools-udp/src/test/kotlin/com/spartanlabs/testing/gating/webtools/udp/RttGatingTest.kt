@@ -33,4 +33,14 @@ class RttGatingTest {
         assertFalse(Rtt.isProbeLost(now - 2 * 300 * ms, now, 300L), "within the horizon")
         assertFalse(Rtt.isProbeLost(now - 10 * 300 * ms, now, 0L), "disabled for interval <= 0")
     }
+
+    @Test
+    fun `rtoMillis is clamped to the floor when the formula is tiny`() {
+        assertEquals(200.0, Rtt.rtoMillis(1.0, 0.0, floorMillis = 200L, capMillis = 5_000L))
+    }
+
+    @Test
+    fun `rtoMillis is clamped to the cap when the formula is huge`() {
+        assertEquals(5_000.0, Rtt.rtoMillis(10_000.0, 10_000.0, floorMillis = 200L, capMillis = 5_000L))
+    }
 }

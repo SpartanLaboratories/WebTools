@@ -11,11 +11,13 @@ import kotlin.test.assertNull
 class DatagramTypeTest {
 
     @Test
-    fun `tag values are the four exact bytes`() {
+    fun `tag values are the six exact bytes`() {
         assertEquals(0x80.toByte(), DatagramType.KEEPALIVE.tag)
         assertEquals(0x81.toByte(), DatagramType.PROBE_PING.tag)
         assertEquals(0x82.toByte(), DatagramType.PROBE_PONG.tag)
         assertEquals(0x90.toByte(), DatagramType.UNRELIABLE.tag)
+        assertEquals(0xA0.toByte(), DatagramType.RELIABLE_DATA.tag)
+        assertEquals(0xA1.toByte(), DatagramType.RELIABLE_ACK.tag)
     }
 
     @Test
@@ -27,6 +29,8 @@ class DatagramTypeTest {
                 0x81 -> DatagramType.PROBE_PING
                 0x82 -> DatagramType.PROBE_PONG
                 0x90 -> DatagramType.UNRELIABLE
+                0xA0 -> DatagramType.RELIABLE_DATA
+                0xA1 -> DatagramType.RELIABLE_ACK
                 else -> null
             }
             assertEquals(expected, DatagramType.ofTagByte(b), "byte 0x${v.toString(16)}")
@@ -37,13 +41,14 @@ class DatagramTypeTest {
     fun `the reserved ranges are all null`() {
         for (v in 0x00..0x7F) assertNull(DatagramType.ofTagByte(v.toByte()), "0x${v.toString(16)}")
         for (v in 0x83..0x8F) assertNull(DatagramType.ofTagByte(v.toByte()), "0x${v.toString(16)}")
-        for (v in 0x91..0xFF) assertNull(DatagramType.ofTagByte(v.toByte()), "0x${v.toString(16)}")
+        for (v in 0x91..0x9F) assertNull(DatagramType.ofTagByte(v.toByte()), "0x${v.toString(16)}")
+        for (v in 0xA2..0xFF) assertNull(DatagramType.ofTagByte(v.toByte()), "0x${v.toString(16)}")
     }
 
     @Test
-    fun `the Stage-2 reserved reliable tags are null in Stage 1`() {
-        assertNull(DatagramType.ofTagByte(0xA0.toByte()))
-        assertNull(DatagramType.ofTagByte(0xA1.toByte()))
+    fun `the Stage-2 reliable tags are now live, promoted from reserved`() {
+        assertEquals(DatagramType.RELIABLE_DATA, DatagramType.ofTagByte(0xA0.toByte()))
+        assertEquals(DatagramType.RELIABLE_ACK, DatagramType.ofTagByte(0xA1.toByte()))
     }
 
     @Test
