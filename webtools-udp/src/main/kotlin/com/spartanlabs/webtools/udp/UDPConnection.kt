@@ -50,12 +50,18 @@ class UDPConnection internal constructor(
     override fun push(message: String): Result<Unit> =
         push(message.toByteArray(Charsets.UTF_8))
 
+    /**
+     * Frames [bytes] as an `0x90` unreliable datagram (`[0x90][channel][payload]`)
+     * and sends it to [peer]. Any payload bytes are delivered to the peer intact -
+     * there is no reserved first byte.
+     */
     override fun push(bytes: ByteArray): Result<Unit> =
-        channel.send(bytes, peer)
+        channel.send(TransportWireFormat.unreliableDatagram(bytes), peer)
             .onFailure { log.error("Connection '{}' could not push a message", name, it) }
 
+    /** Sends a bare `0x80` keepalive datagram to [peer]. */
     override fun keepAlive(): Result<Unit> =
-        channel.send(KEEPALIVE_BYTES, peer)
+        channel.send(KEEPALIVE_DATAGRAM, peer)
             .onFailure { log.error("Connection '{}' could not send a keepalive", name, it) }
 
     /**
@@ -106,6 +112,6 @@ class UDPConnection internal constructor(
 
     private companion object {
         private val log = LoggerFactory.getLogger(UDPConnection::class.java)
-        private val KEEPALIVE_BYTES = HandshakeProtocol.KEEPALIVE_TOKEN.toByteArray(Charsets.UTF_8)
+        private val KEEPALIVE_DATAGRAM = TransportWireFormat.keepaliveDatagram()
     }
 }

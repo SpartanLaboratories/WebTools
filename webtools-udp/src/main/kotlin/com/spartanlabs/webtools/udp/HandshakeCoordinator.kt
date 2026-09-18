@@ -11,16 +11,19 @@ import java.net.InetSocketAddress
  * - the **handshake state machine** - a first `Iam` from a new origin is screened
  *   by [admit] before anything else; on [Admission.Refused] the server replies
  *   `REFUSED <reason>`, registers nothing, and does not fire [onRegistered].
- *   Otherwise it registers a [Connection] and replies with the single token
- *   `REGISTERED`; a retransmit from a known origin just re-sends `REGISTERED`
- *   (no re-screening); a first `Iam` from a name that is already registered under
- *   a different, now-stale origin (e.g. after a NAT rebind) supersedes it - but
- *   only once [admit] has admitted the newcomer, so a refused name-spoof cannot
- *   evict the incumbent - the stale registration is terminated and removed before
- *   the new one is added;
- * - the **inbound-datagram router** - [accept] classifies every datagram as a
- *   handshake, a keepalive (dropped), or application data (handed to the dispatch
- *   executor for the bound handler);
+ *   Otherwise it registers a [Connection] and replies `REGISTERED 2` (the
+ *   accepted reply plus the framed-transport wire major); a retransmit from a
+ *   known origin just re-sends it (no re-screening); a first `Iam` from a name
+ *   that is already registered under a different, now-stale origin (e.g. after a
+ *   NAT rebind) supersedes it - but only once [admit] has admitted the newcomer,
+ *   so a refused name-spoof cannot evict the incumbent - the stale registration
+ *   is terminated and removed before the new one is added;
+ * - the **inbound-datagram router** - [accept] classifies every datagram on its
+ *   [DatagramType] tag (byte 0): a `0x80` keepalive (dropped), a `0x81`/`0x82`
+ *   probe, or a `0x90` unreliable frame whose stripped payload is handed to the
+ *   dispatch executor for the bound handler. An unframed `Iam` (byte 0 `< 0x80`)
+ *   runs the handshake state machine; any other unframed datagram is dropped with
+ *   a WARN (a pre-`2.0` sender);
  * - the [ClientChannel] implementation the connections it mints delegate to for
  *   sending, binding, and deregistering;
  * - the **liveness tracker** - when constructed with a positive
@@ -30,20 +33,20 @@ import java.net.InetSocketAddress
  *   `onDisconnect(_, TIMEOUT)`. It also routes the
  *   `SUPERSEDED` / `TERMINATED` reasons through the same callback;
  * - the **keepalive scheduler seam** - [scheduleKeepAlive] arms an idle-aware
- *   `KA` timer per connection (refreshing off [Registration.lastOutboundAt],
- *   which [send] stamps once any keepalive is armed), cancelled on [deregister]
- *   or a same-name supersede;
- * - the **link-quality probe seam** - [scheduleProbe] arms a periodic `PING`
- *   timer per connection, folds each `PONG` into the connection's
- *   [Registration.linkQuality] estimator, answers an inbound `PING` from a
- *   registered origin with a `PONG`, and is cancelled on [deregister] or a
- *   same-name supersede.
+ *   `0x80` keepalive timer per connection (refreshing off
+ *   [Registration.lastOutboundAt], which [send] stamps once any keepalive is
+ *   armed), cancelled on [deregister] or a same-name supersede;
+ * - the **link-quality probe seam** - [scheduleProbe] arms a periodic `0x81`
+ *   probe timer per connection (an 8-byte big-endian sequence), folds each
+ *   `0x82` reply into the connection's [Registration.linkQuality] estimator,
+ *   answers an inbound `0x81` from a registered origin with an `0x82`, and is
+ *   cancelled on [deregister] or a same-name supersede.
  *
  * @param newConnection builds the connection for a new client, given its name,
  * handshake origin, and the [ClientChannel] it should delegate to (always `this`)
  * @param sender sends raw bytes to a client endpoint; its [Result] is propagated
  * @param onRegistered invoked exactly once per newly registered client, after its
- * `REGISTERED` reply has been sent - never for a retransmitted handshake
+ * `REGISTERED 2` reply has been sent - never for a retransmitted handshake
  * @param admit the pre-accept screen for a first `Iam` from an unknown origin,
  * given the parsed name, origin, and opaque credential (`""` if none). Invoked
  * inline on the listener thread before any supersede or registration; expected to
@@ -102,16 +105,20 @@ internal class HandshakeCoordinator(
 
     /**
      * The single entry point the listener loop calls for every inbound datagram.
-     * Classifies before acting: a bare `KA` keepalive is dropped (success, no
-     * dispatch); an `Iam` runs the handshake state machine inline; anything else
-     * is application data routed to the bound handler. When idle detection is
-     * enabled, `accept` also stamps the origin's last-inbound time and clears any
-     * prior TIMEOUT latch, before classifying.
+     * Classifies before acting on the [DatagramType] tag (byte 0): a `0x80`
+     * keepalive is dropped (success, no dispatch); a `0x81`/`0x82` probe is
+     * answered / folded; a `0x90` frame's stripped payload is routed to the bound
+     * handler; an unframed `Iam` runs the handshake state machine inline; anything
+     * else is dropped with a WARN. When idle detection is enabled, `accept` also
+     * stamps the origin's last-inbound time and clears any prior TIMEOUT latch,
+     * before classifying.
      *
      * @param origin the datagram's post-NAT source - where any reply is addressed
-     * @param bytes the exact-length datagram body, handed verbatim to a bound
-     * bytes handler; classification still runs off [text]
-     * @param text the trimmed datagram text
+     * @param bytes the exact-length datagram body; the tag switch works off
+     * `bytes[0]` and, for a `0x90` frame, the stripped payload is what reaches a
+     * bound bytes handler
+     * @param text the trimmed datagram text - now consulted only for the unframed
+     * `Iam` handshake-bootstrap branch
      * @return [Result.success] if handled or harmlessly ignored, or [Result.failure]
      * if a recognised handshake was malformed or its reply could not be delivered
      */
@@ -125,29 +132,57 @@ internal class HandshakeCoordinator(
         return classify(origin, bytes, text)
     }
 
-    private fun classify(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> = when {
-        HandshakeProtocol.isKeepAlive(text) ->
-            Result.success(Unit).also { log.trace("Keepalive from {}", origin) }
+    private fun classify(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
+        // Byte 0 is authoritative: control vs. application is a tag switch, never a token match.
+        val byte0 = bytes.getOrNull(0)?.toInt()?.and(0xFF)
+        return when (DatagramType.ofTagByte(bytes.getOrNull(0))) {
+            DatagramType.KEEPALIVE ->
+                Result.success(Unit).also { log.trace("Keepalive from {}", origin) }
 
-        HandshakeProtocol.isProbeRequest(text) -> {
-            val reg = registrations.findByOrigin(origin)
-            if (reg == null) {
-                Result.success(Unit).also { log.debug("PING from unregistered {}, dropped", origin) }
-            } else {
-                send(HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)).toByteArray(Charsets.UTF_8), origin)
+            DatagramType.PROBE_PING -> {
+                val reg = registrations.findByOrigin(origin)
+                val seq = TransportWireFormat.probeSequenceOf(bytes)
+                when {
+                    reg == null ->
+                        Result.success(Unit).also { log.debug("PING from unregistered {}, dropped", origin) }
+
+                    seq == null ->
+                        Result.success(Unit).also { log.warn("Malformed 0x81 probe from {}, dropping", origin) }
+
+                    else -> send(TransportWireFormat.probePongDatagram(seq), origin)
+                }
+            }
+
+            DatagramType.PROBE_PONG -> {
+                // A short/garbage 0x82: ignore rather than throw on the listener thread.
+                TransportWireFormat.probeSequenceOf(bytes)
+                    ?.let { seq -> registrations.findByOrigin(origin)?.linkQuality?.completeProbe(seq) }
+                Result.success(Unit)
+            }
+
+            DatagramType.UNRELIABLE -> {
+                val payload = TransportWireFormat.unreliablePayloadOf(bytes)
+                if (payload == null) {
+                    Result.success(Unit).also { log.warn("Malformed 0x90 datagram from {}, dropping", origin) }
+                } else {
+                    deliverData(origin, payload, String(payload, Charsets.UTF_8).trim())
+                }
+            }
+
+            // ofTagByte(null) for a reserved same-major tag (0x83+/0xA0/0xA1) or an unframed byte 0.
+            null -> when {
+                byte0 != null && byte0 >= 0x80 ->
+                    Result.success(Unit).also {
+                        log.warn("Unhandled datagram type 0x{} from {}, dropping", Integer.toHexString(byte0), origin)
+                    }
+
+                HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
+
+                else -> Result.success(Unit).also {
+                    log.warn("Unframed datagram from {}; sender may be pre-2.0, dropping", origin)
+                }
             }
         }
-
-        HandshakeProtocol.isProbeReply(text) -> {
-            // Non-numeric / bare PONG token: ignore rather than throw on the listener thread - an old or spoofed peer must not break the probe.
-            HandshakeWireFormat.probeToken(text).toLongOrNull()
-                ?.let { seq -> registrations.findByOrigin(origin)?.linkQuality?.completeProbe(seq) }
-            Result.success(Unit)
-        }
-
-        HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
-
-        else -> deliverData(origin, bytes, text)
     }
 
     /**
@@ -168,7 +203,7 @@ internal class HandshakeCoordinator(
                 // non-deterministic admit() (e.g. a capacity gate) on a stray retransmit could
                 // refuse an already-admitted client and desync the two sides.
                 log.info("Repeating handshake reply for already-registered origin {}", origin)
-                send(REGISTERED_BYTES, origin)
+                send(HandshakeProtocol.REGISTERED_DATAGRAM, origin)
             } ?: run {
                 // Screen the newcomer BEFORE supersede / registration / reply. Because this runs
                 // ahead of findByName(name), a Refused newcomer never reaches the supersede code,
@@ -203,7 +238,7 @@ internal class HandshakeCoordinator(
                 val connection = newConnection(name, origin, this)
                 registrations.add(Registration(connection))
                 log.info("Registered connection '{}' for {}", name, origin)
-                send(REGISTERED_BYTES, origin).map { onRegistered(connection) }
+                send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
             }
         }
 
@@ -244,7 +279,7 @@ internal class HandshakeCoordinator(
         return keepAliveSchedule.schedule(peer, intervalMillis) {
             val reg = registrations.findByOrigin(peer) ?: return@schedule
             if (KeepAlive.isDue(reg.lastOutboundAt, System.nanoTime(), intervalMillis)) {
-                send(HandshakeProtocol.KEEPALIVE_TOKEN.toByteArray(Charsets.UTF_8), peer)
+                send(TransportWireFormat.keepaliveDatagram(), peer)
                     .onFailure { log.warn("Scheduled keepalive to {} failed", peer, it) }
             }
         }
@@ -267,7 +302,7 @@ internal class HandshakeCoordinator(
             // Re-fetch: a concurrent terminate()/supersede may have dropped the registration.
             val live = registrations.findByOrigin(peer)?.linkQuality ?: return@schedule
             live.sweep()
-            send(HandshakeWireFormat.probeRequestMessage(live.beginProbe().toString()).toByteArray(Charsets.UTF_8), peer)
+            send(TransportWireFormat.probePingDatagram(live.beginProbe()), peer)
                 .onFailure { log.warn("Scheduled probe to {} failed", peer, it) }
         }
     }
@@ -371,10 +406,13 @@ internal class HandshakeCoordinator(
      * @param bytes the raw payload to send to every client
      * @return [Result.success] if the datagram reached every client, or the first failure
      */
-    fun broadcast(bytes: ByteArray): Result<Unit> =
-        registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
-            sent.flatMap { send(bytes, registration.connection.peer) }
+    fun broadcast(bytes: ByteArray): Result<Unit> {
+        // Frame once, then fan out - the shared send seam must not double-frame.
+        val datagram = TransportWireFormat.unreliableDatagram(bytes)
+        return registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
+            sent.flatMap { send(datagram, registration.connection.peer) }
         }
+    }
 
     /**
      * Terminates every registered connection. Every connection is terminated even
@@ -389,6 +427,5 @@ internal class HandshakeCoordinator(
 
     private companion object {
         private val log = LoggerFactory.getLogger(HandshakeCoordinator::class.java)
-        private val REGISTERED_BYTES = HandshakeProtocol.REGISTERED_REPLY.toByteArray(Charsets.UTF_8)
     }
 }

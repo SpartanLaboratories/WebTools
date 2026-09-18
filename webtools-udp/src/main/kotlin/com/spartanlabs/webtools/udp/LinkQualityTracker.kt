@@ -42,7 +42,7 @@ internal class LinkQualityTracker(
      * sweep thread.
      */
     @Volatile
-    var probeIntervalMillis: Long = HandshakeProtocol.DEFAULT_PROBE_INTERVAL_MILLIS
+    var probeIntervalMillis: Long = TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS
 
     /**
      * Records a new outstanding probe and returns its sequence number for the

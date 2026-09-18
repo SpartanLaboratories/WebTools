@@ -5,6 +5,7 @@ import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.CommonChannel
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -46,7 +47,7 @@ class MultiConnectionUDPServerReceiveBufferTest {
                 handshake(client)
                 Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-                val payload = ByteArray(4096) { ((it % 250) + 1).toByte() }
+                val payload = TransportWireFormat.unreliableDatagram(ByteArray(4096) { ((it % 250) + 1).toByte() })
                 client.send(DatagramPacket(payload, payload.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
 
                 val delivered = inbound.poll(5, TimeUnit.SECONDS)

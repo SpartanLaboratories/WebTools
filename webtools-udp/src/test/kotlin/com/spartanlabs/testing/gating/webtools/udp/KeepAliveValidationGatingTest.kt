@@ -1,8 +1,8 @@
 package com.spartanlabs.testing.gating.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeClientChannel
-import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
@@ -76,7 +76,7 @@ class KeepAliveValidationGatingTest {
             override fun keepAlive() = Result.success(Unit)
         }
         assertTrue(plain.startKeepAlive().isFailure)
-        assertTrue(plain.startKeepAlive(HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS).isFailure)
+        assertTrue(plain.startKeepAlive(TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS).isFailure)
         assertTrue(plain.stopKeepAlive().isSuccess)
     }
 }

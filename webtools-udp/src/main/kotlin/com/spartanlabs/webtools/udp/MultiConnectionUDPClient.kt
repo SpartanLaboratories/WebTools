@@ -31,7 +31,8 @@ import java.util.concurrent.Executors
  * ### Concurrency
  * Mirrors [MultiConnectionUDPServer]'s own listener-thread + dispatch-executor
  * split: one background daemon listener thread only *demultiplexes* - `receive()`
- * -> classify (`KA` vs. data) -> drop the keepalive or hand the payload to the
+ * -> switch on the [DatagramType] tag (byte 0) -> drop a keepalive/probe or strip
+ * the `0x90` frame and hand the payload to the
  * dispatch executor. The dispatch executor is a single daemon thread
  * (`mcupc-dispatch`) that invokes the caller's [onMessage] callback passed to
  * [start], so a slow callback cannot stall the socket read loop.
@@ -42,13 +43,14 @@ import java.util.concurrent.Executors
  * [start], is asynchronous.
  *
  * A third daemon thread (`mcupc-keepalive`, a `ScheduledExecutorService`) exists
- * **only once [startKeepAlive] has been called**; it sends `KA` datagrams on an
- * idle-aware cadence and is shut by [stop].
+ * **only once [startKeepAlive] has been called**; it sends `0x80` keepalive
+ * datagrams on an idle-aware cadence and is shut by [stop].
  * See the scheduled-keepalive sequence diagram in docs/issue-12-scheduled-keepalive-plan.md §2.8.
  *
  * A fourth daemon thread (`mcupc-probe`, also a `ScheduledExecutorService`) exists
- * **only once [startProbe] has been called**; it sends `PING <seq>` datagrams on a
- * fixed cadence for the link-quality probe and is shut by [stop].
+ * **only once [startProbe] has been called**; it sends `0x81` probe datagrams
+ * (an 8-byte big-endian sequence) on a fixed cadence for the link-quality probe
+ * and is shut by [stop].
  * See docs/issue-13-link-quality-probe-plan.md §2.9.
  *
  * Boundary-Ring notes (mirrors [CommonChannel]'s):
@@ -58,7 +60,7 @@ import java.util.concurrent.Executors
  * - [socket] is received on only by the listener thread, but sent on from any
  *   thread ([send], [sendKeepAlive], the `mcupc-keepalive` tick, the `mcupc-probe`
  *   tick); the listener thread itself never sends application data - it answers an
- *   inbound `PING` with a `PONG` inline.
+ *   inbound `0x81` probe with an `0x82` reply inline.
  *
  * ### Construction side effects
  * Instantiating this class **binds an ephemeral OS UDP port** immediately - a
@@ -96,13 +98,15 @@ import java.util.concurrent.Executors
  * ### Binary application payloads
  * Application data may be raw bytes: [send] takes a `ByteArray` and [startBytes]
  * arms the listener with a raw-bytes handler that receives an exact-length,
- * undecoded, untrimmed copy of every datagram. The `KA` classifier still runs on
- * the trimmed UTF-8 view of every inbound datagram, so a binary payload that
- * decodes/trims to `KA` is dropped; lead binary application datagrams with a byte
- * that is not ASCII whitespace and cannot start `KA` (e.g. `0x00`, or `>= 0x80`).
- * An inbound datagram over 65507 bytes is delivered truncated, not rejected; on
- * send, a payload over the OS datagram limit fails the `Result`. Keep frames
- * under the path MTU (~1200 bytes) for real-network use.
+ * undecoded, untrimmed copy of every datagram's payload. The session is framed
+ * (`webtools-udp` `2.x`): [send] wraps the payload in an `0x90` unreliable
+ * datagram and the listener strips the frame before delivery, so **any** payload
+ * bytes ride intact - there is no reserved first byte and the pre-`2.0`
+ * "lead with `0x00` / `>= 0x80`" rule is gone. Control datagrams (`0x80`
+ * keepalive, `0x81`/`0x82` probe) are classified out by their [DatagramType] tag
+ * and never delivered. An inbound datagram over 65507 bytes is delivered
+ * truncated, not rejected; on send, a payload over the OS datagram limit fails
+ * the `Result`. Keep frames under the path MTU (~1200 bytes) for real-network use.
  *
  * @param serverAddress the server's address to hand shake with and send to
  * @param serverPort the server's common listen port; defaults to
@@ -204,10 +208,12 @@ class MultiConnectionUDPClient internal constructor(
      * the server's [MultiConnectionUDPServer.admit]; the default (empty string)
      * sends the plain `Iam <name>`. Must be whitespace-free (base64url-encode a
      * structured or binary credential).
-     * @return [Result.success] once the server has replied `REGISTERED`; or
-     * [Result.failure] holding a [HandshakeRefusedException] if the server replied
-     * `REFUSED <reason>`; or the failure that prevented it (including a timeout -
-     * the server never replied)
+     * @return [Result.success] once the server has replied this build's exact
+     * `REGISTERED 2`; or [Result.failure] holding a [HandshakeRefusedException] if
+     * the server replied `REFUSED <reason>`; or an [IncompatibleProtocolException]
+     * if the server's `REGISTERED` reply announces a different wire-protocol major
+     * (a bare `REGISTERED` from a pre-`2.0` server, or `REGISTERED n`, `n != 2`);
+     * or the failure that prevented it (including a timeout - the server never replied)
      */
     @JvmOverloads
     fun handshake(
@@ -224,10 +230,18 @@ class MultiConnectionUDPClient internal constructor(
         socket.receive(reply) // throws SocketTimeoutException if the server never answers
         String(reply.data, 0, reply.length, Charsets.UTF_8).trim()
     }.flatMap { reply ->
+        // Ordering: refusal wins; then this build's exact REGISTERED 2; then a REGISTERED
+        // line announcing a different wire major (a cross-major peer); then a generic reply.
         when {
-            HandshakeWireFormat.isRegistered(reply) -> Result.success(Unit)
             HandshakeWireFormat.isRefused(reply) ->
                 Result.failure(HandshakeRefusedException(HandshakeWireFormat.refusalReason(reply)))
+            HandshakeWireFormat.isRegistered(reply) -> Result.success(Unit)
+            HandshakeWireFormat.registeredProtocolVersion(reply) != null -> Result.failure(
+                IncompatibleProtocolException(
+                    HandshakeWireFormat.registeredProtocolVersion(reply),
+                    TransportWireFormat.FRAMED_PROTOCOL_VERSION,
+                ),
+            )
             else -> Result.failure(
                 IllegalStateException("Expected '${HandshakeWireFormat.REGISTERED_REPLY}' but got '$reply'"),
             )
@@ -236,10 +250,10 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * Starts the background listener thread: receives datagrams on [socket] until
-     * [stop] is called, drops bare `KA` keepalives silently, and dispatches every
-     * other datagram's decoded text to [onMessage] on the single-threaded dispatch
-     * executor (never on the listener thread itself), so a slow [onMessage] cannot
-     * stall the read loop.
+     * [stop] is called, drops `0x80` keepalive and `0x81`/`0x82` probe datagrams
+     * silently, and dispatches every `0x90` frame's stripped payload (decoded to
+     * text) to [onMessage] on the single-threaded dispatch executor (never on the
+     * listener thread itself), so a slow [onMessage] cannot stall the read loop.
      *
      * Call after [handshake] has succeeded. Resets the socket's read timeout (set
      * by [handshake]) back to block indefinitely, since the session listener must
@@ -260,12 +274,11 @@ class MultiConnectionUDPClient internal constructor(
      * exclusive with [start] - last call wins - and carries the same one-shot
      * ordering contract (call after [handshake], call once).
      *
-     * The `KA` classifier still runs on the trimmed UTF-8 view of every inbound
-     * datagram, so a binary payload that decodes/trims to `KA` is dropped and
-     * never delivered; lead binary application datagrams with a byte that is not
-     * ASCII whitespace and cannot start `KA` (e.g. `0x00`, or any byte `>= 0x80`).
-     * The delivered copy is at most 65507 bytes; a larger inbound datagram is
-     * delivered truncated to that length, not rejected.
+     * Control datagrams (`0x80` keepalive, `0x81`/`0x82` probe) are classified out
+     * by their [DatagramType] tag; every `0x90` frame's stripped payload is
+     * delivered verbatim, so any payload bytes ride intact - there is no reserved
+     * first byte. The delivered copy is at most 65507 bytes; a larger inbound
+     * datagram is delivered truncated to that length, not rejected.
      * @param onMessage invoked with the raw body of every non-keepalive datagram;
      * runs on the dispatch executor, not the caller's thread. A thrown exception is
      * caught, logged, and does not stop the listener.
@@ -301,7 +314,7 @@ class MultiConnectionUDPClient internal constructor(
         }
     }
 
-    /** Body of the listener thread: classify-and-drop `KA`, dispatch everything else. */
+    /** Body of the listener thread: switch on the [DatagramType] tag, deliver the stripped `0x90` payload. */
     private fun receiveLoop(deliver: (bytes: ByteArray, text: String) -> Unit) {
         val buffer = ByteArray(receiveBufferBytes)
         while (listening) {
@@ -320,19 +333,34 @@ class MultiConnectionUDPClient internal constructor(
                 val bytes = packet.data.copyOf(packet.length)
                 bytes to String(bytes, Charsets.UTF_8).trim()
             }.onSuccess { (bytes, text) ->
-                when {
-                    HandshakeWireFormat.isKeepAlive(text) -> log.trace("Dropped keepalive from server")
+                // Byte 0 is the DatagramType tag - the session is fully framed post-handshake.
+                when (DatagramType.ofTagByte(bytes.getOrNull(0))) {
+                    DatagramType.KEEPALIVE -> log.trace("Dropped keepalive from server")
 
-                    HandshakeWireFormat.isProbeRequest(text) ->
-                        send(HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)))
-                            .onFailure { log.debug("Could not answer a PING", it) }
+                    DatagramType.PROBE_PING ->
+                        TransportWireFormat.probeSequenceOf(bytes)?.let { seq ->
+                            sendDatagram(TransportWireFormat.probePongDatagram(seq))
+                                .onFailure { log.debug("Could not answer a PING", it) }
+                        } ?: log.warn("Malformed 0x81 probe from server, dropping")
 
-                    HandshakeWireFormat.isProbeReply(text) ->
-                        // Non-numeric / bare PONG token: ignore rather than throw on the listener thread - an old or spoofed peer must not break the probe.
-                        HandshakeWireFormat.probeToken(text).toLongOrNull()
+                    DatagramType.PROBE_PONG ->
+                        // A short/garbage 0x82: ignore rather than throw on the listener thread.
+                        TransportWireFormat.probeSequenceOf(bytes)
                             ?.let { seq -> linkQualityTracker?.completeProbe(seq) }
 
-                    else -> deliver(bytes, text)
+                    DatagramType.UNRELIABLE ->
+                        TransportWireFormat.unreliablePayloadOf(bytes)?.let { payload ->
+                            deliver(payload, String(payload, Charsets.UTF_8).trim())
+                        } ?: log.warn("Malformed 0x90 datagram from server, dropping")
+
+                    null -> {
+                        val byte0 = bytes.getOrNull(0)?.toInt()?.and(0xFF)
+                        if (byte0 != null && byte0 >= 0x80) {
+                            log.debug("Unhandled datagram type 0x{} from server, dropping", Integer.toHexString(byte0))
+                        } else {
+                            log.warn("Unframed/unknown datagram from server (byte0={}), dropping", byte0)
+                        }
+                    }
                 }
             }.onFailure { cause ->
                 if (cause is SocketException) {
@@ -354,36 +382,47 @@ class MultiConnectionUDPClient internal constructor(
     fun send(message: String): Result<Unit> = send(message.toByteArray(Charsets.UTF_8))
 
     /**
-     * Sends [bytes] to the server as one raw datagram over the shared socket - the
-     * payload is placed on the wire verbatim, no encoding, no trim. Safe to call
-     * from any thread. [send]`(String)` is a UTF-8 wrapper over this.
+     * Sends [bytes] to the server as the payload of one `0x90` unreliable
+     * application datagram (`[0x90][channel][bytes]`) over the shared socket. Safe
+     * to call from any thread. [send]`(String)` is a UTF-8 wrapper over this.
      *
-     * A payload above the OS datagram limit fails the returned [Result] (the
+     * Any payload bytes are carried intact - there is no reserved first byte. A
+     * framed datagram above the OS datagram limit fails the returned [Result] (the
      * cause is logged) rather than being sent; for real-network use keep frames
      * under the path MTU (~1200 bytes) to avoid IP fragmentation.
-     * @param bytes the raw datagram payload
+     * @param bytes the raw application payload
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
-    fun send(bytes: ByteArray): Result<Unit> = runCatching {
+    fun send(bytes: ByteArray): Result<Unit> = sendDatagram(TransportWireFormat.unreliableDatagram(bytes))
+
+    /**
+     * Puts one already-formed datagram on the wire verbatim - no framing. The raw
+     * socket primitive shared by [send] (which frames first) and every control
+     * path (the keepalive, the probe tick, an inbound-`PING` reply), none of which
+     * must be framed.
+     * @param bytes the exact datagram bytes to send
+     * @return [Result.success] if the datagram was sent, or the failure that prevented it
+     */
+    private fun sendDatagram(bytes: ByteArray): Result<Unit> = runCatching {
         socket.send(DatagramPacket(bytes, bytes.size, serverAddress, serverPort))
         // Stamped only after a successful send: a failed send must not defer the next KA,
         // since nothing reached the wire. Every outbound datagram funnels through here -
-        // send(String) and sendKeepAlive() included - so any traffic defers a scheduled KA.
+        // send(String)/send(ByteArray) and sendKeepAlive() included - so any traffic defers a scheduled KA.
         lastOutboundAtNanos = System.nanoTime()
     }.onFailure { log.error("Could not send to {}:{}", serverAddress, serverPort, it) }
 
     /**
-     * Sends one minimal `KA` keepalive datagram, one-shot (mirrors
+     * Sends one minimal `0x80` keepalive datagram, one-shot (mirrors
      * [Connection.keepAlive]). For a library-managed cadence use [startKeepAlive].
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
-    fun sendKeepAlive(): Result<Unit> = send(HandshakeWireFormat.KEEPALIVE_TOKEN)
+    fun sendKeepAlive(): Result<Unit> = sendDatagram(TransportWireFormat.keepaliveDatagram())
 
     /**
      * Starts an opt-in, idle-aware background keepalive: every ~[intervalMillis] of
-     * output silence this client sends one `KA` on the shared socket to hold its NAT
-     * mapping open, until [stopKeepAlive] or [stop]. Application sends reset the
-     * idle timer, so a busy client sends no redundant keepalives.
+     * output silence this client sends one `0x80` keepalive on the shared socket to
+     * hold its NAT mapping open, until [stopKeepAlive] or [stop]. Application sends
+     * reset the idle timer, so a busy client sends no redundant keepalives.
      *
      * A convenience over [sendKeepAlive] - it removes the hand-rolled timer every
      * consumer otherwise writes. [sendKeepAlive] itself is unchanged and still owns
@@ -391,14 +430,14 @@ class MultiConnectionUDPClient internal constructor(
      * one daemon thread (`mcupc-keepalive`) created on the first call.
      *
      * @param intervalMillis output-idle time before a keepalive is sent; must be
-     * > 0. Defaults to [HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS]
+     * > 0. Defaults to [TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS]
      * (20 s). A keepalive may go out up to one quarter-interval (max 5 s) late.
      * @return [Result.success] once the schedule is armed; [Result.failure] with an
      * [IllegalArgumentException] for a non-positive interval, or an
      * [IllegalStateException] if [stop] has already run.
      */
     @JvmOverloads
-    fun startKeepAlive(intervalMillis: Long = HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS): Result<Unit> =
+    fun startKeepAlive(intervalMillis: Long = TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS): Result<Unit> =
         keepAlive.schedule(serverEndpoint, intervalMillis) {
             if (KeepAlive.isDue(lastOutboundAtNanos, System.nanoTime(), intervalMillis)) {
                 sendKeepAlive().onFailure { log.warn("Scheduled keepalive send failed", it) }
@@ -414,30 +453,29 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * Starts an opt-in link-quality probe: every [intervalMillis] this client sends
-     * one `PING <seq>` to the server, and each matching `PONG` updates a smoothed
-     * RTT / jitter / packet-loss estimate readable via [linkQuality]. Off until
-     * called; runs until [stopProbe] or [stop]. Backed by one daemon thread
-     * (`mcupc-probe`) created on the first call. Calling this again re-arms it (last
-     * call wins). Call after [handshake] - probes sent before registration go
-     * unanswered and register as loss.
+     * one `0x81` probe (an 8-byte big-endian sequence) to the server, and each
+     * matching `0x82` reply updates a smoothed RTT / jitter / packet-loss estimate
+     * readable via [linkQuality]. Off until called; runs until [stopProbe] or
+     * [stop]. Backed by one daemon thread (`mcupc-probe`) created on the first
+     * call. Calling this again re-arms it (last call wins). Call after [handshake]
+     * - probes sent before registration go unanswered and register as loss.
      *
-     * The probe requires both ends on `1.6.0`+: a pre-`1.6.0` server does not
-     * answer `PING`, so `packetLossRatio` climbs toward `1.0` and a consumer that
-     * opted in against such a server should not have.
+     * The probe requires both ends on `webtools-udp` `2.0.0`+ (as does every
+     * framed datagram) - a cross-major peer is rejected at the handshake.
      *
      * @param intervalMillis probe period; must be > 0. Default
-     * [HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS] (1 s).
+     * [TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS] (1 s).
      * @return [Result.success] once armed; [Result.failure] with
      * [IllegalArgumentException] for a non-positive interval or [IllegalStateException]
      * if [stop] has already run.
      */
     @JvmOverloads
-    fun startProbe(intervalMillis: Long = HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS): Result<Unit> {
+    fun startProbe(intervalMillis: Long = TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS): Result<Unit> {
         val tracker = linkQualityTracker ?: LinkQualityTracker().also { linkQualityTracker = it }
         tracker.probeIntervalMillis = intervalMillis
         return probe.schedule(serverEndpoint, intervalMillis) {
             tracker.sweep()
-            send(HandshakeWireFormat.probeRequestMessage(tracker.beginProbe().toString()))
+            sendDatagram(TransportWireFormat.probePingDatagram(tracker.beginProbe()))
                 .onFailure { log.warn("Scheduled probe send failed", it) }
         }.onFailure { log.error("Could not start the link-quality probe", it) }
     }

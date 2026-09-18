@@ -1,9 +1,10 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
-import com.spartanlabs.webtools.udp.HandshakeWireFormat
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -46,24 +47,24 @@ class MultiConnectionUDPClientProbeTest {
         opened.forEach { runCatching { it.close() } }
     }
 
-    private fun DatagramSocket.nextText(timeoutMillis: Int): String? {
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): ByteArray? {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
             receive(packet)
-            String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+            packet.data.copyOf(packet.length)
         } catch (_: SocketTimeoutException) {
             null
         }
     }
 
-    /** Receives one datagram and echoes [transform] of its trimmed text straight back to the sender. */
-    private fun DatagramSocket.answerOnce(timeoutMillis: Int, transform: (String) -> String): Boolean {
+    /** Receives one datagram and sends [transform] of its raw bytes straight back to the sender. */
+    private fun DatagramSocket.answerOnce(timeoutMillis: Int, transform: (ByteArray) -> ByteArray): Boolean {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
             receive(packet)
-            val reply = transform(String(packet.data, 0, packet.length, Charsets.UTF_8).trim()).toByteArray(Charsets.UTF_8)
+            val reply = transform(packet.data.copyOf(packet.length))
             send(DatagramPacket(reply, reply.size, packet.socketAddress))
             true
         } catch (_: SocketTimeoutException) {
@@ -93,13 +94,13 @@ class MultiConnectionUDPClientProbeTest {
         assertTrue(client.startProbe().isSuccess)
 
         assertEquals(
-            HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS,
+            TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS,
             probe.scheduleCalls.single().intervalMillis,
         )
     }
 
     @Test
-    fun `each tick sends exactly one PING with a strictly increasing token`() {
+    fun `each tick sends exactly one 0x81 PROBE_PING with a strictly increasing sequence`() {
         val peer = fakePeer()
         val probe = FakePeriodicSchedule()
         val client = newClient(peer.localPort, probe)
@@ -107,20 +108,20 @@ class MultiConnectionUDPClientProbeTest {
         val endpoint = InetSocketAddress(loopback, peer.localPort)
 
         probe.tick(endpoint)
-        val first = peer.nextText(500)
-        assertNull(peer.nextText(200), "the tick sends exactly one PING")
+        val first = peer.nextBytes(500)
+        assertNull(peer.nextBytes(200), "the tick sends exactly one 0x81 PROBE_PING")
         probe.tick(endpoint)
-        val second = peer.nextText(500)
+        val second = peer.nextBytes(500)
 
-        assertTrue(first != null && HandshakeWireFormat.isProbeRequest(first), "was $first")
-        assertTrue(second != null && HandshakeWireFormat.isProbeRequest(second), "was $second")
-        val t1 = HandshakeWireFormat.probeToken(first!!).toLong()
-        val t2 = HandshakeWireFormat.probeToken(second!!).toLong()
-        assertTrue(t2 > t1, "tokens must strictly increase: $t1 then $t2")
+        assertTrue(first != null && first[0] == DatagramType.PROBE_PING.tag, "was ${first?.toList()}")
+        assertTrue(second != null && second[0] == DatagramType.PROBE_PING.tag, "was ${second?.toList()}")
+        val t1 = TransportWireFormat.probeSequenceOf(first!!)!!
+        val t2 = TransportWireFormat.probeSequenceOf(second!!)!!
+        assertTrue(t2 > t1, "sequences must strictly increase: $t1 then $t2")
     }
 
     @Test
-    fun `a matching PONG populates linkQuality and a garbage token does not`() {
+    fun `a matching PROBE_PONG populates linkQuality and a garbage 0x82 does not`() {
         val peer = fakePeer()
         val probe = FakePeriodicSchedule()
         val client = newClient(peer.localPort, probe)
@@ -130,18 +131,22 @@ class MultiConnectionUDPClientProbeTest {
 
         // Garbage reply first: neither throws nor populates.
         probe.tick(endpoint)
-        assertTrue(peer.answerOnce(500) { "PONG not-a-number" })
+        assertTrue(peer.answerOnce(500) { byteArrayOf(DatagramType.PROBE_PONG.tag, 1, 2) })
         Thread.sleep(150)
-        assertNull(client.linkQuality(), "a garbage token does not populate")
+        assertNull(client.linkQuality(), "a garbage (short) 0x82 does not populate")
 
         // Now a correct echo.
         probe.tick(endpoint)
-        assertTrue(peer.answerOnce(500) { ping -> HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(ping)) })
+        assertTrue(
+            peer.answerOnce(500) { ping ->
+                TransportWireFormat.probePongDatagram(TransportWireFormat.probeSequenceOf(ping)!!)
+            },
+        )
 
         val deadline = System.currentTimeMillis() + 2_000
         while (client.linkQuality() == null && System.currentTimeMillis() < deadline) Thread.sleep(20)
         val snap = client.linkQuality()
-        assertTrue(snap != null, "a matching PONG populates linkQuality")
+        assertTrue(snap != null, "a matching PROBE_PONG populates linkQuality")
         assertTrue(snap!!.rttMillis in 0.0..2_000.0, "a plausible small RTT, was ${snap.rttMillis}")
         assertEquals(0.0, snap.packetLossRatio, 0.001)
     }

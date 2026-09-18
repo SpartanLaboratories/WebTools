@@ -20,7 +20,14 @@
 // transport-level PING/PONG round trip yielding a smoothed RTT, RTT-variance, and windowed
 // packet-loss ratio (LinkQuality); off by default; one lazily-created daemon
 // ScheduledExecutorService per side. New wire tokens PING/PONG, additive (Issue #13).
-version = "1.6.0"
+// 2.0.0-alpha1: framed transport wire break (Issue #14, Stage 1 of the 2.0 series) -
+// every post-REGISTERED datagram leads with a 1-byte DatagramType tag (0x80 keepalive,
+// 0x81/0x82 probe PING/PONG with an 8-byte sequence, 0x90 unreliable data + channel byte);
+// handshake stays text; REGISTERED reply gains a protocol-version token (REGISTERED 2) so a
+// cross-major peer fails handshake() cleanly (IncompatibleProtocolException). Removes the
+// HandshakeWireFormat KA/PING/PONG token API and the Issue #8 "lead byte >= 0x80" burden.
+// 0xA0/0xA1 reserved for the Stage-2 reliable engine.
+version = "2.0.0-alpha1"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

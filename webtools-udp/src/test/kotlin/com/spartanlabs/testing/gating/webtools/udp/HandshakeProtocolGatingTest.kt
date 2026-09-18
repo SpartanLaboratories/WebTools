@@ -30,8 +30,9 @@ class HandshakeProtocolGatingTest {
     }
 
     @Test
-    fun `the handshake reply is the single token REGISTERED`() {
+    fun `the handshake reply verb is REGISTERED and the datagram is versioned`() {
         assertEquals("REGISTERED", HandshakeProtocol.REGISTERED_REPLY)
+        assertEquals("REGISTERED 2", String(HandshakeProtocol.REGISTERED_DATAGRAM, Charsets.UTF_8))
     }
 
     @Test
@@ -39,25 +40,5 @@ class HandshakeProtocolGatingTest {
         assertTrue(HandshakeProtocol.isHandshake(listOf("Iam", "alice")))
         assertFalse(HandshakeProtocol.isHandshake(listOf("HELLO", "there")))
         assertFalse(HandshakeProtocol.isHandshake(emptyList()))
-    }
-
-    @Test
-    fun `isKeepAlive matches only the bare KA token`() {
-        assertTrue(HandshakeProtocol.isKeepAlive("KA"))
-        assertFalse(HandshakeProtocol.isKeepAlive("Iam x"))
-    }
-
-    @Test
-    fun `isProbeRequest matches a bare or tokened PING`() {
-        assertTrue(HandshakeProtocol.isProbeRequest("PING"))
-        assertTrue(HandshakeProtocol.isProbeRequest("PING 42"))
-        assertFalse(HandshakeProtocol.isProbeRequest("PONG 42"))
-    }
-
-    @Test
-    fun `isProbeReply matches a bare or tokened PONG`() {
-        assertTrue(HandshakeProtocol.isProbeReply("PONG"))
-        assertTrue(HandshakeProtocol.isProbeReply("PONG 42"))
-        assertFalse(HandshakeProtocol.isProbeReply("PING 42"))
     }
 }

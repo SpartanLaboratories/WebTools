@@ -3,7 +3,7 @@ package com.spartanlabs.testing.component.webtools.udp
 import com.spartanlabs.testing.support.webtools.udp.FakeClientChannel
 import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
 import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
-import com.spartanlabs.webtools.udp.HandshakeWireFormat
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
@@ -36,7 +36,7 @@ class UDPConnectionKeepAliveTest {
         connection(channel).startKeepAlive()
 
         assertEquals(
-            listOf(peer to HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS),
+            listOf(peer to TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS),
             channel.keepAliveSchedules,
         )
     }
