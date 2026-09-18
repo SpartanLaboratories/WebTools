@@ -27,7 +27,7 @@
 // cross-major peer fails handshake() cleanly (IncompatibleProtocolException). Removes the
 // HandshakeWireFormat KA/PING/PONG token API and the Issue #8 "lead byte >= 0x80" burden.
 // 0xA0/0xA1 reserved for the Stage-2 reliable engine.
-version = "1.6.0"
+version = "2.0.0-alpha1"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
