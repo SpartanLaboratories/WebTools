@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:1.6.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0-alpha1")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -24,6 +24,11 @@ dependencies {
 ```
 
 Requires JDK 11 or newer. Built with Kotlin 2.2.
+
+`webtools-udp 2.0.0` (currently a pre-release `2.0.0-alphaN` series on the `2.x` integration
+branch) is a **wire break** for everything after the handshake — see [Migrating to
+2.0](#migrating-to-20). Both ends of a connection must be on `2.0.0`+; a `1.x` ↔ `2.x` pairing
+fails the handshake cleanly instead of exchanging data either side can parse.
 
 ### Migrating from `io.github.spartanlaboratories:WebTools` (≤ 2.0.1a)
 
@@ -50,8 +55,11 @@ further releases. To move off it:
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
 | `LinkQuality` | An immutable snapshot from the opt-in probe: smoothed `rttMillis`, `rttVarianceMillis` (jitter proxy), windowed `packetLossRatio`, and `probesSent` / `probesDelivered`. |
 | `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop — receives datagrams up to 65507 bytes (configurable via `receiveBufferBytes`), truncating larger ones. |
-| `HandshakeWireFormat` | The published verbs/tokens of the handshake protocol (`Iam`, `REGISTERED`, `REFUSED`, `KA`, `PING`, `PONG`). |
+| `HandshakeWireFormat` | The handshake-bootstrap wire format: `Iam <name> [<credential>]`, the accepted `REGISTERED <version>` reply, `REFUSED <reason>`. Everything after the handshake lives in `TransportWireFormat`. |
+| `DatagramType` | The 1-byte tag carried as byte 0 of every post-`REGISTERED` datagram (`KEEPALIVE` `0x80`, `PROBE_PING` `0x81`, `PROBE_PONG` `0x82`, `UNRELIABLE` `0x90`); the listener switches on it before touching a payload. |
+| `TransportWireFormat` | Builds/parses the framed post-handshake datagrams: `keepaliveDatagram`, `probePingDatagram` / `probePongDatagram` / `probeSequenceOf`, `unreliableDatagram` / `unreliablePayloadOf` / `unreliableChannelOf`. |
 | `Admission` / `HandshakeRefusedException` | `admit`'s return type (`Admitted` / `Refused(reason)`); the typed failure a refused client's `handshake` surfaces. |
+| `IncompatibleProtocolException` | Typed `handshake()` failure when the server's `REGISTERED` reply announces a different wire-protocol major than this build speaks (e.g. a `1.x` server). |
 | `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
 
 ### `webtools-scraping`
@@ -66,26 +74,35 @@ further releases. To move off it:
 |------|---------|
 | `WebViewer` | Headless-Chrome screenshot utility — `screenshot(url)` returns a `Result<BufferedImage>`, `getPage(url)` a `Result<File>`. Driver provisioned by Selenium Manager. |
 
-## UDP handshake protocol
+## UDP transport protocol
 
 `MultiConnectionUDPServer` multiplexes **all** client traffic over one socket
-(`COMMON_LISTEN_PORT`, `9998`):
+(`COMMON_LISTEN_PORT`, `9998`). The handshake bootstrap stays plain UTF-8 text; every datagram
+after it is **framed** — byte 0 is a `DatagramType` tag the listener switches on before it ever
+looks at a payload:
 
 | Direction | Message | Sent to |
 |-----------|---------|---------|
 | client → server | `Iam <name>` | `COMMON_LISTEN_PORT` (`9998`) |
 | client → server | `Iam <name> <credential>` (optional opaque, whitespace-free token) | `COMMON_LISTEN_PORT` (`9998`) |
-| server → client | `REGISTERED` (single token, no arguments) | the **source address and port** of the client's `Iam` datagram |
+| server → client | `REGISTERED <version>` (e.g. `REGISTERED 2`) | the **source address and port** of the client's `Iam` datagram |
 | server → client | `REFUSED <reason>` (handshake refused; bare `REFUSED` if no reason) | the **source address and port** of the client's `Iam` datagram |
-| client ↔ server | application data | port `9998`, from/to the same socket the client sent `Iam` from |
-| client → server | `KA` (keepalive, ~20 s idle cadence) | port `9998`, from the same socket |
-| client ↔ server | `PING <token>` / `PONG <token>` (link-quality probe; transport-consumed) | port `9998`, same socket |
+| client ↔ server | `0x90 <channel> <payload…>` — application data (`UNRELIABLE`) | port `9998`, from/to the same socket the client sent `Iam` from |
+| client → server | `0x80` — keepalive (`KEEPALIVE`, ~20 s idle cadence) | port `9998`, from the same socket |
+| client ↔ server | `0x81 <seq>` / `0x82 <seq>` — link-quality probe (`PROBE_PING` / `PROBE_PONG`; transport-consumed) | port `9998`, same socket |
+
+Byte 0 of a post-handshake datagram is always `>= 0x80` and the listener never falls back to a
+text match, so **any** payload bytes ride an `0x90` frame intact — see [Binary application
+payloads](#binary-application-payloads). The server's accepted reply carries the wire-protocol
+major it speaks (`REGISTERED 2` for `2.x`); a client on a different major fails `handshake()`
+with a typed `IncompatibleProtocolException` rather than exchanging framed data the other side
+can't parse — see [Migrating to 2.0](#migrating-to-20).
 
 Every server → client datagram is addressed to the client's observed post-NAT source, never
 to anything in a payload, so **the data path traverses NAT** and the server binds no
 per-client ports (it is hostable behind a single-port container or L4 UDP load balancer). A
-retransmitted `Iam` from the same source is answered with another `REGISTERED` and does not
-re-register. `<credential>` (`tokens[2]`, optional) is passed to `admit` verbatim; any token
+retransmitted `Iam` from the same source is answered with another `REGISTERED <version>` and
+does not re-register. `<credential>` (`tokens[2]`, optional) is passed to `admit` verbatim; any token
 after it is ignored.
 
 Before a new handshake is accepted the server calls `admit(name, peer, credential)` →
@@ -103,13 +120,13 @@ deregisters the connection, not just its message handler - e.g. an
 application-level refusal discovered *after* the handshake already completed
 should call it so the refused client is not addressed by future broadcasts.
 
-The client must send the token `KA` on that socket every ~20 s of idle time to hold its NAT
-mapping open. The client may either call `MultiConnectionUDPClient.sendKeepAlive()` on its
-own timer, or call `MultiConnectionUDPClient.startKeepAlive()` once and let the library time
-it (idle-aware — application traffic defers the next `KA`). `Connection.keepAlive()` is the
-server-side one-shot equivalent and `Connection.startKeepAlive()` its library-timed form.
-The server drops inbound `KA` without dispatching it, though when idle detection is enabled
-an inbound `KA` — like any inbound datagram — refreshes that client's server-side liveness
+The client must send an `0x80` keepalive datagram on that socket every ~20 s of idle time to
+hold its NAT mapping open. The client may either call `MultiConnectionUDPClient.sendKeepAlive()`
+on its own timer, or call `MultiConnectionUDPClient.startKeepAlive()` once and let the library
+time it (idle-aware — application traffic defers the next keepalive). `Connection.keepAlive()`
+is the server-side one-shot equivalent and `Connection.startKeepAlive()` its library-timed form.
+The server drops an inbound `0x80` without dispatching it, though when idle detection is enabled
+an inbound `0x80` — like any inbound datagram — refreshes that client's server-side liveness
 timestamp. A server-side keepalive is server → client and refreshes cone NATs only — the
 authoritative keepalive is the client's. See [Scheduled keepalive](#scheduled-keepalive).
 
@@ -122,21 +139,18 @@ A server behind symmetric NAT still needs a rendezvous/relay (out of scope). Bac
 
 Post-handshake application data is not limited to text. `Connection.push(ByteArray)`
 (server → client), `MultiConnectionUDPClient.send(ByteArray)` (client → server), and
-`MultiConnectionUDPServer.pushToAll(ByteArray)` put the payload on the wire **verbatim** —
-no encoding, no trim. `Connection.actuateBytes` / `MultiConnectionUDPClient.startBytes` /
+`MultiConnectionUDPServer.pushToAll(ByteArray)` frame the payload as an `0x90` unreliable
+datagram and put it on the wire **verbatim** — no encoding, no trim, no reserved first byte.
+`Connection.actuateBytes` / `MultiConnectionUDPClient.startBytes` /
 `MultiConnectionUDPServer.startBytes` register an inbound handler that receives an
-**exact-length, undecoded, untrimmed** copy of each datagram. The text and bytes handlers
-are mutually exclusive per connection — the last `actuate` / `actuateBytes` (or `start` /
-`startBytes`) call wins.
+**exact-length, undecoded, untrimmed** copy of the payload (the frame's `0x90` tag and channel
+byte already stripped). The text and bytes handlers are mutually exclusive per connection —
+the last `actuate` / `actuateBytes` (or `start` / `startBytes`) call wins.
 
-Caveat: the `Iam` / `KA` / `PING` / `PONG` classifier runs on the trimmed UTF-8 view of
-**every** inbound datagram, in both directions, and cannot be turned off (a retransmitted
-`Iam`, a `KA`, or a probe token legitimately arrives mid-session). A binary payload whose
-UTF-8 decode, after trimming ASCII whitespace, is exactly `KA` / `PING` / `PONG` or begins
-with `Iam ` / `PING ` / `PONG ` is intercepted by the control-traffic machinery and never
-delivered. Mitigation: lead every binary application datagram with a byte that cannot start
-`Iam` / `KA` / `PING` / `PONG` and is not ASCII whitespace — e.g. `0x00`, or any byte
-`>= 0x80` used as a version/format tag.
+Because control traffic (`Iam`, keepalive, probe) and application data are separated by the
+`DatagramType` tag rather than by matching text, **any** payload bytes survive intact — a
+binary blob that happens to decode-and-trim to `KA` or that starts with `0x81` is delivered to
+`start` / `actuate` exactly as sent, with no lead-byte workaround needed.
 
 Every receive path in this module — `MultiConnectionUDPServer`, `MultiConnectionUDPClient`,
 and `UDPSendReceiveServer` — accepts datagrams up to **65507 bytes** (the maximum UDP
@@ -145,7 +159,7 @@ takes an optional `receiveBufferBytes` (512..65507, default 65507) to shrink the
 per-instance receive buffer when datagrams are known to be small; a datagram larger than
 the configured size is truncated and a WARN is logged. For real-network use keep frames
 under the path MTU (**~1200 bytes**) to avoid IP fragmentation and the loss that comes with
-it.
+it — application payloads carry 2 bytes of framing overhead (`0x90` + channel).
 
 ### Connection liveness
 
@@ -153,7 +167,7 @@ By default the server tracks no per-connection idle time and never signals that 
 gone silent (a crashed / powered-off / out-of-range client stays addressable until an
 explicit `Connection.terminate()` or a same-name supersede). Pass a positive
 `idleTimeoutMillis` to opt in: a dedicated `mcups-liveness` daemon thread then reports any
-connection with no inbound datagram (application data **or** `KA`) within the threshold via
+connection with no inbound datagram (application data **or** a keepalive) within the threshold via
 `onClientDisconnect(connection, reason)`:
 
 ```kotlin
@@ -224,19 +238,19 @@ client.stopKeepAlive()           // also done by client.stop()
 
 // server, per connection
 override fun onClientConnect(connection: Connection) {
-    connection.startKeepAlive()   // server → client KA; also stopped by terminate() / stop()
+    connection.startKeepAlive()   // server → client keepalive; also stopped by terminate() / stop()
 }
 ```
 
-It is idle-aware: a `KA` goes out only after `intervalMillis` of **output** silence on that
-path, so application traffic defers it (a scheduled `KA` may lag up to one quarter-interval,
-max 5 s, past the interval). Each side lazily creates **one** daemon `ScheduledExecutorService`
-(`mcupc-keepalive` / `mcups-keepalive`) on the first `startKeepAlive` call and shuts it in
-`stop()` — a consumer that never opts in pays for no thread. The one-shot
-`sendKeepAlive()` / `keepAlive()` primitives are unchanged and still own no timer. **No
-wire-format change** — the `KA` datagram is byte-identical either way. Server → client
-keepalives refresh only endpoint-independent (cone) NAT mappings; the authoritative keepalive
-is still the client's own.
+It is idle-aware: an `0x80` keepalive goes out only after `intervalMillis` of **output** silence
+on that path, so application traffic defers it (a scheduled keepalive may lag up to one
+quarter-interval, max 5 s, past the interval). Each side lazily creates **one** daemon
+`ScheduledExecutorService` (`mcupc-keepalive` / `mcups-keepalive`) on the first `startKeepAlive`
+call and shuts it in `stop()` — a consumer that never opts in pays for no thread. The one-shot
+`sendKeepAlive()` / `keepAlive()` primitives are unchanged and still own no timer; both emit the
+same `0x80` datagram whether sent one-shot or scheduled. Server → client keepalives refresh
+only endpoint-independent (cone) NAT mappings; the authoritative keepalive is still the
+client's own.
 
 ### Link quality (RTT & packet loss)
 
@@ -247,26 +261,26 @@ without the consumer hand-rolling an application ping. Off by default:
 // client
 client.startProbe()              // default 1 s; or startProbe(intervalMillis)
 client.stopProbe()               // also done by client.stop()
-val q = client.linkQuality()     // null until the first PONG comes back
+val q = client.linkQuality()     // null until the first probe reply comes back
 // q.rttMillis, q.rttVarianceMillis (jitter proxy), q.packetLossRatio, q.probesSent, q.probesDelivered
 
 // server, per connection
 override fun onClientConnect(connection: Connection) {
-    connection.startProbe()      // server → client PING; also stopped by terminate() / stop()
+    connection.startProbe()      // server → client probe; also stopped by terminate() / stop()
 }
 ```
 
-Each armed side sends one tiny `PING <seq>` per interval and the peer echoes `PONG <seq>`
-verbatim; the RTT is computed against the prober's own monotonic clock (EWMA-smoothed, RFC
-6298 SRTT/RTTVAR). The **responder always answers an inbound `PING`** (a client
-unconditionally, a server for a registered origin), so the peer can measure even if this
-side never opted in. `PING` / `PONG` are consumed by the transport and never reach `start` /
+Each armed side sends one tiny `0x81` probe (an 8-byte big-endian sequence) per interval and
+the peer echoes it back as `0x82`; the RTT is computed against the prober's own monotonic clock
+(EWMA-smoothed, RFC 6298 SRTT/RTTVAR). The **responder always answers an inbound `0x81`** (a
+client unconditionally, a server for a registered origin), so the peer can measure even if this
+side never opted in. `0x81` / `0x82` are consumed by the transport and never reach `start` /
 `actuate`. Each side lazily creates **one** daemon `ScheduledExecutorService`
 (`mcupc-probe` / `mcups-probe`) on the first `startProbe` and shuts it in `stop()`.
 `packetLossRatio` is **lagging and windowed** (it needs a few seconds to first resolve and
 reacts over tens of seconds) — a link-health gauge, not a fast congestion trigger. The probe
-requires both ends on `1.6.0`+; against an older peer no `PONG` comes back and
-`packetLossRatio` climbs toward `1.0`.
+requires both ends on `1.6.0`+ (and, on the framed `2.x` transport, both ends on `2.0.0`+);
+against an incompatible peer no `0x82` comes back and `packetLossRatio` climbs toward `1.0`.
 
 ### Client-side usage
 
@@ -284,13 +298,33 @@ client.startKeepAlive()   // library times it; no caller timer needed
 
 // or, for a binary protocol:
 client.startBytes { bytes -> /* exact datagram body, no decode, no trim */ }
-client.send(byteArrayOf(0x00, /* version tag */ 0x01, 0x02, 0x03))
+client.send(byteArrayOf(0x01, 0x02, 0x03))   // any bytes, no reserved first byte needed
 // ...
 client.stop()
 ```
 
-Inbound `KA` datagrams (a server may send one via `Connection.keepAlive()`) are dropped
+Inbound keepalive datagrams (a server may send one via `Connection.keepAlive()`) are dropped
 automatically and never reach the `start` callback.
+
+### Migrating to 2.0
+
+`webtools-udp` `2.0.0` breaks the post-handshake wire format: every datagram after the
+handshake now leads with a 1-byte `DatagramType` tag (§ [UDP transport
+protocol](#udp-transport-protocol)). **Both ends of a connection must be on `2.0.0`+** — a
+`1.x` peer's unframed keepalive/probe/application datagrams are dropped as unrecognized, and a
+`2.x` client against a `1.x` server fails `handshake()` with a typed
+`IncompatibleProtocolException` rather than exchanging data neither side can parse correctly.
+
+- **Removed from `HandshakeWireFormat`:** `KEEPALIVE_TOKEN`, `DEFAULT_KEEPALIVE_INTERVAL_MILLIS`,
+  `isKeepAlive`, `PROBE_REQUEST_VERB`, `PROBE_REPLY_VERB`, `DEFAULT_PROBE_INTERVAL_MILLIS`,
+  `probeRequestMessage`, `probeReplyMessage`, `isProbeRequest`, `isProbeReply`, `probeToken`.
+  Their role moves to `TransportWireFormat` in binary form.
+- **`HandshakeWireFormat.isRegistered`** now requires the exact `REGISTERED 2` reply, not a
+  bare `REGISTERED`; `registeredMessage()` / `registeredProtocolVersion(reply)` are new.
+- **The Issue #8 lead-byte workaround is retired.** Because control and application traffic
+  are separated by the `DatagramType` tag, there is no longer a reserved first byte to avoid —
+  any binary payload, including one that used to collide with `KA`/`PING`/`PONG`, rides an
+  `0x90` frame intact. See [Binary application payloads](#binary-application-payloads).
 
 ## Build & test
 

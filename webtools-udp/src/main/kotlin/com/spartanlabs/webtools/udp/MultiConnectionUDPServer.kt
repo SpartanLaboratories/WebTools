@@ -14,20 +14,24 @@ import java.util.concurrent.TimeUnit
  *
  * A client registers by sending `Iam <name>` (optionally `Iam <name> <credential>`
  * with an opaque trailing token) to the common port from a socket it keeps open.
- * The server screens every new handshake through [admit] and either replies -
- * from that same socket, addressed straight back to the datagram's source address
- * and port - with the single token `REGISTERED`, or refuses it with
- * `REFUSED <reason>` (registering nothing, firing no [onClientConnect]).
- * From then on the client sends and receives everything (application data,
- * broadcasts, keepalives) over that one socket to port [COMMON_LISTEN_PORT], and
- * the server addresses every datagram back to the client's observed post-NAT
- * source. Because the server only ever transmits on a 5-tuple the client already
- * opened, the data path traverses NAT and the server binds no per-client ports.
+ * The handshake stays plain UTF-8 text. The server screens every new handshake
+ * through [admit] and either replies - from that same socket, addressed straight
+ * back to the datagram's source address and port - `REGISTERED 2` (the accepted
+ * verb plus [TransportWireFormat.FRAMED_PROTOCOL_VERSION], the framed-transport
+ * wire major), or refuses it with `REFUSED <reason>` (registering nothing, firing
+ * no [onClientConnect]). A cross-major peer fails its `handshake()` cleanly on the
+ * version token; both ends must be on `webtools-udp` `2.0.0`+.
+ * From then on every datagram in either direction is **framed** - it leads with a
+ * 1-byte [DatagramType] tag ([TransportWireFormat]): `0x80` keepalive, `0x81`/
+ * `0x82` link-quality probe, `0x90` unreliable application data. The server
+ * addresses every datagram back to the client's observed post-NAT source. Because
+ * the server only ever transmits on a 5-tuple the client already opened, the data
+ * path traverses NAT and the server binds no per-client ports.
  *
- * A client sends the token `KA` on an idle interval (~20 s recommended) to keep
- * its NAT mapping warm; the server consumes inbound `KA` without dispatching it,
- * but - when idle detection is enabled (see below) - an inbound `KA` also
- * refreshes that client's per-connection liveness timestamp.
+ * A client sends a bare `0x80` datagram on an idle interval (~20 s recommended) to
+ * keep its NAT mapping warm; the server consumes inbound `0x80` without
+ * dispatching it, but - when idle detection is enabled (see below) - an inbound
+ * `0x80` also refreshes that client's per-connection liveness timestamp.
  *
  * This class is abstract because it does not itself decide what to do once a
  * client has finished the handshake - subclasses implement [onClientConnect]
@@ -52,16 +56,16 @@ import java.util.concurrent.TimeUnit
  * ### Binary application payloads
  * Post-handshake application data may be raw bytes: [Connection.push] takes a
  * `ByteArray`, [Connection.actuateBytes] / [startBytes] register a raw-bytes
- * inbound handler, and [pushToAll] has a `ByteArray` overload. Delivery is an
- * exact-length copy of the datagram body - no UTF-8 decode, no `.trim()`. The
- * `Iam`/`KA` classifier still runs on the trimmed UTF-8 view of *every* inbound
- * datagram, so a binary payload that decodes/trims to a control token is
- * intercepted and never delivered; lead every binary application datagram with a
- * byte that cannot start `Iam`/`KA` and is not ASCII whitespace (e.g. `0x00`, or
- * any byte `>= 0x80`). An inbound datagram over 65507 bytes is delivered
- * truncated, not rejected; on send ([Connection.push] / [pushToAll]), a payload
- * over the OS datagram limit fails the `Result` (cause logged) rather than being
- * sent. Keep frames under the path MTU (~1200 bytes) for real-network use.
+ * inbound handler, and [pushToAll] has a `ByteArray` overload. The transport
+ * wraps the payload in an `0x90` unreliable frame and strips it before delivery;
+ * delivery is an exact-length copy of that payload - no UTF-8 decode, no
+ * `.trim()`. Inbound routing is a switch on the `0x90` / `0x8x` [DatagramType]
+ * tag, so **any** payload bytes ride intact - there is no reserved first byte and
+ * the pre-`2.0` "lead with `0x00` / `>= 0x80`" rule is gone. An inbound datagram
+ * over 65507 bytes is delivered truncated, not rejected; on send
+ * ([Connection.push] / [pushToAll]), a payload over the OS datagram limit fails
+ * the `Result` (cause logged) rather than being sent. Keep frames under the path
+ * MTU (~1200 bytes) for real-network use.
  *
  * The receive buffer size is a constructor parameter [receiveBufferBytes],
  * defaulting to [DEFAULT_RECEIVE_BUFFER_BYTES] (65507) so that by default no
@@ -91,7 +95,7 @@ import java.util.concurrent.TimeUnit
  *
  * ### Connection liveness
  * With a positive [idleTimeoutMillis], every registered connection carries the
- * monotonic time of its last inbound datagram (application data or `KA`), and a
+ * monotonic time of its last inbound datagram (application data or a `0x80` keepalive), and a
  * dedicated `mcups-liveness` daemon thread periodically reports any connection
  * idle beyond the threshold via [onClientDisconnect] with
  * [DisconnectReason.TIMEOUT]. This is **notify-only**: the registration stays in
@@ -103,8 +107,8 @@ import java.util.concurrent.TimeUnit
  *
  * ### Scheduled keepalive
  * Opt-in and per-connection: [Connection.startKeepAlive]`(intervalMillis)` arms an
- * idle-aware background keepalive that sends one `KA` to that client every
- * ~`intervalMillis` of output silence (application traffic defers it), and
+ * idle-aware background keepalive that sends one `0x80` datagram to that client
+ * every ~`intervalMillis` of output silence (application traffic defers it), and
  * [Connection.stopKeepAlive] / [Connection.terminate] / [stop] cancel it. The
  * one-shot [Connection.keepAlive] primitive is unchanged. Server -> client
  * keepalives refresh only endpoint-independent (cone) NAT mappings - the
@@ -112,22 +116,24 @@ import java.util.concurrent.TimeUnit
  *
  * ### Link quality (RTT & packet loss)
  * Opt-in and per-connection: [Connection.startProbe]`(intervalMillis)` arms a
- * periodic transport-level `PING`/`PONG` round trip toward that client, yielding a
- * smoothed RTT, an RTT-variance (jitter proxy), and a windowed packet-loss ratio
- * as a single [LinkQuality] snapshot readable via [Connection.linkQuality] (`null`
- * until the first `PONG` resolves). Off by default (one `mcups-probe` daemon
- * thread, created lazily on the first [Connection.startProbe]); cancelled by
- * [Connection.stopProbe] / [Connection.terminate] / [stop]. The server also
- * answers any inbound `PING` from a registered origin with a `PONG` inline on the
- * listener thread, so a client can measure even if no server-side probe is armed.
- * `PING` / `PONG` are additive wire tokens, transport-consumed on both sides, and
- * `packetLossRatio` is lagging and windowed - not a fast congestion signal. See
+ * periodic transport-level `0x81`/`0x82` probe round trip (an 8-byte big-endian
+ * sequence) toward that client, yielding a smoothed RTT, an RTT-variance (jitter
+ * proxy), and a windowed packet-loss ratio as a single [LinkQuality] snapshot
+ * readable via [Connection.linkQuality] (`null` until the first `0x82` resolves).
+ * Off by default (one `mcups-probe` daemon thread, created lazily on the first
+ * [Connection.startProbe]); cancelled by [Connection.stopProbe] /
+ * [Connection.terminate] / [stop]. The server also answers any inbound `0x81`
+ * probe from a registered origin with an `0x82` reply inline on the listener
+ * thread, so a client can measure even if no server-side probe is armed. `0x81` /
+ * `0x82` are transport-consumed on both sides, and `packetLossRatio` is lagging
+ * and windowed - not a fast congestion signal. See
  * the sequence diagram in docs/issue-13-link-quality-probe-plan.md §2.9.
  *
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
- * classify (`Iam` / `KA` / data) -> run the socket-free handshake state machine
- * inline, drop the keepalive, or hand the payload to the dispatch executor. The
+ * switch on the [DatagramType] tag (or an unframed `Iam`) -> run the socket-free
+ * handshake state machine inline, drop a keepalive/probe, or hand the stripped
+ * `0x90` payload to the dispatch executor. The
  * [admit] screen runs inline on this listener thread too (like [onClientConnect]),
  * so a slow [admit] stalls demultiplexing for every client. A
  * third daemon thread - `mcups-liveness`, a [ScheduledExecutorService] - exists
@@ -135,13 +141,13 @@ import java.util.concurrent.TimeUnit
  * never runs application code (the [onClientDisconnect] hook is handed to
  * `mcups-dispatch`). A fourth daemon thread - `mcups-keepalive`, also a
  * [ScheduledExecutorService] - exists **only once a consumer calls
- * [Connection.startKeepAlive]**; it sends `KA` datagrams and runs no application
+ * [Connection.startKeepAlive]**; it sends `0x80` keepalive datagrams and runs no application
  * code. It is a dedicated executor, *not* the `mcups-liveness` one: liveness
  * exists only for `idleTimeoutMillis > 0` and has a different cadence and
  * lifecycle. See the scheduled-keepalive sequence diagram in
  * docs/issue-12-scheduled-keepalive-plan.md §2.8. A fifth daemon thread -
  * `mcups-probe`, also a [ScheduledExecutorService] - exists **only once a consumer
- * calls [Connection.startProbe]**; it sends `PING` datagrams and runs no
+ * calls [Connection.startProbe]**; it sends `0x81` probe datagrams and runs no
  * application code, and is again a dedicated executor so the probe and keepalive
  * lifecycles stay independent. See docs/issue-13-link-quality-probe-plan.md §2.9.
  *
@@ -483,7 +489,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
 
         /**
          * Default [idleTimeoutMillis]: `0`, i.e. idle-connection detection is off.
-         * When enabling it, a value around 3x the ~20 s `KA` cadence (~60_000) is
+         * When enabling it, a value around 3x the ~20 s keepalive cadence (~60_000) is
          * a sane starting point.
          */
         const val DISABLED_IDLE_TIMEOUT = 0L

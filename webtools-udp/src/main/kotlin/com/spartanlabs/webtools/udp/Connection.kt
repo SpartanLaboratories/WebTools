@@ -50,12 +50,10 @@ interface Connection {
      * handler clears any text handler and vice versa. A consumer that wants both
      * views decodes inside the bytes handler.
      *
-     * Handshake (`Iam`) and keepalive (`KA`) datagrams are filtered upstream and
-     * never delivered here. Note the classifier runs on the trimmed UTF-8 view of
-     * every datagram, so a binary payload that decodes/trims to a control token is
-     * still intercepted - lead binary application datagrams with a byte that
-     * cannot start `Iam`/`KA` and is not ASCII whitespace (e.g. `0x00` or any byte
-     * `>= 0x80`).
+     * Handshake and transport-control datagrams are filtered upstream on the
+     * [DatagramType] tag and never delivered here. The production transport frames
+     * this connection's data as an `0x90` unreliable datagram; any payload bytes
+     * are delivered intact - there is no reserved first byte.
      *
      * The delivered copy is at most 65507 bytes (the maximum UDP payload over
      * IPv4); an inbound datagram larger than that is delivered truncated to that
@@ -106,8 +104,9 @@ interface Connection {
      * the payload is placed on the wire verbatim - no encoding, no trim.
      *
      * The default implementation round-trips through [push]`(String)` and is
-     * therefore lossy for non-UTF-8 payloads; [UDPConnection] overrides it to send
-     * the bytes unchanged.
+     * therefore lossy for non-UTF-8 payloads; [UDPConnection] overrides it to
+     * frame the bytes as an `0x90` unreliable datagram and send them unchanged.
+     * Any payload bytes are delivered to the peer intact.
      *
      * A payload larger than the OS datagram limit fails the [Result] (the cause is
      * logged) rather than being sent; for real-network use keep frames under the
@@ -148,7 +147,7 @@ interface Connection {
      * [UDPConnection] supports a scheduled keepalive.
      *
      * @param intervalMillis output-idle time before a keepalive is sent; must be > 0.
-     * Defaults to [HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS] (20 s).
+     * Defaults to [TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS] (20 s).
      * @return [Result.success] once armed, or the failure that prevented it
      */
     fun startKeepAlive(intervalMillis: Long): Result<Unit> =
@@ -156,11 +155,11 @@ interface Connection {
 
     /**
      * Starts the scheduled keepalive at the recommended interval
-     * ([HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS], 20 s).
+     * ([TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS], 20 s).
      * @return [Result.success] once armed, or the failure that prevented it
      * @see startKeepAlive
      */
-    fun startKeepAlive(): Result<Unit> = startKeepAlive(HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
+    fun startKeepAlive(): Result<Unit> = startKeepAlive(TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
 
     /**
      * Stops the background keepalive started by [startKeepAlive]. Idempotent; a no-op
@@ -192,11 +191,11 @@ interface Connection {
 
     /**
      * Starts the probe at the default interval
-     * ([HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS], 1 s).
+     * ([TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS], 1 s).
      * @return [Result.success] once armed, or the failure that prevented it
      * @see startProbe
      */
-    fun startProbe(): Result<Unit> = startProbe(HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS)
+    fun startProbe(): Result<Unit> = startProbe(TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS)
 
     /**
      * Stops the probe started by [startProbe]. Idempotent; [terminate] and server
