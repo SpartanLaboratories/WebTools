@@ -38,7 +38,7 @@
 // MultiConnectionUDPClient; the two newly-live tags still WARN-drop exactly as a reserved tag
 // did in alpha1 - only enough of a touch to keep both files compiling against the wider
 // DatagramType enum. Public channel API + real socket wiring is Stage 3.
-version = "2.0.0-alpha1"
+version = "2.0.0-alpha2"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
