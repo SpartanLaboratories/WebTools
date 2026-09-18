@@ -169,7 +169,16 @@ internal class HandshakeCoordinator(
                 }
             }
 
-            // ofTagByte(null) for a reserved same-major tag (0x83+/0xA0/0xA1) or an unframed byte 0.
+            // The Stage-2 reliable engine (ReliableChannelEngine) is internal and unwired - no
+            // production capability here yet (Stage 3). Identical WARN text/behavior to what a
+            // reserved 0x83+ tag already gets below, only enough of a touch to keep this when
+            // exhaustive against the wider DatagramType enum.
+            DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK ->
+                Result.success(Unit).also {
+                    log.warn("Unhandled datagram type 0x{} from {}, dropping", Integer.toHexString(byte0!!), origin)
+                }
+
+            // ofTagByte(null) for a reserved same-major tag (0x83+/0xA2-0xAF) or an unframed byte 0.
             null -> when {
                 byte0 != null && byte0 >= 0x80 ->
                     Result.success(Unit).also {
