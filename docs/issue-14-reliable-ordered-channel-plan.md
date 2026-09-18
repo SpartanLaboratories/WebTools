@@ -27,11 +27,27 @@
   `master` after Stage 4.
 - **This plan document** is committed in the **same commit as the first Stage-1
   implementation commit** (§9) so `git log --follow` binds plan to code.
-- **Branch:** `feat/issue-14-framing-prefix` (off `feat/2.0-framed-transport`).
-- **Commit:** TBD
-- **PR:** TBD  *(Stage-1 branch → `feat/2.0-framed-transport`; "PR 1 of 4" in the series)*
-- **Status:** decisions OD-1–OD-4 resolved (§10, 2026-09-09 — maintainer accepted
-  every recommendation); ready to implement. No production file touched yet.
+- **Branch:** `feat/issue-14-framing-prefix` (off `feat/2.0-framed-transport`,
+  deleted after merge).
+- **Commits:**
+  - `0009996` — `feat!:` all `src/main` changes, the new `DatagramType.kt` /
+    `TransportWireFormat.kt` / `IncompatibleProtocolException.kt`,
+    `README.md`, the `build.gradle.kts` version-comment block, and **this
+    plan document** (committed with the first implementation commit per §4.15,
+    so `git log --follow docs/issue-14-reliable-ordered-channel-plan.md` binds
+    plan to implementation).
+  - `e9d4209` — `test:` the §6 suite, all levels.
+  - `9a880aa` — `build:` bump `webtools-udp` to `2.0.0-alpha1` (§4.13).
+- **PR:** [#30](https://github.com/SpartanLaboratories/WebTools/pull/30)
+  *("PR 1 of 4" in the series)*, merged into `feat/2.0-framed-transport` as
+  `5628fd8`.
+- **Status:** **done.** Merged to `feat/2.0-framed-transport` 2026-09-18 as
+  `webtools-udp` `2.0.0-alpha1` (pre-release; not published to Maven Central —
+  the publish stays a separate maintainer-gated step per §10 OD-3). Full suite
+  green across all levels (gating, component, integration, deterministic, e2e,
+  nonfunctional, uat). Decisions OD-1–OD-4 resolved (§10, 2026-09-09 —
+  maintainer accepted every recommendation). Issue #14 stays **open** as the
+  tracking issue for the whole `2.0.0` series — Stages 2–4 remain.
 - **Target version:** `webtools-udp` `1.6.0` → **`2.0.0-alpha1`** (§8). Wire
   break + public-API removal ⇒ major, per the recorded versioning convention.
   The Maven Central **publish** of `2.0.0-alpha1` is a separate maintainer-gated
