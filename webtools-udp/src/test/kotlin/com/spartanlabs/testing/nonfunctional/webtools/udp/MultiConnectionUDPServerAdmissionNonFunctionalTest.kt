@@ -64,7 +64,7 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
         withServer(server) {
             DatagramSocket().use { client ->
                 client.send("Iam bigcred $token")
-                assertEquals("REGISTERED", client.recv())
+                assertEquals("REGISTERED 2", client.recv())
             }
         }
         assertEquals(token, seen.single())
@@ -92,7 +92,7 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
             }
             DatagramSocket().use { client ->
                 client.send("Iam survivor")
-                assertEquals("REGISTERED", client.recv())
+                assertEquals("REGISTERED 2", client.recv())
             }
             Thread.sleep(200)
         }
@@ -117,7 +117,7 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
             }
             DatagramSocket().use { client ->
                 client.send("Iam good")
-                assertEquals("REGISTERED", client.recv())
+                assertEquals("REGISTERED 2", client.recv())
             }
             Thread.sleep(200)
         }
@@ -138,7 +138,7 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
             repeat(HANDSHAKES) { i ->
                 DatagramSocket().use { client ->
                     client.send("Iam slow$i")
-                    assertEquals("REGISTERED", client.recv())
+                    assertEquals("REGISTERED 2", client.recv())
                 }
             }
             val elapsedMillis = (System.nanoTime() - started) / 1_000_000

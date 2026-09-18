@@ -1,9 +1,9 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
-import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -12,6 +12,7 @@ import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
@@ -61,6 +62,17 @@ class MultiConnectionUDPClientKeepAliveTest {
         }
     }
 
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): ByteArray? {
+        soTimeout = timeoutMillis
+        val packet = DatagramPacket(ByteArray(256), 256)
+        return try {
+            receive(packet)
+            packet.data.copyOf(packet.length)
+        } catch (_: SocketTimeoutException) {
+            null
+        }
+    }
+
     @Test
     fun `startKeepAlive records exactly one schedule for the server endpoint at the given interval`() {
         val peer = fakePeer()
@@ -83,13 +95,13 @@ class MultiConnectionUDPClientKeepAliveTest {
         assertTrue(client.startKeepAlive().isSuccess)
 
         assertEquals(
-            HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS,
+            TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS,
             fake.scheduleCalls.single().intervalMillis,
         )
     }
 
     @Test
-    fun `a tick with the last outbound forced past the interval sends exactly one KA`() {
+    fun `a tick with the last outbound forced past the interval sends exactly one 0x80 keepalive`() {
         val peer = fakePeer()
         val fake = FakePeriodicSchedule()
         val client = newClient(peer.localPort, fake)
@@ -100,24 +112,24 @@ class MultiConnectionUDPClientKeepAliveTest {
 
         fake.tick(InetSocketAddress(loopback, peer.localPort))
 
-        assertEquals("KA", peer.nextText(500))
-        assertNull(peer.nextText(200), "the tick sends exactly one KA")
+        assertContentEquals(TransportWireFormat.keepaliveDatagram(), peer.nextBytes(500))
+        assertNull(peer.nextText(200), "the tick sends exactly one keepalive")
     }
 
     @Test
-    fun `a tick with a fresh last outbound sends no KA`() {
+    fun `a tick with a fresh last outbound sends no keepalive`() {
         val peer = fakePeer()
         val fake = FakePeriodicSchedule()
         val client = newClient(peer.localPort, fake)
         assertTrue(client.startKeepAlive(60_000L).isSuccess)
 
-        // An application send stamps lastOutboundAtNanos; drain that datagram.
+        // An application send stamps lastOutboundAtNanos; drain that datagram (framed as 0x90 + channel).
         assertTrue(client.send("hello").isSuccess)
-        assertEquals("hello", peer.nextText(500))
+        assertContentEquals(TransportWireFormat.unreliableDatagram("hello".toByteArray()), peer.nextBytes(500))
 
         fake.tick(InetSocketAddress(loopback, peer.localPort))
 
-        assertNull(peer.nextText(200), "idle-aware: no KA while output is fresh")
+        assertNull(peer.nextText(200), "idle-aware: no keepalive while output is fresh")
     }
 
     @Test

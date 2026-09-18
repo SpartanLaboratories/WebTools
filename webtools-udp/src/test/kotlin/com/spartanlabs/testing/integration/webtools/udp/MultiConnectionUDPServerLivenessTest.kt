@@ -3,6 +3,7 @@ package com.spartanlabs.testing.integration.webtools.udp
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.DisconnectReason
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -82,7 +83,8 @@ class MultiConnectionUDPServerLivenessTest {
             client.soTimeout = 2000
             val packet = DatagramPacket(ByteArray(64), 64)
             client.receive(packet)
-            assertEquals("still-here", String(packet.data, 0, packet.length, Charsets.UTF_8).trim())
+            val framed = packet.data.copyOf(packet.length)
+            assertEquals("still-here", String(TransportWireFormat.unreliablePayloadOf(framed)!!, Charsets.UTF_8))
         }
     }
 

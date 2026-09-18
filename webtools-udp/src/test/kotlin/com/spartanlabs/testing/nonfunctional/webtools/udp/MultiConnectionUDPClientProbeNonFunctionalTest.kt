@@ -1,5 +1,6 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.LinkQualityTracker
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
@@ -34,12 +35,12 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
         opened.forEach { runCatching { it.close() } }
     }
 
-    private fun DatagramSocket.nextText(timeoutMillis: Int): Pair<Int, String>? {
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): Pair<Int, ByteArray>? {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
             receive(packet)
-            packet.length to String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+            packet.length to packet.data.copyOf(packet.length)
         } catch (_: SocketTimeoutException) {
             null
         }
@@ -52,7 +53,7 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
             val packet = DatagramPacket(ByteArray(256), 256)
             peer.receive(packet)
             origin = InetSocketAddress(packet.address, packet.port)
-            val reg = "REGISTERED".toByteArray()
+            val reg = HandshakeWireFormat.registeredMessage().toByteArray(Charsets.UTF_8)
             peer.send(DatagramPacket(reg, reg.size, packet.address, packet.port))
         }.apply { start() }
         assertTrue(client.handshake("alice").isSuccess)
@@ -75,14 +76,14 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
         }
         assertTrue(probeThreadCount() <= 1, "cycles leaked probe threads")
 
-        while (peer.nextText(20) != null) { /* drain */ }
+        while (peer.nextBytes(20) != null) { /* drain */ }
         assertTrue(client.startProbe(300L).isSuccess)
         val deadline = System.currentTimeMillis() + 1_500L
         var ping = false
         while (!ping && System.currentTimeMillis() < deadline) {
-            ping = peer.nextText(200)?.let { HandshakeWireFormat.isProbeRequest(it.second) } ?: false
+            ping = peer.nextBytes(200)?.let { (_, bytes) -> DatagramType.ofTagByte(bytes.getOrNull(0)) == DatagramType.PROBE_PING } ?: false
         }
-        assertTrue(ping, "a final arm still delivers PING")
+        assertTrue(ping, "a final arm still delivers PROBE_PING")
     }
 
     @Test
@@ -99,9 +100,9 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
         val deadline = System.currentTimeMillis() + 1_500L
         var ping = false
         while (!ping && System.currentTimeMillis() < deadline) {
-            ping = peer.nextText(200)?.let { HandshakeWireFormat.isProbeRequest(it.second) } ?: false
+            ping = peer.nextBytes(200)?.let { (_, bytes) -> DatagramType.ofTagByte(bytes.getOrNull(0)) == DatagramType.PROBE_PING } ?: false
         }
-        assertTrue(ping, "PING still flowed while the dispatch thread was wedged")
+        assertTrue(ping, "PROBE_PING still flowed while the dispatch thread was wedged")
     }
 
     @Test
@@ -109,13 +110,13 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         handshake(client, peer)
-        while (peer.nextText(20) != null) { /* drain */ }
+        while (peer.nextBytes(20) != null) { /* drain */ }
         assertTrue(client.startProbe(300L).isSuccess)
 
         val deadline = System.currentTimeMillis() + 1_500L
         var size = -1
         while (size < 0 && System.currentTimeMillis() < deadline) {
-            peer.nextText(200)?.let { (len, text) -> if (HandshakeWireFormat.isProbeRequest(text)) size = len }
+            peer.nextBytes(200)?.let { (len, bytes) -> if (DatagramType.ofTagByte(bytes.getOrNull(0)) == DatagramType.PROBE_PING) size = len }
         }
         assertTrue(size in 1..32, "a probe datagram was $size bytes")
     }

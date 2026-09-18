@@ -1,7 +1,9 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -39,7 +41,7 @@ class MultiConnectionUDPClientProbeTest {
         opened.forEach { runCatching { it.close() } }
     }
 
-    /** Background responder: replies REGISTERED to an Iam, PONG to a PING, and counts PINGs. */
+    /** Background responder: replies REGISTERED 2 to an Iam, an 0x82 PROBE_PONG to an 0x81 PROBE_PING, and counts them. */
     private inner class Echoer(private val peer: DatagramSocket) {
         val pings = AtomicInteger()
         val answering = AtomicBoolean(true)
@@ -55,17 +57,21 @@ class MultiConnectionUDPClientProbeTest {
                 } catch (_: Exception) {
                     break
                 }
-                val text = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
-                val reply = when {
-                    text == HandshakeWireFormat.HANDSHAKE_VERB || text.startsWith("Iam ") -> "REGISTERED"
-                    HandshakeWireFormat.isProbeRequest(text) -> {
+                val inbound = packet.data.copyOf(packet.length)
+                val text = String(inbound, Charsets.UTF_8).trim()
+                val reply: ByteArray = when {
+                    text == HandshakeWireFormat.HANDSHAKE_VERB || text.startsWith("Iam ") ->
+                        HandshakeWireFormat.registeredMessage().toByteArray(Charsets.UTF_8)
+
+                    DatagramType.ofTagByte(inbound.getOrNull(0)) == DatagramType.PROBE_PING -> {
                         pings.incrementAndGet()
-                        if (answering.get()) HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)) else null
+                        val seq = TransportWireFormat.probeSequenceOf(inbound)
+                        if (answering.get() && seq != null) TransportWireFormat.probePongDatagram(seq) else continue
                     }
-                    else -> null
-                } ?: continue
-                val bytes = reply.toByteArray(Charsets.UTF_8)
-                runCatching { peer.send(DatagramPacket(bytes, bytes.size, packet.socketAddress)) }
+
+                    else -> continue
+                }
+                runCatching { peer.send(DatagramPacket(reply, reply.size, packet.socketAddress)) }
             }
         }.apply { isDaemon = true; start() }
 

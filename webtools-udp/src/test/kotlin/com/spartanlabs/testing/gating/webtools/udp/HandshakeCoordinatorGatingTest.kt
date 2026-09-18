@@ -4,9 +4,9 @@ import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
-import com.spartanlabs.webtools.udp.HandshakeProtocol
 import com.spartanlabs.webtools.udp.Registration
 import com.spartanlabs.webtools.udp.Registrations
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -67,7 +67,7 @@ class HandshakeCoordinatorGatingTest {
         coordinator.accept(origin, "Iam alice tok")
 
         assertEquals(1, coordinator.size)
-        assertEquals(listOf("REGISTERED" to origin), replies)
+        assertEquals(listOf("REGISTERED 2" to origin), replies)
         assertEquals(Triple("alice", origin, "tok"), admitCalls.single())
     }
 
@@ -79,7 +79,7 @@ class HandshakeCoordinatorGatingTest {
         coordinator.accept(origin, "Iam alice")
 
         assertEquals(1, coordinator.size)
-        assertEquals(listOf("REGISTERED" to origin), replies)
+        assertEquals(listOf("REGISTERED 2" to origin), replies)
     }
 
     @Test
@@ -90,7 +90,7 @@ class HandshakeCoordinatorGatingTest {
         coordinator.accept(origin, "Iam alice")
 
         assertEquals(1, coordinator.size)
-        assertEquals(listOf("REGISTERED" to origin), replies)
+        assertEquals(listOf("REGISTERED 2" to origin), replies)
     }
 
     @Test
@@ -114,19 +114,21 @@ class HandshakeCoordinatorGatingTest {
         assertEquals(1, coordinator.size)
     }
 
+    private fun keepalive() = TransportWireFormat.keepaliveDatagram()
+
     @Test
-    fun `a KA from a registered origin is dropped with no dispatch`() {
+    fun `a 0x80 keepalive from a registered origin is dropped with no dispatch`() {
         val replies = mutableListOf<Pair<String, InetSocketAddress>>()
         val coordinator = coordinator(replies)
         coordinator.accept(origin, "Iam alice")
         replies.clear()
 
-        assertTrue(coordinator.accept(origin, HandshakeProtocol.KEEPALIVE_TOKEN).isSuccess)
+        assertTrue(coordinator.accept(origin, keepalive(), "").isSuccess)
         assertTrue(replies.isEmpty())
     }
 
     @Test
-    fun `a non-Iam datagram from an unregistered origin is dropped`() {
+    fun `an unframed non-Iam datagram from an unregistered origin is dropped`() {
         val coordinator = coordinator(mutableListOf())
 
         assertTrue(coordinator.accept(origin, "hello").isSuccess)
@@ -134,35 +136,23 @@ class HandshakeCoordinatorGatingTest {
     }
 
     @Test
-    fun `a bound bytes handler receives the exact undecoded application bytes`() {
+    fun `a 0x90 frame reaches a bound bytes handler with the stripped payload verbatim`() {
         val coordinator = coordinator(mutableListOf())
         coordinator.accept(origin, "Iam alice")
         val received = mutableListOf<ByteArray>()
         coordinator.bindBytes(origin, received::add)
         // leading 0x00, an embedded ASCII-whitespace byte, and a trailing 0x0A - all of
-        // which String(..).trim() would reshape on the text path.
-        val payload = byteArrayOf(0x00, 0x20, 0x4B, 0x0A)
+        // which String(..).trim() would reshape on the text path; and bytes that trim to "KA".
+        val payload = byteArrayOf(0x00, 0x20, 0x4B, 0x41, 0x0A)
+        val framed = TransportWireFormat.unreliableDatagram(payload)
 
-        coordinator.accept(origin, payload, String(payload, Charsets.UTF_8).trim())
+        coordinator.accept(origin, framed, String(framed, Charsets.UTF_8).trim())
 
         assertContentEquals(payload, received.single())
     }
 
     @Test
-    fun `a payload trimming to KA is still dropped when a bytes handler is bound`() {
-        val coordinator = coordinator(mutableListOf())
-        coordinator.accept(origin, "Iam alice")
-        val received = mutableListOf<ByteArray>()
-        coordinator.bindBytes(origin, received::add)
-        val payload = " KA ".toByteArray(Charsets.UTF_8)
-
-        assertTrue(coordinator.accept(origin, payload, String(payload, Charsets.UTF_8).trim()).isSuccess)
-
-        assertTrue(received.isEmpty())
-    }
-
-    @Test
-    fun `an overdue registration is reported exactly once, and a KA between sweeps re-arms it`() {
+    fun `an overdue registration is reported exactly once, and a keepalive between sweeps re-arms it`() {
         val coordinator = coordinator(mutableListOf(), idleTimeoutMillis = 1L)
         coordinator.accept(origin, "Iam alice")
         val reg = coordinator.snapshot().single()
@@ -172,7 +162,7 @@ class HandshakeCoordinatorGatingTest {
         coordinator.sweepIdleConnections()
         assertEquals(1, disconnects.size)
 
-        coordinator.accept(origin, HandshakeProtocol.KEEPALIVE_TOKEN)
+        coordinator.accept(origin, keepalive(), "")
         reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
         coordinator.sweepIdleConnections()
         assertEquals(2, disconnects.size)

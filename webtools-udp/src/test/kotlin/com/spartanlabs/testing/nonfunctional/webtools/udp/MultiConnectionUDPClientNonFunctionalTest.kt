@@ -1,6 +1,8 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
+import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -41,11 +43,19 @@ class MultiConnectionUDPClientNonFunctionalTest {
         send(DatagramPacket(out, out.size, target.address, target.port))
     }
 
+    /** Sends [text] to [target] framed as an 0x90 unreliable application datagram. */
+    private fun DatagramSocket.sendFramedTo(target: InetSocketAddress, text: String) =
+        sendTo(target, TransportWireFormat.unreliableDatagram(text.toByteArray(Charsets.UTF_8)))
+
+    /** Sends [bytes] to [target] framed as an 0x90 unreliable application datagram. */
+    private fun DatagramSocket.sendFramedTo(target: InetSocketAddress, bytes: ByteArray) =
+        sendTo(target, TransportWireFormat.unreliableDatagram(bytes))
+
     private fun handshakeSucceeds(client: MultiConnectionUDPClient, peer: DatagramSocket): InetSocketAddress {
         var origin: InetSocketAddress? = null
         val thread = Thread {
             origin = peer.receiveOrigin()
-            peer.sendTo(origin!!, "REGISTERED")
+            peer.sendTo(origin!!, HandshakeWireFormat.registeredMessage())
         }.apply { start() }
         assertTrue(client.handshake("alice").isSuccess)
         thread.join(5000)
@@ -77,7 +87,7 @@ class MultiConnectionUDPClientNonFunctionalTest {
             }.isSuccess,
         )
 
-        repeat(BURST) { i -> peer.sendTo(origin, i.toString()) }
+        repeat(BURST) { i -> peer.sendFramedTo(origin, i.toString()) }
         assertTrue(done.await(10, TimeUnit.SECONDS), "all $BURST messages delivered")
         assertEquals((0 until BURST).toList(), seen.toList())
     }
@@ -96,8 +106,8 @@ class MultiConnectionUDPClientNonFunctionalTest {
             }.isSuccess,
         )
 
-        repeat(STORM_SIZE) { peer.sendTo(origin, "KA") }
-        peer.sendTo(origin, "real-message")
+        repeat(STORM_SIZE) { peer.sendTo(origin, TransportWireFormat.keepaliveDatagram()) }
+        peer.sendFramedTo(origin, "real-message")
 
         assertTrue(realMessageSeen.await(10, TimeUnit.SECONDS), "listener not wedged by the KA storm")
         assertEquals(listOf("real-message"), dispatched.toList())
@@ -119,8 +129,8 @@ class MultiConnectionUDPClientNonFunctionalTest {
             }.isSuccess,
         )
 
-        repeat(THROWING_BURST) { i -> peer.sendTo(origin, "throw-$i") }
-        peer.sendTo(origin, "check")
+        repeat(THROWING_BURST) { i -> peer.sendFramedTo(origin, "throw-$i") }
+        peer.sendFramedTo(origin, "check")
 
         assertTrue(checkSeen.await(10, TimeUnit.SECONDS), "dispatch thread survived $THROWING_BURST throwing messages")
     }
@@ -140,7 +150,7 @@ class MultiConnectionUDPClientNonFunctionalTest {
         )
 
         repeat(BURST) { i ->
-            peer.sendTo(origin, byteArrayOf(0x00, (i shr 8).toByte(), i.toByte()))
+            peer.sendFramedTo(origin, byteArrayOf(0x00, (i shr 8).toByte(), i.toByte()))
         }
         assertTrue(done.await(10, TimeUnit.SECONDS), "all $BURST binary frames delivered")
         assertEquals((0 until BURST).toList(), seen.toList())
@@ -160,8 +170,8 @@ class MultiConnectionUDPClientNonFunctionalTest {
             }.isSuccess,
         )
 
-        repeat(STORM_SIZE) { peer.sendTo(origin, "KA".toByteArray()) }
-        peer.sendTo(origin, byteArrayOf(0x00, 0x01))
+        repeat(STORM_SIZE) { peer.sendTo(origin, TransportWireFormat.keepaliveDatagram()) }
+        peer.sendFramedTo(origin, byteArrayOf(0x00, 0x01))
 
         assertTrue(realSeen.await(10, TimeUnit.SECONDS), "listener not wedged by the KA storm")
         assertEquals(1, dispatched.size)
@@ -179,8 +189,8 @@ class MultiConnectionUDPClientNonFunctionalTest {
             }.isSuccess,
         )
 
-        repeat(THROWING_BURST) { peer.sendTo(origin, byteArrayOf(0x00, 0x01)) }
-        peer.sendTo(origin, byteArrayOf(0x00, 0x63))
+        repeat(THROWING_BURST) { peer.sendFramedTo(origin, byteArrayOf(0x00, 0x01)) }
+        peer.sendFramedTo(origin, byteArrayOf(0x00, 0x63))
 
         assertTrue(checkSeen.await(10, TimeUnit.SECONDS), "dispatch thread survived $THROWING_BURST throwing frames")
     }
@@ -194,7 +204,7 @@ class MultiConnectionUDPClientNonFunctionalTest {
         assertTrue(client.startBytes { received += it }.isSuccess)
 
         val big = ByteArray(8192) { ((it % 250) + 1).toByte() } // no 0x00, no whitespace-only trims
-        peer.sendTo(origin, big)
+        peer.sendFramedTo(origin, big)
 
         val deadline = System.currentTimeMillis() + 10000
         while (received.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)
@@ -211,7 +221,7 @@ class MultiConnectionUDPClientNonFunctionalTest {
         assertTrue(client.startBytes { received += it }.isSuccess)
 
         val big = ByteArray(60_000) { ((it % 250) + 1).toByte() }
-        peer.sendTo(origin, big)
+        peer.sendFramedTo(origin, big)
 
         val deadline = System.currentTimeMillis() + 10000
         while (received.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)

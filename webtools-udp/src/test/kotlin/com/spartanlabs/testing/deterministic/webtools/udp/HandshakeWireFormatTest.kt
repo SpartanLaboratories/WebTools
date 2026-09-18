@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 // Level 4a - exhaustive input -> output mapping for every pure function in HandshakeWireFormat.
@@ -73,69 +74,45 @@ class HandshakeWireFormatTest {
         assertEquals(reason, HandshakeWireFormat.refusalReason(HandshakeWireFormat.refusedMessage(reason)))
     }
 
+    // --- registeredMessage ---
+
+    @Test
+    fun `registeredMessage is the exact accepted reply for this major`() {
+        assertEquals("REGISTERED 2", HandshakeWireFormat.registeredMessage())
+    }
+
+    // --- registeredProtocolVersion ---
+
+    @Test
+    fun `registeredProtocolVersion truth table`() {
+        assertEquals(1, HandshakeWireFormat.registeredProtocolVersion("REGISTERED"))
+        assertEquals(2, HandshakeWireFormat.registeredProtocolVersion("REGISTERED 2"))
+        assertEquals(3, HandshakeWireFormat.registeredProtocolVersion("REGISTERED 3"))
+        // Strict (OD-4): exactly one canonical decimal token.
+        assertNull(HandshakeWireFormat.registeredProtocolVersion("REGISTERED 02"))
+        assertNull(HandshakeWireFormat.registeredProtocolVersion("REGISTERED 2 3"))
+        assertNull(HandshakeWireFormat.registeredProtocolVersion("REGISTERED x"))
+        assertNull(HandshakeWireFormat.registeredProtocolVersion("REGISTERED "))
+        assertNull(HandshakeWireFormat.registeredProtocolVersion("registered"))
+        assertNull(HandshakeWireFormat.registeredProtocolVersion(""))
+        assertNull(HandshakeWireFormat.registeredProtocolVersion("REFUSED full"))
+    }
+
     // --- isRegistered ---
 
     @Test
-    fun `isRegistered truth table`() {
-        assertTrue(HandshakeWireFormat.isRegistered("REGISTERED"))
+    fun `isRegistered is strict - only this build's exact REGISTERED 2`() {
+        assertTrue(HandshakeWireFormat.isRegistered("REGISTERED 2"))
+        assertFalse(HandshakeWireFormat.isRegistered("REGISTERED"))
+        assertFalse(HandshakeWireFormat.isRegistered("REGISTERED 3"))
+        assertFalse(HandshakeWireFormat.isRegistered("REGISTERED 02"))
         assertFalse(HandshakeWireFormat.isRegistered("registered"))
         assertFalse(HandshakeWireFormat.isRegistered(""))
         assertFalse(HandshakeWireFormat.isRegistered("REGISTERED extra"))
     }
 
-    // --- isKeepAlive ---
-
     @Test
-    fun `isKeepAlive truth table`() {
-        assertTrue(HandshakeWireFormat.isKeepAlive("KA"))
-        assertFalse(HandshakeWireFormat.isKeepAlive("ka"))
-        assertFalse(HandshakeWireFormat.isKeepAlive("KA x"))
-        assertFalse(HandshakeWireFormat.isKeepAlive(""))
-        assertFalse(HandshakeWireFormat.isKeepAlive("Iam x"))
-    }
-
-    // --- probe helpers ---
-
-    @Test
-    fun `probeRequestMessage and probeReplyMessage build the verb plus token`() {
-        assertEquals("PING 42", HandshakeWireFormat.probeRequestMessage("42"))
-        assertEquals("PONG 42", HandshakeWireFormat.probeReplyMessage("42"))
-    }
-
-    @Test
-    fun `isProbeRequest truth table`() {
-        assertTrue(HandshakeWireFormat.isProbeRequest("PING"))
-        assertTrue(HandshakeWireFormat.isProbeRequest("PING 42"))
-        assertFalse(HandshakeWireFormat.isProbeRequest("PINGX"))
-        assertFalse(HandshakeWireFormat.isProbeRequest("hello"))
-        assertFalse(HandshakeWireFormat.isProbeRequest("PONG 42"))
-    }
-
-    @Test
-    fun `isProbeReply truth table`() {
-        assertTrue(HandshakeWireFormat.isProbeReply("PONG"))
-        assertTrue(HandshakeWireFormat.isProbeReply("PONG 42"))
-        assertFalse(HandshakeWireFormat.isProbeReply("PONGX"))
-        assertFalse(HandshakeWireFormat.isProbeReply("hello"))
-        assertFalse(HandshakeWireFormat.isProbeReply("PING 42"))
-    }
-
-    @Test
-    fun `probeToken truth table`() {
-        assertEquals("42", HandshakeWireFormat.probeToken("PING 42"))
-        // Leading / trailing / multi-space around the token are all trimmed away.
-        assertEquals("42", HandshakeWireFormat.probeToken("PONG  42 "))
-        assertEquals("", HandshakeWireFormat.probeToken("PING"))
-        // Edge case: the token text is itself "PONG". removePrefix strips the leading
-        // "PING", the second removePrefix does not match (the remainder starts with a
-        // space), and trim() yields the bare word - locked in as current behaviour.
-        assertEquals("PONG", HandshakeWireFormat.probeToken("PING PONG"))
-    }
-
-    @Test
-    fun `probeToken round-trips the token built by probeRequestMessage`() {
-        for (token in listOf("0", "42", "4711", "9007199254740993")) {
-            assertEquals(token, HandshakeWireFormat.probeToken(HandshakeWireFormat.probeRequestMessage(token)))
-        }
+    fun `isRegistered round-trips registeredMessage`() {
+        assertTrue(HandshakeWireFormat.isRegistered(HandshakeWireFormat.registeredMessage()))
     }
 }

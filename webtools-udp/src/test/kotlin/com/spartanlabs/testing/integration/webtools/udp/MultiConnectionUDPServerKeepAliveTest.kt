@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
 import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
@@ -43,12 +44,12 @@ class MultiConnectionUDPServerKeepAliveTest {
         client.receive(DatagramPacket(ByteArray(64), 64))
     }
 
-    private fun DatagramSocket.nextText(timeoutMillis: Int): String? {
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): ByteArray? {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
             receive(packet)
-            String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+            packet.data.copyOf(packet.length)
         } catch (_: SocketTimeoutException) {
             null
         }
@@ -59,8 +60,8 @@ class MultiConnectionUDPServerKeepAliveTest {
         var count = 0
         while (System.currentTimeMillis() < deadline) {
             val remaining = (deadline - System.currentTimeMillis()).toInt().coerceAtLeast(1)
-            val msg = client.nextText(remaining) ?: break
-            if (msg == "KA") count++
+            val msg = client.nextBytes(remaining) ?: break
+            if (DatagramType.ofTagByte(msg.getOrNull(0)) == DatagramType.KEEPALIVE) count++
         }
         return count
     }
@@ -102,8 +103,8 @@ class MultiConnectionUDPServerKeepAliveTest {
                 connection.push("tick")
                 Thread.sleep(100)
                 while (true) {
-                    val msg = client.nextText(20) ?: break
-                    if (msg == "KA") kaSeen++ else dataSeen++
+                    val msg = client.nextBytes(20) ?: break
+                    if (DatagramType.ofTagByte(msg.getOrNull(0)) == DatagramType.KEEPALIVE) kaSeen++ else dataSeen++
                 }
             }
             assertTrue(dataSeen > 0)
@@ -122,7 +123,7 @@ class MultiConnectionUDPServerKeepAliveTest {
 
             assertTrue(srv.connections.single().stopKeepAlive().isSuccess)
             Thread.sleep(400)
-            while (client.nextText(20) != null) { /* drain */ }
+            while (client.nextBytes(20) != null) { /* drain */ }
             assertTrue(countKeepAlives(client, 900L) == 0)
         }
     }
@@ -138,7 +139,7 @@ class MultiConnectionUDPServerKeepAliveTest {
 
             assertTrue(srv.connections.single().terminate().isSuccess)
             Thread.sleep(400)
-            while (client.nextText(20) != null) { /* drain */ }
+            while (client.nextBytes(20) != null) { /* drain */ }
             assertTrue(countKeepAlives(client, 900L) == 0)
         }
     }

@@ -140,4 +140,42 @@ class MultiConnectionUDPServerUatTest {
         // FAIL: rttMillis is wildly off the `ping` ground truth, variance/loss do not move with
         //       the injected impairment, or loss never recovers after the impairment stops.
     }
+
+    @Test
+    @Disabled("Manual: needs a real 1.6.0 jar on one classpath. Issue #14 Stage 1 - the framed-transport wire break.")
+    fun `a 1 6 0 client against a 2 0 0-alpha1 server, and the reverse, both fail handshake cleanly`() {
+        // 1a. Run a `webtools-udp` `2.0.0-alpha1` MultiConnectionUDPServer subclass. From a
+        //     machine on the published `1.6.0` jar's classpath, MultiConnectionUDPClient(...)
+        //     .handshake("legacy").
+        // PASS: handshake() fails with an IncompatibleProtocolException (remoteVersion = null on
+        //       the 1.6.0 side, since 1.x has no such type - the 1.x client instead sees its own
+        //       "Expected 'REGISTERED' but got 'REGISTERED 2'" IllegalStateException). No framed
+        //       traffic is exchanged; the server log names the version mismatch (or, for the
+        //       1.x-client case, an inert transient registration per plan §7 - never addressed
+        //       once the client goes silent).
+        // 1b. The reverse: a `1.6.0` MultiConnectionUDPServer against a `2.0.0-alpha1` client.
+        // PASS: the 2.0.0 client's handshake() fails with IncompatibleProtocolException
+        //       (remoteVersion = 1) - a clean, typed, early failure, not a garbage session.
+        // FAIL: either direction "succeeds" the handshake and then exchanges data one side
+        //       delivers to its application as garbage (the pre-fix Issue #8 failure mode).
+    }
+
+    @Test
+    @Disabled("Manual: real WAN/NAT path with `tc netem` available. Issue #14 Stage 1 - framed mixed session.")
+    fun `a GameTools-style mixed session survives interleaved binary snapshots and text events over a real path`() {
+        // 1. Run a `2.0.0-alpha1` MultiConnectionUDPServer subclass on a host with a public,
+        //    routable IP; onClientConnect binds both an actuateBytes echo and starts a
+        //    server-side keepalive + probe.
+        // 2. From a NAT'd machine (optionally under `tc netem` loss/jitter): handshake, start,
+        //    startKeepAlive(), startProbe(), then run a multi-minute loop sending per-tick binary
+        //    world-state snapshots via send(ByteArray) interleaved with occasional text chat
+        //    events via send(String) - including at least one snapshot whose first byte is each
+        //    of 0x00, 0x4B ("K"), 0x81, and 0x90, deliberately covering the retired Issue #8
+        //    lead-byte advice.
+        // PASS: every snapshot and every chat event arrives at the peer byte-exact / text-exact,
+        //       in send order; the bound handler never receives a keepalive or probe frame;
+        //       linkQuality() reports a plausible RTT throughout.
+        // FAIL: any snapshot is corrupted, dropped, or misrouted as a control frame; the
+        //       classifier is ever seen to misfire on an arbitrary first byte.
+    }
 }

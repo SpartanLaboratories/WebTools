@@ -1,7 +1,7 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeClientChannel
-import com.spartanlabs.webtools.udp.HandshakeProtocol
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
@@ -20,12 +20,14 @@ class UDPConnectionTest {
     private fun connection(channel: FakeClientChannel) = UDPConnection("c", peer, channel)
 
     @Test
-    fun `push encodes UTF-8 and calls channel send to peer`() {
+    fun `push frames the payload as an 0x90 unreliable datagram and calls channel send to peer`() {
         val channel = FakeClientChannel()
 
         assertTrue(connection(channel).push("hello").isSuccess)
 
-        assertEquals(listOf(FakeClientChannel.Sent("hello", peer)), channel.sent)
+        val (bytes, to) = channel.sentBytes.single()
+        assertContentEquals(TransportWireFormat.unreliableDatagram("hello".toByteArray(Charsets.UTF_8)), bytes)
+        assertEquals(peer, to)
     }
 
     @Test
@@ -36,12 +38,14 @@ class UDPConnectionTest {
     }
 
     @Test
-    fun `keepAlive sends the KA bytes to peer`() {
+    fun `keepAlive sends the 0x80 keepalive datagram to peer`() {
         val channel = FakeClientChannel()
 
         assertTrue(connection(channel).keepAlive().isSuccess)
 
-        assertEquals(listOf(FakeClientChannel.Sent(HandshakeProtocol.KEEPALIVE_TOKEN, peer)), channel.sent)
+        val (bytes, to) = channel.sentBytes.single()
+        assertContentEquals(TransportWireFormat.keepaliveDatagram(), bytes)
+        assertEquals(peer, to)
     }
 
     @Test
@@ -73,14 +77,14 @@ class UDPConnectionTest {
     }
 
     @Test
-    fun `push bytes forwards the exact bytes to channel send with peer`() {
+    fun `push bytes frames the exact payload as an 0x90 datagram to channel send with peer`() {
         val channel = FakeClientChannel()
         val payload = byteArrayOf(0x00, 0x7F, -0x01, 0x0A)
 
         assertTrue(connection(channel).push(payload).isSuccess)
 
         val (bytes, to) = channel.sentBytes.single()
-        assertContentEquals(payload, bytes)
+        assertContentEquals(TransportWireFormat.unreliableDatagram(payload), bytes)
         assertEquals(peer, to)
     }
 
@@ -91,7 +95,10 @@ class UDPConnectionTest {
 
         connection(channel).push(message)
 
-        assertContentEquals(message.toByteArray(Charsets.UTF_8), channel.sentBytes.single().first)
+        assertContentEquals(
+            TransportWireFormat.unreliableDatagram(message.toByteArray(Charsets.UTF_8)),
+            channel.sentBytes.single().first,
+        )
     }
 
     @Test
