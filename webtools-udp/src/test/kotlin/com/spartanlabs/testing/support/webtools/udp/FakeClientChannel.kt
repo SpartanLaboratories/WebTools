@@ -2,13 +2,15 @@ package com.spartanlabs.testing.support.webtools.udp
 
 import com.spartanlabs.webtools.udp.ClientChannel
 import com.spartanlabs.webtools.udp.LinkQuality
+import com.spartanlabs.webtools.udp.UdpChannel
 import java.net.InetSocketAddress
 
 /**
  * A socket-free [ClientChannel] test fixture. Records every [send] (as the decoded
  * UTF-8 string plus its target, and separately as the raw bytes), every [bind] /
- * [bindBytes] / [deregister], and lets a test invoke a bound handler directly. Backs
- * the socket-free [com.spartanlabs.webtools.udp.UDPConnection] tests.
+ * [bindBytes] / [deregister] / [sendReliable] / [bindReliable], and lets a test
+ * invoke a bound handler directly. Backs the socket-free
+ * [com.spartanlabs.webtools.udp.UDPConnection] tests.
  */
 internal class FakeClientChannel(
     private val sendResult: Result<Unit> = Result.success(Unit),
@@ -16,6 +18,9 @@ internal class FakeClientChannel(
     private val cancelKeepAliveResult: Result<Unit> = Result.success(Unit),
     private val scheduleProbeResult: Result<Unit> = Result.success(Unit),
     private val cancelProbeResult: Result<Unit> = Result.success(Unit),
+    private val sendReliableResult: Result<Unit> = Result.success(Unit),
+    private val bindReliableResult: Result<Unit> = Result.success(Unit),
+    override val reliableMaxMessageBytes: Int = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
     var linkQuality: LinkQuality? = null,
 ) : ClientChannel {
 
@@ -44,6 +49,12 @@ internal class FakeClientChannel(
     val bound = mutableMapOf<InetSocketAddress, (String) -> Unit>()
     val boundBytes = mutableMapOf<InetSocketAddress, (ByteArray) -> Unit>()
     val deregistered = mutableListOf<InetSocketAddress>()
+
+    /** Every [sendReliable] call, as `(bytes, peer)`, in order. */
+    val reliableSent = mutableListOf<Pair<ByteArray, InetSocketAddress>>()
+
+    /** Every peer bound via [bindReliable], last call wins. */
+    val boundReliable = mutableMapOf<InetSocketAddress, (ByteArray) -> Unit>()
 
     override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
         sent += Sent(String(bytes, Charsets.UTF_8), to)
@@ -92,6 +103,16 @@ internal class FakeClientChannel(
         return linkQuality
     }
 
+    override fun sendReliable(peer: InetSocketAddress, bytes: ByteArray): Result<Unit> {
+        reliableSent += bytes to peer
+        return sendReliableResult
+    }
+
+    override fun bindReliable(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit): Result<Unit> {
+        boundReliable[peer] = onMessage
+        return bindReliableResult
+    }
+
     /** Invokes the text handler bound for [peer] with [message], as the server would. */
     fun deliver(peer: InetSocketAddress, message: String) {
         bound.getValue(peer)(message)
@@ -100,5 +121,10 @@ internal class FakeClientChannel(
     /** Invokes the bytes handler bound for [peer] with [bytes], as the server would. */
     fun deliverBytes(peer: InetSocketAddress, bytes: ByteArray) {
         boundBytes.getValue(peer)(bytes)
+    }
+
+    /** Invokes the reliable handler bound for [peer] with [bytes], as the server would. */
+    fun deliverReliable(peer: InetSocketAddress, bytes: ByteArray) {
+        boundReliable.getValue(peer)(bytes)
     }
 }

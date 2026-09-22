@@ -17,6 +17,7 @@ import kotlin.test.assertTrue
 // Level 3 - a real MultiConnectionUDPClient socket against a fake peer DatagramSocket,
 // exercising the opt-in scheduled keepalive end to end on the client side.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientKeepAliveTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

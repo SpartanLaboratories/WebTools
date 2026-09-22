@@ -15,10 +15,14 @@ import java.net.InetSocketAddress
  * @param failAfterShutdown when `true`, a [schedule] call made after [shutdown]
  * fails with [IllegalStateException] - the real `PeriodicScheduler`'s shut-down
  * latch, without a real executor
+ * @param throwOnShutdown when `true`, [shutdown] throws a [RuntimeException]
+ * instead of completing - lets a test prove a caller's teardown chain still runs
+ * its later steps when an earlier scheduler's `shutdown()` throws (§12 B5)
  */
 internal class FakePeriodicSchedule(
     private val scheduleResult: Result<Unit> = Result.success(Unit),
     private val failAfterShutdown: Boolean = false,
+    private val throwOnShutdown: Boolean = false,
 ) : PeriodicSchedule {
 
     data class Scheduled(val key: InetSocketAddress, val intervalMillis: Long, val tick: () -> Unit)
@@ -43,6 +47,16 @@ internal class FakePeriodicSchedule(
         return scheduleResult
     }
 
+    override fun scheduleTick(key: InetSocketAddress, tickMillis: Long, tick: () -> Unit): Result<Unit> {
+        val entry = Scheduled(key, tickMillis, tick)
+        scheduleCalls += entry
+        if (failAfterShutdown && shutdownCalls > 0) {
+            return Result.failure(IllegalStateException("periodic scheduler already shut down"))
+        }
+        if (scheduleResult.isSuccess) scheduled[key] = entry
+        return scheduleResult
+    }
+
     override fun cancel(key: InetSocketAddress) {
         cancels += key
         scheduled.remove(key)
@@ -50,11 +64,17 @@ internal class FakePeriodicSchedule(
 
     override fun shutdown() {
         shutdownCalls++
+        if (throwOnShutdown) throw RuntimeException("shutdown() failed")
         scheduled.clear()
     }
 
     /** Runs the recorded tick for [key], as the real scheduler's poll would. */
     fun tick(key: InetSocketAddress) {
         scheduled.getValue(key).tick()
+    }
+
+    /** Runs every currently-scheduled tick, in schedule order - for driving several peers' ticks in one call. */
+    fun tickAll() {
+        scheduled.values.toList().forEach { it.tick() }
     }
 }

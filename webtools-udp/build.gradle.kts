@@ -38,7 +38,23 @@
 // MultiConnectionUDPClient; the two newly-live tags still WARN-drop exactly as a reserved tag
 // did in alpha1 - only enough of a touch to keep both files compiling against the wider
 // DatagramType enum. Public channel API + real socket wiring is Stage 3.
-version = "2.0.0-alpha2"
+// 2.0.0-alpha3: the public reliable channel API (Issue #14, Stage 3 of the 2.0 series) -
+// DeliveryMode (UNRELIABLE / RELIABLE_ORDERED), UdpChannel (send/actuate/actuateBytes) and
+// Connection.channel(mode) / MultiConnectionUDPClient.channel(mode); two typed failures,
+// ReliableWindowFullException and ReliableMessageTooLargeException, sharing the open
+// ReliableSendFailure supertype; a message-size cap (reliableMaxMessageBytes, default 1024,
+// max 8192) on both server and client constructors. The Stage-2 ReliableChannelEngine is
+// wired live into HandshakeCoordinator / UDPConnection / MultiConnectionUDPClient /
+// MultiConnectionUDPServer - the 0xA0/0xA1 frames now go out on the wire - behind a new
+// lazily-created mcup{c,s}-retransmit PeriodicScheduler thread per side (a new internal
+// PeriodicSchedule.scheduleTick seam, since the existing schedule() cannot express a
+// sub-250ms cadence). Eight pre-existing members ship deprecated (WARNING) with a working
+// ReplaceWith, fully functional: Connection.push(String|ByteArray)/actuate/actuateBytes and
+// MultiConnectionUDPClient.send(String|ByteArray)/start/startBytes. Server-wide
+// MultiConnectionUDPServer.start/startBytes/pushToAll are not deprecated (no per-Connection
+// replacement) and gain reliable siblings startReliable/pushToAllReliable. No new public
+// signature is removed; additive at both the API and wire level.
+version = "2.0.0-alpha3"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

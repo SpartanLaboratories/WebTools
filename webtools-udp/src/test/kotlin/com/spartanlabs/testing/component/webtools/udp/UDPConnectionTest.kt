@@ -13,6 +13,7 @@ import kotlin.test.assertTrue
 
 // Level 2 - the socket-free UDPConnection handle in isolation, over a FakeClientChannel.
 @Tag("component")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class UDPConnectionTest {
 
     private val peer = InetSocketAddress(InetAddress.getLoopbackAddress(), 41300)

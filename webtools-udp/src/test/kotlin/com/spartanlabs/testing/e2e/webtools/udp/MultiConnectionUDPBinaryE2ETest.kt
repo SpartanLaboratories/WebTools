@@ -22,6 +22,7 @@ import kotlin.test.assertTrue
  * [MultiConnectionUDPClientServerE2ETest] so each stays readable.
  */
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPBinaryE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

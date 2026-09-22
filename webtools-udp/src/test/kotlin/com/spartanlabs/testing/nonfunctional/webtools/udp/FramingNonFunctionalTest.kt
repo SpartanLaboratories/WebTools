@@ -8,11 +8,13 @@ import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -25,6 +27,7 @@ import kotlin.test.assertTrue
 // path-MTU advisory; a flood of random/malformed/truncated datagrams never throws out of
 // either listener and never leaks a control or malformed frame to a bound handler.
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class FramingNonFunctionalTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -80,6 +83,8 @@ class FramingNonFunctionalTest {
             idleTimeoutMillis = 0L,
             keepAliveSchedule = FakePeriodicSchedule(),
             probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         )
         coordinator.accept(origin, "Iam fuzz-target")
         coordinator.bindBytes(origin, delivered::add)
@@ -143,7 +148,10 @@ class FramingNonFunctionalTest {
         assertTrue(client.handshake("fuzz").isSuccess)
         handshakeThread.join(5_000)
 
-        val received = mutableListOf<ByteArray>()
+        // CopyOnWriteArrayList, not a plain mutableListOf: startBytes' handler appends from the
+        // client's background dispatch thread while the poll loop below reads/iterates it from
+        // the test thread - an unsynchronized plain list intermittently threw ConcurrentModificationException.
+        val received = CopyOnWriteArrayList<ByteArray>()
         assertTrue(client.startBytes { received += it }.isSuccess)
 
         val random = Random(7)

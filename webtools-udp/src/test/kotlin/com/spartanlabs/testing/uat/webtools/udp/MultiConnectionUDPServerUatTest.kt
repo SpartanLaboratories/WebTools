@@ -178,4 +178,69 @@ class MultiConnectionUDPServerUatTest {
         // FAIL: any snapshot is corrupted, dropped, or misrouted as a control frame; the
         //       classifier is ever seen to misfire on an arbitrary first byte.
     }
+
+    @Test
+    @Disabled("Manual: real lossy WAN/NAT path with `tc netem` available. Issue #14 Stage 3 - the reliable-ordered channel.")
+    fun `a GameTools-style session interleaves reliable events and unreliable snapshots over a real lossy path`() {
+        // 1. Run a `2.0.0-alpha3`+ MultiConnectionUDPServer subclass on a host with a public,
+        //    routable IP; onClientConnect binds a per-tick handler on
+        //    connection.channel(DeliveryMode.UNRELIABLE) for world-state snapshots AND a
+        //    separate handler on connection.channel(DeliveryMode.RELIABLE_ORDERED) for
+        //    ability-cast / chat / inventory events, logging each with a monotonic receipt index.
+        // 2. From a NAT'd machine, under `tc netem loss 5-10% delay 40ms 20ms`: handshake, then
+        //    run a multi-minute loop sending ~20 unreliable snapshots/second via
+        //    channel(UNRELIABLE).send(...) interleaved with an ability-cast/chat/inventory event
+        //    every few seconds via channel(RELIABLE_ORDERED).send(...), logging the send order
+        //    of the reliable events locally.
+        // PASS (a): every reliable event the client sent arrives at the server exactly once, in
+        //           the exact order the client sent them (compare the client's local send log
+        //           against the server's receipt log).
+        // PASS (b): the reverse direction (server -> client) shows the same guarantee for a
+        //           matching stream of server-originated reliable events.
+        // PASS (c): head-of-line blocking on the reliable stream is visible but bounded - a lost
+        //           reliable datagram delays delivery of reliable events sent after it (and,
+        //           because delivery shares one dispatch thread, briefly delays snapshot delivery
+        //           too) but never longer than a few retransmit RTOs, and the snapshot stream
+        //           itself never stalls or reorders because of it.
+        // 3. Mid-session, inject `tc qdisc change dev <if> root netem loss 100%` for ~5 seconds
+        //    (a full link blackout), then remove it.
+        // PASS (d): reliable events sent during the blackout are retransmitted and arrive, in
+        //           order, once the link recovers - none are silently dropped; the snapshot
+        //           stream simply resumes with no attempt to "catch up" stale ticks (as expected
+        //           for UNRELIABLE - newest-wins is the point).
+        // FAIL: any reliable event is duplicated, reordered, or permanently lost; the reliable
+        //       stream's head-of-line blocking visibly stalls the snapshot stream for longer than
+        //       a few RTOs; or the channel does not recover after the blackout ends.
+    }
+
+    @Test
+    @Disabled("Manual: real lossy WAN/NAT path with `tc netem` available. Issue #14 - the server-wide reliable conveniences.")
+    fun `startReliable and pushToAllReliable serve every already-connected client over a real lossy path`() {
+        // 1. Run a `2.0.0-alpha3`+ MultiConnectionUDPServer subclass on a host with a public,
+        //    routable IP.
+        // 2. From two NAT'd machines, handshake both clients first. Only THEN call
+        //    server.startReliable(handler) once, logging each receipt with the sending client's
+        //    identity and a monotonic receipt index.
+        // 3. Under `tc netem loss 5-10% delay 40ms 20ms` on both clients' paths: have each client
+        //    send a stream of reliable events (channel(RELIABLE_ORDERED).send(...)) a few seconds
+        //    apart, logging its own send order locally. Alongside, the server drives
+        //    pushToAllReliable on a ~2 s cadence for several minutes, interleaved with the
+        //    existing unreliable pushToAll.
+        // PASS (a): the single startReliable call serves both already-connected clients - every
+        //           event from each arrives exactly once, in that client's send order.
+        // PASS (b): every pushToAllReliable payload arrives at both clients exactly once and in
+        //           broadcast order, and never on either client's unreliable handler.
+        // 4. Mid-session, physically pull one client's network (or `kill -9` it) WITHOUT
+        //    terminating it server-side, so its reliable window fills and never drains.
+        // PASS (c) - the fold, over a real path: the other client keeps receiving every
+        //           subsequent pushToAllReliable payload, while the call's Result reports the
+        //           stalled peer's ReliableWindowFullException.
+        // 5. Restore that client's link (or have the operator terminate it server-side).
+        // PASS (d): the broadcast stream it missed is retransmitted and arrives in order once the
+        //           link recovers, or the operator's termination lets the broadcast Result return
+        //           to success.
+        // FAIL: a stalled peer silently stops the broadcast reaching the healthy one; a
+        //       late-handshaking client is bound by an earlier startReliable; or a broadcast
+        //       payload is duplicated or reordered at any client.
+    }
 }

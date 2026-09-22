@@ -95,4 +95,30 @@ internal interface ClientChannel {
      * @return the current [LinkQuality], or `null`
      */
     fun linkQualityOf(peer: InetSocketAddress): LinkQuality?
+
+    /**
+     * Offers [bytes] to [peer]'s reliable-ordered channel, creating the engine and
+     * arming its retransmit tick on first use.
+     * @param peer the client endpoint to send to
+     * @param bytes the application payload to send reliably
+     * @return success once accepted for reliable delivery (buffered and sequenced -
+     * not necessarily already on the wire); failure with
+     * [ReliableMessageTooLargeException] if [bytes] exceeds the cap,
+     * [ReliableWindowFullException] if the in-flight window is full, or
+     * [IllegalStateException] if [peer] is no longer registered
+     */
+    fun sendReliable(peer: InetSocketAddress, bytes: ByteArray): Result<Unit>
+
+    /**
+     * Binds [onMessage] as [peer]'s reliable-ordered inbound handler. Independent
+     * of [bind]/[bindBytes] - binding one never disturbs the other.
+     * @param peer the client endpoint whose reliable datagrams [onMessage] should receive
+     * @param onMessage the handler, invoked on the server's dispatch executor
+     * @return [Result.success] once bound; [Result.failure] with an
+     * [IllegalStateException] if [peer] is not registered
+     */
+    fun bindReliable(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit): Result<Unit>
+
+    /** The configured reliable message-size cap, for the channel handle's pre-check KDoc/tests. */
+    val reliableMaxMessageBytes: Int
 }

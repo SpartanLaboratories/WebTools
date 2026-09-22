@@ -102,19 +102,28 @@ internal class ReliableRetransmitBuffer(
 
     /**
      * Every in-flight entry whose RTO has elapsed since it was last sent:
-     * `now - lastSentAtNanos >= entry.rtoMillis`. Each returned entry's own
-     * `lastSentAtNanos` is bumped to [now], its retransmit count incremented,
-     * and its own `rtoMillis` doubled (capped at [rtoCapMillis]) — RFC 6298
-     * §5.5 per-message backoff. The shared SRTT/RTTVAR estimator is untouched
-     * here; only the caller feeds it fresh samples via [onAck].
+     * `now - lastSentAtNanos >= entry.rtoMillis`, capped at [limit] entries.
+     * Each returned entry's own `lastSentAtNanos` is bumped to [now], its
+     * retransmit count incremented, and its own `rtoMillis` doubled (capped at
+     * [rtoCapMillis]) — RFC 6298 §5.5 per-message backoff. The shared
+     * SRTT/RTTVAR estimator is untouched here; only the caller feeds it fresh
+     * samples via [onAck].
+     *
+     * [limit] is enforced *inside* this loop, not by the caller trimming the
+     * returned list: every entry this method mutates is one it returns, so a
+     * caller-side trim after the fact would mark the dropped remainder as
+     * retransmitted without it ever reaching the wire.
      * @param now the current monotonic time
      * @param rtoCapMillis the ceiling the doubled per-entry RTO is clamped to
-     * @return every entry now due for retransmit, in seq order
+     * @param limit the most entries to return (and mutate) in one call;
+     * defaults to unbounded for the original single-caller contract
+     * @return every entry now due for retransmit, in seq order, at most [limit] of them
      */
     @Synchronized
-    fun dueForRetransmit(now: Long, rtoCapMillis: Long): List<DueRetransmit> {
+    fun dueForRetransmit(now: Long, rtoCapMillis: Long, limit: Int = Int.MAX_VALUE): List<DueRetransmit> {
         val due = mutableListOf<DueRetransmit>()
         for (entry in inFlight.values) {
+            if (due.size == limit) break
             val elapsedMillis = (now - entry.lastSentAtNanos) / NANOS_PER_MILLI
             if (elapsedMillis >= entry.rtoMillis) {
                 entry.lastSentAtNanos = now

@@ -5,6 +5,7 @@ import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -24,6 +25,7 @@ import kotlin.test.assertTrue
 // real loopback listen (the known compromise noted in the plan - the client has no
 // injectable send seam).
 @Tag("component")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientProbeTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -39,6 +41,8 @@ class MultiConnectionUDPClientProbeTest {
             MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
             FakePeriodicSchedule(),
             probe,
+            FakePeriodicSchedule(),
+            UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         ).also { clients += it }
 
     @AfterTest

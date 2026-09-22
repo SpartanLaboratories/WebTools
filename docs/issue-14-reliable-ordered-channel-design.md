@@ -238,6 +238,17 @@ interface Connection {
 }
 ```
 
+> **Superseded 2026-09-18 — see `docs/issue-14-reliable-channel-api-plan.md`
+> §3.1/§7 (Stage 3, maintainer-ratified).** `UdpChannel`'s handler member is
+> **not** the single `actuate(onMessage: (ByteArray) -> Unit)` sketched above.
+> It ships as `actuateBytes` (abstract, bytes) + `actuate` (default, taking
+> `(String) -> Unit`) instead, matching this module's existing
+> `actuate` = text / `actuateBytes` = bytes vocabulary. The sketch above would
+> have inverted that vocabulary and made `Connection.actuate`'s deprecation
+> (plan §10 OD-4) impossible to express as a compiling `ReplaceWith`. `send`,
+> `channel(mode)`, and `DeliveryMode` below are implemented as sketched —
+> only the handler-naming choice changed.
+
 - **For:** this is the durable, LiteNetLib-shaped end state. When multiple
   reliable channels or an unreliable-sequenced mode land later, they slot in with
   no further break. The maintainer floated exactly this in the issue.

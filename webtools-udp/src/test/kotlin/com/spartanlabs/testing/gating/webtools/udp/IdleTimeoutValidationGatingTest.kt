@@ -30,9 +30,9 @@ class IdleTimeoutValidationGatingTest {
     }
 
     @Test
-    fun `the JvmOverloads constructor set is exactly empty, int, and int-long`() {
+    fun `the JvmOverloads constructor set is exactly empty, int, int-long, and int-long-int`() {
         val signatures = MultiConnectionUDPServer::class.java.declaredConstructors
-            // Kotlin emits a synthetic (int, long, int, DefaultConstructorMarker) ctor for defaults - skip it.
+            // Kotlin emits a synthetic (int, long, int, int, DefaultConstructorMarker) ctor for defaults - skip it.
             .filterNot { ctor -> ctor.parameterTypes.any { it.name.endsWith("DefaultConstructorMarker") } }
             .map { ctor -> ctor.parameterTypes.map { it.name } }
             .toSet()
@@ -40,6 +40,10 @@ class IdleTimeoutValidationGatingTest {
         assertTrue(emptyList<String>() in signatures, "no-arg constructor missing; had $signatures")
         assertTrue(listOf("int") in signatures, "(int) constructor missing; had $signatures")
         assertTrue(listOf("int", "long") in signatures, "(int, long) constructor missing; had $signatures")
-        assertTrue(signatures.size == 3, "unexpected extra constructors: $signatures")
+        assertTrue(
+            listOf("int", "long", "int") in signatures,
+            "(int, long, int) constructor missing (reliableMaxMessageBytes, Issue #14 Stage 3); had $signatures",
+        )
+        assertTrue(signatures.size == 4, "unexpected extra constructors: $signatures")
     }
 }

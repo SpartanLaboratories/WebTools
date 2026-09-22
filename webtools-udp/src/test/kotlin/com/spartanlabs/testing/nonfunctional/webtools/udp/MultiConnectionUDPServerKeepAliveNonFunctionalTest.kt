@@ -19,6 +19,7 @@ import kotlin.test.assertTrue
 // Level 4c - robustness of the server-side scheduled keepalive under many connections and
 // hostile senders, plus the zero-cost-when-unused guarantee.
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerKeepAliveNonFunctionalTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()

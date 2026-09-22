@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.gating.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeClientChannel
+import com.spartanlabs.webtools.udp.DeliveryMode
 import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
 import org.junit.jupiter.api.Tag
@@ -9,11 +10,14 @@ import java.net.InetSocketAddress
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 // Level 1 - fast, socket-free smoke that UDPConnection.push forwards bytes to the
 // channel and propagates the Result. The exhaustive matrix lives at Level 2.
 @Tag("gating")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class UDPConnectionGatingTest {
 
     private val peer = InetSocketAddress(InetAddress.getLoopbackAddress(), 41300)
@@ -63,5 +67,26 @@ class UDPConnectionGatingTest {
         UDPConnection("c", peer, channel).push(payload)
 
         assertContentEquals(TransportWireFormat.unreliableDatagram(payload), channel.sentBytes.single().first)
+    }
+
+    @Test
+    fun `channel UNRELIABLE and channel RELIABLE_ORDERED return non-null handles with the right mode`() {
+        val connection = UDPConnection("c", peer, FakeClientChannel())
+
+        val unreliable = connection.channel(DeliveryMode.UNRELIABLE)
+        val reliable = connection.channel(DeliveryMode.RELIABLE_ORDERED)
+
+        assertNotNull(unreliable)
+        assertNotNull(reliable)
+        assertEquals(DeliveryMode.UNRELIABLE, unreliable.mode)
+        assertEquals(DeliveryMode.RELIABLE_ORDERED, reliable.mode)
+    }
+
+    @Test
+    fun `the same channel call twice returns the same instance - the by lazy contract`() {
+        val connection = UDPConnection("c", peer, FakeClientChannel())
+
+        assertSame(connection.channel(DeliveryMode.UNRELIABLE), connection.channel(DeliveryMode.UNRELIABLE))
+        assertSame(connection.channel(DeliveryMode.RELIABLE_ORDERED), connection.channel(DeliveryMode.RELIABLE_ORDERED))
     }
 }

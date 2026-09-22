@@ -19,6 +19,7 @@ import kotlin.test.assertTrue
 // Level 4c - robustness of the server-side link-quality probe under many connections, the
 // zero-cost-when-unused guarantee, and the bounded responder path.
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerProbeNonFunctionalTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()

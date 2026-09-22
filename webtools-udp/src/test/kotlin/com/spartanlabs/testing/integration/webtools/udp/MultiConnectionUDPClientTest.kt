@@ -25,6 +25,7 @@ import kotlin.test.assertTrue
 // Level 3 - real sockets, real threads: MultiConnectionUDPClient exercised against a fake
 // peer DatagramSocket standing in for the server side of the handshake and session.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

@@ -20,6 +20,7 @@ import kotlin.test.assertTrue
 // over loopback, proving the admit() refusal path surfaces as a typed HandshakeRefusedException
 // on the client and that a refused newcomer never disturbs an established connection.
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPHandshakeRefusalE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

@@ -20,6 +20,7 @@ import kotlin.test.assertTrue
 // dispatch-executor concurrency model, mirroring HandshakeNonFunctionalTest's server-side
 // coverage now that the client has the same concurrency shape.
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientNonFunctionalTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

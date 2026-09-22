@@ -17,6 +17,7 @@ import kotlin.test.assertTrue
 // Level 3 - a real MultiConnectionUDPServer with its own instance, a real client DatagramSocket
 // standing in for a peer, exercising Connection.startKeepAlive / stopKeepAlive end to end.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerKeepAliveTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()

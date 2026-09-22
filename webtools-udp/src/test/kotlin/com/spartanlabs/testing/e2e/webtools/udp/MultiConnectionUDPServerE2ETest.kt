@@ -24,6 +24,7 @@ import kotlin.test.assertTrue
  * surface as app messages, and the server binds exactly one UDP port.
  */
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerE2ETest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerE2ETest::class.java)
