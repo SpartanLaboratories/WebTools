@@ -29,13 +29,12 @@
   `master`.
 - **This plan document** is committed in the same commit as the first Stage-3
   implementation commit, so `git log --follow` binds plan to code.
-- **Branch:** `feat/issue-14-reliable-channel-api`
-- **Commit:** TBD
-- **PR:** TBD
-- **Status:** planning only — no source, test, or build file touched by this
-  document. **Every decision is resolved** — OD-1–OD-5 and OD-4a, all
-  2026-09-18 (§10), together with the withdrawal of the standing clean-break
-  policy. Nothing is outstanding; the plan is ready to hand to an implementer.
+- **Branch:** `feat/issue-14-reliable-channel-api` (off `feat/2.0-framed-transport`,
+  deleted after merge).
+- **Commits:** `Commit: a988834` (feat) / `Commit: 7446462` (test) / `Commit: 677da54` (build).
+- **PR:** `PR: #35`, merged into `feat/2.0-framed-transport` as `55564ae`.
+- **Status:** done — on `feat/2.0-framed-transport` as `webtools-udp` 2.0.0-alpha3,
+  not published to Maven Central; Issue #14 stays open for Stage 4.
 - **Revised 2026-09-20 after a verification pass** against the Stage-3 working
   tree. Two kinds of change, both recorded in **§12**: *(a)* seven passages
   corrected to match what the implementation actually (and correctly) does —
