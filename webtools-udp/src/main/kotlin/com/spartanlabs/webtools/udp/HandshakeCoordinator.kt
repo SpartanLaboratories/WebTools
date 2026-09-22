@@ -40,7 +40,13 @@ import java.net.InetSocketAddress
  *   probe timer per connection (an 8-byte big-endian sequence), folds each
  *   `0x82` reply into the connection's [Registration.linkQuality] estimator,
  *   answers an inbound `0x81` from a registered origin with an `0x82`, and is
- *   cancelled on [deregister] or a same-name supersede.
+ *   cancelled on [deregister] or a same-name supersede;
+ * - the **reliable-ordered channel seam** - an inbound `0xA0`/`0xA1`, or a
+ *   `sendReliable`/`bindReliable` call, lazily mints a per-connection
+ *   [ReliableChannelEngine] and arms its `mcups-retransmit` tick
+ *   ([reliableEngineFor]); delivered payloads reach [Registration.onReliable]
+ *   via the dispatch executor, in order ([deliverReliable]); the engine is
+ *   closed and its tick cancelled on [deregister] or a same-name supersede.
  *
  * @param newConnection builds the connection for a new client, given its name,
  * handshake origin, and the [ClientChannel] it should delegate to (always `this`)
@@ -62,6 +68,11 @@ import java.net.InetSocketAddress
  * [cancelKeepAlive]; a [PeriodicScheduler] in production, a fake in tests
  * @param probeSchedule the timer seam backing [scheduleProbe] / [cancelProbe]; a
  * separate [PeriodicScheduler] instance in production, a fake in tests
+ * @param retransmitSchedule the timer seam backing the per-connection reliable
+ * retransmit tick ([reliableEngineFor]); a separate [PeriodicScheduler] instance
+ * in production, a fake in tests
+ * @param reliableMaxMessageBytes the configured reliable-message-size cap
+ * ([ClientChannel.reliableMaxMessageBytes])
  */
 internal class HandshakeCoordinator(
     private val newConnection: (name: String, peer: InetSocketAddress, channel: ClientChannel) -> Connection,
@@ -73,6 +84,8 @@ internal class HandshakeCoordinator(
     private val idleTimeoutMillis: Long,
     private val keepAliveSchedule: PeriodicSchedule,
     private val probeSchedule: PeriodicSchedule,
+    private val retransmitSchedule: PeriodicSchedule,
+    override val reliableMaxMessageBytes: Int,
 ) : ClientChannel {
     private val registrations = Registrations()
 
@@ -169,14 +182,15 @@ internal class HandshakeCoordinator(
                 }
             }
 
-            // The Stage-2 reliable engine (ReliableChannelEngine) is internal and unwired - no
-            // production capability here yet (Stage 3). Identical WARN text/behavior to what a
-            // reserved 0x83+ tag already gets below, only enough of a touch to keep this when
-            // exhaustive against the wider DatagramType enum.
-            DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK ->
-                Result.success(Unit).also {
-                    log.warn("Unhandled datagram type 0x{} from {}, dropping", Integer.toHexString(byte0!!), origin)
+            DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {
+                val reg = registrations.findByOrigin(origin)
+                if (reg == null) {
+                    Result.success(Unit).also { log.debug("Reliable datagram from unregistered {}, dropped", origin) }
+                } else {
+                    val delivered = reliableEngineFor(reg).onInboundDatagram(bytes) // never throws (Stage 2 contract)
+                    deliverReliable(reg, delivered)
                 }
+            }
 
             // ofTagByte(null) for a reserved same-major tag (0x83+/0xA2-0xAF) or an unframed byte 0.
             null -> when {
@@ -240,6 +254,8 @@ internal class HandshakeCoordinator(
                     registrations.removeByOrigin(stale.origin)
                     keepAliveSchedule.cancel(stale.origin)
                     probeSchedule.cancel(stale.origin)
+                    retransmitSchedule.cancel(stale.origin)
+                    stale.reliable?.close() // D7: a supersede resets the reliable channel - fresh engine, fresh sequence space
                     if (notifyingDisconnects) onDisconnect(stale.connection, DisconnectReason.SUPERSEDED)
                     stale.connection.terminate()
                         .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
@@ -271,6 +287,53 @@ internal class HandshakeCoordinator(
             }
 
             else -> Result.success(Unit).also { log.debug("No handler bound for {}, dropping", origin) }
+        }
+    }
+
+    /**
+     * Returns [reg]'s [ReliableChannelEngine], minting one and arming its
+     * `mcups-retransmit` tick on first use (§3.3): created lazily on the
+     * *first* of an app-thread `sendReliable`/`bindReliable` or an inbound
+     * `0xA0`/`0xA1` for [reg] - trigger (2) is not optional, or a peer whose
+     * application never opens the channel would never ack, wedging the
+     * sender's window. `@Synchronized` so a listener-thread inbound and an
+     * app-thread send cannot mint two engines for one peer.
+     */
+    @Synchronized
+    private fun reliableEngineFor(reg: Registration): ReliableChannelEngine {
+        reg.reliable?.let { return it }
+        val engine = ReliableChannelEngine(sendRaw = { send(it, reg.origin) })
+        reg.reliable = engine
+        retransmitSchedule.scheduleTick(reg.origin, ReliableChannelEngine.DEFAULT_RETRANSMIT_TICK_MILLIS) {
+            engine.onRetransmitTick()
+        }.onFailure { log.warn("Could not arm the retransmit tick for {}", reg.origin, it) }
+        log.info("Opened reliable-ordered channel for {}", reg.origin)
+        return engine
+    }
+
+    /**
+     * Mirrors [deliverData] for the reliable plane: hands each of [payloads] to
+     * the dispatch executor, in order, wrapped in `runCatching` so a throwing
+     * handler cannot kill `mcups-dispatch`. DEBUG-logs and drops when
+     * [Registration.onReliable] is unbound - the right shape for "the peer is
+     * using a feature I am not listening to" (§3.3).
+     */
+    private fun deliverReliable(reg: Registration, payloads: List<ByteArray>): Result<Unit> {
+        val handler = reg.onReliable
+        if (handler == null) {
+            if (payloads.isNotEmpty()) {
+                log.debug("No reliable handler bound for {}, dropping {} payload(s)", reg.origin, payloads.size)
+            }
+            return Result.success(Unit)
+        }
+        return payloads.fold(Result.success(Unit)) { delivered, payload ->
+            delivered.flatMap {
+                runCatching {
+                    dispatch {
+                        runCatching { handler(payload) }.onFailure { log.warn("Reliable handler for {} threw", reg.origin, it) }
+                    }
+                }
+            }
         }
     }
 
@@ -327,6 +390,11 @@ internal class HandshakeCoordinator(
         probeSchedule.shutdown()
     }
 
+    /** Shuts the retransmit scheduler; called by `MultiConnectionUDPServer.stop()`. */
+    fun shutRetransmit() {
+        retransmitSchedule.shutdown()
+    }
+
     override fun bind(peer: InetSocketAddress, onMessage: (String) -> Unit) {
         registrations.findByOrigin(peer)?.let {
             it.onMessage = onMessage
@@ -346,11 +414,41 @@ internal class HandshakeCoordinator(
         if (registrations.removeByOrigin(peer)) {
             keepAliveSchedule.cancel(peer)
             probeSchedule.cancel(peer)
+            retransmitSchedule.cancel(peer)
+            reg?.reliable?.close() // design §7.7: teardown discards un-acked reliable data
             log.info("Deregistered connection for {}", peer)
             if (notifyingDisconnects && reg != null) {
                 onDisconnect(reg.connection, DisconnectReason.TERMINATED)
             }
         }
+    }
+
+    override fun sendReliable(peer: InetSocketAddress, bytes: ByteArray): Result<Unit> {
+        val reg = registrations.findByOrigin(peer)
+            ?: return Result.failure(IllegalStateException("No registration for $peer"))
+        if (bytes.size > reliableMaxMessageBytes) {
+            log.warn(
+                "Reliable send to {} of {} byte(s) exceeds the {}-byte cap",
+                peer, bytes.size, reliableMaxMessageBytes,
+            )
+            return Result.failure(ReliableMessageTooLargeException(bytes.size, reliableMaxMessageBytes))
+        }
+        val engine = reliableEngineFor(reg)
+        return when (val outcome = engine.sendReliable(bytes)) {
+            is ReliableChannelEngine.SendOutcome.Accepted -> Result.success(Unit)
+            ReliableChannelEngine.SendOutcome.WindowFull -> {
+                log.debug("Reliable in-flight window full for {}", peer)
+                Result.failure(ReliableWindowFullException(engine.windowSize))
+            }
+        }
+    }
+
+    override fun bindReliable(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit): Result<Unit> {
+        val reg = registrations.findByOrigin(peer)
+            ?: return Result.failure(IllegalStateException("No registration for $peer"))
+        reg.onReliable = onMessage
+        reliableEngineFor(reg) // arm the tick even for the receive-only case (§3.3)
+        return Result.success(Unit)
     }
 
     /**
@@ -383,6 +481,7 @@ internal class HandshakeCoordinator(
      * @param onMessage the callback each connection invokes for every datagram it receives
      * @return [Result.success] if every connection was actuated, or the first failure
      */
+    @Suppress("DEPRECATION") // calls the now-deprecated Connection.actuate; backs the still-current MultiConnectionUDPServer.start
     fun actuateAll(onMessage: (message: String) -> Unit): Result<Unit> =
         registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
             actuated.flatMap { registration.connection.actuate(onMessage) }
@@ -395,9 +494,26 @@ internal class HandshakeCoordinator(
      * copy of every datagram it receives
      * @return [Result.success] if every connection was actuated, or the first failure
      */
+    @Suppress("DEPRECATION") // calls the now-deprecated Connection.actuateBytes; backs the still-current MultiConnectionUDPServer.startBytes
     fun actuateAllBytes(onMessage: (ByteArray) -> Unit): Result<Unit> =
         registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
             actuated.flatMap { registration.connection.actuateBytes(onMessage) }
+        }
+
+    /**
+     * Binds [onMessage] as the reliable-ordered handler on every registered
+     * connection. Unlike [actuateAll], **every** connection is attempted even if
+     * an earlier one failed - a single peer's full in-flight window (or a
+     * not-yet-open channel) is routine and must not stop the rest from being
+     * bound; only the reported [Result] short-circuits to the first failure.
+     * @param onMessage the callback each connection invokes with the exact-length
+     * payload of every reliable message it receives, once, in send order
+     * @return [Result.success] if every connection was actuated, or the first failure
+     */
+    fun actuateAllReliable(onMessage: (ByteArray) -> Unit): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
+            val outcome = bindReliable(registration.origin, onMessage)
+            actuated.flatMap { outcome }
         }
 
     /**
@@ -422,6 +538,21 @@ internal class HandshakeCoordinator(
             sent.flatMap { send(datagram, registration.connection.peer) }
         }
     }
+
+    /**
+     * Sends [bytes] reliably to every registered client. Unlike [broadcast],
+     * which short-circuits at the first failure, **every** peer is attempted
+     * even if an earlier one failed - a single peer's full in-flight window is
+     * routine and must not stop the broadcast from reaching everyone else; only
+     * the reported [Result] is the first failure (mirrors [terminateAll]'s fold).
+     * @param bytes the raw payload to send reliably to every client
+     * @return [Result.success] if every send was accepted, or the first failure
+     */
+    fun broadcastReliable(bytes: ByteArray): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
+            val outcome = sendReliable(registration.origin, bytes)
+            sent.flatMap { outcome }
+        }
 
     /**
      * Terminates every registered connection. Every connection is terminated even

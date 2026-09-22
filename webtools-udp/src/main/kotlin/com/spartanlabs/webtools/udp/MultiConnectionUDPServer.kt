@@ -82,7 +82,8 @@ import java.util.concurrent.TimeUnit
  * can exist per JVM/host at a time. Call [stop] to release the port; the instance
  * is single-use afterwards. Construction throws [IllegalArgumentException] if
  * [receiveBufferBytes] is outside [MIN_RECEIVE_BUFFER_BYTES]..[MAX_UDP_PAYLOAD_BYTES],
- * or if [idleTimeoutMillis] is negative. A positive [idleTimeoutMillis] also
+ * or if [idleTimeoutMillis] is negative, or if [reliableMaxMessageBytes] is outside
+ * 1..[UdpChannel.MAX_RELIABLE_MESSAGE_BYTES]. A positive [idleTimeoutMillis] also
  * starts the `mcups-liveness` daemon thread.
  *
  * @param receiveBufferBytes size of the datagram receive buffer,
@@ -92,6 +93,10 @@ import java.util.concurrent.TimeUnit
  * (the default, [DISABLED_IDLE_TIMEOUT]) disables idle detection entirely - no
  * extra thread, no per-datagram work. Must be `>= 0`; a negative value throws
  * [IllegalArgumentException]; `0` disables detection.
+ * @param reliableMaxMessageBytes the reliable-channel application-payload cap, in
+ * bytes; defaults to [UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES] (1024) and
+ * must be in `1..`[UdpChannel.MAX_RELIABLE_MESSAGE_BYTES] (8192) - v1 does not
+ * fragment, so a larger reliable send fails with [ReliableMessageTooLargeException]
  *
  * ### Connection liveness
  * With a positive [idleTimeoutMillis], every registered connection carries the
@@ -129,6 +134,17 @@ import java.util.concurrent.TimeUnit
  * and windowed - not a fast congestion signal. See
  * the sequence diagram in docs/issue-13-link-quality-probe-plan.md §2.9.
  *
+ * ### Reliable-ordered channel
+ * `connection.channel(DeliveryMode.RELIABLE_ORDERED)` (or the convenience
+ * [startReliable] / [pushToAllReliable]) sends acked, retransmitted, in-order
+ * `0xA0`/`0xA1` traffic to a client - see [UdpChannel] and [DeliveryMode] for the
+ * full contract, including the size cap ([reliableMaxMessageBytes]), the
+ * in-flight-window backpressure ([ReliableWindowFullException]), and the
+ * inherent head-of-line blocking. Lazily created per connection, on either the
+ * first `channel(RELIABLE_ORDERED)` call or the first inbound `0xA0`/`0xA1` for
+ * that peer, whichever comes first - one `mcups-retransmit` daemon thread backs
+ * every connection's retransmit tick.
+ *
  * ### Concurrency
  * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
  * switch on the [DatagramType] tag (or an unframed `Iam`) -> run the socket-free
@@ -150,6 +166,10 @@ import java.util.concurrent.TimeUnit
  * calls [Connection.startProbe]**; it sends `0x81` probe datagrams and runs no
  * application code, and is again a dedicated executor so the probe and keepalive
  * lifecycles stay independent. See docs/issue-13-link-quality-probe-plan.md §2.9.
+ * A sixth daemon thread - `mcups-retransmit`, also a [ScheduledExecutorService] -
+ * exists **only once a reliable channel is opened** (by either side); it retransmits
+ * unacked `0xA0` frames and emits standalone `0xA1` acks, and runs no application
+ * code - delivery itself still goes through `mcups-dispatch`.
  *
  * The dispatch executor is a **single** daemon thread (`mcups-dispatch`) that invokes
  * [Connection] message handlers, so per-client message order is preserved and a
@@ -166,6 +186,7 @@ import java.util.concurrent.TimeUnit
 abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     private val receiveBufferBytes: Int = DEFAULT_RECEIVE_BUFFER_BYTES,
     private val idleTimeoutMillis: Long = DISABLED_IDLE_TIMEOUT,
+    private val reliableMaxMessageBytes: Int = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
 ) {
     init {
         require(receiveBufferBytes in MIN_RECEIVE_BUFFER_BYTES..MAX_UDP_PAYLOAD_BYTES) {
@@ -173,6 +194,9 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         }
         require(idleTimeoutMillis >= 0L) {
             "idleTimeoutMillis must be >= 0 (0 disables idle detection), was $idleTimeoutMillis"
+        }
+        require(reliableMaxMessageBytes in 1..UdpChannel.MAX_RELIABLE_MESSAGE_BYTES) {
+            "reliableMaxMessageBytes must be 1..${UdpChannel.MAX_RELIABLE_MESSAGE_BYTES}, was $reliableMaxMessageBytes"
         }
     }
 
@@ -212,6 +236,17 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     private val probeScheduler = PeriodicScheduler("mcups-probe")
 
     /**
+     * The opt-in reliable-channel retransmit scheduler - a single
+     * `mcups-retransmit` daemon thread. Constructed unconditionally as an
+     * object, but its executor/thread is created lazily on the first reliable
+     * channel opened (by either side), so a server whose consumers never open
+     * one spawns no retransmit thread. A separate instance from
+     * [keepAliveScheduler] / [probeScheduler] so all three features' lifecycles
+     * stay independent.
+     */
+    private val retransmitScheduler = PeriodicScheduler("mcups-retransmit")
+
+    /**
      * The handshake state machine + inbound router, wired to this server's real
      * socket and a real [UDPConnection] factory.
      */
@@ -230,6 +265,8 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
         idleTimeoutMillis = idleTimeoutMillis,
         keepAliveSchedule = keepAliveScheduler,
         probeSchedule = probeScheduler,
+        retransmitSchedule = retransmitScheduler,
+        reliableMaxMessageBytes = reliableMaxMessageBytes,
     )
 
     /**
@@ -390,6 +427,23 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     }
 
     /**
+     * Binds [onClientMessage] as the reliable-ordered handler on every
+     * currently-registered connection, opening (or reusing) each connection's
+     * reliable channel as needed. Unlike [start] / [startBytes], **every**
+     * connection is attempted even if an earlier one failed - a single peer's
+     * full in-flight window is routine and must not stop the rest from being
+     * bound; only the reported [Result] short-circuits to the first failure.
+     * @param onClientMessage callback invoked with the exact-length payload of
+     * every reliable message a connection receives, once, in send order; it runs
+     * on the single-threaded dispatch executor, not the caller's thread
+     * @return [Result.success] if every connection was actuated, or the first failure
+     */
+    fun startReliable(onClientMessage: (ByteArray) -> Unit): Result<Unit> {
+        log.info("Actuating (reliable) {} connection(s)", coordinator.size)
+        return coordinator.actuateAllReliable(onClientMessage)
+    }
+
+    /**
      * Broadcasts a message to every registered client's endpoint over the common socket.
      * "Registered" here means *currently* registered - a connection that has been
      * `terminate()`d, or superseded by a same-name reconnect from a new origin, is
@@ -416,11 +470,27 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     }
 
     /**
+     * Sends [bytes] reliably to every registered client's endpoint, opening (or
+     * reusing) each connection's reliable channel as needed. Unlike [pushToAll],
+     * which short-circuits at the first failure, **every** peer is attempted
+     * even if an earlier one failed - a single peer's full in-flight window is
+     * routine and must not stop the broadcast from reaching everyone else; only
+     * the reported [Result] is the first failure.
+     * @param bytes the raw payload to send reliably to every client
+     * @return [Result.success] if every send was accepted, or the first failure
+     */
+    fun pushToAllReliable(bytes: ByteArray): Result<Unit> {
+        log.info("Pushing (reliable) datagram to all {} connection(s)", coordinator.size)
+        return coordinator.broadcastReliable(bytes)
+    }
+
+    /**
      * Shuts the server down: terminates (fully deregisters) every registered
      * [Connection], leaving `Registrations` empty, then stops the common listener
      * thread, releases the common socket, shuts the `mcups-liveness` executor (if
-     * one was started), shuts the `mcups-keepalive` and `mcups-probe` executors
-     * (if either was started), and shuts the dispatch executor.
+     * one was started), shuts the `mcups-keepalive`, `mcups-probe`, and
+     * `mcups-retransmit` executors (if any were started), and shuts the dispatch
+     * executor.
      *
      * Fires no [onClientDisconnect] callbacks: [stop] calls the coordinator's
      * `stopNotifying()` before `terminateAll()`, so a full server shutdown is not
@@ -450,11 +520,13 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
             .onFailure { log.warn("Could not cleanly shut the keepalive scheduler", it) }
         val probeStopped = runCatching { coordinator.shutProbe() }
             .onFailure { log.warn("Could not cleanly shut the probe scheduler", it) }
+        val retransmitStopped = runCatching { coordinator.shutRetransmit() }
+            .onFailure { log.warn("Could not cleanly shut the retransmit scheduler", it) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
         return connectionsTerminated.flatMap { listenerJoined }.flatMap { socketClosed }
             .flatMap { livenessStopped }.flatMap { keepAliveStopped }.flatMap { probeStopped }
-            .flatMap { executorStopped }
+            .flatMap { retransmitStopped }.flatMap { executorStopped }
     }
 
     companion object {

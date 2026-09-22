@@ -27,6 +27,25 @@ internal interface PeriodicSchedule {
     fun schedule(key: InetSocketAddress, intervalMillis: Long, tick: () -> Unit): Result<Unit>
 
     /**
+     * Arms (or re-arms) a repeating task for [key] that runs every [tickMillis],
+     * with **no** keepalive-style poll division - the cadence asked for is the
+     * cadence delivered. Contrast with [schedule], which runs at
+     * `KeepAlive.pollIntervalMillis(intervalMillis)` (a quarter of the requested
+     * interval, clamped to `250..5000` ms) rather than the requested interval
+     * itself - a division this method's callers (the reliable-channel retransmit
+     * tick) cannot tolerate, since it would silently coarsen a 50 ms tick to
+     * 250 ms. The last call for a [key] wins, and [key]'s task is cancelled by
+     * the same [cancel] as [schedule]'s.
+     * @param key the endpoint the task is for
+     * @param tickMillis the exact task interval; must be > 0
+     * @param tick invoked on each tick; must not throw (it is wrapped defensively)
+     * @return [Result.success] once armed; [Result.failure] with an
+     * [IllegalArgumentException] for a non-positive [tickMillis], or an
+     * [IllegalStateException] if [shutdown] has already run
+     */
+    fun scheduleTick(key: InetSocketAddress, tickMillis: Long, tick: () -> Unit): Result<Unit>
+
+    /**
      * Cancels the poll for [key], if any. Idempotent - a no-op if none is armed.
      * @param key the endpoint whose poll to cancel
      */
@@ -61,16 +80,32 @@ internal class PeriodicScheduler(private val threadName: String) : PeriodicSched
     override fun schedule(key: InetSocketAddress, intervalMillis: Long, tick: () -> Unit): Result<Unit> =
         runCatching {
             require(intervalMillis > 0L) { "intervalMillis must be > 0, was $intervalMillis" }
-            check(!shutDown) { "periodic scheduler already shut down" }
-            cancelInternal(key) // last call wins - replace any existing schedule for this key
-            val poll = KeepAlive.pollIntervalMillis(intervalMillis)
-            // runCatching in the task body is load-bearing: scheduleWithFixedDelay
-            // permanently cancels a repeating task the first time it throws.
-            futures[key] = executor().scheduleWithFixedDelay(
-                { runCatching(tick).onFailure { log.warn("Periodic tick for {} threw", key, it) } },
-                poll, poll, TimeUnit.MILLISECONDS,
-            )
+            arm(key, KeepAlive.pollIntervalMillis(intervalMillis), tick)
         }
+
+    @Synchronized
+    override fun scheduleTick(key: InetSocketAddress, tickMillis: Long, tick: () -> Unit): Result<Unit> =
+        runCatching {
+            require(tickMillis > 0L) { "tickMillis must be > 0, was $tickMillis" }
+            arm(key, tickMillis, tick)
+        }
+
+    /**
+     * Cancels any existing schedule for [key] and arms a fresh one at exactly
+     * [pollMillis]. The shared body [schedule] and [scheduleTick] factor down
+     * to - only the cadence computation differs between the two callers. The
+     * `runCatching(tick)` wrapper in the scheduled task is load-bearing for
+     * **both**: `scheduleWithFixedDelay` permanently cancels a repeating task
+     * the first time it throws.
+     */
+    private fun arm(key: InetSocketAddress, pollMillis: Long, tick: () -> Unit) {
+        check(!shutDown) { "periodic scheduler already shut down" }
+        cancelInternal(key) // last call wins - replace any existing schedule for this key
+        futures[key] = executor().scheduleWithFixedDelay(
+            { runCatching(tick).onFailure { log.warn("Periodic tick for {} threw", key, it) } },
+            pollMillis, pollMillis, TimeUnit.MILLISECONDS,
+        )
+    }
 
     override fun cancel(key: InetSocketAddress) = cancelInternal(key)
 

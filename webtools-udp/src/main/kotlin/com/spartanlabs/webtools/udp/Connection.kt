@@ -28,6 +28,27 @@ interface Connection {
     val peer: InetSocketAddress
 
     /**
+     * The delivery-mode-scoped handle for this connection. Each [DeliveryMode]
+     * has its own sequence space and its own inbound handler - binding a
+     * handler on one mode's [UdpChannel] never disturbs the other's.
+     *
+     * The default implementation returns a working [DeliveryMode.UNRELIABLE]
+     * handle over [push]/[actuateBytes], and, for
+     * [DeliveryMode.RELIABLE_ORDERED], a handle whose operations fail with
+     * [UnsupportedOperationException] - only the production [UDPConnection]
+     * carries a reliable channel.
+     * @param mode which delivery guarantee to get a handle for
+     * @return the [UdpChannel] for [mode]
+     */
+    fun channel(mode: DeliveryMode): UdpChannel = when (mode) {
+        DeliveryMode.UNRELIABLE -> UnreliableConnectionChannel(this)
+        DeliveryMode.RELIABLE_ORDERED -> UnsupportedUdpChannel(
+            DeliveryMode.RELIABLE_ORDERED,
+            "This Connection has no reliable-ordered channel",
+        )
+    }
+
+    /**
      * Registers [onMessage] as the handler for datagrams from this client. No
      * socket is bound - the server already owns the one shared socket; this only
      * routes inbound datagrams whose source matches [peer] to [onMessage].
@@ -39,6 +60,10 @@ interface Connection {
      * thread, so it must return promptly - a slow handler delays delivery to other clients
      * @return [Result.success] once the handler is registered, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuate(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).actuate(onMessage)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
     fun actuate(onMessage: (message: String) -> Unit): Result<Unit>
 
     /**
@@ -65,6 +90,14 @@ interface Connection {
      * it runs on the server's single-threaded dispatch executor, so it must return promptly
      * @return [Result.success] once the handler is registered, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuateBytes(...) - see the 2.0 channel API",
+        ReplaceWith(
+            "channel(DeliveryMode.UNRELIABLE).actuateBytes(onMessage)",
+            "com.spartanlabs.webtools.udp.DeliveryMode",
+        ),
+    )
+    @Suppress("DEPRECATION") // the default body calls the now-deprecated actuate(String) sibling
     fun actuateBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> =
         actuate { onMessage(it.toByteArray(Charsets.UTF_8)) }
 
@@ -97,6 +130,10 @@ interface Connection {
      * @param message the text to send
      * @return [Result.success] if the message was sent, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(message)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
     fun push(message: String): Result<Unit>
 
     /**
@@ -114,6 +151,11 @@ interface Connection {
      * @param bytes the raw datagram payload
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(bytes)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
+    @Suppress("DEPRECATION") // the default body calls the now-deprecated push(String) sibling
     fun push(bytes: ByteArray): Result<Unit> = push(String(bytes, Charsets.UTF_8))
 
     /**

@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0-alpha1")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0-alpha3")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -50,13 +50,16 @@ further releases. To move off it:
 | Type | Purpose |
 |------|---------|
 | `MultiConnectionUDPServer` | Accepts handshakes from many clients on one common port and hands each its own `Connection`. Abstract — subclass and implement `onClientConnect`; optionally override `admit` to screen/refuse handshakes and validate an opaque credential, override `onClientDisconnect`, and set `idleTimeoutMillis` for idle-connection detection. |
-| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `send` and `startBytes` also accept/deliver raw `ByteArray` datagrams. `startKeepAlive` / `stopKeepAlive` run an opt-in, library-timed keepalive; `startProbe` / `stopProbe` / `linkQuality` run an opt-in RTT / packet-loss probe. |
-| `Connection` | Interface for one named connection to a peer (`actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` / `terminate` / `keepAlive` / `startKeepAlive` / `stopKeepAlive` / `startProbe` / `stopProbe` / `linkQuality`). |
+| `MultiConnectionUDPClient` | The client-side counterpart: one socket, one owned listener thread, one dispatch thread — performs the handshake, then delivers the rest of the session via callback. `channel(mode)` is the recommended entry point (see [Reliable-ordered channel](#reliable-ordered-channel)); the older `send` / `start` / `startBytes` (deprecated, still fully functional — see [Migrating to 2.0](#migrating-to-20)) also accept/deliver raw `ByteArray` datagrams via their `ByteArray` overloads. `startKeepAlive` / `stopKeepAlive` run an opt-in, library-timed keepalive; `startProbe` / `stopProbe` / `linkQuality` run an opt-in RTT / packet-loss probe. |
+| `Connection` | Interface for one named connection to a peer. `channel(mode)` (see below) is the recommended entry point; `actuate` / `actuateBytes` / `push(String)` / `push(ByteArray)` are deprecated but fully functional (see [Migrating to 2.0](#migrating-to-20)); `terminate` / `keepAlive` / `startKeepAlive` / `stopKeepAlive` / `startProbe` / `stopProbe` / `linkQuality` are unchanged control-plane members. |
 | `UDPConnection` | The production `Connection`: a socket-free handle to one multiplexed client of a `MultiConnectionUDPServer`; owns no socket. |
+| `DeliveryMode` | Which guarantee a `UdpChannel` provides: `UNRELIABLE` (fire-and-forget, the `0x90` frame) or `RELIABLE_ORDERED` (acked, retransmitted, exactly-once in order, the `0xA0`/`0xA1` frames — head-of-line blocking is inherent). |
+| `UdpChannel` | A delivery-mode-scoped view of one connection: `send(bytes/message)` and `actuate`/`actuateBytes` to bind the inbound handler for that mode. Returned by `Connection.channel(mode)` / `MultiConnectionUDPClient.channel(mode)`. See [Reliable-ordered channel](#reliable-ordered-channel). |
+| `ReliableWindowFullException` / `ReliableMessageTooLargeException` | The two typed reliable-`send` failures, both subtypes of the open `ReliableSendFailure`; never thrown, only ever a `Result.failure` payload. See [Reliable-ordered channel](#reliable-ordered-channel). |
 | `LinkQuality` | An immutable snapshot from the opt-in probe: smoothed `rttMillis`, `rttVarianceMillis` (jitter proxy), windowed `packetLossRatio`, and `probesSent` / `probesDelivered`. |
-| `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop — receives datagrams up to 65507 bytes (configurable via `receiveBufferBytes`), truncating larger ones. |
+| `UDPSendReceiveServer` | A bound send/receive UDP socket pair with an async receive loop — receives datagrams up to 65507 bytes (configurable via `receiveBufferBytes`), truncating larger ones. No `DeliveryMode` / `UdpChannel` surface — see its KDoc. |
 | `HandshakeWireFormat` | The handshake-bootstrap wire format: `Iam <name> [<credential>]`, the accepted `REGISTERED <version>` reply, `REFUSED <reason>`. Everything after the handshake lives in `TransportWireFormat`. |
-| `DatagramType` | The 1-byte tag carried as byte 0 of every post-`REGISTERED` datagram (`KEEPALIVE` `0x80`, `PROBE_PING` `0x81`, `PROBE_PONG` `0x82`, `UNRELIABLE` `0x90`); the listener switches on it before touching a payload. |
+| `DatagramType` | The 1-byte tag carried as byte 0 of every post-`REGISTERED` datagram (`KEEPALIVE` `0x80`, `PROBE_PING` `0x81`, `PROBE_PONG` `0x82`, `UNRELIABLE` `0x90`, `RELIABLE_DATA` `0xA0`, `RELIABLE_ACK` `0xA1`); the listener switches on it before touching a payload. |
 | `TransportWireFormat` | Builds/parses the framed post-handshake datagrams: `keepaliveDatagram`, `probePingDatagram` / `probePongDatagram` / `probeSequenceOf`, `unreliableDatagram` / `unreliablePayloadOf` / `unreliableChannelOf`. |
 | `Admission` / `HandshakeRefusedException` | `admit`'s return type (`Admitted` / `Refused(reason)`); the typed failure a refused client's `handshake` surfaces. |
 | `IncompatibleProtocolException` | Typed `handshake()` failure when the server's `REGISTERED` reply announces a different wire-protocol major than this build speaks (e.g. a `1.x` server). |
@@ -90,6 +93,8 @@ looks at a payload:
 | client ↔ server | `0x90 <channel> <payload…>` — application data (`UNRELIABLE`) | port `9998`, from/to the same socket the client sent `Iam` from |
 | client → server | `0x80` — keepalive (`KEEPALIVE`, ~20 s idle cadence) | port `9998`, from the same socket |
 | client ↔ server | `0x81 <seq>` / `0x82 <seq>` — link-quality probe (`PROBE_PING` / `PROBE_PONG`; transport-consumed) | port `9998`, same socket |
+| client ↔ server | `0xA0 <channel><seq><ack><ackbits><payload>` — reliable-ordered data (`RELIABLE_DATA`) | port `9998`, same socket |
+| client ↔ server | `0xA1 <channel><ack><ackbits>` — standalone reliable ack (`RELIABLE_ACK`; no payload) | port `9998`, same socket |
 
 Byte 0 of a post-handshake datagram is always `>= 0x80` and the listener never falls back to a
 text match, so **any** payload bytes ride an `0x90` frame intact — see [Binary application
@@ -137,15 +142,18 @@ A server behind symmetric NAT still needs a rendezvous/relay (out of scope). Bac
 
 ### Binary application payloads
 
-Post-handshake application data is not limited to text. `Connection.push(ByteArray)`
-(server → client), `MultiConnectionUDPClient.send(ByteArray)` (client → server), and
-`MultiConnectionUDPServer.pushToAll(ByteArray)` frame the payload as an `0x90` unreliable
-datagram and put it on the wire **verbatim** — no encoding, no trim, no reserved first byte.
-`Connection.actuateBytes` / `MultiConnectionUDPClient.startBytes` /
-`MultiConnectionUDPServer.startBytes` register an inbound handler that receives an
-**exact-length, undecoded, untrimmed** copy of the payload (the frame's `0x90` tag and channel
-byte already stripped). The text and bytes handlers are mutually exclusive per connection —
-the last `actuate` / `actuateBytes` (or `start` / `startBytes`) call wins.
+Post-handshake application data is not limited to text. `connection.channel(DeliveryMode.UNRELIABLE).send(bytes)`
+(server → client) / `client.channel(DeliveryMode.UNRELIABLE).send(bytes)` (client → server) —
+or the older `Connection.push(ByteArray)` / `MultiConnectionUDPClient.send(ByteArray)` these are
+implemented over — and `MultiConnectionUDPServer.pushToAll(ByteArray)` frame the payload as an
+`0x90` unreliable datagram and put it on the wire **verbatim** — no encoding, no trim, no
+reserved first byte. `channel(DeliveryMode.UNRELIABLE).actuateBytes(handler)` (or the older
+`Connection.actuateBytes` / `MultiConnectionUDPClient.startBytes` / `MultiConnectionUDPServer.startBytes`)
+registers an inbound handler that receives an **exact-length, undecoded, untrimmed** copy of the
+payload (the frame's `0x90` tag and channel byte already stripped). The text and bytes handlers
+are mutually exclusive per connection **per mode** — the last `actuate` / `actuateBytes` call on
+that `UdpChannel` wins; a reliable-ordered handler bound via `channel(DeliveryMode.RELIABLE_ORDERED)`
+is independent of both — see [Reliable-ordered channel](#reliable-ordered-channel).
 
 Because control traffic (`Iam`, keepalive, probe) and application data are separated by the
 `DatagramType` tag rather than by matching text, **any** payload bytes survive intact — a
@@ -282,6 +290,54 @@ reacts over tens of seconds) — a link-health gauge, not a fast congestion trig
 requires both ends on `1.6.0`+ (and, on the framed `2.x` transport, both ends on `2.0.0`+);
 against an incompatible peer no `0x82` comes back and `packetLossRatio` climbs toward `1.0`.
 
+### Reliable-ordered channel
+
+Both sides can open a second delivery plane alongside the default unreliable one — acked,
+retransmitted, delivered **exactly once, in send order**:
+
+```kotlin
+// either side
+val reliable = connection.channel(DeliveryMode.RELIABLE_ORDERED)   // or client.channel(...)
+reliable.actuate { message -> /* decoded, trimmed text, delivered once, in order */ }
+reliable.send("ability-cast").fold(
+    onSuccess = { /* accepted for reliable delivery - buffered and sequenced, not "on the wire" yet */ },
+    onFailure = { ex ->
+        when (ex) {
+            is ReliableWindowFullException -> Unit // routine backpressure - retry, coalesce, or drop
+            is ReliableMessageTooLargeException -> Unit // programming/config mistake - split or raise the cap
+        }
+    },
+)
+```
+
+`Result.success` from a reliable `send` means **accepted for reliable delivery** — buffered,
+sequenced, and retransmitted until acked — never "already on the wire". A full in-flight window
+fails immediately with `ReliableWindowFullException` (there is no internal absorb queue); an
+oversize message fails with `ReliableMessageTooLargeException` — v1 does not fragment. Both
+extend the open `ReliableSendFailure`, so a caller can `is`-check one type or catch the
+supertype. The default cap is **1024 bytes**, configurable per server/client instance up to a
+hard **8192-byte** maximum (`reliableMaxMessageBytes` constructor parameter).
+
+The reliable and unreliable planes have independent sequence spaces and independent handlers —
+binding one via `channel(...).actuate*` never disturbs the other — but delivery for both shares
+the same per-connection dispatch executor, so **head-of-line blocking is inherent**: a missing
+reliable message stalls delivery of every reliable message sent after it, and also delays
+*unreliable* delivery to that same connection. Use the reliable channel for discrete events
+(chat, ability casts, inventory changes) and the unreliable one for frequent state snapshots
+where a stale or dropped update is harmless.
+
+The channel is created lazily — on the first `channel(RELIABLE_ORDERED)` call *or* the first
+inbound reliable datagram, whichever comes first — and arms one shared `mcups-retransmit` /
+`mcupc-retransmit` daemon thread per side (created only once a reliable channel is actually
+used). A `terminate()`, a same-name supersede, or `stop()` on either side discards any un-acked
+data and resets the channel; a send after teardown fails its `Result`. Both ends must be on
+`webtools-udp` `2.0.0`+ — a pre-`2.0.0` peer never emits or answers `0xA0`/`0xA1`.
+
+Server-wide conveniences mirror the unreliable ones: `MultiConnectionUDPServer.startReliable` /
+`pushToAllReliable`. Unlike `pushToAll`, `pushToAllReliable` **attempts every peer** even if an
+earlier one's window is full, reporting only the first failure — a single busy peer must not
+stop a broadcast reaching everyone else.
+
 ### Client-side usage
 
 `MultiConnectionUDPClient` performs the handshake and then owns a background
@@ -291,20 +347,23 @@ never hand-rolls the receive loop or the "one socket for everything" invariant:
 ```kotlin
 val client = MultiConnectionUDPClient(serverAddress)
 client.handshake("alice").getOrThrow()
-client.start { message -> /* handle inbound data; runs on client's dispatch thread */ }
-client.send("hello")
+val unreliable = client.channel(DeliveryMode.UNRELIABLE)
+unreliable.actuate { message -> /* handle inbound data; runs on client's dispatch thread */ }
+unreliable.send("hello")
+// client.start { ... } / client.send("hello") - the pre-2.0-channel spelling, deprecated but
+// still fully functional; channel(UNRELIABLE) is the recommended replacement (see Migrating to 2.0)
 client.startKeepAlive()   // library times it; no caller timer needed
 // client.sendKeepAlive() is still available for callers who want to drive the cadence themselves
 
 // or, for a binary protocol:
-client.startBytes { bytes -> /* exact datagram body, no decode, no trim */ }
-client.send(byteArrayOf(0x01, 0x02, 0x03))   // any bytes, no reserved first byte needed
+unreliable.actuateBytes { bytes -> /* exact datagram body, no decode, no trim */ }
+unreliable.send(byteArrayOf(0x01, 0x02, 0x03))   // any bytes, no reserved first byte needed
 // ...
 client.stop()
 ```
 
 Inbound keepalive datagrams (a server may send one via `Connection.keepAlive()`) are dropped
-automatically and never reach the `start` callback.
+automatically and never reach the `actuate` callback.
 
 ### Migrating to 2.0
 
@@ -325,6 +384,18 @@ protocol](#udp-transport-protocol)). **Both ends of a connection must be on `2.0
   are separated by the `DatagramType` tag, there is no longer a reserved first byte to avoid —
   any binary payload, including one that used to collide with `KA`/`PING`/`PONG`, rides an
   `0x90` frame intact. See [Binary application payloads](#binary-application-payloads).
+
+**Deprecations in 2.0.** The public reliable channel API (`connection.channel(mode)` /
+`client.channel(mode)`, see [Reliable-ordered channel](#reliable-ordered-channel)) is additive,
+but it also gives every per-`Connection` primitive a channel-shaped replacement, so **eight**
+existing members now carry `@Deprecated(WARNING)` with a working `ReplaceWith` quick-fix — four
+on `Connection` (`push(String)`, `push(ByteArray)`, `actuate`, `actuateBytes`) and four on
+`MultiConnectionUDPClient` (`send(String)`, `send(ByteArray)`, `start`, `startBytes`). All eight
+remain **fully functional** in `2.0.0` — this is a warning, not a break — and are slated to
+leave the public surface at a future `3.0.0` (demoted, not deleted: the implementations survive
+internally). `MultiConnectionUDPServer.start` / `startBytes` / `pushToAll` are **not**
+deprecated and are not going anywhere: `channel(...)` is per-`Connection`, so there is no
+server-wide replacement to point a `ReplaceWith` at.
 
 ## Build & test
 

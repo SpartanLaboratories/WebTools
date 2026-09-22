@@ -36,6 +36,16 @@ import java.util.concurrent.CopyOnWriteArrayList
  * it. Written there and by `completeProbe` on the listener thread, read by the
  * `mcups-probe` thread and by consumer calls to [Connection.linkQuality], hence
  * `@Volatile`.
+ * @property onReliable the reliable-ordered handler bound via
+ * `channel(RELIABLE_ORDERED).actuate`/`actuateBytes`, or `null`. **Not**
+ * mutually exclusive with [onMessage]/[onBytes] - the reliable and unreliable
+ * sequence spaces are independent, so a connection may have both, one, or
+ * neither bound at once. Written by [HandshakeCoordinator], read by the
+ * dispatch executor, hence `@Volatile`.
+ * @property reliable this connection's [ReliableChannelEngine], or `null` until
+ * one is first needed - either an app-thread send/bind or an inbound `0xA0`/`0xA1`
+ * creates it lazily. Written and read across the listener, app, and retransmit
+ * threads, hence `@Volatile`.
  */
 internal class Registration(val connection: Connection) {
     val origin: InetSocketAddress get() = connection.peer
@@ -57,6 +67,12 @@ internal class Registration(val connection: Connection) {
 
     @Volatile
     var linkQuality: LinkQualityTracker? = null
+
+    @Volatile
+    var onReliable: ((ByteArray) -> Unit)? = null
+
+    @Volatile
+    var reliable: ReliableChannelEngine? = null
 }
 
 /**

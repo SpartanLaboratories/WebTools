@@ -53,24 +53,34 @@ import java.util.concurrent.Executors
  * and is shut by [stop].
  * See docs/issue-13-link-quality-probe-plan.md §2.9.
  *
+ * A fifth daemon thread (`mcupc-retransmit`, also a `ScheduledExecutorService`)
+ * exists **only once a reliable channel is opened** - either a
+ * `channel(RELIABLE_ORDERED).send`/`actuate*` call or an inbound `0xA0`/`0xA1`;
+ * it retransmits unacked `0xA0` frames and emits standalone `0xA1` acks, runs no
+ * application code, and is shut by [stop].
+ *
  * Boundary-Ring notes (mirrors [CommonChannel]'s):
  * - One UDP socket carries the handshake and the entire session.
  * - The JDK permits a concurrent [DatagramSocket.send] while a
  *   [DatagramSocket.receive] is in progress.
  * - [socket] is received on only by the listener thread, but sent on from any
  *   thread ([send], [sendKeepAlive], the `mcupc-keepalive` tick, the `mcupc-probe`
- *   tick); the listener thread itself never sends application data - it answers an
- *   inbound `0x81` probe with an `0x82` reply inline.
+ *   tick, the `mcupc-retransmit` tick); the listener thread itself never sends
+ *   application data - it answers an inbound `0x81` probe with an `0x82` reply inline.
  *
  * ### Construction side effects
  * Instantiating this class **binds an ephemeral OS UDP port** immediately - a
  * documented construction side effect, the same convention [CommonChannel] uses.
  *
  * ### Ordering contract (not enforced in code)
- * Call [handshake] once, then [start] once. Calling [start] before a successful
- * [handshake], or calling either twice, is undefined behaviour - matching the
- * level of guarding [MultiConnectionUDPServer] itself applies to its own
- * lifecycle. A [handshake] that fails - including a refusal surfaced as a
+ * Call [handshake] once, then [start] (or [startBytes], or a [channel] `actuate*`)
+ * once. Calling [handshake] itself before a successful prior call, or twice, is
+ * undefined behaviour - matching the level of guarding [MultiConnectionUDPServer]
+ * itself applies to its own lifecycle. The listener start itself, however, is now
+ * **idempotent**: [start], [startBytes], and `channel(UNRELIABLE).actuate*` may
+ * each be called any number of times, in any order, after [handshake] - the last
+ * one to bind wins, and only the first one to run actually starts the listener
+ * thread. A [handshake] that fails - including a refusal surfaced as a
  * [HandshakeRefusedException] - leaves the client safe to [stop] and discard.
  *
  * This class does **not** implement [AutoCloseable], matching
@@ -108,6 +118,15 @@ import java.util.concurrent.Executors
  * truncated, not rejected; on send, a payload over the OS datagram limit fails
  * the `Result`. Keep frames under the path MTU (~1200 bytes) for real-network use.
  *
+ * ### Reliable-ordered channel
+ * `channel(DeliveryMode.RELIABLE_ORDERED)` sends acked, retransmitted, in-order
+ * `0xA0`/`0xA1` traffic to the server - see [UdpChannel] and [DeliveryMode] for
+ * the full contract, including the size cap ([reliableMaxMessageBytes]), the
+ * in-flight-window backpressure ([ReliableWindowFullException]), and the
+ * inherent head-of-line blocking. Lazily created on the first
+ * `channel(RELIABLE_ORDERED)` call or the first inbound `0xA0`/`0xA1`, whichever
+ * comes first; a send after [stop] fails with [IllegalStateException].
+ *
  * @param serverAddress the server's address to hand shake with and send to
  * @param serverPort the server's common listen port; defaults to
  * [MultiConnectionUDPServer.COMMON_LISTEN_PORT]
@@ -121,8 +140,15 @@ import java.util.concurrent.Executors
  * @param probe the link-quality probe timer seam backing [startProbe] /
  * [stopProbe]; the public constructor supplies a real [PeriodicScheduler]
  * (`mcupc-probe`), tests inject a fake.
+ * @param retransmit the timer seam backing the reliable-channel retransmit tick;
+ * the public constructor supplies a real [PeriodicScheduler] (`mcupc-retransmit`),
+ * tests inject a fake.
+ * @param reliableMaxMessageBytes the reliable-channel application-payload cap, in
+ * bytes; defaults to [UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES] (1024) and
+ * must be in `1..`[UdpChannel.MAX_RELIABLE_MESSAGE_BYTES] (8192)
  * @throws java.net.SocketException if an ephemeral local port could not be bound
- * @throws IllegalArgumentException if [receiveBufferBytes] is outside 512..65507
+ * @throws IllegalArgumentException if [receiveBufferBytes] is outside 512..65507, or if
+ * [reliableMaxMessageBytes] is outside 1..8192
  */
 class MultiConnectionUDPClient internal constructor(
     private val serverAddress: InetAddress,
@@ -130,21 +156,26 @@ class MultiConnectionUDPClient internal constructor(
     private val receiveBufferBytes: Int,
     private val keepAlive: PeriodicSchedule,
     private val probe: PeriodicSchedule,
+    private val retransmit: PeriodicSchedule,
+    private val reliableMaxMessageBytes: Int,
 ) {
     /**
-     * The public client constructor - unchanged three-parameter surface. Delegates
-     * to the `internal` seam constructor with real [PeriodicScheduler] instances
-     * (`mcupc-keepalive`, `mcupc-probe`), whose executors/threads stay lazy until
-     * the first [startKeepAlive] / [startProbe].
+     * The public client constructor - unchanged three-parameter surface plus the
+     * new [reliableMaxMessageBytes] knob. Delegates to the `internal` seam
+     * constructor with real [PeriodicScheduler] instances (`mcupc-keepalive`,
+     * `mcupc-probe`, `mcupc-retransmit`), whose executors/threads stay lazy until
+     * the first [startKeepAlive] / [startProbe] / reliable channel use.
      */
     @JvmOverloads
     constructor(
         serverAddress: InetAddress,
         serverPort: Int = MultiConnectionUDPServer.COMMON_LISTEN_PORT,
         receiveBufferBytes: Int = MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
+        reliableMaxMessageBytes: Int = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
     ) : this(
         serverAddress, serverPort, receiveBufferBytes,
-        PeriodicScheduler("mcupc-keepalive"), PeriodicScheduler("mcupc-probe"),
+        PeriodicScheduler("mcupc-keepalive"), PeriodicScheduler("mcupc-probe"), PeriodicScheduler("mcupc-retransmit"),
+        reliableMaxMessageBytes,
     )
 
     init {
@@ -154,6 +185,9 @@ class MultiConnectionUDPClient internal constructor(
         ) {
             "receiveBufferBytes must be ${MultiConnectionUDPServer.MIN_RECEIVE_BUFFER_BYTES}.." +
                 "${MultiConnectionUDPServer.MAX_UDP_PAYLOAD_BYTES}, was $receiveBufferBytes"
+        }
+        require(reliableMaxMessageBytes in 1..UdpChannel.MAX_RELIABLE_MESSAGE_BYTES) {
+            "reliableMaxMessageBytes must be 1..${UdpChannel.MAX_RELIABLE_MESSAGE_BYTES}, was $reliableMaxMessageBytes"
         }
     }
 
@@ -190,6 +224,44 @@ class MultiConnectionUDPClient internal constructor(
      */
     @Volatile
     private var linkQualityTracker: LinkQualityTracker? = null
+
+    /**
+     * The bound unreliable handler, or `null` if neither [start], [startBytes],
+     * nor `channel(UNRELIABLE).actuate*` has been called yet. Already wraps
+     * [dispatch] - set once by whichever of those binds first, replaced (not
+     * accumulated) by a later call, matching [start]/[startBytes]'s existing
+     * mutual-exclusion. Read by the listener thread, hence `@Volatile`.
+     */
+    @Volatile
+    private var deliverUnreliable: ((bytes: ByteArray, text: String) -> Unit)? = null
+
+    /**
+     * The bound reliable-ordered handler, or `null` if
+     * `channel(RELIABLE_ORDERED).actuate*` has never been called. Independent of
+     * [deliverUnreliable] - the reliable and unreliable sequence spaces are
+     * independent, so both may be bound at once. Read by the listener thread,
+     * hence `@Volatile`.
+     */
+    @Volatile
+    private var deliverReliable: ((bytes: ByteArray) -> Unit)? = null
+
+    /**
+     * This client's reliable-ordered engine, or `null` until one is first
+     * needed - either an app-thread `channel(RELIABLE_ORDERED).send`/`actuate*`
+     * call or an inbound `0xA0`/`0xA1` creates it lazily (mirrors
+     * [HandshakeCoordinator]'s per-connection engine). Read by the listener,
+     * app, and retransmit threads, hence `@Volatile`.
+     */
+    @Volatile
+    private var reliableEngine: ReliableChannelEngine? = null
+
+    /**
+     * Set once by [stop]; checked by a reliable send so it fails its [Result]
+     * rather than buffering into a closed socket and reporting success (design
+     * §7.7 requires a failure after teardown).
+     */
+    @Volatile
+    private var stopped = false
 
     /** The local port [socket] is bound to - the same port every datagram, in both directions, uses. */
     val localPort: Int get() = socket.localPort
@@ -249,15 +321,16 @@ class MultiConnectionUDPClient internal constructor(
     }.onFailure { log.error("Handshake with {}:{} failed", serverAddress, serverPort, it) }
 
     /**
-     * Starts the background listener thread: receives datagrams on [socket] until
-     * [stop] is called, drops `0x80` keepalive and `0x81`/`0x82` probe datagrams
-     * silently, and dispatches every `0x90` frame's stripped payload (decoded to
-     * text) to [onMessage] on the single-threaded dispatch executor (never on the
-     * listener thread itself), so a slow [onMessage] cannot stall the read loop.
+     * Starts the background listener thread (if not already running): receives
+     * datagrams on [socket] until [stop] is called, drops `0x80` keepalive and
+     * `0x81`/`0x82` probe datagrams silently, and dispatches every `0x90` frame's
+     * stripped payload (decoded to text) to [onMessage] on the single-threaded
+     * dispatch executor (never on the listener thread itself), so a slow
+     * [onMessage] cannot stall the read loop.
      *
-     * Call after [handshake] has succeeded. Resets the socket's read timeout (set
-     * by [handshake]) back to block indefinitely, since the session listener must
-     * not spuriously time out.
+     * Call after [handshake] has succeeded. Idempotent: calling this (or
+     * [startBytes], or `channel(UNRELIABLE).actuate*`) again rebinds the
+     * unreliable handler rather than starting a second listener thread.
      * @param onMessage invoked with the decoded text of every non-keepalive datagram;
      * runs on the dispatch executor, not the caller's thread, so it must return quickly.
      * An exception thrown by [onMessage] is caught, logged, and does not stop the
@@ -265,14 +338,22 @@ class MultiConnectionUDPClient internal constructor(
      * @return [Result.success] once the listener thread is running, or the failure
      * that prevented starting it
      */
-    fun start(onMessage: (message: String) -> Unit): Result<Unit> =
-        startWith { _, text -> dispatch { onMessage(text) } }
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuate(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).actuate(onMessage)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
+    fun start(onMessage: (message: String) -> Unit): Result<Unit> {
+        deliverUnreliable = { _, text -> dispatch { onMessage(text) } }
+        return ensureListening()
+    }
 
     /**
      * Raw-bytes counterpart to [start]: dispatches an exact-length, undecoded,
      * untrimmed copy of every non-keepalive datagram to [onMessage]. Mutually
-     * exclusive with [start] - last call wins - and carries the same one-shot
-     * ordering contract (call after [handshake], call once).
+     * exclusive with [start] - last call wins - and idempotent in the same way:
+     * calling this (or [start], or `channel(UNRELIABLE).actuate*`) again rebinds
+     * the unreliable handler rather than starting a second listener thread. Call
+     * after [handshake].
      *
      * Control datagrams (`0x80` keepalive, `0x81`/`0x82` probe) are classified out
      * by their [DatagramType] tag; every `0x90` frame's stripped payload is
@@ -285,8 +366,57 @@ class MultiConnectionUDPClient internal constructor(
      * @return [Result.success] once the listener thread is running, or the failure
      * that prevented starting it
      */
-    fun startBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> =
-        startWith { bytes, _ -> dispatch { onMessage(bytes) } }
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuateBytes(...) - see the 2.0 channel API",
+        ReplaceWith(
+            "channel(DeliveryMode.UNRELIABLE).actuateBytes(onMessage)",
+            "com.spartanlabs.webtools.udp.DeliveryMode",
+        ),
+    )
+    fun startBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> {
+        deliverUnreliable = { bytes, _ -> dispatch { onMessage(bytes) } }
+        return ensureListening()
+    }
+
+    /**
+     * The delivery-mode-scoped handle for this client's session with the server.
+     * Each [DeliveryMode] has its own sequence space and its own inbound
+     * handler - binding one never disturbs the other. Unlike the [Connection]
+     * side, both modes are always fully supported here (there is no
+     * [UnsupportedOperationException] case): the client always talks to exactly
+     * one server.
+     * @param mode which delivery guarantee to get a handle for
+     * @return the [UdpChannel] for [mode]
+     */
+    fun channel(mode: DeliveryMode): UdpChannel = when (mode) {
+        DeliveryMode.UNRELIABLE -> unreliableChannel
+        DeliveryMode.RELIABLE_ORDERED -> reliableChannel
+    }
+
+    // Both handles target the private internals (sendUnreliable/sendReliable, the deliver fields,
+    // ensureListening) rather than the deprecated public members above, so neither needs an
+    // @Suppress and both survive the 3.0.0 demotion of those members untouched.
+    private val unreliableChannel: UdpChannel by lazy {
+        object : UdpChannel {
+            override val mode = DeliveryMode.UNRELIABLE
+            override fun send(bytes: ByteArray): Result<Unit> = sendUnreliable(bytes)
+            override fun actuateBytes(onMessage: (ByteArray) -> Unit): Result<Unit> {
+                deliverUnreliable = { bytes, _ -> dispatch { onMessage(bytes) } }
+                return ensureListening()
+            }
+        }
+    }
+
+    private val reliableChannel: UdpChannel by lazy {
+        object : UdpChannel {
+            override val mode = DeliveryMode.RELIABLE_ORDERED
+            override fun send(bytes: ByteArray): Result<Unit> = sendReliable(bytes)
+            override fun actuateBytes(onMessage: (ByteArray) -> Unit): Result<Unit> {
+                deliverReliable = { bytes -> dispatch { onMessage(bytes) } }
+                return ensureListening()
+            }
+        }
+    }
 
     /**
      * Hand delivery to the single-threaded executor so a slow handler never stalls
@@ -297,13 +427,21 @@ class MultiConnectionUDPClient internal constructor(
         dispatchExecutor.execute { runCatching(block).onFailure { log.warn("Message handler threw", it) } }
     }
 
-    private fun startWith(deliver: (bytes: ByteArray, text: String) -> Unit): Result<Unit> {
+    /**
+     * Starts the listener thread if it is not already running; idempotent - a
+     * second call while already listening is a no-op success. [start], [startBytes],
+     * and both [channel] handles' `actuate*` all route through this, so whichever
+     * binds first also starts the socket read loop.
+     */
+    @Synchronized
+    private fun ensureListening(): Result<Unit> {
+        if (listening) return Result.success(Unit)
         listening = true
         return runCatching {
             // Undo handshake()'s bounded wait - the session listener must block
             // indefinitely, not time out every idle interval.
             socket.soTimeout = 0
-            listenerThread = Thread { receiveLoop(deliver) }.apply {
+            listenerThread = Thread { receiveLoop() }.apply {
                 name = "mcupc-listener"
                 isDaemon = true
                 start()
@@ -314,8 +452,53 @@ class MultiConnectionUDPClient internal constructor(
         }
     }
 
+    /**
+     * This client's [ReliableChannelEngine], minting it and arming its
+     * `mcupc-retransmit` tick on first use: created lazily on the *first* of an
+     * app-thread `channel(RELIABLE_ORDERED).send`/`actuate*` call or an inbound
+     * `0xA0`/`0xA1` (mirrors [HandshakeCoordinator.reliableEngineFor]).
+     * `@Synchronized` so a listener-thread inbound and an app-thread send cannot
+     * mint two engines.
+     */
+    @Synchronized
+    private fun reliableEngine(): ReliableChannelEngine {
+        reliableEngine?.let { return it }
+        val engine = ReliableChannelEngine(sendRaw = ::sendDatagram)
+        reliableEngine = engine
+        retransmit.scheduleTick(serverEndpoint, ReliableChannelEngine.DEFAULT_RETRANSMIT_TICK_MILLIS) {
+            engine.onRetransmitTick()
+        }.onFailure { log.warn("Could not arm the retransmit tick", it) }
+        log.info("Opened reliable-ordered channel to {}:{}", serverAddress, serverPort)
+        return engine
+    }
+
+    /**
+     * Offers [bytes] to the reliable-ordered channel, creating the engine and
+     * arming its retransmit tick on first use.
+     * @return success once accepted for reliable delivery (buffered and sequenced -
+     * not necessarily already on the wire); failure with
+     * [ReliableMessageTooLargeException] if [bytes] exceeds
+     * [reliableMaxMessageBytes], [ReliableWindowFullException] if the in-flight
+     * window is full, or [IllegalStateException] if [stop] has already run
+     */
+    private fun sendReliable(bytes: ByteArray): Result<Unit> {
+        if (stopped) return Result.failure(IllegalStateException("client stopped"))
+        if (bytes.size > reliableMaxMessageBytes) {
+            log.warn("Reliable send of {} byte(s) exceeds the {}-byte cap", bytes.size, reliableMaxMessageBytes)
+            return Result.failure(ReliableMessageTooLargeException(bytes.size, reliableMaxMessageBytes))
+        }
+        val engine = reliableEngine()
+        return when (val outcome = engine.sendReliable(bytes)) {
+            is ReliableChannelEngine.SendOutcome.Accepted -> Result.success(Unit)
+            ReliableChannelEngine.SendOutcome.WindowFull -> {
+                log.debug("Reliable in-flight window full")
+                Result.failure(ReliableWindowFullException(engine.windowSize))
+            }
+        }
+    }
+
     /** Body of the listener thread: switch on the [DatagramType] tag, deliver the stripped `0x90` payload. */
-    private fun receiveLoop(deliver: (bytes: ByteArray, text: String) -> Unit) {
+    private fun receiveLoop() {
         val buffer = ByteArray(receiveBufferBytes)
         while (listening) {
             runCatching {
@@ -329,10 +512,11 @@ class MultiConnectionUDPClient internal constructor(
                     )
                 }
                 // Exact-length copy: the next receive() reuses buffer, so a slice handed
-                // to the dispatch executor would be a data race.
-                val bytes = packet.data.copyOf(packet.length)
-                bytes to String(bytes, Charsets.UTF_8).trim()
-            }.onSuccess { (bytes, text) ->
+                // to the dispatch executor would be a data race. Origin is captured here too -
+                // packet itself must not escape this block, and the reliable branch below needs
+                // it to screen against serverEndpoint (§12 B2).
+                packet.data.copyOf(packet.length) to packet.socketAddress as InetSocketAddress
+            }.onSuccess { (bytes, origin) ->
                 // Byte 0 is the DatagramType tag - the session is fully framed post-handshake.
                 when (DatagramType.ofTagByte(bytes.getOrNull(0))) {
                     DatagramType.KEEPALIVE -> log.trace("Dropped keepalive from server")
@@ -349,18 +533,35 @@ class MultiConnectionUDPClient internal constructor(
                             ?.let { seq -> linkQualityTracker?.completeProbe(seq) }
 
                     DatagramType.UNRELIABLE ->
+                        // Decode just the stripped payload here - NOT some already-computed
+                        // whole-datagram text - or a handler would see the tag/channel bytes as
+                        // replacement characters (§3.12 of the Stage-3 plan).
                         TransportWireFormat.unreliablePayloadOf(bytes)?.let { payload ->
-                            deliver(payload, String(payload, Charsets.UTF_8).trim())
+                            deliverUnreliable?.invoke(payload, String(payload, Charsets.UTF_8).trim())
+                                ?: log.debug("No unreliable handler bound, dropping")
                         } ?: log.warn("Malformed 0x90 datagram from server, dropping")
 
-                    // The Stage-2 reliable engine (ReliableChannelEngine) is internal and unwired -
-                    // no production capability here yet (Stage 3); mirrors the existing debug-log
-                    // branch below for a reserved tag rather than silently losing it.
-                    DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK ->
-                        log.debug(
-                            "Unhandled datagram type 0x{} from server, dropping",
-                            Integer.toHexString(bytes.getOrNull(0)?.toInt()?.and(0xFF) ?: 0),
-                        )
+                    DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {
+                        // Client-side counterpart of the server's registrations.findByOrigin guard
+                        // (§12 B2): the socket is unconnected, so a stray/spoofed reliable datagram
+                        // must not mint the engine or reach the application handler.
+                        if (origin != serverEndpoint) {
+                            log.debug(
+                                "Reliable datagram from unexpected origin {} (expected {}), dropped",
+                                origin, serverEndpoint,
+                            )
+                        } else {
+                            val delivered = reliableEngine().onInboundDatagram(bytes) // never throws (Stage 2 contract)
+                            val handler = deliverReliable
+                            if (handler == null) {
+                                if (delivered.isNotEmpty()) {
+                                    log.debug("No reliable handler bound, dropping {} payload(s)", delivered.size)
+                                }
+                            } else {
+                                delivered.forEach(handler)
+                            }
+                        }
+                    }
 
                     null -> {
                         val byte0 = bytes.getOrNull(0)?.toInt()?.and(0xFF)
@@ -388,12 +589,17 @@ class MultiConnectionUDPClient internal constructor(
      * @param message the text to send
      * @return [Result.success] if the message was sent, or the failure that prevented it
      */
-    fun send(message: String): Result<Unit> = send(message.toByteArray(Charsets.UTF_8))
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(message)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
+    fun send(message: String): Result<Unit> = sendUnreliable(message.toByteArray(Charsets.UTF_8))
 
     /**
      * Sends [bytes] to the server as the payload of one `0x90` unreliable
      * application datagram (`[0x90][channel][bytes]`) over the shared socket. Safe
-     * to call from any thread. [send]`(String)` is a UTF-8 wrapper over this.
+     * to call from any thread. [send]`(String)` is a UTF-8 wrapper over the same
+     * private [sendUnreliable] this delegates to.
      *
      * Any payload bytes are carried intact - there is no reserved first byte. A
      * framed datagram above the OS datagram limit fails the returned [Result] (the
@@ -402,7 +608,21 @@ class MultiConnectionUDPClient internal constructor(
      * @param bytes the raw application payload
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
-    fun send(bytes: ByteArray): Result<Unit> = sendDatagram(TransportWireFormat.unreliableDatagram(bytes))
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(bytes)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
+    fun send(bytes: ByteArray): Result<Unit> = sendUnreliable(bytes)
+
+    /**
+     * Frames [bytes] as an `0x90` unreliable datagram and puts it on the wire - the
+     * single implementation of the unreliable send path that [send]`(String)`,
+     * [send]`(ByteArray)`, and `channel(UNRELIABLE).send` all funnel through, so
+     * deprecating the two public overloads above does not make either warn against
+     * the other.
+     */
+    private fun sendUnreliable(bytes: ByteArray): Result<Unit> =
+        sendDatagram(TransportWireFormat.unreliableDatagram(bytes))
 
     /**
      * Puts one already-formed datagram on the wire verbatim - no framing. The raw
@@ -505,13 +725,17 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * Stops the listener thread, shuts the keepalive scheduler (if [startKeepAlive]
-     * armed one), shuts the probe scheduler (if [startProbe] armed one), closes the
-     * socket, and shuts the dispatch executor.
+     * armed one), shuts the probe scheduler (if [startProbe] armed one), shuts the
+     * retransmit scheduler and closes the reliable engine (if a reliable channel
+     * was ever opened), closes the socket, and shuts the dispatch executor. A
+     * reliable send after this returns fails with [IllegalStateException] rather
+     * than buffering into a closed socket (design §7.7).
      * Every step runs even if an earlier one failed, so a partial failure never
      * leaks the bound port. Once called, this instance should be discarded.
      * @return [Result.success] if every step succeeded, or the first failure encountered
      */
     fun stop(): Result<Unit> {
+        stopped = true
         listening = false
         // This join is expected to time out: the listener is blocked in socket.receive()
         // until the close() call below raises the SocketException that lets the loop
@@ -529,12 +753,19 @@ class MultiConnectionUDPClient internal constructor(
         // Shut the probe scheduler before the socket so a scheduled PING never races a close.
         val probeStopped = runCatching { probe.shutdown() }
             .onFailure { log.warn("Could not cleanly shut the probe scheduler", it) }
+        // Shut the retransmit scheduler before the socket so a scheduled retransmit never races a close.
+        // Independent runCatching from the engine close below (§12 B5): a throwing shutdown() must
+        // not skip closing the reliable engine - every step here runs even if an earlier one failed.
+        val retransmitStopped = runCatching { retransmit.shutdown() }
+            .onFailure { log.warn("Could not cleanly shut the retransmit scheduler", it) }
+        val reliableEngineClosed = runCatching { reliableEngine?.close() }.map { }
+            .onFailure { log.warn("Could not cleanly close the reliable engine", it) }
         val socketClosed = runCatching { socket.close() }
             .onFailure { cause -> log.error("Could not close the client socket", cause) }
         val executorStopped = runCatching { dispatchExecutor.shutdownNow() }.map { }
             .onFailure { log.warn("Could not cleanly shut the dispatch executor", it) }
         return listenerJoined.flatMap { keepAliveStopped }.flatMap { probeStopped }
-            .flatMap { socketClosed }.flatMap { executorStopped }
+            .flatMap { retransmitStopped }.flatMap { reliableEngineClosed }.flatMap { socketClosed }.flatMap { executorStopped }
     }
 
     private companion object {

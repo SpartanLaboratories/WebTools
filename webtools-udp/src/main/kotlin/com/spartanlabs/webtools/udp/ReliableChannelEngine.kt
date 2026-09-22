@@ -6,12 +6,13 @@ import org.slf4j.LoggerFactory
  * The reliable-ordered channel's orchestrator: wires [ReliableRetransmitBuffer]
  * (send side), [ReliableReorderBuffer] (receive side), and
  * [ReliableRtoEstimator] (RTO) together into the `sendReliable` /
- * `onInboundDatagram` / `onRetransmitTick` seam a future stage's socket
- * plumbing will drive. Entirely socket-free: outbound bytes go through the
- * injected [sendRaw], and this stage never creates a retransmit-tick executor
- * itself — [onRetransmitTick] is shaped as `() -> Unit` precisely so a later
- * stage can hand `engine::onRetransmitTick` straight to
- * `PeriodicSchedule.schedule(key, intervalMillis, tick)`.
+ * `onInboundDatagram` / `onRetransmitTick` seam that [HandshakeCoordinator]
+ * (server side) and [MultiConnectionUDPClient] (client side) drive against the
+ * real socket. Entirely socket-free itself: outbound bytes go through the
+ * injected [sendRaw], and this engine never creates a retransmit-tick executor
+ * of its own - [onRetransmitTick] is shaped as `() -> Unit` precisely so each
+ * side can hand `engine::onRetransmitTick` straight to
+ * `PeriodicSchedule.scheduleTick(key, DEFAULT_RETRANSMIT_TICK_MILLIS, tick)`.
  *
  * `@Synchronized` throughout, same discipline as [LinkQualityTracker]. The
  * engine is the sole entry point into its sub-buffers, so lock order is
@@ -22,7 +23,10 @@ import org.slf4j.LoggerFactory
  * is logged and left for the next retransmit tick to retry
  * @param windowSize the fixed in-flight window, shared with the receive-side
  * reorder window (design doc OD-3 - unifying them is what structurally
- * prevents the stale-ring-slot bug [ReliableRetransmitBuffer] documents)
+ * prevents the stale-ring-slot bug [ReliableRetransmitBuffer] documents).
+ * Exposed as a read-only property so a caller can report [windowSize] as the
+ * in-flight count of a [ReliableWindowFullException] on [SendOutcome.WindowFull]
+ * - the window being full means exactly this many messages are unacked.
  * @param rtoFloorMillis the minimum RTO [ReliableRtoEstimator] will ever return
  * @param rtoCapMillis the maximum RTO/backoff ceiling, shared by the estimator
  * and by [ReliableRetransmitBuffer]'s per-message backoff
@@ -31,7 +35,7 @@ import org.slf4j.LoggerFactory
  */
 internal class ReliableChannelEngine(
     private val sendRaw: (ByteArray) -> Result<Unit>,
-    private val windowSize: Int = 256,
+    val windowSize: Int = 256,
     private val rtoFloorMillis: Long = 200L,
     private val rtoCapMillis: Long = 5_000L,
     private val channel: Byte = ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL,
@@ -49,6 +53,12 @@ internal class ReliableChannelEngine(
     private val retransmitBuffer = ReliableRetransmitBuffer(windowSize, nanoClock)
     private val reorderBuffer = ReliableReorderBuffer(windowSize)
     private val rtoEstimator = ReliableRtoEstimator(rtoFloorMillis, rtoCapMillis)
+
+    // The RFC 1122 §4.2.3.2 delayed-ack guard: true whenever an 0xA0 has arrived (fresh or
+    // duplicate) since this side last emitted an ack (piggybacked or standalone). Duplicates
+    // MUST set this too - if our ack was lost, the peer's retransmit arrives as a duplicate, and
+    // a guard keyed only on state change would never re-ack, wedging the peer forever.
+    private var ackPending = false
 
     /**
      * Buffers [payload] for reliable delivery and, on acceptance, sends a
@@ -69,6 +79,7 @@ internal class ReliableChannelEngine(
                         // Already buffered - swallow and let the next onRetransmitTick retry it.
                         log.warn("Send of reliable seq {} failed, retrying on the next retransmit tick", offer.seq, it)
                     }
+                ackPending = false // this 0xA0 piggybacks the current ack, whether or not the send itself succeeded
                 SendOutcome.Accepted(offer.seq)
             }
         }
@@ -92,6 +103,10 @@ internal class ReliableChannelEngine(
                     log.warn("Malformed 0xA0 reliable-data datagram, dropping")
                     emptyList()
                 } else {
+                    // Set unconditionally - including for a duplicate or out-of-window 0xA0 - so a
+                    // lost ack's retransmit (which arrives as a duplicate) always re-arms a fresh
+                    // ack, rather than wedging the peer forever (§3.6).
+                    ackPending = true
                     applyAck(header.ack, header.ackBitfield)
                     val outcome = reorderBuffer.onReceive(header.seq, payload)
                     (outcome as? ReliableReorderBuffer.ReceiveOutcome.Delivered)?.messages ?: emptyList()
@@ -121,26 +136,31 @@ internal class ReliableChannelEngine(
     }
 
     /**
-     * Resends every in-flight entry whose RTO has elapsed, each piggybacking
-     * the current ack/bitfield. If nothing was due and there is inbound data
-     * to acknowledge, sends one standalone `0xA1` instead - the standalone-ack
-     * timer coalesced onto the retransmit tick (design doc OD-2), rather than
-     * a dedicated faster ack-delay timer. Shaped as `() -> Unit` so a later
-     * stage can hand this straight to a [PeriodicSchedule]; this stage never
-     * creates that executor itself.
+     * Resends every in-flight entry whose RTO has elapsed (at most
+     * [MAX_RETRANSMITS_PER_TICK] per call), each piggybacking the current
+     * ack/bitfield and clearing [ackPending]. Otherwise, if there is inbound
+     * data to acknowledge (the §3.6 delayed-ack guard - RFC 1122 §4.2.3.2),
+     * sends one standalone `0xA1` instead and clears [ackPending] - the
+     * standalone-ack timer coalesced onto the retransmit tick (design doc
+     * OD-2), rather than a dedicated faster ack-delay timer. If neither is
+     * true, an idle channel's tick does nothing at all. Shaped as `() -> Unit`
+     * so [MultiConnectionUDPClient] / [HandshakeCoordinator] can hand this
+     * straight to a [PeriodicSchedule.scheduleTick].
      */
     @Synchronized
     fun onRetransmitTick() {
-        val due = retransmitBuffer.dueForRetransmit(nanoClock(), rtoCapMillis)
+        val due = retransmitBuffer.dueForRetransmit(nanoClock(), rtoCapMillis, MAX_RETRANSMITS_PER_TICK)
         val (ack, ackBitfield) = reorderBuffer.ackAndBitfield()
         if (due.isNotEmpty()) {
             due.forEach { entry ->
                 sendRaw(ReliableWireFormat.reliableDataDatagram(entry.seq, ack, ackBitfield, entry.payload, channel))
                     .onFailure { log.warn("Retransmit of reliable seq {} failed", entry.seq, it) }
             }
-        } else if (ack != SENTINEL_ACK || ackBitfield != SENTINEL_ACK_BITFIELD) {
+            ackPending = false
+        } else if (ackPending && (ack != SENTINEL_ACK || ackBitfield != SENTINEL_ACK_BITFIELD)) {
             sendRaw(ReliableWireFormat.reliableAckDatagram(ack, ackBitfield, channel))
                 .onFailure { log.warn("Standalone reliable ack send failed", it) }
+            ackPending = false
         }
     }
 
@@ -149,13 +169,32 @@ internal class ReliableChannelEngine(
     fun close() {
         retransmitBuffer.clear()
         reorderBuffer.clear()
+        ackPending = false
     }
 
-    private companion object {
+    companion object {
         private val log = LoggerFactory.getLogger(ReliableChannelEngine::class.java)
 
         // ReliableReorderBuffer.ackAndBitfield()'s documented pre-first-receipt sentinel.
-        const val SENTINEL_ACK = 0xFFFF
-        const val SENTINEL_ACK_BITFIELD = 0
+        private const val SENTINEL_ACK = 0xFFFF
+        private const val SENTINEL_ACK_BITFIELD = 0
+
+        /**
+         * The retransmit/standalone-ack tick cadence: fast enough to bound
+         * retransmit lateness at 25% of the 200 ms RTO floor, cheap enough
+         * (with the §3.6 ack guard) that an idle channel's tick costs nothing
+         * measurable. `internal` per OD-5 - implementation tuning, not contract.
+         */
+        const val DEFAULT_RETRANSMIT_TICK_MILLIS = 50L
+
+        /**
+         * The most in-flight entries [onRetransmitTick] will retransmit in one
+         * call: a burst-size ceiling (not congestion control, D9 stands) that
+         * bounds how long one tick can hold the engine's lock - and therefore
+         * how long it can stall the listener thread sharing that lock via
+         * [onInboundDatagram] - against a black-holed peer with a full window.
+         * `internal` per OD-5 - implementation tuning, not contract.
+         */
+        const val MAX_RETRANSMITS_PER_TICK = 32
     }
 }
