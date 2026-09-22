@@ -54,7 +54,7 @@
 // MultiConnectionUDPServer.start/startBytes/pushToAll are not deprecated (no per-Connection
 // replacement) and gain reliable siblings startReliable/pushToAllReliable. No new public
 // signature is removed; additive at both the API and wire level.
-version = "2.0.0-alpha2"
+version = "2.0.0-alpha3"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
