@@ -22,6 +22,7 @@ import kotlin.test.assertTrue
 // echoes PONG for each PING, exercising the opt-in link-quality probe end to end on the
 // client side.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientProbeTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

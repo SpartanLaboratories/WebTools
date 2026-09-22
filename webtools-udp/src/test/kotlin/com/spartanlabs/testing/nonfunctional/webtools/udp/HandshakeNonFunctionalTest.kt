@@ -7,6 +7,7 @@ import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInstance
 import java.net.DatagramPacket
@@ -48,6 +49,8 @@ class HandshakeNonFunctionalTest {
             idleTimeoutMillis = 0L,
             keepAliveSchedule = FakePeriodicSchedule(),
             probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         )
 
         coordinator.accept(origin, "Iam spoofer 8.8.8.8 1.1.1.1")
@@ -70,6 +73,8 @@ class HandshakeNonFunctionalTest {
             idleTimeoutMillis = 0L,
             keepAliveSchedule = FakePeriodicSchedule(),
             probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         )
 
         repeat(STORM_SIZE) { coordinator.accept(origin, "Iam stormclient") }

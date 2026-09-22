@@ -23,6 +23,7 @@ import kotlin.test.assertTrue
 // (not the shared server of MultiConnectionUDPServerTest). Runs under the module's
 // commonUdpPortLock via the integrationTest task.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerLivenessTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()

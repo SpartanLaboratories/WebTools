@@ -21,6 +21,7 @@ import kotlin.test.assertTrue
  * end to end with neither side hand-rolling socket code.
  */
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientServerE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

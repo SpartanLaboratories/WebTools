@@ -7,6 +7,7 @@ import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.Registration
 import com.spartanlabs.webtools.udp.Registrations
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -43,6 +44,8 @@ class HandshakeCoordinatorGatingTest {
         idleTimeoutMillis = idleTimeoutMillis,
         keepAliveSchedule = FakePeriodicSchedule(),
         probeSchedule = FakePeriodicSchedule(),
+        retransmitSchedule = FakePeriodicSchedule(),
+        reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
     )
 
     @Test

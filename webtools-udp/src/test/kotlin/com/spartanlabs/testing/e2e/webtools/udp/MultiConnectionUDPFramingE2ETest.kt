@@ -19,6 +19,7 @@ import kotlin.test.assertTrue
  * control frame ever leaks to a bound handler.
  */
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPFramingE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

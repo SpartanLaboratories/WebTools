@@ -23,6 +23,7 @@ import kotlin.test.assertTrue
 // buffer size. Both run under the module's commonUdpPortLock (the integrationTest task),
 // and JUnit runs test classes sequentially, so only one binds port 9998 at a time.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerReceiveBufferTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()

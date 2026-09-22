@@ -9,6 +9,7 @@ import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
 import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -24,6 +25,7 @@ import kotlin.test.assertTrue
 // (connection factory, byte sink, registration callback, dispatch) are recording fakes and
 // the dispatch is synchronous, so no socket or thread is involved.
 @Tag("component")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class HandshakeCoordinatorTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -41,6 +43,8 @@ class HandshakeCoordinatorTest {
     private var idleTimeoutMillis: Long = 0L
     private val keepAliveSchedule = FakePeriodicSchedule()
     private val probeSchedule = FakePeriodicSchedule()
+    private val retransmitSchedule = FakePeriodicSchedule()
+    private var reliableMaxMessageBytes: Int = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES
 
     private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
     private var admissionToReturn: Admission = Admission.Admitted
@@ -74,6 +78,8 @@ class HandshakeCoordinatorTest {
         idleTimeoutMillis = idleTimeoutMillis,
         keepAliveSchedule = keepAliveSchedule,
         probeSchedule = probeSchedule,
+        retransmitSchedule = retransmitSchedule,
+        reliableMaxMessageBytes = reliableMaxMessageBytes,
     )
 
     private fun HandshakeCoordinator.registerClients(count: Int) {
@@ -353,6 +359,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -380,6 +388,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -406,6 +416,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -734,6 +746,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
         coordinator.accept(originA, "Iam alice")
 
@@ -772,6 +786,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
         coordinator.registerClients(3)
         val past = System.nanoTime() - 1_000_000_000L

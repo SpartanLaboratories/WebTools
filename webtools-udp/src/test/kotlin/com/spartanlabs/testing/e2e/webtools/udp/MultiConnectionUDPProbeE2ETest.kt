@@ -21,6 +21,7 @@ import kotlin.test.assertTrue
 // scenario via a relay that drops every Nth client->server datagram, and non-interference
 // with application traffic.
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPProbeE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

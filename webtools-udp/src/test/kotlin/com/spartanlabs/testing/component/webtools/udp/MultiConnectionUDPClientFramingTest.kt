@@ -4,6 +4,7 @@ import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -19,6 +20,7 @@ import kotlin.test.assertTrue
 // a loopback peer DatagramSocket (no handshake, no dispatch to a server). Mirrors the framing
 // coverage FramingComponentTest gives the server side.
 @Tag("component")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientFramingTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -34,6 +36,8 @@ class MultiConnectionUDPClientFramingTest {
             MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
             FakePeriodicSchedule(),
             FakePeriodicSchedule(),
+            FakePeriodicSchedule(),
+            UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         ).also { clients += it }
 
     @AfterTest

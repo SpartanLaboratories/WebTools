@@ -7,6 +7,7 @@ import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -34,6 +35,8 @@ class FramingComponentTest {
         idleTimeoutMillis = 0L,
         keepAliveSchedule = FakePeriodicSchedule(),
         probeSchedule = FakePeriodicSchedule(),
+        retransmitSchedule = FakePeriodicSchedule(),
+        reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
     )
 
     @Test
@@ -94,12 +97,14 @@ class FramingComponentTest {
     }
 
     @Test
-    fun `a reserved 0xA0 inbound is dropped with a WARN`() {
+    fun `a reserved 0xA2 inbound is dropped with a WARN`() {
+        // 0xA0/0xA1 went live as RELIABLE_DATA/RELIABLE_ACK in Stage 3 - 0xA2 is the first tag
+        // still reserved (design doc's future reliable-channel-control range, 0xA2-0xAF).
         val coordinator = newCoordinator()
         coordinator.accept(origin, "Iam alice")
         val received = mutableListOf<ByteArray>()
         coordinator.bindBytes(origin, received::add)
-        val reserved = byteArrayOf(0xA0.toByte(), 1, 2)
+        val reserved = byteArrayOf(0xA2.toByte(), 1, 2)
 
         captureLogsOf(HandshakeCoordinator::class.java) { events ->
             assertTrue(coordinator.accept(origin, reserved, "").isSuccess)

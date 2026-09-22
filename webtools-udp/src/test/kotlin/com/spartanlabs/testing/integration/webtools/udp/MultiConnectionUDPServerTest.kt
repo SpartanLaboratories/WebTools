@@ -33,6 +33,7 @@ import kotlin.test.assertTrue
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerTest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerTest::class.java)

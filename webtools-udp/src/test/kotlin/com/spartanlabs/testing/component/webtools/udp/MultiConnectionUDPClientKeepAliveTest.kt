@@ -4,6 +4,7 @@ import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -24,6 +25,7 @@ import kotlin.test.assertTrue
 // coverage. A real client socket is bound (a documented construction side effect) so a
 // tick's sendKeepAlive() can be observed as a datagram at a fake peer.
 @Tag("component")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientKeepAliveTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -43,6 +45,8 @@ class MultiConnectionUDPClientKeepAliveTest {
             MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES,
             fake,
             probe,
+            FakePeriodicSchedule(),
+            UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         ).also { clients += it }
 
     @AfterTest

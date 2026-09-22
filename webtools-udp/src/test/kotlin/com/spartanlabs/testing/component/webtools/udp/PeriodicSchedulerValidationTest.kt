@@ -39,4 +39,31 @@ class PeriodicSchedulerValidationTest {
         assertTrue(result.isFailure)
         assertIs<IllegalStateException>(result.exceptionOrNull())
     }
+
+    // --- scheduleTick (§3.5 of the Stage-3 plan): the honest, non-quarter-divided tick seam ---
+
+    @Test
+    fun `scheduleTick rejects a non-positive tickMillis with IllegalArgumentException`() {
+        val scheduler = PeriodicScheduler("test-periodic")
+        try {
+            listOf(0L, -1L).forEach { bad ->
+                val result = scheduler.scheduleTick(key, bad) { }
+                assertTrue(result.isFailure, "tickMillis $bad must fail")
+                assertIs<IllegalArgumentException>(result.exceptionOrNull())
+            }
+        } finally {
+            scheduler.shutdown()
+        }
+    }
+
+    @Test
+    fun `scheduleTick after shutdown fails with IllegalStateException`() {
+        val scheduler = PeriodicScheduler("test-periodic")
+        scheduler.shutdown()
+
+        val result = scheduler.scheduleTick(key, 50L) { }
+
+        assertTrue(result.isFailure)
+        assertIs<IllegalStateException>(result.exceptionOrNull())
+    }
 }

@@ -20,6 +20,7 @@ import kotlin.test.assertTrue
 // across many arm/disarm cycles, independence from the dispatch thread, tracker concurrency,
 // datagram size, and races with stop().
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientProbeNonFunctionalTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
