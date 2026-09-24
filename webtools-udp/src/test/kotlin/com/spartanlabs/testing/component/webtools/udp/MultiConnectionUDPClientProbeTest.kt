@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.ScheduleMethod
 import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
@@ -77,7 +78,7 @@ class MultiConnectionUDPClientProbeTest {
     }
 
     @Test
-    fun `startProbe records exactly one schedule for the server endpoint at the given interval`() {
+    fun `startProbe records exactly one schedule for the server endpoint at the given interval, via scheduleTick`() {
         val peer = fakePeer()
         val probe = FakePeriodicSchedule()
         val client = newClient(peer.localPort, probe)
@@ -87,6 +88,23 @@ class MultiConnectionUDPClientProbeTest {
         val call = probe.scheduleCalls.single()
         assertEquals(InetSocketAddress(loopback, peer.localPort), call.key)
         assertEquals(300L, call.intervalMillis)
+        assertEquals(ScheduleMethod.TICK, call.via, "the probe must arm via scheduleTick, not schedule (Issue #34)")
+    }
+
+    @Test
+    fun `startProbe below the 250ms floor fails with no schedule call, exactly at the floor succeeds via scheduleTick`() {
+        val peer = fakePeer()
+        val probe = FakePeriodicSchedule()
+        val client = newClient(peer.localPort, probe)
+
+        val below = client.startProbe(249L)
+        assertTrue(below.isFailure)
+        assertIs<IllegalArgumentException>(below.exceptionOrNull())
+        assertTrue(probe.scheduleCalls.isEmpty(), "a rejected interval must arm nothing")
+
+        val atFloor = client.startProbe(250L)
+        assertTrue(atFloor.isSuccess)
+        assertEquals(ScheduleMethod.TICK, probe.scheduleCalls.single().via)
     }
 
     @Test

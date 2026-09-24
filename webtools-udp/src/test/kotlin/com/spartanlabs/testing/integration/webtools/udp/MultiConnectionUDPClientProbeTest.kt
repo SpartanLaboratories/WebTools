@@ -120,7 +120,7 @@ class MultiConnectionUDPClientProbeTest {
         val peer = fakePeer()
         val echo = echoer(peer)
         val client = connected(peer)
-        assertTrue(client.startProbe(200L).isSuccess)
+        assertTrue(client.startProbe(250L).isSuccess)
         assertTrue(await(3_000L) { (client.linkQuality()?.probesDelivered ?: 0) >= 2 })
 
         val rttBefore = client.linkQuality()!!.rttMillis
@@ -129,6 +129,26 @@ class MultiConnectionUDPClientProbeTest {
         assertTrue(await(6_000L) { (client.linkQuality()?.packetLossRatio ?: 0.0) >= 0.5 }, "loss climbs toward 1.0")
         val rttAfter = client.linkQuality()!!.rttMillis
         assertTrue(kotlin.math.abs(rttAfter - rttBefore) < 50.0, "rtt froze: $rttBefore -> $rttAfter")
+    }
+
+    @Test
+    fun `a rejected startProbe does not switch off loss detection on the probe already running`() {
+        val peer = fakePeer()
+        val echo = echoer(peer)
+        val client = connected(peer)
+        assertTrue(client.startProbe(250L).isSuccess)
+        assertTrue(await(3_000L) { (client.linkQuality()?.probesDelivered ?: 0) >= 2 })
+
+        // Pre-fix, startProbe wrote probeIntervalMillis = 0 onto the live tracker before the
+        // interval was rejected, and Rtt.isProbeLost(.., 0) is always false - so loss aging on
+        // the still-running probe was switched off for good and this await would time out.
+        assertTrue(client.startProbe(0L).isFailure)
+
+        echo.answering.set(false)
+        assertTrue(
+            await(6_000L) { (client.linkQuality()?.packetLossRatio ?: 0.0) >= 0.5 },
+            "loss must still climb after a rejected re-arm",
+        )
     }
 
     @Test

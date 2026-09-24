@@ -366,16 +366,29 @@ internal class HandshakeCoordinator(
     }
 
     override fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
-        val reg = registrations.findByOrigin(peer)
-            ?: return Result.failure(IllegalStateException("No registration for $peer"))
-        val tracker = reg.linkQuality ?: LinkQualityTracker().also { reg.linkQuality = it }
-        tracker.probeIntervalMillis = intervalMillis
-        return probeSchedule.schedule(peer, intervalMillis) {
-            // Re-fetch: a concurrent terminate()/supersede may have dropped the registration.
-            val live = registrations.findByOrigin(peer)?.linkQuality ?: return@schedule
-            live.sweep()
-            send(TransportWireFormat.probePingDatagram(live.beginProbe()), peer)
-                .onFailure { log.warn("Scheduled probe to {} failed", peer, it) }
+        // Floor check duplicated verbatim in MultiConnectionUDPClient.startProbe (Issue #34) rather
+        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // any state is touched: writing probeIntervalMillis first would let a rejected call switch
+        // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
+        // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick, and not
+        // on KeepAlive, which held the old poll-division clamp this floor replaces but is
+        // scheduling-cadence policy, not a probe-protocol constant.
+        return runCatching {
+            require(intervalMillis >= TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS) {
+                "intervalMillis must be >= ${TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS}, was $intervalMillis"
+            }
+        }.flatMap {
+            val reg = registrations.findByOrigin(peer)
+                ?: return@flatMap Result.failure(IllegalStateException("No registration for $peer"))
+            val tracker = reg.linkQuality ?: LinkQualityTracker().also { reg.linkQuality = it }
+            tracker.probeIntervalMillis = intervalMillis
+            probeSchedule.scheduleTick(peer, intervalMillis) {
+                // Re-fetch: a concurrent terminate()/supersede may have dropped the registration.
+                val live = registrations.findByOrigin(peer)?.linkQuality ?: return@scheduleTick
+                live.sweep()
+                send(TransportWireFormat.probePingDatagram(live.beginProbe()), peer)
+                    .onFailure { log.warn("Scheduled probe to {} failed", peer, it) }
+            }
         }
     }
 

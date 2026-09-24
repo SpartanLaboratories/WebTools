@@ -54,9 +54,9 @@ class MultiConnectionUDPFramingE2ETest {
 
             // Arm keepalive + probe on both sides at a fast, overlapping cadence with the data burst.
             assertTrue(client.startKeepAlive(50L).isSuccess)
-            assertTrue(client.startProbe(50L).isSuccess)
+            assertTrue(client.startProbe(250L).isSuccess)
             assertTrue(connection.startKeepAlive(50L).isSuccess)
-            assertTrue(connection.startProbe(50L).isSuccess)
+            assertTrue(connection.startProbe(250L).isSuccess)
 
             // A payload that trims to "KA" (0x4B, 0x41) was the Issue #8 footgun; a blob starting
             // 0x00 and one starting 0x81 exercise the old "reserved lead byte" advice being gone.

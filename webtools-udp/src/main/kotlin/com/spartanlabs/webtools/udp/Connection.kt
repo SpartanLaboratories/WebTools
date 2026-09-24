@@ -225,8 +225,10 @@ interface Connection {
      *
      * The default returns [Result.failure] - only the production [UDPConnection]
      * supports a probe.
-     * @param intervalMillis probe period; must be > 0.
-     * @return [Result.success] once armed, or the failure that prevented it
+     * @param intervalMillis probe period; must be >=
+     * [TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS] (250 ms).
+     * @return [Result.success] once armed, or the failure that prevented it -
+     * including [IllegalArgumentException] if [intervalMillis] is below the floor
      */
     fun startProbe(intervalMillis: Long): Result<Unit> =
         Result.failure(UnsupportedOperationException("This Connection does not support a link-quality probe"))
@@ -241,7 +243,10 @@ interface Connection {
 
     /**
      * Stops the probe started by [startProbe]. Idempotent; [terminate] and server
-     * `stop()` also do this. The last [linkQuality] snapshot remains readable.
+     * `stop()` also do this. The last [linkQuality] snapshot remains readable. A
+     * probe still unanswered when the probe stopped is counted as lost once it
+     * passes the loss horizon, so `packetLossRatio` can still settle for up to
+     * three probe intervals after this call.
      * @return [Result.success] once cancelled
      */
     fun stopProbe(): Result<Unit> = Result.success(Unit)

@@ -33,7 +33,7 @@ class MultiConnectionUDPProbeE2ETest {
         override fun onClientConnect(connection: Connection) {
             byName[connection.name] = connection
             connection.actuate { received += it }
-            if (armProbeOnConnect) connection.startProbe(200L)
+            if (armProbeOnConnect) connection.startProbe(250L)
         }
     }
 
@@ -55,7 +55,7 @@ class MultiConnectionUDPProbeE2ETest {
             assertTrue(await(2_000L) { server.byName.containsKey("alice") })
             val seen = ConcurrentLinkedQueue<String>()
             client.start { seen += it }
-            assertTrue(client.startProbe(200L).isSuccess)
+            assertTrue(client.startProbe(250L).isSuccess)
 
             assertTrue(await(3_000L) { (client.linkQuality()?.probesDelivered ?: 0) >= 3 }, "probesDelivered climbs")
             val snap = client.linkQuality()!!
@@ -92,7 +92,7 @@ class MultiConnectionUDPProbeE2ETest {
             client.startBytes { bytes ->
                 clientSeen += String(bytes, Charsets.UTF_8).dropWhile { c -> c.code <= 0x20 }
             }
-            assertTrue(client.startProbe(200L).isSuccess)
+            assertTrue(client.startProbe(250L).isSuccess)
 
             repeat(10) { i ->
                 assertTrue(client.send("c$i").isSuccess)
@@ -119,7 +119,7 @@ class MultiConnectionUDPProbeE2ETest {
             assertTrue(client.handshake("carl").isSuccess)
             assertTrue(await(2_000L) { server.byName.containsKey("carl") })
             client.start { }
-            assertTrue(client.startProbe(200L).isSuccess)
+            assertTrue(client.startProbe(250L).isSuccess)
             assertTrue(await(3_000L) { (client.linkQuality()?.probesDelivered ?: 0) >= 2 })
 
             // Drop every 2nd client->server datagram: ~50% of PINGs are lost.
