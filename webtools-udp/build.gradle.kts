@@ -54,7 +54,21 @@
 // MultiConnectionUDPServer.start/startBytes/pushToAll are not deprecated (no per-Connection
 // replacement) and gain reliable siblings startReliable/pushToAllReliable. No new public
 // signature is removed; additive at both the API and wire level.
-version = "2.0.0-alpha3"
+// 2.0.0-alpha4: link-quality probe cadence fix (Issue #34) - HandshakeCoordinator.scheduleProbe
+// and MultiConnectionUDPClient.startProbe move from PeriodicSchedule.schedule (poll-divided,
+// intervalMillis/4 clamped to 250..5000ms, with no due-ness check in the probe tick) to
+// scheduleTick (exact cadence, the Stage-3 seam), so the probe now fires once per configured
+// interval - previously too slow below 250 ms, exactly 4x too fast at the 1 s default, and more
+// than 4x too fast above 20 s. New public TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS = 250L;
+// both entry points now reject an intervalMillis below it with IllegalArgumentException rather
+// than silently clamping. The interval is now validated before any state is touched, which also
+// fixes a rejected startProbe (e.g. 0 after a successful arm) overwriting the running probe's
+// interval and permanently disabling its loss detection. LinkQualityTracker.snapshot() now sweeps
+// before reporting, so linkQuality() reflects loss as of the call; a probe still unanswered at
+// stopProbe() therefore settles to lost within three intervals instead of staying uncounted.
+// No wire change; a behavioural correction plus a narrowed, enforced input range on an
+// unpublished alpha.
+version = "2.0.0-alpha4"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
