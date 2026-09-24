@@ -137,8 +137,16 @@ class MultiConnectionUDPServerUatTest {
         //           to ~0.0 within a few horizons after the netem rule is removed.
         // PASS (overall): the numbers are usable for sizing an interpolation delay
         //           (rttMillis + k * rttVarianceMillis) and an adaptive send rate.
+        // 6. Also call `startProbe(100)` (below the 250 ms floor) directly.
+        // PASS (d): startProbe(100) returns Result.failure with an IllegalArgumentException and
+        //           the already-armed probe keeps running unchanged (Issue #34); the earlier
+        //           packet capture from steps 2-5 shows PING (0x81) volume matching the
+        //           configured interval exactly (one per second at the default), not up to ~4x
+        //           faster as before the Issue #34 fix.
         // FAIL: rttMillis is wildly off the `ping` ground truth, variance/loss do not move with
-        //       the injected impairment, or loss never recovers after the impairment stops.
+        //       the injected impairment, loss never recovers after the impairment stops,
+        //       startProbe(100) succeeds or silently clamps instead of rejecting, or PING volume
+        //       runs faster than the configured interval.
     }
 
     @Test

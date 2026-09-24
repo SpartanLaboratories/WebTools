@@ -4,6 +4,7 @@ import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.LinkQualityTracker
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -123,6 +124,8 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
     }
 
     @Test
+    // Also guards OD-1's sweep-on-read reentrant-lock (@Synchronized nested call) path: `read`
+    // calls snapshot() concurrently with `begin`/`complete` mutating the tracker under the lock.
     fun `LinkQualityTracker survives 100k interleaved beginProbe completeProbe and snapshot`() {
         val tracker = LinkQualityTracker(windowSize = 128)
         tracker.probeIntervalMillis = 1_000L
@@ -176,7 +179,7 @@ class MultiConnectionUDPClientProbeNonFunctionalTest {
             val peer = fakePeer()
             val client = newClient(peer.localPort)
             handshake(client, peer)
-            client.startProbe(1L)
+            assertTrue(client.startProbe(TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS).isSuccess)
             Thread.sleep(260)
             assertTrue(client.stop().isSuccess)
         }

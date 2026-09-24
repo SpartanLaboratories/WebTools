@@ -2,11 +2,13 @@ package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.ScheduleMethod
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.ClientChannel
 import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
+import com.spartanlabs.webtools.udp.LinkQualityTracker
 import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
 import com.spartanlabs.webtools.udp.UdpChannel
@@ -17,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -951,6 +954,11 @@ class HandshakeCoordinatorTest {
 
         assertTrue(coordinator.scheduleProbe(originA, 300L).isSuccess)
         assertEquals(300L, probeSchedule.scheduled.getValue(originA).intervalMillis)
+        assertEquals(
+            ScheduleMethod.TICK,
+            probeSchedule.scheduled.getValue(originA).via,
+            "the probe must arm via scheduleTick, not schedule (Issue #34)",
+        )
         sentBytes.clear()
 
         probeSchedule.tick(originA)
@@ -981,6 +989,48 @@ class HandshakeCoordinatorTest {
         val coordinator = newCoordinator()
 
         assertTrue(coordinator.scheduleProbe(originA, 300L).isFailure)
+    }
+
+    @Test
+    fun `scheduleProbe below the 250ms floor fails and arms nothing, exactly at the floor succeeds via scheduleTick`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        val below = coordinator.scheduleProbe(originA, 249L)
+        assertTrue(below.isFailure)
+        assertIs<IllegalArgumentException>(below.exceptionOrNull())
+        assertTrue(originA !in probeSchedule.scheduled, "a rejected interval must arm nothing")
+
+        val atFloor = coordinator.scheduleProbe(originA, 250L)
+        assertTrue(atFloor.isSuccess)
+        assertEquals(ScheduleMethod.TICK, probeSchedule.scheduled.getValue(originA).via)
+    }
+
+    @Test
+    fun `a rejected scheduleProbe leaves the running probe's loss horizon intact`() {
+        var nowNanos = 0L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        // Pre-seed a fake-clock tracker; scheduleProbe reuses any tracker already on reg.linkQuality.
+        coordinator.snapshot().single().linkQuality = LinkQualityTracker(nanoClock = { nowNanos })
+        assertTrue(coordinator.scheduleProbe(originA, 250L).isSuccess)
+
+        probeSchedule.tick(originA) // PING 0 at t = 0
+        val seq0 = TransportWireFormat.probeSequenceOf(sentBytes.last().first)!!
+        assertTrue(coordinator.accept(originA, TransportWireFormat.probePongDatagram(seq0), "").isSuccess)
+        probeSchedule.tick(originA) // PING 1 at t = 0, never answered
+
+        // Pre-fix, this wrote probeIntervalMillis = 0 onto the live tracker before rejecting,
+        // and Rtt.isProbeLost(.., 0) is always false - loss aging was switched off for good.
+        val rejected = coordinator.scheduleProbe(originA, 0L)
+        assertIs<IllegalArgumentException>(rejected.exceptionOrNull())
+        assertEquals(1, probeSchedule.scheduleCalls.size, "a rejected call must never reach the scheduler")
+
+        nowNanos = 760_000_000L // 760 ms: just past the 3 x 250 ms loss horizon
+        probeSchedule.tick(originA) // sweep() must age PING 1 to LOST
+
+        // PING 0 DELIVERED, PING 1 LOST, PING 2 still IN_FLIGHT (not counted): 1 / (1 + 1).
+        assertEquals(0.5, coordinator.linkQualityOf(originA)!!.packetLossRatio, 1e-9)
     }
 
     @Test

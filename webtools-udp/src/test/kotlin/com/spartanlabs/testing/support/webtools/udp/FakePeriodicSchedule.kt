@@ -3,6 +3,9 @@ package com.spartanlabs.testing.support.webtools.udp
 import com.spartanlabs.webtools.udp.PeriodicSchedule
 import java.net.InetSocketAddress
 
+/** Which [PeriodicSchedule] method armed a [FakePeriodicSchedule.Scheduled] entry (Issue #34). */
+internal enum class ScheduleMethod { POLL, TICK }
+
 /**
  * A socket-free, timer-free [PeriodicSchedule] test fixture. Records every
  * [schedule] (keeping the `tick` so a test can invoke it synchronously),
@@ -25,7 +28,12 @@ internal class FakePeriodicSchedule(
     private val throwOnShutdown: Boolean = false,
 ) : PeriodicSchedule {
 
-    data class Scheduled(val key: InetSocketAddress, val intervalMillis: Long, val tick: () -> Unit)
+    data class Scheduled(
+        val key: InetSocketAddress,
+        val intervalMillis: Long,
+        val tick: () -> Unit,
+        val via: ScheduleMethod,
+    )
 
     /** Every live [schedule], keyed by endpoint - a re-schedule for a key replaces the prior entry. */
     val scheduled = LinkedHashMap<InetSocketAddress, Scheduled>()
@@ -38,7 +46,7 @@ internal class FakePeriodicSchedule(
         private set
 
     override fun schedule(key: InetSocketAddress, intervalMillis: Long, tick: () -> Unit): Result<Unit> {
-        val entry = Scheduled(key, intervalMillis, tick)
+        val entry = Scheduled(key, intervalMillis, tick, ScheduleMethod.POLL)
         scheduleCalls += entry
         if (failAfterShutdown && shutdownCalls > 0) {
             return Result.failure(IllegalStateException("periodic scheduler already shut down"))
@@ -48,7 +56,7 @@ internal class FakePeriodicSchedule(
     }
 
     override fun scheduleTick(key: InetSocketAddress, tickMillis: Long, tick: () -> Unit): Result<Unit> {
-        val entry = Scheduled(key, tickMillis, tick)
+        val entry = Scheduled(key, tickMillis, tick, ScheduleMethod.TICK)
         scheduleCalls += entry
         if (failAfterShutdown && shutdownCalls > 0) {
             return Result.failure(IllegalStateException("periodic scheduler already shut down"))
