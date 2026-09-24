@@ -73,8 +73,10 @@ internal interface ClientChannel {
      * [linkQualityOf]. Last call wins - a repeat call replaces the schedule. Runs
      * until [cancelProbe], the registration is removed, or the server stops.
      * @param peer the client endpoint to probe
-     * @param intervalMillis probe period; must be > 0
+     * @param intervalMillis probe period; must be >=
+     * [TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS] (250 ms)
      * @return [Result.success] once armed; [Result.failure] with an
+     * [IllegalArgumentException] if [intervalMillis] is below the floor, an
      * [IllegalStateException] if [peer] is not registered, or the failure that
      * prevented arming the schedule
      */

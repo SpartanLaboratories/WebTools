@@ -692,26 +692,43 @@ class MultiConnectionUDPClient internal constructor(
      * The probe requires both ends on `webtools-udp` `2.0.0`+ (as does every
      * framed datagram) - a cross-major peer is rejected at the handshake.
      *
-     * @param intervalMillis probe period; must be > 0. Default
+     * @param intervalMillis probe period; must be >=
+     * [TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS] (250 ms). Default
      * [TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS] (1 s).
      * @return [Result.success] once armed; [Result.failure] with
-     * [IllegalArgumentException] for a non-positive interval or [IllegalStateException]
-     * if [stop] has already run.
+     * [IllegalArgumentException] if [intervalMillis] is below the floor, or
+     * [IllegalStateException] if [stop] has already run.
      */
     @JvmOverloads
     fun startProbe(intervalMillis: Long = TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS): Result<Unit> {
-        val tracker = linkQualityTracker ?: LinkQualityTracker().also { linkQualityTracker = it }
-        tracker.probeIntervalMillis = intervalMillis
-        return probe.schedule(serverEndpoint, intervalMillis) {
-            tracker.sweep()
-            sendDatagram(TransportWireFormat.probePingDatagram(tracker.beginProbe()))
-                .onFailure { log.warn("Scheduled probe send failed", it) }
+        // Floor check duplicated verbatim in HandshakeCoordinator.scheduleProbe (Issue #34) rather
+        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // any state is touched: writing probeIntervalMillis first would let a rejected call switch
+        // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
+        // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick, and not
+        // on KeepAlive, which held the old poll-division clamp this floor replaces but is
+        // scheduling-cadence policy, not a probe-protocol constant.
+        return runCatching {
+            require(intervalMillis >= TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS) {
+                "intervalMillis must be >= ${TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS}, was $intervalMillis"
+            }
+        }.flatMap {
+            val tracker = linkQualityTracker ?: LinkQualityTracker().also { linkQualityTracker = it }
+            tracker.probeIntervalMillis = intervalMillis
+            probe.scheduleTick(serverEndpoint, intervalMillis) {
+                tracker.sweep()
+                sendDatagram(TransportWireFormat.probePingDatagram(tracker.beginProbe()))
+                    .onFailure { log.warn("Scheduled probe send failed", it) }
+            }
         }.onFailure { log.error("Could not start the link-quality probe", it) }
     }
 
     /**
      * Stops the probe started by [startProbe]. Idempotent; [stop] also does this.
-     * The last [linkQuality] snapshot remains readable.
+     * The last [linkQuality] snapshot remains readable. A probe still unanswered
+     * when the probe stopped is counted as lost once it passes the loss horizon,
+     * so `packetLossRatio` can still settle for up to three probe intervals after
+     * this call.
      * @return [Result.success] once the schedule is cancelled
      */
     fun stopProbe(): Result<Unit> = runCatching { probe.cancel(serverEndpoint) }

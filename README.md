@@ -267,7 +267,7 @@ without the consumer hand-rolling an application ping. Off by default:
 
 ```kotlin
 // client
-client.startProbe()              // default 1 s; or startProbe(intervalMillis)
+client.startProbe()              // default 1 s; or startProbe(intervalMillis), >= 250 ms
 client.stopProbe()               // also done by client.stop()
 val q = client.linkQuality()     // null until the first probe reply comes back
 // q.rttMillis, q.rttVarianceMillis (jitter proxy), q.packetLossRatio, q.probesSent, q.probesDelivered
@@ -280,7 +280,9 @@ override fun onClientConnect(connection: Connection) {
 
 Each armed side sends one tiny `0x81` probe (an 8-byte big-endian sequence) per interval and
 the peer echoes it back as `0x82`; the RTT is computed against the prober's own monotonic clock
-(EWMA-smoothed, RFC 6298 SRTT/RTTVAR). The **responder always answers an inbound `0x81`** (a
+(EWMA-smoothed, RFC 6298 SRTT/RTTVAR). `intervalMillis` must be at least
+`TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS` (250 ms); a lower value fails the call rather
+than being silently rounded up. The **responder always answers an inbound `0x81`** (a
 client unconditionally, a server for a registered origin), so the peer can measure even if this
 side never opted in. `0x81` / `0x82` are consumed by the transport and never reach `start` /
 `actuate`. Each side lazily creates **one** daemon `ScheduledExecutorService`
