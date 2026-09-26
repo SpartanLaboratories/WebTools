@@ -90,6 +90,11 @@ internal class ReliableChannelEngine(
      * the RTO estimator, per Karn's algorithm), then, for `0xA0`, the payload
      * is handed to the reorder buffer. Never throws - a malformed or
      * unrecognized [datagram] is WARN-logged and yields an empty list.
+     *
+     * Precondition: the caller has already screened [datagram]'s origin and channel byte -
+     * this engine never reads the channel byte itself and has no origin of its own to check.
+     * An `0xA0`/`0xA1` whose channel byte is not [ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL]
+     * must be dropped by the caller before it ever reaches here.
      * @param datagram one received datagram, tag byte included
      * @return every payload newly deliverable in order as of this call, oldest first
      */

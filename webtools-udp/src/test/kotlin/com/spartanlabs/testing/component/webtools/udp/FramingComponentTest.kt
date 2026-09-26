@@ -1,8 +1,10 @@
 package com.spartanlabs.testing.component.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasEventAt
 import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
@@ -111,6 +113,67 @@ class FramingComponentTest {
             assertTrue(events.hasWarnContaining("Unhandled datagram type"))
         }
         assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `a channel-0x01 0x90 from a registered origin is dropped with the unsupported-channel WARN, never delivered`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(origin, "Iam alice")
+        val receivedBytes = mutableListOf<ByteArray>()
+        coordinator.bindBytes(origin, receivedBytes::add)
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01)
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(origin, framed, String(framed, Charsets.UTF_8).trim()).isSuccess)
+            assertTrue(events.hasWarnContaining("Unreliable datagram on unsupported channel 0x1 from"))
+        }
+        assertTrue(receivedBytes.isEmpty(), "must not reach the bound bytes handler")
+
+        val receivedText = mutableListOf<String>()
+        coordinator.bind(origin, receivedText::add) // rebinds - bind() nulls the bytes handler
+        val secondFramed = TransportWireFormat.unreliableDatagram(byteArrayOf(2), channel = 0x01)
+        assertTrue(coordinator.accept(origin, secondFramed, String(secondFramed, Charsets.UTF_8).trim()).isSuccess)
+        assertTrue(receivedText.isEmpty(), "must not reach the bound text handler either")
+    }
+
+    @Test
+    fun `a channel-0xFF 0x90 logs the masked hex byte, never the sign-extended int`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(origin, "Iam alice")
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0xFF.toByte())
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(origin, framed, "").isSuccess)
+            assertTrue(events.hasWarnContaining("on unsupported channel 0xff from"))
+            assertTrue(events.none { it.formattedMessage.contains("ffffffff") }, "must mask to a single byte, not sign-extend")
+        }
+    }
+
+    @Test
+    fun `a channel-0x01 0x90 from an unregistered origin keeps the DEBUG drop - origin screening wins`() {
+        val coordinator = newCoordinator()
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01)
+
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            assertTrue(coordinator.accept(origin, framed, "").isSuccess)
+            assertTrue(events.none { it.formattedMessage.contains("on unsupported channel") }, "origin screening must run first")
+            assertTrue(events.hasEventAt(Level.DEBUG, "Dropped datagram from unregistered"))
+        }
+    }
+
+    @Test
+    fun `a channel-0x00 frame after a dropped channel-0x01 frame is still delivered`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(origin, "Iam alice")
+        val received = mutableListOf<ByteArray>()
+        coordinator.bindBytes(origin, received::add)
+
+        val dropped = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01)
+        assertTrue(coordinator.accept(origin, dropped, "").isSuccess)
+        val delivered = TransportWireFormat.unreliableDatagram(byteArrayOf(2))
+        assertTrue(coordinator.accept(origin, delivered, "").isSuccess)
+
+        assertContentEquals(byteArrayOf(2), received.single())
     }
 
     @Test

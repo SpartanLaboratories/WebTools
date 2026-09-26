@@ -497,7 +497,11 @@ class MultiConnectionUDPClient internal constructor(
         }
     }
 
-    /** Body of the listener thread: switch on the [DatagramType] tag, deliver the stripped `0x90` payload. */
+    /**
+     * Body of the listener thread: switch on the [DatagramType] tag and deliver the stripped
+     * payload of a `0x90` on channel `0x00`; a `0x90`, `0xA0` or `0xA1` on any other channel is
+     * dropped with a WARN, before any delivery, acknowledgement processing or engine creation.
+     */
     private fun receiveLoop() {
         val buffer = ByteArray(receiveBufferBytes)
         while (listening) {
@@ -532,33 +536,66 @@ class MultiConnectionUDPClient internal constructor(
                         TransportWireFormat.probeSequenceOf(bytes)
                             ?.let { seq -> linkQualityTracker?.completeProbe(seq) }
 
-                    DatagramType.UNRELIABLE ->
+                    DatagramType.UNRELIABLE -> {
                         // Decode just the stripped payload here - NOT some already-computed
                         // whole-datagram text - or a handler would see the tag/channel bytes as
                         // replacement characters (§3.12 of the Stage-3 plan).
-                        TransportWireFormat.unreliablePayloadOf(bytes)?.let { payload ->
-                            deliverUnreliable?.invoke(payload, String(payload, Charsets.UTF_8).trim())
+                        val payload = TransportWireFormat.unreliablePayloadOf(bytes)
+                        val channel = TransportWireFormat.unreliableChannelOf(bytes)
+                        when {
+                            payload == null -> log.warn("Malformed 0x90 datagram from server, dropping")
+
+                            // Issue #40: this branch has no origin screen (#39), so the channel check
+                            // applies to every 0x90. After the malformed check, before delivery.
+                            // Duplicated verbatim at the other three receive-branch channel checks -
+                            // HandshakeCoordinator.deliverData and its RELIABLE_DATA/RELIABLE_ACK
+                            // branch, and this listener's reliable branch below - rather than
+                            // extracted; see docs/issue-40-channel-byte-guard-architecture.md §6.
+                            channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL ->
+                                log.warn(
+                                    "Unreliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
+                                    Integer.toHexString(channel.toInt() and 0xFF), origin,
+                                )
+
+                            else -> deliverUnreliable?.invoke(payload, String(payload, Charsets.UTF_8).trim())
                                 ?: log.debug("No unreliable handler bound, dropping")
-                        } ?: log.warn("Malformed 0x90 datagram from server, dropping")
+                        }
+                    }
 
                     DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {
                         // Client-side counterpart of the server's registrations.findByOrigin guard
                         // (§12 B2): the socket is unconnected, so a stray/spoofed reliable datagram
                         // must not mint the engine or reach the application handler.
-                        if (origin != serverEndpoint) {
-                            log.debug(
-                                "Reliable datagram from unexpected origin {} (expected {}), dropped",
-                                origin, serverEndpoint,
-                            )
-                        } else {
-                            val delivered = reliableEngine().onInboundDatagram(bytes) // never throws (Stage 2 contract)
-                            val handler = deliverReliable
-                            if (handler == null) {
-                                if (delivered.isNotEmpty()) {
-                                    log.debug("No reliable handler bound, dropping {} payload(s)", delivered.size)
+                        val channel = ReliableWireFormat.reliableChannelOf(bytes)
+                        when {
+                            origin != serverEndpoint ->
+                                log.debug(
+                                    "Reliable datagram from unexpected origin {} (expected {}), dropped",
+                                    origin, serverEndpoint,
+                                )
+
+                            // Issue #40: after origin screening, before engine creation/ack
+                            // processing. Duplicated verbatim at the other three receive-branch
+                            // channel checks - HandshakeCoordinator.deliverData and its
+                            // RELIABLE_DATA/RELIABLE_ACK branch, and this listener's UNRELIABLE
+                            // branch above - rather than extracted; see
+                            // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                            channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
+                                log.warn(
+                                    "Reliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
+                                    Integer.toHexString(channel.toInt() and 0xFF), origin,
+                                )
+
+                            else -> {
+                                val delivered = reliableEngine().onInboundDatagram(bytes) // never throws (Stage 2 contract)
+                                val handler = deliverReliable
+                                if (handler == null) {
+                                    if (delivered.isNotEmpty()) {
+                                        log.debug("No reliable handler bound, dropping {} payload(s)", delivered.size)
+                                    }
+                                } else {
+                                    delivered.forEach(handler)
                                 }
-                            } else {
-                                delivered.forEach(handler)
                             }
                         }
                     }

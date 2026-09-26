@@ -9,6 +9,7 @@ import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
 import com.spartanlabs.webtools.udp.LinkQualityTracker
+import com.spartanlabs.webtools.udp.ReliableWireFormat
 import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
 import com.spartanlabs.webtools.udp.UdpChannel
@@ -647,6 +648,36 @@ class HandshakeCoordinatorTest {
         reg.lastInboundAt = 0L
         coordinator.accept(originA, "Iam alice")
         assertTrue(reg.lastInboundAt > 0L, "a retransmitted Iam must refresh lastInboundAt")
+    }
+
+    @Test
+    fun `accept refreshes lastInboundAt and clears timedOut for a channel-0x01 0x90, 0xA0 and 0xA1 too`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+
+        reg.lastInboundAt = 0L
+        reg.timedOut = true
+        coordinator.accept(originA, TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01), "")
+        assertTrue(reg.lastInboundAt > 0L, "a channel-0x01 0x90 must still refresh lastInboundAt")
+        assertFalse(reg.timedOut, "a channel-0x01 0x90 must still clear the timedOut latch")
+
+        reg.lastInboundAt = 0L
+        reg.timedOut = true
+        coordinator.accept(
+            originA,
+            ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(1), channel = 0x01),
+            "",
+        )
+        assertTrue(reg.lastInboundAt > 0L, "a channel-0x01 0xA0 must still refresh lastInboundAt")
+        assertFalse(reg.timedOut, "a channel-0x01 0xA0 must still clear the timedOut latch")
+
+        reg.lastInboundAt = 0L
+        reg.timedOut = true
+        coordinator.accept(originA, ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = 0x01), "")
+        assertTrue(reg.lastInboundAt > 0L, "a channel-0x01 0xA1 must still refresh lastInboundAt")
+        assertFalse(reg.timedOut, "a channel-0x01 0xA1 must still clear the timedOut latch")
     }
 
     @Test

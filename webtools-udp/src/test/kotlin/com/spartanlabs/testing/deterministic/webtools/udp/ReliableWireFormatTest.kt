@@ -31,6 +31,37 @@ class ReliableWireFormatTest {
         assertEquals(0x7.toByte(), framed[1])
     }
 
+    @Test
+    fun `reliableChannelOf is null for a datagram shorter than 2 bytes`() {
+        assertNull(ReliableWireFormat.reliableChannelOf(ByteArray(0)))
+        assertNull(ReliableWireFormat.reliableChannelOf(byteArrayOf(DatagramType.RELIABLE_DATA.tag)))
+    }
+
+    @Test
+    fun `reliableChannelOf reads byte 1 of an 0xA0 datagram`() {
+        assertEquals(0x00.toByte(), ReliableWireFormat.reliableChannelOf(byteArrayOf(DatagramType.RELIABLE_DATA.tag, 0x00)))
+    }
+
+    @Test
+    fun `reliableChannelOf matches every representative channel byte on both data and ack frames`() {
+        for (channel in listOf(0x00, 0x01, 0x7F, 0x80, 0xFF).map { it.toByte() }) {
+            val data = ReliableWireFormat.reliableDataDatagram(0, 0, 0, byteArrayOf(9), channel = channel)
+            val ack = ReliableWireFormat.reliableAckDatagram(0, 0, channel = channel)
+            assertEquals(channel, ReliableWireFormat.reliableChannelOf(data))
+            assertEquals(channel, ReliableWireFormat.reliableChannelOf(ack))
+        }
+    }
+
+    @Test
+    fun `reliableChannelOf agrees with the full header decoder for every well-formed frame`() {
+        for (channel in listOf(0x00, 0x01, 0xFF).map { it.toByte() }) {
+            val data = ReliableWireFormat.reliableDataDatagram(1, 2, 3, byteArrayOf(9), channel = channel)
+            val ack = ReliableWireFormat.reliableAckDatagram(2, 3, channel = channel)
+            assertEquals(ReliableWireFormat.reliableDataHeaderOf(data)!!.channel, ReliableWireFormat.reliableChannelOf(data))
+            assertEquals(ReliableWireFormat.reliableAckHeaderOf(ack)!!.channel, ReliableWireFormat.reliableChannelOf(ack))
+        }
+    }
+
     // --- sizes ---
 
     @Test

@@ -14,7 +14,7 @@ package com.spartanlabs.webtools.udp
  * | `0x80`        | [DatagramType.KEEPALIVE]   | *(empty)* |
  * | `0x81`        | [DatagramType.PROBE_PING]  | 8-byte big-endian `uint64` probe sequence |
  * | `0x82`        | [DatagramType.PROBE_PONG]  | 8-byte big-endian `uint64` probe sequence (echoed) |
- * | `0x90`        | [DatagramType.UNRELIABLE]  | `[channel:1]` (Stage 1: always `0x00`) + payload verbatim |
+ * | `0x90`        | [DatagramType.UNRELIABLE]  | `[channel:1]` (Stage 1: always `0x00`; a non-zero channel byte is dropped with a WARN, Issue #40) + payload verbatim |
  * | `0x83`–`0x8F`, `0x91`–`0xFF` | *reserved* | dropped with a WARN by a Stage-1 peer |
  *
  * ### Boundary note
@@ -33,7 +33,11 @@ object TransportWireFormat {
     /** The wire-protocol major this build speaks; the token in the `REGISTERED 2` reply. */
     const val FRAMED_PROTOCOL_VERSION = 2
 
-    /** The v1 unreliable channel id — the only value Stage 1 emits or accepts. */
+    /**
+     * The unreliable channel id this build emits, always `0x00`. A receiver drops a datagram
+     * whose channel byte is non-zero, with a WARN; see `docs/webtools-udp-protocol.md` for the
+     * full channel-byte contract.
+     */
     const val DEFAULT_UNRELIABLE_CHANNEL: Byte = 0x00
 
     /**

@@ -68,7 +68,17 @@
 // stopProbe() therefore settles to lost within three intervals instead of staying uncounted.
 // No wire change; a behavioural correction plus a narrowed, enforced input range on an
 // unpublished alpha.
-version = "2.0.0-alpha4"
+// 2.0.0-alpha5: receiver-side channel-byte guard (Issue #40) - HandshakeCoordinator and
+// MultiConnectionUDPClient now drop a 0x90/0xA0/0xA1 whose channel byte is non-zero, with a
+// WARN naming the channel and sender, after existing origin screening and before any
+// delivery, ack processing, or reliable-engine creation - closing the forward-compatibility
+// hazard of silently treating a future 2.x minor's reserved channel as channel 0x00 ahead of
+// the Stable Core freeze. New internal ReliableWireFormat.reliableChannelOf, mirroring the
+// existing public TransportWireFormat.unreliableChannelOf (now wired in for the first time).
+// Liveness stamping and all channel-0x00 behaviour unchanged; no ack is sent for a dropped
+// frame. No public API change; the drop is a receive-side behavioural narrowing on an
+// unpublished alpha.
+version = "2.0.0-alpha5"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

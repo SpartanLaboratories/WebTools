@@ -21,9 +21,10 @@ import java.net.InetSocketAddress
  * - the **inbound-datagram router** - [accept] classifies every datagram on its
  *   [DatagramType] tag (byte 0): a `0x80` keepalive (dropped), a `0x81`/`0x82`
  *   probe, or a `0x90` unreliable frame whose stripped payload is handed to the
- *   dispatch executor for the bound handler. An unframed `Iam` (byte 0 `< 0x80`)
- *   runs the handshake state machine; any other unframed datagram is dropped with
- *   a WARN (a pre-`2.0` sender);
+ *   dispatch executor for the bound handler - only on channel `0x00`; a `0x90`,
+ *   `0xA0` or `0xA1` on any other channel is dropped with a WARN. An unframed
+ *   `Iam` (byte 0 `< 0x80`) runs the handshake state machine; any other unframed
+ *   datagram is dropped with a WARN (a pre-`2.0` sender);
  * - the [ClientChannel] implementation the connections it mints delegate to for
  *   sending, binding, and deregistering;
  * - the **liveness tracker** - when constructed with a positive
@@ -41,7 +42,8 @@ import java.net.InetSocketAddress
  *   `0x82` reply into the connection's [Registration.linkQuality] estimator,
  *   answers an inbound `0x81` from a registered origin with an `0x82`, and is
  *   cancelled on [deregister] or a same-name supersede;
- * - the **reliable-ordered channel seam** - an inbound `0xA0`/`0xA1`, or a
+ * - the **reliable-ordered channel seam** - an inbound `0xA0`/`0xA1` on channel
+ *   `0x00` (one on any other channel is dropped before it reaches the engine), or a
  *   `sendReliable`/`bindReliable` call, lazily mints a per-connection
  *   [ReliableChannelEngine] and arms its `mcups-retransmit` tick
  *   ([reliableEngineFor]); delivered payloads reach [Registration.onReliable]
@@ -120,11 +122,17 @@ internal class HandshakeCoordinator(
      * The single entry point the listener loop calls for every inbound datagram.
      * Classifies before acting on the [DatagramType] tag (byte 0): a `0x80`
      * keepalive is dropped (success, no dispatch); a `0x81`/`0x82` probe is
-     * answered / folded; a `0x90` frame's stripped payload is routed to the bound
-     * handler; an unframed `Iam` runs the handshake state machine inline; anything
-     * else is dropped with a WARN. When idle detection is enabled, `accept` also
-     * stamps the origin's last-inbound time and clears any prior TIMEOUT latch,
-     * before classifying.
+     * answered / folded; a `0x90` frame from a registered origin has its stripped
+     * payload routed to the bound handler; an `0xA0`/`0xA1` from a registered
+     * origin is fed to that connection's [ReliableChannelEngine]
+     * ([reliableEngineFor]). A `0x90`, `0xA0` or `0xA1` from an unregistered
+     * origin is dropped at DEBUG; one from a registered origin whose channel byte
+     * (byte 1) is not `0x00` is dropped with a WARN - nothing is delivered, no
+     * acknowledgement in it is applied, and no engine is created for it. An
+     * unframed `Iam` runs the handshake state machine inline; anything else is
+     * dropped with a WARN. When idle detection is enabled, `accept` also stamps
+     * the origin's last-inbound time and clears any prior TIMEOUT latch, before
+     * classifying - for every datagram from a registered origin, dropped or not.
      *
      * @param origin the datagram's post-NAT source - where any reply is addressed
      * @param bytes the exact-length datagram body; the tag switch works off
@@ -178,17 +186,34 @@ internal class HandshakeCoordinator(
                 if (payload == null) {
                     Result.success(Unit).also { log.warn("Malformed 0x90 datagram from {}, dropping", origin) }
                 } else {
-                    deliverData(origin, payload, String(payload, Charsets.UTF_8).trim())
+                    deliverData(origin, TransportWireFormat.unreliableChannelOf(bytes), payload, String(payload, Charsets.UTF_8).trim())
                 }
             }
 
             DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {
                 val reg = registrations.findByOrigin(origin)
-                if (reg == null) {
-                    Result.success(Unit).also { log.debug("Reliable datagram from unregistered {}, dropped", origin) }
-                } else {
-                    val delivered = reliableEngineFor(reg).onInboundDatagram(bytes) // never throws (Stage 2 contract)
-                    deliverReliable(reg, delivered)
+                val channel = ReliableWireFormat.reliableChannelOf(bytes)
+                when {
+                    reg == null ->
+                        Result.success(Unit).also { log.debug("Reliable datagram from unregistered {}, dropped", origin) }
+
+                    // Issue #40: after origin screening, before engine creation/ack processing.
+                    // Duplicated verbatim at the other three receive-branch channel checks -
+                    // HandshakeCoordinator.deliverData, and MultiConnectionUDPClient.receiveLoop's
+                    // UNRELIABLE and reliable branches - rather than extracted; see
+                    // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                    channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
+                        Result.success(Unit).also {
+                            log.warn(
+                                "Reliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
+                                Integer.toHexString(channel.toInt() and 0xFF), origin,
+                            )
+                        }
+
+                    else -> {
+                        val delivered = reliableEngineFor(reg).onInboundDatagram(bytes) // never throws (Stage 2 contract)
+                        deliverReliable(reg, delivered)
+                    }
                 }
             }
 
@@ -267,9 +292,28 @@ internal class HandshakeCoordinator(
             }
         }
 
-    private fun deliverData(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
+    /**
+     * Delivers a `0x90` payload to [origin]'s bound handler. Screening order: [origin] must be
+     * registered (otherwise dropped at DEBUG), then [channel] must be
+     * [TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL] (otherwise dropped with a WARN), and only
+     * then is a handler selected. Every drop returns [Result.success].
+     */
+    private fun deliverData(origin: InetSocketAddress, channel: Byte?, bytes: ByteArray, text: String): Result<Unit> {
         val registration = registrations.findByOrigin(origin)
             ?: return Result.success(Unit).also { log.debug("Dropped datagram from unregistered {}", origin) }
+        // Issue #40: after origin screening, before handler selection. Duplicated verbatim at the
+        // other three receive-branch channel checks - HandshakeCoordinator.classify's
+        // RELIABLE_DATA/RELIABLE_ACK branch, and MultiConnectionUDPClient.receiveLoop's UNRELIABLE
+        // and reliable branches - rather than extracted; see
+        // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+        if (channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL) {
+            return Result.success(Unit).also {
+                log.warn(
+                    "Unreliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
+                    Integer.toHexString(channel.toInt() and 0xFF), origin,
+                )
+            }
+        }
         // A bytes handler, if bound, wins over a text handler - the two are mutually
         // exclusive in practice (bind/bindBytes null the other) but check bytes first.
         val bytesHandler = registration.onBytes
@@ -294,10 +338,12 @@ internal class HandshakeCoordinator(
      * Returns [reg]'s [ReliableChannelEngine], minting one and arming its
      * `mcups-retransmit` tick on first use (§3.3): created lazily on the
      * *first* of an app-thread `sendReliable`/`bindReliable` or an inbound
-     * `0xA0`/`0xA1` for [reg] - trigger (2) is not optional, or a peer whose
-     * application never opens the channel would never ack, wedging the
-     * sender's window. `@Synchronized` so a listener-thread inbound and an
-     * app-thread send cannot mint two engines for one peer.
+     * channel-`0x00` `0xA0`/`0xA1` for [reg] - trigger (2) is not optional, or a
+     * peer whose application never opens the channel would never ack, wedging
+     * the sender's window. An inbound datagram on any other channel is dropped
+     * before this is called, so it never creates an engine. `@Synchronized` so a
+     * listener-thread inbound and an app-thread send cannot mint two engines for
+     * one peer.
      */
     @Synchronized
     private fun reliableEngineFor(reg: Registration): ReliableChannelEngine {

@@ -1,12 +1,15 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.ReliableWireFormat
 import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
@@ -92,23 +95,73 @@ class FramingNonFunctionalTest {
     }
 
     @Test
-    fun `100k random inbound byte arrays never throw and only ever deliver a genuine 0x90 payload`() {
+    fun `100k random inbound byte arrays never throw and only ever deliver a genuine channel-0x00 0x90 payload`() {
         val delivered = mutableListOf<ByteArray>()
         val coordinator = newCoordinator(delivered)
         val random = Random(42)
         val expected = mutableListOf<ByteArray>()
+        var nonZeroChannelFed = 0
 
         repeat(100_000) {
             val bytes = ByteArray(random.nextInt(0, 65)) { random.nextInt(0, 256).toByte() }
             val result = coordinator.accept(origin, bytes, "")
             assertTrue(result.isSuccess || result.isFailure, "accept must return a Result, never throw")
             if (bytes.getOrNull(0) == DatagramType.UNRELIABLE.tag && bytes.size >= 2) {
-                expected += TransportWireFormat.unreliablePayloadOf(bytes)!!
+                // Issue #40: about 255/256 of these carry a non-zero random channel byte and are
+                // now dropped - only a genuine channel-0x00 0x90 frame is still expected to be
+                // delivered.
+                if (bytes[1] == TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL) {
+                    expected += TransportWireFormat.unreliablePayloadOf(bytes)!!
+                } else {
+                    nonZeroChannelFed++
+                }
             }
         }
 
-        assertEquals(expected.size, delivered.size, "only genuine 0x90 frames were ever delivered")
+        assertTrue(nonZeroChannelFed > 0, "the fuzz must have exercised the channel guard at least once")
+        assertEquals(expected.size, delivered.size, "only genuine channel-0x00 0x90 frames were ever delivered")
         expected.indices.forEach { i -> assertContentEquals(expected[i], delivered[i]) }
+    }
+
+    @Test
+    fun `10000 channel-non-zero frames from an unregistered origin produce no WARN, no delivery and no engine`() {
+        val delivered = mutableListOf<ByteArray>()
+        val strangerOrigin = InetSocketAddress(loopback, 44002)
+        val retransmitSchedule = FakePeriodicSchedule()
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, _ -> FakeConnection(name, peer) },
+            sender = { _, _ -> Result.success(Unit) },
+            onRegistered = {},
+            admit = { _, _, _ -> Admission.Admitted },
+            dispatch = { it() },
+            onDisconnect = { _, _ -> },
+            idleTimeoutMillis = 0L,
+            keepAliveSchedule = FakePeriodicSchedule(),
+            probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
+        )
+        coordinator.bindBytes(strangerOrigin, delivered::add) // never registered - bind is a no-op
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            for (i in 0 until 10_000) {
+                val channel = (1 + (i % 255)).toByte()
+                val frame = when (i % 3) {
+                    0 -> TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = channel)
+                    1 -> ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(1), channel = channel)
+                    else -> ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = channel)
+                }
+                assertTrue(coordinator.accept(strangerOrigin, frame, "").isSuccess)
+            }
+            // Every frame here is well-formed and comes from an unregistered origin, so each one
+            // takes the existing DEBUG origin-screening drop: not one WARN of any kind may appear.
+            assertTrue(
+                events.none { it.level.isGreaterOrEqual(Level.WARN) },
+                "a stranger's channel-non-zero traffic must never produce a WARN",
+            )
+        }
+        assertTrue(delivered.isEmpty())
+        assertTrue(retransmitSchedule.scheduleCalls.isEmpty())
     }
 
     @Test
