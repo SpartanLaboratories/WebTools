@@ -26,6 +26,16 @@ import java.net.SocketException
  * @param sendPort the port on [targetAddress] that messages sent via [send] are delivered to
  * @param listenPort the local port this server binds to receive incoming datagrams
  * @param receiveBufferBytes size of the datagram receive buffer, 512..65507; defaults to 65507
+ *
+ * ### No [DeliveryMode] / [UdpChannel] surface, by design
+ * This type deliberately has no reliable-ordered channel, and never will. It is a
+ * standalone **two-socket** primitive (`sendSocket` plus a separately-bound
+ * `listenSocket`) with no handshake and no registration - there is no
+ * [Connection] here, and therefore no registered peer to key a
+ * [ReliableChannelEngine] or a retransmit schedule to. A reliable channel needs
+ * both; giving this type one would mean standing up a second, parallel
+ * reliability stack for a primitive nobody builds a session on. See
+ * `docs/webtools-udp-architecture.md` for the full reasoning.
  */
 class UDPSendReceiveServer @JvmOverloads constructor(
     private val targetAddress: InetAddress,

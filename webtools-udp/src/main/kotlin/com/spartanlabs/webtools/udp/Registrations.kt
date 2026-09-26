@@ -17,12 +17,12 @@ import java.util.concurrent.CopyOnWriteArrayList
  * [HandshakeCoordinator.bindBytes] set one and null the other; the listener thread
  * reads whichever is non-null, hence `@Volatile`
  * @property lastInboundAt monotonic `System.nanoTime()` of the last inbound
- * datagram from this origin (data or `KA`); seeded at construction. Written by
+ * datagram from this origin (data or a `0x80` keepalive); seeded at construction. Written by
  * the listener thread via [HandshakeCoordinator.accept], read by the liveness
  * sweep thread, hence `@Volatile`. Only ever used as a `nanoTime` difference -
  * never as an absolute time.
  * @property lastOutboundAt monotonic `System.nanoTime()` of the last datagram the
- * server sent to this origin (data, broadcast, or `KA`); seeded at construction.
+ * server sent to this origin (data, broadcast, or a `0x80` keepalive); seeded at construction.
  * Written by the listener / dispatch threads via [HandshakeCoordinator.send],
  * read by the `mcups-keepalive` thread, hence `@Volatile`. Only meaningful once a
  * scheduled keepalive is armed for the connection; a `nanoTime` difference, never
@@ -36,6 +36,16 @@ import java.util.concurrent.CopyOnWriteArrayList
  * it. Written there and by `completeProbe` on the listener thread, read by the
  * `mcups-probe` thread and by consumer calls to [Connection.linkQuality], hence
  * `@Volatile`.
+ * @property onReliable the reliable-ordered handler bound via
+ * `channel(RELIABLE_ORDERED).actuate`/`actuateBytes`, or `null`. **Not**
+ * mutually exclusive with [onMessage]/[onBytes] - the reliable and unreliable
+ * sequence spaces are independent, so a connection may have both, one, or
+ * neither bound at once. Written by [HandshakeCoordinator], read by the
+ * dispatch executor, hence `@Volatile`.
+ * @property reliable this connection's [ReliableChannelEngine], or `null` until
+ * one is first needed - either an app-thread send/bind or an inbound `0xA0`/`0xA1`
+ * creates it lazily. Written and read across the listener, app, and retransmit
+ * threads, hence `@Volatile`.
  */
 internal class Registration(val connection: Connection) {
     val origin: InetSocketAddress get() = connection.peer
@@ -57,6 +67,12 @@ internal class Registration(val connection: Connection) {
 
     @Volatile
     var linkQuality: LinkQualityTracker? = null
+
+    @Volatile
+    var onReliable: ((ByteArray) -> Unit)? = null
+
+    @Volatile
+    var reliable: ReliableChannelEngine? = null
 }
 
 /**

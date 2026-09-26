@@ -1,7 +1,9 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -20,6 +22,7 @@ import kotlin.test.assertTrue
 // echoes PONG for each PING, exercising the opt-in link-quality probe end to end on the
 // client side.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientProbeTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -39,7 +42,7 @@ class MultiConnectionUDPClientProbeTest {
         opened.forEach { runCatching { it.close() } }
     }
 
-    /** Background responder: replies REGISTERED to an Iam, PONG to a PING, and counts PINGs. */
+    /** Background responder: replies REGISTERED 2 to an Iam, an 0x82 PROBE_PONG to an 0x81 PROBE_PING, and counts them. */
     private inner class Echoer(private val peer: DatagramSocket) {
         val pings = AtomicInteger()
         val answering = AtomicBoolean(true)
@@ -55,17 +58,21 @@ class MultiConnectionUDPClientProbeTest {
                 } catch (_: Exception) {
                     break
                 }
-                val text = String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
-                val reply = when {
-                    text == HandshakeWireFormat.HANDSHAKE_VERB || text.startsWith("Iam ") -> "REGISTERED"
-                    HandshakeWireFormat.isProbeRequest(text) -> {
+                val inbound = packet.data.copyOf(packet.length)
+                val text = String(inbound, Charsets.UTF_8).trim()
+                val reply: ByteArray = when {
+                    text == HandshakeWireFormat.HANDSHAKE_VERB || text.startsWith("Iam ") ->
+                        HandshakeWireFormat.registeredMessage().toByteArray(Charsets.UTF_8)
+
+                    DatagramType.ofTagByte(inbound.getOrNull(0)) == DatagramType.PROBE_PING -> {
                         pings.incrementAndGet()
-                        if (answering.get()) HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)) else null
+                        val seq = TransportWireFormat.probeSequenceOf(inbound)
+                        if (answering.get() && seq != null) TransportWireFormat.probePongDatagram(seq) else continue
                     }
-                    else -> null
-                } ?: continue
-                val bytes = reply.toByteArray(Charsets.UTF_8)
-                runCatching { peer.send(DatagramPacket(bytes, bytes.size, packet.socketAddress)) }
+
+                    else -> continue
+                }
+                runCatching { peer.send(DatagramPacket(reply, reply.size, packet.socketAddress)) }
             }
         }.apply { isDaemon = true; start() }
 
@@ -113,7 +120,7 @@ class MultiConnectionUDPClientProbeTest {
         val peer = fakePeer()
         val echo = echoer(peer)
         val client = connected(peer)
-        assertTrue(client.startProbe(200L).isSuccess)
+        assertTrue(client.startProbe(250L).isSuccess)
         assertTrue(await(3_000L) { (client.linkQuality()?.probesDelivered ?: 0) >= 2 })
 
         val rttBefore = client.linkQuality()!!.rttMillis
@@ -122,6 +129,26 @@ class MultiConnectionUDPClientProbeTest {
         assertTrue(await(6_000L) { (client.linkQuality()?.packetLossRatio ?: 0.0) >= 0.5 }, "loss climbs toward 1.0")
         val rttAfter = client.linkQuality()!!.rttMillis
         assertTrue(kotlin.math.abs(rttAfter - rttBefore) < 50.0, "rtt froze: $rttBefore -> $rttAfter")
+    }
+
+    @Test
+    fun `a rejected startProbe does not switch off loss detection on the probe already running`() {
+        val peer = fakePeer()
+        val echo = echoer(peer)
+        val client = connected(peer)
+        assertTrue(client.startProbe(250L).isSuccess)
+        assertTrue(await(3_000L) { (client.linkQuality()?.probesDelivered ?: 0) >= 2 })
+
+        // Pre-fix, startProbe wrote probeIntervalMillis = 0 onto the live tracker before the
+        // interval was rejected, and Rtt.isProbeLost(.., 0) is always false - so loss aging on
+        // the still-running probe was switched off for good and this await would time out.
+        assertTrue(client.startProbe(0L).isFailure)
+
+        echo.answering.set(false)
+        assertTrue(
+            await(6_000L) { (client.linkQuality()?.packetLossRatio ?: 0.0) >= 0.5 },
+            "loss must still climb after a rejected re-arm",
+        )
     }
 
     @Test

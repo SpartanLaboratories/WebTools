@@ -28,46 +28,82 @@ import java.net.InetSocketAddress
 class UDPConnection internal constructor(
     override val name: String,
     override val peer: InetSocketAddress,
-    private val channel: ClientChannel,
+    private val clientChannel: ClientChannel,
 ) : Connection {
 
     init {
         log.debug("Created UDPConnection '{}' for {}", name, peer)
     }
 
+    override fun channel(mode: DeliveryMode): UdpChannel = when (mode) {
+        DeliveryMode.UNRELIABLE -> unreliableChannel
+        DeliveryMode.RELIABLE_ORDERED -> reliableChannel
+    }
+
+    // `by lazy` keeps design §9's "no allocation until a reliable channel is opened" literally
+    // true, and makes the handle stable across calls so a consumer may hold it.
+    private val unreliableChannel: UdpChannel by lazy { UnreliableConnectionChannel(this) }
+    private val reliableChannel: UdpChannel by lazy { ReliableConnectionChannel(clientChannel, peer) }
+
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuate(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).actuate(onMessage)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
     override fun actuate(onMessage: (message: String) -> Unit): Result<Unit> =
-        runCatching { channel.bind(peer, onMessage) }
+        runCatching { clientChannel.bind(peer, onMessage) }
             .onFailure { log.error("Could not actuate connection '{}'", name, it) }
 
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuateBytes(...) - see the 2.0 channel API",
+        ReplaceWith(
+            "channel(DeliveryMode.UNRELIABLE).actuateBytes(onMessage)",
+            "com.spartanlabs.webtools.udp.DeliveryMode",
+        ),
+    )
     override fun actuateBytes(onMessage: (ByteArray) -> Unit): Result<Unit> =
-        runCatching { channel.bindBytes(peer, onMessage) }
+        runCatching { clientChannel.bindBytes(peer, onMessage) }
             .onFailure { log.error("Could not actuate (bytes) connection '{}'", name, it) }
 
     override fun terminate(): Result<Unit> =
-        runCatching { channel.deregister(peer) }
+        runCatching { clientChannel.deregister(peer) }
             .onFailure { log.error("Could not terminate connection '{}'", name, it) }
 
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(message)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
+    @Suppress("DEPRECATION") // the body calls the now-deprecated push(bytes) below
     override fun push(message: String): Result<Unit> =
         push(message.toByteArray(Charsets.UTF_8))
 
+    /**
+     * Frames [bytes] as an `0x90` unreliable datagram (`[0x90][channel][payload]`)
+     * and sends it to [peer]. Any payload bytes are delivered to the peer intact -
+     * there is no reserved first byte.
+     */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(bytes)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
     override fun push(bytes: ByteArray): Result<Unit> =
-        channel.send(bytes, peer)
+        clientChannel.send(TransportWireFormat.unreliableDatagram(bytes), peer)
             .onFailure { log.error("Connection '{}' could not push a message", name, it) }
 
+    /** Sends a bare `0x80` keepalive datagram to [peer]. */
     override fun keepAlive(): Result<Unit> =
-        channel.send(KEEPALIVE_BYTES, peer)
+        clientChannel.send(KEEPALIVE_DATAGRAM, peer)
             .onFailure { log.error("Connection '{}' could not send a keepalive", name, it) }
 
     /**
      * Unlike the [Connection] default, this production implementation **does**
      * support a scheduled keepalive: it delegates to the server's shared
-     * `mcups-keepalive` executor via [ClientChannel], which sends an idle-aware `KA`
-     * to [peer] on the given cadence. A non-positive [intervalMillis] surfaces as
+     * `mcups-keepalive` executor via [ClientChannel], which sends an idle-aware `0x80`
+     * keepalive to [peer] on the given cadence. A non-positive [intervalMillis] surfaces as
      * the [ClientChannel]'s [IllegalArgumentException] failure. The schedule is
      * cancelled by [stopKeepAlive] and by [terminate].
      */
     override fun startKeepAlive(intervalMillis: Long): Result<Unit> =
-        channel.scheduleKeepAlive(peer, intervalMillis)
+        clientChannel.scheduleKeepAlive(peer, intervalMillis)
             .onFailure { log.error("Connection '{}' could not start a scheduled keepalive", name, it) }
 
     /**
@@ -77,19 +113,19 @@ class UDPConnection internal constructor(
      * does this.
      */
     override fun stopKeepAlive(): Result<Unit> =
-        channel.cancelKeepAlive(peer)
+        clientChannel.cancelKeepAlive(peer)
             .onFailure { log.error("Connection '{}' could not stop its scheduled keepalive", name, it) }
 
     /**
      * Unlike the [Connection] default, this production implementation **does**
      * support a link-quality probe: it delegates to the server's shared
-     * `mcups-probe` executor via [ClientChannel], which sends a periodic `PING` to
-     * [peer] and folds each `PONG` into a per-connection estimator. A non-positive
+     * `mcups-probe` executor via [ClientChannel], which sends a periodic `0x81` probe to
+     * [peer] and folds each `0x82` reply into a per-connection estimator. A non-positive
      * [intervalMillis] or an unregistered [peer] surfaces as the [ClientChannel]'s
      * failure. The schedule is cancelled by [stopProbe] and by [terminate].
      */
     override fun startProbe(intervalMillis: Long): Result<Unit> =
-        channel.scheduleProbe(peer, intervalMillis)
+        clientChannel.scheduleProbe(peer, intervalMillis)
             .onFailure { log.error("Connection '{}' could not start a link-quality probe", name, it) }
 
     /**
@@ -98,14 +134,30 @@ class UDPConnection internal constructor(
      * executor via [ClientChannel]. Idempotent; [terminate] also does this.
      */
     override fun stopProbe(): Result<Unit> =
-        channel.cancelProbe(peer)
+        clientChannel.cancelProbe(peer)
             .onFailure { log.error("Connection '{}' could not stop its probe", name, it) }
 
     /** The latest link-quality snapshot for this connection, delegated to [ClientChannel]. */
-    override fun linkQuality(): LinkQuality? = channel.linkQualityOf(peer)
+    override fun linkQuality(): LinkQuality? = clientChannel.linkQualityOf(peer)
 
     private companion object {
         private val log = LoggerFactory.getLogger(UDPConnection::class.java)
-        private val KEEPALIVE_BYTES = HandshakeProtocol.KEEPALIVE_TOKEN.toByteArray(Charsets.UTF_8)
+        private val KEEPALIVE_DATAGRAM = TransportWireFormat.keepaliveDatagram()
     }
+}
+
+/**
+ * [UdpChannel] over one [UDPConnection]'s reliable-ordered plane; all work
+ * delegates to [ClientChannel].
+ */
+internal class ReliableConnectionChannel(
+    private val clientChannel: ClientChannel,
+    private val peer: InetSocketAddress,
+) : UdpChannel {
+    override val mode = DeliveryMode.RELIABLE_ORDERED
+
+    override fun send(bytes: ByteArray): Result<Unit> = clientChannel.sendReliable(peer, bytes)
+
+    override fun actuateBytes(onMessage: (ByteArray) -> Unit): Result<Unit> =
+        clientChannel.bindReliable(peer, onMessage)
 }

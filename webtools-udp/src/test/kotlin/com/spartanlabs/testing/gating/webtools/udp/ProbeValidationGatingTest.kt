@@ -62,6 +62,22 @@ class ProbeValidationGatingTest {
     }
 
     @Test
+    fun `startProbe below the 250ms floor fails, exactly at the floor succeeds`() {
+        val peer = DatagramSocket().also { opened += it }
+        val client = MultiConnectionUDPClient(loopback, peer.localPort, MultiConnectionUDPServer.DEFAULT_RECEIVE_BUFFER_BYTES)
+            .also { clients += it }
+
+        val below = client.startProbe(249L)
+        assertTrue(below.isFailure, "249ms must fail")
+        assertIs<IllegalArgumentException>(below.exceptionOrNull())
+
+        val atFloor = client.startProbe(250L)
+        assertTrue(atFloor.isSuccess, "250ms (the floor) must succeed")
+
+        assertTrue(client.stop().isSuccess)
+    }
+
+    @Test
     fun `a UDPConnection startProbe surfaces the channel failure and linkQuality returns the channel value`() {
         val snapshot = LinkQuality(12.0, 3.0, 0.0, 5, 5)
         val channel = FakeClientChannel(

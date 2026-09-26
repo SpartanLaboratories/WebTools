@@ -1,5 +1,7 @@
 package com.spartanlabs.testing.integration.webtools.udp
 
+import com.spartanlabs.webtools.udp.DatagramType
+import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
@@ -15,6 +17,7 @@ import kotlin.test.assertTrue
 // Level 3 - a real MultiConnectionUDPClient socket against a fake peer DatagramSocket,
 // exercising the opt-in scheduled keepalive end to end on the client side.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientKeepAliveTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -32,26 +35,25 @@ class MultiConnectionUDPClientKeepAliveTest {
         opened.forEach { runCatching { it.close() } }
     }
 
-    private fun DatagramSocket.nextText(timeoutMillis: Int): Pair<InetSocketAddress, String>? {
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): Pair<InetSocketAddress, ByteArray>? {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
             receive(packet)
-            InetSocketAddress(packet.address, packet.port) to
-                String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+            InetSocketAddress(packet.address, packet.port) to packet.data.copyOf(packet.length)
         } catch (_: SocketTimeoutException) {
             null
         }
     }
 
-    /** Counts `KA` datagrams from [client] arriving at [peer] over [windowMillis]. */
+    /** Counts `0x80` keepalive datagrams from [client] arriving at [peer] over [windowMillis]. */
     private fun countKeepAlives(peer: DatagramSocket, windowMillis: Long): Int {
         val deadline = System.currentTimeMillis() + windowMillis
         var count = 0
         while (System.currentTimeMillis() < deadline) {
             val remaining = (deadline - System.currentTimeMillis()).toInt().coerceAtLeast(1)
-            val msg = peer.nextText(remaining) ?: break
-            if (msg.second == "KA") count++
+            val msg = peer.nextBytes(remaining) ?: break
+            if (DatagramType.ofTagByte(msg.second.getOrNull(0)) == DatagramType.KEEPALIVE) count++
         }
         return count
     }
@@ -59,9 +61,9 @@ class MultiConnectionUDPClientKeepAliveTest {
     private fun handshake(client: MultiConnectionUDPClient, peer: DatagramSocket): InetSocketAddress {
         var origin: InetSocketAddress? = null
         val t = Thread {
-            val (from, _) = peer.nextText(5_000)!!
+            val (from, _) = peer.nextBytes(5_000)!!
             origin = from
-            val reg = "REGISTERED".toByteArray()
+            val reg = HandshakeWireFormat.registeredMessage().toByteArray(Charsets.UTF_8)
             peer.send(DatagramPacket(reg, reg.size, from.address, from.port))
         }.apply { start() }
         assertTrue(client.handshake("alice").isSuccess)
@@ -95,8 +97,8 @@ class MultiConnectionUDPClientKeepAliveTest {
             client.send("x")
             Thread.sleep(100)
             while (true) {
-                val msg = peer.nextText(20) ?: break
-                if (msg.second == "KA") kaSeen++ else dataSeen++
+                val msg = peer.nextBytes(20) ?: break
+                if (DatagramType.ofTagByte(msg.second.getOrNull(0)) == DatagramType.KEEPALIVE) kaSeen++ else dataSeen++
             }
         }
         assertTrue(dataSeen > 0, "data was received")
@@ -113,7 +115,7 @@ class MultiConnectionUDPClientKeepAliveTest {
 
         assertTrue(client.stopKeepAlive().isSuccess)
         Thread.sleep(400)
-        while (peer.nextText(20) != null) { /* drain */ }
+        while (peer.nextBytes(20) != null) { /* drain */ }
         assertTrue(countKeepAlives(peer, 900L) == 0, "no KA after stopKeepAlive")
 
         assertTrue(client.startKeepAlive(300L).isSuccess)
@@ -130,7 +132,7 @@ class MultiConnectionUDPClientKeepAliveTest {
 
         assertTrue(client.stop().isSuccess)
         Thread.sleep(400)
-        while (peer.nextText(20) != null) { /* drain */ }
+        while (peer.nextBytes(20) != null) { /* drain */ }
         assertTrue(countKeepAlives(peer, 900L) == 0)
         assertTrue(Thread.getAllStackTraces().keys.none { it.name == "mcupc-keepalive" && it.isAlive })
     }

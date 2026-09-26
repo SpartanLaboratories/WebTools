@@ -1,7 +1,10 @@
 package com.spartanlabs.testing.e2e.webtools.udp
 
 import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DatagramType
+import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
@@ -21,6 +24,7 @@ import kotlin.test.assertTrue
  * surface as app messages, and the server binds exactly one UDP port.
  */
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerE2ETest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerE2ETest::class.java)
@@ -43,11 +47,23 @@ class MultiConnectionUDPServerE2ETest {
 
         fun handshake() {
             send("Iam $name")
-            assertEquals("REGISTERED", recv())
+            assertEquals(HandshakeWireFormat.registeredMessage(), recv())
         }
 
         fun send(text: String) {
             val out = text.toByteArray()
+            socket.send(DatagramPacket(out, out.size, loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+        }
+
+        /** Sends [text] framed as an 0x90 unreliable application datagram - the only inbound shape a bound handler ever sees. */
+        fun sendFramed(text: String) {
+            val out = TransportWireFormat.unreliableDatagram(text.toByteArray(Charsets.UTF_8))
+            socket.send(DatagramPacket(out, out.size, loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+        }
+
+        /** Sends the real binary 0x80 keepalive datagram (unframed - a control datagram, not app data). */
+        fun sendKeepAlive() {
+            val out = TransportWireFormat.keepaliveDatagram()
             socket.send(DatagramPacket(out, out.size, loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
         }
 
@@ -57,7 +73,12 @@ class MultiConnectionUDPServerE2ETest {
                 while (true) {
                     val p = DatagramPacket(ByteArray(1024), 1024)
                     socket.receive(p)
-                    received += String(p.data, 0, p.length, Charsets.UTF_8).trim()
+                    val bytes = p.data.copyOf(p.length)
+                    // The server only ever pushes an 0x90 frame or an 0x80 keepalive; strip the
+                    // former to text, and never record the latter as an app message.
+                    if (DatagramType.ofTagByte(bytes.getOrNull(0)) == DatagramType.UNRELIABLE) {
+                        received += String(TransportWireFormat.unreliablePayloadOf(bytes)!!, Charsets.UTF_8)
+                    }
                 }
             } catch (_: java.net.SocketTimeoutException) {
                 // done draining
@@ -83,8 +104,8 @@ class MultiConnectionUDPServerE2ETest {
             assertEquals(3, server.connections.size)
 
             repeat(perClient) { i ->
-                clients.forEach { it.send("${it.name}-msg$i") }
-                clients.forEach { it.send("KA") } // client-side keepalive; server must swallow it
+                clients.forEach { it.sendFramed("${it.name}-msg$i") }
+                clients.forEach { it.sendKeepAlive() } // client-side keepalive; server must swallow it
                 if (i % 4 == 0) server.pushToAll("bc$i")
                 Thread.sleep(20)
             }

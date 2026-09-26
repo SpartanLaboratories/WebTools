@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 // listener auto-answers PING), exercising Connection.startProbe / stopProbe end to end and
 // the symmetric client-probes-server direction.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerProbeTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

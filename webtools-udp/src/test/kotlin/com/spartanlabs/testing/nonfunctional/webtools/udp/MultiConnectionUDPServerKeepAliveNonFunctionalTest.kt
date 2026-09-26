@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
 import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
@@ -18,6 +19,7 @@ import kotlin.test.assertTrue
 // Level 4c - robustness of the server-side scheduled keepalive under many connections and
 // hostile senders, plus the zero-cost-when-unused guarantee.
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerKeepAliveNonFunctionalTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()
@@ -35,11 +37,11 @@ class MultiConnectionUDPServerKeepAliveNonFunctionalTest {
         client.receive(DatagramPacket(ByteArray(64), 64))
     }
 
-    private fun DatagramSocket.nextText(timeoutMillis: Int): String? {
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): ByteArray? {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
-            receive(packet); String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+            receive(packet); packet.data.copyOf(packet.length)
         } catch (_: SocketTimeoutException) {
             null
         }
@@ -48,7 +50,7 @@ class MultiConnectionUDPServerKeepAliveNonFunctionalTest {
     private fun sawKeepAlive(client: DatagramSocket, windowMillis: Long): Boolean {
         val deadline = System.currentTimeMillis() + windowMillis
         while (System.currentTimeMillis() < deadline) {
-            if (client.nextText(150) == "KA") return true
+            if (DatagramType.ofTagByte(client.nextBytes(150)?.getOrNull(0)) == DatagramType.KEEPALIVE) return true
         }
         return false
     }
@@ -103,7 +105,7 @@ class MultiConnectionUDPServerKeepAliveNonFunctionalTest {
 
             assertTrue(byName.getValue("a").terminate().isSuccess)
             Thread.sleep(400)
-            while (a.nextText(20) != null) { /* drain */ }
+            while (a.nextBytes(20) != null) { /* drain */ }
             assertTrue(!sawKeepAlive(a, 900L), "terminated connection's KA stopped")
             assertTrue(sawKeepAlive(b, 1_500L), "the other connection is undisturbed")
         } finally {

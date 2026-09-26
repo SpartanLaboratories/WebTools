@@ -28,6 +28,27 @@ interface Connection {
     val peer: InetSocketAddress
 
     /**
+     * The delivery-mode-scoped handle for this connection. Each [DeliveryMode]
+     * has its own sequence space and its own inbound handler - binding a
+     * handler on one mode's [UdpChannel] never disturbs the other's.
+     *
+     * The default implementation returns a working [DeliveryMode.UNRELIABLE]
+     * handle over [push]/[actuateBytes], and, for
+     * [DeliveryMode.RELIABLE_ORDERED], a handle whose operations fail with
+     * [UnsupportedOperationException] - only the production [UDPConnection]
+     * carries a reliable channel.
+     * @param mode which delivery guarantee to get a handle for
+     * @return the [UdpChannel] for [mode]
+     */
+    fun channel(mode: DeliveryMode): UdpChannel = when (mode) {
+        DeliveryMode.UNRELIABLE -> UnreliableConnectionChannel(this)
+        DeliveryMode.RELIABLE_ORDERED -> UnsupportedUdpChannel(
+            DeliveryMode.RELIABLE_ORDERED,
+            "This Connection has no reliable-ordered channel",
+        )
+    }
+
+    /**
      * Registers [onMessage] as the handler for datagrams from this client. No
      * socket is bound - the server already owns the one shared socket; this only
      * routes inbound datagrams whose source matches [peer] to [onMessage].
@@ -39,6 +60,10 @@ interface Connection {
      * thread, so it must return promptly - a slow handler delays delivery to other clients
      * @return [Result.success] once the handler is registered, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuate(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).actuate(onMessage)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
     fun actuate(onMessage: (message: String) -> Unit): Result<Unit>
 
     /**
@@ -50,12 +75,10 @@ interface Connection {
      * handler clears any text handler and vice versa. A consumer that wants both
      * views decodes inside the bytes handler.
      *
-     * Handshake (`Iam`) and keepalive (`KA`) datagrams are filtered upstream and
-     * never delivered here. Note the classifier runs on the trimmed UTF-8 view of
-     * every datagram, so a binary payload that decodes/trims to a control token is
-     * still intercepted - lead binary application datagrams with a byte that
-     * cannot start `Iam`/`KA` and is not ASCII whitespace (e.g. `0x00` or any byte
-     * `>= 0x80`).
+     * Handshake and transport-control datagrams are filtered upstream on the
+     * [DatagramType] tag and never delivered here. The production transport frames
+     * this connection's data as an `0x90` unreliable datagram; any payload bytes
+     * are delivered intact - there is no reserved first byte.
      *
      * The delivered copy is at most 65507 bytes (the maximum UDP payload over
      * IPv4); an inbound datagram larger than that is delivered truncated to that
@@ -67,6 +90,14 @@ interface Connection {
      * it runs on the server's single-threaded dispatch executor, so it must return promptly
      * @return [Result.success] once the handler is registered, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).actuateBytes(...) - see the 2.0 channel API",
+        ReplaceWith(
+            "channel(DeliveryMode.UNRELIABLE).actuateBytes(onMessage)",
+            "com.spartanlabs.webtools.udp.DeliveryMode",
+        ),
+    )
+    @Suppress("DEPRECATION") // the default body calls the now-deprecated actuate(String) sibling
     fun actuateBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> =
         actuate { onMessage(it.toByteArray(Charsets.UTF_8)) }
 
@@ -99,6 +130,10 @@ interface Connection {
      * @param message the text to send
      * @return [Result.success] if the message was sent, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(message)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
     fun push(message: String): Result<Unit>
 
     /**
@@ -106,8 +141,9 @@ interface Connection {
      * the payload is placed on the wire verbatim - no encoding, no trim.
      *
      * The default implementation round-trips through [push]`(String)` and is
-     * therefore lossy for non-UTF-8 payloads; [UDPConnection] overrides it to send
-     * the bytes unchanged.
+     * therefore lossy for non-UTF-8 payloads; [UDPConnection] overrides it to
+     * frame the bytes as an `0x90` unreliable datagram and send them unchanged.
+     * Any payload bytes are delivered to the peer intact.
      *
      * A payload larger than the OS datagram limit fails the [Result] (the cause is
      * logged) rather than being sent; for real-network use keep frames under the
@@ -115,6 +151,11 @@ interface Connection {
      * @param bytes the raw datagram payload
      * @return [Result.success] if the datagram was sent, or the failure that prevented it
      */
+    @Deprecated(
+        "Use channel(DeliveryMode.UNRELIABLE).send(...) - see the 2.0 channel API",
+        ReplaceWith("channel(DeliveryMode.UNRELIABLE).send(bytes)", "com.spartanlabs.webtools.udp.DeliveryMode"),
+    )
+    @Suppress("DEPRECATION") // the default body calls the now-deprecated push(String) sibling
     fun push(bytes: ByteArray): Result<Unit> = push(String(bytes, Charsets.UTF_8))
 
     /**
@@ -135,7 +176,7 @@ interface Connection {
 
     /**
      * Starts an opt-in, idle-aware background keepalive for this connection: every
-     * ~[intervalMillis] of output silence toward [peer] the server sends one `KA`
+     * ~[intervalMillis] of output silence toward [peer] the server sends one `0x80` keepalive
      * datagram, until [stopKeepAlive], [terminate], or server `stop()`.
      *
      * Server -> client keepalives refresh endpoint-independent (full-cone /
@@ -148,7 +189,7 @@ interface Connection {
      * [UDPConnection] supports a scheduled keepalive.
      *
      * @param intervalMillis output-idle time before a keepalive is sent; must be > 0.
-     * Defaults to [HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS] (20 s).
+     * Defaults to [TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS] (20 s).
      * @return [Result.success] once armed, or the failure that prevented it
      */
     fun startKeepAlive(intervalMillis: Long): Result<Unit> =
@@ -156,11 +197,11 @@ interface Connection {
 
     /**
      * Starts the scheduled keepalive at the recommended interval
-     * ([HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS], 20 s).
+     * ([TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS], 20 s).
      * @return [Result.success] once armed, or the failure that prevented it
      * @see startKeepAlive
      */
-    fun startKeepAlive(): Result<Unit> = startKeepAlive(HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
+    fun startKeepAlive(): Result<Unit> = startKeepAlive(TransportWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS)
 
     /**
      * Stops the background keepalive started by [startKeepAlive]. Idempotent; a no-op
@@ -172,35 +213,42 @@ interface Connection {
 
     /**
      * Starts an opt-in link-quality probe toward [peer]: every [intervalMillis] the
-     * server sends one `PING`, and each `PONG` updates a smoothed RTT / jitter /
-     * loss estimate readable via [linkQuality]. Runs until [stopProbe], [terminate],
-     * or server `stop()`. Server -> client `PING` reaches the client whenever the
-     * session is live (the client is actively holding its own mapping open); the
-     * same cone-NAT caveat as [keepAlive] applies if the client has gone silent.
+     * server sends one `0x81` probe datagram, and each `0x82` reply updates a smoothed
+     * RTT / jitter / loss estimate readable via [linkQuality]. Runs until [stopProbe],
+     * [terminate], or server `stop()`. Server -> client `0x81` reaches the client
+     * whenever the session is live (the client is actively holding its own mapping
+     * open); the same cone-NAT caveat as [keepAlive] applies if the client has gone
+     * silent.
      *
-     * The probe requires both ends on `1.6.0`+: a pre-`1.6.0` peer does not answer
-     * `PING`, so `packetLossRatio` climbs toward `1.0` and a consumer that opted in
-     * against such a peer should not have.
+     * The probe requires both ends on `webtools-udp` `2.0.0`+ (as does every framed
+     * datagram): a pre-`2.0.0` peer never emits or answers `0x81`/`0x82`, so
+     * `packetLossRatio` climbs toward `1.0` and a consumer that opted in against such
+     * a peer should not have.
      *
      * The default returns [Result.failure] - only the production [UDPConnection]
      * supports a probe.
-     * @param intervalMillis probe period; must be > 0.
-     * @return [Result.success] once armed, or the failure that prevented it
+     * @param intervalMillis probe period; must be >=
+     * [TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS] (250 ms).
+     * @return [Result.success] once armed, or the failure that prevented it -
+     * including [IllegalArgumentException] if [intervalMillis] is below the floor
      */
     fun startProbe(intervalMillis: Long): Result<Unit> =
         Result.failure(UnsupportedOperationException("This Connection does not support a link-quality probe"))
 
     /**
      * Starts the probe at the default interval
-     * ([HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS], 1 s).
+     * ([TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS], 1 s).
      * @return [Result.success] once armed, or the failure that prevented it
      * @see startProbe
      */
-    fun startProbe(): Result<Unit> = startProbe(HandshakeWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS)
+    fun startProbe(): Result<Unit> = startProbe(TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS)
 
     /**
      * Stops the probe started by [startProbe]. Idempotent; [terminate] and server
-     * `stop()` also do this. The last [linkQuality] snapshot remains readable.
+     * `stop()` also do this. The last [linkQuality] snapshot remains readable. A
+     * probe still unanswered when the probe stopped is counted as lost once it
+     * passes the loss horizon, so `packetLossRatio` can still settle for up to
+     * three probe intervals after this call.
      * @return [Result.success] once cancelled
      */
     fun stopProbe(): Result<Unit> = Result.success(Unit)

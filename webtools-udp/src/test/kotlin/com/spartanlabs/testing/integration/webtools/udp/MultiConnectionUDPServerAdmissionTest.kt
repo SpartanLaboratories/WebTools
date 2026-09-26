@@ -81,7 +81,7 @@ class MultiConnectionUDPServerAdmissionTest {
     fun `a good credential registers, a wrong one is refused`() {
         val guarded = GuardedServer().also { server = it }
         DatagramSocket().use { ok ->
-            assertEquals("REGISTERED", ok.exchange("Iam guarded s3cret"))
+            assertEquals("REGISTERED 2", ok.exchange("Iam guarded s3cret"))
             Thread.sleep(SETTLE_MILLIS)
             assertTrue(guarded.connected.contains("guarded"))
         }
@@ -94,7 +94,7 @@ class MultiConnectionUDPServerAdmissionTest {
     fun `the default branch sees an empty credential for a bare Iam`() {
         val guarded = GuardedServer().also { server = it }
         DatagramSocket().use { client ->
-            assertEquals("REGISTERED", client.exchange("Iam alice"))
+            assertEquals("REGISTERED 2", client.exchange("Iam alice"))
         }
         assertTrue(guarded.seenCredentials.contains(""))
     }
@@ -104,7 +104,7 @@ class MultiConnectionUDPServerAdmissionTest {
         GuardedServer().also { server = it }
         DatagramSocket().use { client ->
             assertEquals("REFUSED banned", client.exchange("Iam banned"))
-            assertEquals("REGISTERED", client.exchange("Iam guarded s3cret"))
+            assertEquals("REGISTERED 2", client.exchange("Iam guarded s3cret"))
         }
     }
 
@@ -116,7 +116,7 @@ class MultiConnectionUDPServerAdmissionTest {
         }
         server = plain
         DatagramSocket().use { client ->
-            assertEquals("REGISTERED", client.exchange("Iam whoever any-credential-here"))
+            assertEquals("REGISTERED 2", client.exchange("Iam whoever any-credential-here"))
             Thread.sleep(SETTLE_MILLIS)
             assertContentEquals(listOf("whoever"), plain.connected)
         }

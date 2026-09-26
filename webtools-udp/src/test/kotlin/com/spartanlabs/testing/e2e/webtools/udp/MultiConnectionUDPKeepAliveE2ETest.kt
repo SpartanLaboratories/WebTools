@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 // Level 4b - real MultiConnectionUDPClient + real MultiConnectionUDPServer subclass over
 // loopback, exercising the opt-in scheduled keepalive as the only thing holding a session open.
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPKeepAliveE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

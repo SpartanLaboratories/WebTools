@@ -11,16 +11,20 @@ import java.net.InetSocketAddress
  * - the **handshake state machine** - a first `Iam` from a new origin is screened
  *   by [admit] before anything else; on [Admission.Refused] the server replies
  *   `REFUSED <reason>`, registers nothing, and does not fire [onRegistered].
- *   Otherwise it registers a [Connection] and replies with the single token
- *   `REGISTERED`; a retransmit from a known origin just re-sends `REGISTERED`
- *   (no re-screening); a first `Iam` from a name that is already registered under
- *   a different, now-stale origin (e.g. after a NAT rebind) supersedes it - but
- *   only once [admit] has admitted the newcomer, so a refused name-spoof cannot
- *   evict the incumbent - the stale registration is terminated and removed before
- *   the new one is added;
- * - the **inbound-datagram router** - [accept] classifies every datagram as a
- *   handshake, a keepalive (dropped), or application data (handed to the dispatch
- *   executor for the bound handler);
+ *   Otherwise it registers a [Connection] and replies `REGISTERED 2` (the
+ *   accepted reply plus the framed-transport wire major); a retransmit from a
+ *   known origin just re-sends it (no re-screening); a first `Iam` from a name
+ *   that is already registered under a different, now-stale origin (e.g. after a
+ *   NAT rebind) supersedes it - but only once [admit] has admitted the newcomer,
+ *   so a refused name-spoof cannot evict the incumbent - the stale registration
+ *   is terminated and removed before the new one is added;
+ * - the **inbound-datagram router** - [accept] classifies every datagram on its
+ *   [DatagramType] tag (byte 0): a `0x80` keepalive (dropped), a `0x81`/`0x82`
+ *   probe, or a `0x90` unreliable frame whose stripped payload is handed to the
+ *   dispatch executor for the bound handler - only on channel `0x00`; a `0x90`,
+ *   `0xA0` or `0xA1` on any other channel is dropped with a WARN. An unframed
+ *   `Iam` (byte 0 `< 0x80`) runs the handshake state machine; any other unframed
+ *   datagram is dropped with a WARN (a pre-`2.0` sender);
  * - the [ClientChannel] implementation the connections it mints delegate to for
  *   sending, binding, and deregistering;
  * - the **liveness tracker** - when constructed with a positive
@@ -30,20 +34,27 @@ import java.net.InetSocketAddress
  *   `onDisconnect(_, TIMEOUT)`. It also routes the
  *   `SUPERSEDED` / `TERMINATED` reasons through the same callback;
  * - the **keepalive scheduler seam** - [scheduleKeepAlive] arms an idle-aware
- *   `KA` timer per connection (refreshing off [Registration.lastOutboundAt],
- *   which [send] stamps once any keepalive is armed), cancelled on [deregister]
- *   or a same-name supersede;
- * - the **link-quality probe seam** - [scheduleProbe] arms a periodic `PING`
- *   timer per connection, folds each `PONG` into the connection's
- *   [Registration.linkQuality] estimator, answers an inbound `PING` from a
- *   registered origin with a `PONG`, and is cancelled on [deregister] or a
- *   same-name supersede.
+ *   `0x80` keepalive timer per connection (refreshing off
+ *   [Registration.lastOutboundAt], which [send] stamps once any keepalive is
+ *   armed), cancelled on [deregister] or a same-name supersede;
+ * - the **link-quality probe seam** - [scheduleProbe] arms a periodic `0x81`
+ *   probe timer per connection (an 8-byte big-endian sequence), folds each
+ *   `0x82` reply into the connection's [Registration.linkQuality] estimator,
+ *   answers an inbound `0x81` from a registered origin with an `0x82`, and is
+ *   cancelled on [deregister] or a same-name supersede;
+ * - the **reliable-ordered channel seam** - an inbound `0xA0`/`0xA1` on channel
+ *   `0x00` (one on any other channel is dropped before it reaches the engine), or a
+ *   `sendReliable`/`bindReliable` call, lazily mints a per-connection
+ *   [ReliableChannelEngine] and arms its `mcups-retransmit` tick
+ *   ([reliableEngineFor]); delivered payloads reach [Registration.onReliable]
+ *   via the dispatch executor, in order ([deliverReliable]); the engine is
+ *   closed and its tick cancelled on [deregister] or a same-name supersede.
  *
  * @param newConnection builds the connection for a new client, given its name,
  * handshake origin, and the [ClientChannel] it should delegate to (always `this`)
  * @param sender sends raw bytes to a client endpoint; its [Result] is propagated
  * @param onRegistered invoked exactly once per newly registered client, after its
- * `REGISTERED` reply has been sent - never for a retransmitted handshake
+ * `REGISTERED 2` reply has been sent - never for a retransmitted handshake
  * @param admit the pre-accept screen for a first `Iam` from an unknown origin,
  * given the parsed name, origin, and opaque credential (`""` if none). Invoked
  * inline on the listener thread before any supersede or registration; expected to
@@ -59,6 +70,11 @@ import java.net.InetSocketAddress
  * [cancelKeepAlive]; a [PeriodicScheduler] in production, a fake in tests
  * @param probeSchedule the timer seam backing [scheduleProbe] / [cancelProbe]; a
  * separate [PeriodicScheduler] instance in production, a fake in tests
+ * @param retransmitSchedule the timer seam backing the per-connection reliable
+ * retransmit tick ([reliableEngineFor]); a separate [PeriodicScheduler] instance
+ * in production, a fake in tests
+ * @param reliableMaxMessageBytes the configured reliable-message-size cap
+ * ([ClientChannel.reliableMaxMessageBytes])
  */
 internal class HandshakeCoordinator(
     private val newConnection: (name: String, peer: InetSocketAddress, channel: ClientChannel) -> Connection,
@@ -70,6 +86,8 @@ internal class HandshakeCoordinator(
     private val idleTimeoutMillis: Long,
     private val keepAliveSchedule: PeriodicSchedule,
     private val probeSchedule: PeriodicSchedule,
+    private val retransmitSchedule: PeriodicSchedule,
+    override val reliableMaxMessageBytes: Int,
 ) : ClientChannel {
     private val registrations = Registrations()
 
@@ -102,16 +120,26 @@ internal class HandshakeCoordinator(
 
     /**
      * The single entry point the listener loop calls for every inbound datagram.
-     * Classifies before acting: a bare `KA` keepalive is dropped (success, no
-     * dispatch); an `Iam` runs the handshake state machine inline; anything else
-     * is application data routed to the bound handler. When idle detection is
-     * enabled, `accept` also stamps the origin's last-inbound time and clears any
-     * prior TIMEOUT latch, before classifying.
+     * Classifies before acting on the [DatagramType] tag (byte 0): a `0x80`
+     * keepalive is dropped (success, no dispatch); a `0x81`/`0x82` probe is
+     * answered / folded; a `0x90` frame from a registered origin has its stripped
+     * payload routed to the bound handler; an `0xA0`/`0xA1` from a registered
+     * origin is fed to that connection's [ReliableChannelEngine]
+     * ([reliableEngineFor]). A `0x90`, `0xA0` or `0xA1` from an unregistered
+     * origin is dropped at DEBUG; one from a registered origin whose channel byte
+     * (byte 1) is not `0x00` is dropped with a WARN - nothing is delivered, no
+     * acknowledgement in it is applied, and no engine is created for it. An
+     * unframed `Iam` runs the handshake state machine inline; anything else is
+     * dropped with a WARN. When idle detection is enabled, `accept` also stamps
+     * the origin's last-inbound time and clears any prior TIMEOUT latch, before
+     * classifying - for every datagram from a registered origin, dropped or not.
      *
      * @param origin the datagram's post-NAT source - where any reply is addressed
-     * @param bytes the exact-length datagram body, handed verbatim to a bound
-     * bytes handler; classification still runs off [text]
-     * @param text the trimmed datagram text
+     * @param bytes the exact-length datagram body; the tag switch works off
+     * `bytes[0]` and, for a `0x90` frame, the stripped payload is what reaches a
+     * bound bytes handler
+     * @param text the trimmed datagram text - now consulted only for the unframed
+     * `Iam` handshake-bootstrap branch
      * @return [Result.success] if handled or harmlessly ignored, or [Result.failure]
      * if a recognised handshake was malformed or its reply could not be delivered
      */
@@ -125,29 +153,84 @@ internal class HandshakeCoordinator(
         return classify(origin, bytes, text)
     }
 
-    private fun classify(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> = when {
-        HandshakeProtocol.isKeepAlive(text) ->
-            Result.success(Unit).also { log.trace("Keepalive from {}", origin) }
+    private fun classify(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
+        // Byte 0 is authoritative: control vs. application is a tag switch, never a token match.
+        val byte0 = bytes.getOrNull(0)?.toInt()?.and(0xFF)
+        return when (DatagramType.ofTagByte(bytes.getOrNull(0))) {
+            DatagramType.KEEPALIVE ->
+                Result.success(Unit).also { log.trace("Keepalive from {}", origin) }
 
-        HandshakeProtocol.isProbeRequest(text) -> {
-            val reg = registrations.findByOrigin(origin)
-            if (reg == null) {
-                Result.success(Unit).also { log.debug("PING from unregistered {}, dropped", origin) }
-            } else {
-                send(HandshakeWireFormat.probeReplyMessage(HandshakeWireFormat.probeToken(text)).toByteArray(Charsets.UTF_8), origin)
+            DatagramType.PROBE_PING -> {
+                val reg = registrations.findByOrigin(origin)
+                val seq = TransportWireFormat.probeSequenceOf(bytes)
+                when {
+                    reg == null ->
+                        Result.success(Unit).also { log.debug("PING from unregistered {}, dropped", origin) }
+
+                    seq == null ->
+                        Result.success(Unit).also { log.warn("Malformed 0x81 probe from {}, dropping", origin) }
+
+                    else -> send(TransportWireFormat.probePongDatagram(seq), origin)
+                }
+            }
+
+            DatagramType.PROBE_PONG -> {
+                // A short/garbage 0x82: ignore rather than throw on the listener thread.
+                TransportWireFormat.probeSequenceOf(bytes)
+                    ?.let { seq -> registrations.findByOrigin(origin)?.linkQuality?.completeProbe(seq) }
+                Result.success(Unit)
+            }
+
+            DatagramType.UNRELIABLE -> {
+                val payload = TransportWireFormat.unreliablePayloadOf(bytes)
+                if (payload == null) {
+                    Result.success(Unit).also { log.warn("Malformed 0x90 datagram from {}, dropping", origin) }
+                } else {
+                    deliverData(origin, TransportWireFormat.unreliableChannelOf(bytes), payload, String(payload, Charsets.UTF_8).trim())
+                }
+            }
+
+            DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {
+                val reg = registrations.findByOrigin(origin)
+                val channel = ReliableWireFormat.reliableChannelOf(bytes)
+                when {
+                    reg == null ->
+                        Result.success(Unit).also { log.debug("Reliable datagram from unregistered {}, dropped", origin) }
+
+                    // Issue #40: after origin screening, before engine creation/ack processing.
+                    // Duplicated verbatim at the other three receive-branch channel checks -
+                    // HandshakeCoordinator.deliverData, and MultiConnectionUDPClient.receiveLoop's
+                    // UNRELIABLE and reliable branches - rather than extracted; see
+                    // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                    channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
+                        Result.success(Unit).also {
+                            log.warn(
+                                "Reliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
+                                Integer.toHexString(channel.toInt() and 0xFF), origin,
+                            )
+                        }
+
+                    else -> {
+                        val delivered = reliableEngineFor(reg).onInboundDatagram(bytes) // never throws (Stage 2 contract)
+                        deliverReliable(reg, delivered)
+                    }
+                }
+            }
+
+            // ofTagByte(null) for a reserved same-major tag (0x83+/0xA2-0xAF) or an unframed byte 0.
+            null -> when {
+                byte0 != null && byte0 >= 0x80 ->
+                    Result.success(Unit).also {
+                        log.warn("Unhandled datagram type 0x{} from {}, dropping", Integer.toHexString(byte0), origin)
+                    }
+
+                HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
+
+                else -> Result.success(Unit).also {
+                    log.warn("Unframed datagram from {}; sender may be pre-2.0, dropping", origin)
+                }
             }
         }
-
-        HandshakeProtocol.isProbeReply(text) -> {
-            // Non-numeric / bare PONG token: ignore rather than throw on the listener thread - an old or spoofed peer must not break the probe.
-            HandshakeWireFormat.probeToken(text).toLongOrNull()
-                ?.let { seq -> registrations.findByOrigin(origin)?.linkQuality?.completeProbe(seq) }
-            Result.success(Unit)
-        }
-
-        HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
-
-        else -> deliverData(origin, bytes, text)
     }
 
     /**
@@ -168,7 +251,7 @@ internal class HandshakeCoordinator(
                 // non-deterministic admit() (e.g. a capacity gate) on a stray retransmit could
                 // refuse an already-admitted client and desync the two sides.
                 log.info("Repeating handshake reply for already-registered origin {}", origin)
-                send(REGISTERED_BYTES, origin)
+                send(HandshakeProtocol.REGISTERED_DATAGRAM, origin)
             } ?: run {
                 // Screen the newcomer BEFORE supersede / registration / reply. Because this runs
                 // ahead of findByName(name), a Refused newcomer never reaches the supersede code,
@@ -196,6 +279,8 @@ internal class HandshakeCoordinator(
                     registrations.removeByOrigin(stale.origin)
                     keepAliveSchedule.cancel(stale.origin)
                     probeSchedule.cancel(stale.origin)
+                    retransmitSchedule.cancel(stale.origin)
+                    stale.reliable?.close() // D7: a supersede resets the reliable channel - fresh engine, fresh sequence space
                     if (notifyingDisconnects) onDisconnect(stale.connection, DisconnectReason.SUPERSEDED)
                     stale.connection.terminate()
                         .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
@@ -203,13 +288,32 @@ internal class HandshakeCoordinator(
                 val connection = newConnection(name, origin, this)
                 registrations.add(Registration(connection))
                 log.info("Registered connection '{}' for {}", name, origin)
-                send(REGISTERED_BYTES, origin).map { onRegistered(connection) }
+                send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
             }
         }
 
-    private fun deliverData(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
+    /**
+     * Delivers a `0x90` payload to [origin]'s bound handler. Screening order: [origin] must be
+     * registered (otherwise dropped at DEBUG), then [channel] must be
+     * [TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL] (otherwise dropped with a WARN), and only
+     * then is a handler selected. Every drop returns [Result.success].
+     */
+    private fun deliverData(origin: InetSocketAddress, channel: Byte?, bytes: ByteArray, text: String): Result<Unit> {
         val registration = registrations.findByOrigin(origin)
             ?: return Result.success(Unit).also { log.debug("Dropped datagram from unregistered {}", origin) }
+        // Issue #40: after origin screening, before handler selection. Duplicated verbatim at the
+        // other three receive-branch channel checks - HandshakeCoordinator.classify's
+        // RELIABLE_DATA/RELIABLE_ACK branch, and MultiConnectionUDPClient.receiveLoop's UNRELIABLE
+        // and reliable branches - rather than extracted; see
+        // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+        if (channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL) {
+            return Result.success(Unit).also {
+                log.warn(
+                    "Unreliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
+                    Integer.toHexString(channel.toInt() and 0xFF), origin,
+                )
+            }
+        }
         // A bytes handler, if bound, wins over a text handler - the two are mutually
         // exclusive in practice (bind/bindBytes null the other) but check bytes first.
         val bytesHandler = registration.onBytes
@@ -230,6 +334,55 @@ internal class HandshakeCoordinator(
         }
     }
 
+    /**
+     * Returns [reg]'s [ReliableChannelEngine], minting one and arming its
+     * `mcups-retransmit` tick on first use (§3.3): created lazily on the
+     * *first* of an app-thread `sendReliable`/`bindReliable` or an inbound
+     * channel-`0x00` `0xA0`/`0xA1` for [reg] - trigger (2) is not optional, or a
+     * peer whose application never opens the channel would never ack, wedging
+     * the sender's window. An inbound datagram on any other channel is dropped
+     * before this is called, so it never creates an engine. `@Synchronized` so a
+     * listener-thread inbound and an app-thread send cannot mint two engines for
+     * one peer.
+     */
+    @Synchronized
+    private fun reliableEngineFor(reg: Registration): ReliableChannelEngine {
+        reg.reliable?.let { return it }
+        val engine = ReliableChannelEngine(sendRaw = { send(it, reg.origin) })
+        reg.reliable = engine
+        retransmitSchedule.scheduleTick(reg.origin, ReliableChannelEngine.DEFAULT_RETRANSMIT_TICK_MILLIS) {
+            engine.onRetransmitTick()
+        }.onFailure { log.warn("Could not arm the retransmit tick for {}", reg.origin, it) }
+        log.info("Opened reliable-ordered channel for {}", reg.origin)
+        return engine
+    }
+
+    /**
+     * Mirrors [deliverData] for the reliable plane: hands each of [payloads] to
+     * the dispatch executor, in order, wrapped in `runCatching` so a throwing
+     * handler cannot kill `mcups-dispatch`. DEBUG-logs and drops when
+     * [Registration.onReliable] is unbound - the right shape for "the peer is
+     * using a feature I am not listening to" (§3.3).
+     */
+    private fun deliverReliable(reg: Registration, payloads: List<ByteArray>): Result<Unit> {
+        val handler = reg.onReliable
+        if (handler == null) {
+            if (payloads.isNotEmpty()) {
+                log.debug("No reliable handler bound for {}, dropping {} payload(s)", reg.origin, payloads.size)
+            }
+            return Result.success(Unit)
+        }
+        return payloads.fold(Result.success(Unit)) { delivered, payload ->
+            delivered.flatMap {
+                runCatching {
+                    dispatch {
+                        runCatching { handler(payload) }.onFailure { log.warn("Reliable handler for {} threw", reg.origin, it) }
+                    }
+                }
+            }
+        }
+    }
+
     // --- ClientChannel ---
 
     override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
@@ -244,7 +397,7 @@ internal class HandshakeCoordinator(
         return keepAliveSchedule.schedule(peer, intervalMillis) {
             val reg = registrations.findByOrigin(peer) ?: return@schedule
             if (KeepAlive.isDue(reg.lastOutboundAt, System.nanoTime(), intervalMillis)) {
-                send(HandshakeProtocol.KEEPALIVE_TOKEN.toByteArray(Charsets.UTF_8), peer)
+                send(TransportWireFormat.keepaliveDatagram(), peer)
                     .onFailure { log.warn("Scheduled keepalive to {} failed", peer, it) }
             }
         }
@@ -259,16 +412,29 @@ internal class HandshakeCoordinator(
     }
 
     override fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
-        val reg = registrations.findByOrigin(peer)
-            ?: return Result.failure(IllegalStateException("No registration for $peer"))
-        val tracker = reg.linkQuality ?: LinkQualityTracker().also { reg.linkQuality = it }
-        tracker.probeIntervalMillis = intervalMillis
-        return probeSchedule.schedule(peer, intervalMillis) {
-            // Re-fetch: a concurrent terminate()/supersede may have dropped the registration.
-            val live = registrations.findByOrigin(peer)?.linkQuality ?: return@schedule
-            live.sweep()
-            send(HandshakeWireFormat.probeRequestMessage(live.beginProbe().toString()).toByteArray(Charsets.UTF_8), peer)
-                .onFailure { log.warn("Scheduled probe to {} failed", peer, it) }
+        // Floor check duplicated verbatim in MultiConnectionUDPClient.startProbe (Issue #34) rather
+        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // any state is touched: writing probeIntervalMillis first would let a rejected call switch
+        // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
+        // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick, and not
+        // on KeepAlive, which held the old poll-division clamp this floor replaces but is
+        // scheduling-cadence policy, not a probe-protocol constant.
+        return runCatching {
+            require(intervalMillis >= TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS) {
+                "intervalMillis must be >= ${TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS}, was $intervalMillis"
+            }
+        }.flatMap {
+            val reg = registrations.findByOrigin(peer)
+                ?: return@flatMap Result.failure(IllegalStateException("No registration for $peer"))
+            val tracker = reg.linkQuality ?: LinkQualityTracker().also { reg.linkQuality = it }
+            tracker.probeIntervalMillis = intervalMillis
+            probeSchedule.scheduleTick(peer, intervalMillis) {
+                // Re-fetch: a concurrent terminate()/supersede may have dropped the registration.
+                val live = registrations.findByOrigin(peer)?.linkQuality ?: return@scheduleTick
+                live.sweep()
+                send(TransportWireFormat.probePingDatagram(live.beginProbe()), peer)
+                    .onFailure { log.warn("Scheduled probe to {} failed", peer, it) }
+            }
         }
     }
 
@@ -281,6 +447,11 @@ internal class HandshakeCoordinator(
     /** Shuts the probe scheduler; called by `MultiConnectionUDPServer.stop()`. */
     fun shutProbe() {
         probeSchedule.shutdown()
+    }
+
+    /** Shuts the retransmit scheduler; called by `MultiConnectionUDPServer.stop()`. */
+    fun shutRetransmit() {
+        retransmitSchedule.shutdown()
     }
 
     override fun bind(peer: InetSocketAddress, onMessage: (String) -> Unit) {
@@ -302,11 +473,41 @@ internal class HandshakeCoordinator(
         if (registrations.removeByOrigin(peer)) {
             keepAliveSchedule.cancel(peer)
             probeSchedule.cancel(peer)
+            retransmitSchedule.cancel(peer)
+            reg?.reliable?.close() // design §7.7: teardown discards un-acked reliable data
             log.info("Deregistered connection for {}", peer)
             if (notifyingDisconnects && reg != null) {
                 onDisconnect(reg.connection, DisconnectReason.TERMINATED)
             }
         }
+    }
+
+    override fun sendReliable(peer: InetSocketAddress, bytes: ByteArray): Result<Unit> {
+        val reg = registrations.findByOrigin(peer)
+            ?: return Result.failure(IllegalStateException("No registration for $peer"))
+        if (bytes.size > reliableMaxMessageBytes) {
+            log.warn(
+                "Reliable send to {} of {} byte(s) exceeds the {}-byte cap",
+                peer, bytes.size, reliableMaxMessageBytes,
+            )
+            return Result.failure(ReliableMessageTooLargeException(bytes.size, reliableMaxMessageBytes))
+        }
+        val engine = reliableEngineFor(reg)
+        return when (val outcome = engine.sendReliable(bytes)) {
+            is ReliableChannelEngine.SendOutcome.Accepted -> Result.success(Unit)
+            ReliableChannelEngine.SendOutcome.WindowFull -> {
+                log.debug("Reliable in-flight window full for {}", peer)
+                Result.failure(ReliableWindowFullException(engine.windowSize))
+            }
+        }
+    }
+
+    override fun bindReliable(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit): Result<Unit> {
+        val reg = registrations.findByOrigin(peer)
+            ?: return Result.failure(IllegalStateException("No registration for $peer"))
+        reg.onReliable = onMessage
+        reliableEngineFor(reg) // arm the tick even for the receive-only case (§3.3)
+        return Result.success(Unit)
     }
 
     /**
@@ -339,6 +540,7 @@ internal class HandshakeCoordinator(
      * @param onMessage the callback each connection invokes for every datagram it receives
      * @return [Result.success] if every connection was actuated, or the first failure
      */
+    @Suppress("DEPRECATION") // calls the now-deprecated Connection.actuate; backs the still-current MultiConnectionUDPServer.start
     fun actuateAll(onMessage: (message: String) -> Unit): Result<Unit> =
         registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
             actuated.flatMap { registration.connection.actuate(onMessage) }
@@ -351,9 +553,26 @@ internal class HandshakeCoordinator(
      * copy of every datagram it receives
      * @return [Result.success] if every connection was actuated, or the first failure
      */
+    @Suppress("DEPRECATION") // calls the now-deprecated Connection.actuateBytes; backs the still-current MultiConnectionUDPServer.startBytes
     fun actuateAllBytes(onMessage: (ByteArray) -> Unit): Result<Unit> =
         registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
             actuated.flatMap { registration.connection.actuateBytes(onMessage) }
+        }
+
+    /**
+     * Binds [onMessage] as the reliable-ordered handler on every registered
+     * connection. Unlike [actuateAll], **every** connection is attempted even if
+     * an earlier one failed - a single peer's full in-flight window (or a
+     * not-yet-open channel) is routine and must not stop the rest from being
+     * bound; only the reported [Result] short-circuits to the first failure.
+     * @param onMessage the callback each connection invokes with the exact-length
+     * payload of every reliable message it receives, once, in send order
+     * @return [Result.success] if every connection was actuated, or the first failure
+     */
+    fun actuateAllReliable(onMessage: (ByteArray) -> Unit): Result<Unit> =
+        registrations.snapshot().fold(Result.success(Unit)) { actuated, registration ->
+            val outcome = bindReliable(registration.origin, onMessage)
+            actuated.flatMap { outcome }
         }
 
     /**
@@ -371,9 +590,27 @@ internal class HandshakeCoordinator(
      * @param bytes the raw payload to send to every client
      * @return [Result.success] if the datagram reached every client, or the first failure
      */
-    fun broadcast(bytes: ByteArray): Result<Unit> =
+    fun broadcast(bytes: ByteArray): Result<Unit> {
+        // Frame once, then fan out - the shared send seam must not double-frame.
+        val datagram = TransportWireFormat.unreliableDatagram(bytes)
+        return registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
+            sent.flatMap { send(datagram, registration.connection.peer) }
+        }
+    }
+
+    /**
+     * Sends [bytes] reliably to every registered client. Unlike [broadcast],
+     * which short-circuits at the first failure, **every** peer is attempted
+     * even if an earlier one failed - a single peer's full in-flight window is
+     * routine and must not stop the broadcast from reaching everyone else; only
+     * the reported [Result] is the first failure (mirrors [terminateAll]'s fold).
+     * @param bytes the raw payload to send reliably to every client
+     * @return [Result.success] if every send was accepted, or the first failure
+     */
+    fun broadcastReliable(bytes: ByteArray): Result<Unit> =
         registrations.snapshot().fold(Result.success(Unit)) { sent, registration ->
-            sent.flatMap { send(bytes, registration.connection.peer) }
+            val outcome = sendReliable(registration.origin, bytes)
+            sent.flatMap { outcome }
         }
 
     /**
@@ -389,6 +626,5 @@ internal class HandshakeCoordinator(
 
     private companion object {
         private val log = LoggerFactory.getLogger(HandshakeCoordinator::class.java)
-        private val REGISTERED_BYTES = HandshakeProtocol.REGISTERED_REPLY.toByteArray(Charsets.UTF_8)
     }
 }

@@ -67,12 +67,18 @@ internal class FakeConnection(
     /** Every payload passed to [push]`(ByteArray)`, in call order. */
     val pushedBytes = mutableListOf<ByteArray>()
 
+    // FakeConnection deliberately keeps these overrides non-deprecated (it is a test fixture,
+    // not public API a consumer migrates off of) - each override the interface's now-deprecated
+    // member, so it warns "overrides a deprecated member but is not marked as deprecated itself"
+    // (OVERRIDE_DEPRECATION) unless suppressed.
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun actuate(onMessage: (message: String) -> Unit): Result<Unit> {
         actuateCalls++
         lastOnMessage = onMessage
         return actuateResult
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun actuateBytes(onMessage: (bytes: ByteArray) -> Unit): Result<Unit> {
         actuateCalls++
         lastOnBytes = onMessage
@@ -84,11 +90,13 @@ internal class FakeConnection(
         return terminateResult
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun push(message: String): Result<Unit> {
         pushed += message
         return pushResult
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun push(bytes: ByteArray): Result<Unit> {
         pushedBytes += bytes
         return pushResult

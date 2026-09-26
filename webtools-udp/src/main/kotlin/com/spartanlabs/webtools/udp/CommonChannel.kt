@@ -15,8 +15,8 @@ import java.net.InetSocketAddress
  * @property origin the post-NAT source address and port the datagram arrived from
  * @property bytes an exact-length copy of the datagram body, decoupled from the
  * reused receive buffer - used only for delivery to a raw-bytes handler
- * @property text the trimmed UTF-8 text of the datagram body - identical to the
- * value the classifier has always seen
+ * @property text the trimmed UTF-8 text of the datagram body - now consulted only
+ * for the unframed `Iam` handshake-bootstrap branch of the classifier
  */
 internal data class Inbound(
     val origin: InetSocketAddress,
@@ -72,6 +72,9 @@ internal class CommonChannel(port: Int) {
         // Right-sized copy: the next receive() reuses packet.data, so a slice of the
         // live buffer handed to the dispatch executor would be a data race.
         val bytes = packet.data.copyOf(packet.length)
+        // text is now consulted only for the unframed `Iam` handshake bootstrap
+        // (HandshakeCoordinator.classify) - every post-REGISTERED datagram is
+        // routed off the DatagramType tag in bytes[0], not off this string.
         val text = String(bytes, Charsets.UTF_8).trim() // unchanged semantics
         Inbound(origin, bytes, text)
     }.onFailure { log.trace("receive() failed: {}", it.message) }

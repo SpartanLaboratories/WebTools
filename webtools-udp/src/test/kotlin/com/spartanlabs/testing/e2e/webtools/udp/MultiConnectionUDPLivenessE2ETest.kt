@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 
 // Level 4b - real client + real server subclass over loopback, idle detection enabled.
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPLivenessE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()

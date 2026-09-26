@@ -2,6 +2,7 @@ package com.spartanlabs.testing.integration.webtools.udp
 
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -32,6 +33,7 @@ import kotlin.test.assertTrue
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerTest {
 
     private val log = LoggerFactory.getLogger(MultiConnectionUDPServerTest::class.java)
@@ -55,12 +57,34 @@ class MultiConnectionUDPServerTest {
         send(DatagramPacket(out, out.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
     }
 
+    private fun DatagramSocket.sendBytesToServer(payload: ByteArray) {
+        send(DatagramPacket(payload, payload.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
+    }
+
+    /** Sends [payload] framed as an 0x90 unreliable application datagram - the only inbound shape a bound handler ever sees. */
+    private fun DatagramSocket.sendFramedToServer(payload: String) =
+        sendBytesToServer(TransportWireFormat.unreliableDatagram(payload.toByteArray(Charsets.UTF_8)))
+
+    private fun DatagramSocket.sendFramedBytesToServer(payload: ByteArray) =
+        sendBytesToServer(TransportWireFormat.unreliableDatagram(payload))
+
     private fun DatagramSocket.receiveText(): String {
         soTimeout = REPLY_TIMEOUT_MILLIS
         val p = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
         receive(p)
         return String(p.data, 0, p.length, Charsets.UTF_8).trim()
     }
+
+    private fun DatagramSocket.receiveBytes(): ByteArray {
+        soTimeout = REPLY_TIMEOUT_MILLIS
+        val p = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
+        receive(p)
+        return p.data.copyOf(p.length)
+    }
+
+    /** Receives one framed 0x90 datagram from the server and returns its stripped, decoded text. */
+    private fun DatagramSocket.receiveFramedText(): String =
+        String(TransportWireFormat.unreliablePayloadOf(receiveBytes())!!, Charsets.UTF_8)
 
     private fun handshakeFrom(client: DatagramSocket, payload: String): String {
         client.sendToServer(payload)
@@ -88,13 +112,12 @@ class MultiConnectionUDPServerTest {
 
     @Test
     @Order(2)
-    fun `an Iam handshake registers a connection and replies with the bare token REGISTERED`() {
+    fun `an Iam handshake registers a connection and replies with the versioned token REGISTERED 2`() {
         val before = connectedClients.size
         DatagramSocket().use { client ->
             val reply = handshakeFrom(client, "Iam alpha")
-            assertEquals("REGISTERED", reply)
+            assertEquals("REGISTERED 2", reply)
             assertFalse(reply.contains("/"))
-            assertFalse(reply.any { it.isDigit() })
 
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
             assertEquals(before + 1, connectedClients.size)
@@ -107,7 +130,7 @@ class MultiConnectionUDPServerTest {
     @Order(3)
     fun `the client-claimed address token in the payload is ignored`() {
         DatagramSocket().use { client ->
-            assertEquals("REGISTERED", handshakeFrom(client, "Iam beta 203.0.113.7"))
+            assertEquals("REGISTERED 2", handshakeFrom(client, "Iam beta 203.0.113.7"))
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
             assertEquals(
                 InetSocketAddress(serverAddress, client.localPort),
@@ -121,11 +144,11 @@ class MultiConnectionUDPServerTest {
     fun `a retransmitted Iam from the same origin repeats REGISTERED and does not re-register`() {
         val before = connectedClients.size
         DatagramSocket().use { client ->
-            assertEquals("REGISTERED", handshakeFrom(client, "Iam gamma"))
+            assertEquals("REGISTERED 2", handshakeFrom(client, "Iam gamma"))
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
             assertEquals(before + 1, connectedClients.size)
 
-            assertEquals("REGISTERED", handshakeFrom(client, "Iam gamma"))
+            assertEquals("REGISTERED 2", handshakeFrom(client, "Iam gamma"))
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
             assertEquals(before + 1, connectedClients.size)
         }
@@ -138,26 +161,26 @@ class MultiConnectionUDPServerTest {
             handshakeFrom(client, "Iam delta")
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-            client.sendToServer("hello-from-delta")
+            client.sendFramedToServer("hello-from-delta")
             assertEquals("hello-from-delta", inbound.getValue("delta").poll(5, TimeUnit.SECONDS))
 
             assertTrue(connectionNamed("delta").push("hello-from-server").isSuccess)
-            assertEquals("hello-from-server", client.receiveText())
+            assertEquals("hello-from-server", client.receiveFramedText())
         }
     }
 
     @Test
     @Order(6)
-    fun `keepAlive puts a KA on the wire and an inbound KA is consumed without reaching the handler`() {
+    fun `keepAlive puts an 0x80 keepalive on the wire and an inbound one is consumed without reaching the handler`() {
         DatagramSocket().use { client ->
             handshakeFrom(client, "Iam epsilon")
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
             assertTrue(connectionNamed("epsilon").keepAlive().isSuccess)
-            assertEquals("KA", client.receiveText())
+            assertContentEquals(TransportWireFormat.keepaliveDatagram(), client.receiveBytes())
 
-            client.sendToServer("KA")
-            client.sendToServer("real-message")
+            client.sendBytesToServer(TransportWireFormat.keepaliveDatagram())
+            client.sendFramedToServer("real-message")
             assertEquals("real-message", inbound.getValue("epsilon").poll(5, TimeUnit.SECONDS))
             assertNull(inbound.getValue("epsilon").poll(200, TimeUnit.MILLISECONDS))
         }
@@ -173,8 +196,8 @@ class MultiConnectionUDPServerTest {
                 Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
                 assertTrue(server.pushToAll("broadcast-1").isSuccess)
-                assertEquals("broadcast-1", a.receiveText())
-                assertEquals("broadcast-1", b.receiveText())
+                assertEquals("broadcast-1", a.receiveFramedText())
+                assertEquals("broadcast-1", b.receiveFramedText())
             }
         }
     }
@@ -188,7 +211,7 @@ class MultiConnectionUDPServerTest {
                 handshakeFrom(b, "Iam theta2")
                 Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
-                a.sendToServer("only-for-a")
+                a.sendFramedToServer("only-for-a")
                 assertEquals("only-for-a", inbound.getValue("theta1").poll(5, TimeUnit.SECONDS))
                 assertNull(inbound.getValue("theta2").poll(200, TimeUnit.MILLISECONDS))
             }
@@ -203,7 +226,7 @@ class MultiConnectionUDPServerTest {
         }
         Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
         DatagramSocket().use { recovered ->
-            assertEquals("REGISTERED", handshakeFrom(recovered, "Iam afterstranger"))
+            assertEquals("REGISTERED 2", handshakeFrom(recovered, "Iam afterstranger"))
         }
     }
 
@@ -215,7 +238,7 @@ class MultiConnectionUDPServerTest {
             Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
             assertTrue(connectionNamed("quiet").push("unsolicited").isSuccess)
-            assertEquals("unsolicited", client.receiveText())
+            assertEquals("unsolicited", client.receiveFramedText())
         }
     }
 
@@ -231,7 +254,7 @@ class MultiConnectionUDPServerTest {
         }
         Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
         DatagramSocket().use { recovered ->
-            assertEquals("REGISTERED", handshakeFrom(recovered, "Iam afterjunk"))
+            assertEquals("REGISTERED 2", handshakeFrom(recovered, "Iam afterjunk"))
         }
     }
 
@@ -247,7 +270,7 @@ class MultiConnectionUDPServerTest {
                 assertTrue(connectionNamed("kappa").terminate().isSuccess)
 
                 assertTrue(server.pushToAll("kappa-broadcast").isSuccess)
-                assertEquals("kappa-broadcast", survivor.receiveText())
+                assertEquals("kappa-broadcast", survivor.receiveFramedText())
                 kappa.soTimeout = NO_REPLY_TIMEOUT_MILLIS
                 assertFailsWith<SocketTimeoutException> {
                     kappa.receive(DatagramPacket(ByteArray(64), 64))
@@ -268,7 +291,7 @@ class MultiConnectionUDPServerTest {
                 Thread.sleep(POST_HANDSHAKE_SETTLE_MILLIS)
 
                 assertTrue(server.pushToAll("lambda-broadcast").isSuccess)
-                assertEquals("lambda-broadcast", fresh.receiveText())
+                assertEquals("lambda-broadcast", fresh.receiveFramedText())
                 stale.soTimeout = NO_REPLY_TIMEOUT_MILLIS
                 assertFailsWith<SocketTimeoutException> {
                     stale.receive(DatagramPacket(ByteArray(64), 64))
@@ -296,9 +319,7 @@ class MultiConnectionUDPServerTest {
 
             // embedded 0x00 and trailing 0x0A: String(..).trim() + UTF-8 decode would corrupt this.
             val payload = byteArrayOf(0x00, 0x01, 0x4B, 0x41, 0x0A)
-            client.send(
-                DatagramPacket(payload, payload.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT),
-            )
+            client.sendFramedBytesToServer(payload)
 
             val delivered = bytesInbound.poll(5, TimeUnit.SECONDS)
             assertNotNull(delivered)
@@ -316,11 +337,16 @@ class MultiConnectionUDPServerTest {
             val payload = byteArrayOf(0x20, 0x00, 0x4B, 0x41, 0x0A, 0x20)
             assertTrue(server.pushToAll(payload).isSuccess)
 
-            client.soTimeout = REPLY_TIMEOUT_MILLIS
-            val packet = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
-            client.receive(packet)
-            assertContentEquals(payload, packet.data.copyOf(packet.length))
+            assertContentEquals(TransportWireFormat.unreliableDatagram(payload), client.receiveBytes())
         }
+    }
+
+    @Test
+    @Order(19)
+    fun `the common listener thread is a daemon named mcups-listener`() {
+        val listener = Thread.getAllStackTraces().keys.firstOrNull { it.name == "mcups-listener" && it.isAlive }
+        assertNotNull(listener, "the server's common listener thread should be named mcups-listener")
+        assertTrue(listener.isDaemon)
     }
 
     @Test
@@ -328,6 +354,19 @@ class MultiConnectionUDPServerTest {
     fun `stop terminates connections closes the socket and shuts the executor`() {
         assertTrue(server.stop().isSuccess)
         assertNoReplyTo("Iam clientAfterStop")
+
+        // stop() joins the listener for at most 1 s before it closes the socket, so the listener
+        // can still be alive for a moment after stop() returns - poll rather than check once.
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(2000)
+        while (System.nanoTime() < deadline &&
+            Thread.getAllStackTraces().keys.any { it.name == "mcups-listener" && it.isAlive }
+        ) {
+            Thread.sleep(20)
+        }
+        assertTrue(
+            Thread.getAllStackTraces().keys.none { it.name == "mcups-listener" && it.isAlive },
+            "no mcups-listener thread should survive stop()",
+        )
     }
 
     @AfterAll

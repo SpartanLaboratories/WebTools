@@ -1,5 +1,7 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
+import com.spartanlabs.webtools.udp.DatagramType
+import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
@@ -15,6 +17,7 @@ import kotlin.test.assertTrue
 // across many arm/disarm cycles, independence from the dispatch thread, the overshoot bound,
 // and races with stop().
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -30,13 +33,12 @@ class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
         opened.forEach { runCatching { it.close() } }
     }
 
-    private fun DatagramSocket.nextText(timeoutMillis: Int): Pair<InetSocketAddress, String>? {
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): Pair<InetSocketAddress, ByteArray>? {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(256), 256)
         return try {
             receive(packet)
-            InetSocketAddress(packet.address, packet.port) to
-                String(packet.data, 0, packet.length, Charsets.UTF_8).trim()
+            InetSocketAddress(packet.address, packet.port) to packet.data.copyOf(packet.length)
         } catch (_: SocketTimeoutException) {
             null
         }
@@ -45,15 +47,18 @@ class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
     private fun handshake(client: MultiConnectionUDPClient, peer: DatagramSocket): InetSocketAddress {
         var origin: InetSocketAddress? = null
         val t = Thread {
-            val (from, _) = peer.nextText(5_000)!!
+            val (from, _) = peer.nextBytes(5_000)!!
             origin = from
-            val reg = "REGISTERED".toByteArray()
+            val reg = HandshakeWireFormat.registeredMessage().toByteArray(Charsets.UTF_8)
             peer.send(DatagramPacket(reg, reg.size, from.address, from.port))
         }.apply { start() }
         assertTrue(client.handshake("alice").isSuccess)
         t.join(5_000)
         return origin!!
     }
+
+    private fun isKeepAlive(msg: Pair<InetSocketAddress, ByteArray>?): Boolean =
+        msg != null && DatagramType.ofTagByte(msg.second.getOrNull(0)) == DatagramType.KEEPALIVE
 
     private fun keepAliveThreadCount() =
         Thread.getAllStackTraces().keys.count { it.name == "mcupc-keepalive" && it.isAlive }
@@ -70,12 +75,12 @@ class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
         }
         assertTrue(keepAliveThreadCount() <= 1, "cycles leaked keepalive threads")
 
-        while (peer.nextText(20) != null) { /* drain */ }
+        while (peer.nextBytes(20) != null) { /* drain */ }
         assertTrue(client.startKeepAlive(300L).isSuccess)
         val deadline = System.currentTimeMillis() + 1_500L
         var ka = false
         while (!ka && System.currentTimeMillis() < deadline) {
-            ka = peer.nextText(200)?.second == "KA"
+            ka = isKeepAlive(peer.nextBytes(200))
         }
         assertTrue(ka, "a final arm still delivers KA")
     }
@@ -95,7 +100,7 @@ class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
         val deadline = System.currentTimeMillis() + 1_500L
         var ka = false
         while (!ka && System.currentTimeMillis() < deadline) {
-            ka = peer.nextText(200)?.second == "KA"
+            ka = isKeepAlive(peer.nextBytes(200))
         }
         assertTrue(ka, "KA still flowed while the dispatch thread was wedged")
     }
@@ -105,7 +110,7 @@ class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         handshake(client, peer)
-        while (peer.nextText(20) != null) { /* drain */ }
+        while (peer.nextBytes(20) != null) { /* drain */ }
 
         val interval = 300L
         val poll = 250L // KeepAlive.pollIntervalMillis(300) floors at 250
@@ -117,7 +122,7 @@ class MultiConnectionUDPClientKeepAliveNonFunctionalTest {
         var firstKaAt = 0L
         val deadline = armedAt + interval + poll + slack + 1_000L
         while (firstKaAt == 0L && System.currentTimeMillis() < deadline) {
-            if (peer.nextText(100)?.second == "KA") firstKaAt = System.currentTimeMillis()
+            if (isKeepAlive(peer.nextBytes(100))) firstKaAt = System.currentTimeMillis()
         }
         assertTrue(firstKaAt != 0L, "a KA arrived")
         assertTrue(firstKaAt - armedAt <= interval + poll + slack, "overshoot was ${firstKaAt - armedAt} ms")

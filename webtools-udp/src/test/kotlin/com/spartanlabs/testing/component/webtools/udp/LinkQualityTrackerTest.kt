@@ -97,6 +97,28 @@ class LinkQualityTrackerTest {
     }
 
     @Test
+    fun `snapshot ages an in-flight probe past the horizon itself, with no separate sweep`() {
+        val t = tracker()
+        t.probeIntervalMillis = 250L                // loss horizon = 3 x 250 = 750 ms
+
+        val answered = t.beginProbe()
+        advance(20)
+        t.completeProbe(answered)                   // DELIVERED; seeds the snapshot
+        val unanswered = t.beginProbe()             // never answered in time
+
+        advance(749)                                // the unanswered probe is 749 ms old
+        assertEquals(0.0, assertNotNull(t.snapshot()).packetLossRatio, 0.001, "inside the horizon: not lost yet")
+
+        advance(2)                                  // 751 ms old, and sweep() has not been called
+        assertEquals(0.5, assertNotNull(t.snapshot()).packetLossRatio, 0.001, "snapshot() must age it itself")
+
+        t.completeProbe(unanswered)                 // a PONG arriving after the read aged it
+        val after = assertNotNull(t.snapshot())
+        assertEquals(0.5, after.packetLossRatio, 0.001, "LOST stays terminal: a late PONG cannot un-lose it")
+        assertEquals(1L, after.probesDelivered)
+    }
+
+    @Test
     fun `only the last windowSize probes inform the loss ratio`() {
         val t = tracker(window = 4)
         t.probeIntervalMillis = 100L

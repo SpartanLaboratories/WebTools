@@ -49,7 +49,7 @@ internal interface ClientChannel {
 
     /**
      * Arms (or re-arms) an idle-aware background keepalive toward [peer]: every
-     * ~[intervalMillis] of output silence one `KA` datagram is sent, until
+     * ~[intervalMillis] of output silence one `0x80` keepalive datagram is sent, until
      * [cancelKeepAlive], the registration is removed, or the server stops. Last
      * call wins - a repeat call replaces the schedule.
      * @param peer the client endpoint to keep alive
@@ -68,13 +68,15 @@ internal interface ClientChannel {
 
     /**
      * Arms (or re-arms) an opt-in link-quality probe toward [peer]: every
-     * [intervalMillis] one `PING <seq>` is sent, and each matching `PONG` updates a
-     * per-connection smoothed RTT / jitter / loss estimate readable via
+     * [intervalMillis] one `0x81` probe datagram is sent, and each matching `0x82`
+     * reply updates a per-connection smoothed RTT / jitter / loss estimate readable via
      * [linkQualityOf]. Last call wins - a repeat call replaces the schedule. Runs
      * until [cancelProbe], the registration is removed, or the server stops.
      * @param peer the client endpoint to probe
-     * @param intervalMillis probe period; must be > 0
+     * @param intervalMillis probe period; must be >=
+     * [TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS] (250 ms)
      * @return [Result.success] once armed; [Result.failure] with an
+     * [IllegalArgumentException] if [intervalMillis] is below the floor, an
      * [IllegalStateException] if [peer] is not registered, or the failure that
      * prevented arming the schedule
      */
@@ -95,4 +97,30 @@ internal interface ClientChannel {
      * @return the current [LinkQuality], or `null`
      */
     fun linkQualityOf(peer: InetSocketAddress): LinkQuality?
+
+    /**
+     * Offers [bytes] to [peer]'s reliable-ordered channel, creating the engine and
+     * arming its retransmit tick on first use.
+     * @param peer the client endpoint to send to
+     * @param bytes the application payload to send reliably
+     * @return success once accepted for reliable delivery (buffered and sequenced -
+     * not necessarily already on the wire); failure with
+     * [ReliableMessageTooLargeException] if [bytes] exceeds the cap,
+     * [ReliableWindowFullException] if the in-flight window is full, or
+     * [IllegalStateException] if [peer] is no longer registered
+     */
+    fun sendReliable(peer: InetSocketAddress, bytes: ByteArray): Result<Unit>
+
+    /**
+     * Binds [onMessage] as [peer]'s reliable-ordered inbound handler. Independent
+     * of [bind]/[bindBytes] - binding one never disturbs the other.
+     * @param peer the client endpoint whose reliable datagrams [onMessage] should receive
+     * @param onMessage the handler, invoked on the server's dispatch executor
+     * @return [Result.success] once bound; [Result.failure] with an
+     * [IllegalStateException] if [peer] is not registered
+     */
+    fun bindReliable(peer: InetSocketAddress, onMessage: (ByteArray) -> Unit): Result<Unit>
+
+    /** The configured reliable message-size cap, for the channel handle's pre-check KDoc/tests. */
+    val reliableMaxMessageBytes: Int
 }

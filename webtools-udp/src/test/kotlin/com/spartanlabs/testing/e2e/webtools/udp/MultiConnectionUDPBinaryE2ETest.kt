@@ -22,6 +22,7 @@ import kotlin.test.assertTrue
  * [MultiConnectionUDPClientServerE2ETest] so each stays readable.
  */
 @Tag("e2e")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPBinaryE2ETest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -88,7 +89,7 @@ class MultiConnectionUDPBinaryE2ETest {
     }
 
     @Test
-    fun `a payload of exactly KA is swallowed end to end`() {
+    fun `a payload of exactly KA survives intact end to end - the Issue 8 fix`() {
         val server = TestServer()
         val client = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
         try {
@@ -97,8 +98,8 @@ class MultiConnectionUDPBinaryE2ETest {
 
             assertTrue(client.send(byteArrayOf(0x4B, 0x41)).isSuccess)
             assertTrue(client.send("after".toByteArray()).isSuccess)
+            awaitBytes(server.bytesInbound.getValue("carol"), byteArrayOf(0x4B, 0x41))
             awaitBytes(server.bytesInbound.getValue("carol"), "after".toByteArray())
-            assertTrue(server.bytesInbound.getValue("carol").none { it.contentEquals(byteArrayOf(0x4B, 0x41)) })
         } finally {
             client.stop()
             server.stop()
@@ -106,7 +107,7 @@ class MultiConnectionUDPBinaryE2ETest {
     }
 
     @Test
-    fun `a burst of N ordered binary frames arrives in order`() {
+    fun `a burst of N ordered binary frames arrives in order - any first byte, no reserved lead byte`() {
         val server = TestServer()
         val client = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
         try {
@@ -114,11 +115,11 @@ class MultiConnectionUDPBinaryE2ETest {
             Thread.sleep(SETTLE_MILLIS)
             val seen = ConcurrentLinkedQueue<Int>()
             val done = CountDownLatch(BURST)
-            // lead byte 0x00 keeps every frame out of the classifier
-            server.connectionsByName.getValue("dave").actuateBytes { seen += it[1].toInt(); done.countDown() }
+            // Framing (not a reserved lead byte) is what keeps every frame out of the classifier now.
+            server.connectionsByName.getValue("dave").actuateBytes { seen += it[0].toInt(); done.countDown() }
             Thread.sleep(SETTLE_MILLIS)
 
-            repeat(BURST) { i -> assertTrue(client.send(byteArrayOf(0x00, i.toByte())).isSuccess) }
+            repeat(BURST) { i -> assertTrue(client.send(byteArrayOf(i.toByte())).isSuccess) }
             assertTrue(done.await(5, TimeUnit.SECONDS), "all $BURST frames delivered")
             assertEquals((0 until BURST).toList(), seen.toList())
         } finally {

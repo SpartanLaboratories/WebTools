@@ -20,7 +20,76 @@
 // transport-level PING/PONG round trip yielding a smoothed RTT, RTT-variance, and windowed
 // packet-loss ratio (LinkQuality); off by default; one lazily-created daemon
 // ScheduledExecutorService per side. New wire tokens PING/PONG, additive (Issue #13).
-version = "1.6.0"
+// 2.0.0-alpha1: framed transport wire break (Issue #14, Stage 1 of the 2.0 series) -
+// every post-REGISTERED datagram leads with a 1-byte DatagramType tag (0x80 keepalive,
+// 0x81/0x82 probe PING/PONG with an 8-byte sequence, 0x90 unreliable data + channel byte);
+// handshake stays text; REGISTERED reply gains a protocol-version token (REGISTERED 2) so a
+// cross-major peer fails handshake() cleanly (IncompatibleProtocolException). Removes the
+// HandshakeWireFormat KA/PING/PONG token API and the Issue #8 "lead byte >= 0x80" burden.
+// 0xA0/0xA1 reserved for the Stage-2 reliable engine.
+// 2.0.0-alpha2: internal reliable-ordered engine (Issue #14, Stage 2 of the 2.0 series) -
+// 0xA0/0xA1 promoted from reserved to live DatagramType entries (RELIABLE_DATA / RELIABLE_ACK);
+// new internal reliable header codec (ReliableWireFormat), RFC 1982 uint16 serial-number
+// arithmetic (SerialSequence), a private per-channel RTO estimator on the Issue #13 Rtt pure
+// functions with Karn's algorithm (ReliableRtoEstimator), a rolling outbound retransmit
+// sequence buffer with the fixed in-flight window (ReliableRetransmitBuffer), a bounded
+// inbound reorder buffer (ReliableReorderBuffer), and the orchestrating ReliableChannelEngine -
+// all internal, socket-free, and unwired. No new production capability in HandshakeCoordinator /
+// MultiConnectionUDPClient; the two newly-live tags still WARN-drop exactly as a reserved tag
+// did in alpha1 - only enough of a touch to keep both files compiling against the wider
+// DatagramType enum. Public channel API + real socket wiring is Stage 3.
+// 2.0.0-alpha3: the public reliable channel API (Issue #14, Stage 3 of the 2.0 series) -
+// DeliveryMode (UNRELIABLE / RELIABLE_ORDERED), UdpChannel (send/actuate/actuateBytes) and
+// Connection.channel(mode) / MultiConnectionUDPClient.channel(mode); two typed failures,
+// ReliableWindowFullException and ReliableMessageTooLargeException, sharing the open
+// ReliableSendFailure supertype; a message-size cap (reliableMaxMessageBytes, default 1024,
+// max 8192) on both server and client constructors. The Stage-2 ReliableChannelEngine is
+// wired live into HandshakeCoordinator / UDPConnection / MultiConnectionUDPClient /
+// MultiConnectionUDPServer - the 0xA0/0xA1 frames now go out on the wire - behind a new
+// lazily-created mcup{c,s}-retransmit PeriodicScheduler thread per side (a new internal
+// PeriodicSchedule.scheduleTick seam, since the existing schedule() cannot express a
+// sub-250ms cadence). Eight pre-existing members ship deprecated (WARNING) with a working
+// ReplaceWith, fully functional: Connection.push(String|ByteArray)/actuate/actuateBytes and
+// MultiConnectionUDPClient.send(String|ByteArray)/start/startBytes. Server-wide
+// MultiConnectionUDPServer.start/startBytes/pushToAll are not deprecated (no per-Connection
+// replacement) and gain reliable siblings startReliable/pushToAllReliable. No new public
+// signature is removed; additive at both the API and wire level.
+// 2.0.0-alpha4: link-quality probe cadence fix (Issue #34) - HandshakeCoordinator.scheduleProbe
+// and MultiConnectionUDPClient.startProbe move from PeriodicSchedule.schedule (poll-divided,
+// intervalMillis/4 clamped to 250..5000ms, with no due-ness check in the probe tick) to
+// scheduleTick (exact cadence, the Stage-3 seam), so the probe now fires once per configured
+// interval - previously too slow below 250 ms, exactly 4x too fast at the 1 s default, and more
+// than 4x too fast above 20 s. New public TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS = 250L;
+// both entry points now reject an intervalMillis below it with IllegalArgumentException rather
+// than silently clamping. The interval is now validated before any state is touched, which also
+// fixes a rejected startProbe (e.g. 0 after a successful arm) overwriting the running probe's
+// interval and permanently disabling its loss detection. LinkQualityTracker.snapshot() now sweeps
+// before reporting, so linkQuality() reflects loss as of the call; a probe still unanswered at
+// stopProbe() therefore settles to lost within three intervals instead of staying uncounted.
+// No wire change; a behavioural correction plus a narrowed, enforced input range on an
+// unpublished alpha.
+// 2.0.0-alpha5: receiver-side channel-byte guard (Issue #40) - HandshakeCoordinator and
+// MultiConnectionUDPClient now drop a 0x90/0xA0/0xA1 whose channel byte is non-zero, with a
+// WARN naming the channel and sender, after existing origin screening and before any
+// delivery, ack processing, or reliable-engine creation - closing the forward-compatibility
+// hazard of silently treating a future 2.x minor's reserved channel as channel 0x00 ahead of
+// the Stable Core freeze. New internal ReliableWireFormat.reliableChannelOf, mirroring the
+// existing public TransportWireFormat.unreliableChannelOf (now wired in for the first time).
+// Liveness stamping and all channel-0x00 behaviour unchanged; no ack is sent for a dropped
+// frame. No public API change; the drop is a receive-side behavioural narrowing on an
+// unpublished alpha.
+// 2.0.0: the settled release of the 2.0.0-alpha1..alpha5 series above (Issue #14, Stage 4 of
+// the 2.0 series). Relative to 1.6.0: a wire break - every post-handshake datagram is framed
+// with a 1-byte DatagramType tag and the handshake reply is REGISTERED 2, so both ends must be
+// on 2.0.0+; the public reliable-ordered channel (DeliveryMode / UdpChannel / channel(mode),
+// typed ReliableSendFailure results, reliableMaxMessageBytes) beside the unreliable one, with
+// eight older members deprecated at WARNING and still fully functional; the Issue #34
+// probe-cadence fix with its 250 ms floor; and the channel-byte guard (receivers drop a
+// non-zero channel byte). Stage 4 itself: the server's common listener thread is named
+// mcups-listener; everything else is README, comment-only KDoc, two new reference docs
+// (docs/webtools-udp-protocol.md, docs/webtools-udp-architecture.md) and dated as-built notes on
+// the design doc. The whole public surface is Stable Core - see the README's API stability note.
+version = "2.0.0"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

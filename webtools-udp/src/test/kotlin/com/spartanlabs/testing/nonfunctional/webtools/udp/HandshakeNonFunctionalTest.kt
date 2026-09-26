@@ -6,6 +6,8 @@ import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInstance
 import java.net.DatagramPacket
@@ -47,6 +49,8 @@ class HandshakeNonFunctionalTest {
             idleTimeoutMillis = 0L,
             keepAliveSchedule = FakePeriodicSchedule(),
             probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         )
 
         coordinator.accept(origin, "Iam spoofer 8.8.8.8 1.1.1.1")
@@ -69,6 +73,8 @@ class HandshakeNonFunctionalTest {
             idleTimeoutMillis = 0L,
             keepAliveSchedule = FakePeriodicSchedule(),
             probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
         )
 
         repeat(STORM_SIZE) { coordinator.accept(origin, "Iam stormclient") }
@@ -130,7 +136,7 @@ class HandshakeNonFunctionalTest {
             Thread.sleep(100) // let onClientConnect register the connection
             server.start { msg -> seen += msg.toInt(); done.countDown() }
             repeat(BURST) { i ->
-                val out = i.toString().toByteArray()
+                val out = TransportWireFormat.unreliableDatagram(i.toString().toByteArray(Charsets.UTF_8))
                 client.send(DatagramPacket(out, out.size, loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
             }
             assertTrue(done.await(10, TimeUnit.SECONDS), "all $BURST messages delivered")

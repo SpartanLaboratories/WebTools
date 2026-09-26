@@ -137,7 +137,129 @@ class MultiConnectionUDPServerUatTest {
         //           to ~0.0 within a few horizons after the netem rule is removed.
         // PASS (overall): the numbers are usable for sizing an interpolation delay
         //           (rttMillis + k * rttVarianceMillis) and an adaptive send rate.
+        // 6. Also call `startProbe(100)` (below the 250 ms floor) directly.
+        // PASS (d): startProbe(100) returns Result.failure with an IllegalArgumentException and
+        //           the already-armed probe keeps running unchanged (Issue #34); the earlier
+        //           packet capture from steps 2-5 shows PING (0x81) volume matching the
+        //           configured interval exactly (one per second at the default), not up to ~4x
+        //           faster as before the Issue #34 fix.
         // FAIL: rttMillis is wildly off the `ping` ground truth, variance/loss do not move with
-        //       the injected impairment, or loss never recovers after the impairment stops.
+        //       the injected impairment, loss never recovers after the impairment stops,
+        //       startProbe(100) succeeds or silently clamps instead of rejecting, or PING volume
+        //       runs faster than the configured interval.
+    }
+
+    @Test
+    @Disabled("Manual: needs a real 1.6.0 jar on one classpath. Issue #14 Stage 1 - the framed-transport wire break.")
+    fun `a 1 6 0 client against a 2 0 0-alpha1 server, and the reverse, both fail handshake cleanly`() {
+        // 1a. Run a `webtools-udp` `2.0.0-alpha1` MultiConnectionUDPServer subclass. From a
+        //     machine on the published `1.6.0` jar's classpath, MultiConnectionUDPClient(...)
+        //     .handshake("legacy").
+        // PASS: handshake() fails with an IncompatibleProtocolException (remoteVersion = null on
+        //       the 1.6.0 side, since 1.x has no such type - the 1.x client instead sees its own
+        //       "Expected 'REGISTERED' but got 'REGISTERED 2'" IllegalStateException). No framed
+        //       traffic is exchanged; the server log names the version mismatch (or, for the
+        //       1.x-client case, an inert transient registration per plan §7 - never addressed
+        //       once the client goes silent).
+        // 1b. The reverse: a `1.6.0` MultiConnectionUDPServer against a `2.0.0-alpha1` client.
+        // PASS: the 2.0.0 client's handshake() fails with IncompatibleProtocolException
+        //       (remoteVersion = 1) - a clean, typed, early failure, not a garbage session.
+        // FAIL: either direction "succeeds" the handshake and then exchanges data one side
+        //       delivers to its application as garbage (the pre-fix Issue #8 failure mode).
+    }
+
+    @Test
+    @Disabled("Manual: real WAN/NAT path with `tc netem` available. Issue #14 Stage 1 - framed mixed session.")
+    fun `a GameTools-style mixed session survives interleaved binary snapshots and text events over a real path`() {
+        // 1. Run a `2.0.0-alpha1` MultiConnectionUDPServer subclass on a host with a public,
+        //    routable IP; onClientConnect binds both an actuateBytes echo and starts a
+        //    server-side keepalive + probe.
+        // 2. From a NAT'd machine (optionally under `tc netem` loss/jitter): handshake, start,
+        //    startKeepAlive(), startProbe(), then run a multi-minute loop sending per-tick binary
+        //    world-state snapshots via send(ByteArray) interleaved with occasional text chat
+        //    events via send(String) - including at least one snapshot whose first byte is each
+        //    of 0x00, 0x4B ("K"), 0x81, and 0x90, deliberately covering the retired Issue #8
+        //    lead-byte advice.
+        // PASS: every snapshot and every chat event arrives at the peer byte-exact / text-exact,
+        //       in send order; the bound handler never receives a keepalive or probe frame;
+        //       linkQuality() reports a plausible RTT throughout.
+        // FAIL: any snapshot is corrupted, dropped, or misrouted as a control frame; the
+        //       classifier is ever seen to misfire on an arbitrary first byte.
+    }
+
+    @Test
+    @Disabled("Manual: real lossy WAN/NAT path with `tc netem` available. Issue #14 Stage 3 - the reliable-ordered channel.")
+    fun `a GameTools-style session interleaves reliable events and unreliable snapshots over a real lossy path`() {
+        // 1. Run a `2.0.0-alpha3`+ MultiConnectionUDPServer subclass on a host with a public,
+        //    routable IP; onClientConnect binds a per-tick handler on
+        //    connection.channel(DeliveryMode.UNRELIABLE) for world-state snapshots AND a
+        //    separate handler on connection.channel(DeliveryMode.RELIABLE_ORDERED) for
+        //    ability-cast / chat / inventory events, logging each with a monotonic receipt index.
+        // 2. From a NAT'd machine, under `tc netem loss 5-10% delay 40ms 20ms`: handshake, then
+        //    run a multi-minute loop sending ~20 unreliable snapshots/second via
+        //    channel(UNRELIABLE).send(...) interleaved with an ability-cast/chat/inventory event
+        //    every few seconds via channel(RELIABLE_ORDERED).send(...), logging the send order
+        //    of the reliable events locally.
+        // PASS (a): every reliable event the client sent arrives at the server exactly once, in
+        //           the exact order the client sent them (compare the client's local send log
+        //           against the server's receipt log).
+        // PASS (b): the reverse direction (server -> client) shows the same guarantee for a
+        //           matching stream of server-originated reliable events.
+        // PASS (c): head-of-line blocking on the reliable stream is visible but bounded - a lost
+        //           reliable datagram delays delivery of reliable events sent after it (and,
+        //           because delivery shares one dispatch thread, briefly delays snapshot delivery
+        //           too) but never longer than a few retransmit RTOs, and the snapshot stream
+        //           itself never stalls or reorders because of it.
+        // 3. Mid-session, inject `tc qdisc change dev <if> root netem loss 100%` for ~5 seconds
+        //    (a full link blackout), then remove it.
+        // PASS (d): reliable events sent during the blackout are retransmitted and arrive, in
+        //           order, once the link recovers - none are silently dropped; the snapshot
+        //           stream simply resumes with no attempt to "catch up" stale ticks (as expected
+        //           for UNRELIABLE - newest-wins is the point).
+        // FAIL: any reliable event is duplicated, reordered, or permanently lost; the reliable
+        //       stream's head-of-line blocking visibly stalls the snapshot stream for longer than
+        //       a few RTOs; or the channel does not recover after the blackout ends.
+        // 4. (Issue #40) While the session in steps 1-3 is running, from the same NAT'd machine's
+        //    raw socket harness (bypassing the library's own channel(...).send, which never emits a
+        //    non-zero channel), interleave a handful of channel-0x01 0x90 and 0xA0 frames among the
+        //    normal channel-0x00 unreliable snapshots and reliable events.
+        // PASS (e): the server log shows exactly one WARN per such frame, each naming the channel
+        //           byte and the sender's address/port - an operator reading the log can tell which
+        //           peer sent an unsupported channel and how often; the game's snapshot and
+        //           reliable-event handlers never see any of them; the channel-0x00 traffic in steps
+        //           1-3 is completely unaffected by their presence.
+        // FAIL (e): any of the injected frames is delivered to a handler, the server log is silent
+        //           about them, or a WARN does not identify the sending peer.
+    }
+
+    @Test
+    @Disabled("Manual: real lossy WAN/NAT path with `tc netem` available. Issue #14 - the server-wide reliable conveniences.")
+    fun `startReliable and pushToAllReliable serve every already-connected client over a real lossy path`() {
+        // 1. Run a `2.0.0-alpha3`+ MultiConnectionUDPServer subclass on a host with a public,
+        //    routable IP.
+        // 2. From two NAT'd machines, handshake both clients first. Only THEN call
+        //    server.startReliable(handler) once, logging each receipt with the sending client's
+        //    identity and a monotonic receipt index.
+        // 3. Under `tc netem loss 5-10% delay 40ms 20ms` on both clients' paths: have each client
+        //    send a stream of reliable events (channel(RELIABLE_ORDERED).send(...)) a few seconds
+        //    apart, logging its own send order locally. Alongside, the server drives
+        //    pushToAllReliable on a ~2 s cadence for several minutes, interleaved with the
+        //    existing unreliable pushToAll.
+        // PASS (a): the single startReliable call serves both already-connected clients - every
+        //           event from each arrives exactly once, in that client's send order.
+        // PASS (b): every pushToAllReliable payload arrives at both clients exactly once and in
+        //           broadcast order, and never on either client's unreliable handler.
+        // 4. Mid-session, physically pull one client's network (or `kill -9` it) WITHOUT
+        //    terminating it server-side, so its reliable window fills and never drains.
+        // PASS (c) - the fold, over a real path: the other client keeps receiving every
+        //           subsequent pushToAllReliable payload, while the call's Result reports the
+        //           stalled peer's ReliableWindowFullException.
+        // 5. Restore that client's link (or have the operator terminate it server-side).
+        // PASS (d): the broadcast stream it missed is retransmitted and arrives in order once the
+        //           link recovers, or the operator's termination lets the broadcast Result return
+        //           to success.
+        // FAIL: a stalled peer silently stops the broadcast reaching the healthy one; a
+        //       late-handshaking client is bound by an earlier startReliable; or a broadcast
+        //       payload is duplicated or reordered at any client.
     }
 }

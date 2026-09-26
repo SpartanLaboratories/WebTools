@@ -1,8 +1,9 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
 import com.spartanlabs.webtools.udp.Connection
-import com.spartanlabs.webtools.udp.HandshakeWireFormat
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -18,6 +19,7 @@ import kotlin.test.assertTrue
 // Level 4c - robustness of the server-side link-quality probe under many connections, the
 // zero-cost-when-unused guarantee, and the bounded responder path.
 @Tag("nonfunctional")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPServerProbeNonFunctionalTest {
 
     private val serverAddress: InetAddress = InetAddress.getLoopbackAddress()
@@ -45,10 +47,20 @@ class MultiConnectionUDPServerProbeNonFunctionalTest {
         }
     }
 
+    private fun DatagramSocket.nextBytes(timeoutMillis: Int): ByteArray? {
+        soTimeout = timeoutMillis
+        val packet = DatagramPacket(ByteArray(256), 256)
+        return try {
+            receive(packet); packet.data.copyOf(packet.length)
+        } catch (_: SocketTimeoutException) {
+            null
+        }
+    }
+
     private fun sawProbeRequest(client: DatagramSocket, windowMillis: Long): Boolean {
         val deadline = System.currentTimeMillis() + windowMillis
         while (System.currentTimeMillis() < deadline) {
-            if (client.nextText(150)?.let { HandshakeWireFormat.isProbeRequest(it) } == true) return true
+            if (client.nextBytes(150)?.let { DatagramType.ofTagByte(it.getOrNull(0)) == DatagramType.PROBE_PING } == true) return true
         }
         return false
     }
@@ -125,12 +137,12 @@ class MultiConnectionUDPServerProbeNonFunctionalTest {
             handshake(client, "c")
             assertTrue(await(3_000L) { byName.size == 1 })
 
-            // A burst of PING and data from the client - the server answers PING inline but
-            // never allocates a LinkQualityTracker for the connection.
+            // A burst of PROBE_PING and data from the client - the server answers PROBE_PING
+            // inline but never allocates a LinkQualityTracker for the connection.
             repeat(20) { i ->
-                val ping = HandshakeWireFormat.probeRequestMessage(i.toString()).toByteArray(Charsets.UTF_8)
+                val ping = TransportWireFormat.probePingDatagram(i.toLong())
                 client.send(DatagramPacket(ping, ping.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-                val data = "d$i".toByteArray(Charsets.UTF_8)
+                val data = TransportWireFormat.unreliableDatagram("d$i".toByteArray(Charsets.UTF_8))
                 client.send(DatagramPacket(data, data.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
             }
             Thread.sleep(300)
@@ -161,11 +173,11 @@ class MultiConnectionUDPServerProbeNonFunctionalTest {
 
             var pongs = 0
             repeat(10) { i ->
-                val ping = HandshakeWireFormat.probeRequestMessage(i.toString()).toByteArray(Charsets.UTF_8)
+                val ping = TransportWireFormat.probePingDatagram(i.toLong())
                 client.send(DatagramPacket(ping, ping.size, serverAddress, MultiConnectionUDPServer.COMMON_LISTEN_PORT))
-                if (client.nextText(500)?.let { HandshakeWireFormat.isProbeReply(it) } == true) pongs++
+                if (client.nextBytes(500)?.let { DatagramType.ofTagByte(it.getOrNull(0)) == DatagramType.PROBE_PONG } == true) pongs++
             }
-            assertTrue(pongs >= 8, "PONGs kept flowing inline while dispatch was wedged, saw $pongs")
+            assertTrue(pongs >= 8, "0x82 PROBE_PONGs kept flowing inline while dispatch was wedged, saw $pongs")
         }
     }
 }

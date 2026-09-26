@@ -2,7 +2,9 @@ package com.spartanlabs.testing.integration.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
 import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
+import com.spartanlabs.webtools.udp.HandshakeWireFormat
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -23,6 +25,7 @@ import kotlin.test.assertTrue
 // Level 3 - real sockets, real threads: MultiConnectionUDPClient exercised against a fake
 // peer DatagramSocket standing in for the server side of the handshake and session.
 @Tag("integration")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPClientTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -51,6 +54,14 @@ class MultiConnectionUDPClientTest {
         send(DatagramPacket(bytes, bytes.size, target.address, target.port))
     }
 
+    /** Sends [text] to [target] framed as an 0x90 unreliable application datagram. */
+    private fun DatagramSocket.sendFramedTo(target: InetSocketAddress, text: String) =
+        sendBytesTo(target, TransportWireFormat.unreliableDatagram(text.toByteArray(Charsets.UTF_8)))
+
+    /** Sends [bytes] to [target] framed as an 0x90 unreliable application datagram. */
+    private fun DatagramSocket.sendFramedBytesTo(target: InetSocketAddress, bytes: ByteArray) =
+        sendBytesTo(target, TransportWireFormat.unreliableDatagram(bytes))
+
     private fun DatagramSocket.receiveBytes(timeoutMillis: Int = RECEIVE_TIMEOUT_MILLIS): ByteArray {
         soTimeout = timeoutMillis
         val packet = DatagramPacket(ByteArray(RECEIVE_BUFFER_BYTES), RECEIVE_BUFFER_BYTES)
@@ -58,13 +69,13 @@ class MultiConnectionUDPClientTest {
         return packet.data.copyOf(packet.length)
     }
 
-    /** Handshakes [client] against [peer], replying REGISTERED, returning the client's origin. */
+    /** Handshakes [client] against [peer], replying REGISTERED 2, returning the client's origin. */
     private fun handshakeSucceeds(client: MultiConnectionUDPClient, peer: DatagramSocket): InetSocketAddress {
         var origin: InetSocketAddress? = null
         val thread = Thread {
             val (from, _) = peer.receiveText()
             origin = from
-            peer.sendTo(from, "REGISTERED")
+            peer.sendTo(from, HandshakeWireFormat.registeredMessage())
         }.apply { start() }
         assertTrue(client.handshake("alice").isSuccess)
         thread.join(RECEIVE_TIMEOUT_MILLIS.toLong())
@@ -124,40 +135,38 @@ class MultiConnectionUDPClientTest {
         val received = ConcurrentLinkedQueue<String>()
         assertTrue(client.start { received += it }.isSuccess)
 
-        peer.sendTo(origin, "hello")
+        peer.sendFramedTo(origin, "hello")
         awaitQueueContains(received, "hello")
     }
 
     @Test
-    fun `a bare KA from the peer is consumed silently and a following real message still arrives`() {
+    fun `a 0x80 keepalive from the peer is consumed silently and a following real message still arrives`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         val origin = handshakeSucceeds(client, peer)
         val received = ConcurrentLinkedQueue<String>()
         assertTrue(client.start { received += it }.isSuccess)
 
-        peer.sendTo(origin, "KA")
-        peer.sendTo(origin, "still-here")
+        peer.sendBytesTo(origin, TransportWireFormat.keepaliveDatagram())
+        peer.sendFramedTo(origin, "still-here")
         awaitQueueContains(received, "still-here")
         assertFalse(received.contains("KA"))
     }
 
     @Test
-    fun `send puts the exact encoded bytes on the wire to the server address and port`() {
+    fun `send frames the payload as an 0x90 unreliable datagram to the server address and port`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         assertTrue(client.send("hello-server").isSuccess)
-        val (_, text) = peer.receiveText()
-        assertEquals("hello-server", text)
+        assertContentEquals(TransportWireFormat.unreliableDatagram("hello-server".toByteArray(Charsets.UTF_8)), peer.receiveBytes())
     }
 
     @Test
-    fun `sendKeepAlive puts the exact KA bytes on the wire`() {
+    fun `sendKeepAlive puts the exact 0x80 keepalive bytes on the wire`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         assertTrue(client.sendKeepAlive().isSuccess)
-        val (_, text) = peer.receiveText()
-        assertEquals("KA", text)
+        assertContentEquals(TransportWireFormat.keepaliveDatagram(), peer.receiveBytes())
     }
 
     @Test
@@ -169,8 +178,7 @@ class MultiConnectionUDPClientTest {
 
         // The listener thread is now blocked in socket.receive(); a concurrent send must still work.
         assertTrue(client.send("concurrent-send").isSuccess)
-        val (_, text) = peer.receiveText()
-        assertEquals("concurrent-send", text)
+        assertContentEquals(TransportWireFormat.unreliableDatagram("concurrent-send".toByteArray(Charsets.UTF_8)), peer.receiveBytes())
     }
 
     @Test
@@ -186,8 +194,8 @@ class MultiConnectionUDPClientTest {
             }.isSuccess,
         )
 
-        peer.sendTo(origin, "boom")
-        peer.sendTo(origin, "after-throw")
+        peer.sendFramedTo(origin, "boom")
+        peer.sendFramedTo(origin, "after-throw")
         awaitQueueContains(received, "after-throw")
     }
 
@@ -205,7 +213,7 @@ class MultiConnectionUDPClientTest {
             }.isSuccess,
         )
 
-        repeat(BURST) { i -> peer.sendTo(origin, i.toString()) }
+        repeat(BURST) { i -> peer.sendFramedTo(origin, i.toString()) }
         assertTrue(done.await(5, TimeUnit.SECONDS), "all $BURST messages delivered")
         assertEquals((0 until BURST).toList(), received.toList())
     }
@@ -264,18 +272,18 @@ class MultiConnectionUDPClientTest {
     }
 
     @Test
-    fun `send bytes puts the exact bytes on the wire including leading-trailing spaces and an embedded zero`() {
+    fun `send bytes frames the exact payload as an 0x90 datagram including leading-trailing spaces and an embedded zero`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         val payload = byteArrayOf(0x20, 0x41, 0x00, 0x42, 0x20)
 
         assertTrue(client.send(payload).isSuccess)
 
-        assertContentEquals(payload, peer.receiveBytes())
+        assertContentEquals(TransportWireFormat.unreliableDatagram(payload), peer.receiveBytes())
     }
 
     @Test
-    fun `after startBytes an inbound datagram is delivered with no trim and exact length`() {
+    fun `after startBytes an inbound framed datagram is delivered with no trim and exact length`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         val origin = handshakeSucceeds(client, peer)
@@ -283,7 +291,7 @@ class MultiConnectionUDPClientTest {
         assertTrue(client.startBytes { received += it }.isSuccess)
 
         val payload = byteArrayOf(0x20, -0x3D, 0x28, 0x20) // spaces around invalid UTF-8 (C3 28)
-        peer.sendBytesTo(origin, payload)
+        peer.sendFramedBytesTo(origin, payload)
         awaitQueueContainsBytes(received, payload)
     }
 
@@ -296,20 +304,20 @@ class MultiConnectionUDPClientTest {
         assertTrue(client.startBytes { received += it }.isSuccess)
 
         val payload = byteArrayOf(0x00, 0x7F, 0x0A)
-        peer.sendBytesTo(origin, payload)
+        peer.sendFramedBytesTo(origin, payload)
         awaitQueueContainsBytes(received, payload)
     }
 
     @Test
-    fun `a bare KA is still dropped when the listener was armed with startBytes`() {
+    fun `a bare 0x80 keepalive is still dropped when the listener was armed with startBytes`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         val origin = handshakeSucceeds(client, peer)
         val received = ConcurrentLinkedQueue<ByteArray>()
         assertTrue(client.startBytes { received += it }.isSuccess)
 
-        peer.sendTo(origin, "KA")
-        peer.sendBytesTo(origin, byteArrayOf(0x00, 0x01))
+        peer.sendBytesTo(origin, TransportWireFormat.keepaliveDatagram())
+        peer.sendFramedBytesTo(origin, byteArrayOf(0x00, 0x01))
         awaitQueueContainsBytes(received, byteArrayOf(0x00, 0x01))
         assertFalse(received.any { it.contentEquals("KA".toByteArray()) })
     }
@@ -323,7 +331,7 @@ class MultiConnectionUDPClientTest {
 
         captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
             assertTrue(client.start { received += it }.isSuccess)
-            peer.sendTo(origin, "z".repeat(4096))
+            peer.sendFramedTo(origin, "z".repeat(4096))
             awaitQueueNotEmpty(received)
 
             assertTrue(received.first().toByteArray(Charsets.UTF_8).size <= 2048, "delivered text truncated to the buffer")
@@ -336,12 +344,12 @@ class MultiConnectionUDPClientTest {
     }
 
     @Test
-    fun `send String still round-trips as UTF-8`() {
+    fun `send String still round-trips as UTF-8 inside the 0x90 frame`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         assertTrue(client.send("hello-server").isSuccess)
-        val (_, text) = peer.receiveText()
-        assertEquals("hello-server", text)
+        val framed = peer.receiveBytes()
+        assertEquals("hello-server", String(TransportWireFormat.unreliablePayloadOf(framed)!!, Charsets.UTF_8))
     }
 
     private fun awaitQueueContainsBytes(

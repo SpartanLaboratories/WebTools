@@ -2,11 +2,17 @@ package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.ScheduleMethod
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.ClientChannel
+import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
 import com.spartanlabs.webtools.udp.HandshakeProtocol
+import com.spartanlabs.webtools.udp.LinkQualityTracker
+import com.spartanlabs.webtools.udp.ReliableWireFormat
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UDPConnection
+import com.spartanlabs.webtools.udp.UdpChannel
 import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -14,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -22,6 +29,7 @@ import kotlin.test.assertTrue
 // (connection factory, byte sink, registration callback, dispatch) are recording fakes and
 // the dispatch is synchronous, so no socket or thread is involved.
 @Tag("component")
+@Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class HandshakeCoordinatorTest {
 
     private val loopback: InetAddress = InetAddress.getLoopbackAddress()
@@ -39,6 +47,8 @@ class HandshakeCoordinatorTest {
     private var idleTimeoutMillis: Long = 0L
     private val keepAliveSchedule = FakePeriodicSchedule()
     private val probeSchedule = FakePeriodicSchedule()
+    private val retransmitSchedule = FakePeriodicSchedule()
+    private var reliableMaxMessageBytes: Int = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES
 
     private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
     private var admissionToReturn: Admission = Admission.Admitted
@@ -72,11 +82,15 @@ class HandshakeCoordinatorTest {
         idleTimeoutMillis = idleTimeoutMillis,
         keepAliveSchedule = keepAliveSchedule,
         probeSchedule = probeSchedule,
+        retransmitSchedule = retransmitSchedule,
+        reliableMaxMessageBytes = reliableMaxMessageBytes,
     )
 
     private fun HandshakeCoordinator.registerClients(count: Int) {
         repeat(count) { accept(InetSocketAddress(loopback, 41000 + it), "Iam client$it") }
     }
+
+    private fun pingDatagram(): ByteArray = TransportWireFormat.unreliableDatagram("ping".toByteArray(Charsets.UTF_8))
 
     @Test
     fun `a first Iam registers, replies REGISTERED to the origin, and notifies`() {
@@ -86,7 +100,7 @@ class HandshakeCoordinatorTest {
 
         assertEquals(1, coordinator.size)
         assertEquals("alice" to originA, created.single())
-        assertEquals("REGISTERED" to originA, sent.single())
+        assertEquals("REGISTERED 2" to originA, sent.single())
         assertEquals(listOf("alice"), registeredNames)
     }
 
@@ -109,7 +123,7 @@ class HandshakeCoordinatorTest {
         assertEquals(1, coordinator.size)
         assertEquals(1, created.size)
         assertEquals(listOf("alice"), registeredNames, "onRegistered must fire once, not per retransmit")
-        assertEquals(listOf("REGISTERED" to originA, "REGISTERED" to originA), sent)
+        assertEquals(listOf("REGISTERED 2" to originA, "REGISTERED 2" to originA), sent)
     }
 
     @Test
@@ -178,9 +192,11 @@ class HandshakeCoordinatorTest {
         assertEquals(originA, coordinator.snapshot().single().origin)
         assertTrue(disconnects.isEmpty())
         assertEquals(1, created.size)
-        sent.clear()
+        sentBytes.clear()
         coordinator.broadcast("ping")
-        assertEquals(listOf("ping" to originA), sent)
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(pingDatagram(), bytes)
+        assertEquals(originA, to)
     }
 
     @Test
@@ -247,20 +263,21 @@ class HandshakeCoordinatorTest {
         coordinator.accept(originA, "Iam alice")
         val received = mutableListOf<String>()
         coordinator.bind(originA, received::add)
+        val framed = TransportWireFormat.unreliableDatagram("hello world".toByteArray(Charsets.UTF_8))
 
-        assertTrue(coordinator.accept(originA, "hello world").isSuccess)
+        assertTrue(coordinator.accept(originA, framed, "").isSuccess)
 
         assertEquals(listOf("hello world"), received)
     }
 
     @Test
-    fun `accept drops a KA datagram - no dispatch, success`() {
+    fun `accept drops a 0x80 keepalive datagram - no dispatch, success`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         val received = mutableListOf<String>()
         coordinator.bind(originA, received::add)
 
-        assertTrue(coordinator.accept(originA, HandshakeProtocol.KEEPALIVE_TOKEN).isSuccess)
+        assertTrue(coordinator.accept(originA, TransportWireFormat.keepaliveDatagram(), "").isSuccess)
 
         assertTrue(received.isEmpty())
     }
@@ -323,9 +340,11 @@ class HandshakeCoordinatorTest {
         assertEquals("alice", surviving.connection.name)
         assertEquals(originB, surviving.connection.peer)
 
-        sent.clear()
+        sentBytes.clear()
         coordinator.broadcast("ping")
-        assertEquals(listOf("ping" to originB), sent)
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(pingDatagram(), bytes)
+        assertEquals(originB, to)
     }
 
     @Test
@@ -344,6 +363,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -371,6 +392,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -397,6 +420,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
 
         coordinator.accept(originA, "Iam alice")
@@ -447,11 +472,13 @@ class HandshakeCoordinatorTest {
     fun `broadcast sends the message to every registered peer`() {
         val coordinator = newCoordinator()
         coordinator.registerClients(3)
-        sent.clear()
+        sentBytes.clear()
 
         assertTrue(coordinator.broadcast("ping").isSuccess)
 
-        assertEquals(List(3) { "ping" to InetSocketAddress(loopback, 41000 + it) }, sent)
+        val expectedTargets = List(3) { InetSocketAddress(loopback, 41000 + it) }
+        assertEquals(expectedTargets, sentBytes.map { it.second })
+        sentBytes.forEach { (bytes, _) -> assertContentEquals(pingDatagram(), bytes) }
     }
 
     @Test
@@ -488,14 +515,15 @@ class HandshakeCoordinatorTest {
         val received = mutableListOf<ByteArray>()
         coordinator.bindBytes(originA, received::add)
         val payload = byteArrayOf(0x00, 0x20, 0x4B)
+        val framed = TransportWireFormat.unreliableDatagram(payload)
 
-        assertTrue(coordinator.accept(originA, payload, String(payload, Charsets.UTF_8).trim()).isSuccess)
+        assertTrue(coordinator.accept(originA, framed, "").isSuccess)
 
         assertContentEquals(payload, received.single())
     }
 
     @Test
-    fun `a bytes payload that trims to KA is still dropped as a keepalive`() {
+    fun `an unframed bytes payload that trims to KA is dropped as a pre-2 0 datagram, not delivered`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         val bytesSeen = mutableListOf<ByteArray>()
@@ -529,12 +557,14 @@ class HandshakeCoordinatorTest {
 
         coordinator.bind(originA, textSeen::add)
         coordinator.bindBytes(originA, bytesSeen::add)
-        coordinator.accept(originA, "hello".toByteArray(Charsets.UTF_8), "hello")
+        val hello = TransportWireFormat.unreliableDatagram("hello".toByteArray(Charsets.UTF_8))
+        coordinator.accept(originA, hello, "")
         assertTrue(textSeen.isEmpty())
         assertEquals(1, bytesSeen.size)
 
         coordinator.bind(originA, textSeen::add)
-        coordinator.accept(originA, "world".toByteArray(Charsets.UTF_8), "world")
+        val world = TransportWireFormat.unreliableDatagram("world".toByteArray(Charsets.UTF_8))
+        coordinator.accept(originA, world, "")
         assertEquals(listOf("world"), textSeen)
         assertEquals(1, bytesSeen.size)
     }
@@ -576,7 +606,7 @@ class HandshakeCoordinatorTest {
         assertTrue(coordinator.broadcast(payload).isSuccess)
 
         val (bytes, to) = sentBytes.single()
-        assertContentEquals(payload, bytes)
+        assertContentEquals(TransportWireFormat.unreliableDatagram(payload), bytes)
         assertEquals(originA, to)
     }
 
@@ -584,11 +614,13 @@ class HandshakeCoordinatorTest {
     fun `broadcast targets are never a payload-claimed address`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam spoofer 8.8.8.8")
-        sent.clear()
+        sentBytes.clear()
 
         coordinator.broadcast("ping")
 
-        assertEquals(listOf("ping" to originA), sent)
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(pingDatagram(), bytes)
+        assertEquals(originA, to)
         assertFalse(sent.any { it.second.hostString == "8.8.8.8" })
     }
 
@@ -599,17 +631,53 @@ class HandshakeCoordinatorTest {
     private val TERMINATED = com.spartanlabs.webtools.udp.DisconnectReason.TERMINATED
 
     @Test
-    fun `accept refreshes lastInboundAt for data, KA and a retransmitted Iam when tracking is on`() {
+    fun `accept refreshes lastInboundAt for data, a 0x80 keepalive and a retransmitted Iam when tracking is on`() {
         idleTimeoutMillis = 200L
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         val reg = coordinator.snapshot().single()
 
-        listOf("hello", HandshakeProtocol.KEEPALIVE_TOKEN, "Iam alice").forEach { datagram ->
-            reg.lastInboundAt = 0L
-            coordinator.accept(originA, datagram)
-            assertTrue(reg.lastInboundAt > 0L, "'$datagram' must refresh lastInboundAt")
-        }
+        reg.lastInboundAt = 0L
+        coordinator.accept(originA, "hello")
+        assertTrue(reg.lastInboundAt > 0L, "text data must refresh lastInboundAt")
+
+        reg.lastInboundAt = 0L
+        coordinator.accept(originA, TransportWireFormat.keepaliveDatagram(), "")
+        assertTrue(reg.lastInboundAt > 0L, "a 0x80 keepalive must refresh lastInboundAt")
+
+        reg.lastInboundAt = 0L
+        coordinator.accept(originA, "Iam alice")
+        assertTrue(reg.lastInboundAt > 0L, "a retransmitted Iam must refresh lastInboundAt")
+    }
+
+    @Test
+    fun `accept refreshes lastInboundAt and clears timedOut for a channel-0x01 0x90, 0xA0 and 0xA1 too`() {
+        idleTimeoutMillis = 200L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val reg = coordinator.snapshot().single()
+
+        reg.lastInboundAt = 0L
+        reg.timedOut = true
+        coordinator.accept(originA, TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01), "")
+        assertTrue(reg.lastInboundAt > 0L, "a channel-0x01 0x90 must still refresh lastInboundAt")
+        assertFalse(reg.timedOut, "a channel-0x01 0x90 must still clear the timedOut latch")
+
+        reg.lastInboundAt = 0L
+        reg.timedOut = true
+        coordinator.accept(
+            originA,
+            ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(1), channel = 0x01),
+            "",
+        )
+        assertTrue(reg.lastInboundAt > 0L, "a channel-0x01 0xA0 must still refresh lastInboundAt")
+        assertFalse(reg.timedOut, "a channel-0x01 0xA0 must still clear the timedOut latch")
+
+        reg.lastInboundAt = 0L
+        reg.timedOut = true
+        coordinator.accept(originA, ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = 0x01), "")
+        assertTrue(reg.lastInboundAt > 0L, "a channel-0x01 0xA1 must still refresh lastInboundAt")
+        assertFalse(reg.timedOut, "a channel-0x01 0xA1 must still clear the timedOut latch")
     }
 
     @Test
@@ -621,7 +689,7 @@ class HandshakeCoordinatorTest {
         reg.lastInboundAt = 42L
 
         coordinator.accept(originA, "hello")
-        coordinator.accept(originA, HandshakeProtocol.KEEPALIVE_TOKEN)
+        coordinator.accept(originA, TransportWireFormat.keepaliveDatagram(), "")
 
         assertEquals(42L, reg.lastInboundAt)
     }
@@ -641,13 +709,15 @@ class HandshakeCoordinatorTest {
         assertEquals(listOf("alice" to TIMEOUT), disconnects)
         assertEquals(1, coordinator.size)
         assertEquals(originA, coordinator.snapshot().single().origin)
-        sent.clear()
+        sentBytes.clear()
         coordinator.broadcast("ping")
-        assertEquals(listOf("ping" to originA), sent)
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(pingDatagram(), bytes)
+        assertEquals(originA, to)
     }
 
     @Test
-    fun `a KA between sweeps clears the timedOut latch and a later sweep re-reports`() {
+    fun `a 0x80 keepalive between sweeps clears the timedOut latch and a later sweep re-reports`() {
         idleTimeoutMillis = 200L
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
@@ -655,7 +725,7 @@ class HandshakeCoordinatorTest {
 
         reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
         coordinator.sweepIdleConnections()
-        coordinator.accept(originA, HandshakeProtocol.KEEPALIVE_TOKEN)
+        coordinator.accept(originA, TransportWireFormat.keepaliveDatagram(), "")
         reg.lastInboundAt = System.nanoTime() - 1_000_000_000L
         coordinator.sweepIdleConnections()
 
@@ -710,6 +780,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
         coordinator.accept(originA, "Iam alice")
 
@@ -748,6 +820,8 @@ class HandshakeCoordinatorTest {
             idleTimeoutMillis = idleTimeoutMillis,
             keepAliveSchedule = keepAliveSchedule,
             probeSchedule = probeSchedule,
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = reliableMaxMessageBytes,
         )
         coordinator.registerClients(3)
         val past = System.nanoTime() - 1_000_000_000L
@@ -791,16 +865,19 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `the recorded tick sends exactly one KA when lastOutboundAt is in the past`() {
+    fun `the recorded tick sends exactly one 0x80 keepalive when lastOutboundAt is in the past`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         coordinator.scheduleKeepAlive(originA, 300L)
         coordinator.snapshot().single().lastOutboundAt = System.nanoTime() - 1_000_000_000L
-        sent.clear()
+        sentBytes.clear()
 
         keepAliveSchedule.tick(originA)
 
-        assertEquals(listOf(HandshakeProtocol.KEEPALIVE_TOKEN to originA), sent)
+        assertEquals(1, sentBytes.size)
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(TransportWireFormat.keepaliveDatagram(), bytes)
+        assertEquals(originA, to)
     }
 
     @Test
@@ -809,11 +886,11 @@ class HandshakeCoordinatorTest {
         coordinator.accept(originA, "Iam alice")
         coordinator.scheduleKeepAlive(originA, 300L)
         coordinator.snapshot().single().lastOutboundAt = System.nanoTime()
-        sent.clear()
+        sentBytes.clear()
 
         keepAliveSchedule.tick(originA)
 
-        assertTrue(sent.isEmpty())
+        assertTrue(sentBytes.isEmpty())
     }
 
     @Test
@@ -823,11 +900,11 @@ class HandshakeCoordinatorTest {
         coordinator.scheduleKeepAlive(originA, 300L)
         val tick = keepAliveSchedule.scheduleCalls.single().tick
         coordinator.deregister(originA)
-        sent.clear()
+        sentBytes.clear()
 
         tick() // must not throw, must not send
 
-        assertTrue(sent.isEmpty())
+        assertTrue(sentBytes.isEmpty())
     }
 
     @Test
@@ -875,55 +952,65 @@ class HandshakeCoordinatorTest {
     // --- link-quality probe (Issue #13) ---
 
     @Test
-    fun `an inbound PING from a registered origin is answered with exactly one PONG and nothing is dispatched`() {
+    fun `an inbound 0x81 PROBE_PING from a registered origin is answered with exactly one 0x82 PROBE_PONG and nothing is dispatched`() {
         val dispatched = mutableListOf<String>()
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         coordinator.bind(originA) { dispatched += it }
-        sent.clear()
+        sentBytes.clear()
 
-        assertTrue(coordinator.accept(originA, "PING 7").isSuccess)
+        assertTrue(coordinator.accept(originA, TransportWireFormat.probePingDatagram(7L), "").isSuccess)
 
-        assertEquals(listOf("PONG 7" to originA), sent)
+        assertEquals(1, sentBytes.size)
+        val (bytes, to) = sentBytes.single()
+        assertContentEquals(TransportWireFormat.probePongDatagram(7L), bytes)
+        assertEquals(originA, to)
         assertTrue(dispatched.isEmpty())
     }
 
     @Test
-    fun `an inbound PING from an unregistered origin is dropped with no send`() {
+    fun `an inbound 0x81 PROBE_PING from an unregistered origin is dropped with no send`() {
         val coordinator = newCoordinator()
-        sent.clear()
+        sentBytes.clear()
 
-        assertTrue(coordinator.accept(originA, "PING 1").isSuccess)
+        assertTrue(coordinator.accept(originA, TransportWireFormat.probePingDatagram(1L), "").isSuccess)
 
-        assertTrue(sent.isEmpty())
+        assertTrue(sentBytes.isEmpty())
     }
 
     @Test
-    fun `scheduleProbe then the recorded tick sends one PING and creates the estimator`() {
+    fun `scheduleProbe then the recorded tick sends one 0x81 PROBE_PING and creates the estimator`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
 
         assertTrue(coordinator.scheduleProbe(originA, 300L).isSuccess)
         assertEquals(300L, probeSchedule.scheduled.getValue(originA).intervalMillis)
-        sent.clear()
+        assertEquals(
+            ScheduleMethod.TICK,
+            probeSchedule.scheduled.getValue(originA).via,
+            "the probe must arm via scheduleTick, not schedule (Issue #34)",
+        )
+        sentBytes.clear()
 
         probeSchedule.tick(originA)
 
-        assertEquals(1, sent.size)
-        assertTrue(HandshakeProtocol.isProbeRequest(sent.single().first), "was ${sent.single().first}")
-        assertEquals(originA, sent.single().second)
+        assertEquals(1, sentBytes.size)
+        val (bytes, to) = sentBytes.single()
+        assertEquals(DatagramType.PROBE_PING.tag, bytes[0])
+        assertNotNull(TransportWireFormat.probeSequenceOf(bytes))
+        assertEquals(originA, to)
         assertNotNull(coordinator.snapshot().single().linkQuality)
     }
 
     @Test
-    fun `an inbound PONG for a live probe populates linkQualityOf`() {
+    fun `an inbound 0x82 PROBE_PONG for a live probe populates linkQualityOf`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
         coordinator.scheduleProbe(originA, 300L)
         probeSchedule.tick(originA)
-        val token = sent.last().first.substringAfter(' ').trim()
+        val seq = TransportWireFormat.probeSequenceOf(sentBytes.last().first)!!
 
-        assertTrue(coordinator.accept(originA, "PONG $token").isSuccess)
+        assertTrue(coordinator.accept(originA, TransportWireFormat.probePongDatagram(seq), "").isSuccess)
 
         assertNotNull(coordinator.linkQualityOf(originA))
     }
@@ -933,6 +1020,48 @@ class HandshakeCoordinatorTest {
         val coordinator = newCoordinator()
 
         assertTrue(coordinator.scheduleProbe(originA, 300L).isFailure)
+    }
+
+    @Test
+    fun `scheduleProbe below the 250ms floor fails and arms nothing, exactly at the floor succeeds via scheduleTick`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        val below = coordinator.scheduleProbe(originA, 249L)
+        assertTrue(below.isFailure)
+        assertIs<IllegalArgumentException>(below.exceptionOrNull())
+        assertTrue(originA !in probeSchedule.scheduled, "a rejected interval must arm nothing")
+
+        val atFloor = coordinator.scheduleProbe(originA, 250L)
+        assertTrue(atFloor.isSuccess)
+        assertEquals(ScheduleMethod.TICK, probeSchedule.scheduled.getValue(originA).via)
+    }
+
+    @Test
+    fun `a rejected scheduleProbe leaves the running probe's loss horizon intact`() {
+        var nowNanos = 0L
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        // Pre-seed a fake-clock tracker; scheduleProbe reuses any tracker already on reg.linkQuality.
+        coordinator.snapshot().single().linkQuality = LinkQualityTracker(nanoClock = { nowNanos })
+        assertTrue(coordinator.scheduleProbe(originA, 250L).isSuccess)
+
+        probeSchedule.tick(originA) // PING 0 at t = 0
+        val seq0 = TransportWireFormat.probeSequenceOf(sentBytes.last().first)!!
+        assertTrue(coordinator.accept(originA, TransportWireFormat.probePongDatagram(seq0), "").isSuccess)
+        probeSchedule.tick(originA) // PING 1 at t = 0, never answered
+
+        // Pre-fix, this wrote probeIntervalMillis = 0 onto the live tracker before rejecting,
+        // and Rtt.isProbeLost(.., 0) is always false - loss aging was switched off for good.
+        val rejected = coordinator.scheduleProbe(originA, 0L)
+        assertIs<IllegalArgumentException>(rejected.exceptionOrNull())
+        assertEquals(1, probeSchedule.scheduleCalls.size, "a rejected call must never reach the scheduler")
+
+        nowNanos = 760_000_000L // 760 ms: just past the 3 x 250 ms loss horizon
+        probeSchedule.tick(originA) // sweep() must age PING 1 to LOST
+
+        // PING 0 DELIVERED, PING 1 LOST, PING 2 still IN_FLIGHT (not counted): 1 / (1 + 1).
+        assertEquals(0.5, coordinator.linkQualityOf(originA)!!.packetLossRatio, 1e-9)
     }
 
     @Test

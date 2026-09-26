@@ -3,8 +3,10 @@ package com.spartanlabs.webtools.udp
 /**
  * Per-endpoint link-quality accumulator for the opt-in probe. Thread-safe: the
  * probe-scheduler thread calls [beginProbe] / [sweep], the listener thread calls
- * [completeProbe], and any consumer thread calls [snapshot]; every method is
- * `@Synchronized` (contention is ~2 short calls per probe interval).
+ * [completeProbe], and any consumer thread calls [snapshot], which runs [sweep]
+ * itself first; every method is `@Synchronized` on this instance, so that
+ * nesting is reentrant (contention is ~2 short calls per probe interval, plus
+ * one per consumer read).
  *
  * @param nanoClock monotonic time source; injectable for deterministic tests
  * @param windowSize how many recent probes inform the loss ratio (ring capacity)
@@ -42,11 +44,11 @@ internal class LinkQualityTracker(
      * sweep thread.
      */
     @Volatile
-    var probeIntervalMillis: Long = HandshakeProtocol.DEFAULT_PROBE_INTERVAL_MILLIS
+    var probeIntervalMillis: Long = TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS
 
     /**
      * Records a new outstanding probe and returns its sequence number for the
-     * `PING` token. Evicts the oldest probe once the ring is full.
+     * `0x81` probe datagram. Evicts the oldest probe once the ring is full.
      * @return the monotonically increasing sequence number of the new probe
      */
     @Synchronized
@@ -81,7 +83,11 @@ internal class LinkQualityTracker(
         probesDelivered++
     }
 
-    /** Marks every IN_FLIGHT probe that [Rtt.isProbeLost] declares as LOST (a terminal transition). */
+    /**
+     * Marks every IN_FLIGHT probe that [Rtt.isProbeLost] declares as LOST (a terminal
+     * transition). Called by each probe tick and at the start of every [snapshot].
+     * Idempotent at a given clock reading.
+     */
     @Synchronized
     fun sweep() {
         val now = nanoClock()
@@ -95,11 +101,15 @@ internal class LinkQualityTracker(
     /**
      * An immutable snapshot, or `null` until the first probe has been delivered
      * (so a consumer never reads an un-seeded RTT). The loss ratio is over the
-     * ring's terminal (DELIVERED + LOST) probes only.
+     * ring's terminal (DELIVERED + LOST) probes only. Runs [sweep] first, so a
+     * probe past the loss horizon counts as lost as of the moment of the call -
+     * including after the probe schedule has stopped, when no tick sweeps again.
+     * Not a pure read: it may move in-flight probes to LOST, a terminal transition.
      * @return the current [LinkQuality], or `null` if nothing has resolved yet
      */
     @Synchronized
     fun snapshot(): LinkQuality? {
+        sweep() // OD-1 (Issue #34). Reentrant: sweep() is @Synchronized on this same instance.
         if (probesDelivered == 0L) return null
         val lost = ring.count { it.state == State.LOST }
         val delivered = ring.count { it.state == State.DELIVERED }
