@@ -146,7 +146,7 @@ import java.util.concurrent.TimeUnit
  * every connection's retransmit tick.
  *
  * ### Concurrency
- * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
+ * One long-lived daemon listener thread (`mcups-listener`) only *demultiplexes*: `receive()` ->
  * switch on the [DatagramType] tag (or an unframed `Iam`) -> run the socket-free
  * handshake state machine inline, drop a keepalive/probe, or hand the stripped
  * `0x90` payload to the dispatch executor. The
@@ -305,6 +305,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     init {
         log.info("Starting common listener thread on port {}", commonChannel.localPort)
         commonListenerThread = Thread { receiveLoop() }.apply {
+            name = "mcups-listener"
             isDaemon = true
             start()
         }
