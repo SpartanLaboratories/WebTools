@@ -78,6 +78,17 @@
 // Liveness stamping and all channel-0x00 behaviour unchanged; no ack is sent for a dropped
 // frame. No public API change; the drop is a receive-side behavioural narrowing on an
 // unpublished alpha.
+// 2.0.0: the settled release of the 2.0.0-alpha1..alpha5 series above (Issue #14, Stage 4 of
+// the 2.0 series). Relative to 1.6.0: a wire break - every post-handshake datagram is framed
+// with a 1-byte DatagramType tag and the handshake reply is REGISTERED 2, so both ends must be
+// on 2.0.0+; the public reliable-ordered channel (DeliveryMode / UdpChannel / channel(mode),
+// typed ReliableSendFailure results, reliableMaxMessageBytes) beside the unreliable one, with
+// eight older members deprecated at WARNING and still fully functional; the Issue #34
+// probe-cadence fix with its 250 ms floor; and the channel-byte guard (receivers drop a
+// non-zero channel byte). Stage 4 itself: the server's common listener thread is named
+// mcups-listener; everything else is README, comment-only KDoc, two new reference docs
+// (docs/webtools-udp-protocol.md, docs/webtools-udp-architecture.md) and dated as-built notes on
+// the design doc. The whole public surface is Stable Core - see the README's API stability note.
 version = "2.0.0-alpha5"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,

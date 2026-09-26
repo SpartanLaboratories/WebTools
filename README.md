@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0-alpha3")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -25,10 +25,12 @@ dependencies {
 
 Requires JDK 11 or newer. Built with Kotlin 2.2.
 
-`webtools-udp 2.0.0` (currently a pre-release `2.0.0-alphaN` series on the `2.x` integration
-branch) is a **wire break** for everything after the handshake — see [Migrating to
+`webtools-udp 2.0.0` is a **wire break** for everything after the handshake — see [Migrating to
 2.0](#migrating-to-20). Both ends of a connection must be on `2.0.0`+; a `1.x` ↔ `2.x` pairing
-fails the handshake cleanly instead of exchanging data either side can parse.
+fails the handshake cleanly instead of exchanging data either side can parse. See
+[`docs/webtools-udp-protocol.md`](docs/webtools-udp-protocol.md) for the complete wire reference
+and [`docs/webtools-udp-architecture.md`](docs/webtools-udp-architecture.md) for the component,
+thread, and lifecycle picture.
 
 ### Migrating from `io.github.spartanlaboratories:WebTools` (≤ 2.0.1a)
 
@@ -65,6 +67,14 @@ further releases. To move off it:
 | `IncompatibleProtocolException` | Typed `handshake()` failure when the server's `REGISTERED` reply announces a different wire-protocol major than this build speaks (e.g. a `1.x` server). |
 | `resolveLocalAddress()` | Best-effort lookup of this machine's outward-facing local address. |
 
+**API stability.** The whole `webtools-udp` `2.x` public surface — including `DeliveryMode`,
+`DatagramType`, `DisconnectReason`, `UdpChannel`, `ReliableSendFailure` and its subtypes, and
+every other public type — is **Stable Core**: breaking changes only in a major. `DeliveryMode`,
+`DatagramType`, and `DisconnectReason` may each gain a new entry in a **minor** release; keep an
+`else` branch in any `when` over one of them. The eight members deprecated in `2.0.0` (see
+[Migrating to 2.0](#migrating-to-20)) stay fully functional — still compiling, deprecated at
+`WARNING` only — for all of `2.x`, and leave the public surface only at `3.0.0`.
+
 ### `webtools-scraping`
 
 | Type | Purpose |
@@ -84,6 +94,12 @@ further releases. To move off it:
 after it is **framed** — byte 0 is a `DatagramType` tag the listener switches on before it ever
 looks at a payload:
 
+This section summarises the wire; [`docs/webtools-udp-protocol.md`](docs/webtools-udp-protocol.md)
+is the complete, self-contained wire reference (every datagram's byte layout, the as-built
+quirks, and the malformed-input handling), and
+[`docs/webtools-udp-architecture.md`](docs/webtools-udp-architecture.md) covers the threads,
+locks, and lifecycles that move these bytes.
+
 | Direction | Message | Sent to |
 |-----------|---------|---------|
 | client → server | `Iam <name>` | `COMMON_LISTEN_PORT` (`9998`) |
@@ -91,7 +107,7 @@ looks at a payload:
 | server → client | `REGISTERED <version>` (e.g. `REGISTERED 2`) | the **source address and port** of the client's `Iam` datagram |
 | server → client | `REFUSED <reason>` (handshake refused; bare `REFUSED` if no reason) | the **source address and port** of the client's `Iam` datagram |
 | client ↔ server | `0x90 <channel> <payload…>` — application data (`UNRELIABLE`) | port `9998`, from/to the same socket the client sent `Iam` from |
-| client → server | `0x80` — keepalive (`KEEPALIVE`, ~20 s idle cadence) | port `9998`, from the same socket |
+| client ↔ server | `0x80` — keepalive (`KEEPALIVE`, ~20 s idle cadence) | port `9998`, from the same socket |
 | client ↔ server | `0x81 <seq>` / `0x82 <seq>` — link-quality probe (`PROBE_PING` / `PROBE_PONG`; transport-consumed) | port `9998`, same socket |
 | client ↔ server | `0xA0 <channel><seq><ack><ackbits><payload>` — reliable-ordered data (`RELIABLE_DATA`) | port `9998`, same socket |
 | client ↔ server | `0xA1 <channel><ack><ackbits>` — standalone reliable ack (`RELIABLE_ACK`; no payload) | port `9998`, same socket |
@@ -220,7 +236,7 @@ val server = object : MultiConnectionUDPServer() {
 ```kotlin
 val client = MultiConnectionUDPClient(serverAddress)
 client.handshake("alice", credential = base64UrlToken).fold(
-    onSuccess = { client.start { msg -> /* ... */ } },
+    onSuccess = { client.channel(DeliveryMode.UNRELIABLE).actuate { msg -> /* ... */ } },
     onFailure = { ex -> if (ex is HandshakeRefusedException) showError(ex.reason) },
 )
 ```
@@ -328,12 +344,31 @@ reliable message stalls delivery of every reliable message sent after it, and al
 (chat, ability casts, inventory changes) and the unreliable one for frequent state snapshots
 where a stale or dropped update is harmless.
 
-The channel is created lazily — on the first `channel(RELIABLE_ORDERED)` call *or* the first
-inbound reliable datagram, whichever comes first — and arms one shared `mcups-retransmit` /
-`mcupc-retransmit` daemon thread per side (created only once a reliable channel is actually
-used). A `terminate()`, a same-name supersede, or `stop()` on either side discards any un-acked
-data and resets the channel; a send after teardown fails its `Result`. Both ends must be on
-`webtools-udp` `2.0.0`+ — a pre-`2.0.0` peer never emits or answers `0xA0`/`0xA1`.
+The channel is created lazily. On the client, the first reliable `send` *or* the first inbound
+`0xA0`/`0xA1` on channel `0x00` from the server creates it — obtaining the handle via
+`channel(RELIABLE_ORDERED)` or binding its handler alone does not. On the server, the first
+reliable `send` to a peer, the first `startReliable`/`actuate*` binding on that peer's channel,
+or the first inbound reliable datagram on channel `0x00` from a registered peer creates it. (A
+datagram on any other channel is dropped with a WARN and creates nothing.) Either way it arms one
+shared `mcups-retransmit` /
+`mcupc-retransmit` daemon thread per side (created only once a reliable channel is actually used
+on that side). See [`docs/webtools-udp-architecture.md`](docs/webtools-udp-architecture.md) for
+the complete creation/teardown picture. A `terminate()`, a same-name supersede, or `stop()` on
+either side discards any un-acked data and resets the channel; a send after teardown fails its
+`Result`. Both ends must be on `webtools-udp` `2.0.0`+ — a pre-`2.0.0` peer never emits or answers
+`0xA0`/`0xA1`.
+
+**Limits in `2.0`.** Stated loudly because it is the biggest limitation of this feature: **there
+is no congestion control** — no cwnd, no pacing, no loss-triggered rate reduction. Under
+sustained loss the channel retransmits at RTO-backoff cadence up to the in-flight window, then
+fails sends; this is adequate for a low-rate discrete-event stream and inadequate for a
+genuinely congested path. In addition: **no fragmentation** — an oversize message fails
+immediately with `ReliableMessageTooLargeException` rather than being split; **one reliable
+channel per connection** — there is no channel id a consumer can choose; and **no session
+resume** — a `terminate()`, a same-name supersede (NAT rebind), or `stop()` discards all
+in-flight and buffered reliable data and resets the channel, and a fresh registration always
+gets a fresh channel. See [`docs/webtools-udp-protocol.md`](docs/webtools-udp-protocol.md) for
+the wire-level detail behind each of these.
 
 Server-wide conveniences mirror the unreliable ones: `MultiConnectionUDPServer.startReliable` /
 `pushToAllReliable`. Unlike `pushToAll`, `pushToAllReliable` **attempts every peer** even if an
@@ -386,6 +421,20 @@ protocol](#udp-transport-protocol)). **Both ends of a connection must be on `2.0
   are separated by the `DatagramType` tag, there is no longer a reserved first byte to avoid —
   any binary payload, including one that used to collide with `KA`/`PING`/`PONG`, rides an
   `0x90` frame intact. See [Binary application payloads](#binary-application-payloads).
+- **New constructor parameter `reliableMaxMessageBytes`** on both `MultiConnectionUDPServer` and
+  `MultiConnectionUDPClient`: the reliable-channel payload cap, default 1024 bytes, validated to
+  `1..8192`. An oversize reliable `send` fails with `ReliableMessageTooLargeException`.
+- **The link-quality probe runs at its configured interval, with a 250 ms floor.** `startProbe`
+  (on `Connection` and on `MultiConnectionUDPClient`) now fails with `IllegalArgumentException`
+  for an `intervalMillis` below `TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS` (250 ms) instead
+  of silently running at 250 ms, and sends exactly one probe per interval — `1.6.0` probed up to
+  four times too often (exactly 4× at the 1 s default), so `probesSent` and `packetLossRatio`
+  differ from `1.6.0` at the same settings. `linkQuality()` now counts a probe as lost once it
+  is overdue as of the call.
+- **A second `MultiConnectionUDPClient.start` / `startBytes` call now rebinds the handler**
+  instead of starting a second listener: the last call to `start`, `startBytes`, or
+  `channel(DeliveryMode.UNRELIABLE).actuate*` wins, and only the first of them starts the
+  listener thread.
 
 **Deprecations in 2.0.** The public reliable channel API (`connection.channel(mode)` /
 `client.channel(mode)`, see [Reliable-ordered channel](#reliable-ordered-channel)) is additive,
