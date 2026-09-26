@@ -97,8 +97,8 @@ class UDPConnection internal constructor(
     /**
      * Unlike the [Connection] default, this production implementation **does**
      * support a scheduled keepalive: it delegates to the server's shared
-     * `mcups-keepalive` executor via [ClientChannel], which sends an idle-aware `KA`
-     * to [peer] on the given cadence. A non-positive [intervalMillis] surfaces as
+     * `mcups-keepalive` executor via [ClientChannel], which sends an idle-aware `0x80`
+     * keepalive to [peer] on the given cadence. A non-positive [intervalMillis] surfaces as
      * the [ClientChannel]'s [IllegalArgumentException] failure. The schedule is
      * cancelled by [stopKeepAlive] and by [terminate].
      */
@@ -119,8 +119,8 @@ class UDPConnection internal constructor(
     /**
      * Unlike the [Connection] default, this production implementation **does**
      * support a link-quality probe: it delegates to the server's shared
-     * `mcups-probe` executor via [ClientChannel], which sends a periodic `PING` to
-     * [peer] and folds each `PONG` into a per-connection estimator. A non-positive
+     * `mcups-probe` executor via [ClientChannel], which sends a periodic `0x81` probe to
+     * [peer] and folds each `0x82` reply into a per-connection estimator. A non-positive
      * [intervalMillis] or an unregistered [peer] surfaces as the [ClientChannel]'s
      * failure. The schedule is cancelled by [stopProbe] and by [terminate].
      */

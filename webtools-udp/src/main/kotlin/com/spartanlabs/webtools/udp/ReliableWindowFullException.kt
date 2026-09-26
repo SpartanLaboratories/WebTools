@@ -7,6 +7,8 @@ package com.spartanlabs.webtools.udp
  * of [HandshakeRefusedException] in that respect. This is backpressure, not an
  * error: retry after the next retransmit tick, coalesce the message with a
  * later one, or drop it.
+ *
+ * **Stable Core.** Full semver guarantee — breaking changes only in a major.
  * @property inFlight how many messages were unacked when the send was rejected
  */
 class ReliableWindowFullException(val inFlight: Int) : ReliableSendFailure(

@@ -123,9 +123,15 @@ import java.util.concurrent.Executors
  * `0xA0`/`0xA1` traffic to the server - see [UdpChannel] and [DeliveryMode] for
  * the full contract, including the size cap ([reliableMaxMessageBytes]), the
  * in-flight-window backpressure ([ReliableWindowFullException]), and the
- * inherent head-of-line blocking. Lazily created on the first
- * `channel(RELIABLE_ORDERED)` call or the first inbound `0xA0`/`0xA1`, whichever
- * comes first; a send after [stop] fails with [IllegalStateException].
+ * inherent head-of-line blocking. The channel's engine is created lazily, on the
+ * first reliable `send` or the first inbound `0xA0`/`0xA1` on channel `0x00`
+ * from the server, whichever comes first - obtaining the handle or binding its
+ * handler alone creates nothing, and a frame on any other channel is dropped
+ * without creating one; a send after [stop] fails with [IllegalStateException].
+ *
+ * See `docs/webtools-udp-protocol.md` for the complete wire reference and
+ * `docs/webtools-udp-architecture.md` for the complete thread/lifecycle picture this KDoc
+ * only summarises.
  *
  * @param serverAddress the server's address to hand shake with and send to
  * @param serverPort the server's common listen port; defaults to
@@ -207,7 +213,7 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * Monotonic `nanoTime` of the last datagram this client put on the wire (data
-     * or `KA`); read by the keepalive tick, written by [send], hence `@Volatile`.
+     * or a `0x80` keepalive); read by the keepalive tick, written by [send], hence `@Volatile`.
      * Only ever used as a `nanoTime` difference.
      */
     @Volatile
@@ -455,8 +461,10 @@ class MultiConnectionUDPClient internal constructor(
     /**
      * This client's [ReliableChannelEngine], minting it and arming its
      * `mcupc-retransmit` tick on first use: created lazily on the *first* of an
-     * app-thread `channel(RELIABLE_ORDERED).send`/`actuate*` call or an inbound
-     * `0xA0`/`0xA1` (mirrors [HandshakeCoordinator.reliableEngineFor]).
+     * app-thread `channel(RELIABLE_ORDERED).send` call or an inbound `0xA0`/`0xA1`
+     * on channel `0x00` from the server (mirrors [HandshakeCoordinator.reliableEngineFor]);
+     * a frame on any other channel is dropped before reaching here, and binding a
+     * handler via `channel(RELIABLE_ORDERED).actuate*` alone creates nothing.
      * `@Synchronized` so a listener-thread inbound and an app-thread send cannot
      * mint two engines.
      */

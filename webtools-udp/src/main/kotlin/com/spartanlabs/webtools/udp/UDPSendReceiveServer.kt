@@ -34,8 +34,8 @@ import java.net.SocketException
  * [Connection] here, and therefore no registered peer to key a
  * [ReliableChannelEngine] or a retransmit schedule to. A reliable channel needs
  * both; giving this type one would mean standing up a second, parallel
- * reliability stack for a primitive nobody builds a session on. See the
- * Issue #14 Stage 3 plan §3.8 / §11 for the full reasoning.
+ * reliability stack for a primitive nobody builds a session on. See
+ * `docs/webtools-udp-architecture.md` for the full reasoning.
  */
 class UDPSendReceiveServer @JvmOverloads constructor(
     private val targetAddress: InetAddress,

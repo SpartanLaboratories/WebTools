@@ -140,13 +140,16 @@ import java.util.concurrent.TimeUnit
  * `0xA0`/`0xA1` traffic to a client - see [UdpChannel] and [DeliveryMode] for the
  * full contract, including the size cap ([reliableMaxMessageBytes]), the
  * in-flight-window backpressure ([ReliableWindowFullException]), and the
- * inherent head-of-line blocking. Lazily created per connection, on either the
- * first `channel(RELIABLE_ORDERED)` call or the first inbound `0xA0`/`0xA1` for
- * that peer, whichever comes first - one `mcups-retransmit` daemon thread backs
+ * inherent head-of-line blocking. Each connection's engine is created lazily, on
+ * the first reliable `send` to that peer, the first `startReliable` /
+ * `channel(RELIABLE_ORDERED).actuate*` binding for it, or the first inbound
+ * `0xA0`/`0xA1` on channel `0x00` from it, whichever comes first - obtaining
+ * the handle alone creates nothing, and a frame on any other channel is
+ * dropped without creating one. One `mcups-retransmit` daemon thread backs
  * every connection's retransmit tick.
  *
  * ### Concurrency
- * One long-lived daemon listener thread only *demultiplexes*: `receive()` ->
+ * One long-lived daemon listener thread (`mcups-listener`) only *demultiplexes*: `receive()` ->
  * switch on the [DatagramType] tag (or an unframed `Iam`) -> run the socket-free
  * handshake state machine inline, drop a keepalive/probe, or hand the stripped
  * `0x90` payload to the dispatch executor. The
@@ -182,6 +185,10 @@ import java.util.concurrent.TimeUnit
  * See the sequence diagram in `docs/issue-1-tier-2-plan.md` §2.1 for the canonical
  * end-to-end flow, and `docs/issue-10-connection-liveness-plan.md` §2.8 for the
  * idle-sweep sequence.
+ *
+ * See `docs/webtools-udp-protocol.md` for the complete wire reference and
+ * `docs/webtools-udp-architecture.md` for the complete thread/lifecycle picture this KDoc
+ * only summarises.
  */
 abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     private val receiveBufferBytes: Int = DEFAULT_RECEIVE_BUFFER_BYTES,
@@ -305,6 +312,7 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
     init {
         log.info("Starting common listener thread on port {}", commonChannel.localPort)
         commonListenerThread = Thread { receiveLoop() }.apply {
+            name = "mcups-listener"
             isDaemon = true
             start()
         }

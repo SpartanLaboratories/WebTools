@@ -342,10 +342,31 @@ class MultiConnectionUDPServerTest {
     }
 
     @Test
+    @Order(19)
+    fun `the common listener thread is a daemon named mcups-listener`() {
+        val listener = Thread.getAllStackTraces().keys.firstOrNull { it.name == "mcups-listener" && it.isAlive }
+        assertNotNull(listener, "the server's common listener thread should be named mcups-listener")
+        assertTrue(listener.isDaemon)
+    }
+
+    @Test
     @Order(20)
     fun `stop terminates connections closes the socket and shuts the executor`() {
         assertTrue(server.stop().isSuccess)
         assertNoReplyTo("Iam clientAfterStop")
+
+        // stop() joins the listener for at most 1 s before it closes the socket, so the listener
+        // can still be alive for a moment after stop() returns - poll rather than check once.
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(2000)
+        while (System.nanoTime() < deadline &&
+            Thread.getAllStackTraces().keys.any { it.name == "mcups-listener" && it.isAlive }
+        ) {
+            Thread.sleep(20)
+        }
+        assertTrue(
+            Thread.getAllStackTraces().keys.none { it.name == "mcups-listener" && it.isAlive },
+            "no mcups-listener thread should survive stop()",
+        )
     }
 
     @AfterAll

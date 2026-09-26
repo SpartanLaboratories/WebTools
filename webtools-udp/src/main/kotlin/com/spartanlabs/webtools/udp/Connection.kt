@@ -176,7 +176,7 @@ interface Connection {
 
     /**
      * Starts an opt-in, idle-aware background keepalive for this connection: every
-     * ~[intervalMillis] of output silence toward [peer] the server sends one `KA`
+     * ~[intervalMillis] of output silence toward [peer] the server sends one `0x80` keepalive
      * datagram, until [stopKeepAlive], [terminate], or server `stop()`.
      *
      * Server -> client keepalives refresh endpoint-independent (full-cone /
@@ -213,15 +213,17 @@ interface Connection {
 
     /**
      * Starts an opt-in link-quality probe toward [peer]: every [intervalMillis] the
-     * server sends one `PING`, and each `PONG` updates a smoothed RTT / jitter /
-     * loss estimate readable via [linkQuality]. Runs until [stopProbe], [terminate],
-     * or server `stop()`. Server -> client `PING` reaches the client whenever the
-     * session is live (the client is actively holding its own mapping open); the
-     * same cone-NAT caveat as [keepAlive] applies if the client has gone silent.
+     * server sends one `0x81` probe datagram, and each `0x82` reply updates a smoothed
+     * RTT / jitter / loss estimate readable via [linkQuality]. Runs until [stopProbe],
+     * [terminate], or server `stop()`. Server -> client `0x81` reaches the client
+     * whenever the session is live (the client is actively holding its own mapping
+     * open); the same cone-NAT caveat as [keepAlive] applies if the client has gone
+     * silent.
      *
-     * The probe requires both ends on `1.6.0`+: a pre-`1.6.0` peer does not answer
-     * `PING`, so `packetLossRatio` climbs toward `1.0` and a consumer that opted in
-     * against such a peer should not have.
+     * The probe requires both ends on `webtools-udp` `2.0.0`+ (as does every framed
+     * datagram): a pre-`2.0.0` peer never emits or answers `0x81`/`0x82`, so
+     * `packetLossRatio` climbs toward `1.0` and a consumer that opted in against such
+     * a peer should not have.
      *
      * The default returns [Result.failure] - only the production [UDPConnection]
      * supports a probe.

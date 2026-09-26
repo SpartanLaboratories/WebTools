@@ -8,31 +8,38 @@ package com.spartanlabs.webtools.udp
  * classifier collided on.
  *
  * ### Value space (byte 0)
- * The tag space is partitioned by plane so later stages of the `2.x` series slot
- * in with no further wire break:
+ * The tag space is partitioned by plane, with whole ranges reserved so that a
+ * datagram type can be added later without changing any existing layout:
  *
- * | Byte 0        | Entry        | Plane      | Introduced |
- * |---------------|--------------|------------|------------|
- * | `0x00`–`0x7F` | *(none)*     | —          | not a valid tag — the text handshake bootstrap only (`Iam` / `REGISTERED` / `REFUSED`) |
- * | `0x80`        | [KEEPALIVE]  | control    | Stage 1    |
- * | `0x81`        | [PROBE_PING] | control    | Stage 1    |
- * | `0x82`        | [PROBE_PONG] | control    | Stage 1    |
- * | `0x83`–`0x8F` | *reserved*   | control    | future transport control (MTU probe, graceful close, …) |
- * | `0x90`        | [UNRELIABLE] | app data   | Stage 1    |
- * | `0x91`–`0x9F` | *reserved*   | app data   | future unreliable variants (unreliable-sequenced, newest-wins) |
- * | `0xA0`        | [RELIABLE_DATA] | app data | Stage 2 |
- * | `0xA1`        | [RELIABLE_ACK] | app data | Stage 2 |
- * | `0xA2`–`0xAF` | *reserved*   | app data   | reliable-channel control (SACK ranges, window updates, channel open/close) |
- * | `0xB0`–`0xFF` | *reserved*   | —          | unallocated |
+ * | Byte 0        | Entry           | Plane    |
+ * |---------------|-----------------|----------|
+ * | `0x00`–`0x7F` | *(none)*        | handshake text only — not a valid post-handshake tag |
+ * | `0x80`        | [KEEPALIVE]     | control  |
+ * | `0x81`        | [PROBE_PING]    | control  |
+ * | `0x82`        | [PROBE_PONG]    | control  |
+ * | `0x83`–`0x8F` | *reserved*      | control — future transport control (MTU probe, graceful close, …) |
+ * | `0x90`        | [UNRELIABLE]    | app data |
+ * | `0x91`–`0x9F` | *reserved*      | app data — future unreliable variants (unreliable-sequenced, newest-wins) |
+ * | `0xA0`        | [RELIABLE_DATA] | app data |
+ * | `0xA1`        | [RELIABLE_ACK]  | app data |
+ * | `0xA2`–`0xAF` | *reserved*      | app data — reliable-channel control (SACK ranges, window updates, channel open/close) |
+ * | `0xB0`–`0xFF` | *reserved*      | unallocated |
+ *
+ * The complete, self-contained wire reference — including every datagram's byte layout, the
+ * ack/retransmit contract, and the malformed-input table — is `docs/webtools-udp-protocol.md`.
  *
  * Every live tag is `>= 0x80`, so it cannot collide with the ASCII first byte of
  * `Iam` (`0x49`) or `REGISTERED` / `REFUSED` (`0x52`); post-handshake text is no
  * longer a wire concept — application text rides an [UNRELIABLE] frame like any
  * other bytes.
  *
- * A Stage-1 peer that receives a reserved tag drops it with a WARN: it is a
- * same-major peer running a later stage, which a Stage-1 ↔ Stage-1 session never
- * produces.
+ * A reserved tag is dropped, never dispatched: the server logs it at WARN, the client at
+ * DEBUG. See `docs/webtools-udp-protocol.md` for the complete reserved-range table and the
+ * full malformed-input handling.
+ *
+ * A future **minor** release may add a live tag from one of the reserved ranges above (e.g. a
+ * new [DeliveryMode]'s wire representation). Keep an `else` branch in any `when` over
+ * [DatagramType] or over `ofTagByte`'s result.
  *
  * @property tag the single byte this type occupies as byte 0 of a datagram
  */

@@ -9,6 +9,8 @@ package com.spartanlabs.webtools.udp
  * `client.channel(mode)` on the client side. `channel(...)` itself is an
  * accessor, not a fallible operation - it always returns a handle; the
  * [Result] lives on [send] / [actuate] / [actuateBytes].
+ *
+ * **Stable Core.** Full semver guarantee — breaking changes only in a major.
  */
 interface UdpChannel {
     /** The delivery guarantee this handle provides. */

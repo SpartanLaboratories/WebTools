@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Tag
 import java.net.InetAddress
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -88,9 +89,17 @@ class MultiConnectionUDPFramingE2ETest {
             },
             "no residual client thread after stop()",
         )
+        // stop() joins mcups-listener for at most 1 s before closing the socket, so it can still
+        // be alive briefly after stop() returns even past the settle sleep above - poll for it.
+        val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(2000)
+        while (System.nanoTime() < deadline &&
+            Thread.getAllStackTraces().keys.any { it.name == "mcups-listener" && it.isAlive }
+        ) {
+            Thread.sleep(20)
+        }
         assertTrue(
             Thread.getAllStackTraces().keys.none {
-                (it.name == "mcups-keepalive" || it.name == "mcups-probe") && it.isAlive
+                (it.name == "mcups-keepalive" || it.name == "mcups-probe" || it.name == "mcups-listener") && it.isAlive
             },
             "no residual server thread after stop()",
         )

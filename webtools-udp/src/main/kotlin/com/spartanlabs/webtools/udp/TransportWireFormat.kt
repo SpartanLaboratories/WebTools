@@ -14,8 +14,7 @@ package com.spartanlabs.webtools.udp
  * | `0x80`        | [DatagramType.KEEPALIVE]   | *(empty)* |
  * | `0x81`        | [DatagramType.PROBE_PING]  | 8-byte big-endian `uint64` probe sequence |
  * | `0x82`        | [DatagramType.PROBE_PONG]  | 8-byte big-endian `uint64` probe sequence (echoed) |
- * | `0x90`        | [DatagramType.UNRELIABLE]  | `[channel:1]` (Stage 1: always `0x00`; a non-zero channel byte is dropped with a WARN, Issue #40) + payload verbatim |
- * | `0x83`–`0x8F`, `0x91`–`0xFF` | *reserved* | dropped with a WARN by a Stage-1 peer |
+ * | `0x90`        | [DatagramType.UNRELIABLE]  | `[channel:1]` (`2.0`: always `0x00`) + payload verbatim — channel-byte contract: see [DEFAULT_UNRELIABLE_CHANNEL] |
  *
  * ### Boundary note
  * This is a wire break: there is **no** `1.x` ↔ `2.x` post-handshake interop.
@@ -25,9 +24,9 @@ package com.spartanlabs.webtools.udp
  * `MultiConnectionUDPClient.handshake` cleanly with an
  * [IncompatibleProtocolException].
  *
- * The `0xA0`/`0xA1` reliable-channel frames this object's value-space table
- * reserves are encoded/decoded by `ReliableWireFormat`, not here — see that
- * type for the reliable header layout.
+ * Every other byte 0 — including the reliable-channel `0xA0`/`0xA1` frames — is listed in
+ * [DatagramType]'s own value-space table; the complete wire reference is
+ * `docs/webtools-udp-protocol.md`.
  */
 object TransportWireFormat {
     /** The wire-protocol major this build speaks; the token in the `REGISTERED 2` reply. */
@@ -130,7 +129,7 @@ object TransportWireFormat {
      * control datagrams (keepalive, `PONG`, `REGISTERED`) that must not be
      * double-framed.
      * @param payload the application bytes to carry, placed on the wire verbatim
-     * @param channel the unreliable channel id; Stage 1 only ever emits
+     * @param channel the unreliable channel id; this build only ever emits
      * [DEFAULT_UNRELIABLE_CHANNEL]
      * @return the framed datagram, `payload.size + 2` bytes
      */
