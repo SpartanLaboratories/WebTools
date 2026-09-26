@@ -4,6 +4,10 @@ package com.spartanlabs.webtools.udp
  * Which delivery guarantee a [UdpChannel] provides. Each entry has its own
  * sequence space and its own inbound handler (see [Connection.channel] /
  * [UdpChannel.actuateBytes]).
+ *
+ * **Stable Core.** Full semver guarantee — breaking changes only in a major. A future
+ * **minor** release may add a new entry (e.g. an unreliable-sequenced mode); keep an `else`
+ * branch in any `when` over [DeliveryMode] so a new entry does not fail your build.
  */
 enum class DeliveryMode {
     /**

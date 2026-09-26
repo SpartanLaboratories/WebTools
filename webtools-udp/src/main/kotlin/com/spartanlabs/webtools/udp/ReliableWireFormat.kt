@@ -2,11 +2,11 @@ package com.spartanlabs.webtools.udp
 
 /**
  * The reliable-ordered channel's wire header codec: the `0xA0` reliable-data
- * frame and the `0xA1` standalone-ack frame (design doc §6.2). A separate
- * `internal` object rather than an extension of the public
- * [TransportWireFormat] — keeps Stage 3's dispatch-wiring diff clean, and
- * mirrors the `Rtt.kt`-beside-`LinkQualityTracker.kt` precedent of a pure
- * wire/math helper living next to the stateful type that consumes it.
+ * frame and the `0xA1` standalone-ack frame. See `docs/webtools-udp-protocol.md`
+ * for the complete wire reference. A separate `internal` object rather than an
+ * extension of the public [TransportWireFormat] — mirrors the
+ * `Rtt.kt`-beside-`LinkQualityTracker.kt` precedent of a pure wire/math helper
+ * living next to the stateful type that consumes it.
  *
  * ### Layout
  *
@@ -68,7 +68,7 @@ internal object ReliableWireFormat {
      * @param ack the highest sequence received at all from the peer (gaps allowed), masked to `0..65535`
      * @param ackBitfield bit `n` set means `(ack - n - 1)` was also received
      * @param payload the application bytes to carry, placed on the wire verbatim
-     * @param channel the reliable channel id; this stage only ever emits [DEFAULT_RELIABLE_CHANNEL]
+     * @param channel the reliable channel id; this build only ever emits [DEFAULT_RELIABLE_CHANNEL]
      * @return the framed datagram, `payload.size + 10` bytes
      */
     fun reliableDataDatagram(
@@ -92,7 +92,7 @@ internal object ReliableWireFormat {
      * The standalone-ack datagram: `[0xA1][channel][ack:2][bits:4]`, no seq, no payload.
      * @param ack the highest sequence received at all from the peer (gaps allowed), masked to `0..65535`
      * @param ackBitfield bit `n` set means `(ack - n - 1)` was also received
-     * @param channel the reliable channel id; this stage only ever emits [DEFAULT_RELIABLE_CHANNEL]
+     * @param channel the reliable channel id; this build only ever emits [DEFAULT_RELIABLE_CHANNEL]
      * @return the 8-byte `0xA1` datagram
      */
     fun reliableAckDatagram(ack: Int, ackBitfield: Int, channel: Byte = DEFAULT_RELIABLE_CHANNEL): ByteArray {

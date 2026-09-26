@@ -8,5 +8,8 @@ package com.spartanlabs.webtools.udp
  * nothing should ever construct or throw the bare supertype - only
  * [ReliableWindowFullException] and [ReliableMessageTooLargeException] do,
  * and only ever as a [Result.failure] payload, never thrown.
+ *
+ * **Stable Core.** Full semver guarantee — breaking changes only in a major; the hierarchy
+ * stays open rather than sealed, so a new subtype is additive, never breaking.
  */
 abstract class ReliableSendFailure(message: String) : Exception(message)

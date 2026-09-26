@@ -17,12 +17,12 @@ import java.util.concurrent.CopyOnWriteArrayList
  * [HandshakeCoordinator.bindBytes] set one and null the other; the listener thread
  * reads whichever is non-null, hence `@Volatile`
  * @property lastInboundAt monotonic `System.nanoTime()` of the last inbound
- * datagram from this origin (data or `KA`); seeded at construction. Written by
+ * datagram from this origin (data or a `0x80` keepalive); seeded at construction. Written by
  * the listener thread via [HandshakeCoordinator.accept], read by the liveness
  * sweep thread, hence `@Volatile`. Only ever used as a `nanoTime` difference -
  * never as an absolute time.
  * @property lastOutboundAt monotonic `System.nanoTime()` of the last datagram the
- * server sent to this origin (data, broadcast, or `KA`); seeded at construction.
+ * server sent to this origin (data, broadcast, or a `0x80` keepalive); seeded at construction.
  * Written by the listener / dispatch threads via [HandshakeCoordinator.send],
  * read by the `mcups-keepalive` thread, hence `@Volatile`. Only meaningful once a
  * scheduled keepalive is armed for the connection; a `nanoTime` difference, never

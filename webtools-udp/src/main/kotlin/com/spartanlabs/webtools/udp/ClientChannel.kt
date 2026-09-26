@@ -49,7 +49,7 @@ internal interface ClientChannel {
 
     /**
      * Arms (or re-arms) an idle-aware background keepalive toward [peer]: every
-     * ~[intervalMillis] of output silence one `KA` datagram is sent, until
+     * ~[intervalMillis] of output silence one `0x80` keepalive datagram is sent, until
      * [cancelKeepAlive], the registration is removed, or the server stops. Last
      * call wins - a repeat call replaces the schedule.
      * @param peer the client endpoint to keep alive
@@ -68,8 +68,8 @@ internal interface ClientChannel {
 
     /**
      * Arms (or re-arms) an opt-in link-quality probe toward [peer]: every
-     * [intervalMillis] one `PING <seq>` is sent, and each matching `PONG` updates a
-     * per-connection smoothed RTT / jitter / loss estimate readable via
+     * [intervalMillis] one `0x81` probe datagram is sent, and each matching `0x82`
+     * reply updates a per-connection smoothed RTT / jitter / loss estimate readable via
      * [linkQualityOf]. Last call wins - a repeat call replaces the schedule. Runs
      * until [cancelProbe], the registration is removed, or the server stops.
      * @param peer the client endpoint to probe

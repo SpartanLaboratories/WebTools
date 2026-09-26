@@ -48,7 +48,7 @@ internal class LinkQualityTracker(
 
     /**
      * Records a new outstanding probe and returns its sequence number for the
-     * `PING` token. Evicts the oldest probe once the ring is full.
+     * `0x81` probe datagram. Evicts the oldest probe once the ring is full.
      * @return the monotonically increasing sequence number of the new probe
      */
     @Synchronized
