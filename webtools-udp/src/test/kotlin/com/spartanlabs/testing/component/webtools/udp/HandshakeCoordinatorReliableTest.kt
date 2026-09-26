@@ -1,9 +1,14 @@
 package com.spartanlabs.testing.component.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasEventAt
+import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
+import com.spartanlabs.webtools.udp.ReliableChannelEngine
 import com.spartanlabs.webtools.udp.ReliableMessageTooLargeException
 import com.spartanlabs.webtools.udp.ReliableWindowFullException
 import com.spartanlabs.webtools.udp.ReliableWireFormat
@@ -48,8 +53,12 @@ class HandshakeCoordinatorReliableTest {
         reliableMaxMessageBytes = reliableMaxMessageBytes,
     )
 
-    private fun reliableFrame(seq: Int = 0, payload: ByteArray = byteArrayOf(1)): ByteArray =
-        ReliableWireFormat.reliableDataDatagram(seq = seq, ack = 0xFFFF, ackBitfield = 0, payload = payload)
+    private fun reliableFrame(
+        seq: Int = 0,
+        payload: ByteArray = byteArrayOf(1),
+        channel: Byte = ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL,
+    ): ByteArray =
+        ReliableWireFormat.reliableDataDatagram(seq = seq, ack = 0xFFFF, ackBitfield = 0, payload = payload, channel = channel)
 
     @Test
     fun `an inbound 0xA0 from a registered origin creates exactly one engine and arms exactly one schedule`() {
@@ -99,6 +108,120 @@ class HandshakeCoordinatorReliableTest {
 
         assertTrue(coordinator.accept(originA, reliableFrame(), "").isSuccess)
 
+        assertTrue(retransmitSchedule.scheduleCalls.isEmpty())
+    }
+
+    @Test
+    fun `an inbound channel-0x01 0xA0 or 0xA1 from a registered origin with no engine yet is dropped with a WARN, arming no schedule`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(originA, reliableFrame(channel = 0x01), "").isSuccess)
+            assertTrue(events.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+        }
+        assertTrue(retransmitSchedule.scheduleCalls.isEmpty())
+
+        val ack = ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = 0x01)
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(originA, ack, "").isSuccess)
+            assertTrue(events.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+        }
+        assertTrue(retransmitSchedule.scheduleCalls.isEmpty())
+    }
+
+    @Test
+    fun `a channel-0x01 0xA0 seq 0 does not deliver - the following channel-0x00 0xA0 seq 0 delivers exactly once`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val received = mutableListOf<ByteArray>()
+        coordinator.bindReliable(originA) { received += it }
+
+        assertTrue(coordinator.accept(originA, reliableFrame(seq = 0, payload = byteArrayOf(1), channel = 0x01), "").isSuccess)
+        assertTrue(coordinator.accept(originA, reliableFrame(seq = 0, payload = byteArrayOf(2)), "").isSuccess)
+
+        assertEquals(listOf(listOf<Byte>(2)), received.map { it.toList() })
+    }
+
+    @Test
+    fun `no ack is applied from a channel-0x01 0xA1 or a channel-0x01 0xA0 piggyback - the window stays full`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        repeat(256) { i -> assertTrue(coordinator.sendReliable(originA, byteArrayOf(i.toByte())).isSuccess) }
+
+        val standaloneAck = ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = 0x01)
+        assertTrue(coordinator.accept(originA, standaloneAck, "").isSuccess)
+        assertIs<ReliableWindowFullException>(
+            coordinator.sendReliable(originA, byteArrayOf(1)).exceptionOrNull(),
+            "a channel-0x01 standalone ack must not free the window",
+        )
+
+        // Built directly, not via reliableFrame(): that helper hardcodes ack = 0xFFFF (the
+        // nothing-received sentinel), which would free no slot even if the guard were missing -
+        // this frame must carry ack = 0 so that only the guard keeps the window full.
+        val piggybackAck = ReliableWireFormat.reliableDataDatagram(
+            seq = 0, ack = 0, ackBitfield = 0, payload = byteArrayOf(9), channel = 0x01,
+        )
+        assertTrue(coordinator.accept(originA, piggybackAck, "").isSuccess)
+        assertIs<ReliableWindowFullException>(
+            coordinator.sendReliable(originA, byteArrayOf(1)).exceptionOrNull(),
+            "a channel-0x01 0xA0 piggybacking ack=0 must not free the window either",
+        )
+    }
+
+    @Test
+    fun `control - a channel-0x00 0xA1 ack does free the window, per ReliableRetransmitBuffer onAck`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        repeat(256) { i -> assertTrue(coordinator.sendReliable(originA, byteArrayOf(i.toByte())).isSuccess) }
+
+        val ack = ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0)
+        assertTrue(coordinator.accept(originA, ack, "").isSuccess)
+
+        assertTrue(coordinator.sendReliable(originA, byteArrayOf(1)).isSuccess, "a channel-0x00 ack must free exactly one window slot")
+    }
+
+    @Test
+    fun `a truncated 0xA0 with a non-zero channel byte is dropped by the channel guard, never reaching the engine's malformed check`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val truncated = byteArrayOf(0xA0.toByte(), 0x01, 0x00)
+
+        captureLogsOf(HandshakeCoordinator::class.java) { coordinatorEvents ->
+            captureLogsOf(ReliableChannelEngine::class.java) { engineEvents ->
+                assertTrue(coordinator.accept(originA, truncated, "").isSuccess)
+                assertTrue(coordinatorEvents.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+                assertTrue(engineEvents.none { it.formattedMessage.contains("Malformed 0xA0") })
+            }
+        }
+        assertTrue(retransmitSchedule.scheduleCalls.isEmpty())
+    }
+
+    @Test
+    fun `a truncated 0xA0 with no channel byte, or channel-0x00, still reaches the engine's own malformed check unchanged`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        captureLogsOf(ReliableChannelEngine::class.java) { events ->
+            assertTrue(coordinator.accept(originA, byteArrayOf(0xA0.toByte()), "").isSuccess)
+            assertTrue(events.hasWarnContaining("Malformed 0xA0"))
+        }
+        captureLogsOf(ReliableChannelEngine::class.java) { events ->
+            assertTrue(coordinator.accept(originA, byteArrayOf(0xA0.toByte(), 0x00, 0x00), "").isSuccess)
+            assertTrue(events.hasWarnContaining("Malformed 0xA0"))
+        }
+    }
+
+    @Test
+    fun `a channel-0x01 0xA0 from an unregistered origin keeps the DEBUG drop, arming no schedule`() {
+        val coordinator = newCoordinator()
+        val framed = reliableFrame(channel = 0x01)
+
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            assertTrue(coordinator.accept(originA, framed, "").isSuccess)
+            assertTrue(events.none { it.formattedMessage.contains("on unsupported channel") })
+            assertTrue(events.hasEventAt(Level.DEBUG, "Reliable datagram from unregistered"))
+        }
         assertTrue(retransmitSchedule.scheduleCalls.isEmpty())
     }
 

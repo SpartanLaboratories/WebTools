@@ -1,6 +1,9 @@
 package com.spartanlabs.testing.component.webtools.udp
 
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
+import com.spartanlabs.webtools.udp.DeliveryMode
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.TransportWireFormat
@@ -11,9 +14,11 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 // Level 2 - the client's send()/receiveLoop framing in isolation, over a real socket against
@@ -124,5 +129,58 @@ class MultiConnectionUDPClientFramingTest {
         Thread.sleep(300)
 
         assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `a channel-0x01 0x90 from the peer is dropped with a WARN - the following channel-0x00 frame is the only delivery`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val received = CopyOnWriteArrayList<ByteArray>()
+        assertTrue(client.channel(DeliveryMode.UNRELIABLE).actuateBytes(received::add).isSuccess)
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            val nonZero = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01)
+            peer.send(DatagramPacket(nonZero, nonZero.size, loopback, client.localPort))
+            val barrier = TransportWireFormat.unreliableDatagram(byteArrayOf(9))
+            peer.send(DatagramPacket(barrier, barrier.size, loopback, client.localPort))
+
+            val deadline = System.currentTimeMillis() + 2_000
+            while (received.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)
+
+            assertTrue(events.hasWarnContaining("Unreliable datagram on unsupported channel 0x1 from"))
+        }
+        assertEquals(1, received.size)
+        assertContentEquals(byteArrayOf(9), received.single())
+    }
+
+    @Test
+    fun `a channel-0x01 0x90 from a foreign socket is dropped with a WARN naming the actual sender - pins the no-origin-screen behaviour (issue 39)`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        val received = CopyOnWriteArrayList<ByteArray>()
+        assertTrue(client.channel(DeliveryMode.UNRELIABLE).actuateBytes(received::add).isSuccess)
+        val foreign = fakePeer()
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            val nonZero = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01)
+            foreign.send(DatagramPacket(nonZero, nonZero.size, loopback, client.localPort))
+
+            val deadline = System.currentTimeMillis() + 2_000
+            while (!events.hasWarnContaining("on unsupported channel") && System.currentTimeMillis() < deadline) {
+                Thread.sleep(20)
+            }
+
+            // This test intentionally pins today's behaviour: the client 0x90 branch has no
+            // origin screen (#39), so the WARN names whatever socket actually sent the frame,
+            // not "server". #39's own fix will change what this test asserts.
+            assertTrue(
+                events.hasWarnContaining("Unreliable datagram on unsupported channel 0x1 from") &&
+                    events.hasWarnContaining(":" + foreign.localPort),
+                "the WARN must name the actual (unscreened) sender, not \"server\"",
+            )
+        }
+        // The WARN branch and the delivery branch are exclusive, so once the WARN is logged this
+        // frame can no longer be delivered - no extra sleep is needed before the negative check.
+        assertTrue(received.isEmpty(), "nothing must be delivered")
     }
 }

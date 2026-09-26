@@ -132,13 +132,79 @@ class ReliableChannelNonFunctionalTest {
     }
 
     @Test
-    fun `every truncation length of an 0xA0 or 0xA1 fed to HandshakeCoordinator accept never throws`() {
+    fun `10000 channel-non-zero reliable frames from a registered origin mint no engine and never disturb one - a channel-0x00 seq 0 still delivers afterward`() {
+        val retransmitSchedule = FakePeriodicSchedule()
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, _ -> FakeConnection(name, peer) },
+            sender = { _, _ -> Result.success(Unit) },
+            onRegistered = {},
+            admit = { _, _, _ -> Admission.Admitted },
+            dispatch = { it() },
+            onDisconnect = { _, _ -> },
+            idleTimeoutMillis = 0L,
+            keepAliveSchedule = FakePeriodicSchedule(),
+            probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = retransmitSchedule,
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
+        )
+        coordinator.accept(origin, "Iam channel-flood")
+        val random = Random(2040)
+        fun flood() = repeat(5_000) {
+            val channel = (1 + random.nextInt(255)).toByte()
+            // Each decoy reuses seq 0, and each decoy ack names seq 0: if either leaked past the
+            // guard, the real channel-0x00 seq 0 below would be treated as a duplicate.
+            val frame = if (random.nextBoolean()) {
+                ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0, ackBitfield = 0, payload = byteArrayOf(1), channel = channel)
+            } else {
+                ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = channel)
+            }
+            assertTrue(coordinator.accept(origin, frame, "").isSuccess)
+        }
+
+        // Phase 1 - no handler bound, so no engine exists: the flood must not mint one.
+        flood()
+        assertTrue(retransmitSchedule.scheduleCalls.isEmpty(), "channel-non-zero frames must mint no engine")
+
+        // Phase 2 - bindReliable mints the engine (one schedule); a second flood must leave it
+        // untouched: nothing delivered, no second engine, and seq 0 still unconsumed.
+        val received = mutableListOf<ByteArray>()
+        assertTrue(coordinator.bindReliable(origin) { received += it }.isSuccess)
+        assertEquals(1, retransmitSchedule.scheduleCalls.size, "bindReliable mints exactly one engine")
+        flood()
+        assertTrue(received.isEmpty(), "no channel-non-zero frame may be delivered")
+        assertEquals(1, retransmitSchedule.scheduleCalls.size, "the flood must not mint a second engine")
+
+        val zero = ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(9))
+        assertTrue(coordinator.accept(origin, zero, "").isSuccess)
+        assertEquals(listOf(listOf<Byte>(9)), received.map { it.toList() })
+    }
+
+    @Test
+    fun `every truncation length of a channel-0x00 0xA0 or 0xA1 fed to HandshakeCoordinator accept never throws`() {
         val coordinator = newCoordinator()
         coordinator.accept(origin, "Iam trunc")
 
         for (tag in listOf(0xA0.toByte(), 0xA1.toByte())) {
             for (len in 0..12) {
-                val truncated = ByteArray(len) { if (it == 0) tag else it.toByte() }
+                // Byte 1 (the channel) pinned to 0x00 (Issue #40): this loop's intent is the
+                // engine's own malformed-header handling, not the channel guard - a non-zero byte 1
+                // would be dropped by the guard before ever reaching the engine. See the sibling
+                // test below for the channel-drop path's own never-throw property.
+                val truncated = ByteArray(len) { if (it == 0) tag else if (it == 1) 0x00 else it.toByte() }
+                val result = runCatching { coordinator.accept(origin, truncated, "") }
+                assertTrue(result.getOrNull()?.isSuccess ?: false, "tag 0x${tag.toString(16)} length $len must not throw/fail")
+            }
+        }
+    }
+
+    @Test
+    fun `every truncation length of a channel-0x01 0xA0 or 0xA1 fed to HandshakeCoordinator accept never throws - the channel-drop path`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(origin, "Iam trunc-channel")
+
+        for (tag in listOf(0xA0.toByte(), 0xA1.toByte())) {
+            for (len in 0..12) {
+                val truncated = ByteArray(len) { if (it == 0) tag else if (it == 1) 0x01 else it.toByte() }
                 val result = runCatching { coordinator.accept(origin, truncated, "") }
                 assertTrue(result.getOrNull()?.isSuccess ?: false, "tag 0x${tag.toString(16)} length $len must not throw/fail")
             }

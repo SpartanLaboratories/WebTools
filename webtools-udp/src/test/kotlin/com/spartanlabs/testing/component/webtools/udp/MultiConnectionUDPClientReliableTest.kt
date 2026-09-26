@@ -1,13 +1,16 @@
 package com.spartanlabs.testing.component.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasEventAt
 import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.DatagramType
 import com.spartanlabs.webtools.udp.DeliveryMode
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
 import com.spartanlabs.webtools.udp.ReliableChannelEngine
+import com.spartanlabs.webtools.udp.ReliableWindowFullException
 import com.spartanlabs.webtools.udp.ReliableWireFormat
 import com.spartanlabs.webtools.udp.TransportWireFormat
 import com.spartanlabs.webtools.udp.UdpChannel
@@ -17,6 +20,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -191,6 +195,137 @@ class MultiConnectionUDPClientReliableTest {
         while (received.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20)
         assertContentEquals(byteArrayOf(9), received.single())
         assertTrue(retransmit.scheduleCalls.isNotEmpty(), "the real server endpoint's datagram must mint the engine")
+    }
+
+    @Test
+    fun `a channel-0x01 0xA0 from the server endpoint is dropped with a WARN and mints no engine - a following channel-0x00 0xA0 delivers and mints one`() {
+        val peer = fakePeer()
+        val retransmit = FakePeriodicSchedule()
+        val client = newClient(peer.localPort, retransmit)
+        val received = CopyOnWriteArrayList<ByteArray>()
+        assertTrue(client.channel(DeliveryMode.RELIABLE_ORDERED).actuateBytes { received += it }.isSuccess)
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            val nonZero = ReliableWireFormat.reliableDataDatagram(
+                seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(1), channel = 0x01,
+            )
+            peer.send(DatagramPacket(nonZero, nonZero.size, loopback, client.localPort))
+
+            val deadline = System.currentTimeMillis() + 2_000
+            while (events.none { it.formattedMessage.contains("on unsupported channel") } && System.currentTimeMillis() < deadline) {
+                Thread.sleep(20)
+            }
+            assertTrue(events.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+        }
+        assertTrue(received.isEmpty())
+        assertTrue(retransmit.scheduleCalls.isEmpty(), "a channel-0x01 0xA0 must mint no engine")
+
+        val zero = ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(2))
+        peer.send(DatagramPacket(zero, zero.size, loopback, client.localPort))
+        val deadline2 = System.currentTimeMillis() + 2_000
+        while (received.isEmpty() && System.currentTimeMillis() < deadline2) Thread.sleep(20)
+        assertContentEquals(byteArrayOf(2), received.single())
+        assertTrue(retransmit.scheduleCalls.isNotEmpty(), "the channel-0x00 frame must mint the engine")
+    }
+
+    @Test
+    fun `a channel-0x01 0xA1 from the server endpoint is dropped with a WARN and mints no engine`() {
+        val peer = fakePeer()
+        val retransmit = FakePeriodicSchedule()
+        val client = newClient(peer.localPort, retransmit)
+        assertTrue(client.channel(DeliveryMode.RELIABLE_ORDERED).actuateBytes { }.isSuccess) // starts the listener only
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            val ack = ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = 0x01)
+            peer.send(DatagramPacket(ack, ack.size, loopback, client.localPort))
+
+            val deadline = System.currentTimeMillis() + 2_000
+            while (events.none { it.formattedMessage.contains("on unsupported channel") } && System.currentTimeMillis() < deadline) {
+                Thread.sleep(20)
+            }
+            assertTrue(events.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+        }
+        assertTrue(retransmit.scheduleCalls.isEmpty())
+    }
+
+    @Test
+    fun `no ack is applied from a channel-0x01 0xA1 - the window stays full until a channel-0x00 ack arrives`() {
+        val peer = fakePeer()
+        val client = newClient(peer.localPort)
+        assertTrue(client.channel(DeliveryMode.RELIABLE_ORDERED).actuateBytes { }.isSuccess) // starts the listener
+        repeat(256) { i -> assertTrue(client.channel(DeliveryMode.RELIABLE_ORDERED).send(byteArrayOf(i.toByte())).isSuccess) }
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            val nonZeroAck = ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0, channel = 0x01)
+            peer.send(DatagramPacket(nonZeroAck, nonZeroAck.size, loopback, client.localPort))
+            val deadline = System.currentTimeMillis() + 2_000
+            while (events.none { it.formattedMessage.contains("on unsupported channel") } && System.currentTimeMillis() < deadline) {
+                Thread.sleep(20)
+            }
+            assertTrue(events.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+        }
+        assertIs<ReliableWindowFullException>(
+            client.channel(DeliveryMode.RELIABLE_ORDERED).send(byteArrayOf(1)).exceptionOrNull(),
+            "a channel-0x01 ack must not free the window",
+        )
+
+        val zeroAck = ReliableWireFormat.reliableAckDatagram(ack = 0, ackBitfield = 0)
+        peer.send(DatagramPacket(zeroAck, zeroAck.size, loopback, client.localPort))
+        val deadline2 = System.currentTimeMillis() + 2_000
+        var freed = false
+        while (!freed && System.currentTimeMillis() < deadline2) {
+            freed = client.channel(DeliveryMode.RELIABLE_ORDERED).send(byteArrayOf(2)).isSuccess
+            if (!freed) Thread.sleep(20)
+        }
+        assertTrue(freed, "a channel-0x00 ack must eventually free a window slot")
+    }
+
+    @Test
+    fun `a channel-0x01 0xA0 from a foreign origin keeps the DEBUG unexpected-origin drop, arming no schedule`() {
+        val peer = fakePeer()
+        val retransmit = FakePeriodicSchedule()
+        val client = newClient(peer.localPort, retransmit)
+        assertTrue(client.channel(DeliveryMode.RELIABLE_ORDERED).actuateBytes { }.isSuccess) // starts the listener only
+        val foreign = fakePeer()
+
+        captureLogsOf(MultiConnectionUDPClient::class.java, Level.DEBUG) { events ->
+            val framed = ReliableWireFormat.reliableDataDatagram(
+                seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(1), channel = 0x01,
+            )
+            foreign.send(DatagramPacket(framed, framed.size, loopback, client.localPort))
+
+            // Wait for the specific DEBUG drop, not merely "any event": at DEBUG this logger may
+            // emit other lines, and the assertions below must run only after this frame is handled.
+            val deadline = System.currentTimeMillis() + 2_000
+            while (!events.hasEventAt(Level.DEBUG, "Reliable datagram from unexpected origin") &&
+                System.currentTimeMillis() < deadline
+            ) {
+                Thread.sleep(20)
+            }
+
+            assertTrue(events.hasEventAt(Level.DEBUG, "Reliable datagram from unexpected origin"))
+            assertTrue(events.none { it.formattedMessage.contains("on unsupported channel") })
+        }
+        assertTrue(retransmit.scheduleCalls.isEmpty())
+    }
+
+    @Test
+    fun `a truncated 0xA0 with a non-zero channel byte from the server endpoint is dropped with a WARN, arming no schedule`() {
+        val peer = fakePeer()
+        val retransmit = FakePeriodicSchedule()
+        val client = newClient(peer.localPort, retransmit)
+        assertTrue(client.channel(DeliveryMode.RELIABLE_ORDERED).actuateBytes { }.isSuccess) // starts the listener only
+        val truncated = byteArrayOf(0xA0.toByte(), 0x01, 0x00)
+
+        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+            peer.send(DatagramPacket(truncated, truncated.size, loopback, client.localPort))
+            val deadline = System.currentTimeMillis() + 2_000
+            while (events.none { it.formattedMessage.contains("on unsupported channel") } && System.currentTimeMillis() < deadline) {
+                Thread.sleep(20)
+            }
+            assertTrue(events.hasWarnContaining("Reliable datagram on unsupported channel 0x1 from"))
+        }
+        assertTrue(retransmit.scheduleCalls.isEmpty())
     }
 
     @Test

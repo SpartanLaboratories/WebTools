@@ -219,6 +219,17 @@ class MultiConnectionUDPServerUatTest {
         // FAIL: any reliable event is duplicated, reordered, or permanently lost; the reliable
         //       stream's head-of-line blocking visibly stalls the snapshot stream for longer than
         //       a few RTOs; or the channel does not recover after the blackout ends.
+        // 4. (Issue #40) While the session in steps 1-3 is running, from the same NAT'd machine's
+        //    raw socket harness (bypassing the library's own channel(...).send, which never emits a
+        //    non-zero channel), interleave a handful of channel-0x01 0x90 and 0xA0 frames among the
+        //    normal channel-0x00 unreliable snapshots and reliable events.
+        // PASS (e): the server log shows exactly one WARN per such frame, each naming the channel
+        //           byte and the sender's address/port - an operator reading the log can tell which
+        //           peer sent an unsupported channel and how often; the game's snapshot and
+        //           reliable-event handlers never see any of them; the channel-0x00 traffic in steps
+        //           1-3 is completely unaffected by their presence.
+        // FAIL (e): any of the injected frames is delivered to a handler, the server log is silent
+        //           about them, or a WARN does not identify the sending peer.
     }
 
     @Test

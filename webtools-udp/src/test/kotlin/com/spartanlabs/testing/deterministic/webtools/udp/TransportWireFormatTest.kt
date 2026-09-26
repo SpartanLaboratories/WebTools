@@ -91,6 +91,12 @@ class TransportWireFormatTest {
     }
 
     @Test
+    fun `unreliableChannelOf reads a 0xFF channel byte without sign-extension`() {
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0xFF.toByte())
+        assertEquals(0xFF.toByte(), TransportWireFormat.unreliableChannelOf(framed))
+    }
+
+    @Test
     fun `unreliable accessors reject a datagram shorter than the 2-byte prefix`() {
         assertNull(TransportWireFormat.unreliablePayloadOf(byteArrayOf(0x90.toByte())))
         assertNull(TransportWireFormat.unreliablePayloadOf(ByteArray(0)))
