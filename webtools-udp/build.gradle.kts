@@ -89,7 +89,7 @@
 // mcups-listener; everything else is README, comment-only KDoc, two new reference docs
 // (docs/webtools-udp-protocol.md, docs/webtools-udp-architecture.md) and dated as-built notes on
 // the design doc. The whole public surface is Stable Core - see the README's API stability note.
-version = "2.0.0-alpha5"
+version = "2.0.0"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
