@@ -18,10 +18,11 @@
   Issue #14 finalisation docs (`docs/issue-14-finalisation-architecture.md`,
   `docs/issue-14-finalisation-plan.md`), which this unit does not touch.
 - **Branch:** `fix/issue-40-channel-byte-guard` (off `feat/2.0-framed-transport`).
-- **Commit: TBD**
-- **PR: TBD**
+- **Commit:** `cb55d5f` (fix) / `d304343` (test) / `7501306` (build)
+- **PR:** #42, merged into `feat/2.0-framed-transport` as `6973ff6`
 - **Target version:** `webtools-udp` `2.0.0-alpha4` → **`2.0.0-alpha5`**.
-- **Status:** planning complete. **No open decisions.** Ready for implementation.
+- **Status:** done — on `feat/2.0-framed-transport` as `webtools-udp` `2.0.0-alpha5`,
+  not published to Maven Central; Issue #40 closed (fully resolved).
 - **Related docs:**
   - `docs/issue-40-channel-byte-guard-architecture.md` — the approved design
     this plan implements.
