@@ -27,9 +27,11 @@
 - **Branch:** `docs/issue-14-stage4-finalisation` (off
   `feat/2.0-framed-transport`, cut only **after** the guard has merged;
   deleted local + remote after merge).
-- **Commit: TBD** / **PR: TBD**. **Status: planning only — decisions resolved
-  2026-09-24; execution blocked until #40 (the channel-byte guard, already
-  planned) is implemented and merged (§9).**
+- **Commits:** `5099e14` (fix) / `b9f3797` (test) / `3b89a1a` (docs) /
+  `101de90` (docs) / `d1a0de9` (build). **PR:** #44, merged into
+  `feat/2.0-framed-transport` as `5fb8e61`. **Status:** done — on
+  `feat/2.0-framed-transport` as `webtools-udp` `2.0.0`, not yet published to
+  Maven Central; Issue #14 not yet closed (closes on the `master` merge).
 - **This plan document and the architecture document ride the first Stage-4
   commit together**, so `git log --follow` binds design to code (architecture
   Header; precedent: PRs #31/#33/#36's header-backfill convention, and
