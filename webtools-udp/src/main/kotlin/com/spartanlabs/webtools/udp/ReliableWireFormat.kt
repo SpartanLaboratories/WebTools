@@ -32,9 +32,16 @@ package com.spartanlabs.webtools.udp
  * 16-bit sequence space RFC 1982 arithmetic (see [SerialSequence]) operates
  * over. Big-endian encode/decode mirrors [TransportWireFormat]'s own
  * probe-sequence codec exactly, at 2-/4-byte widths instead of 8. Stateless.
+ *
+ * A receiver drops either frame's `channel id` byte with a WARN when it is
+ * non-zero (Issue #40) — see [DEFAULT_RELIABLE_CHANNEL].
  */
 internal object ReliableWireFormat {
-    /** The v1 reliable channel id — the only value this stage emits or accepts. */
+    /**
+     * The reliable channel id this build emits, always `0x00`. A receiver drops a datagram
+     * whose channel byte is non-zero, with a WARN; see `docs/webtools-udp-protocol.md` for the
+     * full channel-byte contract.
+     */
     const val DEFAULT_RELIABLE_CHANNEL: Byte = 0x00
 
     /** The decoded header of an inbound `0xA0` reliable-data datagram. */
@@ -137,6 +144,17 @@ internal object ReliableWireFormat {
             ackBitfield = readUInt(datagram, 4),
         )
     }
+
+    /**
+     * The channel id byte of an `0xA0`/`0xA1` [datagram] (byte 1), or `null` if the
+     * datagram has no byte 1. Reads that byte alone - unlike [reliableDataHeaderOf] /
+     * [reliableAckHeaderOf] it needs no complete header - so a receiver can screen the
+     * channel of a truncated frame too. Mirrors [TransportWireFormat.unreliableChannelOf].
+     * @param datagram a received `0xA0` or `0xA1` datagram
+     * @return the channel byte, or `null` if the datagram is shorter than 2 bytes
+     */
+    fun reliableChannelOf(datagram: ByteArray): Byte? =
+        if (datagram.size < 1 + CHANNEL_BYTES) null else datagram[1]
 
     // --- big-endian primitives, mirroring TransportWireFormat.probeDatagram/probeSequenceOf ---
 
