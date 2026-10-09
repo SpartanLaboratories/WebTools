@@ -28,7 +28,7 @@
     `PeriodicScheduler.kt` rename, `README.md`, the `build.gradle.kts`
     version-comment block, the renamed test-support fixtures + **this plan
     document** (committed with the first implementation stage per §10, so
-    `git log --follow docs/issue-13-link-quality-probe-plan.md` binds plan to
+    `git log --follow docs/plans/13-link-quality-probe/plan.md` binds plan to
     implementation).
   - `6d6137c` — `test:` the §5 suite, all levels, plus the
     coordinator-constructor updates and the `KeepAliveScheduler*Test` renames.
@@ -44,18 +44,18 @@
   value type, new public methods with default/`@JvmOverloads` bodies, new public
   constants and wire helpers; nothing removed or changed; see §7).
 - **Related (boundaries noted, not redesigned here):**
-  - `docs/issue-12-scheduled-keepalive-plan.md` — the opt-in / lazy-scheduler /
+  - `docs/plans/12-scheduled-keepalive/plan.md` — the opt-in / lazy-scheduler /
     `internal`-constructor-seam / `HandshakeWireFormat`-constant patterns this
     plan reuses wholesale. #12 §9 explicitly flagged two follow-ups for #13: "a
     keepalive-failed-N-times signal" (still deferred here — see §10) and
     "exposing per-connection accessors" (done here as `LinkQuality`). This plan
     also **renames** #12's `KeepAliveScheduler` / `KeepAliveSchedule` (see D4).
-  - `docs/issue-10-connection-liveness-plan.md` — `Liveness` (pure) +
+  - `docs/plans/10-connection-liveness/plan.md` — `Liveness` (pure) +
     `Registration.lastInboundAt` (state) + `livenessTracked` (default-cost-zero
     guard). `Rtt` (pure) + `Registration.linkQuality` (state) is the same shape.
-  - `docs/issue-11-handshake-refusal-and-credential-plan.md` — the
+  - `docs/plans/11-handshake-refusal-and-credential/plan.md` — the
     default-method / `@JvmOverloads` additive-interface-growth pattern.
-  - `docs/issue-1-tier-2-plan.md` §2.1 — the canonical inbound-datagram flow the
+  - `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 — the canonical inbound-datagram flow the
     new classifier branches slot into.
 
 ---
@@ -726,7 +726,7 @@ a `@property` KDoc entry (§2.8).
 - No change to the `commonUdpPortLock` task list (the new socket-binding tests
   are `integrationTest` / `e2eTest` / `nonfunctionalTest`, already listed).
 
-### 3.17 `docs/issue-13-link-quality-probe-plan.md`
+### 3.17 `docs/plans/13-link-quality-probe/plan.md`
 This document. Committed in the same commit as §3.1–§3.16 (stage 1). Backfill the
 `Commit:` / `PR:` header fields once they exist (as done for #8–#12).
 
@@ -1142,7 +1142,7 @@ instruction.
   3. `build: bump webtools-udp to 1.6.0 for the opt-in link-quality probe (Issue #13)`
      — the `version = "1.6.0"` line (§3.16), split from commit 1 per #10–#12.
 - The plan document rides in commit 1 (the first implementation stage) so
-  `git log --follow docs/issue-13-link-quality-probe-plan.md` permanently binds
+  `git log --follow docs/plans/13-link-quality-probe/plan.md` permanently binds
   plan to implementation.
 - **Commit trailer:** none. Attribution is off for this repo — no
   `Co-Authored-By` / `Claude-Session` / "Generated with" trailer on commits, and

@@ -52,7 +52,7 @@ object TransportWireFormat {
     const val DEFAULT_PROBE_INTERVAL_MILLIS = 1_000L
 
     // 250 is the edge of the range the pre-Issue-#34 poll-divided clamp could honour: below
-    // it that clamp already forced a 250 ms cadence. See docs/issue-34-probe-cadence-architecture.md §1.2.
+    // it that clamp already forced a 250 ms cadence. See docs/plans/34-probe-cadence/architecture.md §1.2.
     /**
      * The minimum accepted link-quality probe interval, in milliseconds (250 ms).
      * [Connection.startProbe] and [MultiConnectionUDPClient.startProbe] fail with

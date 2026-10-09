@@ -13,7 +13,7 @@
   public API and no socket wiring**. Stage 1 (the 1-byte datagram-type framing
   prefix) is merged; Stage 3 (public channel API + socket plumbing) and
   Stage 4 (docs + version finalisation) are not designed here — see §11.
-- **Approved design:** `docs/issue-14-reliable-ordered-channel-design.md`
+- **Approved design:** `docs/plans/14-reliable-ordered-channel/architecture.md`
   §6–§9, §13. This plan turns those sections into a file-by-file change set
   and a 5-level test matrix for the reliable-engine slice specifically.
 - **Baseline:** `webtools-udp` `2.0.0-alpha1` on `feat/2.0-framed-transport`
@@ -37,12 +37,12 @@
   `2.0.0-alpha2` stays a separate maintainer-gated step, per the Stage-1 OD-3
   precedent.
 - **Related docs:**
-  - `docs/issue-14-reliable-ordered-channel-design.md` §6–§9, §11, §13 — the
+  - `docs/plans/14-reliable-ordered-channel/architecture.md` §6–§9, §11, §13 — the
     accepted design this plan implements.
-  - `docs/issue-14-reliable-ordered-channel-plan.md` — the Stage-1 plan; the
+  - `docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md` — the Stage-1 plan; the
     structural template for this document and the source of the "0xA0/0xA1
     reserved" wire contract this stage promotes to live.
-  - `docs/issue-13-link-quality-probe-plan.md` — the RFC 6298 SRTT/RTTVAR
+  - `docs/plans/13-link-quality-probe/plan.md` — the RFC 6298 SRTT/RTTVAR
     estimator (`Rtt`, `LinkQualityTracker`) this stage's private
     `ReliableRtoEstimator` reuses for its pure math, without sharing state.
 
@@ -417,7 +417,7 @@ Stage-2 addition (§9). The `version = "2.0.0-alpha1"` line itself is
 **unchanged** by this plan/implementation — the bump to `2.0.0-alpha2` is a
 separate follow-up step, not part of this stage's scope as directed.
 
-### 4.11 `docs/issue-14-reliable-engine-plan.md`
+### 4.11 `docs/plans/14-reliable-ordered-channel/plan-reliable-engine.md`
 
 This document.
 
@@ -602,7 +602,7 @@ only — no public API, no socket wiring. Green at every applicable test level
 (gating, component, integration, deterministic, nonfunctional; e2e/uat
 explicitly deferred) before Stage 3 opens.
 
-**Next — Stage 3 (public channel API), its own `docs/issue-14-*` plan:**
+**Next — Stage 3 (public channel API), its own `docs/plans/14-reliable-ordered-channel/plan-*` plan:**
 `DeliveryMode` + `UdpChannel` (design D2 Option A); `connection.channel
 (RELIABLE_ORDERED)` / `channel(UNRELIABLE)`; the reliable message-size cap
 (default 1024 B, hard max ~8 KB — design D5) and its typed errors

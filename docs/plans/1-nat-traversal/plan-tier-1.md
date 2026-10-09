@@ -1,6 +1,6 @@
 # Issue #1 — Tier 1 full implementation plan
 
-**Parent:** [`issue-1-nat-traversal-plan.md`](./issue-1-nat-traversal-plan.md)
+**Parent:** [`architecture.md`](./architecture.md)
 **Scope of this document:** Tier 1 only — make the *handshake* and the *common broadcast
 channel* address replies to the datagram's real source, so both work from behind NAT.
 The per-client dedicated data channel (`UDPConnection` / `UDPSendReceiveServer`) is **not**
@@ -42,7 +42,7 @@ therefore extracted:
 | 3 integration | `testing.integration.webtools` | `MultiConnectionUDPServerTest` (10) | end-to-end over real UDP: reply-to-source, bare `TXRXON`, payload-token-ignored, **retransmit dedup**, **multi-client disjoint ports**, `pushToAll`-to-origin, malformed / empty / unknown-verb / oversized datagrams, `stop` |
 | 4a deterministic | `testing.deterministic.webtools` | `HandshakeProtocolTest` (15) | exhaustive input→output for every `HandshakeProtocol` function |
 | 4c non-functional | `testing.nonfunctional.webtools` | `HandshakeNonFunctionalTest` (2) | retransmit-storm bounded allocation; reply target is never a payload-claimed address |
-| 5 UAT | `testing.uat.webtools` | `MultiConnectionUDPServerUatTest` (2, `@Disabled`) | manual two-host cross-NAT procedure — see [`issue-1-tier-1-uat.md`](./issue-1-tier-1-uat.md) |
+| 5 UAT | `testing.uat.webtools` | `MultiConnectionUDPServerUatTest` (2, `@Disabled`) | manual two-host cross-NAT procedure — see [`uat-tier-1.md`](./uat-tier-1.md) |
 
 The `stop()` / `start()` / `pushToAll()` fan-out folds were moved onto `HandshakeCoordinator`
 as `terminateAll()` / `actuateAll()` / `broadcast()` so the "terminate every connection even
@@ -239,7 +239,7 @@ Focused, not exhaustive:
 - Convention: every fallible operation returns `kotlin.Result`.
 - Build & test: `./gradlew build`, `./gradlew test`.
 
-### 2.4 `docs/issue-1-nat-traversal-plan.md`
+### 2.4 `docs/plans/1-nat-traversal/architecture.md`
 
 Mark the Tier 1 section done / link to this doc and the commit.
 
@@ -271,7 +271,7 @@ Tier 1's test edits (§2.2) apply on top of the moved file.
 > **Superseded for Tier 2.** As of `2.0.0c` (Issue #1 Tier 2, single-socket
 > multiplex) there are no dedicated per-client ports and a single-threaded
 > dispatch executor runs the message handlers. The canonical topology is now the
-> Mermaid diagram in [`issue-1-tier-2-plan.md`](./issue-1-tier-2-plan.md) §2.1.
+> Mermaid diagram in [`plan-tier-2.md`](./plan-tier-2.md) §2.1.
 > The diagram below describes the Tier 1 (`2.0.0b`) design only.
 
 `MultiConnectionUDPServer` has one long-lived daemon thread plus whatever caller

@@ -8,15 +8,15 @@
   (Stage 1 = PR #30, Stage 2 = PR #32, Stage 3 = PR #35).
 - **What this document is:** the file-by-file implementation plan for the
   unit `issue-14-finalisation`. It turns
-  `docs/issue-14-finalisation-architecture.md` into exact edits a developer
+  `docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` into exact edits a developer
   executes without a design decision of their own. The maintainer resolved
   every open decision on 2026-09-24 (§10); only the chosen text is printed.
-- **Architecture:** `docs/issue-14-finalisation-architecture.md`, unit
+- **Architecture:** `docs/plans/14-reliable-ordered-channel/architecture-finalisation.md`, unit
   `issue-14-finalisation` (architecture §9). The other unit there,
   `issue-40-channel-byte-guard`, is a production fix under
   `SpartanLaboratories/WebTools#40`, planned separately in
-  `docs/issue-40-channel-byte-guard-architecture.md` and
-  `docs/issue-40-channel-byte-guard-plan.md`. This plan depends on it (§9)
+  `docs/plans/40-channel-byte-guard/architecture.md` and
+  `docs/plans/40-channel-byte-guard/plan.md`. This plan depends on it (§9)
   and does not plan it.
 - **Baseline:** `webtools-udp` **`2.0.0-alpha5`** on
   `feat/2.0-framed-transport` — that is, `4a70ba4` (`2.0.0-alpha4`, full
@@ -38,18 +38,18 @@
   Stage 3's plan riding commit `a988834`).
 - **Target version:** `webtools-udp` **`2.0.0`**, from the `2.0.0-alpha5` the
   channel-byte guard leaves.
-- **Related docs:** `docs/issue-14-reliable-ordered-channel-design.md` (annotated
-  in place, §4f); `docs/issue-14-reliable-ordered-channel-plan.md`,
-  `docs/issue-14-reliable-engine-plan.md`,
-  `docs/issue-14-reliable-channel-api-plan.md` (Stages 1–3, historical,
-  untouched); `docs/issue-34-probe-cadence-plan.md` (the house format this
+- **Related docs:** `docs/plans/14-reliable-ordered-channel/architecture.md` (annotated
+  in place, §4f); `docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md`,
+  `docs/plans/14-reliable-ordered-channel/plan-reliable-engine.md`,
+  `docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md` (Stages 1–3, historical,
+  untouched); `docs/plans/34-probe-cadence/plan.md` (the house format this
   document follows); the two new evergreen docs this plan creates,
   `docs/webtools-udp-protocol.md` and `docs/webtools-udp-architecture.md`.
 - **Prerequisite:** [#40](https://github.com/SpartanLaboratories/WebTools/issues/40)
   — *"webtools-udp 2.0: receivers must drop non-zero channel-byte frames
   before the Stable Core freeze"*. It is planned in
-  `docs/issue-40-channel-byte-guard-architecture.md` and
-  `docs/issue-40-channel-byte-guard-plan.md` (unit
+  `docs/plans/40-channel-byte-guard/architecture.md` and
+  `docs/plans/40-channel-byte-guard/plan.md` (unit
   `issue-40-channel-byte-guard`, branch `fix/issue-40-channel-byte-guard`)
   (§9). **Related but out of scope:**
   [#38](https://github.com/SpartanLaboratories/WebTools/issues/38) and
@@ -215,12 +215,12 @@ on any conflict with this document. The threads, locks and lifecycles behind
 these bytes are in [webtools-udp-architecture.md](webtools-udp-architecture.md).
 
 History (decision records, not current fact):
-[design](issue-14-reliable-ordered-channel-design.md) ·
-[Stage 1 plan](issue-14-reliable-ordered-channel-plan.md) ·
-[Stage 2 plan](issue-14-reliable-engine-plan.md) ·
-[Stage 3 plan](issue-14-reliable-channel-api-plan.md) ·
-[Stage 4 plan](issue-14-finalisation-plan.md) ·
-[Issue #34 probe-cadence fix](issue-34-probe-cadence-architecture.md).
+[design](plans/14-reliable-ordered-channel/architecture.md) ·
+[Stage 1 plan](plans/14-reliable-ordered-channel/plan-framing-prefix.md) ·
+[Stage 2 plan](plans/14-reliable-ordered-channel/plan-reliable-engine.md) ·
+[Stage 3 plan](plans/14-reliable-ordered-channel/plan-reliable-channel-api.md) ·
+[Stage 4 plan](plans/14-reliable-ordered-channel/plan-finalisation.md) ·
+[Issue #34 probe-cadence fix](plans/34-probe-cadence/architecture.md).
 ```
 
 (Both evergreen docs live in `docs/`, so links between `docs/` files are
@@ -535,7 +535,7 @@ as contract):
   bound, delivered payloads are dropped at DEBUG — but they are still acked.
 - Either side's engine exists only once that side's reliable channel is in
   use — link to the Lifecycles section of
-  [webtools-udp-architecture.md](webtools-udp-architecture.md) for the exact
+  [webtools-udp-architecture.md](../../webtools-udp-architecture.md) for the exact
   creation rules rather than restating them. It is also created on an
   inbound reliable datagram on channel `0x00`, so a peer that never opened
   the channel still acknowledges. A non-zero-channel frame never creates one;
@@ -612,7 +612,7 @@ against the merged code first.
   never reaches the engine. Only a truncated frame on channel `0x00` (or one
   too short to have a byte 1) gets the engine's malformed WARN.
 
-Source: `docs/issue-40-channel-byte-guard-architecture.md`, D2, D5 and its
+Source: `docs/plans/40-channel-byte-guard/architecture.md`, D2, D5 and its
 "checking only well-formed headers" alternative.
 
 #### 9. Versioning & cross-version behaviour
@@ -675,13 +675,13 @@ datagram takes in each direction. The bytes themselves are specified in
 any conflict with this document.
 
 History (decision records, not current fact):
-[design](issue-14-reliable-ordered-channel-design.md) (its §7.8 diagram is
+[design](plans/14-reliable-ordered-channel/architecture.md) (its §7.8 diagram is
 superseded by §9 below) ·
-[Stage 1 plan](issue-14-reliable-ordered-channel-plan.md) ·
-[Stage 2 plan](issue-14-reliable-engine-plan.md) ·
-[Stage 3 plan](issue-14-reliable-channel-api-plan.md) ·
-[Stage 4 plan](issue-14-finalisation-plan.md) ·
-[Issue #34 probe-cadence fix](issue-34-probe-cadence-architecture.md).
+[Stage 1 plan](plans/14-reliable-ordered-channel/plan-framing-prefix.md) ·
+[Stage 2 plan](plans/14-reliable-ordered-channel/plan-reliable-engine.md) ·
+[Stage 3 plan](plans/14-reliable-ordered-channel/plan-reliable-channel-api.md) ·
+[Stage 4 plan](plans/14-reliable-ordered-channel/plan-finalisation.md) ·
+[Issue #34 probe-cadence fix](plans/34-probe-cadence/architecture.md).
 ```
 
 **Section 1, Scope & audience** — one paragraph: for a maintainer reasoning
@@ -1860,7 +1860,7 @@ Insert:
 
 (Both class KDocs' inaccurate engine-creation sentences are corrected in §4d.)
 
-### 4f. `docs/issue-14-reliable-ordered-channel-design.md` — as-built
+### 4f. `docs/plans/14-reliable-ordered-channel/architecture.md` — as-built
 annotations (R9)
 
 Ring: **historical record**, annotated in place, never rewritten (§3.5).
@@ -2268,7 +2268,7 @@ failure.
 **Mermaid.** Every Mermaid block this stage commits — the inbound-dispatch
 `flowchart` and the reliable `sequenceDiagram` in
 `docs/webtools-udp-architecture.md`, the link graph in
-`docs/issue-14-finalisation-architecture.md` §5, and this plan's §2 commit
+`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §5, and this plan's §2 commit
 flow — must be visually confirmed rendering correctly in the PR's GitHub
 file view ("Files changed" → "View file") before merge. Per R13, GitHub's
 Mermaid renderer has failure modes (bare `end`, unescaped punctuation, `;` in
@@ -2355,10 +2355,10 @@ tests before writing them (§3.1, §3.2 section 6).
   projects handle their own adoption of `2.0.0`.
 - **Pre-existing working-tree changes.** At planning time the tree is clean
   except for four untracked docs:
-  - this plan and `docs/issue-14-finalisation-architecture.md` — they ride
+  - this plan and `docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` — they ride
     commit 1;
-  - `docs/issue-40-channel-byte-guard-architecture.md` and
-    `docs/issue-40-channel-byte-guard-plan.md` — they belong to #40's own
+  - `docs/plans/40-channel-byte-guard/architecture.md` and
+    `docs/plans/40-channel-byte-guard/plan.md` — they belong to #40's own
     commits and must already be on the branch, via #40's PR, before Stage 4
     starts.
 
@@ -2371,7 +2371,7 @@ tests before writing them (§3.1, §3.2 section 6).
 
 - **Integration branch:** `feat/2.0-framed-transport` (already exists).
 - **Prerequisite:** #40's PR (branch `fix/issue-40-channel-byte-guard`, per
-  `docs/issue-40-channel-byte-guard-plan.md`) has merged into
+  `docs/plans/40-channel-byte-guard/plan.md`) has merged into
   `feat/2.0-framed-transport`, leaving `2.0.0-alpha5` (§9). Do not cut the
   Stage-4 branch before that.
 - **Stage-4 branch:** `docs/issue-14-stage4-finalisation`, off
@@ -2395,8 +2395,8 @@ tests before writing them (§3.1, §3.2 section 6).
   1. `fix: name the server's common listener thread mcups-listener (Issue #14, Stage 4)`
      — paths: `webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/MultiConnectionUDPServer.kt`
      (§4h: the `name =` line and the Concurrency-section KDoc mention only),
-     `docs/issue-14-finalisation-architecture.md` and
-     `docs/issue-14-finalisation-plan.md`. Both planning docs are untracked
+     `docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` and
+     `docs/plans/14-reliable-ordered-channel/plan-finalisation.md`. Both planning docs are untracked
      and land here, so `git log --follow` binds plan to code, as every prior
      stage did. The body says this is the maintainer-approved drive-by (B7):
      the server listener was the only unnamed thread.
@@ -2407,7 +2407,7 @@ tests before writing them (§3.1, §3.2 section 6).
   3. `docs: add the webtools-udp 2.0.0 protocol and architecture references (Issue #14, Stage 4)`
      — paths: `docs/webtools-udp-protocol.md` (new),
      `docs/webtools-udp-architecture.md` (new), `README.md` (§4a),
-     `docs/issue-14-reliable-ordered-channel-design.md` (§4f), and
+     `docs/plans/14-reliable-ordered-channel/architecture.md` (§4f), and
      `webtools-udp/build.gradle.kts` (comment-ladder entry only, per the note
      above).
   4. `docs: bring webtools-udp KDoc in line with the 2.0.0 release (Issue #14, Stage 4)`
@@ -2471,8 +2471,8 @@ The sibling is `issue-40-channel-byte-guard` (architecture §9). It is
 required: the maintainer chose OD-4 = (a) on 2026-09-24. It is a production
 change under
 [SpartanLaboratories/WebTools#40](https://github.com/SpartanLaboratories/WebTools/issues/40),
-planned by its own pass in `docs/issue-40-channel-byte-guard-architecture.md`
-and `docs/issue-40-channel-byte-guard-plan.md`. This plan does not design it.
+planned by its own pass in `docs/plans/40-channel-byte-guard/architecture.md`
+and `docs/plans/40-channel-byte-guard/plan.md`. This plan does not design it.
 
 The contract below is what `issue-14-finalisation` depends on. #40's plan
 adopts it: its requirements 1–8 and decisions D3–D12, and its §8 "Seam with
@@ -2564,7 +2564,7 @@ chosen text.
   ("(Stage 2 contract)", "(§3.12 of the Stage-3 plan)") stay as they are.
 - **OD-4 — channel byte: (a), fix before the cut.** A separate fix lands on
   the integration branch first — now filed as #40 and planned in
-  `docs/issue-40-channel-byte-guard-plan.md`. Receivers drop
+  `docs/plans/40-channel-byte-guard/plan.md`. Receivers drop
   non-zero-channel frames with a WARN, with test coverage, and it takes the
   version to `2.0.0-alpha5`. Stage 4 then moves it to `2.0.0`, and the
   protocol doc states "dropped" as the real contract. The "emits or accepts"
@@ -2589,8 +2589,8 @@ chosen text.
 **Order of operations:**
 
 1. ~~File the channel-byte guard's issue~~ — **done: #40.**
-2. ~~Plan the guard~~ — **done:** `docs/issue-40-channel-byte-guard-architecture.md`
-   and `docs/issue-40-channel-byte-guard-plan.md`, aligned with §9's
+2. ~~Plan the guard~~ — **done:** `docs/plans/40-channel-byte-guard/architecture.md`
+   and `docs/plans/40-channel-byte-guard/plan.md`, aligned with §9's
    contract.
 3. **Implement and land #40** per its plan on
    `fix/issue-40-channel-byte-guard` into `feat/2.0-framed-transport`: fix,
@@ -2610,7 +2610,7 @@ chosen text.
 
 1. Receivers ignore the channel byte → **filed as
    [#40](https://github.com/SpartanLaboratories/WebTools/issues/40)** and
-   planned (`docs/issue-40-channel-byte-guard-plan.md`). It is a
+   planned (`docs/plans/40-channel-byte-guard/plan.md`). It is a
    prerequisite of this stage (§9).
 2. The handshake accepts an empty name when the `Iam` line contains
    consecutive spaces → **filed as

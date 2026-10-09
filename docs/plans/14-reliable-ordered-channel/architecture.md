@@ -19,7 +19,7 @@
 - **Status:** **decision made (2026-09-09)** — the maintainer accepted the
   recommended option for every decision D1–D10 (§13). WebTools **takes this on** as
   the headline feature of **`webtools-udp` `2.0.0`**. Next step: an implementation
-  plan (`docs/issue-14-reliable-ordered-channel-plan.md`) turning §5–§9 into a
+  plan (`docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md`) turning §5–§9 into a
   file-by-file design and a 5-level test matrix. No code written yet, no production
   file touched.
 
@@ -27,8 +27,8 @@
   > through Issue #14's four staged PRs (#30, #32, #35 and the Stage-4 PR), the Issue #34
   > probe-cadence fix (#37), and the Issue #40 channel-byte guard (#42). The as-built
   > wire protocol and architecture are documented in
-  > [webtools-udp-protocol.md](webtools-udp-protocol.md) and
-  > [webtools-udp-architecture.md](webtools-udp-architecture.md), which are
+  > [webtools-udp-protocol.md](../../webtools-udp-protocol.md) and
+  > [webtools-udp-architecture.md](../../webtools-udp-architecture.md), which are
   > authoritative wherever this design record differs from them. Known
   > divergences are annotated in place below: §6.2, §6.3, §7.3, §7.4/§7.5,
   > §7.8, §11, §12, §14 and D10.
@@ -37,17 +37,17 @@
   `com.spartanlabs.webtools.udp`). The reliability layer, if taken on, is the
   headline feature of **`webtools-udp` `2.0.0`** (see §4).
 - **Related docs:**
-  - `docs/issue-13-link-quality-probe-plan.md` — the RFC 6298 SRTT/RTTVAR
+  - `docs/plans/13-link-quality-probe/plan.md` — the RFC 6298 SRTT/RTTVAR
     estimator (`Rtt`, `LinkQualityTracker`) this design reuses for the RTO, and
     the opt-in / lazy-scheduler / additive-wire-token patterns.
-  - `docs/issue-8-binary-datagram-path-plan.md` §2.4 — the classifier-collision
+  - `docs/plans/8-binary-datagram-path/plan.md` §2.4 — the classifier-collision
     limitation this design finally resolves with a framing byte, already named
     there as a "clean-break protocol revision" follow-up.
-  - `docs/issue-12-scheduled-keepalive-plan.md`, `docs/issue-11-*` — the
+  - `docs/plans/12-scheduled-keepalive/plan.md`, `docs/plans/11-handshake-refusal-and-credential/plan.md` — the
     default-method additive-growth idiom on the published `Connection` interface.
-  - `docs/split-into-three-modules-plan.md` — the 3-artifact split rationale
+  - `docs/plans/15-split-into-three-modules/plan.md` — the 3-artifact split rationale
     (unrelated *dependencies*, not unrelated *concerns*), weighed in §4.
-  - `docs/issue-1-tier-2-plan.md` §2.1 — the canonical inbound-datagram flow the
+  - `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 — the canonical inbound-datagram flow the
     new framed path slots into.
 
 ---
@@ -253,7 +253,7 @@ interface Connection {
 }
 ```
 
-> **Superseded 2026-09-18 — see `docs/issue-14-reliable-channel-api-plan.md`
+> **Superseded 2026-09-18 — see `docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md`
 > §3.1/§7 (Stage 3, maintainer-ratified).** `UdpChannel`'s handler member is
 > **not** the single `actuate(onMessage: (ByteArray) -> Unit)` sketched above.
 > It ships as `actuateBytes` (abstract, bytes) + `actuate` (default, taking
@@ -354,7 +354,7 @@ After the `0xA0` / `0xA1` tag byte:
 
 > **As built (Stage 4, 2026-09-26):** `ack` is the highest sequence received **at
 > all** from the peer, gaps allowed — never "highest in-order"; the bitfield
-> meaning is as above. See [webtools-udp-protocol.md](webtools-udp-protocol.md)
+> meaning is as above. See [webtools-udp-protocol.md](../../webtools-udp-protocol.md)
 > for the authoritative ack/ackBits contract.
 
 - **Reliable data overhead: 10 bytes** (`0xA0`). **Ack-only overhead: 8 bytes**
@@ -384,7 +384,7 @@ window, so 65 536 distinct in-flight sequence numbers is enormous headroom. A
   > standalone `0xA1` is coalesced onto the 50 ms retransmit tick and sent only
   > when an `0xA0` has arrived since this side last acknowledged (a delayed-ack
   > guard, RFC 1122 §4.2.3.2 style) — see
-  > [webtools-udp-protocol.md](webtools-udp-protocol.md).
+  > [webtools-udp-protocol.md](../../webtools-udp-protocol.md).
 - The 32-bit bitfield gives each ack ~32× redundancy (Glenn Fiedler,
   [*Reliable Ordered Messages*](https://gafferongames.com/post/reliable_ordered_messages/)),
   which combined with retransmit makes perfect acks unnecessary.
@@ -445,7 +445,7 @@ already uses).
   > term (`RTO = SRTT + 4·RTTVAR`, clamped to `[200, 5000]` ms), and the 200 ms
   > floor and 5000 ms cap are internal tuning, not configurable (Stage 3 kept
   > only the message-size cap public). See the tuning-values table in
-  > [webtools-udp-protocol.md](webtools-udp-protocol.md).
+  > [webtools-udp-protocol.md](../../webtools-udp-protocol.md).
 - **Backoff:** double the RTO for a message each time *that message* times out
   again (RFC 6298 §5.5); reset to the estimator value when a fresh (non-retransmitted)
   ack arrives.
@@ -483,7 +483,7 @@ already uses).
 > **As built (Stage 4, 2026-09-26):** the window of §7.4 and §7.5 (256) is one
 > shared value — the in-flight cap and the receive reorder window — and is
 > internal tuning, not configurable. See the tuning-values table in
-> [webtools-udp-protocol.md](webtools-udp-protocol.md).
+> [webtools-udp-protocol.md](../../webtools-udp-protocol.md).
 
 ### 7.6 No congestion control in v1 — stated plainly
 
@@ -543,7 +543,7 @@ sequenceDiagram
 ```
 
 > **As built (Stage 4, 2026-09-26):** this diagram is superseded by the as-built
-> sequence diagram in [webtools-udp-architecture.md](webtools-udp-architecture.md),
+> sequence diagram in [webtools-udp-architecture.md](../../webtools-udp-architecture.md),
 > which reflects what shipped: the public entry point is
 > `channel(RELIABLE_ORDERED).send`, not `sendReliable`, and the diagram adds the
 > size check, `ackPending`, the listener/dispatch split, the 32-per-tick
@@ -721,7 +721,7 @@ sequenceDiagram
 ## 14. Sequencing & follow-ups
 
 **Immediate:** D1–D10 are resolved (above). Next step is an implementation plan
-(`docs/issue-14-reliable-ordered-channel-plan.md`) turning §5–§9 into a
+(`docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md`) turning §5–§9 into a
 file-by-file design and a 5-level test matrix, then the staged `2.0.0-alphaN`
 series of §12.
 
@@ -731,7 +731,7 @@ series of §12.
 > open and unscheduled. The "multiple reliable channels" follow-up can reuse
 > the reserved channel byte: `2.x` receivers drop a non-zero channel, so
 > using it needs both ends to support it (see
-> [webtools-udp-protocol.md](webtools-udp-protocol.md)).
+> [webtools-udp-protocol.md](../../webtools-udp-protocol.md)).
 
 **Deliberately left for after v1**, roughly in priority order:
 

@@ -19,8 +19,8 @@
   - `io.github.spartanlaboratories:webtools-browser:1.0.0`
   - `io.github.spartanlaboratories:WebTools` — frozen at `2.0.1a`, no further
     releases; README documents the migration.
-- **Related:** `docs/issue-3-public-client-handshake-plan.md`,
-  `docs/issue-5-prune-stale-registrations-plan.md` (both entirely within the
+- **Related:** `docs/plans/3-public-client-handshake/plan.md`,
+  `docs/plans/5-prune-stale-registrations/plan.md` (both entirely within the
   future `webtools-udp` module).
 
 ### Settled decisions (from user)

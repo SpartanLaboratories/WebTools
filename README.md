@@ -153,8 +153,8 @@ authoritative keepalive is the client's. See [Scheduled keepalive](#scheduled-ke
 
 A server behind symmetric NAT still needs a rendezvous/relay (out of scope). Background:
 [issue #1](https://github.com/SpartanLaboratories/WebTools/issues/1),
-[`docs/issue-1-nat-traversal-plan.md`](docs/issue-1-nat-traversal-plan.md),
-[`docs/issue-1-tier-2-plan.md`](docs/issue-1-tier-2-plan.md).
+[`docs/plans/1-nat-traversal/architecture.md`](docs/plans/1-nat-traversal/architecture.md),
+[`docs/plans/1-nat-traversal/plan-tier-2.md`](docs/plans/1-nat-traversal/plan-tier-2.md).
 
 ### Binary application payloads
 

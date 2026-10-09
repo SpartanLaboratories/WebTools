@@ -45,13 +45,13 @@ import java.util.concurrent.Executors
  * A third daemon thread (`mcupc-keepalive`, a `ScheduledExecutorService`) exists
  * **only once [startKeepAlive] has been called**; it sends `0x80` keepalive
  * datagrams on an idle-aware cadence and is shut by [stop].
- * See the scheduled-keepalive sequence diagram in docs/issue-12-scheduled-keepalive-plan.md §2.8.
+ * See the scheduled-keepalive sequence diagram in docs/plans/12-scheduled-keepalive/plan.md §2.8.
  *
  * A fourth daemon thread (`mcupc-probe`, also a `ScheduledExecutorService`) exists
  * **only once [startProbe] has been called**; it sends `0x81` probe datagrams
  * (an 8-byte big-endian sequence) on a fixed cadence for the link-quality probe
  * and is shut by [stop].
- * See docs/issue-13-link-quality-probe-plan.md §2.9.
+ * See docs/plans/13-link-quality-probe/plan.md §2.9.
  *
  * A fifth daemon thread (`mcupc-retransmit`, also a `ScheduledExecutorService`)
  * exists **only once a reliable channel is opened** - either a
@@ -102,7 +102,7 @@ import java.util.concurrent.Executors
  * [startProbe] / [stopProbe] carry the same contract: safe from any thread, and a
  * [startProbe] after [stop] fails its [Result].
  *
- * See the sequence diagram in docs/issue-3-public-client-handshake-plan.md §2.2
+ * See the sequence diagram in docs/plans/3-public-client-handshake/plan.md §2.2
  * for the canonical handshake/listener/dispatch flow.
  *
  * ### Binary application payloads
@@ -558,7 +558,7 @@ class MultiConnectionUDPClient internal constructor(
                             // Duplicated verbatim at the other three receive-branch channel checks -
                             // HandshakeCoordinator.deliverData and its RELIABLE_DATA/RELIABLE_ACK
                             // branch, and this listener's reliable branch below - rather than
-                            // extracted; see docs/issue-40-channel-byte-guard-architecture.md §6.
+                            // extracted; see docs/plans/40-channel-byte-guard/architecture.md §6.
                             channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL ->
                                 log.warn(
                                     "Unreliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
@@ -587,7 +587,7 @@ class MultiConnectionUDPClient internal constructor(
                             // channel checks - HandshakeCoordinator.deliverData and its
                             // RELIABLE_DATA/RELIABLE_ACK branch, and this listener's UNRELIABLE
                             // branch above - rather than extracted; see
-                            // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                            // docs/plans/40-channel-byte-guard/architecture.md §6 for why.
                             channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
                                 log.warn(
                                     "Reliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
@@ -747,7 +747,7 @@ class MultiConnectionUDPClient internal constructor(
     @JvmOverloads
     fun startProbe(intervalMillis: Long = TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS): Result<Unit> {
         // Floor check duplicated verbatim in HandshakeCoordinator.scheduleProbe (Issue #34) rather
-        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // than extracted - see docs/plans/34-probe-cadence/architecture.md §6.1. It must run before
         // any state is touched: writing probeIntervalMillis first would let a rejected call switch
         // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
         // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick, and not

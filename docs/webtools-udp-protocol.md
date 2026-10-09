@@ -9,12 +9,12 @@ on any conflict with this document. The threads, locks and lifecycles behind
 these bytes are in [webtools-udp-architecture.md](webtools-udp-architecture.md).
 
 History (decision records, not current fact):
-[design](issue-14-reliable-ordered-channel-design.md) ·
-[Stage 1 plan](issue-14-reliable-ordered-channel-plan.md) ·
-[Stage 2 plan](issue-14-reliable-engine-plan.md) ·
-[Stage 3 plan](issue-14-reliable-channel-api-plan.md) ·
-[Stage 4 plan](issue-14-finalisation-plan.md) ·
-[Issue #34 probe-cadence fix](issue-34-probe-cadence-architecture.md).
+[design](plans/14-reliable-ordered-channel/architecture.md) ·
+[Stage 1 plan](plans/14-reliable-ordered-channel/plan-framing-prefix.md) ·
+[Stage 2 plan](plans/14-reliable-ordered-channel/plan-reliable-engine.md) ·
+[Stage 3 plan](plans/14-reliable-ordered-channel/plan-reliable-channel-api.md) ·
+[Stage 4 plan](plans/14-reliable-ordered-channel/plan-finalisation.md) ·
+[Issue #34 probe-cadence fix](plans/34-probe-cadence/architecture.md).
 
 ## 1. Scope & audience
 

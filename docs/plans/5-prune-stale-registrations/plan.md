@@ -16,7 +16,7 @@
   build` green (130 tests, 0 failures). Awaiting commit.
 - **Target version:** `2.0.1a` (see §7 for why this is a bugfix-letter release,
   not a third-number bump).
-- **Related:** `docs/issue-3-public-client-handshake-plan.md` (current wire
+- **Related:** `docs/plans/3-public-client-handshake/plan.md` (current wire
   protocol / `HandshakeCoordinator` shape, unaffected by this fix).
 
 ---
@@ -471,7 +471,7 @@ updates the README.
 ## 7. Version to ship as
 
 **Recommendation: `2.0.1a`**, not `2.0.2`. Per this project's recorded
-convention (settled in `docs/issue-3-public-client-handshake-plan.md` §9 D6):
+convention (settled in `docs/plans/3-public-client-handshake/plan.md` §9 D6):
 the trailing pre-release letter suffix is reserved for bugfix releases; a
 non-breaking *addition* bumps the third number instead. This change adds no
 new public API and no new capability — it fixes broken bookkeeping behavior,

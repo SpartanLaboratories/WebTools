@@ -8,13 +8,13 @@
   (`TXRXON <sendPort> <receivePort>`, dedicated port pairs, `portPairFor`). That
   protocol no longer exists — Tier 2 (`SpartanLaboratories/WebTools#1`, PR #4)
   replaced it with the single-socket multiplex described in
-  [`docs/issue-1-tier-2-plan.md`](./issue-1-tier-2-plan.md) and shipped as
+  [`docs/plans/1-nat-traversal/plan-tier-2.md`](../1-nat-traversal/plan-tier-2.md) and shipped as
   `2.0.0c`, the version currently in `build.gradle.kts`. This plan re-derives
   the same three underlying asks against the **current** protocol (`Iam
   <name>` → `REGISTERED`, then everything multiplexed over that one socket to
   `COMMON_LISTEN_PORT` (9998), `KA` keepalive) rather than the stale wire
   details in the issue text.
-- **Parent context:** [`docs/issue-1-tier-2-plan.md`](./issue-1-tier-2-plan.md)
+- **Parent context:** [`docs/plans/1-nat-traversal/plan-tier-2.md`](../1-nat-traversal/plan-tier-2.md)
   §11 "Deliberately left for later" already names this exact gap: *"A
   client-side `Connection` / `MultiConnectionUDPClient` type in WebTools so the
   downstream repos stop hand-rolling the socket — larger, separate work."*
@@ -36,8 +36,8 @@
   Tier 2 plan, until downstream integration + cross-NAT UAT sign-off — this
   work ships from the same pre-`2.0.0`-promotion tree, as `2.0.1`, independent
   of that pending promotion.
-- **Related:** `docs/issue-1-nat-traversal-plan.md`, `docs/issue-1-tier-2-plan.md`,
-  `docs/issue-1-tier-2-uat.md`.
+- **Related:** `docs/plans/1-nat-traversal/architecture.md`, `docs/plans/1-nat-traversal/plan-tier-2.md`,
+  `docs/plans/1-nat-traversal/uat-tier-2.md`.
 
 ---
 
@@ -577,7 +577,7 @@ Required — new public types and a new documented threading model.
   `start` callback.
 - **Install** snippet version → `2.0.1`.
 
-### 3.7 `docs/issue-1-tier-2-plan.md`
+### 3.7 `docs/plans/1-nat-traversal/plan-tier-2.md`
 
 - §11 "Deliberately left for later": tick the `MultiConnectionUDPClient` item,
   pointing at this doc.
@@ -632,7 +632,7 @@ socket-and-thread-owning types.
 ### 4.7 Level 5 — UAT (`testing.uat.webtools`)
 
 No new class. Optionally (not required by this plan) a future editor of
-`docs/issue-1-tier-2-uat.md` could note that Host C's manual cross-NAT session
+`docs/plans/1-nat-traversal/uat-tier-2.md` could note that Host C's manual cross-NAT session
 may now be driven by the shipped `MultiConnectionUDPClient` instead of a
 hand-rolled socket; left as a documentation opportunity, not a task here.
 
@@ -652,7 +652,7 @@ hand-rolled socket; left as a documentation opportunity, not a task here.
 | Inner Core | Level-1 comments in `MultiConnectionUDPClient`: why `start()` resets `soTimeout` to `0`; why `receiveLoop` classifies before dispatching; why the dispatch executor exists; why this class must not be composed from `UDPSendReceiveServer` (§2.2/§3.3). |
 | Component Ring (KDoc) | New KDoc on `HandshakeWireFormat` and `MultiConnectionUDPClient` (full `@param`/`@return`, including the concurrency/threading contract); `HandshakeProtocol`'s object KDoc gains the "public subset lives in `HandshakeWireFormat`" note; `Connection.push`'s KDoc gains the single-client-targeting clause (§2.3). |
 | Boundary Ring | `README.md` Components table + new "Client-side usage" subsection, including the `KA`-drop behaviour and the `start`-callback threading contract (§3.6). |
-| Architectural Outer Layer | The sequence diagram in §2.2 is the canonical client lifecycle/threading model, parallel to the one in `docs/issue-1-tier-2-plan.md` §2.1 for the server; `docs/issue-1-tier-2-plan.md` §11 updated to point at this doc instead of listing the client as an open follow-up. |
+| Architectural Outer Layer | The sequence diagram in §2.2 is the canonical client lifecycle/threading model, parallel to the one in `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 for the server; `docs/plans/1-nat-traversal/plan-tier-2.md` §11 updated to point at this doc instead of listing the client as an open follow-up. |
 
 README currency: covered by §3.6 — the same commit that adds the public types
 updates the README.
@@ -742,7 +742,7 @@ updates the README.
   1. `feat: publish the handshake wire format and an async client-side handshake helper (Issue #3)`
      — §3.1–§3.4 (production), §4 (all new tests), §3.5 (`build.gradle.kts`
      version bump to `2.0.1`), §3.6 (`README.md`), §3.7
-     (`docs/issue-1-tier-2-plan.md` follow-up tick), and this plan document.
+     (`docs/plans/1-nat-traversal/plan-tier-2.md` follow-up tick), and this plan document.
      `./gradlew build` (all levels) green before committing.
   2. *(after merge)* fill this doc's `Commit:` / `PR:` header fields with the
      real SHA(s) and PR number.
@@ -805,7 +805,7 @@ bumps the third number: `2.0.0` → `2.0.1`.
 1. Implement §3.1–§3.4 and §4 together (production + tests), `./gradlew build`
    green.
 2. Update `README.md`, `build.gradle.kts` version, and
-   `docs/issue-1-tier-2-plan.md` §11 in the same commit.
+   `docs/plans/1-nat-traversal/plan-tier-2.md` §11 in the same commit.
 3. On the user's say-so: publish, comment on issue #3 noting it was
    re-scoped against the current (Tier 2) protocol rather than the stale
    `2.0.0b` wire details in the original text, and separately raise the

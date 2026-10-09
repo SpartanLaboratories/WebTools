@@ -15,7 +15,7 @@
 - **Branch:** `feat/issue-9-receive-buffer` (off `master`, deleted after merge).
 - **Commits:**
   - `0477c4f` — `feat:` production changes (§3.1–§3.5, incl. README) + **this plan
-    document** (so `git log --follow docs/issue-9-receive-buffer-plan.md` binds
+    document** (so `git log --follow docs/plans/9-receive-buffer/plan.md` binds
     plan to implementation).
   - `9a6dccd` — `test:` the §5 suite, all levels.
   - `03a7cb3` — `build:` bump `webtools-udp` to `1.2.0` (§3.6).
@@ -27,12 +27,12 @@
   (D2). Open decisions were **resolved by the maintainer** — see §8.
 - **Target version:** `webtools-udp` `1.1.0` → **`1.2.0`** (see §7).
 - **Related:**
-  - `docs/issue-8-binary-datagram-path-plan.md` — **§2.5 / §9 D2 already raised
+  - `docs/plans/8-binary-datagram-path/plan.md` — **§2.5 / §9 D2 already raised
     `RECEIVE_BUFFER_BYTES` to 65507** on `MultiConnectionUDPServer` and
     `MultiConnectionUDPClient`; that shipped in `1.1.0` (PR #17).
-  - `docs/issue-3-public-client-handshake-plan.md` — `MultiConnectionUDPClient`
+  - `docs/plans/3-public-client-handshake/plan.md` — `MultiConnectionUDPClient`
     shape / handshake.
-  - `docs/split-into-three-modules-plan.md` — per-module versioning.
+  - `docs/plans/15-split-into-three-modules/plan.md` — per-module versioning.
   - GitHub Project **"webtools-udp: large-payload framing"** —
     <https://github.com/orgs/SpartanLaboratories/projects/5> — holds the deferred
     fragment/reassembly design (6 draft issues).
@@ -345,7 +345,7 @@ receive path to it.*
   all three receive types (default 65507); UDPSendReceiveServer no longer
   truncates at 1024; documented receive ceiling everywhere (Issue #9).`
 
-### 3.7 `docs/issue-9-receive-buffer-plan.md`
+### 3.7 `docs/plans/9-receive-buffer/plan.md`
 
 - This document. Committed in the same commit as §3.1–§3.4 (the first
   implementation stage). Backfill the `Commit:` / `PR:` header fields with real
@@ -554,7 +554,7 @@ No decisions remain open.
   only makes the single-datagram ceiling explicit, documented, and (downward-)
   tunable.
 - A 1-byte datagram-type tag separating control from application traffic (already
-  a follow-up in `docs/issue-8-binary-datagram-path-plan.md` §10) — a natural
+  a follow-up in `docs/plans/8-binary-datagram-path/plan.md` §10) — a natural
   host for a fragment header; in scope for Project 5, not here.
 - A binary (raw `ByteArray`) receive path on `UDPSendReceiveServer` — out of
   scope; that type stays text-only here.

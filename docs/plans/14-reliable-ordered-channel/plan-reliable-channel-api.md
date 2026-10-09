@@ -14,7 +14,7 @@
   PRs** in the series: Stage 1 merged as **PR #30**, Stage 2 as **PR #32**
   (PRs #31 and #33 were doc-only header backfills and are not stages). Stage 4
   (docs + version finalisation) is not designed here — see §11.
-- **Approved design:** `docs/issue-14-reliable-ordered-channel-design.md`
+- **Approved design:** `docs/plans/14-reliable-ordered-channel/architecture.md`
   §5 (API shape, Option A), §6.4 (dispatch), §7.5–§7.8 (window, size cap,
   teardown, flow), §8 (size cap), §9 (v1 scope), §13 (D2, D5, D6, D7).
   This plan turns those into a file-by-file change set and a 5-level test
@@ -53,14 +53,14 @@
   Stage-1 OD-3 precedent — this plan covers the `version` declaration and the
   PR only.
 - **Related docs:**
-  - `docs/issue-14-reliable-ordered-channel-design.md` — the accepted design.
-  - `docs/issue-14-reliable-ordered-channel-plan.md` — the Stage-1 plan
+  - `docs/plans/14-reliable-ordered-channel/architecture.md` — the accepted design.
+  - `docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md` — the Stage-1 plan
     (framing prefix); the structural template for this document.
-  - `docs/issue-14-reliable-engine-plan.md` — the Stage-2 plan (internal
+  - `docs/plans/14-reliable-ordered-channel/plan-reliable-engine.md` — the Stage-2 plan (internal
     engine); its §11 is this stage's starting brief.
-  - `docs/issue-13-link-quality-probe-plan.md` — the `PeriodicScheduler` and
+  - `docs/plans/13-link-quality-probe/plan.md` — the `PeriodicScheduler` and
     RFC 6298 RTT machinery this stage hangs the retransmit tick onto.
-  - `docs/issue-12-scheduled-keepalive-plan.md` — the lazily-created
+  - `docs/plans/12-scheduled-keepalive/plan.md` — the lazily-created
     per-role scheduler idiom (`mcup{c,s}-keepalive`) this stage mirrors for
     `mcup{c,s}-retransmit`.
 
@@ -1535,7 +1535,7 @@ stays Stage 4 (§11).
   worth one assertion. The module keeps its `slf4j-api`-only dependency story
   intact.
 
-### 4.18 `docs/issue-14-reliable-channel-api-plan.md`
+### 4.18 `docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md`
 
 This document. Committed in Stage-3 commit 1; backfill `Commit:` / `PR:` once
 they exist, matching the #8–#13 / Stage-1 / Stage-2 convention.
@@ -1550,7 +1550,7 @@ registered peer to key a reliable engine or a retransmit schedule to, and
 reliability here would mean a second parallel stack. Reasoning and the
 verification behind it are in §3.8 and §11. No code changes, no test changes.
 
-### 4.20 `docs/issue-14-reliable-ordered-channel-design.md` (the approved design — one inserted note)
+### 4.20 `docs/plans/14-reliable-ordered-channel/architecture.md` (the approved design — one inserted note)
 
 *(Recorded 2026-09-20, §12 A2. The edit is docs-only and was missing from this
 list; the design doc itself already carries the note.)*
@@ -1558,7 +1558,7 @@ list; the design doc itself already carries the note.)*
 This stage makes **one** edit to the approved design document: a block quote
 inserted under **§5 Option A**, immediately after the `Connection` /
 `UdpChannel` sketch, headed **"Superseded 2026-09-18 — see
-`docs/issue-14-reliable-channel-api-plan.md` §3.1/§7 (Stage 3,
+`docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md` §3.1/§7 (Stage 3,
 maintainer-ratified)"**. It records that the handler member ships as
 `actuateBytes` (abstract, bytes) + `actuate` (default, `(String) -> Unit`)
 rather than the sketch's single `actuate(onMessage: (ByteArray) -> Unit)`, why
@@ -1591,7 +1591,7 @@ It rides Stage-3 commit 1 with the rest of the docs (§9).
 | **Boundary ring** (protocol) | **yes — this is where the `0xA0`/`0xA1` contract goes live.** | Stage 2 defined the frames; Stage 3 is the first stage where two peers actually exchange them, so the boundary contract (ack semantics, the standalone-ack cadence, "both ends must be `2.0.0`+", the size cap and the deliberate absence of fragmentation) must be stated in `UdpChannel`'s KDoc and the README protocol table. The dedicated `docs/` protocol reference remains Stage 4. |
 | **Architectural outer layer** | yes | A **new daemon thread per side** (`mcups-retransmit` / `mcupc-retransmit`) joins the documented thread inventory in both class KDocs, and the §3.9 sequence diagram is the canonical picture of the wired reliable path. The full architecture section and the design §7.8 diagram land in Stage 4. |
 | **README** | yes — proportionate | New public API, a new dependency-coordinate version, and two new threads all trip the README-currency rule, so §4.16's edits ride the **same commit** as the implementation. The reference-doc rewrite is Stage 4's deliverable, not a reason to skip this. |
-| **Design record** (`docs/issue-14-reliable-ordered-channel-design.md`) | yes — one inserted note | The approved design's §5 Option A sketch is annotated in place with a dated "Superseded 2026-09-18" block pointing at this plan's §3.1/§7, so a reader who starts from the design doc is not led into an API shape that never shipped. Annotated, never rewritten; nothing else in that document changes. §4.20 has the full text and the rules. |
+| **Design record** (`docs/plans/14-reliable-ordered-channel/architecture.md`) | yes — one inserted note | The approved design's §5 Option A sketch is annotated in place with a dated "Superseded 2026-09-18" block pointing at this plan's §3.1/§7, so a reader who starts from the design doc is not led into an API shape that never shipped. Annotated, never rewritten; nothing else in that document changes. §4.20 has the full text and the rules. |
 
 ---
 
@@ -1832,7 +1832,7 @@ hide nothing and mislead the next reader.
      — §4.1–§4.14 and §4.19 (all `src/main`), §4.16 (`README.md`), §4.17's
      version-**comment** block (not the version line), **this plan
      document** (§4.18), and the one-block supersession note on the design
-     document (§4.20), so `git log --follow docs/issue-14-reliable-channel-api-plan.md`
+     document (§4.20), so `git log --follow docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md`
      binds plan to code and the design record points forward to what superseded
      it.
   2. `test: cover the public reliable channel API across all levels (Issue #14, Stage 3)`
@@ -1974,7 +1974,7 @@ the Stage-2 engine live. Green at every level (gating, component, integration,
 deterministic-by-omission, e2e, nonfunctional; uat `@Disabled`) before Stage 4
 opens. Publishes `2.0.0-alpha3`.
 
-**Next — Stage 4 (docs + version finalisation), its own `docs/issue-14-*` plan:**
+**Next — Stage 4 (docs + version finalisation), its own `docs/plans/14-reliable-ordered-channel/plan-*` plan:**
 the README "reliable-ordered channel" **reference** section, a dedicated
 `docs/` protocol reference (the tag table, the reliable header layout, the ack
 scheme, "both ends must be `2.0.0`+"), the architecture section with the design
