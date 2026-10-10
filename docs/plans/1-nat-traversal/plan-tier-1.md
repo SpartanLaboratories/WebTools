@@ -12,47 +12,11 @@ below describe what was built; a few details shifted in the final code (noted in
 **Release:** rides the in-progress `2.0.0` break; Tier 1 ships as `2.0.0b`
 (`build.gradle.kts` → `2.0.0b`), published to Maven Central.
 
-**As-built deltas from this plan:**
-- `commonListenSocket` renamed to `commonSocket` (it now both sends and receives);
-  removed `COMMON_SEND_PORT` (public) and `HANDSHAKE_ADDRESS_INDEX`.
-- §1.5 retransmit de-dup: included.
-- `pushToAddress` → `replyToOrigin`.
+> As built: see [final-implementation.md](final-implementation.md), "plan-tier-1.md header, As-built deltas from this plan".
 
-**Follow-up: testability refactor for full test-hierarchy compliance** (same branch,
-separate commit). A `test-inspector` audit found the class was untestable below Level 3
-because it binds a socket and starts a thread in its constructor. The handshake logic was
-therefore extracted:
-- `Connection` (new public interface) — `UDPConnection` implements it; lets the server's
-  logic run against a socket-free fake. `onClientConnect` now takes `Connection`.
-- `HandshakeProtocol` (new `internal object`) — pure: `parseHandshake`, `extraTokenCount`,
-  `portPairFor`, `txrxonReply`. All the `HANDSHAKE_*` / `DEDICATED_PORT_BASE` constants moved
-  here.
-- `Registrations` + `Registration` (new `internal`) — the registration collection, no I/O.
-- `HandshakeCoordinator` (new `internal class`) — the handshake state machine, with the
-  socket, the `UDPConnection` factory, and `onClientConnect` injected as three collaborators.
-- `MultiConnectionUDPServer` is now just: bind `commonSocket`, run the receive loop, wire the
-  coordinator. It keeps `COMMON_LISTEN_PORT` and the buffer/timeout constants.
+> As built: see [final-implementation.md](final-implementation.md), "plan-tier-1.md header, Follow-up: testability refactor for full test-hierarchy compliance".
 
-**Test matrix (as built):**
-
-| Level | Package | Class | Covers |
-|-------|---------|-------|--------|
-| 1 gating | `testing.gating.webtools` | `HandshakeProtocolGatingTest` (4), `HandshakeCoordinatorGatingTest` (3) | fast socket-free smoke: parse / port-disjointness / reply-shape, and register / retransmit-no-reregister / `findByOrigin` |
-| 2 component | `testing.component.webtools` | `HandshakeCoordinatorTest` (13), `RegistrationsTest` (5) | state machine (new-vs-dedup, port allocation, reply-failure path, order) and the fan-out methods (`actuateAll` / `broadcast` / `terminateAll` incl. partial-failure), plus the collection; socket-free via `FakeConnection` |
-| 3 integration | `testing.integration.webtools` | `MultiConnectionUDPServerTest` (10) | end-to-end over real UDP: reply-to-source, bare `TXRXON`, payload-token-ignored, **retransmit dedup**, **multi-client disjoint ports**, `pushToAll`-to-origin, malformed / empty / unknown-verb / oversized datagrams, `stop` |
-| 4a deterministic | `testing.deterministic.webtools` | `HandshakeProtocolTest` (15) | exhaustive input→output for every `HandshakeProtocol` function |
-| 4c non-functional | `testing.nonfunctional.webtools` | `HandshakeNonFunctionalTest` (2) | retransmit-storm bounded allocation; reply target is never a payload-claimed address |
-| 5 UAT | `testing.uat.webtools` | `MultiConnectionUDPServerUatTest` (2, `@Disabled`) | manual two-host cross-NAT procedure — see [`uat-tier-1.md`](./uat-tier-1.md) |
-
-The `stop()` / `start()` / `pushToAll()` fan-out folds were moved onto `HandshakeCoordinator`
-as `terminateAll()` / `actuateAll()` / `broadcast()` so the "terminate every connection even
-if one fails" contract is unit-tested with failing fakes rather than only on the happy path.
-
-Shared fixture: `testing.support.webtools.FakeConnection`. New Gradle tasks:
-`gatingTest`, `deterministicTest`, `nonfunctionalTest`, `uatTest` (joining `componentTest` /
-`integrationTest`); a `CommonUdpPortLock` build service serialises `test` and
-`integrationTest` so parallel workers never collide on port 9998. `4b` has no task — no
-end-to-end tests exist yet.
+> As built: see [final-implementation.md](final-implementation.md), "plan-tier-1.md header, Test matrix (as built)".
 
 ---
 

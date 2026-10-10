@@ -23,15 +23,7 @@
   file-by-file design and a 5-level test matrix. No code written yet, no production
   file touched.
 
-  > **As built (Stage 4, 2026-09-26):** implemented as `webtools-udp` `2.0.0`
-  > through Issue #14's four staged PRs (#30, #32, #35 and the Stage-4 PR), the Issue #34
-  > probe-cadence fix (#37), and the Issue #40 channel-byte guard (#42). The as-built
-  > wire protocol and architecture are documented in
-  > [webtools-udp-protocol.md](../../webtools-udp-protocol.md) and
-  > [webtools-udp-architecture.md](../../webtools-udp-architecture.md), which are
-  > authoritative wherever this design record differs from them. Known
-  > divergences are annotated in place below: §6.2, §6.3, §7.3, §7.4/§7.5,
-  > §7.8, §11, §12, §14 and D10.
+  > As built: see [final-implementation.md](final-implementation.md), "architecture.md header, Status".
 - **Current baseline:** `webtools-udp` `1.6.0` (Maven Central;
   `io.github.spartanlaboratories:webtools-udp`, package
   `com.spartanlabs.webtools.udp`). The reliability layer, if taken on, is the
@@ -177,10 +169,7 @@ stream, on top of `webtools-udp`'s binary datagram path.
 recommendation keeps (b) explicitly supported (and worth a short README pattern —
 Open Decision D10) until `2.0.0` lands.
 
-> **As built (Stage 4, 2026-09-26):** D10 is superseded. `webtools-udp` `2.0.0`
-> ships the reliable-ordered channel this design describes, so the interim
-> app-level pattern was never added to the README and will not be (maintainer
-> decision, Stage 4).
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §3.2 Option (b) — GameTools lives with unreliable-only + app-level reliability".
 
 ### 3.3 Option (c) — adopt an existing library
 
@@ -352,10 +341,7 @@ After the `0xA0` / `0xA1` tag byte:
  bytes 10..    : payload               (one application message; absent for 0xA1)
 ```
 
-> **As built (Stage 4, 2026-09-26):** `ack` is the highest sequence received **at
-> all** from the peer, gaps allowed — never "highest in-order"; the bitfield
-> meaning is as above. See [webtools-udp-protocol.md](../../webtools-udp-protocol.md)
-> for the authoritative ack/ackBits contract.
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §6.2 Reliable header layout".
 
 - **Reliable data overhead: 10 bytes** (`0xA0`). **Ack-only overhead: 8 bytes**
   (`0xA1`, no seq, no payload).
@@ -380,11 +366,7 @@ window, so 65 536 distinct in-flight sequence numbers is enormous headroom. A
   the retransmit tick) emits an ack-only datagram. The event stream is bursty and
   often one-directional, so the standalone ack path is **not** optional.
 
-  > **As built (Stage 4, 2026-09-26):** there is no separate ack-delay timer. The
-  > standalone `0xA1` is coalesced onto the 50 ms retransmit tick and sent only
-  > when an `0xA0` has arrived since this side last acknowledged (a delayed-ack
-  > guard, RFC 1122 §4.2.3.2 style) — see
-  > [webtools-udp-protocol.md](../../webtools-udp-protocol.md).
+  > As built: see [final-implementation.md](final-implementation.md), "architecture.md §6.3 Acks".
 - The 32-bit bitfield gives each ack ~32× redundancy (Glenn Fiedler,
   [*Reliable Ordered Messages*](https://gafferongames.com/post/reliable_ordered_messages/)),
   which combined with retransmit makes perfect acks unnecessary.
@@ -441,11 +423,7 @@ already uses).
 - **Cap:** an upper bound (e.g. 5 s) so a black-holed link does not push the RTO
   to absurdity.
 
-  > **As built (Stage 4, 2026-09-26):** the shipped RTO has no clock-granularity
-  > term (`RTO = SRTT + 4·RTTVAR`, clamped to `[200, 5000]` ms), and the 200 ms
-  > floor and 5000 ms cap are internal tuning, not configurable (Stage 3 kept
-  > only the message-size cap public). See the tuning-values table in
-  > [webtools-udp-protocol.md](../../webtools-udp-protocol.md).
+  > As built: see [final-implementation.md](final-implementation.md), "architecture.md §7.3 RTO — from the Issue #13 estimator".
 - **Backoff:** double the RTO for a message each time *that message* times out
   again (RFC 6298 §5.5); reset to the estimator value when a fresh (non-retransmitted)
   ack arrives.
@@ -480,10 +458,7 @@ already uses).
   no send-rate reduction on loss beyond per-message RTO backoff. It exists purely
   so a stalled or black-holed peer cannot make the send queue grow without limit.
 
-> **As built (Stage 4, 2026-09-26):** the window of §7.4 and §7.5 (256) is one
-> shared value — the in-flight cap and the receive reorder window — and is
-> internal tuning, not configurable. See the tuning-values table in
-> [webtools-udp-protocol.md](../../webtools-udp-protocol.md).
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §7.5 In-flight window — a bound, not congestion control".
 
 ### 7.6 No congestion control in v1 — stated plainly
 
@@ -542,14 +517,7 @@ sequenceDiagram
     Note over RT: retransmit executor is lazily created on the first<br/>reliable channel, mirroring mcup?-keepalive / mcup?-probe
 ```
 
-> **As built (Stage 4, 2026-09-26):** this diagram is superseded by the as-built
-> sequence diagram in [webtools-udp-architecture.md](../../webtools-udp-architecture.md),
-> which reflects what shipped: the public entry point is
-> `channel(RELIABLE_ORDERED).send`, not `sendReliable`, and the diagram adds the
-> size check, `ackPending`, the listener/dispatch split, the 32-per-tick
-> retransmit cap, and the client/server asymmetry in engine creation. The
-> diagram's "ack=highest-in-order" is also superseded: `ack` is the highest
-> sequence received at all, gaps allowed.
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §7.8 Flow — the ack / retransmit loop".
 
 ---
 
@@ -631,9 +599,7 @@ sequenceDiagram
   clear buffer entries between the previous and new highest insert seq; soak-test
   under heavy synthetic loss (Level 4c).
 
-  > **As built (Stage 4, 2026-09-26):** prevented structurally rather than by this
-  > mitigation — the retransmit ring's capacity *is* the in-flight window, so a
-  > slot can never be reused while its occupant is still unacked.
+  > As built: see [final-implementation.md](final-implementation.md), "architecture.md §11 Risks & edge cases".
 - **Sequence wraparound.** RFC 1982 serial arithmetic everywhere seq is compared;
   a dedicated deterministic (Level 4a) test around the `uint16` boundary.
 - **Duplicate / replay.** Delivery cursor + bitfield dedupe; a duplicate below the
@@ -673,9 +639,7 @@ sequenceDiagram
   `master` when `2.0.0` is cut. A single monolithic PR would be too large to
   review well.
 
-  > **As built (Stage 4, 2026-09-26):** every Issue #14 stage PR, and the final
-  > `feat/2.0-framed-transport` → `master` merge, uses a **merge commit**, never
-  > a squash — the stage plans cite the stage commits by SHA.
+  > As built: see [final-implementation.md](final-implementation.md), "architecture.md §12 Version-control approach (if greenlit)".
 - **Suggested PR series** (each green at all 5 test levels before the next):
   1. **Framing prefix.** Introduce the 1-byte datagram-type tag; migrate the
      unreliable / binary / keepalive / probe paths onto it; rework the listener
@@ -714,7 +678,7 @@ sequenceDiagram
 | **D7** | **Does a reliable channel survive a NAT-rebind supersede** (session resume token)? | **RESOLVED — no for v1**: fresh registration = fresh channel. Revisited with Issue #10 session-resume work. |
 | **D8** | **Release path:** staged `2.0.0-alphaN` series on an integration branch vs one `2.0.0` PR. | **RESOLVED — staged `2.0.0-alphaN` series** (§12). |
 | **D9** | **Ship v1 with no congestion control?** | **RESOLVED — yes, ship without it**. The in-flight window + RTO backoff bound the damage; congestion control is follow-up #1. |
-| **D10** | **Interim guidance:** a documented app-level ack/retransmit pattern for consumers who need reliability before `2.0.0`? | **RESOLVED — yes**, a short README snippet / note. **As built (Stage 4, 2026-09-26):** superseded by the shipped `2.0.0` reliable channel; no README content (maintainer decision, Stage 4). |
+| **D10** | **Interim guidance:** a documented app-level ack/retransmit pattern for consumers who need reliability before `2.0.0`? | **RESOLVED — yes**, a short README snippet / note. **As built:** see [final-implementation.md](final-implementation.md), "architecture.md §13 Decisions, D10". |
 
 ---
 
@@ -725,13 +689,7 @@ sequenceDiagram
 file-by-file design and a 5-level test matrix, then the staged `2.0.0-alphaN`
 series of §12.
 
-> **As built (Stage 4, 2026-09-26):** the "Immediate" item is complete — the
-> implementation plans and the staged `2.0.0-alphaN` series were delivered in
-> four stages and closed out as `2.0.0`. The numbered follow-ups below remain
-> open and unscheduled. The "multiple reliable channels" follow-up can reuse
-> the reserved channel byte: `2.x` receivers drop a non-zero channel, so
-> using it needs both ends to support it (see
-> [webtools-udp-protocol.md](../../webtools-udp-protocol.md)).
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §14 Sequencing & follow-ups".
 
 **Deliberately left for after v1**, roughly in priority order:
 

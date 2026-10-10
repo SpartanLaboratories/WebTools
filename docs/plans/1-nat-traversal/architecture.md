@@ -31,12 +31,7 @@ The `ab53747` "step ports down by 2" fix is a patch on top of design #4 and beco
 
 ## 2. Tier 1 — correctness fix — DONE
 
-Implemented on branch `fix/issue-1-handshake-datagram-source`. See
-[`plan-tier-1.md`](./plan-tier-1.md) for the detail.
-Summary of what shipped: the server learns the client endpoint from the datagram source,
-replies on the receiving socket, the protocol is now `Iam <name>` → bare `TXRXON`,
-`commonSendSocket` / `COMMON_SEND_PORT` are gone, `pushToAll` targets each client's learned
-origin, and a retransmitted `Iam` reuses its ports instead of allocating a new pair.
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §2 Tier 1 — correctness fix — DONE".
 
 Goal (met): the handshake completes for any client that can send a UDP datagram to the
 server, NAT'd or not. No reliance on client self-reported address.
@@ -66,10 +61,7 @@ worthwhile as an incremental commit toward Tier 2.
 
 ## 3. Tier 2 — real NAT traversal (choose one)
 
-**Decision: Option B1 (single-socket multiplex) was chosen and implemented.** See
-[`plan-tier-2.md`](./plan-tier-2.md) for the full design and
-file-by-file breakdown. The handshake reply landed as the single token
-`REGISTERED` (not the `OK`/token placeholder sketched below). Shipped as `2.0.0c`.
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §3 Tier 2 — real NAT traversal (choose one)".
 
 ### Option B1 — single-socket multiplex  *(chosen, implemented)*
 
