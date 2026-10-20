@@ -16,7 +16,7 @@ to recover.
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0a")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
