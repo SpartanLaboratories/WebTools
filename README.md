@@ -106,6 +106,7 @@ locks, and lifecycles that move these bytes.
 | client → server | `Iam <name> <credential>` (optional opaque, whitespace-free token) | `COMMON_LISTEN_PORT` (`9998`) |
 | server → client | `REGISTERED <version>` (e.g. `REGISTERED 2`) | the **source address and port** of the client's `Iam` datagram |
 | server → client | `REFUSED <reason>` (handshake refused; bare `REFUSED` if no reason) | the **source address and port** of the client's `Iam` datagram |
+| server → client | `REFUSED malformed` (an `Iam` with a missing or empty name, or a present-but-empty credential; the reason text is informative) | the **source address and port** of the malformed `Iam` datagram |
 | client ↔ server | `0x90 <channel> <payload…>` — application data (`UNRELIABLE`) | port `9998`, from/to the same socket the client sent `Iam` from |
 | client ↔ server | `0x80` — keepalive (`KEEPALIVE`, ~20 s idle cadence) | port `9998`, from the same socket |
 | client ↔ server | `0x81 <seq>` / `0x82 <seq>` — link-quality probe (`PROBE_PING` / `PROBE_PONG`; transport-consumed) | port `9998`, same socket |
@@ -126,13 +127,22 @@ retransmitted `Iam` from the same source is answered with another `REGISTERED <v
 does not re-register. `<credential>` (`tokens[2]`, optional) is passed to `admit` verbatim; any token
 after it is ignored.
 
+The server splits the line on single spaces, so two spaces in a row make an empty token. An `Iam`
+whose `<name>` is missing or empty, or whose `<credential>` slot is present but empty (`Iam  x`,
+`Iam bob  tok`), is **malformed**: the server answers it `REFUSED malformed` — from any source,
+registered or not — without calling `admit`, registering anything, or firing `onClientConnect`. A
+source that already holds a registration keeps it. A missing credential (`Iam bob`) is not
+malformed. The reason `malformed` is informative text, not a contract; clients must not branch on
+it. The [protocol reference](docs/webtools-udp-protocol.md#3-handshake) has the details, including
+the replies an unverified source address can draw.
+
 Before a new handshake is accepted the server calls `admit(name, peer, credential)` →
 `Admission`; returning `Admission.Refused(reason)` replies `REFUSED <reason>` to the client
 (surfaced client-side as a typed `HandshakeRefusedException`), registers nothing, and fires
 no `onClientConnect`. This replaces the old "call `Connection.terminate()` after the fact"
-workaround for a refuse-at-connect decision. `admit` is only consulted for a first `Iam`
-from an unknown origin, and runs *before* any same-name supersede, so a refused newcomer
-cannot evict a legitimate incumbent.
+workaround for a refuse-at-connect decision. `admit` is only consulted for a first well-formed
+`Iam` from an unknown origin (never for a malformed line, which the server refuses itself), and
+runs *before* any same-name supersede, so a refused newcomer cannot evict a legitimate incumbent.
 
 A fresh, admitted `Iam` under a name that is already registered under a different
 origin (e.g. after a NAT rebind) supersedes that stale registration; the old
@@ -216,7 +226,9 @@ same-name supersede fires `SUPERSEDED`. `stop()` teardown fires nothing. With th
 
 ### Handshake screening & credentials
 
-By default the server accepts every well-formed `Iam`. Override
+By default the server accepts every well-formed `Iam`: one whose name is non-empty and whose
+credential slot, if present, is non-empty. The server itself refuses any other `Iam` with
+`REFUSED malformed` before `admit` is consulted, so `admit` never sees an empty `name`. Override
 `admit(name, peer, credential): Admission` to screen a handshake before it is registered —
 validate the credential, enforce a capacity gate, reject a banned name:
 
@@ -243,7 +255,7 @@ client.handshake("alice", credential = base64UrlToken).fold(
 
 The credential is **one whitespace-free token**, opaque to the library (base64url-encode a
 structured or binary value), passed to `admit` verbatim; an absent credential arrives as the
-empty string. It rides **in cleartext** — the library gives you a channel, not
+empty string (a present-but-empty slot is malformed and never reaches `admit`). It rides **in cleartext** — the library gives you a channel, not
 confidentiality. Back-compat is total in every direction: an old client (`Iam <name>`)
 against a new server registers with an empty credential and the default `admit`; a new
 client (`Iam <name> <cred>`) against an old server still registers (the old server ignores
