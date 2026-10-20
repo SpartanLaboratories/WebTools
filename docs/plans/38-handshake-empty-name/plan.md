@@ -8,16 +8,25 @@
   beside it.
 - **Impact:** [`impact.md`](impact.md): adoption, blast radius and follow-ups.
 - **Branch:** `fix/issue-38-handshake-empty-name` (exists; holds the research commits).
-- **Commit:** TBD — this plan and `architecture.md` are committed in the same commit as
-  Stage A's first implementation commit (Commit 1 in §11), so `git log --follow` binds them
-  to the code.
-- **PR:** TBD.
+- **Commit:** on `fix/issue-38-handshake-empty-name`, in order:
+  - research: `77b3786`, `7b58916`, `fbf9dc9`, `b6446de`, `31aab26`, `e8c2929`, `9b1fff7`;
+  - `56a2121`: Commit 1. A-1 and A-2, with this plan, `architecture.md` and `impact.md`.
+  - `1605bdd`: Commit 2. A-3..A-7.
+  - `d3807b0`: Commit 3. C-1..C-4 and D-1..D-3, with the plan documents.
+  - `c6be0f2`: Commit 4. C-T1..C-T8 and D-4.
+  - `16d6849`: Commit 5. Stage B with C-D, C-B, D-5 and D-6.
+  - `ca57a57`: Commit 6. The version bump to `webtools-udp` `2.0.0a`, with the README
+    install snippet.
+
+  The as-built documentation commit follows. The as-built record is
+  [`final-implementation.md`](final-implementation.md).
+- **PR:** [#59](https://github.com/SpartanLaboratories/WebTools/pull/59).
 - **What this plans:** the `webtools-udp` server refuses a malformed `Iam` line with
   `REFUSED malformed` from any origin, never lets one reach `admit()` or touch a
   registration, and the code, KDoc, tests and living documents that say so.
-- **Status:** planning only.
-- **Target version:** a bugfix on `webtools-udp` `2.0.0`; the release manager picks the
-  letter-suffix bump at landing. This plan does not edit `webtools-udp/build.gradle.kts`.
+- **Status:** implemented. Stages A–D are committed.
+- **Target version:** `webtools-udp` `2.0.0a`, the bugfix after `2.0.0`. It is set in its
+  own `build:` commit; the plan's own commits do not edit `webtools-udp/build.gradle.kts`.
 - **Executor:** `rookie-dev`. Every step names its file, its anchor and `path:line` on
   baseline `85cfbbe`, the exact text, and the command that checks it. Where a step does
   not match the file as quoted, stop and report; do not improvise.
