@@ -49,7 +49,7 @@ Ownership: the server owns one `HandshakeCoordinator`, which owns
 `Registrations` (0..N `Registration`s); each `Registration` may own one
 `ReliableChannelEngine` and one `LinkQualityTracker`. A client owns at most
 one of each for its single server session
-(`MultiConnectionUDPServer.kt:254`, `Registrations.kt:50,87`).
+(`MultiConnectionUDPServer.kt:277`, `Registrations.kt:50,87`).
 
 ## 3. Thread inventory
 
@@ -108,8 +108,8 @@ Server:
 flowchart TD
     RX["receive() on the common socket<br/>(mcups-listener)"] --> STAMP["accept(): if idle detection is on<br/>and the origin is registered,<br/>stamp its liveness"]
     STAMP --> TAG{"byte 0 at least 0x80?"}
-    TAG -->|"no"| ISIAM{"text starts with Iam?"}
-    ISIAM -->|"yes"| HS["handshake state machine:<br/>admit, supersede, register,<br/>reply REGISTERED 2 or REFUSED"]
+    TAG -->|"no"| ISIAM{"first token is exactly Iam?"}
+    ISIAM -->|"yes"| HS["handshake state machine:<br/>malformed line (any origin): REFUSED malformed<br/>registered origin: repeat REGISTERED 2<br/>new origin: admit, supersede, register,<br/>reply REGISTERED 2 or REFUSED"]
     ISIAM -->|"no"| DROPT["WARN 'sender may be pre-2.0', drop"]
     TAG -->|"yes"| SWITCH{"DatagramType.ofTagByte(byte 0)"}
     SWITCH -->|"0x80 KEEPALIVE"| KA["drop (TRACE)"]

@@ -100,11 +100,70 @@ class MultiConnectionUDPServerAdmissionTest {
     }
 
     @Test
+    fun `every malformed Iam shape gets REFUSED malformed and admit is never consulted`() {
+        val guarded = GuardedServer().also { server = it }
+        listOf("Iam", "Iam  x", "Iam bob  tok").forEach { line ->
+            DatagramSocket().use { client ->
+                assertEquals("REFUSED malformed", client.exchange(line), line)
+            }
+        }
+        Thread.sleep(SETTLE_MILLIS)
+        assertTrue(guarded.seenCredentials.isEmpty())
+        assertTrue(guarded.connected.isEmpty())
+    }
+
+    @Test
+    fun `a malformed Iam from a registered socket is refused and leaves it registered`() {
+        val guarded = GuardedServer().also { server = it }
+        DatagramSocket().use { client ->
+            assertEquals("REGISTERED 2", client.exchange("Iam alice"))
+            assertEquals("REFUSED malformed", client.exchange("Iam  x"))
+            assertEquals("REFUSED malformed", client.exchange("Iam"))
+            assertEquals("REFUSED malformed", client.exchange("Iam alice  tok"))
+            assertEquals("REGISTERED 2", client.exchange("Iam alice"))
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(listOf("alice"), guarded.connected.toList())
+            assertEquals(1, guarded.seenCredentials.size, "the retransmit is not re-screened")
+        }
+    }
+
+    @Test
+    fun `a trailing space on the wire is trimmed so Iam bob with a trailing space registers bob`() {
+        val guarded = GuardedServer().also { server = it }
+        DatagramSocket().use { client ->
+            assertEquals("REGISTERED 2", client.exchange("Iam bob "))
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(listOf("bob"), guarded.connected.toList())
+            assertEquals(listOf(""), guarded.seenCredentials.toList())
+        }
+    }
+
+    @Test
+    fun `an empty token past the credential slot is ignored and the credential reaches admit`() {
+        val guarded = GuardedServer().also { server = it }
+        DatagramSocket().use { client ->
+            assertEquals("REGISTERED 2", client.exchange("Iam bob tok  x"))
+            assertEquals(listOf("tok"), guarded.seenCredentials.toList())
+        }
+    }
+
+    @Test
     fun `a socket refused once can retry successfully on the same socket`() {
         GuardedServer().also { server = it }
         DatagramSocket().use { client ->
             assertEquals("REFUSED banned", client.exchange("Iam banned"))
             assertEquals("REGISTERED 2", client.exchange("Iam guarded s3cret"))
+        }
+    }
+
+    @Test
+    fun `a socket refused as malformed can retry a well-formed Iam on the same socket`() {
+        val guarded = GuardedServer().also { server = it }
+        DatagramSocket().use { client ->
+            assertEquals("REFUSED malformed", client.exchange("Iam  x"))
+            assertEquals("REGISTERED 2", client.exchange("Iam bob"))
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(listOf("bob"), guarded.connected.toList())
         }
     }
 

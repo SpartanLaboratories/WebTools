@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 // Level 3 - the channel-byte guard end to end (Issue #40), against a real MultiConnectionUDPServer
 // and a real MultiConnectionUDPClient over loopback. Mirrors MultiConnectionUDPServerE2ETest's
 // raw-socket-peer shape for the server side, and FramingNonFunctionalTest's raw-server shape for
-// the client side (webtools-udp/src/test/kotlin/com/spartanlabs/testing/nonfunctional/webtools/udp/FramingNonFunctionalTest.kt:140-149).
+// the client side (webtools-udp/src/test/kotlin/com/spartanlabs/testing/nonfunctional/webtools/udp/FramingNonFunctionalTest.kt:187-215).
 @Tag("integration")
 class ChannelByteGuardIntegrationTest {
 

@@ -1,8 +1,11 @@
 package com.spartanlabs.testing.component.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.testing.support.webtools.udp.ScheduleMethod
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasEventAt
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.ClientChannel
 import com.spartanlabs.webtools.udp.DatagramType
@@ -23,6 +26,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 // Level 2 - the handshake state machine + inbound router in isolation. Its collaborators
@@ -53,6 +57,9 @@ class HandshakeCoordinatorTest {
     private val admitCalls = mutableListOf<Triple<String, InetSocketAddress, String>>()
     private var admissionToReturn: Admission = Admission.Admitted
     private var admitThrows = false
+
+    // The three malformed shapes, already trimmed (accept(origin, text) does not trim).
+    private val malformedLines = listOf("Iam", "Iam  x", "Iam bob  tok")
 
     private val recordingAdmit: (name: String, peer: InetSocketAddress, credential: String) -> Admission =
         { name, peer, credential ->
@@ -236,13 +243,163 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `a nameless Iam fails and registers nothing`() {
+    fun `a nameless Iam is refused with REFUSED malformed and registers nothing`() {
         val coordinator = newCoordinator()
+
+        assertTrue(coordinator.accept(originA, "Iam").isSuccess)
+
+        assertEquals(0, coordinator.size)
+        assertEquals(listOf("REFUSED malformed" to originA), sent)
+        assertContentEquals(HandshakeProtocol.MALFORMED_REFUSAL_DATAGRAM, sentBytes.single().first)
+        assertTrue(admitCalls.isEmpty())
+        assertTrue(created.isEmpty())
+        assertTrue(registeredNames.isEmpty())
+    }
+
+    @Test
+    fun `an Iam with an empty name slot is refused with REFUSED malformed and registers nothing`() {
+        val coordinator = newCoordinator()
+
+        assertTrue(coordinator.accept(originA, "Iam  x").isSuccess)
+
+        assertEquals(0, coordinator.size)
+        assertEquals(listOf("REFUSED malformed" to originA), sent)
+        assertTrue(admitCalls.isEmpty())
+    }
+
+    @Test
+    fun `an Iam with a present-but-empty credential slot is refused with REFUSED malformed and registers nothing`() {
+        val coordinator = newCoordinator()
+
+        assertTrue(coordinator.accept(originA, "Iam bob  tok").isSuccess)
+
+        assertEquals(0, coordinator.size)
+        assertEquals(listOf("REFUSED malformed" to originA), sent)
+        assertTrue(admitCalls.isEmpty())
+    }
+
+    @Test
+    fun `a malformed Iam never reaches admit and fires no onRegistered`() {
+        val coordinator = newCoordinator()
+
+        malformedLines.forEach { line -> assertTrue(coordinator.accept(originA, line).isSuccess, line) }
+
+        assertEquals(malformedLines.size, sent.size)
+        assertTrue(admitCalls.isEmpty())
+        assertTrue(created.isEmpty())
+        assertTrue(registeredNames.isEmpty())
+        assertEquals(0, coordinator.size)
+    }
+
+    @Test
+    fun `a malformed Iam from a registered origin draws REFUSED malformed and leaves its registration untouched`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        val registration = coordinator.snapshot().single()
+        sent.clear()
+
+        malformedLines.forEach { line ->
+            assertTrue(coordinator.accept(originA, line).isSuccess, line)
+            assertEquals(listOf("REFUSED malformed" to originA), sent, line)
+            sent.clear()
+            assertEquals(1, coordinator.size, line)
+            assertSame(registration, coordinator.snapshot().single(), line)
+        }
+
+        assertEquals(1, created.size)
+        assertEquals(listOf("alice"), registeredNames)
+        assertTrue(disconnects.isEmpty())
+        assertEquals(0, createdConnections.single().terminateCalls)
+        assertEquals(1, admitCalls.size, "only the registering Iam consulted admit")
+    }
+
+    @Test
+    fun `a malformed Iam under an existing name from another origin does not supersede the incumbent`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        sent.clear()
+        admitCalls.clear()
+
+        assertTrue(coordinator.accept(originB, "Iam alice  tok").isSuccess)
+
+        assertEquals(listOf("REFUSED malformed" to originB), sent)
+        assertEquals(1, coordinator.size)
+        assertEquals(originA, coordinator.snapshot().single().origin)
+        assertTrue(disconnects.isEmpty())
+        assertTrue(admitCalls.isEmpty())
+        assertEquals(0, createdConnections.single().terminateCalls)
+        assertEquals(1, created.size)
+    }
+
+    @Test
+    fun `an empty token past the credential slot is ignored and the Iam is accepted`() {
+        val coordinator = newCoordinator()
+
+        assertTrue(coordinator.accept(originA, "Iam bob tok  x").isSuccess)
+
+        assertEquals(Triple("bob", originA, "tok"), admitCalls.single())
+        assertEquals("REGISTERED 2" to originA, sent.single())
+        assertEquals(1, coordinator.size)
+    }
+
+    @Test
+    fun `a malformed Iam whose refusal cannot be sent reports the send failure and registers nothing`() {
+        val coordinator = newCoordinator()
+        sendResult = Result.failure(RuntimeException("send failed"))
 
         assertTrue(coordinator.accept(originA, "Iam").isFailure)
 
         assertEquals(0, coordinator.size)
-        assertTrue(sent.isEmpty())
+        assertTrue(admitCalls.isEmpty())
+    }
+
+    @Test
+    fun `a malformed Iam logs one WARN naming the defect and the origin, and never the line`() {
+        val coordinator = newCoordinator()
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(originA, "Iam leak-name  leak-cred").isSuccess)
+
+            val event = events.single()
+            assertEquals(Level.WARN, event.level)
+            assertNull(event.throwableProxy, "no exception object is attached")
+            val text = event.formattedMessage
+            assertTrue(text.contains("Refusing malformed handshake from"), text)
+            assertTrue(text.contains(originA.toString()), text)
+            assertTrue(text.contains("credential empty"), text)
+            assertTrue(text.contains("origin registered: false"), text)
+            assertFalse(text.contains("leak-name"), text)
+            assertFalse(text.contains("leak-cred"), text)
+        }
+    }
+
+    @Test
+    fun `a malformed Iam from a registered origin logs the registered flag and the defect`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            coordinator.accept(originA, "Iam  leak-cred")
+
+            val text = events.single().formattedMessage
+            assertTrue(text.contains("name empty"), text)
+            assertTrue(text.contains("origin registered: true"), text)
+            assertFalse(text.contains("leak-cred"), text)
+        }
+    }
+
+    @Test
+    fun `the extra-token DEBUG is logged for a valid line only`() {
+        val coordinator = newCoordinator()
+
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            coordinator.accept(originA, "Iam bob tok x")
+            assertTrue(events.hasEventAt(Level.DEBUG, "Ignoring 1 extra handshake token(s)"))
+        }
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            coordinator.accept(originB, "Iam bob  tok x")
+            assertTrue(events.none { it.formattedMessage.contains("extra handshake token") })
+        }
     }
 
     @Test
@@ -570,11 +727,28 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `deliverData with no handler bound drops a binary datagram`() {
+    fun `an unframed NUL-led datagram from a registered origin is dropped with no reply`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
+        sent.clear()
 
-        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), " ").isSuccess)
+        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), "\u0000\u0001").isSuccess)
+        assertTrue(sent.isEmpty())
+        assertEquals(1, coordinator.size)
+    }
+
+    @Test
+    fun `deliverData with no handler bound drops a 0x90 frame with no reply`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        sent.clear()
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(0x00, 0x01))
+
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            assertTrue(coordinator.accept(originA, framed, "").isSuccess)
+            assertTrue(events.hasEventAt(Level.DEBUG, "No handler bound for"))
+        }
+        assertTrue(sent.isEmpty())
     }
 
     @Test

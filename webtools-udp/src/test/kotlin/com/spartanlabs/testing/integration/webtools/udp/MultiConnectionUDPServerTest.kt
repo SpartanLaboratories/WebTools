@@ -245,7 +245,10 @@ class MultiConnectionUDPServerTest {
     @Test
     @Order(11)
     fun `malformed empty unknown-verb and oversized datagrams do not wedge the listener`() {
-        listOf("", "   ", "HELLO world", "Iam").forEach(::assertNoReplyTo)
+        listOf("", "   ", "HELLO world", "Iam\tbob").forEach(::assertNoReplyTo)
+        DatagramSocket().use { client ->
+            assertEquals("REFUSED malformed", handshakeFrom(client, "Iam"))
+        }
         DatagramSocket().use { client ->
             val oversized = ("Iam " + "z".repeat(4096)).toByteArray(Charsets.UTF_8)
             client.send(

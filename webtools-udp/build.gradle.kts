@@ -89,7 +89,16 @@
 // mcups-listener; everything else is README, comment-only KDoc, two new reference docs
 // (docs/webtools-udp-protocol.md, docs/webtools-udp-architecture.md) and dated as-built notes on
 // the design doc. The whole public surface is Stable Core - see the README's API stability note.
-version = "2.0.0"
+// 2.0.0a: the bugfix after 2.0.0 - malformed-Iam refusal (Issue #38). The server answers an
+// Iam whose name slot is missing or empty, or whose credential slot is present but empty (two
+// spaces in a row split to an empty token), with REFUSED malformed from any origin; 2.0.0 and
+// earlier registered the empty-name and empty-credential shapes and left a bare Iam unanswered.
+// A malformed line never reaches admit(), adds, supersedes or tears down no registration, and
+// fires no onClientConnect; a registration the origin already holds is kept, so a mid-session
+// peer can receive the unframed REFUSED. The parse is total over a new internal sealed
+// HandshakeParse outcome. No public API change; on the wire only the three malformed shapes
+// change, from silence or REGISTERED 2 to REFUSED malformed.
+version = "2.0.0a"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of

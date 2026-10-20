@@ -18,7 +18,8 @@ import kotlin.test.assertTrue
 
 // Level 4b - a real MultiConnectionUDPClient against a real MultiConnectionUDPServer subclass
 // over loopback, proving the admit() refusal path surfaces as a typed HandshakeRefusedException
-// on the client and that a refused newcomer never disturbs an established connection.
+// on the client, that a refused newcomer never disturbs an established connection, and that a
+// malformed line built from an empty name is refused the same way.
 @Tag("e2e")
 @Suppress("DEPRECATION") // exercises the still-working, now-deprecated push/actuate/send/start primitives on purpose
 class MultiConnectionUDPHandshakeRefusalE2ETest {
@@ -133,6 +134,36 @@ class MultiConnectionUDPHandshakeRefusalE2ETest {
             assertEquals(1, server.connections.size)
         } finally {
             client.stop()
+            server.stop()
+        }
+    }
+
+    // Pins today's library-client behaviour for an empty name: handshake("") sends `Iam `, which
+    // the server trims to a bare `Iam`, and handshake("", credential = "tok") sends `Iam  tok`
+    // with an empty name slot - both malformed, both refused. When #52 lands, both calls fail
+    // locally with IllegalArgumentException before anything is sent; flip this test to assert that.
+    @Test
+    fun `a nameless handshake fails fast with a typed malformed refusal and registers nothing`() {
+        val server = object : MultiConnectionUDPServer() {
+            val connections = CopyOnWriteArrayList<Connection>()
+            override fun onClientConnect(connection: Connection) { connections += connection }
+        }
+        val bare = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
+        val withCredential = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
+        try {
+            listOf(
+                bare.handshake(""),
+                withCredential.handshake("", credential = "tok"),
+            ).forEach { outcome ->
+                // A typed refusal, not a SocketTimeoutException: the server answered.
+                val cause = assertIs<HandshakeRefusedException>(outcome.exceptionOrNull())
+                assertEquals("malformed", cause.reason)
+            }
+            Thread.sleep(SETTLE_MILLIS)
+            assertTrue(server.connections.isEmpty())
+        } finally {
+            bare.stop()
+            withCredential.stop()
             server.stop()
         }
     }
