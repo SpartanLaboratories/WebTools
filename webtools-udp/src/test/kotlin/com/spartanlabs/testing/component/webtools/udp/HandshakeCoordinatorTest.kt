@@ -574,7 +574,7 @@ class HandshakeCoordinatorTest {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
 
-        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), " ").isSuccess)
+        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), "\u0000\u0001").isSuccess)
     }
 
     @Test
