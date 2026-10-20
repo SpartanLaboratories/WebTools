@@ -82,6 +82,14 @@ class HandshakeProtocolTest {
         assertEquals(HandshakeParse.NotAHandshake, parse("Iam\tbob"))
     }
 
+    @Test
+    fun `parseHandshake reports NotAHandshake before any slot defect`() {
+        assertEquals(HandshakeParse.NotAHandshake, parse("HELLO", "", "x"))
+        assertEquals(HandshakeParse.NotAHandshake, parse("iam", "", "x"))
+        assertEquals(HandshakeParse.NotAHandshake, parse("iam", "bob", ""))
+        assertEquals(HandshakeParse.NotAHandshake, parse("Nope", "bob", "", "tok"))
+    }
+
     // --- parseHandshake: totality and the known #53 gap ---
 
     @Test
@@ -153,7 +161,7 @@ class HandshakeProtocolTest {
     // --- isHandshake ---
 
     @Test
-    fun `isHandshake truth table`() {
+    fun `isHandshake is true only when the first token is exactly Iam, whatever the slots hold`() {
         assertTrue(HandshakeProtocol.isHandshake(listOf("Iam", "x")))
         assertTrue(HandshakeProtocol.isHandshake(listOf("Iam")))
         assertTrue(HandshakeProtocol.isHandshake(listOf("Iam", "")))

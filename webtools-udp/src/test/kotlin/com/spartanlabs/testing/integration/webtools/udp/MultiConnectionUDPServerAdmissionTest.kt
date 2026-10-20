@@ -119,6 +119,7 @@ class MultiConnectionUDPServerAdmissionTest {
             assertEquals("REGISTERED 2", client.exchange("Iam alice"))
             assertEquals("REFUSED malformed", client.exchange("Iam  x"))
             assertEquals("REFUSED malformed", client.exchange("Iam"))
+            assertEquals("REFUSED malformed", client.exchange("Iam alice  tok"))
             assertEquals("REGISTERED 2", client.exchange("Iam alice"))
             Thread.sleep(SETTLE_MILLIS)
             assertEquals(listOf("alice"), guarded.connected.toList())
@@ -152,6 +153,17 @@ class MultiConnectionUDPServerAdmissionTest {
         DatagramSocket().use { client ->
             assertEquals("REFUSED banned", client.exchange("Iam banned"))
             assertEquals("REGISTERED 2", client.exchange("Iam guarded s3cret"))
+        }
+    }
+
+    @Test
+    fun `a socket refused as malformed can retry a well-formed Iam on the same socket`() {
+        val guarded = GuardedServer().also { server = it }
+        DatagramSocket().use { client ->
+            assertEquals("REFUSED malformed", client.exchange("Iam  x"))
+            assertEquals("REGISTERED 2", client.exchange("Iam bob"))
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(listOf("bob"), guarded.connected.toList())
         }
     }
 

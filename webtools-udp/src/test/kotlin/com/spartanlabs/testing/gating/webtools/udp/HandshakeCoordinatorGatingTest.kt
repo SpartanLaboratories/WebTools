@@ -76,6 +76,20 @@ class HandshakeCoordinatorGatingTest {
     }
 
     @Test
+    fun `a malformed Iam from a registered origin gets REFUSED malformed and keeps its registration`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
+        coordinator.accept(origin, "Iam alice")
+        replies.clear()
+
+        assertTrue(coordinator.accept(origin, "Iam  x").isSuccess)
+
+        assertEquals(listOf("REFUSED malformed" to origin), replies)
+        assertEquals(1, coordinator.size)
+        assertEquals(listOf("alice"), created)
+    }
+
+    @Test
     fun `an admitted Iam with a credential registers and the credential reaches admit`() {
         val replies = mutableListOf<Pair<String, InetSocketAddress>>()
         val coordinator = coordinator(replies)
@@ -145,10 +159,12 @@ class HandshakeCoordinatorGatingTest {
 
     @Test
     fun `an unframed non-Iam datagram from an unregistered origin is dropped`() {
-        val coordinator = coordinator(mutableListOf())
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
 
         assertTrue(coordinator.accept(origin, "hello").isSuccess)
         assertEquals(0, coordinator.size)
+        assertTrue(replies.isEmpty())
     }
 
     @Test

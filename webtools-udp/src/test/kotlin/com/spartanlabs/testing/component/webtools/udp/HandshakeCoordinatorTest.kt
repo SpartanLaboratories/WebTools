@@ -727,11 +727,28 @@ class HandshakeCoordinatorTest {
     }
 
     @Test
-    fun `deliverData with no handler bound drops a binary datagram`() {
+    fun `an unframed NUL-led datagram from a registered origin is dropped with no reply`() {
         val coordinator = newCoordinator()
         coordinator.accept(originA, "Iam alice")
+        sent.clear()
 
         assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), "\u0000\u0001").isSuccess)
+        assertTrue(sent.isEmpty())
+        assertEquals(1, coordinator.size)
+    }
+
+    @Test
+    fun `deliverData with no handler bound drops a 0x90 frame with no reply`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        sent.clear()
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(0x00, 0x01))
+
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            assertTrue(coordinator.accept(originA, framed, "").isSuccess)
+            assertTrue(events.hasEventAt(Level.DEBUG, "No handler bound for"))
+        }
+        assertTrue(sent.isEmpty())
     }
 
     @Test

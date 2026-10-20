@@ -1,7 +1,9 @@
 package com.spartanlabs.testing.nonfunctional.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakeConnection
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.Connection
 import com.spartanlabs.webtools.udp.HandshakeCoordinator
@@ -20,10 +22,13 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 // Level 4c - non-functional properties of the multiplexed handshake / data path: the reply
-// is only ever addressed to the datagram source; the server binds exactly one socket
+// is only ever addressed to the datagram source; a hostile malformed line draws one bounded
+// reply to its origin and never reaches the log; the server binds exactly one socket
 // regardless of client count; per-client message order is preserved under a burst (with the
 // accepted cross-client head-of-line-blocking trade-off documented below); a KA storm
 // creates no registrations and is never dispatched.
@@ -57,6 +62,48 @@ class HandshakeNonFunctionalTest {
         coordinator.accept(origin, "Iam spoofer 203.0.113.9")
 
         assertEquals(listOf(origin, origin), replyTargets)
+    }
+
+    @Test
+    fun `a malformed Iam carrying CR-LF and a credential-like token draws one bounded reply to its origin and stays out of the log`() {
+        val replies = mutableListOf<Pair<ByteArray, InetSocketAddress>>()
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, _ -> FakeConnection(name, peer) },
+            sender = { bytes, target -> replies += bytes to target; Result.success(Unit) },
+            onRegistered = {},
+            admit = { _, _, _ -> Admission.Admitted },
+            dispatch = { it() },
+            onDisconnect = { _, _ -> },
+            idleTimeoutMillis = 0L,
+            keepAliveSchedule = FakePeriodicSchedule(),
+            probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
+        )
+        // The two spaces leave the credential slot empty, so the line is malformed. The name
+        // token carries CR/LF and a forged log line; the last token stands in for an access token.
+        val hostileLine = "Iam evil\r\nFORGED-LOG-LINE  sk_live_SECRET"
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(origin, hostileLine).isSuccess)
+
+            val event = events.single()
+            val message = event.formattedMessage
+            assertEquals(Level.WARN, event.level)
+            assertNull(event.throwableProxy, "no exception object is attached")
+            assertTrue(message.contains("credential empty"), message)
+            assertFalse(message.contains('\r'), message)
+            assertFalse(message.contains('\n'), message)
+            assertFalse(message.contains("FORGED-LOG-LINE"), message)
+            assertFalse(message.contains("evil"), message)
+            assertFalse(message.contains("sk_live_SECRET"), message)
+        }
+
+        val (bytes, target) = replies.single()
+        assertEquals(origin, target)
+        assertTrue(bytes.size <= 17, "the reply is ${bytes.size} bytes")
+        assertEquals("REFUSED malformed", String(bytes, Charsets.UTF_8))
+        assertEquals(0, coordinator.size)
     }
 
     @Test

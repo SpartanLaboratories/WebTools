@@ -45,6 +45,19 @@ class HandshakeProtocolGatingTest {
     }
 
     @Test
+    fun `an Iam with a present-but-empty credential slot is malformed with the credential-empty defect`() {
+        assertEquals(
+            HandshakeParse.Malformed(HandshakeDefect.CREDENTIAL_EMPTY),
+            HandshakeProtocol.parseHandshake(listOf("Iam", "bob", "", "tok")),
+        )
+    }
+
+    @Test
+    fun `a line whose first token is not Iam is not a handshake`() {
+        assertEquals(HandshakeParse.NotAHandshake, HandshakeProtocol.parseHandshake(listOf("HELLO", "there")))
+    }
+
+    @Test
     fun `the handshake reply verb is REGISTERED and the datagram is versioned`() {
         assertEquals("REGISTERED", HandshakeProtocol.REGISTERED_REPLY)
         assertEquals("REGISTERED 2", String(HandshakeProtocol.REGISTERED_DATAGRAM, Charsets.UTF_8))

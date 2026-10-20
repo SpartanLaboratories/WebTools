@@ -2,7 +2,9 @@ package com.spartanlabs.testing.nonfunctional.webtools.udp
 
 import com.spartanlabs.webtools.udp.Admission
 import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DisconnectReason
 import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInstance
 import java.net.DatagramPacket
@@ -21,8 +23,10 @@ import kotlin.test.assertTrue
 
 // Level 4c - robustness / security / timing properties of the admit() screening hook over a
 // real socket: the credential arrives verbatim, a throwing admit never wedges the listener,
-// a refusal burst leaks no state, a slow admit serialises handshakes (documented cost), and
-// a multi-line refusal reason is collapsed to one wire line.
+// a refusal burst leaks no state, a malformed-handshake burst - from strangers and from a
+// registered socket - draws exactly one refusal per datagram and never reaches admit, a slow
+// admit serialises handshakes (documented cost), and a multi-line refusal reason is
+// collapsed to one wire line.
 @Tag("nonfunctional")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MultiConnectionUDPServerAdmissionNonFunctionalTest {
@@ -147,10 +151,58 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
                 client.send("Iam good")
                 assertEquals("REGISTERED 2", client.recv())
             }
-            Thread.sleep(200)
+            // onClientConnect runs after the REGISTERED 2 send; give it time to land before asserting.
+            Thread.sleep(CONNECT_SETTLE_MILLIS)
         }
         assertEquals(listOf("good"), admitted.toList(), "only the well-formed line reached admit")
         assertEquals(listOf("good"), connected.toList())
+    }
+
+    @Test
+    fun `a malformed burst that includes a registered socket draws one refusal per datagram and the peer stays registered and reachable`() {
+        val admitted = ConcurrentLinkedQueue<String>()
+        val connected = CopyOnWriteArrayList<Connection>()
+        val disconnects = CopyOnWriteArrayList<DisconnectReason>()
+        val server = object : MultiConnectionUDPServer() {
+            override fun admit(name: String, peer: InetSocketAddress, credential: String): Admission {
+                admitted += name
+                return Admission.Admitted
+            }
+            override fun onClientConnect(connection: Connection) { connected += connection }
+            override fun onClientDisconnect(connection: Connection, reason: DisconnectReason) { disconnects += reason }
+        }
+        val malformedLines = listOf("Iam", "Iam  x", "Iam bob  tok")
+        withServer(server) {
+            DatagramSocket().use { peer ->
+                DatagramSocket().use { stranger ->
+                    peer.send("Iam peer")
+                    assertEquals("REGISTERED 2", peer.recv())
+                    // onClientConnect runs after the REGISTERED 2 send; give it time to land before asserting.
+                    Thread.sleep(CONNECT_SETTLE_MILLIS)
+
+                    repeat(MALFORMED_BURST_WITH_PEER) { i ->
+                        val line = malformedLines[i % malformedLines.size]
+                        val sender = if (i % 2 == 0) peer else stranger
+                        sender.send(line)
+                        assertEquals("REFUSED malformed", sender.recv(2000), line)
+                    }
+                    // One reply per datagram: after the burst nothing further is queued on either socket.
+                    assertNull(runCatching { peer.recv(300) }.getOrNull(), "no extra reply to the registered peer")
+                    assertNull(runCatching { stranger.recv(300) }.getOrNull(), "no extra reply to the stranger")
+
+                    assertEquals(listOf("peer"), admitted.toList(), "only the registering line reached admit")
+                    assertEquals(1, connected.size, "the peer is still the only registration")
+                    assertTrue(disconnects.isEmpty(), "no onClientDisconnect fired before stop")
+                    // pushToAll addresses only peers still in the registry, so receiving it proves the
+                    // registration survived the burst.
+                    assertTrue(server.pushToAll("still-here").isSuccess)
+                    peer.soTimeout = 5000
+                    val packet = DatagramPacket(ByteArray(4096), 4096).also { peer.receive(it) }
+                    val payload = TransportWireFormat.unreliablePayloadOf(packet.data.copyOf(packet.length))
+                    assertEquals("still-here", payload?.toString(Charsets.UTF_8))
+                }
+            }
+        }
     }
 
     @Test
@@ -202,5 +254,7 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
         const val ADMIT_DELAY_MILLIS = 200L
         const val HANDSHAKES = 5
         const val MALFORMED_BURST = 600
+        const val MALFORMED_BURST_WITH_PEER = 300
+        const val CONNECT_SETTLE_MILLIS = 200L
     }
 }
