@@ -12,7 +12,7 @@
 All lines arrive as unframed UTF-8 text. The server trims the text and splits it on a
 single U+0020.
 
-| Line | From | Before | After |
+| Line | From | Before (`2.0.0` and earlier) | After (`2.0.0a`) |
 |---|---|---|---|
 | bare `Iam` | an origin with no registration | no reply; listener WARN with a stack trace | `REFUSED malformed`; one WARN (origin, defect, registered flag); nothing registered |
 | bare `Iam` | a registered origin | no reply; listener WARN with a stack trace | `REFUSED malformed`; the registration is kept |
@@ -63,7 +63,7 @@ contract.
 |---|---|
 | Production code | `HandshakeProtocol.kt`: the sealed parse outcome, the defect enum, the reply bytes. `HandshakeCoordinator.kt`: one split, one parse, the routing. |
 | Public KDoc | `MultiConnectionUDPServer.kt` (class, `admit`) and `HandshakeWireFormat.kt` (credential slot, the `REFUSED` reply, `REFUSED_REPLY`). Documentation only; no signature changes. |
-| Tests | Two tests flip from silence to `REFUSED malformed`. New cases at levels 1, 2, 3, 4a and 4c. `HandshakeProtocolTest` and `HandshakeProtocolGatingTest` follow the sealed outcome. |
+| Tests | Two tests flip from silence to `REFUSED malformed`. New cases at levels 1, 2, 3, 4a, 4b and 4c. `HandshakeProtocolTest` and `HandshakeProtocolGatingTest` follow the sealed outcome. The 4b case pins the library client's empty-name refusal until #52 rejects it locally. |
 | Test hygiene | The raw NUL and SOH bytes in `HandshakeCoordinatorTest.kt:577` become `"\u0000\u0001"`, so ripgrep-based search reaches the file again. The comment at `ChannelByteGuardIntegrationTest.kt:25` points at the raw-socket peer's current lines. |
 | Protocol doc | §3 (the rule, the registered-origin trade-off, the #53 gap, replies to unverified origins) and §8 (the malformed rows). Every out-of-date source line reference is refreshed, 21 of 37 on `85cfbbe`. |
 | Architecture doc | The line reference at `:52` and the handshake node in the inbound-dispatch flowchart. |
@@ -88,7 +88,7 @@ Every site that recognises or tokenises an `Iam` line:
 
 Consumers of `io.github.spartanlaboratories:webtools-udp` get no API change, and a consumer
 whose clients send well-formed handshakes sees no difference on the wire. The fix ships as
-a bugfix release.
+the bugfix release `2.0.0a`.
 
 ## 6. Follow-ups
 

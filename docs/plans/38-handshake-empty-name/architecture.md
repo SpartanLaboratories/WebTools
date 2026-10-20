@@ -53,7 +53,10 @@ handshake line. The work makes the server refuse a malformed one.
    server log only.
 3. **A malformed line** never reaches `admit()`, never supersedes a same-name
    registration, registers nothing, and fires no `onClientConnect`. From an origin that
-   already holds a registration, the registration is left exactly as it is: no teardown.
+   already holds a registration, the registration is not torn down, superseded or
+   re-screened, and no `onClientDisconnect` fires; like every inbound datagram from a
+   registered origin, the line still refreshes the registration's liveness stamp when
+   idle detection is on.
    The rule "`REFUSED` only ever goes to an unregistered origin" is deliberately
    relaxed, and the protocol doc states the trade-off: a library client mid-session drops
    the unframed `REFUSED` with a WARN (`main/MultiConnectionUDPClient.kt:611-618`); a
@@ -95,8 +98,8 @@ handshake line. The work makes the server refuse a malformed one.
     `MultiConnectionUDPClient.handshake("", …)` fail locally.
 
 **Acceptance.** Each of the three malformed shapes, from an unknown origin and from a
-registered origin, draws exactly one `REFUSED malformed`, calls no `admit`, changes no
-registration, fires no `onClientConnect`, and logs one WARN without the line, its
+registered origin, draws exactly one `REFUSED malformed`, calls no `admit`, adds,
+supersedes and tears down no registration, fires no `onClientConnect`, and logs one WARN without the line, its
 tokens, the name or the credential. `Iam bob`, `Iam bob tok` and `Iam bob tok  x`
 register (or, from a registered origin, draw `REGISTERED 2`). `Iam<TAB>bob` and every
 other unrecognised datagram draw nothing. A burst of malformed lines leaves the listener

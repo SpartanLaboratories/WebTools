@@ -18,8 +18,9 @@ package com.spartanlabs.webtools.udp
  * with a structured or binary credential encodes it first (base64url is the
  * recommendation). An absent credential is delivered to `admit` as the empty
  * string; a slot that is present but empty (`Iam <name>  <credential>` with two
- * spaces) is not an absent credential but a malformed line, refused before `admit`
- * (see the `REFUSED` reply below). The credential rides **in cleartext**: this is a channel, not
+ * spaces) is not an absent credential but a malformed line, which a `webtools-udp`
+ * `2.0.0a`+ server refuses before `admit` (see the `REFUSED` reply below). The
+ * credential rides **in cleartext**: this is a channel, not
  * confidentiality - a scheme needing secrecy must be self-protecting (short
  * TTL, channel binding) or run over an encrypted underlay.
  *
@@ -35,13 +36,17 @@ package com.spartanlabs.webtools.udp
  * | `1.x` | `2.0` | `REGISTERED 2` | `Result.failure(IllegalStateException("Expected 'REGISTERED' but got 'REGISTERED 2'"))` |
  *
  * ### The `REFUSED` reply
- * A `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a bare
- * `REFUSED`) instead of an accepted reply, in two cases: [MultiConnectionUDPServer.admit]
- * refuses it, or the line is **malformed** - a missing or empty name, or a credential
- * slot that is present but empty. A malformed line is refused with the fixed reason
- * `malformed`, which is informative text, not a contract: a client must not branch on
- * it, and `admit` may return the same word. It is sent whatever the state of the
- * sender's origin and leaves any registration that origin holds exactly as it was.
+ * A `webtools-udp` `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a
+ * bare `REFUSED`) instead of an accepted reply when [MultiConnectionUDPServer.admit]
+ * refuses it. A `2.0.0a`+ server also answers a **malformed** `Iam` - a missing or
+ * empty name, or a credential slot that is present but empty - with the fixed reason
+ * `malformed`; an earlier server registers the empty-name and empty-credential shapes
+ * and leaves a bare `Iam` unanswered. The reason `malformed` is informative text, not
+ * a contract: a client must not branch on it, and `admit` may return the same word.
+ * The refusal is sent whatever the state of the sender's origin. A registration that
+ * origin already holds is not torn down, superseded or re-screened; like any inbound
+ * datagram from a registered origin, the line does refresh that registration's
+ * idle-detection stamp when the server's `idleTimeoutMillis` is positive.
  *
  * `REFUSED` is interpreted **only** by [MultiConnectionUDPClient.handshake]
  * reading its single reply datagram; framed session traffic never carries it. A
@@ -63,10 +68,10 @@ object HandshakeWireFormat {
 
     /**
      * The verb of the server's handshake-refused reply: `REFUSED <reason>` (or a
-     * bare `REFUSED`). Sent by a `1.4.0`+ server instead of an accepted reply
-     * when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and when
-     * the server rejects a malformed `Iam` itself (reason `malformed`, informative
-     * text - not a contract).
+     * bare `REFUSED`). Sent by a `webtools-udp` `1.4.0`+ server instead of an accepted
+     * reply when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and by a
+     * `webtools-udp` `2.0.0a`+ server when it rejects a malformed `Iam` itself (reason
+     * `malformed`, informative text - not a contract).
      */
     const val REFUSED_REPLY = "REFUSED"
 

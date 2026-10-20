@@ -12,8 +12,10 @@ import java.net.InetSocketAddress
  *   routed. A **malformed** line (a missing or empty name, or a present-but-empty
  *   credential) is answered `REFUSED malformed` whatever the state of its origin:
  *   it never reaches [admit], registers nothing, supersedes nothing, fires no
- *   [onRegistered], and leaves any registration its origin already holds exactly as
- *   it was. A well-formed retransmit from a known origin just re-sends
+ *   [onRegistered], and does not tear down, supersede or re-screen a registration
+ *   its origin already holds (that registration's liveness stamp is still refreshed,
+ *   as for every inbound datagram - see the liveness tracker below). A well-formed
+ *   retransmit from a known origin just re-sends
  *   `REGISTERED 2` (no re-screening). A well-formed first `Iam` from a new origin is
  *   screened by [admit] before anything else; on [Admission.Refused] the server
  *   replies `REFUSED <reason>`, registers nothing, and does not fire [onRegistered].
@@ -125,6 +127,8 @@ internal class HandshakeCoordinator(
      */
     fun snapshot(): List<Registration> = registrations.snapshot()
 
+    //region Inbound routing
+
     /**
      * The single entry point the listener loop calls for every inbound datagram.
      * Classifies before acting on the [DatagramType] tag (byte 0): a `0x80`
@@ -139,8 +143,8 @@ internal class HandshakeCoordinator(
      * unframed datagram (byte 0 `< 0x80`) is split once on U+0020 and parsed
      * ([HandshakeProtocol.parseHandshake]): a first token other than `Iam` is
      * dropped with a WARN (a pre-`2.0` sender); a malformed `Iam` is answered
-     * `REFUSED malformed` from any origin and changes no registration; a
-     * well-formed `Iam` runs the handshake state machine inline. When idle
+     * `REFUSED malformed` from any origin and adds, supersedes or tears down no
+     * registration; a well-formed `Iam` runs the handshake state machine inline. When idle
      * detection is enabled, `accept` also stamps the origin's last-inbound time
      * and clears any prior TIMEOUT latch, before classifying - for every datagram
      * from a registered origin, dropped or not.
@@ -154,7 +158,9 @@ internal class HandshakeCoordinator(
      * coordinator does not trim again
      * @return [Result.success] if handled or harmlessly ignored - including a
      * malformed `Iam` whose `REFUSED malformed` reply went out - or [Result.failure]
-     * only if a reply could not be delivered or [admit] threw
+     * if a reply could not be delivered, [admit] threw, or a bound handler could not be
+     * handed to [dispatch] (for example after the server's dispatch executor has shut
+     * down)
      */
     fun accept(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
         if (livenessTracked) registrations.findByOrigin(origin)?.let {
@@ -247,11 +253,19 @@ internal class HandshakeCoordinator(
     /**
      * Two-argument [accept] overload retained for callers that only have the
      * datagram text - delegates with `bytes` derived from a UTF-8 encode of [text].
-     * [text] is used as given: unlike the real receive path (`CommonChannel` trims
-     * once), this overload does not trim, so a caller must pass trimmed text.
+     *
+     * @param origin the datagram's post-NAT source - where any reply is addressed
+     * @param text the datagram text, already trimmed: unlike the real receive path
+     * (`CommonChannel` trims once), this overload does not trim, so a caller must pass
+     * trimmed text
+     * @return the same [Result] the three-argument [accept] returns for these bytes
      */
     fun accept(origin: InetSocketAddress, text: String): Result<Unit> =
         accept(origin, text.toByteArray(Charsets.UTF_8), text)
+
+    //endregion
+
+    //region Handshake state machine
 
     /**
      * Routes one unframed datagram, already split on U+0020, by the outcome of
@@ -282,9 +296,11 @@ internal class HandshakeCoordinator(
     /**
      * Answers a malformed `Iam` with the fixed
      * [HandshakeProtocol.MALFORMED_REFUSAL_DATAGRAM], whatever the state of [origin].
-     * Touches no registration: nothing is added, superseded or torn down, [admit] is
-     * not consulted and [onRegistered] does not fire. The registry is read once, only
-     * to say in the log whether [origin] holds a registration (which is kept).
+     * Changes no registration itself: nothing is added, superseded or torn down,
+     * [admit] is not consulted and [onRegistered] does not fire. (Before routing,
+     * [accept] has already refreshed a registered origin's liveness stamp, as it does
+     * for every inbound datagram.) The registry is read once, only to say in the log
+     * whether [origin] holds a registration (which is kept).
      *
      * Logs one WARN with a fixed message template. Its arguments are the origin
      * (rendered from the socket address), [defect]'s fixed label and the registered
@@ -329,8 +345,9 @@ internal class HandshakeCoordinator(
     /**
      * Screens a first well-formed `Iam` from an unknown [origin] with [admit], then
      * supersedes any same-name registration, registers the newcomer, sends
-     * `REGISTERED 2` and fires [onRegistered]. This is the previous inline body,
-     * moved unchanged; the register-before-send ordering is deliberate (#49).
+     * `REGISTERED 2` and fires [onRegistered]. The registration is added before the
+     * send, so a send that fails leaves a registration whose [onRegistered] never
+     * fired - a known defect, tracked as #49.
      *
      * @param origin the datagram's post-NAT source
      * @param handshake the parsed name and credential
@@ -372,10 +389,15 @@ internal class HandshakeCoordinator(
                 .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
         }
         val connection = newConnection(name, origin, this)
+        // FIXME(#49): registers before the REGISTERED 2 send; a failed send orphans the registration.
         registrations.add(Registration(connection))
         log.info("Registered connection '{}' for {}", name, origin)
         return send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
     }
+
+    //endregion
+
+    //region Delivery to bound handlers
 
     /**
      * Delivers a `0x90` payload to [origin]'s bound handler. Screening order: [origin] must be
@@ -468,7 +490,9 @@ internal class HandshakeCoordinator(
         }
     }
 
-    // --- ClientChannel ---
+    //endregion
+
+    //region ClientChannel and scheduler shutdown
 
     override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
         // Only pay the origin scan once a keepalive is armed anywhere (default-cost-zero,
@@ -595,6 +619,10 @@ internal class HandshakeCoordinator(
         return Result.success(Unit)
     }
 
+    //endregion
+
+    //region Liveness
+
     /**
      * Reports every registered connection that has been idle beyond
      * [idleTimeoutMillis] via `onDisconnect(_, TIMEOUT)`, at most once per idle
@@ -618,6 +646,10 @@ internal class HandshakeCoordinator(
                 .onFailure { log.warn("onDisconnect(TIMEOUT) failed for '{}'", reg.connection.name, it) }
         }
     }
+
+    //endregion
+
+    //region Server-wide fan-out
 
     /**
      * Binds [onMessage] as the handler on every registered connection, stopping at
@@ -708,6 +740,8 @@ internal class HandshakeCoordinator(
         registrations.snapshot().fold(Result.success(Unit)) { terminated, registration ->
             registration.connection.terminate().let { outcome -> terminated.flatMap { outcome } }
         }
+
+    //endregion
 
     private companion object {
         private val log = LoggerFactory.getLogger(HandshakeCoordinator::class.java)

@@ -49,10 +49,13 @@ it on a single U+0020. A line whose first token is exactly `Iam` is a handshake 
    three shapes; the defect detail goes to the server log only.
 3. **A malformed line** never reaches `admit()`, never supersedes a same-name registration,
    registers nothing, and fires no `onClientConnect`. From an origin that already holds a
-   registration, that registration is left exactly as it is, with no teardown. `REFUSED`
-   may therefore reach a mid-session peer: a library client's session listener drops it
-   with a WARN (`main/MultiConnectionUDPClient.kt:611-618`); a third-party client may read
-   it as a disconnect while the server keeps it registered. The protocol doc states this.
+   registration, that registration is not torn down, superseded or re-screened, and no
+   `onClientDisconnect` fires; like every inbound datagram from a registered origin, the
+   line still refreshes the registration's liveness stamp when idle detection is on.
+   `REFUSED` may therefore reach a mid-session peer: a library client's session listener
+   drops it with a WARN (`main/MultiConnectionUDPClient.kt:611-618`); a third-party client
+   may read it as a disconnect while the server keeps it registered. The protocol doc
+   states this.
 4. **A well-formed `Iam` from a registered origin** gets `REGISTERED 2` again, with no
    re-screening. **From an unknown origin** it takes today's `admit`, supersede, register,
    `REGISTERED 2`, `onRegistered` path unchanged, including the register-before-send
@@ -83,9 +86,10 @@ it on a single U+0020. A line whose first token is exactly `Iam` is a handshake 
     a bare `Iam` flip to expecting `REFUSED malformed`.
 
 **Acceptance.** Each of the three malformed shapes, from an unknown origin and from a
-registered origin, draws exactly one `REFUSED malformed`, calls no `admit`, changes no
-registration, fires no `onClientConnect`, and logs one WARN that contains neither the
-line, its tokens, the name nor the credential. `Iam bob`, `Iam bob tok` and
+registered origin, draws exactly one `REFUSED malformed`, calls no `admit`, adds,
+supersedes and tears down no registration, fires no `onClientConnect`, and logs one WARN
+that contains neither the line, its tokens, the name nor the credential. A registered peer
+that draws it stays registered and reachable. `Iam bob`, `Iam bob tok` and
 `Iam bob tok  x` register (from a registered origin: draw `REGISTERED 2`). `Iam<TAB>bob`
 and every other unrecognised datagram draw nothing. A burst of malformed lines leaves the
 listener alive and the registration count unchanged. Every `File.kt:N` reference in the
@@ -247,7 +251,7 @@ malformed arm. `handleHandshake` (valid line: lookup, retransmit) and `admitAndR
 | `refuseMalformed(origin, defect): Result<Unit>` | returns `send(...)`'s `Result`; `Result.success` when the reply went out (as the `Admission.Refused` path does at `:264-271`) | an undeliverable reply is the only failure | by `routeUnframed`'s caller chain, as above |
 | `handleHandshake(origin, handshake): Result<Unit>` | as the old body: the repeat-reply send's `Result` | same | as above |
 | `admitAndRegister(origin, handshake): Result<Unit>` | `Result.failure(cause)` if `admit` throws (via `runCatching`/`getOrElse`, unchanged); the send's failure | same as today | as above |
-| `accept(...)`'s `@return` | `Result.failure` now means only "a reply could not be delivered" or "`admit` threw" | n/a | `receiveLoop` |
+| `accept(...)`'s `@return` | `Result.failure` means a reply could not be delivered, `admit` threw, or a bound handler could not be handed to `dispatch` (for example after the server's dispatch executor has shut down) | n/a | `receiveLoop` |
 
 **Concurrency.** Everything runs on `mcups-listener`, as today. `Registrations` is a
 copy-on-write list. `MALFORMED_REFUSAL_DATAGRAM` is a shared array that is only read (like
@@ -280,6 +284,9 @@ Stage A's checks (§8.1) pass before Stage B starts: Stage B's line references a
 from Stage A's final files.
 
 ## 7. File-by-file changes — Stage A
+
+Stage C (§17) amends the KDoc and tests that Stage A introduces; the text below is Stage A
+as it lands in Commit 2.
 
 ### A-1 `test/component/webtools/udp/HandshakeCoordinatorTest.kt` — escape the NUL/SOH bytes (FIRST edit to this file)
 
@@ -1567,11 +1574,17 @@ add `const val MALFORMED_BURST = 600`. No new imports.
 The final `good` handshake succeeding is the liveness proof for the listener thread
 (requirement 8). Nonfunctional +1 (62 -> 63).
 
-### T-9 Not planned
+### T-9 Levels 4b and 5
 
-- **Level 4b (e2e):** not required. If one is added later it must send from a raw
-  `DatagramSocket`. `MultiConnectionUDPServerE2ETest.kt:44-94` has a private raw `Client`.
-- **Level 5 (uat):** no change.
+- **Level 4b (e2e):** added in Stage C (§17, C-T7): a real default server and a real
+  `MultiConnectionUDPClient`, pinning that an empty name fails fast with a typed `malformed`
+  refusal until #52 rejects it locally. Any e2e case that needs a malformed line other than
+  the library client's own sends it from a raw `DatagramSocket`
+  (`MultiConnectionUDPServerE2ETest.kt:44-94` has a private raw `Client`).
+- **Level 5 (uat):** no UAT step. The change's only observable surface is the wire reply
+  and the server log, and the level-3, 4b and 4c tests exercise both end to end over real
+  loopback sockets; a manual pass would repeat those exchanges without adding product-fit
+  information.
 - **Not automatable:** the readability/accuracy of the documentation edits (Stage B) and
   the Boundary-Ring note's arithmetic are reviewed by reading; the line-reference check
   (§10, B-7) is a script plus a human read of first/last lines.
@@ -1585,10 +1598,12 @@ The final `good` handshake succeeding is the liveness proof for the listener thr
 ./gradlew.bat :webtools-udp:test
 ```
 
-All must end `BUILD SUCCESSFUL`. Expected per-level counts (sum the `tests=` attribute of
-`webtools-udp/build/test-results/<task>/*.xml`): gating **80** (77+3), component **234**
-(223+11), deterministic **95** (89+6), integration **114** (110+4), nonfunctional **63**
-(62+1). The e2e and uat counts are unchanged. A single class:
+All must end `BUILD SUCCESSFUL`. Expected per-level counts after Stage A (sum the `tests=`
+attribute of `webtools-udp/build/test-results/<task>/*.xml`): gating **80** (77+3),
+component **234** (223+11), deterministic **95** (89+6), integration **114** (110+4),
+nonfunctional **63** (62+1), e2e **33** (unchanged), uat **13** (unchanged). After Stage C
+(§17, C-6): gating **83**, component **235**, deterministic **96**, integration **115**,
+e2e **34**, nonfunctional **65**, uat **13**. A single class:
 `./gradlew.bat :webtools-udp:componentTest --tests 'com.spartanlabs.testing.component.webtools.udp.HandshakeCoordinatorTest'`.
 The socket-binding tasks (integration, e2e, nonfunctional) are serialised by
 `commonUdpPortLock`; run them in one Gradle invocation, not in parallel shells.
@@ -1785,9 +1800,12 @@ The reason `malformed` is **informative, not contract**: a client treats any
 `admit` may return the same text, so the text alone does not show which layer
 refused.
 
-*From an origin that already holds a registration,* the registration is left
-exactly as it is — no teardown, no `onClientDisconnect` — but the reply still goes
-out. A peer that is mid-session can therefore receive an unframed
+*From an origin that already holds a registration,* the registration is not torn
+down, superseded or re-screened, and no `onClientDisconnect` fires — but the reply
+still goes out. Like every inbound datagram from a registered origin, the line also
+refreshes that registration's liveness stamp and clears its idle-timeout latch when
+idle detection is on (§5, `0x80` KEEPALIVE). A peer that is mid-session can
+therefore receive an unframed
 `REFUSED malformed`: the library client's session listener drops it with a WARN
 (`MultiConnectionUDPClient.kt:611-618`), and a third-party client may read it as a
 disconnect while the server keeps it registered. A genuine retransmit repeats the
@@ -1819,11 +1837,14 @@ party. A source address that holds no registration can draw three replies:
 `REGISTERED 2` (12 bytes) to any well-formed `Iam <name>`, which also registers it;
 `REFUSED <reason>` when `admit` refuses, of a length the application chooses; and
 `REFUSED malformed` (17 bytes) to a malformed line, which registers nothing. A
-source address that does hold a registration can draw two: `REGISTERED 2` to a
-well-formed `Iam`, and `REFUSED malformed` to a malformed one — so a forged source
-that knows a registered client's `ip:port` can make the server send that client
-unframed 17-byte datagrams, one per trigger datagram, at a rate the sender
-chooses. Each trigger datagram draws at most one reply. In UDP payload bytes the
+source address that does hold a registration can draw two handshake replies:
+`REGISTERED 2` to a well-formed `Iam`, and `REFUSED malformed` to a malformed one —
+so a forged source that knows a registered client's `ip:port` can make the server
+send that client unframed 17-byte datagrams, one per trigger datagram, at a rate the
+sender chooses. Each handshake trigger draws at most one reply. Outside the
+handshake, a registered source address also draws the transport's own replies: a
+9-byte `0x82` for each valid `0x81` (§5), and at most one standalone 8-byte `0xA1` per
+retransmit tick after an inbound `0xA0` (§6). In UDP payload bytes the
 smallest well-formed trigger (`Iam a`, 5 bytes) draws 12, a ratio of 2.4; the
 smallest malformed trigger (a bare `Iam`, 3 bytes) draws 17, a ratio of 5.7, and
 `Iam  x` (6 bytes) a ratio of 2.8; with 28 bytes of IPv4 and UDP headers counted
@@ -1859,10 +1880,15 @@ supersedes … fires `onClientConnect` inline." — stay as they are.)
 ```text
 A malformed line reaches the client as an ordinary `REFUSED`
 (`HandshakeRefusedException`, `reason == "malformed"`). A library client sends one
-today only when its name is empty or begins with a space, or its credential begins
-with a space; client-side validation
-([#52](https://github.com/SpartanLaboratories/WebTools/issues/52)) will reject those
-locally.
+whenever the line `handshake(name, credential = …)` builds has an empty name or
+credential slot once the server trims it and splits it on single U+0020: for example
+`handshake("")` (`Iam `, trimmed to a bare `Iam`), `handshake(" x")` (`Iam  x`),
+`handshake("a  b")` (`Iam a  b`), and `handshake("bob ", credential = "tok")` or
+`handshake("bob", credential = " tok")` (both `Iam bob  tok`). Not every input with a
+space is malformed: `handshake("bob", credential = " ")` trims to the valid `Iam bob`,
+and `handshake("a b")` is the valid `Iam a b` (name `a`, credential `b`). Client-side
+validation ([#52](https://github.com/SpartanLaboratories/WebTools/issues/52)) will
+reject such input locally.
 ```
 
 ### B-4 Protocol doc §8 (lines 315-342)
@@ -1879,7 +1905,7 @@ old (:321):
 | `Iam` with no name token (a bare `Iam`) | handshake parse failure, logged at WARN by the listener ("Failed to handle incoming datagram"), nothing registered, no reply | *(not applicable — the client never receives `Iam`)* |
 new (three rows):
 | `Iam` with a missing name (a bare `Iam`), an empty name slot, or a present-but-empty credential slot, from any origin | WARN (origin, defect label, whether the origin is registered — never the line), nothing registered, no `admit`, no `onClientConnect`; reply `REFUSED malformed` (informative text, not contract) | *(the client never receives `Iam`)*; a handshaking client sees the reply as `HandshakeRefusedException` with `reason == "malformed"` |
-| The same malformed `Iam` from an origin that already holds a registration | as above; the registration is left as it is (no teardown) | a library client's session listener drops the unframed `REFUSED malformed` with a WARN (`MultiConnectionUDPClient.kt:611-618`); a third-party client may read it as a disconnect |
+| The same malformed `Iam` from an origin that already holds a registration | as above; the registration is not torn down, superseded or re-screened (like any inbound datagram, the line refreshes its liveness stamp when idle detection is on, §5) | a library client's session listener drops the unframed `REFUSED malformed` with a WARN (`MultiConnectionUDPClient.kt:611-618`); a third-party client may read it as a disconnect |
 | `Iam` with a name and, optionally, a non-empty credential, followed by any further tokens (empty ones included) | extra tokens ignored at DEBUG; accepted (a registered origin gets `REGISTERED 2` again, whatever name the line carries: [#56](https://github.com/SpartanLaboratories/WebTools/issues/56)) | *(not applicable)* |
 ```
 
@@ -2011,7 +2037,16 @@ git status --short                     # only docs, README.md (and final-impleme
   |---|---|---|
   | 1 | A-1, A-2, plus `docs/plans/38-handshake-empty-name/plan.md`, `architecture.md` and `impact.md` | `test: escape the raw NUL/SOH bytes in HandshakeCoordinatorTest and refresh a stale line reference (Issue #38)` |
   | 2 | A-3..A-7 (code, KDoc, tests) | `fix: refuse a malformed Iam with REFUSED malformed instead of accepting or ignoring it (Issue #38)` |
-  | 3 | B-1..B-6 (protocol doc, architecture doc, README) | `docs: describe the malformed Iam refusal and refresh the protocol line references (Issue #38)` |
+  | 3 | C-1..C-4 and D-1..D-3 (production KDoc, the `#49` FIXME, `//region` markers) plus the updated `plan.md`, `architecture.md` and `impact.md` | `docs: state the exact registration and failure contracts of the malformed Iam refusal (Issue #38)` |
+  | 4 | C-T1..C-T8 and D-4 (tests at levels 1, 2, 3, 4a, 4b, 4c) | `test: cover the remaining malformed Iam paths at every level (Issue #38)` |
+  | 5 | B-1..B-6 as corrected by C-D and D-5, with every line reference recomputed in C-B and D-6 (protocol doc, architecture doc, README) | `docs: describe the malformed Iam refusal and refresh the protocol line references (Issue #38)` |
+  | 6 | version bump to `2.0.0a` (the manager's `build:` commit; it also moves the README install snippet to `2.0.0a`) | the manager's convention |
+
+  Commits 3 and 4 touch only `webtools-udp/src` and the plan documents; Commit 5 touches
+  only `README.md` and `docs/`. Commit 5 comes last because its line references are
+  computed from the files Commits 3 and 4 leave. Stage B's document edits sit uncommitted
+  in the working tree while Commits 3 and 4 are made; stage those commits by path, never
+  with `git add -A`.
 
   Commit 1 carries the plan so `git log --follow docs/plans/38-handshake-empty-name/plan.md`
   starts at the first implementation commit. `architecture.md` and `impact.md` are
@@ -2059,7 +2094,11 @@ git status --short                     # only docs, README.md (and final-impleme
   a UTF-8-safe path (§10 B-0). `*.kt` files are LF.
 - **Ordering constraint.** The protocol doc's references into `HandshakeCoordinator.kt`,
   `HandshakeProtocol.kt`, `HandshakeWireFormat.kt` and `MultiConnectionUDPServer.kt` and the
-  architecture doc's `:52` are computed only after Stage A is final.
+  architecture doc's `:52` are computed only after Stage A and Stage C are final (C-B
+  recomputes them).
+- **Version label in the documents.** The KDoc and the protocol doc name `2.0.0a` as the
+  first release that refuses a malformed `Iam` (C-2a, C-2b, C-2c, C-3, C-D1, C-D6). If the
+  release label differs, every one of those mentions changes with it.
 - **Test pinning a known gap.** `HandshakeProtocolTest` pins that a tab inside a name is
   still `Valid` (known gap #53); #53 flips it.
 - **Compatibility.** No public API change; no cross-repo impact; no change to
@@ -2079,8 +2118,15 @@ doc's known-gap paragraph; #54 adds its guard in `receiveLoop` and around `onReg
 
 1. A-1, A-2, then Commit 1 (with this plan, `architecture.md` and `impact.md`).
 2. A-3, A-4, A-5, A-6 (`compileKotlin`), then A-7 tests, then the §8.1 checks, then Commit 2.
-3. Stage B: B-0 pre-checks, B-1 and B-2 (compute), B-3..B-6 (edit), B-7 (check), Commit 3.
-4. The manager opens the PR, picks the version bump, and deletes the branch after merge.
+3. Stage B: B-0 pre-checks, B-1 and B-2 (compute), B-3..B-6 (edit), B-7 (check). Its
+   commit waits for Stage C.
+4. Stage C (§17): C-0, C-1..C-4 then C-5; C-T1..C-T8 then C-6; C-D (document
+   corrections), C-B (recompute every reference), C-7 (checks).
+5. Stage D (§18), on Stage C's uncommitted tree: D-1..D-6, then D-7. Then Commit 3
+   (C-1..C-4, D-1..D-3, plan documents), Commit 4 (C-T1..C-T8, D-4), Commit 5 (Stage B
+   with C-D, C-B, D-5, D-6).
+6. The manager commits the version bump to `2.0.0a`, opens the PR, and deletes the branch
+   after merge.
 
 Follow-ups (not part of this change): #41, #49, #52, #53, #54, #56, #57 as in §4.
 
@@ -2090,7 +2136,6 @@ Follow-ups (not part of this change): #41, #49, #52, #53, #54, #56, #57 as in §
   do if one does not.
 - The post-change line numbers for the protocol and architecture docs are unknown until
   Stage A is written; B-2 gives anchors and shifts, not numbers.
-- The e2e level was not run for the baseline (it is not changed by this plan).
 - The amplification ratios are derived from byte counts, not measured, and assume a 28-byte
   IPv4+UDP header with no options. No source gives a numeric rule that binds a custom text
   protocol; the 3x figures are QUIC and DTLS 1.3, applied by analogy.
@@ -2105,3 +2150,1432 @@ Follow-ups (not part of this change): #41, #49, #52, #53, #54, #56, #57 as in §
 None. The behaviour follows from the requirements in §1; no new public surface exists to
 assign a stability tier; the one open-ended wording choice (the reason text) is fixed
 (`malformed`) and documented as informative.
+
+## 17. Stage C — contracts, coverage and document corrections
+
+Stage C states the exact registration and failure contracts in the KDoc, marks the #49
+defect where it lives, adds `//region` navigation to `HandshakeCoordinator.kt`, widens the
+tests at every automated level, and corrects four protocol-doc passages. It starts from the
+branch at Commit 2 (`1605bdd`) with Stage B's three documents edited but uncommitted.
+
+- **Commit order:** its production and test edits (Commits 3 and 4) land before Stage B's
+  documents are committed (Commit 5). They shift the lines those documents cite, and C-B
+  recomputes every such reference.
+- **How to use the steps:** each step names its file, its anchor (current `path:line` on
+  `1605bdd`), the exact old and new text, and its check. Where a file does not match the
+  old text as quoted, stop and report; do not improvise.
+- **Apply by text:** use the `Edit` tool with the quoted old text, which is unique in its
+  file. Line numbers are for orientation only.
+- **Baseline** (the last full run on this tree, all green): gating 80, component 234,
+  deterministic 95, integration 114, e2e 33, nonfunctional 63, uat 13.
+
+### C-0 Preconditions
+
+```bash
+cd /d/Documents/Programming/WebTools
+git log --oneline -1     # expect: 1605bdd fix: refuse a malformed Iam with REFUSED malformed ...
+git status --short       # expect: M README.md, M docs/webtools-udp-architecture.md,
+                         # M docs/webtools-udp-protocol.md, and the plan documents if this
+                         # plan revision is not yet committed - nothing else
+```
+
+Do not edit `README.md` or anything under `docs/` before C-D. Stage Commits 3 and 4 by path.
+
+### C-1 `main/HandshakeProtocol.kt` — the reply-bytes KDoc states only its contract (`:40-47`)
+
+```text
+old:
+    /**
+     * The exact refusal datagram for a malformed `Iam`: `REFUSED malformed` as UTF-8
+     * bytes. Built once because the malformed path runs at a rate the sender chooses
+     * and [HandshakeWireFormat.refusedMessage] compiles a `Regex` per call. Shared and
+     * read-only, like [REGISTERED_DATAGRAM]: callers must not mutate it.
+     */
+    val MALFORMED_REFUSAL_DATAGRAM: ByteArray =
+        HandshakeWireFormat.refusedMessage(MALFORMED_REASON).toByteArray(Charsets.UTF_8)
+new:
+    /**
+     * The exact refusal datagram for a malformed `Iam`: the 17 bytes of
+     * `REFUSED malformed` in UTF-8. Shared and read-only, like [REGISTERED_DATAGRAM]:
+     * callers must not mutate it.
+     */
+    val MALFORMED_REFUSAL_DATAGRAM: ByteArray =
+        // Built once, not per reply: the malformed path runs at a rate the sender chooses, and
+        // HandshakeWireFormat.refusedMessage compiles a Regex on every call.
+        HandshakeWireFormat.refusedMessage(MALFORMED_REASON).toByteArray(Charsets.UTF_8)
+```
+
+The `//` comment sits inside the initializer so that the KDoc stays attached to the
+declaration.
+
+### C-2 `main/HandshakeWireFormat.kt` — which release refuses, and what a refusal leaves of a registration
+
+Three edits, top to bottom.
+
+**C-2a — "The optional credential slot" (`:19-22`).**
+
+```text
+old:
+ * recommendation). An absent credential is delivered to `admit` as the empty
+ * string; a slot that is present but empty (`Iam <name>  <credential>` with two
+ * spaces) is not an absent credential but a malformed line, refused before `admit`
+ * (see the `REFUSED` reply below). The credential rides **in cleartext**: this is a channel, not
+new:
+ * recommendation). An absent credential is delivered to `admit` as the empty
+ * string; a slot that is present but empty (`Iam <name>  <credential>` with two
+ * spaces) is not an absent credential but a malformed line, which a `2.0.0a`+ server
+ * refuses before `admit` (see the `REFUSED` reply below). The credential rides
+ * **in cleartext**: this is a channel, not
+```
+
+**C-2b — "The `REFUSED` reply" (`:37-44`).**
+
+```text
+old:
+ * ### The `REFUSED` reply
+ * A `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a bare
+ * `REFUSED`) instead of an accepted reply, in two cases: [MultiConnectionUDPServer.admit]
+ * refuses it, or the line is **malformed** - a missing or empty name, or a credential
+ * slot that is present but empty. A malformed line is refused with the fixed reason
+ * `malformed`, which is informative text, not a contract: a client must not branch on
+ * it, and `admit` may return the same word. It is sent whatever the state of the
+ * sender's origin and leaves any registration that origin holds exactly as it was.
+new:
+ * ### The `REFUSED` reply
+ * A `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a bare
+ * `REFUSED`) instead of an accepted reply when [MultiConnectionUDPServer.admit]
+ * refuses it. A `2.0.0a`+ server also answers a **malformed** `Iam` - a missing or
+ * empty name, or a credential slot that is present but empty - with the fixed reason
+ * `malformed`; an earlier server registers the empty-name and empty-credential shapes
+ * and leaves a bare `Iam` unanswered. The reason `malformed` is informative text, not
+ * a contract: a client must not branch on it, and `admit` may return the same word.
+ * The refusal is sent whatever the state of the sender's origin. A registration that
+ * origin already holds is not torn down, superseded or re-screened; like any inbound
+ * datagram from a registered origin, the line does refresh that registration's
+ * idle-detection stamp when the server's `idleTimeoutMillis` is positive.
+```
+
+**C-2c — `REFUSED_REPLY` (`:66-69`).**
+
+```text
+old:
+     * bare `REFUSED`). Sent by a `1.4.0`+ server instead of an accepted reply
+     * when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and when
+     * the server rejects a malformed `Iam` itself (reason `malformed`, informative
+     * text - not a contract).
+new:
+     * bare `REFUSED`). Sent by a `1.4.0`+ server instead of an accepted reply
+     * when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and by a
+     * `2.0.0a`+ server when it rejects a malformed `Iam` itself (reason `malformed`,
+     * informative text - not a contract).
+```
+
+### C-3 `main/MultiConnectionUDPServer.kt` — "Handshake screening & credentials" (`:47-55`)
+
+```text
+old:
+ * Override [admit] to accept or refuse a handshake before it is registered. The
+ * default admits every well-formed `Iam` - identical to pre-`1.4.0` behaviour. An
+ * `Iam` is **well-formed** unless its name slot is missing or empty, or its
+ * credential slot is present but empty. The server refuses a malformed one itself
+ * (`REFUSED malformed`, an informative reason that a client must not branch on)
+ * before [admit] is consulted, so [admit] never sees an empty `name` and sees
+ * `credential` as `""` only when the client sent none. The refusal is sent even to
+ * an origin that already holds a registration; that registration is left exactly as
+ * it is, so a peer that is mid-session can receive the unframed `REFUSED`.
+new:
+ * Override [admit] to accept or refuse a handshake before it is registered. The
+ * default admits every well-formed `Iam`, which for a well-formed line is identical
+ * to pre-`1.4.0` behaviour. An `Iam` is **well-formed** unless its name slot is
+ * missing or empty, or its credential slot is present but empty. Since `2.0.0a` the
+ * server refuses a malformed one itself (`REFUSED malformed`, an informative reason
+ * that a client must not branch on) before [admit] is consulted, so [admit] never
+ * sees an empty `name` and sees `credential` as `""` only when the client sent none;
+ * an earlier server registered the empty-name and empty-credential shapes and left a
+ * bare `Iam` unanswered. The refusal is sent even to an origin that already holds a
+ * registration. That registration is not torn down, superseded or re-screened, and
+ * no [onClientDisconnect] fires; like any inbound datagram from a registered origin,
+ * the line does refresh its idle-detection stamp when [idleTimeoutMillis] is
+ * positive (see "Connection liveness" below). A peer that is mid-session can
+ * therefore receive the unframed `REFUSED`.
+```
+
+### C-4 `main/HandshakeCoordinator.kt` — contracts, the #49 marker, regions
+
+Apply C-4a..C-4e first, then the region markers in C-4f.
+
+**C-4a — class KDoc, the handshake-state-machine bullet (`:15-16`).**
+
+```text
+old:
+ *   [onRegistered], and leaves any registration its origin already holds exactly as
+ *   it was. A well-formed retransmit from a known origin just re-sends
+new:
+ *   [onRegistered], and does not tear down, supersede or re-screen a registration
+ *   its origin already holds (that registration's liveness stamp is still refreshed,
+ *   as for every inbound datagram - see the liveness tracker below). A well-formed
+ *   retransmit from a known origin just re-sends
+```
+
+**C-4b — `accept` KDoc (`:141-143` and `:155-157`).** Two edits.
+
+```text
+old:
+     * dropped with a WARN (a pre-`2.0` sender); a malformed `Iam` is answered
+     * `REFUSED malformed` from any origin and changes no registration; a
+     * well-formed `Iam` runs the handshake state machine inline. When idle
+new:
+     * dropped with a WARN (a pre-`2.0` sender); a malformed `Iam` is answered
+     * `REFUSED malformed` from any origin and adds, supersedes or tears down no
+     * registration; a well-formed `Iam` runs the handshake state machine inline. When idle
+```
+
+```text
+old:
+     * @return [Result.success] if handled or harmlessly ignored - including a
+     * malformed `Iam` whose `REFUSED malformed` reply went out - or [Result.failure]
+     * only if a reply could not be delivered or [admit] threw
+new:
+     * @return [Result.success] if handled or harmlessly ignored - including a
+     * malformed `Iam` whose `REFUSED malformed` reply went out - or [Result.failure]
+     * if a reply could not be delivered, [admit] threw, or a bound handler could not be
+     * handed to [dispatch] (for example after the server's dispatch executor has shut
+     * down)
+```
+
+The third failure source is real today: `deliverData` (`:409-416`) and `deliverReliable`
+(`:460-468`) wrap the hand-off in `runCatching`, and the server's `dispatch` is
+`dispatchExecutor.execute`, which throws `RejectedExecutionException` after shutdown.
+
+**C-4c — the two-argument `accept` KDoc (`:247-252`).**
+
+```text
+old:
+    /**
+     * Two-argument [accept] overload retained for callers that only have the
+     * datagram text - delegates with `bytes` derived from a UTF-8 encode of [text].
+     * [text] is used as given: unlike the real receive path (`CommonChannel` trims
+     * once), this overload does not trim, so a caller must pass trimmed text.
+     */
+new:
+    /**
+     * Two-argument [accept] overload retained for callers that only have the
+     * datagram text - delegates with `bytes` derived from a UTF-8 encode of [text].
+     *
+     * @param origin the datagram's post-NAT source - where any reply is addressed
+     * @param text the datagram text, already trimmed: unlike the real receive path
+     * (`CommonChannel` trims once), this overload does not trim, so a caller must pass
+     * trimmed text
+     * @return the same [Result] the three-argument [accept] returns for these bytes
+     */
+```
+
+**C-4d — `refuseMalformed` KDoc (`:283-287`).**
+
+```text
+old:
+     * Answers a malformed `Iam` with the fixed
+     * [HandshakeProtocol.MALFORMED_REFUSAL_DATAGRAM], whatever the state of [origin].
+     * Touches no registration: nothing is added, superseded or torn down, [admit] is
+     * not consulted and [onRegistered] does not fire. The registry is read once, only
+     * to say in the log whether [origin] holds a registration (which is kept).
+new:
+     * Answers a malformed `Iam` with the fixed
+     * [HandshakeProtocol.MALFORMED_REFUSAL_DATAGRAM], whatever the state of [origin].
+     * Changes no registration itself: nothing is added, superseded or torn down,
+     * [admit] is not consulted and [onRegistered] does not fire. (Before routing,
+     * [accept] has already refreshed a registered origin's liveness stamp, as it does
+     * for every inbound datagram.) The registry is read once, only to say in the log
+     * whether [origin] holds a registration (which is kept).
+```
+
+**C-4e — `admitAndRegister`: the KDoc names #49 as a defect, and a `FIXME` marks the line
+(`:332-333`, `:374-375`).** Two edits.
+
+```text
+old:
+     * `REGISTERED 2` and fires [onRegistered]. This is the previous inline body,
+     * moved unchanged; the register-before-send ordering is deliberate (#49).
+new:
+     * `REGISTERED 2` and fires [onRegistered]. The registration is added before the
+     * send, so a send that fails leaves a registration whose [onRegistered] never
+     * fired - a known defect, tracked as #49.
+```
+
+```text
+old:
+        val connection = newConnection(name, origin, this)
+        registrations.add(Registration(connection))
+new:
+        val connection = newConnection(name, origin, this)
+        // FIXME(#49): registers before the REGISTERED 2 send; a failed send orphans the registration.
+        registrations.add(Registration(connection))
+```
+
+**C-4f — `//region` markers.** This is the file's first use of the IDE's region folding.
+The markers are `//region <Name>` and `//endregion`, at member indentation (four spaces).
+
+| Region | Members (lines on `1605bdd`) |
+|---|---|
+| `Inbound routing` | three-argument `accept` (`:128-167`), `classify` (`:169-245`), two-argument `accept` (`:247-254`) |
+| `Handshake state machine` | `routeUnframed`, `refuseMalformed`, `handleHandshake`, `admitAndRegister` (`:256-378`) |
+| `Delivery to bound handlers` | `deliverData`, `reliableEngineFor`, `deliverReliable` (`:380-469`) |
+| `ClientChannel and scheduler shutdown` | every `ClientChannel` override, plus `shutKeepAlive`, `shutProbe`, `shutRetransmit` (`:471-596`); the region marker replaces the `// --- ClientChannel ---` divider |
+| `Liveness` | `sweepIdleConnections` (`:598-620`) |
+| `Server-wide fan-out` | `actuateAll`, `actuateAllBytes`, `actuateAllReliable`, both `broadcast` overloads, `broadcastReliable`, `terminateAll` (`:622-710`) |
+
+The state block at the top of the class (`registrations` … `snapshot`, `:99-126`) and the
+`private companion object` stay outside any region. Seven edits:
+
+```text
+C-4f-1 old:
+    fun snapshot(): List<Registration> = registrations.snapshot()
+
+    /**
+     * The single entry point the listener loop calls for every inbound datagram.
+C-4f-1 new:
+    fun snapshot(): List<Registration> = registrations.snapshot()
+
+    //region Inbound routing
+
+    /**
+     * The single entry point the listener loop calls for every inbound datagram.
+```
+
+```text
+C-4f-2 old:
+        accept(origin, text.toByteArray(Charsets.UTF_8), text)
+
+    /**
+     * Routes one unframed datagram, already split on U+0020, by the outcome of
+C-4f-2 new:
+        accept(origin, text.toByteArray(Charsets.UTF_8), text)
+
+    //endregion
+
+    //region Handshake state machine
+
+    /**
+     * Routes one unframed datagram, already split on U+0020, by the outcome of
+```
+
+```text
+C-4f-3 old:
+        return send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
+    }
+
+    /**
+     * Delivers a `0x90` payload to [origin]'s bound handler. Screening order: [origin] must be
+C-4f-3 new:
+        return send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
+    }
+
+    //endregion
+
+    //region Delivery to bound handlers
+
+    /**
+     * Delivers a `0x90` payload to [origin]'s bound handler. Screening order: [origin] must be
+```
+
+```text
+C-4f-4 old:
+    // --- ClientChannel ---
+
+    override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
+C-4f-4 new:
+    //endregion
+
+    //region ClientChannel and scheduler shutdown
+
+    override fun send(bytes: ByteArray, to: InetSocketAddress): Result<Unit> {
+```
+
+```text
+C-4f-5 old:
+        reliableEngineFor(reg) // arm the tick even for the receive-only case (§3.3)
+        return Result.success(Unit)
+    }
+
+    /**
+     * Reports every registered connection that has been idle beyond
+C-4f-5 new:
+        reliableEngineFor(reg) // arm the tick even for the receive-only case (§3.3)
+        return Result.success(Unit)
+    }
+
+    //endregion
+
+    //region Liveness
+
+    /**
+     * Reports every registered connection that has been idle beyond
+```
+
+```text
+C-4f-6 old:
+                .onFailure { log.warn("onDisconnect(TIMEOUT) failed for '{}'", reg.connection.name, it) }
+        }
+    }
+
+    /**
+     * Binds [onMessage] as the handler on every registered connection, stopping at
+C-4f-6 new:
+                .onFailure { log.warn("onDisconnect(TIMEOUT) failed for '{}'", reg.connection.name, it) }
+        }
+    }
+
+    //endregion
+
+    //region Server-wide fan-out
+
+    /**
+     * Binds [onMessage] as the handler on every registered connection, stopping at
+```
+
+```text
+C-4f-7 old:
+            registration.connection.terminate().let { outcome -> terminated.flatMap { outcome } }
+        }
+
+    private companion object {
+C-4f-7 new:
+            registration.connection.terminate().let { outcome -> terminated.flatMap { outcome } }
+        }
+
+    //endregion
+
+    private companion object {
+```
+
+### C-5 Checks after C-1..C-4, then Commit 3
+
+```bash
+src=webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp
+./gradlew.bat :webtools-udp:compileKotlin :webtools-udp:gatingTest      # BUILD SUCCESSFUL; gating still 80
+git diff --stat -- webtools-udp/src/main            # exactly the four files above
+grep -c '^    //region ' $src/HandshakeCoordinator.kt    # 6
+grep -c '^    //endregion$' $src/HandshakeCoordinator.kt # 6
+grep -n -- '--- ClientChannel ---' $src/HandshakeCoordinator.kt   # no output
+grep -n 'exactly as it' $src/*.kt                   # no output
+grep -n -A1 'FIXME(#49)' $src/HandshakeCoordinator.kt   # the FIXME, then registrations.add(Registration(connection))
+```
+
+Commit 3 (§11) stages, by path, the four production files and `plan.md`, `architecture.md`
+and `impact.md`.
+
+### C-T Tests (Commit 4)
+
+The conventions are as in §8: `kotlin.test` with the level `@Tag` on the class, the fakes and
+`LogCapture` under `test/support/`, pre-trimmed text at level 2, raw sockets for any
+malformed line at levels 3 and 4c.
+
+**C-T1 — Level 1, `test/gating/webtools/udp/HandshakeProtocolGatingTest.kt` (+2).** Insert
+two tests after the name-empty test (`:39-45`):
+
+```text
+old:
+            HandshakeProtocol.parseHandshake(listOf("Iam", "", "x")),
+        )
+    }
+
+    @Test
+    fun `the handshake reply verb is REGISTERED and the datagram is versioned`() {
+new:
+            HandshakeProtocol.parseHandshake(listOf("Iam", "", "x")),
+        )
+    }
+
+    @Test
+    fun `an Iam with a present-but-empty credential slot is malformed with the credential-empty defect`() {
+        assertEquals(
+            HandshakeParse.Malformed(HandshakeDefect.CREDENTIAL_EMPTY),
+            HandshakeProtocol.parseHandshake(listOf("Iam", "bob", "", "tok")),
+        )
+    }
+
+    @Test
+    fun `a line whose first token is not Iam is not a handshake`() {
+        assertEquals(HandshakeParse.NotAHandshake, HandshakeProtocol.parseHandshake(listOf("HELLO", "there")))
+    }
+
+    @Test
+    fun `the handshake reply verb is REGISTERED and the datagram is versioned`() {
+```
+
+No new imports.
+
+**C-T2 — Level 1, `test/gating/webtools/udp/HandshakeCoordinatorGatingTest.kt` (+1 test,
++1 assertion).**
+
+First, insert a registered-origin case after the unknown-origin malformed test (`:65-76`):
+
+```text
+old:
+        assertTrue(admitCalls.isEmpty())
+        assertEquals(listOf("REFUSED malformed" to origin), replies)
+    }
+
+    @Test
+    fun `an admitted Iam with a credential registers and the credential reaches admit`() {
+new:
+        assertTrue(admitCalls.isEmpty())
+        assertEquals(listOf("REFUSED malformed" to origin), replies)
+    }
+
+    @Test
+    fun `a malformed Iam from a registered origin gets REFUSED malformed and keeps its registration`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
+        coordinator.accept(origin, "Iam alice")
+        replies.clear()
+
+        assertTrue(coordinator.accept(origin, "Iam  x").isSuccess)
+
+        assertEquals(listOf("REFUSED malformed" to origin), replies)
+        assertEquals(1, coordinator.size)
+        assertEquals(listOf("alice"), created)
+    }
+
+    @Test
+    fun `an admitted Iam with a credential registers and the credential reaches admit`() {
+```
+
+Then make the non-`Iam` drop test (`:146-152`) assert that nothing was sent:
+
+```text
+old:
+    fun `an unframed non-Iam datagram from an unregistered origin is dropped`() {
+        val coordinator = coordinator(mutableListOf())
+
+        assertTrue(coordinator.accept(origin, "hello").isSuccess)
+        assertEquals(0, coordinator.size)
+    }
+new:
+    fun `an unframed non-Iam datagram from an unregistered origin is dropped`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
+
+        assertTrue(coordinator.accept(origin, "hello").isSuccess)
+        assertEquals(0, coordinator.size)
+        assertTrue(replies.isEmpty())
+    }
+```
+
+No new imports.
+
+**C-T3 — Level 2, `test/component/webtools/udp/HandshakeCoordinatorTest.kt` (1 renamed and
+strengthened, +1).** A `0x00`-led datagram is unframed, so it is routed as a non-handshake
+and never reaches `deliverData`. The existing test (`:729-735`) is renamed after what it
+exercises, and a `0x90` case reaches `deliverData` with no handler bound:
+
+```text
+old:
+    @Test
+    fun `deliverData with no handler bound drops a binary datagram`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+
+        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), "\u0000\u0001").isSuccess)
+    }
+new:
+    @Test
+    fun `an unframed NUL-led datagram from a registered origin is dropped with no reply`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        sent.clear()
+
+        assertTrue(coordinator.accept(originA, byteArrayOf(0x00, 0x01), "\u0000\u0001").isSuccess)
+        assertTrue(sent.isEmpty())
+        assertEquals(1, coordinator.size)
+    }
+
+    @Test
+    fun `deliverData with no handler bound drops a 0x90 frame with no reply`() {
+        val coordinator = newCoordinator()
+        coordinator.accept(originA, "Iam alice")
+        sent.clear()
+        val framed = TransportWireFormat.unreliableDatagram(byteArrayOf(0x00, 0x01))
+
+        captureLogsOf(HandshakeCoordinator::class.java, Level.DEBUG) { events ->
+            assertTrue(coordinator.accept(originA, framed, "").isSuccess)
+            assertTrue(events.hasEventAt(Level.DEBUG, "No handler bound for"))
+        }
+        assertTrue(sent.isEmpty())
+    }
+```
+
+`"\u0000\u0001"` is the Kotlin escape text, as the file already holds it. `Level`,
+`captureLogsOf`, `hasEventAt`, `TransportWireFormat` and `HandshakeCoordinator` are
+already imported.
+
+**C-T4 — Level 3, `test/integration/webtools/udp/MultiConnectionUDPServerAdmissionTest.kt`
+(+1 test, +1 exchange).**
+
+First, the registered-socket test (`:116-127`) also sends an empty-credential line:
+
+```text
+old:
+            assertEquals("REFUSED malformed", client.exchange("Iam  x"))
+            assertEquals("REFUSED malformed", client.exchange("Iam"))
+new:
+            assertEquals("REFUSED malformed", client.exchange("Iam  x"))
+            assertEquals("REFUSED malformed", client.exchange("Iam"))
+            assertEquals("REFUSED malformed", client.exchange("Iam alice  tok"))
+```
+
+Then add a retry case after `a socket refused once can retry successfully on the same
+socket` (`:149-156`):
+
+```text
+old:
+            assertEquals("REFUSED banned", client.exchange("Iam banned"))
+            assertEquals("REGISTERED 2", client.exchange("Iam guarded s3cret"))
+        }
+    }
+new:
+            assertEquals("REFUSED banned", client.exchange("Iam banned"))
+            assertEquals("REGISTERED 2", client.exchange("Iam guarded s3cret"))
+        }
+    }
+
+    @Test
+    fun `a socket refused as malformed can retry a well-formed Iam on the same socket`() {
+        val guarded = GuardedServer().also { server = it }
+        DatagramSocket().use { client ->
+            assertEquals("REFUSED malformed", client.exchange("Iam  x"))
+            assertEquals("REGISTERED 2", client.exchange("Iam bob"))
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(listOf("bob"), guarded.connected.toList())
+        }
+    }
+```
+
+No new imports.
+
+**C-T5 and C-T6 — Level 4a, `test/deterministic/webtools/udp/HandshakeProtocolTest.kt` (+1,
+1 renamed).**
+
+First, the verb check runs before any slot check. Insert after the not-a-handshake test
+(`:75-83`):
+
+```text
+old:
+        assertEquals(HandshakeParse.NotAHandshake, parse("Iam\tbob"))
+    }
+new:
+        assertEquals(HandshakeParse.NotAHandshake, parse("Iam\tbob"))
+    }
+
+    @Test
+    fun `parseHandshake reports NotAHandshake before any slot defect`() {
+        assertEquals(HandshakeParse.NotAHandshake, parse("HELLO", "", "x"))
+        assertEquals(HandshakeParse.NotAHandshake, parse("iam", "", "x"))
+        assertEquals(HandshakeParse.NotAHandshake, parse("iam", "bob", ""))
+        assertEquals(HandshakeParse.NotAHandshake, parse("Nope", "bob", "", "tok"))
+    }
+```
+
+Then rename the `isHandshake` test (`:156`) after its behaviour:
+
+```text
+old:
+    fun `isHandshake truth table`() {
+new:
+    fun `isHandshake is true only when the first token is exactly Iam, whatever the slots hold`() {
+```
+
+`\t` is the Kotlin escape text, as the file already holds it.
+
+**C-T7 — Level 4b, `test/e2e/webtools/udp/MultiConnectionUDPHandshakeRefusalE2ETest.kt`
+(+1).** This test pins how the library client's empty name reaches the server today, and
+flips when #52 lands.
+
+First, the class comment (`:19-21`):
+
+```text
+old:
+// Level 4b - a real MultiConnectionUDPClient against a real MultiConnectionUDPServer subclass
+// over loopback, proving the admit() refusal path surfaces as a typed HandshakeRefusedException
+// on the client and that a refused newcomer never disturbs an established connection.
+new:
+// Level 4b - a real MultiConnectionUDPClient against a real MultiConnectionUDPServer subclass
+// over loopback, proving the admit() refusal path surfaces as a typed HandshakeRefusedException
+// on the client, that a refused newcomer never disturbs an established connection, and that a
+// malformed line built from an empty name is refused the same way.
+```
+
+Then insert the test after `against a default server a bare handshake still succeeds`
+(`:123-138`):
+
+```text
+old:
+            assertTrue(client.handshake("bob").isSuccess)
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(1, server.connections.size)
+        } finally {
+            client.stop()
+            server.stop()
+        }
+    }
+new:
+            assertTrue(client.handshake("bob").isSuccess)
+            Thread.sleep(SETTLE_MILLIS)
+            assertEquals(1, server.connections.size)
+        } finally {
+            client.stop()
+            server.stop()
+        }
+    }
+
+    // Pins today's library-client behaviour for an empty name: handshake("") sends `Iam `, which
+    // the server trims to a bare `Iam`, and handshake("", credential = "tok") sends `Iam  tok`
+    // with an empty name slot - both malformed, both refused. When #52 lands, both calls fail
+    // locally with IllegalArgumentException before anything is sent; flip this test to assert that.
+    @Test
+    fun `a nameless handshake fails fast with a typed malformed refusal and registers nothing`() {
+        val server = object : MultiConnectionUDPServer() {
+            val connections = CopyOnWriteArrayList<Connection>()
+            override fun onClientConnect(connection: Connection) { connections += connection }
+        }
+        val bare = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
+        val withCredential = MultiConnectionUDPClient(loopback, MultiConnectionUDPServer.COMMON_LISTEN_PORT)
+        try {
+            listOf(
+                bare.handshake(""),
+                withCredential.handshake("", credential = "tok"),
+            ).forEach { outcome ->
+                // A typed refusal, not a SocketTimeoutException: the server answered.
+                val cause = assertIs<HandshakeRefusedException>(outcome.exceptionOrNull())
+                assertEquals("malformed", cause.reason)
+            }
+            Thread.sleep(SETTLE_MILLIS)
+            assertTrue(server.connections.isEmpty())
+        } finally {
+            bare.stop()
+            withCredential.stop()
+            server.stop()
+        }
+    }
+```
+
+Each client calls `handshake` once, because a second call on one client is outside its
+contract. No new imports.
+
+**C-T8a — Level 4c,
+`test/nonfunctional/webtools/udp/MultiConnectionUDPServerAdmissionNonFunctionalTest.kt` (+1,
+and a named settle constant).** Five edits, top to bottom.
+
+1. **Imports.**
+
+```text
+old:
+import com.spartanlabs.webtools.udp.Admission
+import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+new:
+import com.spartanlabs.webtools.udp.Admission
+import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DeliveryMode
+import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+import com.spartanlabs.webtools.udp.TransportWireFormat
+```
+
+2. **The class comment (`:22-25`).**
+
+```text
+old:
+// Level 4c - robustness / security / timing properties of the admit() screening hook over a
+// real socket: the credential arrives verbatim, a throwing admit never wedges the listener,
+// a refusal burst leaks no state, a slow admit serialises handshakes (documented cost), and
+// a multi-line refusal reason is collapsed to one wire line.
+new:
+// Level 4c - robustness / security / timing properties of the admit() screening hook over a
+// real socket: the credential arrives verbatim, a throwing admit never wedges the listener,
+// a refusal burst leaks no state, a malformed-handshake burst - from strangers and from a
+// registered socket - draws exactly one refusal per datagram and never reaches admit, a slow
+// admit serialises handshakes (documented cost), and a multi-line refusal reason is
+// collapsed to one wire line.
+```
+
+3. **The settle wait in the malformed burst test (`:150`).**
+
+```text
+old:
+            Thread.sleep(200)
+        }
+        assertEquals(listOf("good"), admitted.toList(), "only the well-formed line reached admit")
+new:
+            // onClientConnect runs after the REGISTERED 2 send; give it time to land before asserting.
+            Thread.sleep(CONNECT_SETTLE_MILLIS)
+        }
+        assertEquals(listOf("good"), admitted.toList(), "only the well-formed line reached admit")
+```
+
+4. **The new test, after the malformed burst test.**
+
+```text
+old:
+        assertEquals(listOf("good"), admitted.toList(), "only the well-formed line reached admit")
+        assertEquals(listOf("good"), connected.toList())
+    }
+
+    @Test
+    fun `a slow admit serialises handshakes`() {
+new:
+        assertEquals(listOf("good"), admitted.toList(), "only the well-formed line reached admit")
+        assertEquals(listOf("good"), connected.toList())
+    }
+
+    @Test
+    fun `a malformed burst that includes a registered socket draws one refusal per datagram and the peer stays registered and reachable`() {
+        val connected = CopyOnWriteArrayList<Connection>()
+        val server = object : MultiConnectionUDPServer() {
+            override fun onClientConnect(connection: Connection) { connected += connection }
+        }
+        val malformedLines = listOf("Iam", "Iam  x", "Iam bob  tok")
+        withServer(server) {
+            DatagramSocket().use { peer ->
+                DatagramSocket().use { stranger ->
+                    peer.send("Iam peer")
+                    assertEquals("REGISTERED 2", peer.recv())
+                    // onClientConnect runs after the REGISTERED 2 send; give it time to land before asserting.
+                    Thread.sleep(CONNECT_SETTLE_MILLIS)
+
+                    repeat(MALFORMED_BURST_WITH_PEER) { i ->
+                        val line = malformedLines[i % malformedLines.size]
+                        val sender = if (i % 2 == 0) peer else stranger
+                        sender.send(line)
+                        assertEquals("REFUSED malformed", sender.recv(2000), line)
+                    }
+                    // One reply per datagram: after the burst nothing further is queued on either socket.
+                    assertNull(runCatching { peer.recv(300) }.getOrNull(), "no extra reply to the registered peer")
+                    assertNull(runCatching { stranger.recv(300) }.getOrNull(), "no extra reply to the stranger")
+
+                    assertEquals(1, connected.size, "the peer is still the only registration")
+                    assertTrue(connected.single().channel(DeliveryMode.UNRELIABLE).send("still-here").isSuccess)
+                    peer.soTimeout = 5000
+                    val packet = DatagramPacket(ByteArray(4096), 4096).also { peer.receive(it) }
+                    val payload = TransportWireFormat.unreliablePayloadOf(packet.data.copyOf(packet.length))
+                    assertEquals("still-here", payload?.toString(Charsets.UTF_8))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `a slow admit serialises handshakes`() {
+```
+
+5. **The constants.**
+
+```text
+old:
+        const val MALFORMED_BURST = 600
+    }
+new:
+        const val MALFORMED_BURST = 600
+        const val MALFORMED_BURST_WITH_PEER = 300
+        const val CONNECT_SETTLE_MILLIS = 200L
+    }
+```
+
+Two notes on the new test:
+- **Why "one reply per datagram" is checked only at the end.** Each send is followed by
+  exactly one receive, so a second reply to any datagram would stay queued. The two final
+  300 ms receives would then find it. That costs two waits rather than one per datagram.
+- **Library members it uses:** `DatagramSocket.send(String)` and `recv(Int)` are this
+  class's helpers; `peer.receive` is the JDK method.
+
+**C-T8b — Level 4c, `test/nonfunctional/webtools/udp/HandshakeNonFunctionalTest.kt` (+1).**
+Four edits, top to bottom.
+
+1. **Imports.**
+
+```text
+old:
+import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+new:
+import ch.qos.logback.classic.Level
+import com.spartanlabs.testing.support.webtools.udp.FakeConnection
+import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
+import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+```
+
+```text
+old:
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+new:
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+```
+
+2. **The class comment (`:25-29`).**
+
+```text
+old:
+// Level 4c - non-functional properties of the multiplexed handshake / data path: the reply
+// is only ever addressed to the datagram source; the server binds exactly one socket
+new:
+// Level 4c - non-functional properties of the multiplexed handshake / data path: the reply
+// is only ever addressed to the datagram source; a hostile malformed line draws one bounded
+// reply to its origin and never reaches the log; the server binds exactly one socket
+```
+
+3. **The new test, after the reply-addressing test (`:39-60`).**
+
+```text
+old:
+        assertEquals(listOf(origin, origin), replyTargets)
+    }
+new:
+        assertEquals(listOf(origin, origin), replyTargets)
+    }
+
+    @Test
+    fun `a malformed Iam carrying CR-LF and a credential-like token draws one bounded reply to its origin and stays out of the log`() {
+        val replies = mutableListOf<Pair<ByteArray, InetSocketAddress>>()
+        val coordinator = HandshakeCoordinator(
+            newConnection = { name, peer, _ -> FakeConnection(name, peer) },
+            sender = { bytes, target -> replies += bytes to target; Result.success(Unit) },
+            onRegistered = {},
+            admit = { _, _, _ -> Admission.Admitted },
+            dispatch = { it() },
+            onDisconnect = { _, _ -> },
+            idleTimeoutMillis = 0L,
+            keepAliveSchedule = FakePeriodicSchedule(),
+            probeSchedule = FakePeriodicSchedule(),
+            retransmitSchedule = FakePeriodicSchedule(),
+            reliableMaxMessageBytes = UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES,
+        )
+        // The two spaces leave the credential slot empty, so the line is malformed. The name
+        // token carries CR/LF and a forged log line; the last token stands in for an access token.
+        val hostileLine = "Iam evil\r\nFORGED-LOG-LINE  sk_live_SECRET"
+
+        captureLogsOf(HandshakeCoordinator::class.java) { events ->
+            assertTrue(coordinator.accept(origin, hostileLine).isSuccess)
+
+            val event = events.single()
+            val message = event.formattedMessage
+            assertEquals(Level.WARN, event.level)
+            assertNull(event.throwableProxy, "no exception object is attached")
+            assertTrue(message.contains("credential empty"), message)
+            assertFalse(message.contains('\r'), message)
+            assertFalse(message.contains('\n'), message)
+            assertFalse(message.contains("FORGED-LOG-LINE"), message)
+            assertFalse(message.contains("evil"), message)
+            assertFalse(message.contains("sk_live_SECRET"), message)
+        }
+
+        val (bytes, target) = replies.single()
+        assertEquals(origin, target)
+        assertTrue(bytes.size <= 17, "the reply is ${bytes.size} bytes")
+        assertEquals("REFUSED malformed", String(bytes, Charsets.UTF_8))
+        assertEquals(0, coordinator.size)
+    }
+```
+
+The line splits to `[Iam, "evil\r\nFORGED-LOG-LINE", "", "sk_live_SECRET"]`. Its credential
+slot is empty, so it reports `CREDENTIAL_EMPTY` whatever its name token holds.
+
+### C-6 Checks after the tests, then Commit 4
+
+```bash
+./gradlew.bat :webtools-udp:compileTestKotlin
+./gradlew.bat :webtools-udp:gatingTest :webtools-udp:componentTest :webtools-udp:deterministicTest
+./gradlew.bat :webtools-udp:integrationTest :webtools-udp:e2eTest :webtools-udp:nonfunctionalTest
+git diff --stat -- webtools-udp/src/test     # exactly the eight test files named in C-T1..C-T8
+```
+
+All must end `BUILD SUCCESSFUL`. Expected counts, summed from the `tests=` attributes in
+`webtools-udp/build/test-results/<task>/*.xml`:
+
+| Level | Count | Change |
+|---|---|---|
+| gating | **83** | 80 + 3 |
+| component | **235** | 234 + 1 |
+| deterministic | **96** | 95 + 1 |
+| integration | **115** | 114 + 1 |
+| e2e | **34** | 33 + 1 |
+| nonfunctional | **65** | 63 + 2 |
+| uat | 13 | unchanged; not run |
+
+Commit 4 (§11) stages the eight test files by path.
+
+### C-D Document corrections (Stage B's files, still uncommitted)
+
+Edit `docs/webtools-udp-protocol.md` through B-0 step 2's procedure: convert to LF, edit
+with the `Edit` tool, convert back to CRLF. `README.md` and `docs/webtools-udp-architecture.md`
+need no prose change in Stage C; C-B updates their line references. Six edits:
+
+**C-D1 — scope line (`:3`).**
+
+```text
+old:
+Applies to `webtools-udp` `2.x` — wire protocol version `2`. This is a
+new:
+Applies to `webtools-udp` `2.x` as of `2.0.0a` — wire protocol version `2`; §9
+lists where an earlier release behaves differently. This is a
+```
+
+**C-D2 — §3, a registered origin's malformed line (`:100-102`).**
+
+```text
+old:
+*From an origin that already holds a registration,* the registration is left
+exactly as it is — no teardown, no `onClientDisconnect` — but the reply still goes
+out. A peer that is mid-session can therefore receive an unframed
+new:
+*From an origin that already holds a registration,* the registration is not torn
+down, superseded or re-screened, and no `onClientDisconnect` fires — but the reply
+still goes out. Like every inbound datagram from a registered origin, the line also
+refreshes that registration's liveness stamp and clears its idle-timeout latch when
+idle detection is on (§5, `0x80` KEEPALIVE). A peer that is mid-session can
+therefore receive an unframed
+```
+
+**C-D3 — §3, replies to unverified origins (`:130-135`).**
+
+```text
+old:
+`REFUSED malformed` (17 bytes) to a malformed line, which registers nothing. A
+source address that does hold a registration can draw two: `REGISTERED 2` to a
+well-formed `Iam`, and `REFUSED malformed` to a malformed one — so a forged source
+that knows a registered client's `ip:port` can make the server send that client
+unframed 17-byte datagrams, one per trigger datagram, at a rate the sender
+chooses. Each trigger datagram draws at most one reply. In UDP payload bytes the
+new:
+`REFUSED malformed` (17 bytes) to a malformed line, which registers nothing. A
+source address that does hold a registration can draw two handshake replies:
+`REGISTERED 2` to a well-formed `Iam`, and `REFUSED malformed` to a malformed one —
+so a forged source that knows a registered client's `ip:port` can make the server
+send that client unframed 17-byte datagrams, one per trigger datagram, at a rate the
+sender chooses. Each handshake trigger draws at most one reply. Outside the
+handshake, a registered source address also draws the transport's own replies: a
+9-byte `0x82` for each valid `0x81` (§5), and at most one standalone 8-byte `0xA1` per
+retransmit tick after an inbound `0xA0` (§6). In UDP payload bytes the
+```
+
+**C-D4 — §3, when a library client sends a malformed line (`:162-167`).**
+
+```text
+old:
+A malformed line reaches the client as an ordinary `REFUSED`
+(`HandshakeRefusedException`, `reason == "malformed"`). A library client sends one
+today only when its name is empty or begins with a space, or its credential begins
+with a space; client-side validation
+([#52](https://github.com/SpartanLaboratories/WebTools/issues/52)) will reject those
+locally.
+new:
+A malformed line reaches the client as an ordinary `REFUSED`
+(`HandshakeRefusedException`, `reason == "malformed"`). A library client sends one
+whenever the line `handshake(name, credential = …)` builds has an empty name or
+credential slot once the server trims it and splits it on single U+0020: for example
+`handshake("")` (`Iam `, trimmed to a bare `Iam`), `handshake(" x")` (`Iam  x`),
+`handshake("a  b")` (`Iam a  b`), and `handshake("bob ", credential = "tok")` or
+`handshake("bob", credential = " tok")` (both `Iam bob  tok`). Not every input with a
+space is malformed: `handshake("bob", credential = " ")` trims to the valid `Iam bob`,
+and `handshake("a b")` is the valid `Iam a b` (name `a`, credential `b`). Client-side
+validation ([#52](https://github.com/SpartanLaboratories/WebTools/issues/52)) will
+reject such input locally.
+```
+
+**C-D5 — §8, the registered-origin row (`:388`).** This is a fragment replacement inside the
+row; the rest of the row stays.
+
+```text
+old:
+| as above; the registration is left as it is (no teardown) |
+new:
+| as above; the registration is not torn down, superseded or re-screened (like any inbound datagram, the line refreshes its liveness stamp when idle detection is on, §5) |
+```
+
+**C-D6 — §9, a row for servers before `2.0.0a`.** Insert it after the `1.x` client row
+(`:418`):
+
+```text
+old:
+| `1.x` | `2.0` | client fails with `IllegalStateException`, but **the server has already registered it and fired `onClientConnect`** — that transient registration is removed only by idle detection, a supersede, or `terminate()` |
+new:
+| `1.x` | `2.0` | client fails with `IllegalStateException`, but **the server has already registered it and fired `onClientConnect`** — that transient registration is removed only by idle detection, a supersede, or `terminate()` |
+| any | before `2.0.0a` (every `1.x`, and `2.0.0`) | a malformed `Iam` is not refused: `Iam  x` registers the name `""`, `Iam bob  tok` registers `bob` with credential `""` (the token after the empty slot is ignored), and a bare `Iam` gets no reply, so the client's `handshake()` times out. `REFUSED malformed` comes from `2.0.0a` on (§3) |
+```
+
+The "Source: `HandshakeWireFormat.kt:…`" line under the table keeps citing the KDoc
+cross-version table; C-B updates its numbers.
+
+### C-B Recompute every reference into the four edited production files
+
+C-1..C-4 shifted the lines that Stage B's documents cite in `HandshakeCoordinator.kt`,
+`HandshakeProtocol.kt`, `HandshakeWireFormat.kt` and `MultiConnectionUDPServer.kt`.
+Recompute each one from its anchors rather than from B-2's shifts: the region markers sit
+between anchors that B-2's shifts treated as one contiguous block. The blocks the `+N`
+offsets span are unchanged inside by Stage C.
+
+1. **Compute.** Run this from the repo root:
+
+```bash
+src=webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp
+at() { grep -n -F -- "$2" "$src/$1" | cut -d: -f1; }   # line(s) of file $1 holding the fixed text $2
+HC=HandshakeCoordinator.kt; HP=HandshakeProtocol.kt; HWF=HandshakeWireFormat.kt; MCUS=MultiConnectionUDPServer.kt
+s=$(at $MCUS 'const val COMMON_LISTEN_PORT = 9998');                    echo "MCUS_PORT        $s"
+s=$(at $MCUS 'private val coordinator = HandshakeCoordinator(');        echo "MCUS_COORD       $s"
+a=$(at $HWF '### The optional credential slot'); b=$(at $HWF 'TTL, channel binding) or run over an encrypted underlay.')
+c=$(( $(at $HWF 'Builds the `Iam <name>`') - 1 )); d=$(at $HWF 'if (credential.isEmpty()) "$HANDSHAKE_VERB $name" else')
+                                                                         echo "HWF_CRED         $a-$b,$c-$d"
+s=$(at $HWF 'fun registeredMessage(): String');                         echo "HWF_REGMSG       $s"
+s=$(at $HWF 'fun registeredProtocolVersion(reply: String): Int? {');    echo "HWF_REGVER       $s-$((s+8))"
+s=$(at $HWF 'fun refusedMessage(reason: String): String {');           echo "HWF_REFUSED      $s-$((s+3))"
+s=$(at $HWF '| Client | Server | Reply seen |');                        echo "HWF_TABLE        $s-$((s+4))"
+a=$(at $HP 'fun parseHandshake(tokens: List<String>): HandshakeParse {'); b=$(at $HP '(tokens.size - (CREDENTIAL_INDEX + 1)).coerceAtLeast(0)')
+                                                                         echo "HP_PARSE         $a-$b"
+s=$(at $HP 'val MALFORMED_REFUSAL_DATAGRAM: ByteArray =');              echo "HP_DATAGRAM      $s-$((s+3))"
+s=$(at $HC "else -> routeUnframed(origin, text.split(' '))");           echo "HC_SPLIT         $s"
+s=$(at $HC 'val extra = HandshakeProtocol.extraTokenCount(tokens)');    echo "HC_EXTRA         $s-$((s+1))"
+s=$(at $HC 'private fun refuseMalformed(');                             echo "HC_MALFORMED     $s-$((s+6))"
+a=$(at $HC 'private fun routeUnframed(')
+b=$(( $(at $HC 'return send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }') + 1 ))
+                                                                         echo "HC_HANDLING      $a-$b"
+a=$(at $HC 'fun accept(origin: InetSocketAddress, bytes: ByteArray, text: String)'); b=$(at $HC 'return classify(origin, bytes, text)')
+                                                                         echo "HC_ACCEPT        $a-$b"
+s=$(at $HC 'DatagramType.PROBE_PING -> {');                             echo "HC_PING          $s-$((s+11))"
+s=$(at $HC 'DatagramType.UNRELIABLE -> {');                             echo "HC_UNREL         $s-$((s+7))"
+s=$(at $HC 'DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {'); echo "HC_RELDROP       $s-$((s+5))"
+s=$(at $HC 'private fun deliverData(');                                 echo "HC_DELIVER       $s-$((s+34))"
+s=$(at $HC 'val registration = registrations.findByOrigin(origin)');    echo "HC_DELIVER_UNREG $s-$((s+1))"
+s=$(at $HC 'override fun sendReliable(peer: InetSocketAddress, bytes: ByteArray)'); echo "HC_SENDREL       $((s+1))-$((s+2))"
+```
+
+   Every line printed must hold one value, or one range of two numbers. A blank or a
+   doubled value means an anchor did not match exactly once: stop and report it.
+
+2. **Substitute.** Replace each current reference with its new value, matching the text
+   rather than the doc line number:
+
+| Document | Current text (on the working tree) | New value |
+|---|---|---|
+| protocol doc | `MultiConnectionUDPServer.kt:564` | `MultiConnectionUDPServer.kt:` + `MCUS_PORT` |
+| protocol doc | `HandshakeWireFormat.kt:14-24,73-87` | `HandshakeWireFormat.kt:` + `HWF_CRED` |
+| protocol doc | `HandshakeCoordinator.kt:242` | `HandshakeCoordinator.kt:` + `HC_SPLIT` |
+| protocol doc | `HandshakeProtocol.kt:79-99` | `HandshakeProtocol.kt:` + `HP_PARSE` |
+| protocol doc | `HandshakeCoordinator.kt:276-277` | `HandshakeCoordinator.kt:` + `HC_EXTRA` |
+| protocol doc | `HandshakeCoordinator.kt:300-306` | `HandshakeCoordinator.kt:` + `HC_MALFORMED` |
+| protocol doc | `HandshakeProtocol.kt:46-47` | `HandshakeProtocol.kt:` + `HP_DATAGRAM` |
+| protocol doc | `HandshakeWireFormat.kt:93` | `HandshakeWireFormat.kt:` + `HWF_REGMSG` |
+| protocol doc | `` (`:105-113`) `` (shorthand, `registeredProtocolVersion`) | `` (`: `` + `HWF_REGVER` + `` `) `` |
+| protocol doc | `HandshakeWireFormat.kt:131-134` | `HandshakeWireFormat.kt:` + `HWF_REFUSED` |
+| protocol doc | `HandshakeCoordinator.kt:266-378` | `HandshakeCoordinator.kt:` + `HC_HANDLING` |
+| protocol doc | `HandshakeCoordinator.kt:159-166` | `HandshakeCoordinator.kt:` + `HC_ACCEPT` |
+| protocol doc | `HandshakeCoordinator.kt:176-187` | `HandshakeCoordinator.kt:` + `HC_PING` |
+| protocol doc | `HandshakeCoordinator.kt:197-204,386-420` | `HandshakeCoordinator.kt:` + `HC_UNREL` + `,` + `HC_DELIVER` |
+| protocol doc | `HandshakeCoordinator.kt:387-388` | `HandshakeCoordinator.kt:` + `HC_DELIVER_UNREG` |
+| protocol doc | `HandshakeCoordinator.kt:206-211` | `HandshakeCoordinator.kt:` + `HC_RELDROP` |
+| protocol doc | `HandshakeCoordinator.kt:571-572` | `HandshakeCoordinator.kt:` + `HC_SENDREL` |
+| protocol doc | `HandshakeWireFormat.kt:31-35` | `HandshakeWireFormat.kt:` + `HWF_TABLE` |
+| architecture doc | `MultiConnectionUDPServer.kt:270` | `MultiConnectionUDPServer.kt:` + `MCUS_COORD` |
+
+   A computed value that equals the current one needs no edit. References into other files
+   (`MultiConnectionUDPClient.kt`, `CommonChannel.kt`, the reliable-channel files, the
+   `:104-118` shorthand for `ReliableChannelEngine.kt`) are unchanged by Stage C. `README.md`
+   holds no line references.
+
+### C-7 Final checks, then Commit 5
+
+Run B-7's script and checks unchanged, and read every `first:`/`last:` pair against its
+sentence. Then:
+
+```bash
+grep -n "exactly as it is\|left as it is\|can draw two:\|only when its name is empty" docs/webtools-udp-protocol.md   # no output
+grep -n "2.0.0a" docs/webtools-udp-protocol.md      # the scope line and the §9 row
+grep -c "{[A-Z_]*}" docs/webtools-udp-protocol.md   # 0
+file docs/webtools-udp-protocol.md README.md docs/webtools-udp-architecture.md   # CRLF line terminators
+git status --short     # only README.md and docs/ (plus final-implementation.md if a deviation was recorded)
+```
+
+Commit 5 (§11) stages, by path, `README.md`, `docs/webtools-udp-protocol.md` and
+`docs/webtools-udp-architecture.md`. The manager then makes the version-bump commit to
+`2.0.0a`, whose README install snippet moves to `2.0.0a` with it.
+
+## 18. Stage D — wording and one test probe
+
+Stage D runs on the working tree as Stage C leaves it. Stage C's production, test and
+document edits are applied but not yet committed.
+
+| Step | File | Commit |
+|---|---|---|
+| D-1 | `main/HandshakeProtocol.kt` | 3 |
+| D-2 | `main/HandshakeWireFormat.kt` | 3 |
+| D-3 | `main/MultiConnectionUDPServer.kt` | 3 |
+| D-4 | the 4c admission test | 4 |
+| D-5 | protocol doc | 5 |
+| D-6 | protocol and architecture docs | 5 |
+
+Apply each step with the `Edit` tool using the quoted old text, which is unique in its file.
+Line numbers are for orientation, on the current working tree.
+
+### D-1 `main/HandshakeProtocol.kt` — which replies carry no application bytes (`:4-6`, +1 line)
+
+```text
+old:
+ * The pure, socket-free rules of the [MultiConnectionUDPServer] handshake: how an
+ * `Iam` line is classified and parsed, and the two fixed replies the server sends
+ * without consulting the application (`REGISTERED <version>` and `REFUSED malformed`).
+new:
+ * The pure, socket-free rules of the [MultiConnectionUDPServer] handshake: how an
+ * `Iam` line is classified and parsed, and the two fixed-text replies
+ * (`REGISTERED <version>` and `REFUSED malformed`), whose bytes never come from the
+ * application (unlike `REFUSED <reason>`).
+```
+
+A new origin's `REGISTERED 2` is sent only after `admit`. What is fixed is the reply's
+text, not whether the application was consulted.
+
+### D-2 `main/HandshakeWireFormat.kt` — name the artifact on the release labels (no line-count change)
+
+Three edits. Each first mention of `2.0.0a` in a KDoc block, and the `1.4.0` label beside
+it, names `webtools-udp`, because `2.0.0a` was also a version of the retired combined
+`io.github.spartanlaboratories:WebTools` artifact.
+
+**D-2a — "The optional credential slot" (`:20-23`).**
+
+```text
+old:
+ * string; a slot that is present but empty (`Iam <name>  <credential>` with two
+ * spaces) is not an absent credential but a malformed line, which a `2.0.0a`+ server
+ * refuses before `admit` (see the `REFUSED` reply below). The credential rides
+ * **in cleartext**: this is a channel, not
+new:
+ * string; a slot that is present but empty (`Iam <name>  <credential>` with two
+ * spaces) is not an absent credential but a malformed line, which a `webtools-udp`
+ * `2.0.0a`+ server refuses before `admit` (see the `REFUSED` reply below). The
+ * credential rides **in cleartext**: this is a channel, not
+```
+
+**D-2b — "The `REFUSED` reply" (`:39-40`).**
+
+```text
+old:
+ * A `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a bare
+ * `REFUSED`) instead of an accepted reply when [MultiConnectionUDPServer.admit]
+new:
+ * A `webtools-udp` `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a
+ * bare `REFUSED`) instead of an accepted reply when [MultiConnectionUDPServer.admit]
+```
+
+**D-2c — `REFUSED_REPLY` (`:71-74`).**
+
+```text
+old:
+     * bare `REFUSED`). Sent by a `1.4.0`+ server instead of an accepted reply
+     * when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and by a
+     * `2.0.0a`+ server when it rejects a malformed `Iam` itself (reason `malformed`,
+     * informative text - not a contract).
+new:
+     * bare `REFUSED`). Sent by a `webtools-udp` `1.4.0`+ server instead of an accepted
+     * reply when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and by a
+     * `webtools-udp` `2.0.0a`+ server when it rejects a malformed `Iam` itself (reason
+     * `malformed`, informative text - not a contract).
+```
+
+The pre-1.4.0 mention in the `handshakeMessage` KDoc (`:86`) is outside the edited blocks
+and stays.
+
+### D-3 `main/MultiConnectionUDPServer.kt` — release labels and what refreshes liveness (+2 lines)
+
+Three edits, top to bottom.
+
+**D-3a — keepalive paragraph (`:34-37`, no line-count change).**
+
+```text
+old:
+ * A client sends a bare `0x80` datagram on an idle interval (~20 s recommended) to
+ * keep its NAT mapping warm; the server consumes inbound `0x80` without
+ * dispatching it, but - when idle detection is enabled (see below) - an inbound
+ * `0x80` also refreshes that client's per-connection liveness timestamp.
+new:
+ * A client sends a bare `0x80` datagram on an idle interval (~20 s recommended) to
+ * keep its NAT mapping warm; the server consumes inbound `0x80` without
+ * dispatching it, but - when idle detection is enabled (see below) - an inbound
+ * `0x80`, like any other datagram from that client, refreshes its liveness timestamp.
+```
+
+**D-3b — "Handshake screening & credentials" (`:47-51`, +1 line).**
+
+```text
+old:
+ * Override [admit] to accept or refuse a handshake before it is registered. The
+ * default admits every well-formed `Iam`, which for a well-formed line is identical
+ * to pre-`1.4.0` behaviour. An `Iam` is **well-formed** unless its name slot is
+ * missing or empty, or its credential slot is present but empty. Since `2.0.0a` the
+ * server refuses a malformed one itself (`REFUSED malformed`, an informative reason
+new:
+ * Override [admit] to accept or refuse a handshake before it is registered. The
+ * default admits every well-formed `Iam`, which for a well-formed line is identical
+ * to the behaviour before `webtools-udp` `1.4.0`. An `Iam` is **well-formed** unless
+ * its name slot is missing or empty, or its credential slot is present but empty.
+ * Since `webtools-udp` `2.0.0a` the server refuses a malformed one itself
+ * (`REFUSED malformed`, an informative reason
+```
+
+The next line, `that a client must not branch on) before [admit] is consulted, ...`, stays.
+
+**D-3c — "Connection liveness" (`:117-119`, +1 line).** The coordinator stamps every
+datagram from a registered origin before it classifies it (`HandshakeCoordinator.kt:166-171`).
+
+```text
+old:
+ * With a positive [idleTimeoutMillis], every registered connection carries the
+ * monotonic time of its last inbound datagram (application data or a `0x80` keepalive), and a
+ * dedicated `mcups-liveness` daemon thread periodically reports any connection
+new:
+ * With a positive [idleTimeoutMillis], every registered connection carries the
+ * monotonic time of its last inbound datagram of any kind (application data, a
+ * `0x80` keepalive, a probe, a handshake line - even one that is dropped), and a
+ * dedicated `mcups-liveness` daemon thread periodically reports any connection
+```
+
+### D-4 4c test — the registered peer is probed through the registry
+
+File: `test/nonfunctional/webtools/udp/MultiConnectionUDPServerAdmissionNonFunctionalTest.kt`.
+
+The burst test (`:161-195`) currently probes through the captured server-side `Connection`,
+which never consults the registry. The new version probes with `pushToAll`, which
+addresses only the peers in `registrations.snapshot()` (`HandshakeCoordinator.kt:710-716`).
+It also asserts that no `onClientDisconnect` fired before `stop()`, and that only the
+registering line reached `admit`, as the class comment states.
+
+The test's name is unchanged, so the counts are unchanged.
+
+Three edits.
+
+**D-4a — imports.** `DeliveryMode` is no longer used, and `DisconnectReason` is.
+
+```text
+old:
+import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DeliveryMode
+import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+new:
+import com.spartanlabs.webtools.udp.Connection
+import com.spartanlabs.webtools.udp.DisconnectReason
+import com.spartanlabs.webtools.udp.MultiConnectionUDPServer
+```
+
+**D-4b — the server and its recorders (`:163-166`).**
+
+```text
+old:
+        val connected = CopyOnWriteArrayList<Connection>()
+        val server = object : MultiConnectionUDPServer() {
+            override fun onClientConnect(connection: Connection) { connected += connection }
+        }
+        val malformedLines = listOf("Iam", "Iam  x", "Iam bob  tok")
+        withServer(server) {
+            DatagramSocket().use { peer ->
+new:
+        val admitted = ConcurrentLinkedQueue<String>()
+        val connected = CopyOnWriteArrayList<Connection>()
+        val disconnects = CopyOnWriteArrayList<DisconnectReason>()
+        val server = object : MultiConnectionUDPServer() {
+            override fun admit(name: String, peer: InetSocketAddress, credential: String): Admission {
+                admitted += name
+                return Admission.Admitted
+            }
+            override fun onClientConnect(connection: Connection) { connected += connection }
+            override fun onClientDisconnect(connection: Connection, reason: DisconnectReason) { disconnects += reason }
+        }
+        val malformedLines = listOf("Iam", "Iam  x", "Iam bob  tok")
+        withServer(server) {
+            DatagramSocket().use { peer ->
+```
+
+The old text is unique: `peer ->` occurs in no other test in this class.
+
+**D-4c — the probe (`:186-187`).**
+
+```text
+old:
+                    assertEquals(1, connected.size, "the peer is still the only registration")
+                    assertTrue(connected.single().channel(DeliveryMode.UNRELIABLE).send("still-here").isSuccess)
+new:
+                    assertEquals(listOf("peer"), admitted.toList(), "only the registering line reached admit")
+                    assertEquals(1, connected.size, "the peer is still the only registration")
+                    assertTrue(disconnects.isEmpty(), "no onClientDisconnect fired before stop")
+                    // pushToAll addresses only peers still in the registry, so receiving it proves the
+                    // registration survived the burst.
+                    assertTrue(server.pushToAll("still-here").isSuccess)
+```
+
+The lines after it stay. They set `peer.soTimeout`, receive the datagram, and assert that
+its `0x90` payload is `still-here`.
+
+`ConcurrentLinkedQueue`, `InetSocketAddress` and `Admission` are already imported.
+`pushToAll(String)` is not deprecated. `onClientDisconnect` runs on the dispatch thread;
+with idle detection off, nothing in this test can fire it before `stop()`.
+
+### D-5 Protocol doc §9 — cite the source of every row (`:433`)
+
+Edit through B-0 step 2's procedure: convert to LF, edit, convert back.
+
+```text
+old:
+Source: `HandshakeWireFormat.kt:32-36`.
+new:
+Source: `HandshakeWireFormat.kt:32-36` (rows 1-3), `:41-44` (row 4).
+```
+
+D-2 leaves `HandshakeWireFormat.kt`'s line count unchanged, so these values are final.
+Check them before editing:
+- `sed -n '32p;36p'` must print the table header row and the `1.x`/`2.0` row;
+- `sed -n '41p;44p'` must print `refuses it. A ... server also answers a **malformed**` and
+  `and leaves a bare \`Iam\` unanswered`.
+
+If either differs, recompute from those anchors.
+
+### D-6 Recount the references D-1 and D-3 shifted
+
+D-1 adds one line to `HandshakeProtocol.kt`, and D-3 adds two to
+`MultiConnectionUDPServer.kt`. `HandshakeWireFormat.kt` and `HandshakeCoordinator.kt` keep
+their line counts.
+
+Rerun the four lines of C-B's script for `MCUS_PORT`, `MCUS_COORD`, `HP_PARSE` and
+`HP_DATAGRAM`, then replace by matching the text:
+
+| Document | Current text | Placeholder | Expected new value |
+|---|---|---|---|
+| protocol doc (`:41`) | `MultiConnectionUDPServer.kt:569` | `MCUS_PORT` | `MultiConnectionUDPServer.kt:571` |
+| protocol doc (`:72`) | `HandshakeProtocol.kt:80-100` | `HP_PARSE` | `HandshakeProtocol.kt:81-101` |
+| protocol doc (`:90`) | `HandshakeProtocol.kt:45-48` | `HP_DATAGRAM` | `HandshakeProtocol.kt:46-49` |
+| architecture doc (`:52`) | `MultiConnectionUDPServer.kt:275` | `MCUS_COORD` | `MultiConnectionUDPServer.kt:277` |
+
+Use the script's output, not the expected column. The column is a cross-check: a mismatch
+means an edit did not land as quoted. In that case, stop and report it.
+
+### D-7 Checks
+
+```bash
+cd /d/Documents/Programming/WebTools
+src=webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp
+./gradlew.bat :webtools-udp:compileKotlin :webtools-udp:compileTestKotlin
+./gradlew.bat :webtools-udp:gatingTest :webtools-udp:componentTest :webtools-udp:deterministicTest
+./gradlew.bat :webtools-udp:integrationTest :webtools-udp:e2eTest :webtools-udp:nonfunctionalTest
+grep -c 'webtools-udp` `2.0.0a`' $src/HandshakeWireFormat.kt $src/MultiConnectionUDPServer.kt   # 2 and 1
+grep -c 'webtools-udp` `1.4.0`' $src/HandshakeWireFormat.kt $src/MultiConnectionUDPServer.kt    # 2 and 1
+grep -n 'without consulting the application\|pre-`1.4.0` behaviour\|application data or a `0x80` keepalive' $src/*.kt   # no output
+grep -n 'DeliveryMode' webtools-udp/src/test/kotlin/com/spartanlabs/testing/nonfunctional/webtools/udp/MultiConnectionUDPServerAdmissionNonFunctionalTest.kt   # no output
+```
+
+The expected counts are unchanged from C-6: gating 83, component 235, deterministic 96,
+integration 115, e2e 34, nonfunctional 65, uat 13.
+
+Then run C-7 again: B-7's script, the shorthand references read by hand (now also `:41-44`),
+and the greps.
+
+Stage D's edits ride the pending commits:
+- **Commit 3:** D-1..D-3, with `plan.md`.
+- **Commit 4:** D-4.
+- **Commit 5:** D-5 and D-6.

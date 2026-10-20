@@ -2,8 +2,9 @@ package com.spartanlabs.webtools.udp
 
 /**
  * The pure, socket-free rules of the [MultiConnectionUDPServer] handshake: how an
- * `Iam` line is classified and parsed, and the two fixed replies the server sends
- * without consulting the application (`REGISTERED <version>` and `REFUSED malformed`).
+ * `Iam` line is classified and parsed, and the two fixed-text replies
+ * (`REGISTERED <version>` and `REFUSED malformed`), whose bytes never come from the
+ * application (unlike `REFUSED <reason>`).
  *
  * Everything here is a deterministic function of its arguments with no I/O and no
  * state, so it can be tested exhaustively without binding a socket.
@@ -38,12 +39,13 @@ internal object HandshakeProtocol {
     private const val MALFORMED_REASON = "malformed"
 
     /**
-     * The exact refusal datagram for a malformed `Iam`: `REFUSED malformed` as UTF-8
-     * bytes. Built once because the malformed path runs at a rate the sender chooses
-     * and [HandshakeWireFormat.refusedMessage] compiles a `Regex` per call. Shared and
-     * read-only, like [REGISTERED_DATAGRAM]: callers must not mutate it.
+     * The exact refusal datagram for a malformed `Iam`: the 17 bytes of
+     * `REFUSED malformed` in UTF-8. Shared and read-only, like [REGISTERED_DATAGRAM]:
+     * callers must not mutate it.
      */
     val MALFORMED_REFUSAL_DATAGRAM: ByteArray =
+        // Built once, not per reply: the malformed path runs at a rate the sender chooses, and
+        // HandshakeWireFormat.refusedMessage compiles a Regex on every call.
         HandshakeWireFormat.refusedMessage(MALFORMED_REASON).toByteArray(Charsets.UTF_8)
 
     /** Index of the client-supplied name within a whitespace-split handshake line. */

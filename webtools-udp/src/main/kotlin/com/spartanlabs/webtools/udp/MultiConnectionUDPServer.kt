@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit
  * A client sends a bare `0x80` datagram on an idle interval (~20 s recommended) to
  * keep its NAT mapping warm; the server consumes inbound `0x80` without
  * dispatching it, but - when idle detection is enabled (see below) - an inbound
- * `0x80` also refreshes that client's per-connection liveness timestamp.
+ * `0x80`, like any other datagram from that client, refreshes its liveness timestamp.
  *
  * This class is abstract because it does not itself decide what to do once a
  * client has finished the handshake - subclasses implement [onClientConnect]
@@ -45,14 +45,20 @@ import java.util.concurrent.TimeUnit
  *
  * ### Handshake screening & credentials
  * Override [admit] to accept or refuse a handshake before it is registered. The
- * default admits every well-formed `Iam` - identical to pre-`1.4.0` behaviour. An
- * `Iam` is **well-formed** unless its name slot is missing or empty, or its
- * credential slot is present but empty. The server refuses a malformed one itself
- * (`REFUSED malformed`, an informative reason that a client must not branch on)
- * before [admit] is consulted, so [admit] never sees an empty `name` and sees
- * `credential` as `""` only when the client sent none. The refusal is sent even to
- * an origin that already holds a registration; that registration is left exactly as
- * it is, so a peer that is mid-session can receive the unframed `REFUSED`.
+ * default admits every well-formed `Iam`, which for a well-formed line is identical
+ * to the behaviour before `webtools-udp` `1.4.0`. An `Iam` is **well-formed** unless
+ * its name slot is missing or empty, or its credential slot is present but empty.
+ * Since `webtools-udp` `2.0.0a` the server refuses a malformed one itself
+ * (`REFUSED malformed`, an informative reason
+ * that a client must not branch on) before [admit] is consulted, so [admit] never
+ * sees an empty `name` and sees `credential` as `""` only when the client sent none;
+ * an earlier server registered the empty-name and empty-credential shapes and left a
+ * bare `Iam` unanswered. The refusal is sent even to an origin that already holds a
+ * registration. That registration is not torn down, superseded or re-screened, and
+ * no [onClientDisconnect] fires; like any inbound datagram from a registered origin,
+ * the line does refresh its idle-detection stamp when [idleTimeoutMillis] is
+ * positive (see "Connection liveness" below). A peer that is mid-session can
+ * therefore receive the unframed `REFUSED`.
  * [admit] returns [Admission.Admitted] or [Admission.Refused]`(reason)`; on a
  * refusal the server sends `REFUSED <reason>` back to the `Iam` origin, mints no
  * [Connection], adds no registration, and does not call [onClientConnect] - the
@@ -110,7 +116,8 @@ import java.util.concurrent.TimeUnit
  *
  * ### Connection liveness
  * With a positive [idleTimeoutMillis], every registered connection carries the
- * monotonic time of its last inbound datagram (application data or a `0x80` keepalive), and a
+ * monotonic time of its last inbound datagram of any kind (application data, a
+ * `0x80` keepalive, a probe, a handshake line - even one that is dropped), and a
  * dedicated `mcups-liveness` daemon thread periodically reports any connection
  * idle beyond the threshold via [onClientDisconnect] with
  * [DisconnectReason.TIMEOUT]. This is **notify-only**: the registration stays in
