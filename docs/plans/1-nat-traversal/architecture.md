@@ -31,12 +31,7 @@ The `ab53747` "step ports down by 2" fix is a patch on top of design #4 and beco
 
 ## 2. Tier 1 — correctness fix — DONE
 
-Implemented on branch `fix/issue-1-handshake-datagram-source`. See
-[`issue-1-tier-1-implementation.md`](./issue-1-tier-1-implementation.md) for the detail.
-Summary of what shipped: the server learns the client endpoint from the datagram source,
-replies on the receiving socket, the protocol is now `Iam <name>` → bare `TXRXON`,
-`commonSendSocket` / `COMMON_SEND_PORT` are gone, `pushToAll` targets each client's learned
-origin, and a retransmitted `Iam` reuses its ports instead of allocating a new pair.
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §2 Tier 1 — correctness fix — DONE".
 
 Goal (met): the handshake completes for any client that can send a UDP datagram to the
 server, NAT'd or not. No reliance on client self-reported address.
@@ -66,10 +61,7 @@ worthwhile as an incremental commit toward Tier 2.
 
 ## 3. Tier 2 — real NAT traversal (choose one)
 
-**Decision: Option B1 (single-socket multiplex) was chosen and implemented.** See
-[`issue-1-tier-2-plan.md`](./issue-1-tier-2-plan.md) for the full design and
-file-by-file breakdown. The handshake reply landed as the single token
-`REGISTERED` (not the `OK`/token placeholder sketched below). Shipped as `2.0.0c`.
+> As built: see [final-implementation.md](final-implementation.md), "architecture.md §3 Tier 2 — real NAT traversal (choose one)".
 
 ### Option B1 — single-socket multiplex  *(chosen, implemented)*
 
@@ -123,8 +115,8 @@ call sites before implementation.
    Published to Maven Central as `2.0.0b`.
 2. Coordinate the client-repo change (`Iam <name>` + parse bare `TXRXON` from the send
    socket) in `MyGameTools` / `MyGameServer`.
-3. ~~Decide Tier 2 B1 vs B2.~~ **Done** — B1 (see `issue-1-tier-2-plan.md`).
+3. ~~Decide Tier 2 B1 vs B2.~~ **Done** — B1 (see `plan-tier-2.md`).
 4. ~~Land Tier 2 refactor + tests.~~ **Done** — `2.0.0c`, single-socket multiplex,
    reply token `REGISTERED`, `KA` keepalive, `e2e` test level added.
 5. Tag 2.0.0 — **pending** downstream (`MyGameTools` / `MyGameServer`) integration
-   on `2.0.0c` and cross-NAT UAT (`issue-1-tier-2-uat.md`) sign-off.
+   on `2.0.0c` and cross-NAT UAT (`uat-tier-2.md`) sign-off.

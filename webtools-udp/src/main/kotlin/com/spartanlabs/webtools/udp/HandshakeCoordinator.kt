@@ -201,7 +201,7 @@ internal class HandshakeCoordinator(
                     // Duplicated verbatim at the other three receive-branch channel checks -
                     // HandshakeCoordinator.deliverData, and MultiConnectionUDPClient.receiveLoop's
                     // UNRELIABLE and reliable branches - rather than extracted; see
-                    // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                    // docs/plans/40-channel-byte-guard/architecture.md §6 for why.
                     channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
                         Result.success(Unit).also {
                             log.warn(
@@ -305,7 +305,7 @@ internal class HandshakeCoordinator(
         // other three receive-branch channel checks - HandshakeCoordinator.classify's
         // RELIABLE_DATA/RELIABLE_ACK branch, and MultiConnectionUDPClient.receiveLoop's UNRELIABLE
         // and reliable branches - rather than extracted; see
-        // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+        // docs/plans/40-channel-byte-guard/architecture.md §6 for why.
         if (channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL) {
             return Result.success(Unit).also {
                 log.warn(
@@ -413,7 +413,7 @@ internal class HandshakeCoordinator(
 
     override fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
         // Floor check duplicated verbatim in MultiConnectionUDPClient.startProbe (Issue #34) rather
-        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // than extracted - see docs/plans/34-probe-cadence/architecture.md §6.1. It must run before
         // any state is touched: writing probeIntervalMillis first would let a rejected call switch
         // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
         // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick, and not

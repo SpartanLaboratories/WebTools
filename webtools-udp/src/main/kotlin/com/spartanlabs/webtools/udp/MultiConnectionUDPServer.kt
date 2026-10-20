@@ -132,7 +132,7 @@ import java.util.concurrent.TimeUnit
  * thread, so a client can measure even if no server-side probe is armed. `0x81` /
  * `0x82` are transport-consumed on both sides, and `packetLossRatio` is lagging
  * and windowed - not a fast congestion signal. See
- * the sequence diagram in docs/issue-13-link-quality-probe-plan.md §2.9.
+ * the sequence diagram in docs/plans/13-link-quality-probe/plan.md §2.9.
  *
  * ### Reliable-ordered channel
  * `connection.channel(DeliveryMode.RELIABLE_ORDERED)` (or the convenience
@@ -164,11 +164,11 @@ import java.util.concurrent.TimeUnit
  * code. It is a dedicated executor, *not* the `mcups-liveness` one: liveness
  * exists only for `idleTimeoutMillis > 0` and has a different cadence and
  * lifecycle. See the scheduled-keepalive sequence diagram in
- * docs/issue-12-scheduled-keepalive-plan.md §2.8. A fifth daemon thread -
+ * docs/plans/12-scheduled-keepalive/plan.md §2.8. A fifth daemon thread -
  * `mcups-probe`, also a [ScheduledExecutorService] - exists **only once a consumer
  * calls [Connection.startProbe]**; it sends `0x81` probe datagrams and runs no
  * application code, and is again a dedicated executor so the probe and keepalive
- * lifecycles stay independent. See docs/issue-13-link-quality-probe-plan.md §2.9.
+ * lifecycles stay independent. See docs/plans/13-link-quality-probe/plan.md §2.9.
  * A sixth daemon thread - `mcups-retransmit`, also a [ScheduledExecutorService] -
  * exists **only once a reliable channel is opened** (by either side); it retransmits
  * unacked `0xA0` frames and emits standalone `0xA1` acks, and runs no application
@@ -182,8 +182,8 @@ import java.util.concurrent.TimeUnit
  * on from any thread (the JDK permits a concurrent send during a receive); the
  * registration list is copy-on-write.
  *
- * See the sequence diagram in `docs/issue-1-tier-2-plan.md` §2.1 for the canonical
- * end-to-end flow, and `docs/issue-10-connection-liveness-plan.md` §2.8 for the
+ * See the sequence diagram in `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 for the canonical
+ * end-to-end flow, and `docs/plans/10-connection-liveness/plan.md` §2.8 for the
  * idle-sweep sequence.
  *
  * See `docs/webtools-udp-protocol.md` for the complete wire reference and

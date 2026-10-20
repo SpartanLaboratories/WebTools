@@ -24,7 +24,7 @@
   - `63b2524` — `feat:` all `src/main` changes, `KeepAlive.kt`,
     `KeepAliveScheduler.kt`, `README.md`, the test-support fixtures + **this plan
     document** (committed with the first implementation stage per §10, so
-    `git log --follow docs/issue-12-scheduled-keepalive-plan.md` binds plan to
+    `git log --follow docs/plans/12-scheduled-keepalive/plan.md` binds plan to
     implementation).
   - `1108673` — `test:` the §5 suite, all levels.
   - `f6a0dd4` — `build:` bump `webtools-udp` to `1.5.0` (§3.13).
@@ -37,7 +37,7 @@
 - **Target version:** `webtools-udp` `1.4.0` → **`1.5.0`** (purely additive — new
   members only, nothing removed or changed; see §7).
 - **Related (boundaries noted, not designed here):**
-  - `docs/issue-10-connection-liveness-plan.md` — introduced the server-side
+  - `docs/plans/10-connection-liveness/plan.md` — introduced the server-side
     `mcups-liveness` `ScheduledExecutorService` and the pure `Liveness` helper.
     §2.4 there notes "#12's server-side scheduled keepalive, if it lands, reuses
     that executor rather than adding a third" — this plan diverges from that
@@ -45,13 +45,13 @@
     and `mcups-liveness` exists only when `idleTimeoutMillis > 0`, so a dedicated
     opt-in scheduler is cleaner than a conditional piggyback. The new `KeepAlive`
     helper is a deliberate near-twin of `Liveness` (§2.3).
-  - `docs/issue-11-handshake-refusal-and-credential-plan.md` — the
+  - `docs/plans/11-handshake-refusal-and-credential/plan.md` — the
     `@JvmOverloads` + `open`/default-method additive-evolution pattern reused
     here for `Connection` and `MultiConnectionUDPClient`.
-  - `docs/issue-3-public-client-handshake-plan.md` — the `MultiConnectionUDPClient`
+  - `docs/plans/3-public-client-handshake/plan.md` — the `MultiConnectionUDPClient`
     lifecycle (`handshake` → `start` → `stop`) this plan extends with
     `startKeepAlive` / `stopKeepAlive`.
-  - `docs/issue-1-tier-2-plan.md` §2.1 — the canonical inbound-datagram flow.
+  - `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 — the canonical inbound-datagram flow.
 
 ---
 
@@ -634,7 +634,7 @@ server's shared `mcups-keepalive` thread, cancelled by `terminate()`.
     consumer calls `Connection.startKeepAlive`**; it sends `KA` datagrams and
     runs no application code. Note it is *not* the `mcups-liveness` executor
     (§2.6). Add: *"See the scheduled-keepalive sequence diagram in
-    docs/issue-12-scheduled-keepalive-plan.md §2.8."*
+    docs/plans/12-scheduled-keepalive/plan.md §2.8."*
   - `### Construction side effects`: unchanged — the keepalive scheduler binds
     nothing and starts no thread at construction.
   - New `### Scheduled keepalive` section: opt-in `Connection.startKeepAlive` /
@@ -663,7 +663,7 @@ server's shared `mcups-keepalive` thread, cancelled by `terminate()`.
   `startKeepAlive`. Class KDoc `### Concurrency` (`:30-41`): a third daemon thread
   (`mcupc-keepalive`), created only on `startKeepAlive`, shut by `stop()`; add
   *"See the scheduled-keepalive sequence diagram in
-  docs/issue-12-scheduled-keepalive-plan.md §2.8."*
+  docs/plans/12-scheduled-keepalive/plan.md §2.8."*
   "Concurrent-call contract": `startKeepAlive` / `stopKeepAlive` are safe from any
   thread and may race `stop()` (a `startKeepAlive` after `stop()` fails its
   `Result`; an in-flight tick either sends or observes the closed socket and
@@ -719,7 +719,7 @@ server's shared `mcups-keepalive` thread, cancelled by `terminate()`.
   // unchanged; no wire change (Issue #12).
   ```
 
-### 3.14 `docs/issue-12-scheduled-keepalive-plan.md`
+### 3.14 `docs/plans/12-scheduled-keepalive/plan.md`
 
 This document. Committed in the same commit as §3.1–§3.12 (stage 1). Backfill the
 `Commit:` / `PR:` header fields once they exist (as done for #8/#9/#10/#11).
@@ -733,7 +733,7 @@ This document. Committed in the same commit as §3.1–§3.12 (stage 1). Backfil
 | **Inner core** (in-editor) | yes | Comments: why quarter-interval poll not fixed-rate; the `scheduleWithFixedDelay` throw-cancel hazard (→ `runCatching` in the tick); `@Volatile lastOutboundAt(Nanos)` single-writer/single-reader reasoning; the `shutDown` latch preventing executor resurrection after `stop()`; why the server keepalive does not reuse `mcups-liveness`. |
 | **Component ring** (KDoc) | yes | New KDoc: `KeepAlive.pollIntervalMillis` / `isDue`, `KeepAliveSchedule` / `KeepAliveScheduler`, `HandshakeWireFormat.DEFAULT_KEEPALIVE_INTERVAL_MILLIS`, `ClientChannel.scheduleKeepAlive` / `cancelKeepAlive`, `Connection.startKeepAlive(Long)` / `stopKeepAlive`, `UDPConnection` overrides, `Registration.lastOutboundAt`, `HandshakeCoordinator` `@param keepAliveSchedule` + `shutKeepAlive`, `MultiConnectionUDPClient` `internal` constructor `@param keepAlive` + `startKeepAlive` / `stopKeepAlive`. The no-arg `Connection.startKeepAlive()` overload gets its **own** KDoc block (summary + `@return` + `@see startKeepAlive`), since `Connection` uses two explicit overloads rather than `@JvmOverloads`. Updated KDoc: `Connection.keepAlive`, `MultiConnectionUDPClient.sendKeepAlive` (cross-ref the managed form). |
 | **Boundary ring** (protocol) | **no wire change** | The `KA` token, its drop-on-receipt semantics, and "the client's keepalive is authoritative" are unchanged. One clarifying sentence in `HandshakeWireFormat` / README that the cadence can now be library-managed. |
-| **Architectural outer layer** | yes | One new opt-in daemon thread per side (`mcupc-keepalive`, `mcups-keepalive`), created only on first `startKeepAlive`, shut on `stop()`. Documented in both `### Concurrency` KDocs, **each of which adds a one-line pointer**: *"See the scheduled-keepalive sequence diagram in docs/issue-12-scheduled-keepalive-plan.md §2.8"* (§2.8 is the canonical flow — the same convention `MultiConnectionUDPClient` / `MultiConnectionUDPServer` already use to point at the issue-1/issue-3/issue-10 diagrams). |
+| **Architectural outer layer** | yes | One new opt-in daemon thread per side (`mcupc-keepalive`, `mcups-keepalive`), created only on first `startKeepAlive`, shut on `stop()`. Documented in both `### Concurrency` KDocs, **each of which adds a one-line pointer**: *"See the scheduled-keepalive sequence diagram in docs/plans/12-scheduled-keepalive/plan.md §2.8"* (§2.8 is the canonical flow — the same convention `MultiConnectionUDPClient` / `MultiConnectionUDPServer` already use to point at the issue-1/issue-3/issue-10 diagrams). |
 | **README** | yes | Per the README-currency rule: new public methods on two types, new public constant, new (conditional) thread per side, changed usage guidance, dependency-coordinate bump. |
 
 ---
@@ -1120,7 +1120,7 @@ labelled this non-blocking polish.
   2. `test: cover the opt-in scheduled keepalive across all levels (Issue #12)` — §5 all levels; includes the `javap` overload verification.
   3. `build: bump webtools-udp to 1.5.0 for the opt-in scheduled keepalive (Issue #12)` — §3.13.
 - The plan document rides in commit 1 (the first implementation stage) so
-  `git log --follow docs/issue-12-scheduled-keepalive-plan.md` permanently binds
+  `git log --follow docs/plans/12-scheduled-keepalive/plan.md` permanently binds
   plan to implementation.
 - **Commit trailer:** none. Attribution is off for this repo — commits carry no
   `Co-Authored-By` / `Claude-Session` / "Generated with" trailer, and the PR

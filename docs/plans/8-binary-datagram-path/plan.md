@@ -23,9 +23,9 @@
   size, D3 inbound callback shape).
 - **Target version:** `webtools-udp` `1.0.0` → **`1.1.0`** (non-breaking
   addition; see §7).
-- **Related:** `docs/issue-3-public-client-handshake-plan.md` (current wire
-  protocol, `MultiConnectionUDPClient` shape), `docs/issue-5-prune-stale-registrations-plan.md`,
-  `docs/split-into-three-modules-plan.md` (module layout, per-module versions).
+- **Related:** `docs/plans/3-public-client-handshake/plan.md` (current wire
+  protocol, `MultiConnectionUDPClient` shape), `docs/plans/5-prune-stale-registrations/plan.md`,
+  `docs/plans/15-split-into-three-modules/plan.md` (module layout, per-module versions).
 - **Consumer context (not tracked here):** unblocks `SpartanLabsGaming/MyGameTools`'
   planned binary `SnapshotCodec` (its roadmap §7). Per standing guidance the
   downstream adoption is that repo's concern; this plan closes once the
@@ -442,7 +442,7 @@ unless noted.
   use).
 - "Client-side usage" snippet: optional `startBytes` / `send(bytes)` example.
 
-### 3.13 `docs/issue-8-binary-datagram-path-plan.md`
+### 3.13 `docs/plans/8-binary-datagram-path/plan.md`
 
 - This document, committed with the implementation (§8).
 
@@ -652,7 +652,7 @@ project convention.
      the `RECEIVE_BUFFER_BYTES` change in `CommonChannel` /
      `MultiConnectionUDPServer` and `MultiConnectionUDPClient` (§3.6–§3.8, §2.5),
      the 4.3 `CommonChannelTest` "large datagram received whole" case, **and this
-     plan document** (so `git log --follow docs/issue-8-*` binds to the first
+     plan document** (so `git log --follow docs/plans/8-binary-datagram-path/plan.md` binds to the first
      stage of the work). `./gradlew :webtools-udp:build` green.
   2. `feat: expose a raw binary datagram path on the webtools-udp send/receive surface (Issue #8)`
      — the rest of §3.1–§3.10 (production + test-support fixtures), §4 (all
@@ -724,29 +724,4 @@ consumer).
 
 ## 11. QA-remediation additions (post-plan)
 
-Two QA passes were run on the implementation. The first surfaced 8
-documentation findings (send-side payload-size contract missing on the byte
-methods; `Connection.push(String)` KDoc stated an inverted contract;
-non-interpolating `$VERB`/`$HANDSHAKE_VERB` in KDoc; inbound-truncation sentence
-absent at the `*Bytes` call sites; four minors) — all fixed. A `.gitattributes`
-(`*.kt`/`*.kts text eol=lf`) was added and two test files re-saved LF after an
-editor had rewritten them CRLF.
-
-The second pass returned 4 low-severity test-coverage-placement findings. The
-plan had deferred two of them (§4's "leave to 4b" for the server socket path;
-the manual UAT scenario, formerly listed here). **At the user's explicit
-direction during QA, all four were closed**, superseding those deferrals:
-
-- **L1 gating** — `HandshakeCoordinatorGatingTest` +2: a bound bytes handler
-  gets the exact undecoded bytes; a payload trimming to `KA` is still dropped
-  when a bytes handler is bound.
-- **L2 component** — `RegistrationsTest` +1: `Registration.onBytes` defaults
-  `null` and is settable independently of `onMessage` at that layer.
-- **L3 integration** — `MultiConnectionUDPServerTest` +2 (`@Order(14)`/`(15)`,
-  after every text case, before `stop`): a re-actuated bytes handler receives a
-  client datagram byte-identical with no trim/decode; `pushToAll(ByteArray)` puts
-  the payload on a real client socket verbatim. Isolated from the `PER_CLASS`
-  ordered suite by using fresh per-test sockets and re-binding only the one
-  connection under test — the shared server fixture is untouched.
-- **L5 UAT** — `MultiConnectionUDPServerUatTest` +1 `@Disabled`: a NAT'd client
-  round-trips a raw binary blob through an `actuateBytes` echo handler.
+> As built: see [final-implementation.md](final-implementation.md), "plan.md §11 QA-remediation additions (post-plan)".

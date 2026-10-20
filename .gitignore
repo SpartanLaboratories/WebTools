@@ -34,12 +34,24 @@ bin/
 /dist/
 /nbdist/
 /.nb-gradle/
+nbproject/
+.nbproject/
 
 ### VS Code ###
 .vscode/
+
+### JetBrains Fleet ###
+.fleet/
 
 ### Mac OS ###
 .DS_Store
 
 ### Local AI tooling config ###
 .ai/
+
+### Editor swap / backup files ###
+*.swp
+*.swo
+*~
+.#*
+\#*\#

@@ -5,7 +5,7 @@
 - **Covers:** `SpartanLaboratories/WebTools#40` — *"webtools-udp 2.0: receivers
   must drop non-zero channel-byte frames before the Stable Core freeze"*. This
   is the prerequisite the Issue #14 Stage-4 finalisation architecture names
-  `issue-14-channel-byte-guard` (`docs/issue-14-finalisation-architecture.md`
+  `issue-14-channel-byte-guard` (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md`
   §9) — now that it has its own filed issue, this document and its plan use
   the `issue-40-*` slug instead.
 - **What this document is:** a **systems design record** for a small,
@@ -15,19 +15,19 @@
   channel byte, the order the check runs in relative to origin screening and
   malformed-frame handling, and the one new internal wire-codec accessor —
   before code is written. There is no file-by-file breakdown and no method
-  bodies here; those belong to `docs/issue-40-channel-byte-guard-plan.md`.
+  bodies here; those belong to `docs/plans/40-channel-byte-guard/plan.md`.
 - **Baseline:** `webtools-udp` `2.0.0-alpha4` on `feat/2.0-framed-transport`,
   HEAD `4a70ba4`. Working tree otherwise clean at the time of writing (only
   the two untracked Issue #14 finalisation docs present, neither touched by
   this fix).
 - **Branch model:** unchanged from the #34 precedent
-  (`docs/issue-34-probe-cadence-architecture.md` Header): a short-lived
+  (`docs/plans/34-probe-cadence/architecture.md` Header): a short-lived
   branch `fix/issue-40-channel-byte-guard` off the long-lived integration
   branch `feat/2.0-framed-transport`, PR into that branch (`Refs #40`, not
   `Closes`), branch deleted after merge, issue closed by hand.
 - **Target version:** `webtools-udp` `2.0.0-alpha4` → `2.0.0-alpha5`.
 - **Status:** design complete. The single implementation plan
-  (`docs/issue-40-channel-byte-guard-plan.md`) is written and aligned against
+  (`docs/plans/40-channel-byte-guard/plan.md`) is written and aligned against
   this document (see "Cross-plan alignment" at the end). **No open
   decisions.** Ready for the `manager` to cut the branch and for
   implementation.
@@ -36,14 +36,14 @@
 - **This document and the plan ride the first implementation commit** (the
   `fix:` commit), so `git log --follow` binds design to code.
 - **Related docs:**
-  - `docs/issue-14-finalisation-architecture.md` — the Stage-4 document that
+  - `docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` — the Stage-4 document that
     names this fix as its prerequisite (§4, §9, §13 R5/R13/R15) and whose
     protocol/architecture docs will state this fix's behaviour as the
     permanent wire contract.
-  - `docs/issue-14-finalisation-plan.md` — the Stage-4 plan whose §4b.2,
+  - `docs/plans/14-reliable-ordered-channel/plan-finalisation.md` — the Stage-4 plan whose §4b.2,
     §4b.3, §4d and §9 depend on this fix and, in two places (§4b.2/§4b.3),
     apply KDoc text only if this fix did not already rewrite it.
-  - `docs/issue-34-probe-cadence-architecture.md` — the house format this
+  - `docs/plans/34-probe-cadence/architecture.md` — the house format this
     document follows, and the source of the "duplicate a tiny check across
     call sites rather than extract it" precedent this fix reuses (§6.1
     there; §6 here).
@@ -114,7 +114,7 @@ against the code at `4a70ba4` and found no evidence contradicting any of them
   cross-referenced by a one-line comment naming Issue #40 and the other three
   sites — the same shape as the probe-cadence floor check
   (`HandshakeCoordinator.kt:369-375`; `MultiConnectionUDPClient.kt:704-710`;
-  `docs/issue-34-probe-cadence-architecture.md` §6.1). No shared predicate, no
+  `docs/plans/34-probe-cadence/architecture.md` §6.1). No shared predicate, no
   `when` guard conditions.
 - **D8** — a dropped frame is harmless: the server returns
   `Result.success(Unit)` (confirmed necessary — `MultiConnectionUDPServer.kt:318-332`
@@ -140,7 +140,7 @@ against the code at `4a70ba4` and found no evidence contradicting any of them
   - **(a) Owned outright:** the two `DEFAULT_*_CHANNEL` lines
     (`TransportWireFormat.kt:36`, `ReliableWireFormat.kt:37`). Their text is
     the Stage-4 plan's §4b.2/§4b.3 replacement, **verbatim**
-    (`docs/issue-14-finalisation-plan.md`).
+    (`docs/plans/14-reliable-ordered-channel/plan-finalisation.md`).
   - **(b) Falsified by this fix, not quoted by Stage 4:**
     1. the `HandshakeCoordinator` class KDoc's inbound-router bullet
        (`:21-26`);
@@ -201,7 +201,7 @@ library citations, CWE background — are supporting evidence for these):
    here would let a forward-compatibility hazard go undetected past the
    Stable Core freeze. This is why the fix is a hard per-frame drop, not a
    fallback-to-channel-0 default — which is exactly the silent-corruption
-   failure mode `docs/issue-14-finalisation-architecture.md`'s OD-4 motivates
+   failure mode `docs/plans/14-reliable-ordered-channel/architecture-finalisation.md`'s OD-4 motivates
    this issue to close.
 2. **A hard connection-level error (QUIC/GNS style) is disproportionate here
    and was rejected**, because this wire format's frames are self-describing
@@ -259,7 +259,7 @@ cross-cutting seam for something this small (see §6).
 
 ### 3.2 Interaction diagrams
 
-Per R13 (`docs/issue-14-finalisation-architecture.md` §13): every label
+Per R13 (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §13): every label
 containing `:`, `()`, `[]`, `/` or `;` is double-quoted, line breaks use
 `<br/>`, and no label contains a bare `end`. Beyond R13, labels avoid HTML
 entities (the Stage-4 alignment pass removed them for the same reason) and
@@ -350,7 +350,7 @@ level (its own plan's job).
 
 ### 4.1 Not a second instance of an unrelated mechanism
 
-Unlike the #34 fix (`docs/issue-34-probe-cadence-architecture.md` §4, which
+Unlike the #34 fix (`docs/plans/34-probe-cadence/architecture.md` §4, which
 had a real second instance to check — the idle-liveness sweep — and cleared
 it), this fix's mechanism (a wire-format value check) has no sibling
 mechanism elsewhere in the module to sweep for. The adoption question here is
@@ -372,7 +372,7 @@ fully answered by the two-call-site blast radius above.
   Central's `webtools-udp` latest is `1.1.0`, confirmed by the #34 precedent's
   research), so no consumer can be relying on the old silent-accept
   behaviour. Once Stage 4 freezes `2.0.0` as Stable Core
-  (`docs/issue-14-finalisation-architecture.md` B1), this drop is part of
+  (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` B1), this drop is part of
   that frozen contract — narrowing it further would need a major version;
   loosening it (accepting a specific non-zero value) is exactly the
   forward-compatible extension point the reserved channel range exists for,
@@ -389,7 +389,7 @@ fully answered by the two-call-site blast radius above.
   `@RequiresOptIn` — this is not an extension seam, it is a correction to
   the receive-side contract of Stable Core surface (`0x90`/`0xA0`/`0xA1`)
   that was already public/internal, matching B1's existing scope in the
-  Stage-4 document (`docs/issue-14-finalisation-architecture.md` §1.2). No
+  Stage-4 document (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §1.2). No
   open decision on tier: this is confident, not deferred.
 
 ---
@@ -398,7 +398,7 @@ fully answered by the two-call-site blast radius above.
 
 | Alternative | Rejected because |
 |---|---|
-| **Shared predicate/helper function** (e.g. one `isSupportedChannel(byte)` or one `screenChannel(...)` called from all four sites) | No such extraction precedent exists for a comparably tiny duplicated check in this module — the probe-cadence floor check (Issue #34) and the retransmit-tick wiring are both duplicated verbatim across their two call sites rather than shared, specifically because each call site's surrounding state (which `Result` failure to construct, which log fields are in scope, `Result` vs. statement form) differs enough that a shared function would need parameters for all of it, undermining the readability a helper is supposed to buy (D7; `docs/issue-34-probe-cadence-architecture.md` §6.1). |
+| **Shared predicate/helper function** (e.g. one `isSupportedChannel(byte)` or one `screenChannel(...)` called from all four sites) | No such extraction precedent exists for a comparably tiny duplicated check in this module — the probe-cadence floor check (Issue #34) and the retransmit-tick wiring are both duplicated verbatim across their two call sites rather than shared, specifically because each call site's surrounding state (which `Result` failure to construct, which log fields are in scope, `Result` vs. statement form) differs enough that a shared function would need parameters for all of it, undermining the readability a helper is supposed to buy (D7; `docs/plans/34-probe-cadence/architecture.md` §6.1). |
 | **Kotlin `when` guard conditions** (`DatagramType.UNRELIABLE if (…) ->`, stable since Kotlin 2.2.0 — https://kotlinlang.org/docs/control-flow.html) | A guard is evaluated while the `when` selects a branch, so it cannot see anything the branch body computes. The two reliable arms are comma-joined (`RELIABLE_DATA, RELIABLE_ACK ->`), and Kotlin does not allow a guard on a multi-condition branch at all. On the server `0x90` arm a guard would run before the origin lookup inside `deliverData`, violating requirement 2. Only the client `0x90` arm could legally take one, and there it would split one branch into two and need the malformed check repeated inside the guard. That buys nothing, and it would leave the four sites with two different shapes. |
 | **A check inside `ReliableChannelEngine`** (reject in `onInboundDatagram` rather than before `reliableEngineFor`/`reliableEngine()`) | Per D2/D4/D6, the check must run *before* engine creation, so a non-zero-channel `0xA0` from a first-ever reliable frame never mints an engine at all. Moving the check into the engine would let exactly that engine-creation happen first, then reject the frame — observably different from the settled requirement 2, and the wrong layer besides: the engine is deliberately channel-agnostic (`ReliableChannelEngine.kt:33-41`'s `channel` parameter is what it *emits*, never read on receipt), and giving it origin/channel screening responsibility would blur its one job (ack/reorder/retransmit orchestration) with the receive-branch's screening job. |
 | **Hard disconnect / connection error** (QUIC/GameNetworkingSockets style: treat a non-zero channel as a protocol violation ending the session) | Disproportionate for a value reserved for a *future* 2.x minor (§2 finding 2) — it would make a mixed-version rollout of that future feature brittle, and this wire format's frames are self-describing per-tag records, so a per-frame drop is sufficient and does not risk desynchronising the parser the way an unbounded QUIC frame stream would. |
@@ -413,9 +413,9 @@ fully answered by the two-call-site blast radius above.
 
 | Ring | Touched? | What moves with the change |
 |---|---|---|
-| **Inner core** | yes | A one-line `//` comment at each of the four call sites naming Issue #40 and cross-referencing the other three sites (D7), matching the probe-cadence precedent's inner-core comment (`docs/issue-34-probe-cadence-architecture.md` §7). |
+| **Inner core** | yes | A one-line `//` comment at each of the four call sites naming Issue #40 and cross-referencing the other three sites (D7), matching the probe-cadence precedent's inner-core comment (`docs/plans/34-probe-cadence/architecture.md` §7). |
 | **Component ring (KDoc)** | yes | `TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL` and `ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL` (owned by this fix, D10(a), using the Stage-4 plan's exact replacement text); the six further internal/public KDoc blocks D10(b) names (`HandshakeCoordinator`'s class KDoc bullets, `accept`, `reliableEngineFor`, `MultiConnectionUDPClient.receiveLoop`'s one-liner, a new precondition sentence on `ReliableChannelEngine.onInboundDatagram`, and the new accessor's own KDoc) — none of which Stage 4 quotes, so this fix owns their correction outright, not as a conditional. |
-| **Boundary ring (protocol)** | no direct edit | `docs/webtools-udp-protocol.md` does not exist yet — Stage 4 creates it in the *next* PR on this branch and will describe this fix's behaviour as contract (`docs/issue-14-finalisation-architecture.md` §3.2, R8). The KDoc this fix writes points at that path by name (per the repo's backticked-path convention, R5) even though the file does not yet exist on this branch — the pointer dangles only between this fix's merge and Stage 4's merge, never on `master` or in a published artifact (D10(a)). |
+| **Boundary ring (protocol)** | no direct edit | `docs/webtools-udp-protocol.md` does not exist yet — Stage 4 creates it in the *next* PR on this branch and will describe this fix's behaviour as contract (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §3.2, R8). The KDoc this fix writes points at that path by name (per the repo's backticked-path convention, R5) even though the file does not yet exist on this branch — the pointer dangles only between this fix's merge and Stage 4's merge, never on `master` or in a published artifact (D10(a)). |
 | **Architectural outer layer** | no | No new thread, no topology change, no lock reordering — the check is a comparison inside an existing receive branch. |
 | **README** | no | Makes no channel-acceptance claim today (`README.md:93-97`, `:153`, `:170`); D11 confirms no edit is needed, and Stage 4 owns every README edit before `master` regardless. |
 
@@ -423,7 +423,7 @@ fully answered by the two-call-site blast radius above.
 
 ## 8. Seam with Issue #14 Stage 4
 
-This fix is the named prerequisite of `docs/issue-14-finalisation-plan.md`
+This fix is the named prerequisite of `docs/plans/14-reliable-ordered-channel/plan-finalisation.md`
 §9 ("Interfaces with sibling units"). The contract in both directions:
 
 **What Stage 4 expects from this fix** (already quoted in Stage 4's own §9,
@@ -436,7 +436,7 @@ reproduced here so this document is self-contained):
   itself; Stage 4's §4b.2/§4b.3 apply their own text **only if** this fix did
   not already rewrite those exact lines — if this fix's wording differs from
   what those sections expect, Stage 4's executor is instructed to stop and
-  report rather than overwrite silently (`docs/issue-14-finalisation-plan.md`
+  report rather than overwrite silently (`docs/plans/14-reliable-ordered-channel/plan-finalisation.md`
   §4b.2, §9).
 - This fix merges into `feat/2.0-framed-transport` before the Stage-4 branch
   is cut.
@@ -461,7 +461,7 @@ reproduced here so this document is self-contained):
   `TransportWireFormat.kt`, `ReliableWireFormat.kt` and
   `MultiConnectionUDPClient.kt` (KDoc only), and neither
   `HandshakeCoordinator.kt` nor `ReliableChannelEngine.kt`
-  (`docs/issue-14-finalisation-plan.md` §8, commit 4's path list).
+  (`docs/plans/14-reliable-ordered-channel/plan-finalisation.md` §8, commit 4's path list).
   - In the three shared files, the only blocks Stage 4 quotes that this fix
     also changes are the two `DEFAULT_*_CHANNEL` lines Stage 4 hands over.
   - Every other edit here is in a block Stage 4 does not quote: the
@@ -472,7 +472,7 @@ reproduced here so this document is self-contained):
     protocol and architecture docs make into `HandshakeCoordinator.kt` and
     `MultiConnectionUDPClient.kt`. Stage 4 already anchors every edit on
     quoted "Current" text and re-verifies citations against the merged guard
-    (`docs/issue-14-finalisation-architecture.md` §12), so the drift is
+    (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §12), so the drift is
     anticipated.
 
   Within this fix's own three commits no file is edited twice, so there is no
@@ -484,7 +484,7 @@ reproduced here so this document is self-contained):
 
 One plannable unit. The fix is four small, structurally identical branch
 edits plus one new internal accessor and its KDoc tail — the same shape and
-scale as the #34 precedent (`docs/issue-34-probe-cadence-architecture.md` §8:
+scale as the #34 precedent (`docs/plans/34-probe-cadence/architecture.md` §8:
 "a ~10-line production change... not a system decomposition"). Splitting by
 side (server unit / client unit) or by tag (`0x90` unit / reliable unit)
 would manufacture seams between four checks that share one WARN-text pattern,
@@ -496,7 +496,7 @@ the others without leaving the wire contract only half-guarded.
 |---|---|---|---|
 | `issue-40-channel-byte-guard` | All four receive-branch channel checks (server `0x90`/reliable, client `0x90`/reliable); the new internal `ReliableWireFormat` channel accessor; the KDoc rewrite of both `DEFAULT_*_CHANNEL` constants and the six further D10(b) KDoc blocks; tests at every applicable level including origin-screening-priority proof; the `2.0.0-alpha4` → `2.0.0-alpha5` version bump. | none | Only unit — lands directly on `feat/2.0-framed-transport`, before the Issue #14 Stage-4 branch is cut |
 
-The plan document, `docs/issue-40-channel-byte-guard-plan.md`, turns this
+The plan document, `docs/plans/40-channel-byte-guard/plan.md`, turns this
 into the file-by-file change set and the 5-level test matrix.
 
 ---
@@ -535,7 +535,7 @@ into the file-by-file change set and the 5-level test matrix.
   - `master` receives this branch only after Stage 4 (its §9 landing order);
   - alphas are source-only, with no published artifact;
   - Stage 4's own verification resolves every cross-reference before its
-    merge (`docs/issue-14-finalisation-architecture.md` §7).
+    merge (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §7).
 
   If Stage 4 were abandoned, the pointer would need a one-line follow-up.
 - **Behavioural narrowing, contained.** Any (hypothetical) consumer sending a
@@ -543,7 +543,7 @@ into the file-by-file change set and the 5-level test matrix.
   fix, that traffic is dropped with a WARN. Acceptable for the same reason
   the #34 precedent gives: `2.0.0-alphaN` carries no semver promise and no
   Maven Central artifact exists at this coordinate beyond `1.1.0`
-  (`docs/issue-34-probe-cadence-architecture.md` §1.3.1).
+  (`docs/plans/34-probe-cadence/architecture.md` §1.3.1).
 - **No concurrency shape change.** Every check added is a same-thread
   comparison inside an already-synchronized or single-threaded receive path
   (the server's common listener thread, the client's `mcupc-listener`
@@ -593,7 +593,7 @@ issue. This pipeline files none.
 
 ## Cross-plan alignment (planner, 2026-09-25)
 
-There is one plan in this decomposition, `docs/issue-40-channel-byte-guard-plan.md`,
+There is one plan in this decomposition, `docs/plans/40-channel-byte-guard/plan.md`,
 so there were no parallel drafts to reconcile. The pass checked that plan
 against this document, the binding requirement (§1.1), the Issue #14 Stage-4
 plan it precedes, and the code at `4a70ba4`.
@@ -601,7 +601,7 @@ plan it precedes, and the code at `4a70ba4`.
 ### What was checked
 
 - **Contracts at the seams.** The only seam is Stage 4
-  (`docs/issue-14-finalisation-plan.md` §9). Checked against it:
+  (`docs/plans/14-reliable-ordered-channel/plan-finalisation.md` §9). Checked against it:
   - the plan's behaviour matches Stage 4's expectation: WARN-and-drop on
     both sides for all three tags, origin screening first, liveness
     unchanged, `2.0.0-alpha5`;
@@ -709,7 +709,7 @@ suite is expected at 605 tests, 13 skipped, 0 failures.
   precision fixes in Stage 4's own documents.
 - **Stage-4 documents are stale about this unit's identity.** They call it
   `issue-14-channel-byte-guard` and say its issue is "not yet filed". It is
-  now #40, with this document and `docs/issue-40-channel-byte-guard-plan.md`.
+  now #40, with this document and `docs/plans/40-channel-byte-guard/plan.md`.
   Stage 4's own documents were not edited by this pass.
 - **Line-number drift into Stage 4.** This fix moves lines in
   `HandshakeCoordinator.kt`, `MultiConnectionUDPClient.kt`,

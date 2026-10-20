@@ -8,15 +8,15 @@
   unit `issue-40-channel-byte-guard` — a file-by-file change set and a 5-level
   test matrix. It turns the approved architecture into code; it makes no
   design decisions of its own.
-- **Approved design:** `docs/issue-40-channel-byte-guard-architecture.md`,
+- **Approved design:** `docs/plans/40-channel-byte-guard/architecture.md`,
   unit `issue-40-channel-byte-guard` (its only unit, §9). §1.1 the settled
   requirement; §1.2 D1–D12 the binding design resolutions; §3 the pipelines;
   §6 the alternatives rejected; §8 the seam with Issue #14 Stage 4; §10 the
   systems-level risks.
 - **Baseline:** `webtools-udp` `2.0.0-alpha4` on `feat/2.0-framed-transport`,
   HEAD `4a70ba4`. Working tree otherwise clean apart from the two untracked
-  Issue #14 finalisation docs (`docs/issue-14-finalisation-architecture.md`,
-  `docs/issue-14-finalisation-plan.md`), which this unit does not touch.
+  Issue #14 finalisation docs (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md`,
+  `docs/plans/14-reliable-ordered-channel/plan-finalisation.md`), which this unit does not touch.
 - **Branch:** `fix/issue-40-channel-byte-guard` (off `feat/2.0-framed-transport`).
 - **Commit:** `cb55d5f` (fix) / `d304343` (test) / `7501306` (build)
 - **PR:** #42, merged into `feat/2.0-framed-transport` as `6973ff6`
@@ -24,14 +24,14 @@
 - **Status:** done — on `feat/2.0-framed-transport` as `webtools-udp` `2.0.0-alpha5`,
   not published to Maven Central; Issue #40 closed (fully resolved).
 - **Related docs:**
-  - `docs/issue-40-channel-byte-guard-architecture.md` — the approved design
+  - `docs/plans/40-channel-byte-guard/architecture.md` — the approved design
     this plan implements.
-  - `docs/issue-34-probe-cadence-plan.md` — the house format this document
+  - `docs/plans/34-probe-cadence/plan.md` — the house format this document
     follows (header/association shape, §4 file-by-file, §5 test-plan table
     shape, §7 version control, three-commit split), and the source of the
     duplicated-check-over-shared-helper precedent (§6.1 there) this fix reuses
     (D7).
-  - `docs/issue-14-finalisation-plan.md` — the Stage-4 plan this fix
+  - `docs/plans/14-reliable-ordered-channel/plan-finalisation.md` — the Stage-4 plan this fix
     precedes and unblocks: §4b.2/§4b.3 (the verbatim `DEFAULT_*_CHANNEL` KDoc
     text this fix applies), §4d (the engine-creation KDoc Stage 4 owns on
     `MultiConnectionUDPClient.kt:126-128` / `MultiConnectionUDPServer.kt:143-146`,
@@ -66,7 +66,7 @@ accepts any value. That is a forward-compatibility hazard the moment a future
 receiver would process that traffic as if it were channel `0x00`, corrupting
 the channel-`0x00` sequence space it shares (reliable) or silently
 misdelivering it to the wrong handler (unreliable) — exactly the failure mode
-`docs/issue-14-finalisation-architecture.md` OD-4 named and this issue exists
+`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` OD-4 named and this issue exists
 to close before the Stable Core freeze (architecture §2 finding 1, RFC 9413
 §5.1 "Virtuous Intolerance").
 
@@ -293,7 +293,7 @@ New:
         // other three receive-branch channel checks - HandshakeCoordinator.classify's
         // RELIABLE_DATA/RELIABLE_ACK branch, and MultiConnectionUDPClient.receiveLoop's UNRELIABLE
         // and reliable branches - rather than extracted; see
-        // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+        // docs/plans/40-channel-byte-guard/architecture.md §6 for why.
         if (channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL) {
             return Result.success(Unit).also {
                 log.warn(
@@ -375,7 +375,7 @@ New:
                     // Duplicated verbatim at the other three receive-branch channel checks -
                     // HandshakeCoordinator.deliverData, and MultiConnectionUDPClient.receiveLoop's
                     // UNRELIABLE and reliable branches - rather than extracted; see
-                    // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                    // docs/plans/40-channel-byte-guard/architecture.md §6 for why.
                     channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
                         Result.success(Unit).also {
                             log.warn(
@@ -567,7 +567,7 @@ New:
                             // Duplicated verbatim at the other three receive-branch channel checks -
                             // HandshakeCoordinator.deliverData and its RELIABLE_DATA/RELIABLE_ACK
                             // branch, and this listener's reliable branch below - rather than
-                            // extracted; see docs/issue-40-channel-byte-guard-architecture.md §6.
+                            // extracted; see docs/plans/40-channel-byte-guard/architecture.md §6.
                             channel != null && channel != TransportWireFormat.DEFAULT_UNRELIABLE_CHANNEL ->
                                 log.warn(
                                     "Unreliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
@@ -630,7 +630,7 @@ New:
                             // channel checks - HandshakeCoordinator.deliverData and its
                             // RELIABLE_DATA/RELIABLE_ACK branch, and this listener's UNRELIABLE
                             // branch above - rather than extracted; see
-                            // docs/issue-40-channel-byte-guard-architecture.md §6 for why.
+                            // docs/plans/40-channel-byte-guard/architecture.md §6 for why.
                             channel != null && channel != ReliableWireFormat.DEFAULT_RELIABLE_CHANNEL ->
                                 log.warn(
                                     "Reliable datagram on unsupported channel 0x{} from {}; sender may be a newer 2.x, dropping",
@@ -839,7 +839,7 @@ taken once, before any mutation.
 
 | Ring | Touched? | What moves with the change |
 |---|---|---|
-| **Inner core** | yes | One `//` comment at each of the four receive-branch call sites (§3.3, §3.4), naming Issue #40, stating its position (after origin screening, before delivery/ack processing/engine creation), naming the other three sites, and pointing to `docs/issue-40-channel-byte-guard-architecture.md` §6 for why the check is duplicated rather than extracted — same shape as the probe-cadence precedent (`docs/issue-34-probe-cadence-architecture.md` §7). Every pre-existing inner-core comment in the touched branches is preserved verbatim: `// never throws (Stage 2 contract)`, `(§12 B2)`, `(§3.12 of the Stage-3 plan)`. |
+| **Inner core** | yes | One `//` comment at each of the four receive-branch call sites (§3.3, §3.4), naming Issue #40, stating its position (after origin screening, before delivery/ack processing/engine creation), naming the other three sites, and pointing to `docs/plans/40-channel-byte-guard/architecture.md` §6 for why the check is duplicated rather than extracted — same shape as the probe-cadence precedent (`docs/plans/34-probe-cadence/architecture.md` §7). Every pre-existing inner-core comment in the touched branches is preserved verbatim: `// never throws (Stage 2 contract)`, `(§12 B2)`, `(§3.12 of the Stage-3 plan)`. |
 | **Component ring (KDoc)** | yes | The two `DEFAULT_*_CHANNEL` lines (§3.1, §3.2, owned outright, Stage-4 plan's exact text); the new `reliableChannelOf` accessor's own KDoc (§3.1); six further blocks this fix falsifies and Stage 4 does not quote (§3.3.4–§3.3.6, §3.4.3, §3.5) — `HandshakeCoordinator`'s class KDoc (two bullets), `accept`, `reliableEngineFor`, `MultiConnectionUDPClient.receiveLoop`'s one-liner, `ReliableChannelEngine.onInboundDatagram`'s precondition. No issue numbers appear in any KDoc block — only in the `//` inner-core comments, matching Stage 4's own cleanup direction. |
 | **Boundary ring (protocol)** | no direct edit | `docs/webtools-udp-protocol.md` does not exist yet — Stage 4 creates it in the *next* PR on this branch and will state this fix's shipped behaviour as the permanent wire contract (architecture §7, §8). The two `DEFAULT_*_CHANNEL` KDoc blocks this fix writes name that path by its backticked-path convention even though the file does not yet exist on this branch; the pointer dangles only between this fix's merge and Stage 4's merge, never on `master` (§6 risks). |
 | **Architectural outer layer** | no | No new thread, no topology change, no lock reordering — every check is a same-thread comparison inside an already-synchronized or single-threaded receive path. |
@@ -2112,8 +2112,8 @@ scenarios already record; validated by use, not by test.
 ## 7. Interfaces with sibling units
 
 The sibling is `issue-14-finalisation` (Stage 4), which names this fix as its
-prerequisite (`docs/issue-14-finalisation-architecture.md` §9,
-`docs/issue-14-finalisation-plan.md` §9). Contract, both directions:
+prerequisite (`docs/plans/14-reliable-ordered-channel/architecture-finalisation.md` §9,
+`docs/plans/14-reliable-ordered-channel/plan-finalisation.md` §9). Contract, both directions:
 
 **What this fix expects from Stage 4 (nothing — this fix has no dependency on
 Stage 4):** none. This is the only plannable unit in the architecture's
@@ -2182,8 +2182,8 @@ cut.
      - `webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/HandshakeCoordinator.kt`
      - `webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/MultiConnectionUDPClient.kt`
      - `webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/ReliableChannelEngine.kt`
-     - `docs/issue-40-channel-byte-guard-architecture.md`
-     - `docs/issue-40-channel-byte-guard-plan.md`
+     - `docs/plans/40-channel-byte-guard/architecture.md`
+     - `docs/plans/40-channel-byte-guard/plan.md`
 
      Suggested body:
      ```
@@ -2322,7 +2322,7 @@ cut.
   (architecture §9, acceptance criterion 8).
 - Backfill this document's `Commit:` / `PR:` header fields, and its
   `Status:` line, once they exist — a small follow-up `docs:` PR, matching
-  the `docs/issue-34-probe-cadence-plan.md` precedent's own header-backfill
+  the `docs/plans/34-probe-cadence/plan.md` precedent's own header-backfill
   step.
 
 ---

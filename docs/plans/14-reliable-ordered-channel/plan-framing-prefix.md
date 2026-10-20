@@ -12,7 +12,7 @@
   prefix** and nothing else. It turns design §6.1 / §6.4 / §9 into a file-by-file
   change set and a 5-level test matrix. Stages 2–4 (reliable engine, public
   channel API, docs/version finalisation) get **their own plans** — see §11.
-- **Approved design:** `docs/issue-14-reliable-ordered-channel-design.md`
+- **Approved design:** `docs/plans/14-reliable-ordered-channel/architecture.md`
   (decisions resolved, §13). This plan designs *within* it; where it makes a
   call the design doc left to "the implementation plan" that call is in §2 and,
   where it is genuinely the maintainer's, in §10.
@@ -34,7 +34,7 @@
     `TransportWireFormat.kt` / `IncompatibleProtocolException.kt`,
     `README.md`, the `build.gradle.kts` version-comment block, and **this
     plan document** (committed with the first implementation commit per §4.15,
-    so `git log --follow docs/issue-14-reliable-ordered-channel-plan.md` binds
+    so `git log --follow docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md` binds
     plan to implementation).
   - `e9d4209` — `test:` the §6 suite, all levels.
   - `9a880aa` — `build:` bump `webtools-udp` to `2.0.0-alpha1` (§4.13).
@@ -53,16 +53,16 @@
   The Maven Central **publish** of `2.0.0-alpha1` is a separate maintainer-gated
   step (§10 OD-3); this plan covers the `version` declaration and the PR only.
 - **Related docs:**
-  - `docs/issue-14-reliable-ordered-channel-design.md` §2 / §6.1 / §6.4 / §9 / §10 / §12.
-  - `docs/issue-8-binary-datagram-path-plan.md` §2.4 — the classifier-collision
+  - `docs/plans/14-reliable-ordered-channel/architecture.md` §2 / §6.1 / §6.4 / §9 / §10 / §12.
+  - `docs/plans/8-binary-datagram-path/plan.md` §2.4 — the classifier-collision
     limitation this stage finally resolves; named there as a "clean-break
     protocol revision" follow-up.
-  - `docs/issue-13-link-quality-probe-plan.md` — structure/§-numbering model for
+  - `docs/plans/13-link-quality-probe/plan.md` — structure/§-numbering model for
     this plan; the `PING`/`PONG` probe and `PeriodicScheduler` this stage
     migrates onto tag bytes.
-  - `docs/issue-12-scheduled-keepalive-plan.md` — the `KA` scheduled keepalive
+  - `docs/plans/12-scheduled-keepalive/plan.md` — the `KA` scheduled keepalive
     this stage migrates onto a tag byte.
-  - `docs/issue-1-tier-2-plan.md` §2.1 — the canonical inbound-datagram flow the
+  - `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 — the canonical inbound-datagram flow the
     reworked dispatch slots into.
 
 ---
@@ -650,7 +650,7 @@ reply announces a different wire major; both ends must be on `webtools-udp`
 - `FakePeriodicSchedule.kt`: unchanged.
 - `LogCapture.kt`: unchanged (used to assert the new WARN lines).
 
-### 4.15 `docs/issue-14-reliable-ordered-channel-plan.md`
+### 4.15 `docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md`
 This document. Committed in Stage-1 commit 1. Backfill the `Commit:` / `PR:`
 header fields once they exist (as done for #8–#13).
 
@@ -663,7 +663,7 @@ header fields once they exist (as done for #8–#13).
 | **Inner core** (in-editor) | yes | Comments: the tag switch in both listeners and *why* byte 0 is authoritative; the 8-byte-BE probe sequence layout; the 2-byte `0x90` prefix and why framing is not in the send seam; why `CommonChannel.receive` still computes `text` (handshake bootstrap only); the transient-registration note on `handleHandshake`. |
 | **Component ring** (KDoc) | yes | New KDoc: `DatagramType` (+ every entry, + the reserved-range rationale), `TransportWireFormat` (every member), `IncompatibleProtocolException`. Rewritten KDoc: `HandshakeWireFormat` (handshake-only; `registeredMessage` / `registeredProtocolVersion` / strict `isRegistered`), `HandshakeProtocol`, `Connection.push` / `push(ByteArray)` / `actuate` / `actuateBytes`, `UDPConnection.push` / `keepAlive`, `MultiConnectionUDPClient.send` / `sendKeepAlive` / `handshake` / class KDoc, `MultiConnectionUDPServer` class KDoc. |
 | **Boundary ring** (protocol) | **yes — major.** | The framed wire protocol is a new boundary contract: the §3.1 `DatagramType` table, the `0x90` unreliable frame layout, the `0x81`/`0x82` probe encoding, the `REGISTERED <version>` handshake reply, and the "both ends must be `2.0.0`+" rule. Lands in `TransportWireFormat` / `HandshakeWireFormat` KDoc, the README "UDP transport protocol" section (renamed from "handshake protocol"), and this plan §3. A dedicated `docs/` protocol reference is **Stage 4** (design §12 PR 4). |
-| **Architectural outer layer** | yes | The transport is now a framed protocol. The §3.7 classification diagram is the new canonical inbound-routing picture (supersedes the token-match fork in `docs/issue-8-*` §2.6). No new thread, no new lifecycle. |
+| **Architectural outer layer** | yes | The transport is now a framed protocol. The §3.7 classification diagram is the new canonical inbound-routing picture (supersedes the token-match fork in `docs/plans/8-binary-datagram-path/plan.md` §2.6). No new thread, no new lifecycle. |
 | **README** | yes — substantial | Per the README-currency rule: a wire-protocol change, removed/renamed public API, a new public type, a dependency-coordinate version bump, and a migration note. Same commit as the implementation (§9). |
 
 ---
@@ -934,7 +934,7 @@ Level 4a. No new timing surface — this stage adds no threads.
   3. `build: bump webtools-udp to 2.0.0-alpha1 for the framed transport wire break (Issue #14)`
      — the `version` line (§4.13), split from commit 1 per the #10–#13 idiom.
 - **The plan document rides in commit 1** (the first implementation stage) so
-  `git log --follow docs/issue-14-reliable-ordered-channel-plan.md` binds plan
+  `git log --follow docs/plans/14-reliable-ordered-channel/plan-framing-prefix.md` binds plan
   to code. The approved design doc is already on `master` (PR #29) and thus on
   the integration branch — no move needed.
 - **Commit trailer:** none — no `Co-Authored-By` / `Claude-Session` /
@@ -982,7 +982,7 @@ Level 4a. No new timing surface — this stage adds no threads.
 **This stage (PR 1 of the design §12 series):** the framing prefix only.
 Green at all 5 levels before Stage 2 opens.
 
-**Later stages — each gets its own `docs/issue-14-*` plan, all on
+**Later stages — each gets its own `docs/plans/14-reliable-ordered-channel/plan-*` plan, all on
 `feat/2.0-framed-transport`:**
 
 1. **Stage 2 — reliable engine (internal).** `0xA0` / `0xA1` tags promoted from

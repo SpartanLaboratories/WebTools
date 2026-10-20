@@ -44,7 +44,7 @@ about — *a real client behind a home router can connect to a cloud server*.
    message back.
 2. Expected: **FAIL** — C's NAT has no binding for the dedicated ports and S
    speaks first. This is the known Tier 1 limitation
-   ([`issue-1-nat-traversal-plan.md`](./issue-1-nat-traversal-plan.md) Tier 2).
+   ([`architecture.md`](./architecture.md) Tier 2).
 3. Record the observed behaviour so Tier 2 has a concrete before/after.
 
 ## Sign-off

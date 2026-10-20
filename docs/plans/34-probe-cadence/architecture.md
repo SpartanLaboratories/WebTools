@@ -14,30 +14,30 @@
   the fix's shape, its one new public constant, and its adoption sweep across
   the six `PeriodicSchedule` call sites are recorded before code is written.
   There is no file-by-file breakdown and no test matrix here — those belong to
-  `docs/issue-34-probe-cadence-plan.md` (named again in §8).
+  `docs/plans/34-probe-cadence/plan.md` (named again in §8).
 - **Baseline:** `webtools-udp` `2.0.0-alpha3` on `feat/2.0-framed-transport`.
   Working tree clean at time of writing.
 - **Branch model:** lands **only** on the long-lived `2.x` integration branch
   `feat/2.0-framed-transport` (off `master`), mirroring the Issue #14 stage
-  precedent (`docs/issue-14-reliable-channel-api-plan.md` header): a
+  precedent (`docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md` header): a
   short-lived branch off the integration branch (e.g.
   `fix/issue-34-probe-cadence`), deleted after merge, PR targets
   `feat/2.0-framed-transport`, never `master`. **`master` is explicitly out of
   scope** — see §1.3.
 - **Target version:** `webtools-udp` `2.0.0-alpha3` → **`2.0.0-alpha4`**.
-- **Status:** complete. The plan (`docs/issue-34-probe-cadence-plan.md`) is
+- **Status:** complete. The plan (`docs/plans/34-probe-cadence/plan.md`) is
   written, and both maintainer decisions are incorporated: OD-1 adopted, and
   the validation-ordering bug fixed under #34 (§11.4). **No open decisions.**
 - **Related docs:**
-  - `docs/issue-13-link-quality-probe-plan.md` — origin of `Rtt`,
+  - `docs/plans/13-link-quality-probe/plan.md` — origin of `Rtt`,
     `LinkQualityTracker`, `PeriodicScheduler` (née `KeepAliveScheduler`), and
     the opt-in / lazy-scheduler pattern this fix operates inside.
-  - `docs/issue-14-reliable-engine-plan.md` / `issue-14-reliable-channel-api-plan.md`
+  - `docs/plans/14-reliable-ordered-channel/plan-reliable-engine.md` / `docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md`
     — introduced `PeriodicSchedule.scheduleTick` for the retransmit tick,
     specifically because `schedule()` cannot express a sub-250 ms/exact
     cadence (`webtools-udp/build.gradle.kts:50-51`). This fix is the second
     consumer of that seam, not a new one.
-  - `docs/issue-14-reliable-ordered-channel-design.md` — house format this
+  - `docs/plans/14-reliable-ordered-channel/architecture.md` — house format this
     document follows.
 
 ---
@@ -102,8 +102,8 @@ range the old clamp could represent faithfully.
    `0  18`, confirmed), so the eventual `2.0` merge carries the fix to
    `master` automatically. The Issue #14 Stage-3 plan's "Baseline: `1.6.0` on
    `master` (Maven Central; ...)" parenthetical
-   (`docs/issue-14-reliable-channel-api-plan.md:22`) names **coordinates**,
-   not a publication event — `docs/issue-13-link-quality-probe-plan.md:38-39`
+   (`docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md:22`) names **coordinates**,
+   not a publication event — `docs/plans/13-link-quality-probe/plan.md:38-39`
    says plainly the `1.6.0` merge is "not yet published to Maven Central."
 2. **Mechanism: `.schedule(...)` → `.scheduleTick(...)`** at the two probe
    call sites. No due-ness check is added — `scheduleTick` already delivers
@@ -113,7 +113,7 @@ range the old clamp could represent faithfully.
    documented, **enforced 250 ms minimum**, **rejecting** rather than
    clamping.
 4. **One plan document** follows this architecture:
-   `docs/issue-34-probe-cadence-plan.md`.
+   `docs/plans/34-probe-cadence/plan.md`.
 
 ---
 
@@ -454,7 +454,7 @@ channel's RTO.
 | **README** | yes — small | Add the 250 ms floor to the `startProbe` snippet (`README.md:270-271`); the surrounding prose (`:281`, "per interval") already describes the corrected behaviour and needs no rewrite. |
 
 The 5-level test plan (which levels get which new/changed cases) belongs in
-`docs/issue-34-probe-cadence-plan.md`, not here.
+`docs/plans/34-probe-cadence/plan.md`, not here.
 
 ---
 
@@ -469,7 +469,7 @@ manufacture structure a fix this size does not have.
 |---|---|---|---|
 | `issue-34-probe-cadence` | Swap both probe call sites to `scheduleTick`; add `TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS` and a duplicated `runCatching { require }` floor check that runs first at both entry points (which also fixes the validation-ordering bug); make `LinkQualityTracker.snapshot()` sweep first (OD-1); add the `FakePeriodicSchedule` `via` discriminator; bump the 8 sub-250 ms test literals; add the validation-ordering regression guards and the OD-1 test; update the interval-contract KDoc, the OD-1 KDoc and README; bump `webtools-udp` to `2.0.0-alpha4`. | none | only unit — lands directly on `feat/2.0-framed-transport` |
 
-The single plan document, `docs/issue-34-probe-cadence-plan.md`, turns this
+The single plan document, `docs/plans/34-probe-cadence/plan.md`, turns this
 into the file-by-file change set and the 5-level test matrix.
 
 ---
@@ -538,7 +538,7 @@ every read exact. The original proposal, verbatim, for the record:
 ## 11. Cross-plan alignment
 
 The planner's own final pass over this document and its one plan
-(`docs/issue-34-probe-cadence-plan.md`). With a single unit there are no
+(`docs/plans/34-probe-cadence/plan.md`). With a single unit there are no
 plan-to-plan seams. The alignment checked are plan ↔ architecture, both
 against the code, and both against the maintainer's two binding answers.
 

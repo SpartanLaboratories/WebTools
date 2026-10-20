@@ -6,9 +6,9 @@
   client-claimed address, not the datagram source: breaks any NAT'd client"* —
   **Tier 2 only** (the data path). Tier 1, the handshake fix, shipped in PR #2 as
   `2.0.0b`.
-- **Parent design:** [`issue-1-nat-traversal-plan.md`](./issue-1-nat-traversal-plan.md)
+- **Parent design:** [`architecture.md`](./architecture.md)
   (root-cause table, problems #1–#5, the B1 vs B2 comparison in §3).
-- **Tier 1 as-built:** [`issue-1-tier-1-implementation.md`](./issue-1-tier-1-implementation.md).
+- **Tier 1 as-built:** [`plan-tier-1.md`](./plan-tier-1.md).
 - **Branch:** `fix/issue-1-tier-2-multiplex` (off `master`).
 - **Commit:** TBD — this plan document is to be committed **in the same commit as
   the first implementation stage that touches production code** (commit 2 in §9)
@@ -19,7 +19,7 @@
 - **Target version:** `2.0.0c` (the 2.0.0 line is still pre-release: `2.0.0a`,
   `2.0.0b`). The bare `2.0.0` tag is reserved until the downstream client repos
   have integrated and the cross-NAT UAT (§6) is signed off. See §10 D4.
-- **Related:** new `docs/issue-1-tier-2-uat.md` (Level 5 procedure, created by
+- **Related:** new `docs/plans/1-nat-traversal/uat-tier-2.md` (Level 5 procedure, created by
   this work).
 
 ---
@@ -60,7 +60,7 @@ not change. After Tier 1:
 
 Net effect: the handshake completes from behind NAT, but no data flows back to
 the client. Confirmed by the Tier 1 UAT
-([`issue-1-tier-1-uat.md`](./issue-1-tier-1-uat.md) §2), which records this as the
+([`uat-tier-1.md`](./uat-tier-1.md) §2), which records this as the
 accepted Tier 1 limitation.
 
 ### 1.3 Goal / acceptance criteria
@@ -519,7 +519,7 @@ Required — the wire protocol and the component behaviour both change.
   - **delete** the "Known limitation" paragraph.
 - **Build & test**: add `./gradlew e2eTest  # Level 4b - full-stack flows`.
 
-### 3.11 `docs/issue-1-nat-traversal-plan.md`
+### 3.11 `docs/plans/1-nat-traversal/architecture.md`
 
 - §3: mark **Option B1 as chosen and implemented**; note the reply verb landed as
   `REGISTERED` (not the `OK`/token placeholder the parent sketch used); link this
@@ -527,7 +527,7 @@ Required — the wire protocol and the component behaviour both change.
 - §5 sequencing: tick items 3–5; note the final `2.0.0` tag is pending downstream
   integration.
 
-### 3.12 `docs/issue-1-tier-2-uat.md` (new) — see §6.
+### 3.12 `docs/plans/1-nat-traversal/uat-tier-2.md` (new) — see §6.
 
 ---
 
@@ -598,13 +598,13 @@ Add the `e2eTest` Gradle task (§3.9).
 
 | Class | Behaviours |
 |-------|------------|
-| `MultiConnectionUDPServerUatTest` (update) | Keep test 1 (handshake from behind NAT — still valid; assert reply is `REGISTERED`). **Flip test 2**: `the dedicated data channel is known not to traverse NAT yet` → `a NAT'd client exchanges data both ways over the single multiplexed port`, `@Disabled`, pointing at `docs/issue-1-tier-2-uat.md`. **Add test 3**: `the NAT mapping survives a multi-minute session driven by Connection.keepAlive() plus a client-side keepalive`, `@Disabled`. |
+| `MultiConnectionUDPServerUatTest` (update) | Keep test 1 (handshake from behind NAT — still valid; assert reply is `REGISTERED`). **Flip test 2**: `the dedicated data channel is known not to traverse NAT yet` → `a NAT'd client exchanges data both ways over the single multiplexed port`, `@Disabled`, pointing at `docs/plans/1-nat-traversal/uat-tier-2.md`. **Add test 3**: `the NAT mapping survives a multi-minute session driven by Connection.keepAlive() plus a client-side keepalive`, `@Disabled`. |
 
 ### 4.8 What cannot be automated
 
 - Behaviour against a **real** NAT (any cone type), carrier-grade NAT, and NAT
   mapping-timeout behaviour — loopback has no NAT. Covered by the manual
-  `docs/issue-1-tier-2-uat.md` (§6), same approach Tier 1 took.
+  `docs/plans/1-nat-traversal/uat-tier-2.md` (§6), same approach Tier 1 took.
 - Whether a server→client `Connection.keepAlive()` alone refreshes a given real
   NAT (it does for cone NATs, not for port-restricted/symmetric) — UAT §4
   records the observed behaviour per router.
@@ -618,15 +618,15 @@ Add the `e2eTest` Gradle task (§3.9).
 |------|-----------------------------|
 | Inner Core | Level-1 inline comments: why the receive loop classifies (`KA` / `Iam` / data) before dispatching; why `deliverData` drops unknown origins; why the dispatch executor is single-threaded; why `keepAlive()` is a one-shot. |
 | Component Ring (KDoc) | `Connection` (new `peer`, `keepAlive()` + its direction caveat, `actuate` = register-not-bind), `UDPConnection` (socket-free handle), `HandshakeCoordinator` (widened role — **name unchanged**), `CommonChannel`, `ClientChannel`, `HandshakeProtocol` (`REGISTERED_REPLY` / `KEEPALIVE_TOKEN` / `isHandshake` / `isKeepAlive`, removed port + `TXRXON` API), `MultiConnectionUDPServer` (rewrite protocol + concurrency paragraphs, delete "Known limitation"). |
-| Boundary Ring | `README.md` "UDP handshake protocol" rewrite (data path NAT-traversable, `REGISTERED` reply, `KA` keepalive + ~20 s cadence, no per-client ports); `MultiConnectionUDPServer` KDoc concurrency/side-effect notes; `docs/issue-1-nat-traversal-plan.md` status. |
-| Architectural Outer Layer | The Mermaid diagram in §2.1 is the canonical topology for the multiplexed server; add a pointer from `docs/issue-1-tier-1-implementation.md` §3a noting its diagram is superseded for Tier 2. `docs/issue-1-tier-2-uat.md` (new) is the Level-5 architecture-facing artefact. |
+| Boundary Ring | `README.md` "UDP handshake protocol" rewrite (data path NAT-traversable, `REGISTERED` reply, `KA` keepalive + ~20 s cadence, no per-client ports); `MultiConnectionUDPServer` KDoc concurrency/side-effect notes; `docs/plans/1-nat-traversal/architecture.md` status. |
+| Architectural Outer Layer | The Mermaid diagram in §2.1 is the canonical topology for the multiplexed server; add a pointer from `docs/plans/1-nat-traversal/plan-tier-1.md` §3a noting its diagram is superseded for Tier 2. `docs/plans/1-nat-traversal/uat-tier-2.md` (new) is the Level-5 architecture-facing artefact. |
 
 README currency: covered by §3.10 — the same commit that changes the protocol
 updates the README.
 
 ---
 
-## 6. `docs/issue-1-tier-2-uat.md` (new, Level 5 procedure)
+## 6. `docs/plans/1-nat-traversal/uat-tier-2.md` (new, Level 5 procedure)
 
 Mirror the Tier 1 UAT doc's structure. Contents:
 
@@ -765,13 +765,13 @@ Executor actions before implementation:
      — all of §3 (production), all of §4 (test rewrites + new
      `CommonChannelTest`, `MultiConnectionUDPServerE2ETest`, `FakeClientChannel`),
      §3.9 (`build.gradle.kts` version + `e2e` task), §3.10 (`README.md`), §3.11
-     (`docs/issue-1-nat-traversal-plan.md`), §6 (`docs/issue-1-tier-2-uat.md`),
-     **and this plan document** (`docs/issue-1-tier-2-plan.md`) — so
+     (`docs/plans/1-nat-traversal/architecture.md`), §6 (`docs/plans/1-nat-traversal/uat-tier-2.md`),
+     **and this plan document** (`docs/plans/1-nat-traversal/plan-tier-2.md`) — so
      `git log --follow` on the plan binds it to the implementation. The `feat!`
      marker records the breaking change. `./gradlew build` (all levels) green
      before committing.
   3. *(after merge)* update this doc's `Commit:` / `PR:` header fields with the
-     real SHA(s) and PR number, and tick `docs/issue-1-nat-traversal-plan.md` §5.
+     real SHA(s) and PR number, and tick `docs/plans/1-nat-traversal/architecture.md` §5.
 - **No push, no PR, no release** until the user asks. When asked to share:
   prompt the user to (a) comment on issue #1 that Tier 2 has landed, (b)
   coordinate the `MyGameTools` / `MyGameServer` client change per §8, (c) decide
@@ -820,7 +820,7 @@ caller drives it on a ~20 s idle cadence (rationale in §2.5). Added to the
 at Level 2 (pure call → `channel.send` with the `"KA"` bytes, incl. failure path,
 §4.2) and Level 3 (the datagram actually leaves on the wire and a client `KA` is
 consumed without dispatch, §4.3 case (f)). The ~20 s client cadence is documented
-in `README.md` (§3.10) and `docs/issue-1-tier-2-uat.md` (§6 Section 4). The
+in `README.md` (§3.10) and `docs/plans/1-nat-traversal/uat-tier-2.md` (§6 Section 4). The
 server-side direction caveat (server→client `keepAlive()` does not refresh
 port-restricted/symmetric NATs; the authoritative keepalive is client→server) is
 documented in the `Connection` KDoc, README, and UAT.
@@ -859,7 +859,7 @@ behavioural rewrite in commit 2 diffs cleanly.
   if a caller without its own scheduler needs it.
 - [x] A client-side `Connection` / `MultiConnectionUDPClient` type in WebTools so
   the downstream repos stop hand-rolling the socket — shipped by
-  [`docs/issue-3-public-client-handshake-plan.md`](./issue-3-public-client-handshake-plan.md).
+  [`docs/plans/3-public-client-handshake/plan.md`](../3-public-client-handshake/plan.md).
 - STUN/TURN/relay for a server behind symmetric NAT — separate, much larger; not
   tracked by issue #1.
 - A `4b` e2e harness for the other WebTools components (`Connector`, `WebViewer`)

@@ -20,7 +20,7 @@
 - **Branch:** `feat/issue-10-connection-liveness` (off `master`, deleted after merge).
 - **Commits:**
   - `ff61c62` — `feat:` production changes (§3.1–§3.6, incl. README) + **this plan
-    document** (so `git log --follow docs/issue-10-connection-liveness-plan.md`
+    document** (so `git log --follow docs/plans/10-connection-liveness/plan.md`
     binds plan to implementation).
   - `5a24211` — `test:` the §5 suite, all five levels, incl. the `@JvmOverloads`
     constructor-set assertion.
@@ -46,12 +46,12 @@
     exactly one field (`Registration.lastInboundAt`) and keeps it server-internal;
     #13 extends `Registration` with its counters and may then extract a shared
     `ConnectionStats` holder. See §8 D6.
-  - `docs/issue-5-prune-stale-registrations-plan.md` — the supersede / `terminate`
+  - `docs/plans/5-prune-stale-registrations/plan.md` — the supersede / `terminate`
     removal paths this plan hooks a callback onto.
-  - `docs/issue-8-binary-datagram-path-plan.md` §2.3 / §9 — the `@JvmOverloads`
+  - `docs/plans/8-binary-datagram-path/plan.md` §2.3 / §9 — the `@JvmOverloads`
     binary-compatibility pattern and the `open`-method interface-evolution pattern
     reused here.
-  - `docs/issue-1-tier-2-plan.md` §2.1 — the canonical inbound-datagram flow the
+  - `docs/plans/1-nat-traversal/plan-tier-2.md` §2.1 — the canonical inbound-datagram flow the
     §2.8 diagram extends.
 
 ---
@@ -293,7 +293,7 @@ open fun onClientDisconnect(connection: Connection, reason: DisconnectReason) {}
 ```
 
 `open` + no-op body: binary- and source-compatible for every existing subclass
-(cf. the `Connection` default-method pattern in `docs/issue-8-*` §9 D1). The
+(cf. the `Connection` default-method pattern in `docs/plans/8-binary-datagram-path/plan.md` §9 D1). The
 asymmetry with the `abstract` `onClientConnect` is deliberate — making
 `onClientDisconnect` abstract would force every subclass to change, a major bump.
 
@@ -614,7 +614,7 @@ with per-constant KDoc. Top-level public type, mirroring how `Connection` /
   `// idleTimeoutMillis ctor param, and the open onClientDisconnect(conn, reason)`
   `// hook on the dispatch executor (Issue #10).`
 
-### 3.10 `docs/issue-10-connection-liveness-plan.md`
+### 3.10 `docs/plans/10-connection-liveness/plan.md`
 
 This document. Committed in the same commit as §3.1–§3.6 + §3.8 (the first
 implementation stage). Backfill the `Commit:` / `PR:` header fields with real
@@ -940,7 +940,7 @@ recommendation. No decision remains open; §3 is executable as written.
   2. `test: cover connection-liveness detection and the disconnect hook (Issue #10)` — §5 all levels; includes the `javap` signature verification.
   3. `build: bump webtools-udp to 1.3.0 for connection-liveness detection (Issue #10)` — §3.9.
 - The plan document rides in commit 1 (the first implementation stage) so
-  `git log --follow docs/issue-10-connection-liveness-plan.md` permanently binds
+  `git log --follow docs/plans/10-connection-liveness/plan.md` permanently binds
   plan to implementation.
 - **Commit trailer** on every commit:
   ```

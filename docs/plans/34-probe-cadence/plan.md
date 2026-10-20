@@ -13,7 +13,7 @@
   unit `issue-34-probe-cadence` — a file-by-file change set and a 5-level test
   matrix. It turns the approved architecture into code; it makes no design
   decisions of its own.
-- **Approved design:** `docs/issue-34-probe-cadence-architecture.md`, unit
+- **Approved design:** `docs/plans/34-probe-cadence/architecture.md`, unit
   `issue-34-probe-cadence` (its only unit, §8). §1.2's five-row band table is
   the authoritative description of the defect; §1.3 records the four binding
   constraints; §3 the design; §10 OD-1, **resolved: adopted** (recorded in §9
@@ -35,13 +35,13 @@
   (OD-1 adopted; the validation-ordering bug fixed under #34). **No open
   decisions.** Ready for implementation.
 - **Related docs:**
-  - `docs/issue-34-probe-cadence-architecture.md` — the approved design this
+  - `docs/plans/34-probe-cadence/architecture.md` — the approved design this
     plan implements.
-  - `docs/issue-14-reliable-channel-api-plan.md` — house format this document
+  - `docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md` — house format this document
     follows (§4 file-by-file, §6 test plan, §8 version, §9 version control);
     also the origin of `PeriodicSchedule.scheduleTick`, the seam this fix
     reuses, and of the Issue #34 filing itself (its own §7 risk list).
-  - `docs/issue-13-link-quality-probe-plan.md` — origin of `LinkQualityTracker`
+  - `docs/plans/13-link-quality-probe/plan.md` — origin of `LinkQualityTracker`
     / `Rtt` / the opt-in probe this fix corrects the cadence of.
 
 ---
@@ -207,7 +207,7 @@ New — insert immediately after, still inside `object TransportWireFormat`:
     const val DEFAULT_PROBE_INTERVAL_MILLIS = 1_000L
 
     // 250 is the edge of the range the pre-Issue-#34 poll-divided clamp could honour: below
-    // it that clamp already forced a 250 ms cadence. See docs/issue-34-probe-cadence-architecture.md §1.2.
+    // it that clamp already forced a 250 ms cadence. See docs/plans/34-probe-cadence/architecture.md §1.2.
     /**
      * The minimum accepted link-quality probe interval, in milliseconds (250 ms).
      * [Connection.startProbe] and [MultiConnectionUDPClient.startProbe] fail with
@@ -257,7 +257,7 @@ New:
 ```kotlin
     override fun scheduleProbe(peer: InetSocketAddress, intervalMillis: Long): Result<Unit> {
         // Floor check duplicated verbatim in MultiConnectionUDPClient.startProbe (Issue #34) rather
-        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // than extracted - see docs/plans/34-probe-cadence/architecture.md §6.1. It must run before
         // any state is touched: writing probeIntervalMillis first would let a rejected call switch
         // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
         // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick.
@@ -371,7 +371,7 @@ New:
     @JvmOverloads
     fun startProbe(intervalMillis: Long = TransportWireFormat.DEFAULT_PROBE_INTERVAL_MILLIS): Result<Unit> {
         // Floor check duplicated verbatim in HandshakeCoordinator.scheduleProbe (Issue #34) rather
-        // than extracted - see docs/issue-34-probe-cadence-architecture.md §6.1. It must run before
+        // than extracted - see docs/plans/34-probe-cadence/architecture.md §6.1. It must run before
         // any state is touched: writing probeIntervalMillis first would let a rejected call switch
         // off loss aging on a probe that is already running. The floor lives on TransportWireFormat,
         // not PeriodicSchedule, because scheduleTick is shared with the 50 ms retransmit tick.
@@ -1218,7 +1218,7 @@ file already in the tree.
 | **Component** | `webtools-udp/src/test/kotlin/com/spartanlabs/testing/component/webtools/udp/LinkQualityTrackerTest.kt` | **New test (OD-1, §3.10a):** with the file's fake clock and no `sweep()` call, a read at 749 ms reports `0.0` and a read at 751 ms reports `0.5`, so `snapshot()` ages the probe itself. A late `completeProbe` then leaves it `0.5` with `probesDelivered == 1`, so `LOST` stays terminal. All six existing tests in the file stay valid unchanged (each checked in §3.10a). |
 | **Integration** | `webtools-udp/src/test/kotlin/com/spartanlabs/testing/integration/webtools/udp/MultiConnectionUDPClientProbeTest.kt` | **Changed** (§3.7c): `startProbe(200L)` at `:123` → `startProbe(250L)`. **New test (latent-bug guard, §2, client side):** after a successful `startProbe(250L)`, a rejected `startProbe(0L)` must not switch off loss aging. The echo then stops and `packetLossRatio` must still climb past `0.5` within 6 s. Real time at Level 3, because the client's tracker is `private` and cannot take a fake clock; reuses this file's `Echoer` harness. |
 | **Integration** | `webtools-udp/src/test/kotlin/com/spartanlabs/testing/integration/webtools/udp/ProbeCadenceIntegrationTest.kt` (**new**) | **The Issue #34-mandated case:** observed probe count over a fixed window matches the configured interval, against a **real** `PeriodicScheduler` (no fake). Design below. |
-| **Deterministic** | *(none)* | The guard is a pure comparison already covered at gating/component; the cadence itself is a real-scheduler timing property, not a pure input→output mapping. Recorded deliberately, not by omission — matches the precedent set for this module's other timing-driven fixes (`docs/issue-14-reliable-channel-api-plan.md` §6, "every new type is either... or stateful"). |
+| **Deterministic** | *(none)* | The guard is a pure comparison already covered at gating/component; the cadence itself is a real-scheduler timing property, not a pure input→output mapping. Recorded deliberately, not by omission — matches the precedent set for this module's other timing-driven fixes (`docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md` §6, "every new type is either... or stateful"). |
 | **E2E** | `webtools-udp/src/test/kotlin/com/spartanlabs/testing/e2e/webtools/udp/MultiConnectionUDPFramingE2ETest.kt` | **Changed** (§3.7a): `startProbe(50L)` → `startProbe(250L)` at `:57` and `:59` only; the `startKeepAlive(50L)` calls on `:56`/`:58` are untouched. |
 | **E2E** | `webtools-udp/src/test/kotlin/com/spartanlabs/testing/e2e/webtools/udp/MultiConnectionUDPProbeE2ETest.kt` | **Changed** (§3.7b): `startProbe(200L)` → `startProbe(250L)` at `:36`, `:58`, `:95`, `:122`. No assertion logic changes; all `await(...)` windows have confirmed slack. |
 | **Nonfunctional** | `webtools-udp/src/test/kotlin/com/spartanlabs/testing/nonfunctional/webtools/udp/MultiConnectionUDPClientProbeNonFunctionalTest.kt` | **Changed** (§3.7d): `startProbe(1L)` → `startProbe(TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS)` at `:179`, **and** the previously-unchecked return value is now asserted `isSuccess`. This is the one bump that is not purely cosmetic: left as `1L`, the new guard would reject it outright and the "PING racing `stop()`" scenario the test is named for would silently stop being exercised while the test kept passing. |
@@ -1439,7 +1439,7 @@ use, not by test.
   deleted (local + remote) after the PR merges.
 - **PR target:** `feat/2.0-framed-transport` — **not** `master`.
 - **Working tree** is clean apart from the two Issue #34 documents
-  (`docs/issue-34-probe-cadence-architecture.md` and this plan, both
+  (`docs/plans/34-probe-cadence/architecture.md` and this plan, both
   untracked); do not fold any unrelated change into these commits.
 - **Commit sequence:**
   1. `fix: send the link-quality probe at its configured interval, not a poll-divided one (Issue #34)`
@@ -1481,7 +1481,7 @@ use, not by test.
   close-once-its-own-fix-lands rule, close it by hand once this PR merges, with
   a comment naming both fixes and noting they reach `master` with the 2.0
   merge. This matches the Issue #14 precedent: a stage merged into the
-  integration branch counts as landed (`docs/issue-14-reliable-channel-api-plan.md`
+  integration branch counts as landed (`docs/plans/14-reliable-ordered-channel/plan-reliable-channel-api.md`
   header), and #14 stayed open only because Stage 4 remained.
 - **Commit trailer:** none — no `Co-Authored-By`, no `Claude-Session`, no
   "Generated with" line, per the recorded project standing instruction.
