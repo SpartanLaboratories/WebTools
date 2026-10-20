@@ -8,22 +8,27 @@ import java.net.InetSocketAddress
  * injected collaborators so it can be tested with no real I/O. It is four things
  * at once:
  *
- * - the **handshake state machine** - a first `Iam` from a new origin is screened
- *   by [admit] before anything else; on [Admission.Refused] the server replies
- *   `REFUSED <reason>`, registers nothing, and does not fire [onRegistered].
- *   Otherwise it registers a [Connection] and replies `REGISTERED 2` (the
- *   accepted reply plus the framed-transport wire major); a retransmit from a
- *   known origin just re-sends it (no re-screening); a first `Iam` from a name
- *   that is already registered under a different, now-stale origin (e.g. after a
- *   NAT rebind) supersedes it - but only once [admit] has admitted the newcomer,
- *   so a refused name-spoof cannot evict the incumbent - the stale registration
- *   is terminated and removed before the new one is added;
+ * - the **handshake state machine** - an unframed `Iam` line is parsed once and
+ *   routed. A **malformed** line (a missing or empty name, or a present-but-empty
+ *   credential) is answered `REFUSED malformed` whatever the state of its origin:
+ *   it never reaches [admit], registers nothing, supersedes nothing, fires no
+ *   [onRegistered], and leaves any registration its origin already holds exactly as
+ *   it was. A well-formed retransmit from a known origin just re-sends
+ *   `REGISTERED 2` (no re-screening). A well-formed first `Iam` from a new origin is
+ *   screened by [admit] before anything else; on [Admission.Refused] the server
+ *   replies `REFUSED <reason>`, registers nothing, and does not fire [onRegistered].
+ *   Otherwise it registers a [Connection] and replies `REGISTERED 2` (the accepted
+ *   reply plus the framed-transport wire major); a first `Iam` from a name that is
+ *   already registered under a different, now-stale origin (e.g. after a NAT
+ *   rebind) supersedes it - but only once [admit] has admitted the newcomer, so a
+ *   refused name-spoof cannot evict the incumbent - the stale registration is
+ *   terminated and removed before the new one is added;
  * - the **inbound-datagram router** - [accept] classifies every datagram on its
  *   [DatagramType] tag (byte 0): a `0x80` keepalive (dropped), a `0x81`/`0x82`
  *   probe, or a `0x90` unreliable frame whose stripped payload is handed to the
  *   dispatch executor for the bound handler - only on channel `0x00`; a `0x90`,
  *   `0xA0` or `0xA1` on any other channel is dropped with a WARN. An unframed
- *   `Iam` (byte 0 `< 0x80`) runs the handshake state machine; any other unframed
+ *   `Iam` (byte 0 `< 0x80`) is routed by the handshake state machine above; any other unframed
  *   datagram is dropped with a WARN (a pre-`2.0` sender);
  * - the [ClientChannel] implementation the connections it mints delegate to for
  *   sending, binding, and deregistering;
@@ -55,11 +60,13 @@ import java.net.InetSocketAddress
  * @param sender sends raw bytes to a client endpoint; its [Result] is propagated
  * @param onRegistered invoked exactly once per newly registered client, after its
  * `REGISTERED 2` reply has been sent - never for a retransmitted handshake
- * @param admit the pre-accept screen for a first `Iam` from an unknown origin,
- * given the parsed name, origin, and opaque credential (`""` if none). Invoked
- * inline on the listener thread before any supersede or registration; expected to
- * return promptly. [Admission.Refused] short-circuits to a `REFUSED <reason>`
- * reply with nothing registered; a thrown exception drops the handshake.
+ * @param admit the pre-accept screen for a first well-formed `Iam` from an unknown
+ * origin, given the parsed name (never empty), origin, and opaque credential (`""`
+ * only when the client sent none; a present-but-empty slot is malformed and never
+ * reaches it). Invoked inline on the listener thread before any supersede or
+ * registration; expected to return promptly. [Admission.Refused] short-circuits to a
+ * `REFUSED <reason>` reply with nothing registered; a thrown exception drops the
+ * handshake.
  * @param dispatch hands a block to the server's single-threaded dispatch executor
  * @param onDisconnect invoked when a registered connection stops being
  * addressable (`TIMEOUT` / `SUPERSEDED` / `TERMINATED`); called inline, so it is
@@ -129,19 +136,25 @@ internal class HandshakeCoordinator(
      * origin is dropped at DEBUG; one from a registered origin whose channel byte
      * (byte 1) is not `0x00` is dropped with a WARN - nothing is delivered, no
      * acknowledgement in it is applied, and no engine is created for it. An
-     * unframed `Iam` runs the handshake state machine inline; anything else is
-     * dropped with a WARN. When idle detection is enabled, `accept` also stamps
-     * the origin's last-inbound time and clears any prior TIMEOUT latch, before
-     * classifying - for every datagram from a registered origin, dropped or not.
+     * unframed datagram (byte 0 `< 0x80`) is split once on U+0020 and parsed
+     * ([HandshakeProtocol.parseHandshake]): a first token other than `Iam` is
+     * dropped with a WARN (a pre-`2.0` sender); a malformed `Iam` is answered
+     * `REFUSED malformed` from any origin and changes no registration; a
+     * well-formed `Iam` runs the handshake state machine inline. When idle
+     * detection is enabled, `accept` also stamps the origin's last-inbound time
+     * and clears any prior TIMEOUT latch, before classifying - for every datagram
+     * from a registered origin, dropped or not.
      *
      * @param origin the datagram's post-NAT source - where any reply is addressed
      * @param bytes the exact-length datagram body; the tag switch works off
      * `bytes[0]` and, for a `0x90` frame, the stripped payload is what reaches a
      * bound bytes handler
-     * @param text the trimmed datagram text - now consulted only for the unframed
-     * `Iam` handshake-bootstrap branch
-     * @return [Result.success] if handled or harmlessly ignored, or [Result.failure]
-     * if a recognised handshake was malformed or its reply could not be delivered
+     * @param text the trimmed datagram text - consulted only for the unframed
+     * `Iam` handshake-bootstrap branch; it must already be trimmed, because the
+     * coordinator does not trim again
+     * @return [Result.success] if handled or harmlessly ignored - including a
+     * malformed `Iam` whose `REFUSED malformed` reply went out - or [Result.failure]
+     * only if a reply could not be delivered or [admit] threw
      */
     fun accept(origin: InetSocketAddress, bytes: ByteArray, text: String): Result<Unit> {
         if (livenessTracked) registrations.findByOrigin(origin)?.let {
@@ -224,11 +237,9 @@ internal class HandshakeCoordinator(
                         log.warn("Unhandled datagram type 0x{} from {}, dropping", Integer.toHexString(byte0), origin)
                     }
 
-                HandshakeProtocol.isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))
-
-                else -> Result.success(Unit).also {
-                    log.warn("Unframed datagram from {}; sender may be pre-2.0, dropping", origin)
-                }
+                // The one split of the trimmed text. It sits after the reserved-tag drop above, so a
+                // >= 0x80 datagram is never split, and one token list serves recognition and parsing.
+                else -> routeUnframed(origin, text.split(' '))
             }
         }
     }
@@ -236,61 +247,135 @@ internal class HandshakeCoordinator(
     /**
      * Two-argument [accept] overload retained for callers that only have the
      * datagram text - delegates with `bytes` derived from a UTF-8 encode of [text].
+     * [text] is used as given: unlike the real receive path (`CommonChannel` trims
+     * once), this overload does not trim, so a caller must pass trimmed text.
      */
     fun accept(origin: InetSocketAddress, text: String): Result<Unit> =
         accept(origin, text.toByteArray(Charsets.UTF_8), text)
 
-    private fun handleHandshake(origin: InetSocketAddress, tokens: List<String>): Result<Unit> =
-        HandshakeProtocol.parseHandshake(tokens).flatMap { (name, credential) ->
-            val extra = HandshakeProtocol.extraTokenCount(tokens)
-            if (extra > 0) log.debug("Ignoring {} extra handshake token(s)", extra)
-
-            registrations.findByOrigin(origin)?.let {
-                // Retransmitted Iam from a known origin - repeat the token it already earned.
-                // No re-screening: admit() runs once, at first registration - re-running a
-                // non-deterministic admit() (e.g. a capacity gate) on a stray retransmit could
-                // refuse an already-admitted client and desync the two sides.
-                log.info("Repeating handshake reply for already-registered origin {}", origin)
-                send(HandshakeProtocol.REGISTERED_DATAGRAM, origin)
-            } ?: run {
-                // Screen the newcomer BEFORE supersede / registration / reply. Because this runs
-                // ahead of findByName(name), a Refused newcomer never reaches the supersede code,
-                // so an attacker spoofing an existing name from a fresh origin cannot evict the
-                // legitimate incumbent.
-                val admission = runCatching { admit(name, origin, credential) }.getOrElse { cause ->
-                    log.warn("admit(...) threw for '{}' from {} - dropping the handshake", name, origin, cause)
-                    return@flatMap Result.failure(cause)
-                }
-                if (admission is Admission.Refused) {
-                    log.info("Refused handshake for '{}' from {}: {}", name, origin, admission.reason)
-                    // A REFUSED datagram that went out is a successful server action, not a failure.
-                    return@flatMap send(
-                        HandshakeWireFormat.refusedMessage(admission.reason).toByteArray(Charsets.UTF_8),
-                        origin,
-                    )
+    /**
+     * Routes one unframed datagram, already split on U+0020, by the outcome of
+     * [HandshakeProtocol.parseHandshake]. The `when` is exhaustive, so a new
+     * [HandshakeParse] arm cannot go unrouted.
+     *
+     * @param origin the datagram's post-NAT source - where any reply is addressed
+     * @param tokens the trimmed datagram text split on a single U+0020
+     * @return [Result.success] for a dropped non-handshake; the reply send's [Result]
+     * for a malformed line ([refuseMalformed]); otherwise what [handleHandshake] returns
+     */
+    private fun routeUnframed(origin: InetSocketAddress, tokens: List<String>): Result<Unit> =
+        when (val parsed = HandshakeProtocol.parseHandshake(tokens)) {
+            HandshakeParse.NotAHandshake ->
+                Result.success(Unit).also {
+                    log.warn("Unframed datagram from {}; sender may be pre-2.0, dropping", origin)
                 }
 
-                // A same-name registration under a different origin is a stale entry (e.g. a NAT
-                // rebind), not a distinct client - supersede it directly against Registrations,
-                // rather than relying solely on stale.connection.terminate(), so pruning stays
-                // correct even for fakes whose terminate() doesn't reach back into this registry.
-                registrations.findByName(name)?.let { stale ->
-                    log.info("Superseding stale registration for '{}': {} -> {}", name, stale.origin, origin)
-                    registrations.removeByOrigin(stale.origin)
-                    keepAliveSchedule.cancel(stale.origin)
-                    probeSchedule.cancel(stale.origin)
-                    retransmitSchedule.cancel(stale.origin)
-                    stale.reliable?.close() // D7: a supersede resets the reliable channel - fresh engine, fresh sequence space
-                    if (notifyingDisconnects) onDisconnect(stale.connection, DisconnectReason.SUPERSEDED)
-                    stale.connection.terminate()
-                        .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
-                }
-                val connection = newConnection(name, origin, this)
-                registrations.add(Registration(connection))
-                log.info("Registered connection '{}' for {}", name, origin)
-                send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
+            is HandshakeParse.Malformed -> refuseMalformed(origin, parsed.defect)
+
+            is HandshakeParse.Valid -> {
+                val extra = HandshakeProtocol.extraTokenCount(tokens)
+                if (extra > 0) log.debug("Ignoring {} extra handshake token(s)", extra)
+                handleHandshake(origin, parsed.handshake)
             }
         }
+
+    /**
+     * Answers a malformed `Iam` with the fixed
+     * [HandshakeProtocol.MALFORMED_REFUSAL_DATAGRAM], whatever the state of [origin].
+     * Touches no registration: nothing is added, superseded or torn down, [admit] is
+     * not consulted and [onRegistered] does not fire. The registry is read once, only
+     * to say in the log whether [origin] holds a registration (which is kept).
+     *
+     * Logs one WARN with a fixed message template. Its arguments are the origin
+     * (rendered from the socket address), [defect]'s fixed label and the registered
+     * flag - never the line, its tokens, the name or the credential, which are
+     * untrusted input (CR/LF, access tokens) and stay out of the log.
+     *
+     * @param origin the datagram's post-NAT source - where the refusal is addressed
+     * @param defect which slot of the line is defective
+     * @return the reply send's [Result], as the [Admission.Refused] path does: a
+     * `REFUSED` that went out is a successful server action, not a failure;
+     * [Result.failure] only if the reply could not be delivered
+     */
+    private fun refuseMalformed(origin: InetSocketAddress, defect: HandshakeDefect): Result<Unit> {
+        log.warn(
+            "Refusing malformed handshake from {} ({}); origin registered: {}",
+            origin, defect.label, registrations.findByOrigin(origin) != null,
+        )
+        return send(HandshakeProtocol.MALFORMED_REFUSAL_DATAGRAM, origin)
+    }
+
+    /**
+     * Handles a well-formed [handshake] from [origin]: a retransmit from a known
+     * origin repeats `REGISTERED 2`; a first `Iam` from an unknown origin goes
+     * through [admitAndRegister].
+     *
+     * @param origin the datagram's post-NAT source
+     * @param handshake the parsed name and credential
+     * @return the repeat reply's send [Result], or what [admitAndRegister] returns
+     */
+    private fun handleHandshake(origin: InetSocketAddress, handshake: Handshake): Result<Unit> {
+        if (registrations.findByOrigin(origin) != null) {
+            // Retransmitted Iam from a known origin - repeat the token it already earned.
+            // No re-screening: admit() runs once, at first registration - re-running a
+            // non-deterministic admit() (e.g. a capacity gate) on a stray retransmit could
+            // refuse an already-admitted client and desync the two sides.
+            log.info("Repeating handshake reply for already-registered origin {}", origin)
+            return send(HandshakeProtocol.REGISTERED_DATAGRAM, origin)
+        }
+        return admitAndRegister(origin, handshake)
+    }
+
+    /**
+     * Screens a first well-formed `Iam` from an unknown [origin] with [admit], then
+     * supersedes any same-name registration, registers the newcomer, sends
+     * `REGISTERED 2` and fires [onRegistered]. This is the previous inline body,
+     * moved unchanged; the register-before-send ordering is deliberate (#49).
+     *
+     * @param origin the datagram's post-NAT source
+     * @param handshake the parsed name and credential
+     * @return [Result.failure] if [admit] threw or a reply could not be delivered;
+     * otherwise the send [Result] (a `REFUSED` that went out is a success)
+     */
+    private fun admitAndRegister(origin: InetSocketAddress, handshake: Handshake): Result<Unit> {
+        val (name, credential) = handshake
+        // Screen the newcomer BEFORE supersede / registration / reply. Because this runs
+        // ahead of findByName(name), a Refused newcomer never reaches the supersede code,
+        // so an attacker spoofing an existing name from a fresh origin cannot evict the
+        // legitimate incumbent.
+        val admission = runCatching { admit(name, origin, credential) }.getOrElse { cause ->
+            log.warn("admit(...) threw for '{}' from {} - dropping the handshake", name, origin, cause)
+            return Result.failure(cause)
+        }
+        if (admission is Admission.Refused) {
+            log.info("Refused handshake for '{}' from {}: {}", name, origin, admission.reason)
+            // A REFUSED datagram that went out is a successful server action, not a failure.
+            return send(
+                HandshakeWireFormat.refusedMessage(admission.reason).toByteArray(Charsets.UTF_8),
+                origin,
+            )
+        }
+
+        // A same-name registration under a different origin is a stale entry (e.g. a NAT
+        // rebind), not a distinct client - supersede it directly against Registrations,
+        // rather than relying solely on stale.connection.terminate(), so pruning stays
+        // correct even for fakes whose terminate() doesn't reach back into this registry.
+        registrations.findByName(name)?.let { stale ->
+            log.info("Superseding stale registration for '{}': {} -> {}", name, stale.origin, origin)
+            registrations.removeByOrigin(stale.origin)
+            keepAliveSchedule.cancel(stale.origin)
+            probeSchedule.cancel(stale.origin)
+            retransmitSchedule.cancel(stale.origin)
+            stale.reliable?.close() // D7: a supersede resets the reliable channel - fresh engine, fresh sequence space
+            if (notifyingDisconnects) onDisconnect(stale.connection, DisconnectReason.SUPERSEDED)
+            stale.connection.terminate()
+                .onFailure { log.warn("Failed to terminate superseded connection '{}'", name, it) }
+        }
+        val connection = newConnection(name, origin, this)
+        registrations.add(Registration(connection))
+        log.info("Registered connection '{}' for {}", name, origin)
+        return send(HandshakeProtocol.REGISTERED_DATAGRAM, origin).map { onRegistered(connection) }
+    }
 
     /**
      * Delivers a `0x90` payload to [origin]'s bound handler. Screening order: [origin] must be

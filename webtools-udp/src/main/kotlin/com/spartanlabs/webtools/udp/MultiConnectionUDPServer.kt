@@ -14,7 +14,10 @@ import java.util.concurrent.TimeUnit
  *
  * A client registers by sending `Iam <name>` (optionally `Iam <name> <credential>`
  * with an opaque trailing token) to the common port from a socket it keeps open.
- * The handshake stays plain UTF-8 text. The server screens every new handshake
+ * The handshake stays plain UTF-8 text. The server itself refuses a **malformed**
+ * `Iam` - a missing or empty name, or a credential slot that is present but empty
+ * (`Iam  x`, `Iam bob  tok`) - with `REFUSED malformed`, whatever the state of its
+ * origin and without consulting [admit]. It screens every other new handshake
  * through [admit] and either replies - from that same socket, addressed straight
  * back to the datagram's source address and port - `REGISTERED 2` (the accepted
  * verb plus [TransportWireFormat.FRAMED_PROTOCOL_VERSION], the framed-transport
@@ -42,7 +45,14 @@ import java.util.concurrent.TimeUnit
  *
  * ### Handshake screening & credentials
  * Override [admit] to accept or refuse a handshake before it is registered. The
- * default admits every well-formed `Iam` - identical to pre-`1.4.0` behaviour.
+ * default admits every well-formed `Iam` - identical to pre-`1.4.0` behaviour. An
+ * `Iam` is **well-formed** unless its name slot is missing or empty, or its
+ * credential slot is present but empty. The server refuses a malformed one itself
+ * (`REFUSED malformed`, an informative reason that a client must not branch on)
+ * before [admit] is consulted, so [admit] never sees an empty `name` and sees
+ * `credential` as `""` only when the client sent none. The refusal is sent even to
+ * an origin that already holds a registration; that registration is left exactly as
+ * it is, so a peer that is mid-session can receive the unframed `REFUSED`.
  * [admit] returns [Admission.Admitted] or [Admission.Refused]`(reason)`; on a
  * refusal the server sends `REFUSED <reason>` back to the `Iam` origin, mints no
  * [Connection], adds no registration, and does not call [onClientConnect] - the
@@ -353,7 +363,11 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
 
     /**
      * Screens an incoming `Iam` handshake before it is accepted. The default
-     * admits every well-formed handshake - today's behaviour. Override to validate
+     * admits every well-formed handshake - today's behaviour. A **malformed** `Iam`
+     * (a missing or empty name, or a credential slot that is present but empty)
+     * never reaches here: the server answers it `REFUSED malformed` first, from any
+     * origin, so [name] is never empty and [credential] is `""` only when the client
+     * sent none. Override to validate
      * [credential] (an opaque token the client supplied, empty if it sent none) or
      * to refuse for application reasons (over capacity, banned): return
      * [Admission.Refused] and the client receives `REFUSED <reason>` as a typed
@@ -366,20 +380,22 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
      * for every client. Do fast, local checks here; hand a slow verification to
      * another thread and gate on its cached result.
      *
-     * Called only for a first `Iam` from an unknown origin - not for a retransmit
-     * from an already-registered origin. Called for a same-name reconnect from a
+     * Called only for a first well-formed `Iam` from an unknown origin - not for a
+     * retransmit from an already-registered origin, and never for a malformed line.
+     * Called for a same-name reconnect from a
      * **new** origin *before* the stale registration is superseded, so refusing it
      * leaves the existing connection intact.
      *
      * A thrown exception is caught, logged, and the handshake is dropped (no
      * reply, no registration); the client sees a timeout and may retry.
      *
-     * @param name the client's chosen name
+     * @param name the client's chosen name; never empty
      * @param peer the client's observed post-NAT origin
      * @param credential the opaque token from `Iam <name> <credential>`, verbatim;
-     * the empty string if the client sent `Iam <name>`. A custom implementation
-     * must tolerate arbitrary/garbage credential strings (a legacy client may put
-     * an unrelated trailing token there).
+     * the empty string only if the client sent `Iam <name>` with no credential slot
+     * (a present-but-empty slot is malformed and never reaches here). A custom
+     * implementation must tolerate arbitrary/garbage credential strings (a legacy
+     * client may put an unrelated trailing token there).
      * @return [Admission.Admitted] to accept, [Admission.Refused] to reject
      */
     open fun admit(name: String, peer: InetSocketAddress, credential: String): Admission =

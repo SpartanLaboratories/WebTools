@@ -17,7 +17,9 @@ package com.spartanlabs.webtools.udp
  * opaque string handed verbatim to [MultiConnectionUDPServer.admit]. A caller
  * with a structured or binary credential encodes it first (base64url is the
  * recommendation). An absent credential is delivered to `admit` as the empty
- * string. The credential rides **in cleartext**: this is a channel, not
+ * string; a slot that is present but empty (`Iam <name>  <credential>` with two
+ * spaces) is not an absent credential but a malformed line, refused before `admit`
+ * (see the `REFUSED` reply below). The credential rides **in cleartext**: this is a channel, not
  * confidentiality - a scheme needing secrecy must be self-protecting (short
  * TTL, channel binding) or run over an encrypted underlay.
  *
@@ -34,9 +36,19 @@ package com.spartanlabs.webtools.udp
  *
  * ### The `REFUSED` reply
  * A `1.4.0`+ server may answer an `Iam` with `REFUSED <reason>` (or a bare
- * `REFUSED`) instead of an accepted reply - see [MultiConnectionUDPServer.admit].
+ * `REFUSED`) instead of an accepted reply, in two cases: [MultiConnectionUDPServer.admit]
+ * refuses it, or the line is **malformed** - a missing or empty name, or a credential
+ * slot that is present but empty. A malformed line is refused with the fixed reason
+ * `malformed`, which is informative text, not a contract: a client must not branch on
+ * it, and `admit` may return the same word. It is sent whatever the state of the
+ * sender's origin and leaves any registration that origin holds exactly as it was.
+ *
  * `REFUSED` is interpreted **only** by [MultiConnectionUDPClient.handshake]
- * reading its single reply datagram; framed session traffic never carries it.
+ * reading its single reply datagram; framed session traffic never carries it. A
+ * session listener can still receive one as an **unframed** datagram - the reply to a
+ * malformed `Iam` from its address, for example from a forged source - and drops it
+ * (the library client logs a WARN); a third-party client should not take a stray
+ * `REFUSED` on an established session as proof that the server dropped it.
  */
 object HandshakeWireFormat {
     /** The verb that opens a client handshake: `Iam <name>`. */
@@ -52,7 +64,9 @@ object HandshakeWireFormat {
     /**
      * The verb of the server's handshake-refused reply: `REFUSED <reason>` (or a
      * bare `REFUSED`). Sent by a `1.4.0`+ server instead of an accepted reply
-     * when [MultiConnectionUDPServer.admit] returns [Admission.Refused].
+     * when [MultiConnectionUDPServer.admit] returns [Admission.Refused], and when
+     * the server rejects a malformed `Iam` itself (reason `malformed`, informative
+     * text - not a contract).
      */
     const val REFUSED_REPLY = "REFUSED"
 

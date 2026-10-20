@@ -63,6 +63,19 @@ class HandshakeCoordinatorGatingTest {
     }
 
     @Test
+    fun `a malformed Iam from an unknown origin gets REFUSED malformed and registers nothing`() {
+        val replies = mutableListOf<Pair<String, InetSocketAddress>>()
+        val coordinator = coordinator(replies)
+
+        assertTrue(coordinator.accept(origin, "Iam").isSuccess)
+
+        assertEquals(0, coordinator.size)
+        assertTrue(created.isEmpty())
+        assertTrue(admitCalls.isEmpty())
+        assertEquals(listOf("REFUSED malformed" to origin), replies)
+    }
+
+    @Test
     fun `an admitted Iam with a credential registers and the credential reaches admit`() {
         val replies = mutableListOf<Pair<String, InetSocketAddress>>()
         val coordinator = coordinator(replies)

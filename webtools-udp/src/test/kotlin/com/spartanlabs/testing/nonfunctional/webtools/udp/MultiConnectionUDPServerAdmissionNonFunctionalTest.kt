@@ -125,6 +125,35 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
     }
 
     @Test
+    fun `a burst of malformed handshakes is refused, never reaches admit, and the listener survives`() {
+        val admitted = ConcurrentLinkedQueue<String>()
+        val connected = CopyOnWriteArrayList<String>()
+        val server = object : MultiConnectionUDPServer() {
+            override fun admit(name: String, peer: InetSocketAddress, credential: String): Admission {
+                admitted += name
+                return Admission.Admitted
+            }
+            override fun onClientConnect(connection: Connection) { connected += connection.name }
+        }
+        val malformedLines = listOf("Iam", "Iam  x", "Iam bob  tok")
+        withServer(server) {
+            repeat(MALFORMED_BURST) { i ->
+                DatagramSocket().use { client ->
+                    client.send(malformedLines[i % malformedLines.size])
+                    assertEquals("REFUSED malformed", client.recv(2000))
+                }
+            }
+            DatagramSocket().use { client ->
+                client.send("Iam good")
+                assertEquals("REGISTERED 2", client.recv())
+            }
+            Thread.sleep(200)
+        }
+        assertEquals(listOf("good"), admitted.toList(), "only the well-formed line reached admit")
+        assertEquals(listOf("good"), connected.toList())
+    }
+
+    @Test
     fun `a slow admit serialises handshakes`() {
         val server = object : MultiConnectionUDPServer() {
             override fun admit(name: String, peer: InetSocketAddress, credential: String): Admission {
@@ -172,5 +201,6 @@ class MultiConnectionUDPServerAdmissionNonFunctionalTest {
     private companion object {
         const val ADMIT_DELAY_MILLIS = 200L
         const val HANDSHAKES = 5
+        const val MALFORMED_BURST = 600
     }
 }
