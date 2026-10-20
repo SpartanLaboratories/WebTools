@@ -21,24 +21,38 @@ the server reject a malformed one.
   the credential produces the empty slot: `Iam  x` puts `""` in the name slot, and
   `Iam bob  tok` puts `""` in the credential slot. An absent credential (`Iam bob`) is
   not malformed; `admit()` receives it as `""`, as before.
-- A malformed line from an origin with no registration is answered `REFUSED <reason>`,
-  with one short fixed reason. It registers nothing, never reaches `admit()`, never
-  supersedes a same-name registration, and fires no `onClientConnect`. A library
-  client's `handshake()` fails with `HandshakeRefusedException`.
-- A malformed line from an origin that already holds a registration is never answered
-  `REFUSED`, and the registration is left as it is. The registered-origin lookup
-  therefore runs before the malformed-line check.
-- Tokens past the credential slot stay ignored, empty ones included: `Iam bob tok  x`
-  is accepted with credential `tok`.
-- A line whose first space-separated token is not exactly `Iam` (for example
-  `Iam<TAB>bob`) is still not a handshake.
+- **Every malformed line is answered `REFUSED malformed`,** whatever the state of its
+  origin. It registers nothing, never reaches `admit()`, never supersedes a same-name
+  registration, and fires no `onClientConnect`. A library client's `handshake()` fails
+  with `HandshakeRefusedException`.
+- **A malformed line from an origin that already holds a registration leaves the
+  registration as it is:** no teardown, no `admit()`, no supersede, no `onClientConnect`.
+  The `REFUSED malformed` reply reaches a peer that is mid-session:
+  - a library client's session listener drops that unframed datagram with a WARN;
+  - a third-party client may take it as a disconnect while the server keeps the peer
+    registered.
+
+  The protocol doc states this.
+- **A well-formed line from a registered origin** gets `REGISTERED 2` again, as a
+  retransmit, without re-screening.
+- **Tokens past the credential slot stay ignored,** empty ones included:
+  `Iam bob tok  x` is accepted with credential `tok`.
+- **Only the three malformed shapes draw a reply.** A line whose first space-separated
+  token is not exactly `Iam` (for example `Iam<TAB>bob`) is still not a handshake. It
+  stays silent, as does every other unrecognised datagram.
 - Names and credentials that contain whitespace other than U+0020 (tab, CR/LF, NBSP)
   still register. #53 tracks that gap, together with the client-side checks in #52.
 - No public API is added. The reason is informative wire text, not a contract.
-- Every out-of-date source line reference in `docs/webtools-udp-protocol.md` is
-  refreshed. The protocol doc describes the remaining whitespace gap as known and links
-  #53.
-- The ordering behind #49 (register, then send `REGISTERED 2`) is unchanged.
+- **Line references are refreshed:**
+  - every out-of-date source line reference in `docs/webtools-udp-protocol.md`;
+  - the one at `docs/webtools-udp-architecture.md:52`;
+  - the one in the comment at `ChannelByteGuardIntegrationTest.kt:25`.
+
+  The protocol doc describes the remaining whitespace gap as known and links #53.
+- **The raw NUL and SOH bytes** in the string literal at `HandshakeCoordinatorTest.kt:577`
+  become the escapes `"\u0000\u0001"`. The string is the same.
+- **Unchanged:** the ordering behind #49 (register, then send `REGISTERED 2`), and an
+  exception thrown by `onClientConnect` (#54).
 
 ## Questions
 
@@ -88,10 +102,11 @@ Options worth comparing:
   - a separate pure validity check that runs before parsing.
 - **How the credential slot is modelled,** so that an absent credential stays distinct
   from one that is present but empty. Today `getOrElse(2) { "" }` conflates the two.
-- **What a registered origin's malformed line gets.** Either no reply and a log line,
-  which is how a bare `Iam` is handled today, or the same `REGISTERED 2` a well-formed
-  retransmit gets. An `Iam` with an empty slot gets `REGISTERED 2` today, because it
-  parses.
+- **What a registered origin's malformed line gets.** The options are:
+  - no reply and a log line, which is how a bare `Iam` is handled today;
+  - the same `REGISTERED 2` a well-formed retransmit gets (an `Iam` with an empty slot
+    gets this today, because it parses);
+  - the same `REFUSED` an unknown origin gets.
 - **What `handleHandshake` returns for an unknown origin's malformed line.** Either the
   `REFUSED` send's `Result`, as the `admit()` refusal does, or a failure.
 - **The log level and content of each outcome:** INFO as for an `admit()` refusal, WARN
@@ -105,8 +120,7 @@ An answer must keep:
 - the public API unchanged;
 - a malformed line away from `admit()`, the same-name supersede, registration and
   `onClientConnect`;
-- the rule that `REFUSED` only goes to an origin with no registration, with a
-  registered origin's registration untouched;
+- a registered origin's registration untouched by a malformed line;
 - the single-U+0020 split of the trimmed text, extra tokens ignored, and `Iam` as the
   exact first token.
 
@@ -272,11 +286,19 @@ tests pass pre-trimmed text, because only `CommonChannel` trims
   and KDoc edits, from the anchors in [inventory §5](codebase-blast-radius.md).
 - The architecture doc's handshake node and the README handshake sections get small
   wording updates.
+- The architecture doc's stale `MultiConnectionUDPServer.kt:254` (at `:52`) is refreshed
+  too, after the KDoc edits to that file.
+- The comment at `ChannelByteGuardIntegrationTest.kt:25` gets the line range of the
+  raw-socket peer in `FramingNonFunctionalTest.kt` (`:187-215` on `85cfbbe`).
 
 **Editing hazards.**
 - `HandshakeCoordinatorTest.kt:577` holds raw NUL and SOH bytes in a string literal. As a
-  result, the ripgrep-based search skips the whole file (use `grep -a`), and an edit must
-  keep the bytes.
+  result, the ripgrep-based search skips the whole file (use `grep -a`).
+  - The change replaces them with the escapes `"\u0000\u0001"`, which give the same
+    string.
+  - The replacement must be made with a byte-aware edit and checked with
+    `grep -a -P '\x00'`.
+  - Every other edit to the file keeps the bytes intact until that replacement lands.
 - The docs are CRLF in the working tree.
 
 ### How a malformed line is represented and routed
@@ -303,22 +325,24 @@ verb check is therefore part of the outcome, not a `require` precondition.
 `Handshake` carries it as `""`, as `admit` documents. A credential slot that is present
 but empty is malformed. `Handshake` keeps its shape.
 
-**Routing.** The coordinator splits the trimmed text once, parses it, looks up the origin,
-then branches:
-- **unknown origin, malformed:** reply `REFUSED malformed`. Nothing is registered, and
-  there is no `admit`, no supersede and no `onClientConnect`. It returns the send's
-  `Result`, as the `admit` refusal does, so the listener adds no stack-trace WARN;
-- **unknown origin, valid:** today's `admit`, supersede, register, `REGISTERED 2` path,
+**Routing.** The coordinator splits the trimmed text once and parses it, then branches:
+- **malformed, from any origin:** reply `REFUSED malformed`.
+  - It returns the send's `Result`, as the `admit` refusal does, so the listener adds no
+    stack-trace WARN.
+  - Nothing is registered, and there is no `admit`, no supersede and no
+    `onClientConnect`.
+  - An origin that already holds a registration keeps it exactly as it was, with no
+    teardown.
+- **valid, unknown origin:** today's `admit`, supersede, register, `REGISTERED 2` path,
   unchanged, including the register-before-send ordering that #49 concerns;
-- **registered origin, valid:** `REGISTERED 2` again, never re-screened;
-- **registered origin, malformed:** never `REFUSED`, and the registration is untouched.
-  The reply is the open Consideration below.
+- **valid, registered origin:** `REGISTERED 2` again, never re-screened.
 
-**Logging.** Each malformed outcome logs one WARN line carrying the origin and the defect
-label only, never the line, its tokens, the name or the credential. The basis is CWE-117
-and OWASP (sanitise CR/LF, never log access tokens); under #53 a token can still carry
-CR/LF. The message text is constant, so a per-reason rate bound (#41) can key on the
-defect. The extra-token DEBUG line runs only for a valid line.
+**Logging.** Each refused malformed line logs one WARN line carrying the origin, the
+defect label, and whether the origin holds a registration (which is kept). It never logs
+the line, its tokens, the name or the credential. The basis is CWE-117 and OWASP
+(sanitise CR/LF, never log access tokens); under #53 a token can still carry CR/LF. The
+message text is constant, so a per-reason rate bound (#41) can key on the defect. The
+extra-token DEBUG line runs only for a valid line.
 
 ### What the refusal says
 
@@ -353,11 +377,17 @@ that runs at a rate the sender chooses ([findings §6.1](refusal-reply-text.md))
 - A bare `REFUSED`: the reply carries a reason because the author of a hand-rolled client
   needs one (SMTP likewise advises against bare codes).
 
-**A Boundary-Ring note for the protocol doc.** The server answers some first datagrams
-before it can know their source is genuine. The note lists the three replies an
-unverified origin can draw, with their sizes and ratios. It states that there is no
-address validation and no reply rate limiting, so a deployment exposed to untrusted
-networks should rate-limit unregistered sources at its edge.
+**A Boundary-Ring note for the protocol doc.**
+- **Unverified sources.** The server answers some datagrams before it can know their
+  source is genuine. The note lists the replies a forged source can draw, with their
+  sizes and ratios. One of them is `REFUSED malformed` sent to the address of a client
+  that is registered and mid-session.
+- **That client's side of it.** A library client's session listener drops such a reply
+  with a WARN, one per datagram until #41 bounds those logs. A third-party client may take
+  it as a disconnect while the server keeps it registered.
+- **No defences in the server.** There is no address validation and no reply rate
+  limiting, so a deployment exposed to untrusted networks should rate-limit unregistered
+  sources at its edge.
 
 ### Where the findings differ, and which view holds
 - [malformed-line-handling.md §5.A](malformed-line-handling.md) sketches the verb check
@@ -369,39 +399,23 @@ networks should rate-limit unregistered sources at its edge.
   uses sealed types for domain outcomes such as `Admission`.
 - [refusal-reply-text.md C1](refusal-reply-text.md) weighs a bare `REFUSED`. The reply
   keeps its reason.
+- [codebase-blast-radius.md §11 C1](codebase-blast-radius.md) and
+  [malformed-line-handling.md C1](malformed-line-handling.md) recommend silence for a
+  registered origin's malformed line, following DTLS, WireGuard and ENet. The design
+  answers it `REFUSED malformed` instead, so every malformed line draws the same reply
+  whatever the state of its origin, while the registration stays untouched.
+  - **Costs the protocol doc states.** A forged source that knows a registered client's
+    address can make the server send that client 17-byte unframed datagrams. A
+    third-party client may also read `REFUSED` mid-session as a disconnect.
+  - **Retransmits are unaffected.** A genuine retransmit repeats the registering line
+    byte for byte, so it is well-formed and still gets `REGISTERED 2`.
+  - **Behaviour changes for a registered origin.** The two empty-slot lines draw
+    `REFUSED malformed` in place of `REGISTERED 2`. A bare `Iam` draws `REFUSED malformed`
+    in place of nothing.
 
 ### Considerations
 
-**What a registered origin gets for a malformed `Iam`.** It never gets `REFUSED`, and its
-registration is untouched. The reply itself is open. Today a bare `Iam` from a registered
-origin gets nothing: it fails to parse, and the listener logs a WARN with a stack trace.
-`Iam  x` and `Iam bob  tok` parse, and get `REGISTERED 2` again.
-
-| From a registered origin | Today | No reply, WARN | Today's replies kept |
-|---|---|---|---|
-| bare `Iam` | nothing (listener WARN with stack trace) | nothing (coordinator WARN) | nothing (listener WARN with stack trace) |
-| `Iam  x` | `REGISTERED 2` | nothing | `REGISTERED 2` |
-| `Iam bob  tok` | `REGISTERED 2` | nothing | `REGISTERED 2` |
-
-- **No reply, WARN.**
-  - The registered peer gets one rule: a well-formed `Iam` gets `REGISTERED 2`, and
-    anything else gets nothing.
-  - A genuine retransmit repeats the registering line byte for byte. It is always
-    well-formed, so it is never dropped.
-  - Silent discard is what DTLS, WireGuard and ENet do, and it sends nothing a spoofer
-    could reflect.
-  - It changes the two empty-slot lines from `REGISTERED 2` to nothing.
-- **Today's replies kept.**
-  - Nothing changes for registered origins.
-  - It needs today's lenient parse kept beside the strict one, or a special case per
-    defect.
-  - It answers an accept to two shapes the server defines as malformed, and keeps the
-    stack-trace WARN for a bare `Iam`.
-- **Not weighed: `REGISTERED 2` for all three shapes.** It would accept every malformed
-  shape and give a reply to an input that is silent today.
-
-**Recommendation:** no reply, WARN
-([findings §11 C1](codebase-blast-radius.md), [findings C1](malformed-line-handling.md)).
+None.
 
 ### Known gaps
 - The line numbers after the change are unknown until the code is written, so references
@@ -410,7 +424,7 @@ origin gets nothing: it fails to parse, and the listener logs a WARN with a stac
 - Whether the edit tools round-trip the NUL and SOH bytes in `HandshakeCoordinatorTest.kt`
   is untested.
 - No Kotlin or JVM server with a rule for a malformed first message from a registered peer
-  was found. The silent-discard practice comes from DTLS, WireGuard and ENet, none of
-  which uses a text handshake.
+  was found. The comparable UDP systems (DTLS, WireGuard, ENet) discard silently, and
+  none of them uses a text handshake.
 - #41 has no design yet. Keying its rate bound on the defect label is an inference from
   its issue text.
