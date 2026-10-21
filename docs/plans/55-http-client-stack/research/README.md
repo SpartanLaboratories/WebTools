@@ -113,8 +113,9 @@ Atom behind a port with a default implementation, and fetches feeds with a condi
   - Its providers call OpenDota (60 calls a minute and 3,000 a day without a key, with a refused
     request still counting), Steam's news API, Open-Meteo, and RSS or Atom feeds at URLs that
     server administrators supply.
-- **Scope.** The work ends at merge. Releasing follows the organisation's steps once the
-  repository practices in #58 exist.
+- **Scope.** The work spans several systems. Each one lands as its own sub-issue and ends at
+  its merge. Releasing follows the organisation's steps once the repository practices in #58
+  exist.
 
 **Current state.**
 - `settings.gradle.kts` includes `:webtools-udp`, `:webtools-scraping` and `:webtools-browser`,
@@ -408,3 +409,503 @@ after question 2.
   - The OWASP XML external entity guidance.
   - Comparable Kotlin feed libraries.
 - **Findings:** [`feed-parsing.md`](feed-parsing.md)
+
+## Verification
+
+### Outside-world claims
+
+Every load-bearing claim in the ten findings files here, and in
+[`../47-java-23-bytecode/research/java-11-floor.md`](../47-java-23-bytecode/research/java-11-floor.md),
+was re-opened at its source on 2026-10-21.
+
+**231 claims: 227 hold, none fails, 1 is unclear, and 3 cite this repository's own files.**
+
+| Findings file | Claims | Result |
+|---|---|---|
+| [`kmp-test-fixtures.md`](kmp-test-fixtures.md) | 18 | all hold |
+| [`kmp-build-topology.md`](kmp-build-topology.md) | 11 | all hold |
+| [`java-11-floor.md`](../47-java-23-bytecode/research/java-11-floor.md) | 17 | all hold |
+| [`codebase-blast-radius.md`](codebase-blast-radius.md) | 8 | 6 hold; 7 and 8 cite repository files |
+| [`http-transport.md`](http-transport.md) | 25 | 24 hold; 25 cites a repository file |
+| [`outbound-url-policy.md`](outbound-url-policy.md) | 25 | 24 hold; 25 unclear |
+| [`response-cache.md`](response-cache.md) | 30 | all hold |
+| [`call-budget.md`](call-budget.md) | 28 | all hold |
+| [`test-support-and-time.md`](test-support-and-time.md) | 19 | all hold |
+| [`api-shape-and-failures.md`](api-shape-and-failures.md) | 26 | all hold |
+| [`feed-parsing.md`](feed-parsing.md) | 24 | all hold |
+
+**The unclear claim.** `outbound-url-policy.md` claim 25 says the address classifier compiles for
+`jvm()` and `js(IR)` under Kotlin 2.2.0 and passes the same tests on both. It is a measurement
+from a throwaway probe, with no external source to re-open. It stands as a measurement, and the
+shipped classifier's Level 4a tests in `commonTest` re-establish it.
+
+**Notes on claims that hold:**
+
+- **KT-78620** is Fixed, with "Planned for 2.3.20-Beta1" and an empty "Available in". So
+  "fixed in the 2.3 line" rests on the planned version (`kmp-build-topology.md` claim 3).
+- **Unpublishable targets.** That a target cannot be marked unpublishable is inferred from
+  `KotlinTarget.publishable` being read-only. `AbstractKotlinTarget` returns `true`, and native
+  and external targets override it; the JVM target is unaffected (`kmp-build-topology.md`
+  claim 4).
+- **Commit dates.** Two commit dates in `outbound-url-policy.md` (claims 19 and 21) are a day
+  off in UTC. The hashes, tags and quotes are right.
+- **Ktor.** `AttributeKey.type` is private in Ktor, not public (`response-cache.md` claim 23).
+- **OpenDota.** Its live `X-Rate-Limit-Remaining-Day` read 2998 at verification against 2999
+  when recorded, as a live counter does (`call-budget.md` claim 12).
+- **Nothing newer changes an answer:**
+  - OkHttp 5.5.0, Caffeine 3.3.1, foojay-resolver-convention 1.0.0,
+    binary-compatibility-validator 0.18.2 and Resilience4j 2.4.0 are the latest releases.
+  - Rome 2.1.0 is still its latest release.
+  - The IETF rate-limit header draft is still revision 11.
+  - `@IntroducedAt` is still experimental at Kotlin 2.4.21.
+  - The Kotlin Gradle compatibility table still has no row covering Gradle 9.7.1.
+
+### Codebase facts
+
+The repository claims the findings rest on were checked against `master` at `806ce8e`:
+
+- **Root build.** `build.gradle.kts:18` applies `org.jetbrains.kotlin.jvm` to every module.
+  `:29`–`:31` add `api(slf4j-api)` and the JUnit test dependencies. `:44`–`:62` register the
+  level tasks over `sourceSets["test"]`. `:64`–`:91` hold the publishing skeleton.
+- **Settings and versions.** `settings.gradle.kts:2` applies foojay-resolver-convention 0.8.0.
+  `webtools-udp/build.gradle.kts:101` sets `2.0.0a`, and `:103`–`:117` hold the UDP port lock.
+- **Test layout.** The repository has 99 test files, 4 of them untagged `testing/support/`
+  helpers. Every other file's JUnit tag equals its package level. `webtools-udp` has 19
+  gating, 21 component and 9 deterministic tagged classes.
+- **README.** `README.md:26` is the only statement of a JDK floor in the repository.
+  `README.md:73`–`:74` state the "keep an `else` branch" rule.
+- **`Connector`'s global state.** `Connector.kt:65` calls `Unirest.setTimeouts(0, 0)`, and
+  `:150` sets the JVM-wide `http.agent`.
+- **Failure-hierarchy precedent.** `ReliableSendFailure.kt:15` is an open
+  `abstract class … : Exception`.
+- **Programmer errors.** `webtools-udp`'s constructors throw `IllegalArgumentException` through
+  `require` for invalid configuration (`MultiConnectionUDPClient.kt:188`, `:195`).
+- **The three repository-cited claims** resolve:
+  - `kmp-build-topology.md:213` records the mangled `execute-gIAlu-s`;
+  - `codebase-blast-radius.md` claims 7 and 8 quote text present in the build-topology and
+    Java-floor findings.
+
+## Summary
+
+### Build, publishing and the Java 11 floor
+
+- **The Kotlin Gradle plugin stays at 2.2.0 on Gradle 9.7.1.** Measured: it configures, compiles,
+  tests and publishes a multiplatform module with the configuration cache on, writes metadata
+  `[2,2,0]`, and publishes a `kotlin-stdlib` requirement of `2.2.0`.
+  - The Kotlin compatibility table documents 2.2.x only up to Gradle 8.14, so the pairing is
+    undocumented although it works.
+  - Its one diagnostic is a Gradle-10 deprecation of the `archives` configuration, fixed in the
+    2.3 line.
+  - If that deprecation must go, the fallback is a newer plugin with
+    `languageVersion = apiVersion = 2.2` and `coreLibrariesVersion = "2.2.0"`. Measured on
+    2.4.21, it writes the same metadata and stdlib requirement.
+  - Source: [`kmp-build-topology.md`](kmp-build-topology.md).
+- **Shared configuration moves into an included `build-logic` build.**
+  - It holds three precompiled plugins: `webtools.kotlin-jvm-library`,
+    `webtools.kotlin-multiplatform-library` and `webtools.published-library`.
+  - A `WebToolsBuild` object holds the Java floor and the test-level list.
+  - The root build keeps `group` and `version` only.
+  - Measured: the three existing modules then publish the same POMs and Module Metadata, except
+    that `org.gradle.jvm.version` goes from 23 to 11.
+  - A consumer with its own `build-logic` build includes WebTools as a nested composite without
+    a clash.
+- **Level test tasks.** The seven level test tasks select tests by package
+  (`com.spartanlabs.testing.<level>.*`) in every module, with `isFailOnNoMatchingTests = false`.
+  - On the three JVM modules the package filter selects exactly the classes their JUnit tags
+    select: 99 test files, no mismatch.
+  - A `commonTest` class cannot carry a JUnit tag.
+  - A multiplatform module has no `test` task, so its plugin registers one that depends on
+    `jvmTest`. Without it, `./gradlew test` would skip the module silently.
+- **Java 11 for every module.** The mechanism is `jvmTarget = 11` plus `-Xjdk-release=11`, read
+  from one constant on the build JDK, with no toolchain.
+  - **How each module kind is configured.**
+    - `kotlin("jvm")` modules also set `java { sourceCompatibility; targetCompatibility }`,
+      because the plugin's JVM-target validation fails without it, even with no Java source.
+    - A multiplatform `jvm()` target writes no `org.gradle.jvm.version` under any setting, so its
+      plugin, and the fixtures variants, set the attribute explicitly.
+  - **Why `jvmTarget` alone is not a floor.** Measured on a JDK 23 host, `MutableList.removeFirst()`
+    compiled to JDK 21's `List.removeFirst` without a warning.
+  - **The existing modules survive the floor.** They compile under `-Xjdk-release=11` with
+    identical public signatures, so no legacy API breaks. Their tests pass on a real JDK 11,
+    and no dependency on any candidate classpath is above Java 11.
+  - **Why no toolchain.** A `jvmToolchain(11)` or a JDK 11 test launcher would need the foojay
+    resolver bump, since 0.8.0 fails on Gradle 9.7.1 the moment a JDK must be provisioned. It
+    would also make a consumer's composite build need a JDK 11.
+  - **The guard.** A `verifyJavaFloor` task, wired into `check`, reads the built jars, the
+    generated `.module` files and the resolved runtime classpath, and fails on anything above
+    the floor.
+  - Source: [`../47-java-23-bytecode/research/java-11-floor.md`](../47-java-23-bytecode/research/java-11-floor.md).
+- **Publishing.**
+  - vanniktech 0.36.0 publishes a multiplatform module as the root `webtools-http`, which holds
+    no classes, plus `webtools-http-jvm`, each with a `.module` and a `.pom`.
+  - A Gradle consumer depends on the root coordinate; a plain Maven consumer needs `-jvm`.
+  - `slf4j-api` stays `api` in the three existing modules, declared in their own build files so
+    their published shape is unchanged. The new modules declare it `implementation`.
+- **Test support ships as a test-fixtures variant of the multiplatform module.**
+  - **What the variant is.** It is a JVM-only `testFixtures` compilation associated with `main`,
+    published through the experimental `kotlin.publishing.adhocSoftwareComponent` (Kotlin Gradle
+    plugin 2.1.20 and later). It carries capability `webtools-http-test-fixtures` in the root
+    module's metadata, beside a `-test-fixtures.jar`.
+  - **Measured.** A JDK 21 / Kotlin 2.2.0 consumer resolves `testFixtures(...)` both from a file
+    repository and through `includeBuild`. The fixtures' own dependencies reach only that
+    consumer's test classpath.
+  - **The guard.** Kotlin has no first-class feature for this (KT-63142 and KT-69482 are open).
+    A build-level publication check therefore guards the experimental API across plugin
+    upgrades: it publishes, then resolves from a file repository and through a composite.
+  - Source: [`kmp-test-fixtures.md`](kmp-test-fixtures.md).
+- **`jvm()` alone does not keep `commonMain` common.**
+  - Measured: `java.io.File`, `java.time.Instant` and `System.currentTimeMillis()` compile in
+    `commonMain` when there is one target. A second target makes the compiler reject them.
+  - A target cannot be declared and then left unpublished: the root `.module` keeps a dangling
+    `available-at`.
+  - An unpublished check-only module that compiles the same `commonMain` directory for `js`
+    works.
+  - See Consideration 1.
+
+### What the change touches
+
+- **Files.**
+  - Edited: `settings.gradle.kts`, the root build file, the three module build files and
+    `README.md`.
+  - Created: `build-logic/`, `webtools-http/`, the feeds module and an evergreen
+    `docs/webtools-http-architecture.md`.
+  - No legacy source or test file changes. `.gitignore` already covers every new build output.
+- **`webtools-udp`'s port lock** moves unchanged, because the plugin that registers the level
+  tasks is applied in the module's `plugins {}` block.
+- **Nothing existing moves onto the new stack.**
+  - `Connector` is blocking and stateful, sets JVM-wide state, and has no timeouts or caps.
+  - `WebViewer` and `resolveLocalAddress()` are not HTTP clients.
+- **Baseline.** Every level of every module passes on an unmodified `master`: 642 tests executed
+  and 15 disabled by design.
+- **First-consumer checks.** BotTools' acceptance checks for its adapter and its feeds plugin map
+  onto `webtools-http` and feeds tests at Levels 2, 3, 4a and 4c.
+- Source: [`codebase-blast-radius.md`](codebase-blast-radius.md).
+
+### Transport
+
+- **The port** is
+  `HttpTransport : AutoCloseable { suspend fun execute(request: HttpRequest): Result<HttpResponse> }`
+  in `commonMain`, over library-owned types:
+  - `HttpMethod`;
+  - a validated `Url`: `http` or `https` only, no user-info, and a query-free `redacted()`;
+  - `HttpHeaders`: ordered, case-insensitive, with per-entry sensitive flags;
+  - a `ByteArray` body;
+  - `HttpResponse(status, headers, body, url, redirectChain)`.
+
+  Measured: the types compile for both `jvm()` and `js(IR)`.
+- **The transport never re-sends.** One request per hop was measured in every scenario, using
+  three mechanisms together:
+  - `retryOnConnectionFailure(false)`;
+  - redirects followed by the transport itself, one OkHttp `Call` per hop;
+  - a network interceptor that hides `Retry-After` on a `503` from OkHttp's follow-up logic
+    (restoring it in the response) and refuses any second exchange for a hop.
+
+  The client flags alone left a `503` with `Retry-After: 0` re-sent. The cost is failures on
+  stale pooled connections, which an idle-connection TTL of 4 s (a parameter) removes.
+- **Reading the body.**
+  - The body is read inside `Callback.onResponse`, so cancellation reaches it: 0 ms, against
+    29.4 s for the literal `okhttp-coroutines` pattern.
+  - The body cap counts decoded bytes, which refused a 50 MB gzip bomb.
+  - No body is read for `HEAD`, `1xx`, `204`, `304` or a followed redirect. OkHttp 5.5.0 blocks
+    reading a `304` that carries `Content-Length`.
+- **Redirects.**
+  - Only `GET` and `HEAD` are followed, up to a configurable cap.
+  - A per-hop policy check runs before any socket.
+  - Every flagged-sensitive header and the default credential names are stripped on a
+    cross-origin hop.
+  - An `https` to `http` downgrade is refused by default.
+- **Lifecycle.** The transport owns its `Dispatcher` and `ConnectionPool`. `close()` cancels
+  calls, shuts down the executor and evicts the pool; without it, the JVM lingered 61 s.
+- Source: [`http-transport.md`](http-transport.md).
+
+### Outbound-URL policy
+
+- **Three checks, each with its own job:**
+  - **A per-hop URL check,** run before any socket, covers scheme, user-info, host form,
+    reserved names and ports. It is the only check that stops IP-literal hosts. OkHttp never
+    calls `Dns` for a digits-and-dots or colon host, so with a resolver guard alone,
+    `2130706433`, `127.1`, `[::1]` and `169.254.169.254` connected.
+  - **A guarding `Dns`** judges every resolved address and rejects a mixed answer whole. OkHttp
+    connects only to that answer, which closes rebinding.
+  - **A guarding `SocketFactory`** is a backstop on every connect attempt.
+- **`Untrusted` forces `Proxy.NO_PROXY`.** A configured proxy would bypass the resolver guard,
+  and a SOCKS proxy the socket guard as well.
+- **The deny table** follows the IANA special-purpose registries and is a pure function over
+  address bytes, in common code. It is default-deny for IPv6 outside `2000::/3`. The
+  `InetAddress` predicates miss 16 of the 26 non-public addresses tried.
+- **Numeric hosts.** A digits-and-dots host that is not strict dotted-decimal is refused. The JDK
+  reads `127.1` and `0177.0.0.1` leniently, and libc reads `0177` as octal where the JDK reads it
+  as decimal.
+- **The policy is a closed pair, `Trusted` and `Untrusted`, each with tightening-only
+  parameters.** Fetching from a private address is `Trusted`.
+  - **`Untrusted`:**
+    - refuses a request that carries credential headers;
+    - defaults to ports 80, 443, 8080 and 8443;
+    - caps redirects, bytes and time.
+  - **`Trusted`:**
+    - checks scheme, user-info and optional host pinning;
+    - is `https`-only by default.
+- **Refusals.** A refusal carries a coarse reason, never an address or a query.
+- **The test seam is internal.** A fixtures-only factory reaches an `internal` relaxation that
+  exempts loopback only, so Level 3 runs `Untrusted` against a loopback `mockwebserver3` with
+  every other rule live.
+- Source: [`outbound-url-policy.md`](outbound-url-policy.md).
+
+### Response cache
+
+- **The port.** `ResponseCache : AutoCloseable` has one suspend
+  `getOrLoad(key: CacheKey<V>, policy, maxAge, loader): Result<Lookup<V>>`. `Lookup` is `Found` or
+  `Missing`, so a confirmed miss is a stored value, never a null or a failure. The default is
+  `CaffeineResponseCache`.
+- **Decoded values are stored.** The whole load runs inside the cache loader: budget, transport,
+  status check and decode. Three things follow:
+  - a hit costs nothing;
+  - a decode failure is never stored;
+  - N coalesced callers cost one permit (measured: 50 callers, 1 load).
+- **Failures are values with zero lifetime, removed by each waiter.** Caffeine's exceptional
+  completion logs a stack trace per failure, and it left 45 of 2,000 immediate retries joined to
+  the failed load; the fix gave 0.
+- **How waiters wait.** Waiters use `asDeferred().await()`, because `CompletionStage.await()`
+  cancels the shared load for everyone. A load nobody waits for still completes and lands in the
+  cache.
+- **`maxAge`** is an age check on read with a compare-and-remove. With 50 callers on a stale
+  entry it ran 1 load, against 10 to 12 for invalidate-then-get.
+- **Keys and time.** The key is the endpoint id plus its parameters sorted by name, never a
+  tenant or a credential. The `Ticker` derives from the injected `TimeSource`.
+- Source: [`response-cache.md`](response-cache.md).
+
+### Call budget
+
+- **The algorithm.** Fixed windows are aligned to multiples of their period since the Unix epoch,
+  with a 1 s boundary guard, in an integer ledger. Every provider read counts in clock-aligned
+  windows.
+  - Against a server limit of 60 per minute, a greedy token bucket let 119 calls into one server
+    minute.
+  - Plain aligned windows overspent in 510 of 1,000 skewed trials.
+  - The guarded ledger overspent in none, at a cost of about 2 % of grants.
+- **Reservations.**
+  - They are planned ahead under a coroutine `Mutex`, served first come, first served per lane,
+    and awaited outside the lock.
+  - A cancellation refunds its reservation and re-plans the waiters behind it.
+  - A wait above `maxWait` fails fast with `BudgetExhausted(wait)`.
+- **Lane shares.** A lane's reserved share is a floor that is held back, not lent. Lending drove
+  interactive grants to zero in a plan-ahead ledger.
+- **Server signals.**
+  - The server's remaining count can only raise local usage.
+  - A pause is the maximum of every hint, and it covers every lane.
+  - `Retry-After` is parsed in common code, as seconds or any of the three HTTP-date forms; the
+    parser matched `java.time` on 600,000 instants.
+- **The hard daily stop.**
+  - A `hard` window refuses until its boundary.
+  - The opt-in persistence seam is a suspend `load`/`save` of snapshot values, written ahead in
+    blocks, so a crash never under-counts.
+  - The in-memory store is the default.
+- **Permits.** A permit is spent once granted, unless it is released before sending. One permit
+  covers a logical call, redirects included.
+- **Time** is a `TimeSource` plus a library-owned `WallClock` of epoch milliseconds.
+  `kotlin.time.Clock` and `Instant` need an error-level opt-in on Kotlin 2.2.0 and are stable
+  only from 2.3.0.
+- **Dispatcher sizing.** The transport's dispatcher is sized from the budget's largest
+  instantaneous grant (`maxBurst`), because OkHttp's queue is invisible to the wait cap and to
+  the call timeout.
+- Source: [`call-budget.md`](call-budget.md).
+
+### Test support and time
+
+- **One virtual clock.** A clock built on a `TestCoroutineScheduler` supplies the `TimeSource`,
+  the `WallClock`, the dispatcher and a same-thread maintenance executor, using only stable
+  `kotlinx-coroutines-test` 1.10.2 API.
+  - **Measured.** In one `runTest` it expired a cache entry, rolled a budget window, resumed
+    `delay` and moved the wall clock 25 h.
+  - **Fake all three clocks or none.** Faking one clock of three passes for the wrong reason.
+  - **Injectable dispatchers.** Every library-owned scope takes an injectable dispatcher. A scope
+    on `Dispatchers.Default` makes `delay` real inside `runTest`.
+- **`FakeHttpTransport` is a script engine.**
+  - The most recent matching stub wins.
+  - Its steps run in order, and the last one repeats.
+  - Each step has a virtual-time delay and either responds or fails.
+  - Calls are recorded, and an unmatched request fails the test.
+- **Fixtures** are raw HTTP message files (`*.http`), parsed by about 40 lines of code. No parser
+  dependency and no JSON type reaches a signature.
+- **The recorder** is a decorating transport. `WEBTOOLS_HTTP_RECORD` opens it, and any of twelve
+  CI variables closes it. It never writes request headers, and it redacts sensitive query names
+  and response headers.
+- **Level 3** starts and closes `mockwebserver3` by hand, because `@StartStop` closes the server
+  only from JUnit 5.13. It runs on real clocks under `runBlocking`.
+- Source: [`test-support-and-time.md`](test-support-and-time.md).
+
+### Public API shape and failure model
+
+- **The marker.** One marker, `ExperimentalForInheritanceWebToolsApi`, at level `ERROR` with an
+  empty `@Target`, is applied only through `@SubclassOptInRequired`.
+  - That annotation is stable on 2.2.0. It gates implementing and delegating, but not mentioning
+    a type, so constructing and calling the supplied defaults needs no opt-in.
+  - A `fun interface` cannot carry the gate, so `WallClock` and `BudgetObserver` are plain
+    interfaces.
+  - The feeds module reuses the marker through its `api` dependency.
+  - `@SupportedExtension` is defined when the first seam graduates.
+- **Failures.** They form an open `abstract class HttpFailure : Exception` with two abstract
+  groups (`TransportFailure`, `UpstreamFailure`), final leaves, and one shared `Closed`.
+  - This follows `webtools-udp`'s precedent: a sealed root would make an added leaf a compile
+    error in a consumer's `when`, and a runtime error in an already compiled one.
+  - Library-produced reasons are open constants classes.
+  - Cancellation is thrown and never wrapped.
+  - A programmer error in developer-written configuration throws `IllegalArgumentException` at
+    construction, as `webtools-udp`'s constructors do. Text from outside the process is parsed
+    into a `Result`.
+- **The facades.** There are two, built by factory functions:
+  - `UpstreamClient` serves `Endpoint<T>` calls for one trusted upstream. It layers cache, then
+    budget (inside the cache loader), then transport.
+  - `UrlFetcher` serves administrator-supplied URLs, with no decode and no cache. Its policy
+    pre-check costs nothing.
+
+  The decoder travels with the `Endpoint`, because the cache key cannot see it. A `429` returns
+  `RateLimited`, with no retry. A client closes only what it built.
+- **Conventions.**
+  - Every long-lived component is a `kotlin.AutoCloseable` with a non-suspend `close()`. The
+    budget adds a suspend `flush()`.
+  - ABI checking uses binary-compatibility-validator 0.18.2, because the plugin's built-in
+    validator is experimental at 2.2.0.
+  - Logging from common code goes through an `internal expect fun` with an slf4j actual on the
+    JVM.
+  - `webtools-http` uses one flat package.
+- **Java callers are a non-goal,** because `suspend`, `Result` and `Duration` mangle JVM names.
+- **Defaulted parameters.** Adding a defaulted parameter to a public constructor or function
+  breaks binary compatibility for Kotlin callers. `@JvmOverloads` does not repair it, and
+  `@IntroducedAt` needs Kotlin 2.3. See Consideration 3.
+- Source: [`api-shape-and-failures.md`](api-shape-and-failures.md).
+
+### Feeds module
+
+- **Parser.** The default is Rome 2.1.0, an `implementation` dependency behind a library-owned
+  `FeedParser` port.
+  - **Why Rome.** It is the only candidate hardened by default: DOCTYPE refused, external
+    entities and DTD loading off, entity expansion off. It also:
+    - separates malformed XML from a document that is not a feed;
+    - covers RSS 0.90 to 2.0, and Atom 0.3 and 1.0;
+    - detects encoding in the RFC 7303 order.
+  - **Its cost** is staleness: its last release was 2023-03-12.
+  - **The alternatives.**
+    - rssreader 3.12.0 is the documented swap. It turns malformed XML into an empty stream and
+      ignores Atom `rel`.
+    - prof18's multiplatform parser needs Kotlin 2.4.10 and coroutines 1.11.0.
+- **Hardening does not rest on one library flag.**
+  - The transport's decoded-byte cap bounds the document.
+  - The default parser refuses any DOCTYPE in a prolog scan before Rome runs, because Rome skips
+    a hardening feature its SAX provider does not recognise.
+  - Per-field and per-count limits are parameters that only tighten.
+  - A named Level 4c suite gates any parser behind the port: XXE, billion laughs, deep nesting,
+    and attribute and element floods.
+- **Conditional GET.** The caller owns the conditional-GET state.
+  - A fetch takes the stored validators and returns `Fetched` or `NotModified` with new
+    validators. A `304` is a success value. Python feedparser, gofeed and feed-rs do the same,
+    and Rome's own stateful fetcher is archived.
+  - The fetcher calls the transport directly, with no cache and no budget. Its constructor takes
+    an `HttpTransport`, so the dependency on `webtools-http` is `api`.
+  - An `untrusted(...)` factory builds and owns an `Untrusted` transport, and is the documented
+    path.
+- **Parsing is a plain function, not `suspend`.** It is CPU-bound, bounded by the byte cap, and
+  moved off the caller's thread by the fetcher.
+- **The module's shape** is Consideration 2.
+- Source: [`feed-parsing.md`](feed-parsing.md).
+
+### Where the findings differ, and which view holds
+
+- **Dispatcher sizing.** The transport findings proposed 16 concurrent requests and 5 per host.
+  The budget can grant its smallest window at once, so the dispatcher is sized from the
+  budget's `maxBurst`.
+- **Where transport settings live.** The transport findings put `TransportSettings` beside the
+  policy in the transport's constructor, and the policy findings put them inside each policy.
+  The settings belong to the policy, because `Untrusted`'s caps and timeouts are part of what
+  makes it untrusted. The transport takes the policy.
+- **Direct opt-in markers.** The budget findings marked `RateSignals`, `WindowReading`,
+  `BudgetStore` and the snapshot types directly with the opt-in marker. A directly marked type
+  in `Permit.complete` or in a constructor default forces the opt-in on every caller. Only the
+  interfaces a consumer implements carry `@SubclassOptInRequired`, and the value types carry no
+  marker.
+- **Failure types.**
+  - The budget findings' `BudgetClosed` and the transport findings' `Closed` are one
+    `HttpFailure.Closed`.
+  - The feeds findings' sealed `FeedFailure` rooted at `Throwable` follows the open `HttpFailure`
+    convention instead, and so do their marker name and defaulted parameters.
+  - `RefusalReason` and `ExhaustedReason` are constants classes, not enums.
+  - `withPermit` is a plain `suspend fun`, not `inline`.
+- **Lifecycle and packages.** The budget's `suspend fun close()` becomes `close()` plus
+  `suspend fun flush()`. Its `…http.budget` subpackage folds into the one flat package.
+- **Logging in common code.** The build findings left `commonMain` without a logger. The
+  repository's rule asks for structured logging of lifecycle events, data flows and failure
+  states; the `internal expect fun` seam satisfies it in common code. `BudgetObserver` stays a
+  consumer hook, not the logging path.
+- **Fixtures and `explicitApi()`.** The fixtures findings recorded that `explicitApi()` does not
+  reach the fixtures compilation. `-Xexplicit-api=strict` on the fixtures compile task closes
+  that gap; it checks visibility and return types, not KDoc.
+- **Redirect permanence.** `HttpResponse.redirectChain` records URLs only, so a feed fetcher
+  cannot tell a permanent move from a temporary one. Recording each hop's status in the chain
+  closes that.
+
+### Considerations
+
+1. **How `commonMain` is kept free of JVM-only API.**
+   - (a) No check. The ports sit in `commonMain`, unenforced.
+   - (b) An unpublished check-only module that compiles the same `commonMain` for `js`. No new
+     coordinate is published.
+   - (c) A published `js` target. This adds a `webtools-http-js` artifact, a klib that needs a
+     Kotlin 2.2+ consumer.
+
+   Both (b) and (c) need every `commonMain` dependency to be multiplatform, and a `js` `actual`
+   for the logging seam.
+
+   **Recommendation: (b).** It turns "the ports are common code" into a compile error without
+   publishing an artifact that no consumer needs.
+2. **The feeds module's shape.**
+   - (a) JVM-only, with one coordinate, `webtools-feeds`.
+   - (b) Kotlin Multiplatform, like `webtools-http`. The port and the model go in `commonMain`
+     and Rome in `jvmMain`, giving two coordinates: `webtools-feeds` and `webtools-feeds-jvm`.
+
+   Both build, publish and substitute in a composite (measured).
+
+   **Recommendation: (a).** Every parser candidate is JVM-only and no non-JVM consumer exists.
+   Public signatures free of JVM types keep a later move to (b) open.
+3. **How policy numbers are supplied.**
+   - (a) Factory functions with builder lambdas over `internal` constructors. Policy numbers are
+     builder properties with defaults, so a property can be added in a minor without a binary
+     break.
+   - (b) Flat public constructors with defaulted parameters. Each release that adds one keeps
+     the previous constructor as a hidden overload, and the ABI check is the only guard.
+
+   **Recommendation: (a).** It removes a class of silent binary break, and call sites read the
+   same apart from the lambda.
+4. **Where the single Java 11 setting lives.** The root build's shared configuration moves into
+   the included `build-logic` build.
+   - (a) The one constant lives there, as `WebToolsBuild.JAVA_FLOOR`.
+   - (b) A property in the root `gradle.properties` that the plugins read. How an included build
+     reads it in a consumer's composite is unmeasured.
+
+   **Recommendation: (a),** which was measured in a consumer's nested composite.
+
+### Known gaps
+
+- **Nothing published or cross-platform was exercised.** Nothing was published to Maven Central
+  or signed. No Linux build ran, and no IntelliJ import of `build-logic` or the fixtures source
+  set was tried.
+- **The public surface was not compiled.** Four things need a compile check, in `commonMain` and
+  `jvmMain`, before the first unit lands:
+  - the marker;
+  - a gated interface;
+  - a constructor default that mentions the gated interface;
+  - a consumer without the opt-in.
+- **The budget's close is undesigned.** A non-suspend `close()` on the `Mutex`-based budget is
+  not designed.
+- **Network behaviour.** Real provider idle timeouts, HTTP/2 coalescing over real TLS, and real
+  DNS answers for the bypass catalogue were not measured. The 4 s idle-connection TTL is
+  judgement.
+- **Feed parsing.**
+  - Rome's DOM memory amplification on a hostile 2 MiB document is unmeasured.
+  - No corpus of real feeds was parsed.
+  - How the JDK StAX reader treats a DOCTYPE when `SUPPORT_DTD` is off is not established.
+- **Calendar-month rate windows** cannot be expressed with a fixed period.
+- **Judgement defaults.** These defaults are judgement, not measurement:
+  - the `Untrusted` port set;
+  - the reserved-name list;
+  - the feed limits;
+  - the recorder's CI variable list.

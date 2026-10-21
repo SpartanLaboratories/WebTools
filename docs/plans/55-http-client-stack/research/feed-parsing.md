@@ -281,7 +281,12 @@ DOCTYPE with an external general entity pointing at a loopback `mockwebserver3` 
 - **G2. No corpus run.** I did not run Rome or rssreader over real or malformed feeds, so "Rome tolerates more than rssreader" rests on the repair code (`XmlFixerReader`) and the tag tables, not on a measured pass rate. The brief did not allow building or running.
 - **G3. JDK StAX with `SUPPORT_DTD=false` and a DOCTYPE that declares an entity** was not established (the sources say it "does not necessarily reject"). It decides whether rssreader or an in-house StAX parser is safe without a separate DOCTYPE scan; until the suite passes, assume it is not.
 - **G4. The Java 11 JDK limit defaults** were not retrievable (the Java 11 module page truncates the table). The numbers above are the Java 21 guide's. Rome sets none of them, so the effect is on the default SAX parser's behaviour on a Java 11 runtime only.
-- **G5. Failure-model and marker names.** The failure-model findings (`api-shape-and-failures.md`) do not exist yet. `FeedFailure`'s root type, whether `Refused`/`NotAFeedReason` are enums or open constants, `UnexpectedStatus` against the facade's upstream-status failure, and the opt-in marker name (`SeamOptIn` in the test-support findings is provisional) must align with it; `@SubclassOptInRequired` versus `@RequiresOptIn` for `FeedParser` is that sibling's call.
+- **G5. Failure-model and marker names.** The names and shapes here are provisional. The conventions of the whole stack are set in [`api-shape-and-failures.md`](api-shape-and-failures.md), and these must follow them:
+  - `FeedFailure`'s root type;
+  - whether `Refused` and `NotAFeedReason` are enums or open constants;
+  - `UnexpectedStatus` against the facade's upstream-status failure;
+  - the opt-in marker and how `FeedParser` is gated;
+  - defaulted constructor parameters.
 - **G6. Rome mappings I did not verify:** which of Atom `published` and `updated` becomes `getPublishedDate()` for Atom 1.0; the `getUri()` fallbacks for RSS items without a `guid`; whether `Atom10Parser` resolves relative links from `xml:base` (so `FeedInput.baseUrl` may be redundant for Atom). The adapter and the contract suite settle them.
 - **G7. Evidence on malformed-feed prevalence is old and informal** (2003 and a book estimate); it supports designing for tolerance, not a number.
 - **G8. Redirect permanence.** `HttpResponse.redirectChain` carries URLs only, so the fetcher cannot report "moved permanently". If the first consumer wants to rewrite a subscription URL on a `301`, the transport's response would need the status of each hop; that is a `webtools-http` question, not decided here.
