@@ -1,0 +1,1275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="template-divergence" content="Renderer: the decision path's end levels add RUNS (green), FAILS (red) and NOT RUN (grey), each with its glyph, to the template's DELIVER and WARN, because a build's test selection ends in a task that runs, fails or does not run (footer item 4).">
+<title>Gradle build · WebTools</title>
+<style>
+/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → Guarantees bubbles → Context cards → provenance footer.
+   System page template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
+   Colour plan: --server / --client / --wire are the page's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
+   (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned. */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --server:#2a78d6; --client:#eb6834; --wire:#1baf7a;
+  --server-soft:#e2edfa; --client-soft:#fdeae1; --wire-soft:#ddf4ea;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --ph-1:#a49bed; --ph-2:#6250d6; --ph-3:#352a91;
+  --on:#0e1420; --dim:.28; --focus:#2a78d6; --rel:#6b7382;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#d95926;--wire:#199e70;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(217,89,38,.20);--wire-soft:rgba(25,158,112,.22);--ph-1:#5546c0;--ph-2:#8a7ee6;--ph-3:#c9c2f7;--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#d95926;--wire:#199e70;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(217,89,38,.20);--wire-soft:rgba(25,158,112,.22);--ph-1:#5546c0;--ph-2:#8a7ee6;--ph-3:#c9c2f7;--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.92em}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px}
+.crumbs a{text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)}
+.function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2)}
+.chip b{color:var(--ink);font-weight:600}
+.chip.model{border-style:dashed}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
+.kpi .seg-bar i{display:block;height:100%}
+
+/* tabs + stage */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink)}
+.tab.model::after{content:" DSL";font:10px var(--mono);color:var(--muted);vertical-align:super}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static}}
+.stage>div{min-width:0}
+.view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.view svg{display:block;width:100%;height:auto}
+.view h2{font-size:15px;margin:0 0 4px}
+.lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
+.inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px}
+.inspector p{margin:0 0 8px;color:var(--ink-2);font-size:13px}
+.inspector dl{margin:0;font-size:12.5px}
+.inspector dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-top:8px}
+.inspector dd{margin:2px 0 0}
+.inspector dd a{font-family:var(--mono);font-size:12px;text-decoration:none;border-bottom:1px solid var(--line)}
+.inspector dd a:hover{border-bottom-color:var(--ink)}
+.linkbtn{appearance:none;border:1px dashed var(--line);background:var(--surface-2);color:var(--ink);font:12px var(--mono);padding:5px 8px;border-radius:4px;cursor:pointer;text-align:left}
+.linkbtn:hover{border-color:var(--ink)}
+.tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
+.tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
+/* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
+   ending with planned. check-page.js fails a tab without a visible one. */
+.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.key i.pub{background:var(--surface-2)}.key i.std{border-style:dotted}.key i.pln{border-style:dashed;background:none;opacity:.6}
+.key i.srv{border-color:var(--server)}.key i.cli{border-color:var(--client)}.key i.wir{border-color:var(--wire)}
+.key i.pub.srv{background:var(--server-soft)}.key i.pub.cli{background:var(--client-soft)}.key i.pub.wir{background:var(--wire-soft)}
+.key i.con{border-color:var(--ink)}.key i.ext{border-color:var(--muted);background:var(--surface-2)}
+.key i.bs{border-left:4px solid var(--server)}.key i.bc{border-left:4px solid var(--client)}.key i.bw{border-left:4px solid var(--wire)}
+.key i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.key i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.key i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
+.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
+.key i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
+.key i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
+.key i.band{border:0;background:var(--surface-2)}
+.key i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
+.key .pill{align-self:center}
+
+/* structure svg */
+.band{fill:var(--surface-2)}
+.lane{font-size:11px;fill:var(--muted);letter-spacing:.1em;font-family:var(--sans)}
+.note{font-size:10.5px;fill:var(--ink-2);font-family:var(--sans)}
+.node{cursor:pointer}
+.node rect{fill:var(--surface);stroke-width:1.5}
+.node.pub rect{stroke-width:2}
+.node.server rect{stroke:var(--server)}.node.server.pub rect{fill:var(--server-soft)}
+.node.client rect{stroke:var(--client)}.node.client.pub rect{fill:var(--client-soft)}
+.node.wire rect{stroke:var(--wire)}.node.wire.pub rect{fill:var(--wire-soft)}
+.node.standalone rect{stroke:var(--muted);stroke-dasharray:2 3;fill:var(--surface-2)}
+.node.planned{opacity:.6}.node.planned rect{stroke-dasharray:6 4}
+.node.container rect{fill-opacity:.55}
+.node text{fill:var(--ink);font-family:var(--sans)}
+.node .t{font-weight:700;font-size:10.5px}
+.node.container .t{font-size:13px}
+.node .s{font-size:10px;fill:var(--ink-2)}
+.node.chip .t{font-family:var(--mono);font-size:11px}
+.node.chip .s{font-family:var(--mono);font-size:8.5px}
+.node.sel rect{stroke:var(--on);stroke-width:3}
+
+/* datagram flow svg */
+.fnode{cursor:default}
+.fnode rect,.fnode polygon{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.fnode.t rect{fill:var(--surface-2)}
+.fnode rect.stripe,.fnode.on rect.stripe{stroke:none}
+.fnode text{fill:var(--ink);font-size:10.5px;font-family:var(--sans)}
+.fnode .lvl{font-family:var(--mono);font-size:8.5px;fill:var(--muted)}
+.fnode.on rect,.fnode.on polygon{stroke:var(--on);stroke-width:2.5}
+.fnode.off{opacity:var(--dim)}
+.fnode.planned rect,.fnode.planned polygon{stroke-dasharray:6 4}.fnode.planned:not(.off){opacity:.6}
+.fedge{stroke:var(--line);stroke-width:1.5;fill:none}
+.fedge.on{stroke:var(--on);stroke-width:2.5}
+.fedge.off{opacity:var(--dim)}
+.fedge.planned{stroke-dasharray:6 4}
+.flabel{font-size:9.5px;fill:var(--muted);font-family:var(--mono)}
+.flabel.on{fill:var(--ink);font-weight:600}
+.flabel.off{opacity:var(--dim)}
+.outcome{font-size:13px;margin:0 0 10px;padding:8px 10px;border-radius:4px;background:var(--surface-2);border-left:3px solid var(--ink)}
+.outcome code{font-weight:600}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
+.ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
+/* A segmented control wraps onto a second row at phone width rather than pushing the page sideways. */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[aria-disabled="true"]{opacity:.35;cursor:default}
+.seg button:hover:not([aria-pressed="true"]):not([aria-disabled="true"]){background:var(--surface-2)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:12px var(--mono);padding:7px 10px;border-radius:5px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* sequence svg */
+.life{stroke:var(--line);stroke-dasharray:3 4}
+.lh rect{fill:var(--surface-2);stroke:var(--line)}
+.lh.server rect{fill:var(--server-soft);stroke:var(--server)}.lh.client rect{fill:var(--client-soft);stroke:var(--client)}.lh.wire rect{fill:var(--wire-soft);stroke:var(--wire)}
+.lh.consumer rect{fill:var(--surface);stroke:var(--ink)}.lh.external rect{fill:var(--surface-2);stroke:var(--muted)}
+.lh.planned{opacity:.6}.lh.planned rect{stroke-dasharray:6 4}
+.lh text{font-size:10.5px;font-weight:700;fill:var(--ink);font-family:var(--mono)}
+.phase rect{fill:var(--surface-2);opacity:.55}
+.phase text{font-size:9.5px;fill:var(--muted);font-family:var(--mono);letter-spacing:.08em}
+.msg{cursor:pointer}
+.msg line,.msg path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+.msg.ret line{stroke-dasharray:5 4}
+.msg text{font-size:10px;fill:var(--ink-2);font-family:var(--sans)}
+.msg .lbg{fill:var(--surface);stroke:none}
+.msg .num{font-family:var(--mono);font-size:9px;fill:var(--muted)}
+.msg.cur line,.msg.cur path{stroke:var(--on);stroke-width:2.5}
+.msg.cur text{fill:var(--ink);font-weight:600}
+.msg.future{opacity:.3}
+.msg.planned line,.msg.planned path{stroke-dasharray:6 4}.msg.planned:not(.future){opacity:.6}
+
+/* C4 model tab — rendered from the DSL. A level ladder on the left (C4 is about zooming in), typed element
+   cards whose header colour comes from the DSL's styles block, relationships routed orthogonally in lanes,
+   the scope drawn as a boundary frame, and the dynamic view drawn as the sequence it is. */
+.c4wrap{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+.ladder{display:flex;flex-wrap:wrap;gap:7px;min-width:0}
+.rung{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:6px;padding:7px 10px;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:0 8px;align-items:center;min-width:0;position:relative;flex:1 1 150px;max-width:230px}
+.rung .lv{font:700 13px var(--mono);color:var(--muted);grid-row:span 2;text-align:center}
+.rung .nm{font-weight:700;font-size:12.5px;color:var(--ink)}
+.rung .sc{font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rung:hover{border-color:var(--ink-2)}
+.rung[aria-pressed="true"]{border-color:var(--ink);background:var(--surface-2)}
+.rung[aria-pressed="true"] .lv{color:var(--ink)}
+.rung.sep{margin-left:8px}
+.rung.lvl::after{content:"";position:absolute;right:-8px;top:50%;width:8px;height:2px;background:var(--line)}
+.rung.lvl.last::after{display:none}
+.c4main{min-width:0}
+.c4head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:0 0 8px}
+.c4head .zoom{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;align-self:center}
+.c4head .zoom button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:11px var(--mono);padding:5px 9px;cursor:pointer}
+.c4head .zoom button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.c4head .lvl{font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.c4head .ttl{font-weight:700;font-size:14px}
+.c4head .desc{font-size:12.5px;color:var(--ink-2)}
+.c4canvas{border:1px solid var(--line);border-radius:6px;padding:6px;background-color:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1.2px);background-size:22px 22px;overflow-x:auto}
+.c4canvas svg{max-width:none}
+.c4key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
+.c4key span{display:inline-flex;align-items:center;gap:6px}
+.c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
+.c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
+.c4key i.arrow.dashed{border-top-style:dashed}
+.c4key i.frame{background:var(--surface-2);border:1.5px dashed var(--muted);border-radius:4px}
+.c4el{cursor:pointer}
+.c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.c4el .hdr{stroke:none}
+.c4el text{font-family:var(--sans)}
+.c4el .n{font-weight:700;font-size:12px}
+.c4el .m{font-size:9.5px;font-family:var(--mono);fill:var(--muted)}
+.c4el .d{font-size:10px;fill:var(--ink-2)}
+.c4el .tg{font-size:8.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.04em}
+.c4el.sel .card{stroke:var(--on);stroke-width:2.5}
+.c4el.hl .card{stroke:var(--ink-2);stroke-width:2}
+.c4el.dim{opacity:.3}
+.c4rel path{stroke:var(--rel);stroke-width:1.4;fill:none;stroke-linejoin:round}
+.c4rel.dashed path{stroke-dasharray:6 4}
+.c4rel text{font-size:9.5px;fill:var(--ink-2);font-family:var(--sans)}
+.c4rel .lbg{fill:var(--surface);stroke:var(--line);stroke-width:.8}
+.c4rel.dim{opacity:.12}
+.c4rel.hl path{stroke:var(--ink);stroke-width:2.2}
+.c4rel.hl text{fill:var(--ink);font-weight:600}
+.c4rel.hl .lbg{stroke:var(--ink-2)}
+.c4rel.cur path{stroke:var(--on);stroke-width:2.5}
+.c4rel.cur text{fill:var(--ink);font-weight:600}
+.c4rel .num circle{fill:var(--ink);stroke:none}
+.c4rel .num text{fill:var(--bg);font-weight:700;font-size:9.5px;font-family:var(--mono)}
+.c4bound{fill:var(--surface-2);fill-opacity:.45;stroke:var(--muted);stroke-dasharray:8 5}
+.c4boundl rect{fill:var(--surface);stroke:var(--muted);stroke-dasharray:8 5}
+.c4boundl text{font:700 10px var(--mono);fill:var(--ink-2)}
+.c4band{font-size:9.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.14em}
+.c4life{stroke:var(--line);stroke-dasharray:3 4}
+pre.dsl{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow-x:auto;color:var(--ink);max-height:70vh}
+pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} pre.dsl .s{color:var(--ink-2)}
+.steps-list{margin:8px 0 0;padding:0;list-style:none;font-size:12.5px}
+.steps-list li{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:4px 0;border-top:1px solid var(--hair);color:var(--ink-2);cursor:pointer}
+.steps-list li b{font-family:var(--mono);color:var(--ink)}
+.steps-list li.on{color:var(--ink)}
+
+/* threads */
+.threads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:700px){.threads{grid-template-columns:1fr}}
+.tside h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 6px}
+.thread{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-left-width:4px;border-radius:4px;margin-bottom:6px;background:var(--surface);cursor:pointer;min-width:0}
+.thread.server{border-left-color:var(--server)}.thread.client{border-left-color:var(--client)}.thread.wire{border-left-color:var(--wire)}
+.thread.planned{border-style:dashed;opacity:.6}
+.thread .n{font:12px var(--mono);font-weight:600}
+.thread .r{grid-column:1/-1;font-size:12px;color:var(--ink-2)}
+.thread.sel{outline:2px solid var(--on)}
+/* When a thread starts: filled = eagerly, outlined = lazily on first use, dotted = only under a condition. Dashed stays free for planned. */
+.pill{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1.5px solid var(--ink-2);color:var(--ink-2);align-self:start;white-space:nowrap}
+.pill.eager{background:var(--ink-2);color:var(--surface)}.pill.cond{border-style:dotted}.pill.planned{border-style:dashed;opacity:.6}
+.scroll{overflow-x:auto}
+.matrix{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;min-width:560px}
+.matrix th,.matrix td{padding:6px 8px;border-top:1px solid var(--hair);text-align:center;vertical-align:top}
+.matrix th{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix td:first-child{color:var(--ink-2)}
+.matrix .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.matrix tr:hover td{background:var(--surface-2)}
+
+/* lifecycles */
+.lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h3{font-size:13px;margin:0 0 8px}
+.card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.steps li{counter-increment:s;font:12px var(--mono);border:1px solid var(--line);border-radius:4px;padding:5px 8px;background:var(--surface)}
+.steps li::before{content:counter(s) " ";color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:6px 6px;border-top:1px solid var(--hair);vertical-align:top}
+.tbl td{overflow-wrap:anywhere}
+.tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+/* Phases (the Lifecycles colour plan): .ph1 start / creation, .ph2 run / steady state, .ph3 stop / teardown. A class sets --ph;
+   a card takes it as its top rule, a callout as its left rule, a step or table row as a left mark, a state box as its stroke. */
+.ph1{--ph:var(--ph-1)}.ph2{--ph:var(--ph-2)}.ph3{--ph:var(--ph-3)}
+.card.ph1,.card.ph2,.card.ph3{border-top:3px solid var(--ph)}
+.steps li.ph1,.steps li.ph2,.steps li.ph3{border-left:3px solid var(--ph)}.steps li.planned{border-style:dashed;opacity:.6}
+.tbl tr.ph1>:first-child,.tbl tr.ph2>:first-child,.tbl tr.ph3>:first-child{border-left:3px solid var(--ph)}
+.callout{border-left:3px solid var(--ph,var(--ink-2));padding:8px 10px;background:var(--surface-2);border-radius:4px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.callout b{color:var(--ink)}
+.states text{font-family:var(--mono);font-size:11px;fill:var(--ink)}
+.states .lab{font-family:var(--sans);font-size:9.5px;fill:var(--muted)}
+.states rect{fill:var(--surface-2);stroke:var(--ink-2);stroke-width:1.5}
+.states rect.ph1,.states rect.ph2,.states rect.ph3{stroke:var(--ph);stroke-width:2;fill:color-mix(in srgb,var(--ph) 14%,var(--surface))}
+.states rect.planned{stroke-dasharray:6 4;opacity:.6}
+.states line,.states path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+
+/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled bubble per guarantee */
+.guarantees{margin-top:20px}
+.guarantees>h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.bubbles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.bubble{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.bubble h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
+.bubble h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.bubble ul{margin:0;padding:0 0 0 15px}
+.bubble li{margin:3px 0}
+.bubble p{margin:6px 0 0}
+.bubble code{color:var(--ink)}
+.bubble .gap{color:var(--muted);font-style:italic}
+.bubble .badge{margin-left:2px}
+
+/* context */
+.context{margin-top:24px}
+.context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.issues{list-style:none;margin:0;padding:0;font-size:12.5px}
+.issues li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.issues a:hover{color:var(--ink)}
+.badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
+.badge.bug{border-color:var(--serious)}
+.badge.bug::before{content:"▲ ";color:var(--serious)}
+.badge.planned{border-style:dashed}
+.badge.closed{color:var(--muted)}
+.tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+@media (max-width:520px){.issues li{grid-template-columns:auto 1fr}.issues li>.tags{grid-column:2;justify-content:flex-start}}
+/* roadmap: each item (a tracking issue, or an entry in the repository's roadmap document) with the issues mapped to it */
+.roadmap{list-style:none;margin:0;padding:0;font-size:12.5px}
+.roadmap>li{padding:6px 0;border-top:1px solid var(--hair)}
+.roadmap .ri{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
+.roadmap .ri>span:nth-child(2){font-weight:600;color:var(--ink)}
+.roadmap .ri small{font:400 11px var(--mono);color:var(--muted)}
+.roadmap .ri a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.roadmap .issues{margin:4px 0 0 14px}
+.roadmap .more{margin:4px 0 0 14px;font-size:12px;color:var(--muted)}
+/* one series (test classes), so one neutral fill: a hue here would read as a side */
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;align-items:center;font-size:12px}
+.bars .lbl{color:var(--ink-2);font-family:var(--mono);font-size:11.5px}
+.bars .trk{height:10px;background:var(--surface-2);border-radius:2px;overflow:hidden;position:relative}
+.bars .fil{position:absolute;left:0;top:0;height:100%;background:var(--ink-2);border-radius:0 4px 4px 0}
+.bars .val{font-variant-numeric:tabular-nums;color:var(--ink)}
+.docs{margin:0;padding:0;list-style:none;font-size:12.5px}
+.docs li{padding:4px 0;border-top:1px solid var(--hair)}
+.docs a{text-decoration:none;border-bottom:1px solid var(--line)}
+.docs a:hover{border-bottom-color:var(--ink)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+footer code{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="crumbs"><a href="../index.html">WebTools</a> › gradle-build</div>
+  <h1>Gradle build</h1>
+  <p class="function">Builds, tests and publishes every WebTools module from one place: the wrapper and the settings, and the included <code>build-logic</code> build whose three convention plugins give each module its Kotlin setup, its seven package-selected level test tasks and the Maven Central publishing skeleton.</p>
+  <div class="chips">
+    <span class="chip">Gradle <b>9.7.1</b></span>
+    <span class="chip">Kotlin Gradle plugin <b>2.2.0</b></span>
+    <span class="chip">publishes <b>nothing</b> of its own</span>
+    <span class="chip">as-is at <b>master 1e27071</b> · 2026-10-22</span>
+    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener"><b>#61</b></a> build-logic · db98325</span>
+    <span class="chip model">C4 model <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
+  </div>
+</header>
+
+<section class="kpis" aria-label="Key figures">
+  <div class="kpi"><div class="l">Source</div><div class="v">9 files</div><div class="s">414 lines · the build scripts and build-logic's main sources; wrapper excluded</div></div>
+  <div class="kpi"><div class="l">Plugins</div><div class="v">3 ids</div><div class="s">webtools.* · applied by id, with no version in any script</div></div>
+  <div class="kpi"><div class="l">Processes</div><div class="v">3 kinds</div><div class="s">Gradle daemon · test JVMs · TestKit daemon · 2 one-at-a-time locks</div></div>
+  <div class="kpi"><div class="l">Level tasks</div><div class="v">7 per module</div><div class="s">gatingTest … uatTest · by package · not in check</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">12 classes</div><div class="s">49 tests · 6 of 7 levels · build-logic's own</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">5</div><div class="s">1 bug · 3 planned units · 1 enhancement</div></div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t-structure" aria-controls="p-structure" aria-selected="true">Structure</button>
+  <button class="tab model" role="tab" id="t-c4" aria-controls="p-c4" aria-selected="false">C4 model</button>
+  <button class="tab" role="tab" id="t-threads" aria-controls="p-threads" aria-selected="false">Processes</button>
+  <button class="tab" role="tab" id="t-datagrams" aria-controls="p-datagrams" aria-selected="false">Test selection</button>
+  <button class="tab" role="tab" id="t-reliable" aria-controls="p-reliable" aria-selected="false">Module configuration</button>
+  <button class="tab" role="tab" id="t-lifecycles" aria-controls="p-lifecycles" aria-selected="false">Lifecycles</button>
+</div>
+
+<div class="stage">
+<div>
+  <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
+    <h2>Component map</h2>
+    <p class="lede">Nesting is ownership. Filled boxes are what a module's build file may use — the three plugin ids and <code>WebToolsBuild</code> — outlined boxes are the build's internals. The module build files on the left belong to the modules; they are drawn here because they are where the plugins are applied. Click any box for its role, files and the process it runs in — and its place in the C4 model.</p>
+    <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of the Gradle build"></svg>
+    <div class="key"><span><i class="pub cli"></i>used by a module · repository build scripts</span><span><i class="cli"></i>internal · repository build scripts</span><span><i class="pub srv"></i>used by a module · build-logic</span><span><i class="srv"></i>internal · build-logic</span><span><i class="pub wir"></i>used by a module · shared</span><span><i class="wir"></i>internal · build-logic's tests</span><span><i class="pln"></i>planned, not built</span></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
+    <h2>C4 model <small style="font:11px var(--mono);color:var(--muted);font-weight:400">rendered from workspace.dsl at load</small></h2>
+    <p class="lede">The Structurizr DSL beside this page is the formal model: elements, their relationships, tags and styles. These views are parsed from it every time the page opens — nothing here is drawn by hand, so the model and the dashboard cannot disagree. Step down the ladder to zoom in; hover an element to see what it touches. Structurizr Lite or <code>structurizr-cli</code> render the same file.</p>
+    <div class="c4wrap">
+      <nav class="ladder" id="c4-ladder" aria-label="C4 levels"></nav>
+      <div class="c4main">
+        <div class="c4head" id="c4-head"></div>
+        <div class="c4canvas" id="c4-canvas"><svg id="svg-c4" viewBox="0 0 900 300" role="img" aria-label="C4 view"></svg></div>
+        <div class="c4key" id="c4-key"></div>
+        <pre class="dsl" id="dsl-view" hidden></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
+    <h2>Processes and locks</h2>
+    <p class="lede">The build starts no thread of its own at a consumer's runtime: it is build-time only. These are the processes a build run starts and the two build services that keep tasks from running at the same time, coloured by the side that owns them. Filled pill = started by every run, outlined = started when a task needs it, dotted = only under a condition. Click one for details.</p>
+    <div class="threads">
+      <div class="tside"><h3>Repository build · ./gradlew</h3>
+        <div class="thread client" data-t="Gradle daemon" tabindex="0" role="button"><span class="n">Gradle daemon</span><span class="pill eager">./gradlew</span><span class="r">configures the settings, build-logic and every module; runs the task graph</span></div>
+        <div class="thread client" data-t="module test JVM" tabindex="0" role="button"><span class="n">module test JVM</span><span class="pill lazy">per Test task</span><span class="r">a module's test or level task: JUnit Platform, the selected classes</span></div>
+        <div class="thread client" data-t="commonUdpPortLock" tabindex="0" role="button"><span class="n">commonUdpPortLock</span><span class="pill cond">webtools-udp only</span><span class="r">build service, one permit: four socket-binding test tasks, one at a time</span></div>
+      </div>
+      <div class="tside"><h3>build-logic's tests · nested builds</h3>
+        <div class="thread wire" data-t="build-logic test JVM" tabindex="0" role="button"><span class="n">build-logic test JVM</span><span class="pill lazy">per :build-logic task</span><span class="r">build-logic's own level tasks and test, on the JUnit Platform</span></div>
+        <div class="thread wire" data-t="TestKit daemon" tabindex="0" role="button"><span class="n">TestKit daemon</span><span class="pill cond">nested-build tasks</span><span class="r">the nested Gradle builds of generated projects; Kotlin compiles in-process</span></div>
+        <div class="thread wire" data-t="testKitHomeLock" tabindex="0" role="button"><span class="n">testKitHomeLock</span><span class="pill cond">nested-build tasks</span><span class="r">build service, one permit: integrationTest, e2eTest, nonfunctionalTest, one at a time</span></div>
+      </div>
+    </div>
+    <div class="key"><span><i class="bc"></i>repository build · ./gradlew</span><span><i class="bw"></i>build-logic's tests · nested builds</span><span><span class="pill eager">./gradlew</span>started by every run</span><span><span class="pill lazy">per …</span>started when a task needs it</span><span><span class="pill cond">only …</span>only under a condition</span><span><i class="dot"></i>runs that work (table below)</span></div>
+    <h2 style="margin-top:16px">Which process runs what</h2>
+    <p class="lede">Where each kind of build work happens. Read from the build scripts, <code>NestedBuild</code> and the samples' <code>gradle.properties</code>.</p>
+    <div class="scroll"><table class="matrix">
+      <thead><tr><th>Work</th><th>Gradle daemon</th><th>Module test JVM</th><th>build-logic test JVM</th><th>TestKit daemon</th></tr></thead>
+      <tbody>
+        <tr><td>Configuring the settings, build-logic and the three modules</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td>A module's <code>test</code> or level task (its test bodies)</td><td></td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>:build-logic:test</code>, <code>gatingTest</code>, <code>componentTest</code>, <code>deterministicTest</code></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
+        <tr><td>The TestKit test classes of <code>integrationTest</code>, <code>e2eTest</code>, <code>nonfunctionalTest</code></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
+        <tr><td>The nested builds those classes start, their Kotlin compilation included (<code>in-process</code>)</td><td></td><td></td><td></td><td><span class="dot"></span></td></tr>
+        <tr><td><code>publishToMavenCentral</code> and the <code>sign…Publication</code> tasks</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-datagrams" aria-labelledby="t-datagrams" hidden>
+    <h2>Which tests a task runs</h2>
+    <p class="lede">Pick a test class and a task; the path Gradle takes lights up. Hexagons are decisions; shaded boxes are where it ends, their stripe coloured by the outcome. Two variants: a module's tasks, and build-logic's own.</p>
+    <div class="ctl" id="flow-ctl"></div>
+    <p class="outcome" id="outcome"></p>
+    <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Test selection decision path"></svg>
+    <div class="key" id="flow-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
+    <h2>How a module is configured when <code>./gradlew</code> runs</h2>
+    <p class="lede">From the wrapper to a module's level task, through the included build, each lifeline in the colour of who owns it; the release steps and the planned Java floor close it. Step through it, or click any message.</p>
+    <div class="ctl">
+      <button class="btn" id="seq-prev">‹ prev</button>
+      <button class="btn" id="seq-next">next ›</button>
+      <button class="btn" id="seq-play" aria-pressed="false">play</button>
+      <span id="seq-pos" style="font:12px var(--mono);color:var(--muted)"></span>
+    </div>
+    <svg id="svg-seq" viewBox="0 0 1000 600" role="img" aria-label="Module configuration sequence diagram"></svg>
+    <div class="key" id="seq-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
+    <h2>Lifecycles and rules</h2>
+    <p class="lede">The order a build configures in, the path from source to a release, the TestKit home's life, and the rules the scripts hold to — coloured by phase: configure, build and verify, release and teardown.</p>
+    <div class="lgrid">
+      <div class="card ph1"><h3>Configuration order <small>every <code>./gradlew</code> run</small></h3>
+        <ol class="steps"><li>wrapper starts Gradle 9.7.1</li><li>settings: <code>includeBuild("build-logic")</code>, first</li><li>foojay 0.8.0 · include 3 modules</li><li>root: <code>allprojects</code> group, version 1.0.0</li><li>a module requests its plugin: build-logic compiles, then is cached</li><li>the plugin applies Kotlin, publishing, test dependencies</li><li><code>registerLevelTasks</code>: 7 tasks, lazily</li><li>the module's own lines: dependencies, coordinates, POM</li></ol>
+        <div class="callout"><b>Versions live in one file.</b> Kotlin 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 are plugin markers at literal versions in <code>build-logic/build.gradle.kts</code>; the scripts apply plugins by id, and Gradle forbids versions there.</div></div>
+      <div class="card"><h3>Source to release <small>the path every module takes</small></h3>
+        <ol class="steps"><li class="ph2">compile on the build JDK</li><li class="ph2">test: every class</li><li class="ph2">gatingTest … uatTest, on demand</li><li class="ph3">signAllPublications</li><li class="ph3">publishToMavenCentral</li><li class="ph2 planned">verifyJavaFloor (#47)</li></ol>
+        <div class="callout"><b>No CI and no release record.</b> Who runs <code>publishToMavenCentral</code>, and when, is not recorded in the repository; CI, a CHANGELOG and release tags are open as <a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a>. A release needs the Central credentials and a signing key as Gradle properties, never committed.</div></div>
+      <div class="card"><h3>The TestKit home and generated projects <small>build-logic's nested-build tasks</small></h3>
+        <table class="tbl"><thead><tr><th></th><th>What happens</th></tr></thead><tbody>
+          <tr class="ph1"><td style="white-space:nowrap">Created</td><td>on the first nested-build run: <code>build-logic/build/testkit/home</code>, the TestKit directory and the nested builds' Gradle user home; it downloads the Kotlin compiler, the test dependencies and the plugin markers, so that run needs the network (about 910 MB measured)</td></tr>
+          <tr class="ph2"><td style="white-space:nowrap">Shared</td><td>by every nested build of <code>integrationTest</code>, <code>e2eTest</code> and <code>nonfunctionalTest</code>, one task at a time (<code>testKitHomeLock</code>), and kept between runs</td></tr>
+          <tr class="ph2"><td style="white-space:nowrap">Per test class</td><td>a generated project under <code>build-logic/build/testkit/projects/p-&lt;label&gt;-&lt;base36&gt;</code>, built in <code>@BeforeAll</code></td></tr>
+          <tr class="ph3"><td style="white-space:nowrap">Removed</td><td>each project, best effort in <code>@AfterAll</code> (a held file is logged as a WARN); <code>clean</code> resets both directories</td></tr>
+        </tbody></table></div>
+      <div class="card ph2"><h3>Rules the scripts hold to</h3>
+        <div class="callout"><b>Level tasks select by package</b> <code>com.spartanlabs.testing.&lt;level&gt;.*</code>; none is part of <code>check</code>. A module's level task passes when nothing matches; every one of build-logic's own fails on an empty run. A test class outside the level packages runs under <code>test</code> only.</div>
+        <div class="callout"><b>No plugin sets a JVM target or toolchain:</b> class files and <code>org.gradle.jvm.version</code> follow the build JDK until the Java floor lands (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>). No plugin sets <code>explicitApi()</code>.</div>
+        <div class="callout"><b>binary-compatibility-validator only on a multiplatform module,</b> never at the root or on an ancestor; such a module commits <code>api/&lt;project&gt;.api</code>, because <code>apiCheck</code> fails until the dump exists. No module script may assign <code>runtimeDependencyFiles</code>.</div></div>
+    </div>
+    <div class="key"><span><i class="ph1"></i>configure · creation</span><span><i class="ph2"></i>build and verify · the rules that hold</span><span><i class="ph3"></i>release · teardown</span><span><i class="pln"></i>planned, not built</span></div>
+  </section>
+</div>
+
+<aside class="inspector" id="inspector" aria-live="polite">
+  <h2>Inspector</h2>
+  <div id="insp-body"><p>Select a component, C4 element, process, decision or sequence step to see its details here.</p></div>
+</aside>
+</div>
+
+<section class="guarantees" aria-label="Guarantees">
+  <h2>Guarantees</h2>
+  <div class="bubbles">
+    <div class="bubble"><h3>Failure model</h3>
+      <ul>
+        <li>A failing compile or test fails <code>./gradlew build</code>; nothing is retried.</li>
+        <li>Configuration errors fail the build at configuration: a second level-task registration on one project throws <code>InvalidUserDataException</code>.</li>
+        <li>A module's level task passes on an empty selection; build-logic's own test tasks fail on one. A multiplatform module's <code>apiCheck</code> fails until its dump is committed.</li>
+        <li><span class="gap">Not checked: the Java floor</span> (<code>verifyJavaFloor</code> is planned, <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>).</li>
+      </ul></div>
+    <div class="bubble"><h3>Extension points</h3>
+      <ul>
+        <li>For a module's build file: the plugin ids <code>webtools.kotlin-jvm-library</code> (three modules), <code>webtools.kotlin-multiplatform-library</code> (none yet), <code>webtools.published-library</code>.</li>
+        <li><code>WebToolsBuild</code>, a public object in the default package: <code>LEVELS</code>, <code>LEVEL_PACKAGE_ROOT</code>, <code>registerLevelTasks</code>, readable from any module script.</li>
+        <li>A module adds its own dependencies, coordinates, POM name and description, and anything that is its alone (webtools-udp's version and port lock).</li>
+        <li>Unpublished, used only inside this repository: no stability tier or opt-in marker applies.</li>
+      </ul></div>
+    <div class="bubble"><h3>Test levels <small>12 classes · build-logic</small></h3>
+      <div class="bars" role="table" aria-label="Test classes per testing level">
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">6</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
+        <span class="lbl">L4b e2e</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:33%"></span></span><span class="val">2</span>
+        <span class="lbl">L5 UAT</span><span class="trk"><span class="fil" style="width:0%"></span></span><span class="val">0</span>
+      </div>
+      <p>49 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 7 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1, L2, L4a: 15 tests) is the pre-commit gate; <code>./gradlew build</code> runs none of them. <span class="gap">No test-inspector report is committed.</span></p></div>
+    <div class="bubble"><h3>Compatibility &amp; versioning</h3>
+      <ul>
+        <li>The build has no version; it publishes nothing. #61 changed no published byte: each module's POM, module metadata and jars were measured identical to <code>834ce4a</code>'s.</li>
+        <li>Gradle 9.7.1 · Kotlin Gradle plugin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 (ASM 9.9.1 pinned) · foojay 0.8.0.</li>
+        <li>Kotlin 2.2.0 prints a Gradle-10 deprecation at <code>jvm()</code> (KT-78620), so no build runs with <code>--warning-mode=fail</code>. Configuration-cache compatible: a second identical run reuses the entry.</li>
+        <li><span class="gap">No JVM target is set:</span> all three artifacts declare the build JDK's version, against the README's 11+ (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>).</li>
+      </ul></div>
+    <div class="bubble"><h3>Thread safety</h3>
+      <ul>
+        <li>No runtime threads: build-logic is never on a module's runtime classpath.</li>
+        <li><code>commonUdpPortLock</code> (one permit) runs webtools-udp's <code>test</code>, <code>integrationTest</code>, <code>e2eTest</code> and <code>nonfunctionalTest</code> one at a time, so two never bind UDP 9998 at once.</li>
+        <li><code>testKitHomeLock</code> (one permit) runs build-logic's three nested-build tasks one at a time on the shared TestKit home.</li>
+      </ul></div>
+    <div class="bubble"><h3>Resources to close</h3>
+      <ul>
+        <li>Nothing a module or a consumer holds.</li>
+        <li>The TestKit home (about 910 MB) stays between runs; <code>clean</code> resets it and any generated project a held file left behind.</li>
+        <li>A TestKit daemon outlives each nested build and is reused until its test JVM exits.</li>
+      </ul></div>
+    <div class="bubble"><h3>On your classpath</h3>
+      <ul>
+        <li>Nothing from the build itself: <code>build-logic</code> is never published and never on a module's runtime.</li>
+        <li>Through the Kotlin plugin it applies, each module's POM carries <code>kotlin-stdlib:2.2.0</code>; each module declares its own <code>api(slf4j-api:2.0.13)</code>.</li>
+        <li>Test-only, from the plugins: <code>kotlin-test</code>, <code>kotlin-test-junit5</code>, <code>logback-classic:1.5.6</code>.</li>
+      </ul></div>
+    <div class="bubble"><h3>Releasing</h3>
+      <ul>
+        <li><code>publishToMavenCentral</code> with <code>signAllPublications()</code>: every publication is signed.</li>
+        <li>Needs, as Gradle properties and never committed: <code>mavenCentralUsername</code>, <code>mavenCentralPassword</code>, and a signing key (<code>signing.keyId</code>, <code>signing.password</code>, <code>signing.secretKeyRingFile</code>, or the <code>signingInMemoryKey</code> trio).</li>
+        <li>A Kotlin/JVM module ships a sources jar and a javadoc jar; a multiplatform one sources jars and an empty javadoc jar.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="context">
+  <h2>Context</h2>
+  <div class="cards">
+    <div class="card"><h3>Roadmap <small>1 item · 2026-10-22</small></h3>
+      <ol class="roadmap">
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span>HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes <small>tracking issue</small></span><span class="tags"><span class="badge">open</span><span class="badge">L4</span></span></div>
+          <ul class="issues">
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span>Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks <small>unit 1 · landed in 1e27071: this page</small></span><span class="tags"><span class="badge">closed</span><span class="badge">L3</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span>webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+ <small>unit 2 · the Java floor in build-logic</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">open</span><span class="badge">L2</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span>webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile <small>unit 3 · adds <code>webtools.kotlin-common-check</code> and the first multiplatform module</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span><span class="badge">L3</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span>webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check <small>unit 4 · its publication check reuses this harness</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span><span class="badge">L3</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span>webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code> <small>unit 10 · applies the multiplatform plugin; its check module the common-check plugin</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span><span class="badge">L3</span></span></li>
+          </ul>
+          <p class="more">6 more of its issues (#64–#68, #70) touch webtools-http and the documentation only.</p></li>
+      </ol></div>
+    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-10-22</small></h3>
+      <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span>Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</span><span class="tags"><span class="badge">docs · enhancement</span></span></li>
+      </ul></div>
+    <div class="card"><h3>Plans and documents</h3>
+      <ul class="docs">
+        <li>Plan boards that amended this system: <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — gap, options, verdict and as built · <a href="../../plans/55-http-client-stack/dashboard.html">#55 tracking board</a> — the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li><a href="../../plans/55-http-client-stack/61-build-logic/plan.md">#61 plan</a> · <a href="../../plans/55-http-client-stack/61-build-logic/final-implementation.md">as built</a> — every measurement · <a href="../../plans/55-http-client-stack/61-build-logic/impact.md">impact</a> — what units 2, 3, 4 and 10 build on · <a href="../../plans/55-http-client-stack/61-build-logic/research/README.md">research</a></li>
+        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.1 shared build logic, §6.8 the check-only js modules, §11 the decomposition</li>
+        <li><a href="../../../README.md">README</a> — "Build &amp; test" and "Shared build logic": the commands, the package rule, the plugin ids</li>
+        <li><a href="../../plans/15-split-into-three-modules/plan.md">#15 split into three modules</a> — the plan that made the three artifacts and the build as it stood before #61</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it · the modules built with it: <a href="../webtools-udp/index.html">webtools-udp</a>, and on the <a href="../index.html">repository page</a> webtools-scraping and webtools-browser</li>
+      </ul></div>
+  </div>
+</section>
+
+<footer>Drawn from <code>build-logic/</code>, the build scripts, <code>workspace.dsl</code>, #61's <code>final-implementation.md</code> and the README's "Build &amp; test" at <code>master 1e27071</code>. Code is authoritative on any conflict. Maintained by the presenter agent, refreshed when a change to this system lands: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
+<!-- Divergences from the system-dashboard template (presenter, 2026-10-22):
+     1. The core tabs are adapted to a build system and named for what they show: "Processes" (the Threads tab: the build starts no runtime threads, so it lists the processes a build run starts and its two build-service locks, with a "which process runs what" matrix), "Test selection" (the decision path, two variants: a module's tasks and build-logic's own) and "Module configuration" (the sequence).
+     2. The KPI row names a build's facts: plugins, processes, level tasks, in place of types, threads and contracts.
+     3. An eighth Guarantees bubble, "Releasing": what a publish needs, by property key only.
+     4. The decision path's end levels are RUNS (green), NOT RUN (grey) and FAILS (red), each with its glyph; the template's lvlCol knows only DELIVER and WARN, so this page's lvlCol adds them.
+     5. The structure map draws the three module build files, which belong to the modules, because they are where the plugins are applied; the band in the middle holds what both plugins and module scripts share.
+     Nothing is removed. Item 4 changes the renderer and is declared in the head (meta template-divergence); items 1, 2, 3 and 5
+     live in what a page fills in (MODEL, hand-written panels, header), so the page's CSS and tab set are the template's. -->
+</div>
+
+
+<!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
+     and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
+<script type="text/plain" id="dsl">
+// gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
+// As-is at WebTools master 1e27071 (2026-10-22): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61. The build publishes nothing of its own. Code is authoritative on any conflict.
+// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.1, 6.8 and 11) and carry their sub-issue. None of them is built; they are drawn dashed.
+workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
+
+    !identifiers hierarchical
+
+    model {
+        maintainer = person "Maintainer" "Builds, tests and publishes the modules with the Gradle wrapper; the repository has no CI."
+        central = softwareSystem "Maven Central" "Hosts the io.github.spartanlaboratories artifacts and serves the build's dependencies." "External"
+        portal  = softwareSystem "Gradle Plugin Portal" "Serves the foojay settings plugin and, with Maven Central, the plugin markers build-logic depends on." "External"
+
+        webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
+            udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.0a and its UDP-port lock." "Kotlin/JVM library · 2.0.0a"
+            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot helpers. Its build file applies webtools.kotlin-jvm-library." "Kotlin/JVM library · 1.0.0"
+            browser  = container "webtools-browser" "WebViewer: headless-Chrome screenshots. Its build file applies webtools.kotlin-jvm-library." "Kotlin/JVM library · 1.0.0"
+
+            gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0" "Internal" {
+                // ---- what a module build script may use: the plugin ids and WebToolsBuild ----
+                published = component "webtools.published-library" "Applies vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM. Never calls configure(...)." "precompiled script plugin" "Public"
+                jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; test dependencies, JUnit Platform, the seven level tasks over the test source set. No jvmTarget or toolchain." "precompiled script plugin" "Public"
+                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target and its TargetJvmVersion attribute, binary-compatibility-validator 0.18.2 with ASM 9.9.1, level tasks over the jvm test compilation, a lifecycle test task. No module applies it yet." "precompiled script plugin" "Public"
+                levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks: one Test task per level, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches." "Kotlin object · default package" "Public"
+
+                // ---- internals ----
+                wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
+                settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, applies foojay-resolver-convention 0.8.0, includes the three modules." "Gradle Kotlin DSL" "Internal"
+                root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
+                logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, and the testKitHomeLock build service." "Gradle included build · unpublished" "Internal"
+                harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests." "test sources · Gradle TestKit" "Internal"
+
+                // ---- planned by Issue #55, not built ----
+                floor       = component "Java floor" "#47 (unit 2): WebToolsBuild.JAVA_FLOOR = 11, jvmTarget and -Xjdk-release from it in both library plugins, and verifyJavaFloor in check." "planned" "Planned"
+                commonCheck = component "webtools.kotlin-common-check" "#62 (unit 3): a plugin that compiles a multiplatform module's commonMain for js, publishing nothing." "planned" "Planned"
+                jsCheck     = component "check-only js modules" "#62 and #69: webtools-http-commoncheck and webtools-feeds-commoncheck, unpublished." "planned" "Planned"
+            }
+        }
+
+        // ---- as built ----
+        maintainer -> webtools.gradleBuild.wrapper "Runs ./gradlew build, a level task, publishToMavenCentral"
+        maintainer -> webtools.gradleBuild.harness "Runs :build-logic:test, and the nested-build tasks on demand"
+        webtools.gradleBuild.wrapper -> webtools.gradleBuild.settings "Starts Gradle 9.7.1 on the settings"
+        webtools.gradleBuild.settings -> webtools.gradleBuild.logicBuild "Includes through pluginManagement, first"
+        webtools.gradleBuild.settings -> webtools.gradleBuild.root "Includes the three modules the root script sets group and version on"
+        webtools.gradleBuild.settings -> portal "Resolves foojay-resolver-convention 0.8.0"
+        webtools.gradleBuild.logicBuild -> portal "Resolves its plugin markers from Maven Central and the Plugin Portal: Kotlin 2.2.0, vanniktech 0.36.0, validator 0.18.2"
+        webtools.gradleBuild.logicBuild -> webtools.gradleBuild.published "Compiles, with its plugin markers on the classpath"
+        webtools.gradleBuild.logicBuild -> webtools.gradleBuild.jvmLib "Compiles"
+        webtools.gradleBuild.logicBuild -> webtools.gradleBuild.kmpLib "Compiles"
+        webtools.gradleBuild.jvmLib -> webtools.gradleBuild.published "Applies"
+        webtools.gradleBuild.kmpLib -> webtools.gradleBuild.published "Applies"
+        webtools.gradleBuild.jvmLib -> webtools.gradleBuild.levels "registerLevelTasks over the test source set"
+        webtools.gradleBuild.kmpLib -> webtools.gradleBuild.levels "registerLevelTasks over the jvm test compilation"
+        webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.0a"
+        webtools.gradleBuild.root -> webtools.scraping "Sets group and version 1.0.0"
+        webtools.gradleBuild.root -> webtools.browser "Sets group and version 1.0.0"
+        webtools.gradleBuild.jvmLib -> webtools.udp "Configures: applied by id in its plugins block"
+        webtools.gradleBuild.jvmLib -> webtools.scraping "Configures: applied by id in its plugins block"
+        webtools.gradleBuild.jvmLib -> webtools.browser "Configures: applied by id in its plugins block"
+        webtools.gradleBuild.published -> central "Publishes signed artifacts: publishToMavenCentral"
+        webtools.gradleBuild.harness -> webtools.gradleBuild.jvmLib "Applies it to generated projects through TestKit"
+        webtools.gradleBuild.harness -> webtools.gradleBuild.kmpLib "Applies it to generated projects through TestKit"
+        webtools.gradleBuild.harness -> webtools.gradleBuild.logicBuild "Copies its sources into an end-to-end composite"
+
+        // ---- planned by Issue #55 (dashed: one end is Planned) ----
+        webtools.gradleBuild.floor -> webtools.gradleBuild.levels "Would add JAVA_FLOOR = 11"
+        webtools.gradleBuild.floor -> webtools.gradleBuild.jvmLib "Would fill the TODO(#47) java floor region"
+        webtools.gradleBuild.floor -> webtools.gradleBuild.kmpLib "Would set TargetJvmVersion to the floor"
+        webtools.gradleBuild.jsCheck -> webtools.gradleBuild.commonCheck "Would apply"
+        webtools.gradleBuild.logicBuild -> webtools.gradleBuild.commonCheck "Would compile (#62)"
+    }
+
+    views {
+        systemContext webtools "Context" "WebTools, its maintainer and the services the build reaches." {
+            include *
+            autoLayout lr
+        }
+        container webtools "Containers" "The three modules and the Gradle build that configures them." {
+            include *
+            autoLayout lr
+        }
+        component webtools.gradleBuild "Components" "The Gradle build as built at master 1e27071, with its planned parts dashed: the Java floor (#47) and the js common check (#62, #69)." {
+            include *
+            autoLayout tb
+        }
+        dynamic webtools.gradleBuild "ModuleBuild" "How a module is configured when ./gradlew runs, as built." {
+            maintainer -> webtools.gradleBuild.wrapper "./gradlew :webtools-udp:componentTest"
+            webtools.gradleBuild.wrapper -> webtools.gradleBuild.settings "Gradle 9.7.1 evaluates the settings"
+            webtools.gradleBuild.settings -> webtools.gradleBuild.logicBuild "pluginManagement includes build-logic, compiled on first use"
+            webtools.gradleBuild.root -> webtools.udp "allprojects: group and version 1.0.0"
+            webtools.gradleBuild.jvmLib -> webtools.udp "plugins { id(webtools.kotlin-jvm-library) }"
+            webtools.gradleBuild.jvmLib -> webtools.gradleBuild.published "applies the publishing skeleton"
+            webtools.gradleBuild.jvmLib -> webtools.gradleBuild.levels "registers gatingTest … uatTest, selected by package"
+            autoLayout lr
+        }
+        styles {
+            element "Person"          { shape person  background #08427b color #ffffff }
+            element "Software System" { background #1168bd color #ffffff }
+            element "External"        { background #999999 color #ffffff }
+            element "Container"       { background #438dd5 color #ffffff }
+            element "Component"       { background #85bbf0 color #000000 }
+            element "Internal"        { background #c6dcf5 color #000000 }
+            element "Standalone"      { background #eeeeee color #000000 border dotted }
+            element "Planned"         { background #ffffff color #666666 border dashed opacity 60 }
+        }
+    }
+}
+</script>
+
+<script>
+"use strict";
+const REPO="https://github.com/SpartanLaboratories/WebTools";
+const SRC=REPO+"/blob/master/"; // every d.files entry is a path from the repository root
+const NS="http://www.w3.org/2000/svg";
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","text-anchor":anchor||"start"},p);(Array.isArray(lines)?lines:[lines]).forEach((l,i)=>{const s=mk("tspan",{x,dy:i?(dy||12):0},t);s.textContent=l;});return t;};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
+const ilink=n=>`<a href="${REPO}/issues/${n}" target="_blank" rel="noopener">#${n}</a>`;
+function inspect(html){ $("#insp-body").innerHTML=html; }
+function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker",{id,viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:color||"var(--ink-2)"},m); const mo=mk("marker",{id:id+"-open",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10",fill:"none",stroke:color||"var(--ink-2)","stroke-width":"1.5"},mo); const mon=mk("marker",{id:id+"-on",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--on)"},mon); }
+
+/* =========================================================================
+   MODEL — the as-built behaviour this page draws (threads, flows, sequence) and the
+   hand-placed component map. Structure also lives in the DSL above; `c4` maps map
+   nodes to their DSL element so the two views cross-reference.
+   ========================================================================= */
+const MODEL = {
+  // The page's colour groups: server = build-logic (blue), client = the repository's build scripts (orange), wire = shared and
+  // build-logic's tests (aqua); the maintainer, and anything outside the build.
+  sides:{server:"build-logic",client:"repository build scripts",wire:"shared · build-logic's tests",consumer:"the maintainer",external:"outside the build: the modules, Maven Central"},
+  // Map node id → DSL element id.
+  c4:{wrapper:"webtools.gradleBuild.wrapper",settings:"webtools.gradleBuild.settings",root:"webtools.gradleBuild.root",udpB:"webtools.udp",scrB:"webtools.scraping",brB:"webtools.browser",
+      jsCheck:"webtools.gradleBuild.jsCheck",levels:"webtools.gradleBuild.levels",floor:"webtools.gradleBuild.floor",logic:"webtools.gradleBuild.logicBuild",published:"webtools.gradleBuild.published",
+      jvmLib:"webtools.gradleBuild.jvmLib",kmpLib:"webtools.gradleBuild.kmpLib",logicBuild:"webtools.gradleBuild.logicBuild",commonCheck:"webtools.gradleBuild.commonCheck",
+      harness:"webtools.gradleBuild.harness",tests:"webtools.gradleBuild.harness"},
+  structure: {
+    lanes:[["REPOSITORY BUILD SCRIPTS",40,40,"start"],["SHARED",500,40,"middle"],["INCLUDED BUILD",960,40,"end"],["BUILD-LOGIC'S OWN TESTS",40,466,"start"]],
+    notes:[],
+    nodes:[
+      {id:"wrapper",side:"client",vis:"int",x:40,y:56,w:180,h:56,t:"Gradle wrapper",s:["Gradle 9.7.1","gradlew · gradle.properties"],
+        d:{role:"gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1. gradle.properties sets only kotlin.code.style=official. The repository has no CI: a maintainer runs the wrapper (#58).",vis:"internal · build script",files:["gradle/wrapper/gradle-wrapper.properties","gradle.properties"],threads:["Gradle daemon"],issues:[58]}},
+      {id:"settings",side:"client",vis:"int",x:236,y:56,w:180,h:56,t:"settings.gradle.kts",s:["includeBuild(build-logic) first","foojay 0.8.0 · 3 modules"],
+        d:{role:"Its first statement is pluginManagement { includeBuild(\"build-logic\") }, so the convention plugins resolve by id. It applies foojay-resolver-convention 0.8.0, names the root project WebTools and includes :webtools-udp, :webtools-scraping and :webtools-browser.",vis:"internal · build script",files:["settings.gradle.kts"],threads:["Gradle daemon"],issues:[58]}},
+      {id:"root",side:"client",vis:"int",x:40,y:128,w:376,h:50,t:"build.gradle.kts (root)",s:["allprojects { group; version 1.0.0 } · no plugins, no subprojects, no tasks"],
+        d:{role:"Keeps only allprojects { group = \"io.github.spartanlaboratories\"; version = \"1.0.0\" }, under a comment that points at build-logic and the README. It applies no plugin, so the root project has no build, check or test task of its own; ./gradlew build runs each module's.",vis:"internal · build script",files:["build.gradle.kts"],threads:["Gradle daemon"],issues:[]}},
+      {id:"modules",side:"client",vis:"int",container:true,x:40,y:196,w:376,h:186,t:"Module build files",s:"each module's own · applies a plugin by id",
+        d:{role:"Each of the three modules applies id(\"webtools.kotlin-jvm-library\") and declares its own api(\"org.slf4j:slf4j-api:2.0.13\"), its coordinates and its POM name and description. These files belong to the modules; they are drawn here because they are where the plugins are applied.",vis:"owned by each module",files:["webtools-udp/build.gradle.kts","webtools-scraping/build.gradle.kts","webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"udpB",side:"client",vis:"int",x:56,y:240,w:344,h:40,t:"webtools-udp/build.gradle.kts",s:"jvm plugin · api slf4j · version 2.0.0a · UDP-port lock",
+        d:{role:"Overrides the root version with 2.0.0a and puts test, integrationTest, e2eTest and nonfunctionalTest on the commonUdpPortLock build service (one permit). #61 rewrote only its header and added the plugins and dependencies blocks; the version note, the version line and the port lock are byte-identical.",vis:"owned by webtools-udp",files:["webtools-udp/build.gradle.kts"],threads:["Gradle daemon","commonUdpPortLock"]}},
+      {id:"scrB",side:"client",vis:"int",x:56,y:288,w:344,h:40,t:"webtools-scraping/build.gradle.kts",s:"jvm plugin · api slf4j · skrapeit, jsoup, unirest-java",
+        d:{role:"Adds skrapeit 1.1.5, jsoup 1.15.4 and unirest-java 1.4.9 as implementation; no version line, so it takes the root's 1.0.0.",vis:"owned by webtools-scraping",files:["webtools-scraping/build.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"brB",side:"client",vis:"int",x:56,y:336,w:344,h:40,t:"webtools-browser/build.gradle.kts",s:"jvm plugin · api slf4j · selenium-java",
+        d:{role:"Adds selenium-java 4.48.0 as implementation; no version line, so it takes the root's 1.0.0.",vis:"owned by webtools-browser",files:["webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"jsCheck",side:"client",vis:"int",kind:"planned",x:40,y:396,w:376,h:44,t:"check-only js modules",s:"planned #62, #69 · webtools-http-commoncheck, webtools-feeds-commoncheck",
+        d:{role:"Planned by #55 (architecture §6.8): unpublished modules that compile each multiplatform module's commonMain for js, so a JVM API in common code is a compile error. Not built.",vis:"planned",files:[],issues:[62,69]}},
+      {id:"levels",side:"wire",vis:"pub",x:440,y:96,w:120,h:120,t:"WebToolsBuild",s:["LEVEL_PACKAGE_ROOT","LEVELS · 7 TestLevels","registerLevelTasks","default package"],
+        d:{role:"A public object in the default package, read by both library plugins and readable from any module script. LEVELS holds the seven levels in order; registerLevelTasks registers gatingTest … uatTest as plain Test tasks in the verification group, each on the JUnit Platform, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches. They are registered lazily and never added to check.",vis:"public · object · default package",files:["build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"]}},
+      {id:"floor",side:"wire",vis:"pub",kind:"planned",x:440,y:236,w:120,h:72,t:"Java floor",s:["planned #47","JAVA_FLOOR = 11","verifyJavaFloor"],
+        d:{role:"Planned as unit 2 (#47): WebToolsBuild.JAVA_FLOOR = 11; jvmTarget, -Xjdk-release and the Java compatibility settings from it in the two TODO(#47) places of the library plugins; verifyJavaFloor in check. Not built: class files follow the build JDK today.",vis:"planned",files:[],issues:[47]}},
+      {id:"logic",side:"server",vis:"int",container:true,x:584,y:56,w:376,h:330,t:"build-logic",s:"included build · kotlin-dsl · never published",
+        d:{role:"An included build reached through the settings' pluginManagement. Its precompiled script plugins and WebToolsBuild sit in the default package; it compiles when a module first requests a plugin and is cached afterwards. It is never published and never on a module's runtime classpath.",vis:"internal · included build",files:["build-logic/settings.gradle.kts","build-logic/build.gradle.kts"],threads:["Gradle daemon"],issues:[47,62]}},
+      {id:"published",side:"server",vis:"pub",x:600,y:100,w:344,h:44,t:"webtools.published-library",s:"vanniktech 0.36.0 · mavenCentral() · signing · shared POM",
+        d:{role:"Applies com.vanniktech.maven.publish, declares mavenCentral(), and calls publishToMavenCentral(), signAllPublications() and the shared pom {} (inception year, URL, Apache 2.0 licence, developer, SCM). It never calls configure(...), so a Kotlin/JVM module keeps vanniktech's own KotlinJvm(Javadoc(), Sources()).",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.published-library.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"jvmLib",side:"server",vis:"pub",x:600,y:152,w:344,h:44,t:"webtools.kotlin-jvm-library",s:"Kotlin/JVM 2.2.0 · tests · level tasks · 3 modules apply it",
+        d:{role:"Applies the Kotlin/JVM plugin and webtools.published-library; adds kotlin(\"test\"), kotlin(\"test-junit5\") and logback-classic 1.5.6 as test dependencies; puts every Test task on the JUnit Platform; registers the level tasks over the test source set. Sets no jvmTarget and no toolchain, and marks where the Java floor goes (TODO(#47)).",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts"],threads:["Gradle daemon"],issues:[47]}},
+      {id:"kmpLib",side:"server",vis:"pub",x:600,y:204,w:344,h:56,t:"webtools.kotlin-multiplatform-library",s:["jvm() + TargetJvmVersion · validator 0.18.2 + ASM 9.9.1","level tasks · lifecycle test · no module applies it yet"],
+        d:{role:"Applies Kotlin Multiplatform with one jvm() target, whose TargetJvmVersion attribute is the build JDK's major version (TODO(#47)); webtools.published-library and vanniktech with KotlinMultiplatform(JavadocJar.Empty(), SourcesJar.Sources()); binary-compatibility-validator on its defaults with ASM 9.9.1 on its worker classpath; the level tasks over the jvm test compilation and a lifecycle test task depending on jvmTest. A second JVM-based target would move the ABI dump.",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"],threads:["Gradle daemon"],issues:[47,62,69]}},
+      {id:"logicBuild",side:"server",vis:"int",x:600,y:268,w:344,h:44,t:"build-logic/build.gradle.kts",s:"4 plugin markers · its own level tasks · testKitHomeLock",
+        d:{role:"A kotlin-dsl build: the plugin markers for Kotlin JVM and Multiplatform 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 at literal versions; JUnit 5.11.4 for its tests; one test task per level that has tests, each failing on an empty run; test as the fast aggregate; the single-permit testKitHomeLock for the three nested-build tasks.",vis:"internal · build script",files:["build-logic/build.gradle.kts","build-logic/settings.gradle.kts"],threads:["Gradle daemon","testKitHomeLock"]}},
+      {id:"commonCheck",side:"server",vis:"pub",kind:"planned",x:600,y:328,w:344,h:44,t:"webtools.kotlin-common-check",s:"planned #62 · compiles commonMain for js",
+        d:{role:"Planned as part of unit 3 (#62): a plugin the check-only js modules apply; it declares its own repositories because it does not apply webtools.published-library. Not built.",vis:"planned",files:[],issues:[62]}},
+      {id:"harness",side:"wire",vis:"int",container:true,x:40,y:478,w:600,h:120,t:"TestKit harness",s:"testing.support · nested builds of generated projects",
+        d:{role:"Generates small projects that apply one plugin each (or a composite that includes a copy of build-logic), runs nested Gradle builds on them through Gradle TestKit with one shared TestKit home, and reads the results from the files they write: test reports by <testcase classname>, module.json, POMs.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/NestedBuild.kt"],threads:["build-logic test JVM","TestKit daemon","testKitHomeLock"],issues:[63]}},
+      {id:"hSample",side:"wire",vis:"int",x:56,y:522,w:135,h:30,t:"SampleProject",s:"",d:{role:"The generated projects: a Kotlin/JVM sample, a multiplatform sample and an included-build composite, with their gradle.properties (configuration cache on, in-process Kotlin compiler, -Xmx2g).",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/SampleProject.kt"]}},
+      {id:"hWorkspace",side:"wire",vis:"int",x:199,y:522,w:135,h:30,t:"ProjectWorkspace",s:"",d:{role:"A harness-owned project directory under build-logic/build/testkit/projects, deleted best effort; AutoCloseable.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/ProjectWorkspace.kt"]}},
+      {id:"hNested",side:"wire",vis:"int",x:342,y:522,w:135,h:30,t:"NestedBuild",s:"",d:{role:"Runs a nested build with GradleRunner: the shared TestKit home, and the plugin classpath injected unless the workspace includes its own copy of build-logic.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/NestedBuild.kt"],threads:["TestKit daemon"]}},
+      {id:"hReports",side:"wire",vis:"int",x:485,y:522,w:140,h:30,t:"TestReports",s:"",d:{role:"Which classes a nested task ran, read from each report's <testcase classname>, which names the class for a plain Test task and for KGP's jvmTest alike.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/TestReports.kt"]}},
+      {id:"hMeta",side:"wire",vis:"int",x:56,y:560,w:135,h:30,t:"ModuleMetadata",s:"",d:{role:"Reads org.gradle.jvm.version from a published module.json.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/ModuleMetadata.kt"]}},
+      {id:"hPom",side:"wire",vis:"int",x:199,y:560,w:135,h:30,t:"PomFile",s:"",d:{role:"Parses a published POM, with DOCTYPE declarations refused.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/PomFile.kt"]}},
+      {id:"hSource",side:"wire",vis:"int",x:342,y:560,w:135,h:30,t:"BuildLogicSource",s:"",d:{role:"Copies build-logic's settings, build script and src/main into the end-to-end composite, which reaches the plugins through a real includeBuild.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/BuildLogicSource.kt"]}},
+      {id:"tests",side:"wire",vis:"int",x:660,y:478,w:300,h:120,t:"12 test classes · 49 tests",s:["L1 1 · L2 1 · L3 6 · L4a 1 · L4b 1 · L4c 2","test = L1 + L2 + L4a: 15 tests, the gate","integrationTest, e2eTest, nonfunctionalTest:","34 nested-build tests, on demand"],
+        d:{role:"build-logic's own tests, one class per file under com.spartanlabs.testing.<level>.webtools.buildlogic. ./gradlew build runs none of them; :build-logic:test is the pre-commit gate; the nested-build tasks run on demand and their first run needs the network.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/"],threads:["build-logic test JVM","TestKit daemon"]}}
+    ]
+  },
+  // Processes and build services, keyed by name: side, kind, created, runs, sends (unused here), note, issues.
+  threads:{
+    "Gradle daemon":{side:"client",kind:"process",daemon:false,created:"when ./gradlew runs: the wrapper starts Gradle 9.7.1, or reuses a running daemon",runs:"configures the settings, build-logic (compiling it on first use) and the three modules; runs the task graph, publishing included.",sends:[],note:"",issues:[]},
+    "module test JVM":{side:"client",kind:"process",daemon:false,created:"when a module's test or level task runs: Gradle forks the test worker",runs:"the selected classes of that module on the JUnit Platform.",sends:[],note:"webtools-udp's test, integrationTest, e2eTest and nonfunctionalTest take commonUdpPortLock.",issues:[]},
+    "commonUdpPortLock":{side:"client",kind:"build service",daemon:false,created:"at configuration, by webtools-udp/build.gradle.kts",runs:"nothing itself: a BuildService with maxParallelUsages = 1 that webtools-udp's test, integrationTest, e2eTest and nonfunctionalTest use, so Gradle never runs two of them at once and none hits a BindException on UDP 9998.",sends:[],note:"It lives in the module because only that module binds the port.",issues:[]},
+    "build-logic test JVM":{side:"wire",kind:"process",daemon:false,created:"when one of build-logic's test tasks runs (./gradlew :build-logic:<task>)",runs:"build-logic's own classes on the JUnit Platform: gating, component and deterministic in seconds; the TestKit classes, which start nested builds.",sends:[],note:"No logback: gradleApi() already carries Gradle's slf4j binding.",issues:[]},
+    "TestKit daemon":{side:"wire",kind:"process",daemon:false,created:"by GradleRunner, on the first nested build of a TestKit class",runs:"the nested Gradle builds of generated projects, with -Xmx2g -XX:MaxMetaspaceSize=1g and the Kotlin compiler in-process; its Gradle user home is build-logic/build/testkit/home.",sends:[],note:"It outlives each nested build and is reused until the test JVM exits. A nested build has no timeout of its own; the calling task's 30-minute timeout bounds it.",issues:[]},
+    "testKitHomeLock":{side:"wire",kind:"build service",daemon:false,created:"at configuration, by build-logic/build.gradle.kts",runs:"nothing itself: a BuildService with maxParallelUsages = 1 that integrationTest, e2eTest and nonfunctionalTest use, so they run one after another on the shared TestKit home.",sends:[],note:"Measured warm: 96 s one after another, against 48 s when they overlapped before the lock.",issues:[]}
+  },
+  // Decision paths: which tests a task runs.
+  flows:[
+    {id:"module",label:"a module's tasks",kicker:"TEST SELECTION",runsOn:"Gradle daemon, then the module test JVM",foot:"no level task is part of check; ./gradlew build runs test, which runs every class",
+     controls:[{key:"pkg",label:"Test class package",def:"level",options:[["level","com.spartanlabs.testing.<level>"],["other","outside the level packages"]]},
+               {key:"plugin",label:"Module applies",def:"jvm",options:[["jvm","kotlin-jvm-library"],["kmp","kotlin-multiplatform-library"]]},
+               {key:"task",label:"Task run",def:"same",options:[["same","its level's task"],["other","another level's task"],["test","test"]]}],
+     names:{level:"a class in its level package",other:"a class outside every level package"},
+     nodes:{IN:{c:0,r:0,k:"p",t:["a test class","in a module"]},P:{c:1,r:0,k:"d",t:["which","plugin?"]},
+            JVM:{c:2,r:0,k:"p",t:["test source","set"]},KMP:{c:2,r:1,k:"p",t:["jvm test","compilation"]},
+            T:{c:3,r:0,k:"d",t:["which","task?"]},
+            M:{c:4,r:0,k:"d",t:["package is the","task's level?"]},RUN:{c:5,r:0,k:"t",lvl:"✓ RUNS",t:["runs in the","level task"]},
+            SKIP:{c:5,r:1,k:"t",lvl:"– NOT RUN",t:["not selected;","the task passes"]},
+            TEST:{c:4,r:2,k:"t",lvl:"✓ RUNS",t:["test runs","every class"]}},
+     edges:[["IN","P"],["P","JVM","jvm"],["P","KMP","kmp"],["JVM","T"],["KMP","T"],["T","M","lvl"],["M","RUN","yes"],["M","SKIP","no"],["T","TEST","test"]],
+     rules(s){ const p=["IN","P",s.plugin==="kmp"?"KMP":"JVM","T"], R=(o,irr)=>({path:p,outcome:o,irrelevant:irr||[]});
+       const src=s.plugin==="kmp"?"the jvm test compilation (commonTest and jvmTest)":"the test source set";
+       if(s.task==="test"){ p.push("TEST"); return R(s.plugin==="kmp"?`test is a lifecycle task that depends on jvmTest, which runs every class of ${src}, this one included.`:`test runs every class of ${src}, this one included.`,["pkg"]); }
+       p.push("M");
+       if(s.task==="same"&&s.pkg==="level"){ p.push("RUN"); return R(`The level task selects com.spartanlabs.testing.<level>.* over ${src}: this class runs.`); }
+       p.push("SKIP");
+       if(s.pkg==="other") return R("A class outside every level package runs under test only: no level task selects it, and the level task still passes (isFailOnNoMatchingTests = false).");
+       return R("Each level task selects only its own package, so another level's task does not run this class; it passes even when it selects nothing."); }},
+    {id:"buildlogic",label:"build-logic's own tasks",kicker:"TEST SELECTION",runsOn:"the build-logic test JVM; nested builds on the TestKit daemon",foot:"./gradlew build runs none of these: an included build's tasks run only when asked for",
+     controls:[{key:"task",label:"Task run",def:"test",options:[["test",":build-logic:test"],["fast","gating · component · deterministic"],["nested","integration · e2e · nonfunctional"],["build","./gradlew build"]]},
+               {key:"match",label:"Filter matches a test",def:"yes",options:[["yes","yes"],["no","no (e.g. --tests NoSuchClass)"]]},
+               {key:"home",label:"TestKit home",def:"warm",options:[["warm","already filled"],["cold","absent: first run"]]}],
+     names:{test:":build-logic:test",fast:"a fast level task",nested:"a nested-build task",build:"./gradlew build from the root"},
+     nodes:{IN:{c:0,r:0,k:"p",t:["./gradlew","a task"]},Q:{c:1,r:0,k:"d",t:["which","task?"]},
+            NONE:{c:2,r:3,k:"t",lvl:"– NOT RUN",t:["none of build-","logic's tests"]},
+            MQ:{c:2,r:0,k:"d",t:["filter matches","a test?"]},FAIL:{c:3,r:1,k:"t",lvl:"✗ FAILS",t:["no tests found:","the task fails"]},
+            KIND:{c:3,r:0,k:"d",t:["starts nested","builds?"]},FAST:{c:4,r:0,k:"t",lvl:"✓ RUNS",t:["runs in","seconds"]},
+            LOCK:{c:4,r:1,k:"p",t:["takes","testKitHomeLock"]},H:{c:4,r:2,k:"d",t:["TestKit home","filled?"]},
+            DL:{c:4,r:3,k:"p",t:["downloads into","the home: network"]},NEST:{c:5,r:2,k:"t",lvl:"✓ RUNS",t:["nested builds","run, one task at a time"]}},
+     edges:[["IN","Q"],["Q","NONE","build"],["Q","MQ","test"],["MQ","FAIL","no"],["MQ","KIND","yes"],["KIND","FAST","no"],["KIND","LOCK","yes"],["LOCK","H"],["H","NEST","yes"],["H","DL","no"],["DL","NEST"]],
+     rules(s){ const p=["IN","Q"], R=(o,irr)=>({path:p,outcome:o,irrelevant:irr||[]});
+       if(s.task==="build"){ p.push("NONE"); return R("./gradlew build runs none of build-logic's tests: the root has no build task, and an included build's tasks run only when something asks for them.",["match","home"]); }
+       p.push("MQ");
+       if(s.match==="no"){ p.push("FAIL"); return R("Every one of build-logic's test tasks fails on an empty run (isFailOnNoMatchingTests = true): an empty run means a broken filter or a lost test class.",["home"]); }
+       p.push("KIND");
+       if(s.task!=="nested"){ p.push("FAST"); return R(s.task==="test"?"test runs the gating, component and deterministic levels, 15 tests, in seconds: the pre-commit gate.":"Each fast level task runs its one level; none starts a nested build.",["home"]); }
+       p.push("LOCK","H");
+       if(s.home==="cold"){ p.push("DL","NEST"); return R("The first run downloads the Kotlin compiler, the test dependencies and the plugin markers into build-logic/build/testkit/home (about 910 MB), so it needs the network; then the nested builds run. The three tasks take testKitHomeLock and run one after another."); }
+       p.push("NEST"); return R("The nested builds reuse the TestKit home; the three tasks take testKitHomeLock and run one after another (about 96 s together, warm, measured)."); }}
+  ],
+  // The sequence: how a module is configured and built.
+  sequence:{
+    kicker:"SEQUENCE · MODULE CONFIGURATION",
+    lifelines:[{n:"maintainer",side:"consumer"},{n:"Gradle",side:"client"},{n:"settings",side:"client"},{n:"root script",side:"client"},{n:"build-logic",side:"server"},{n:"webtools-udp",side:"external"},{n:"Maven Central",side:"external"}],
+    phases:[["CONFIGURE",0,7],["BUILD & TEST",8,10],["RELEASE",11,12]],
+    steps:[
+      {f:0,t:1,l:"./gradlew build",n:"The wrapper starts Gradle 9.7.1. There is no CI: a maintainer runs it (#58)."},
+      {f:1,t:2,l:"evaluate settings",n:"settings.gradle.kts: pluginManagement { includeBuild(\"build-logic\") } first, then the foojay-resolver-convention 0.8.0 plugin, the root project name and the three modules."},
+      {f:2,t:4,l:"includeBuild",n:"build-logic is included for plugin resolution; it compiles when a module first requests one of its plugins and is cached afterwards."},
+      {f:1,t:3,l:"allprojects",n:"The root script sets group io.github.spartanlaboratories and the default version 1.0.0 on every project. Nothing else."},
+      {f:5,t:4,l:"id(webtools.kotlin-jvm-library)",n:"The module's plugins block applies the convention plugin by id, with no version."},
+      {f:4,t:5,l:"Kotlin/JVM · publishing · tests",n:"The plugin applies Kotlin/JVM 2.2.0 and webtools.published-library (vanniktech, mavenCentral(), publishToMavenCentral(), signAllPublications(), the shared POM), adds the test dependencies and puts every Test task on the JUnit Platform."},
+      {f:4,t:5,l:"registerLevelTasks",n:"WebToolsBuild registers gatingTest … uatTest over the test source set, each selecting com.spartanlabs.testing.<level>.*; none is added to check."},
+      {f:5,t:5,self:true,l:"version 2.0.0a · port lock",n:"webtools-udp's own lines: api(slf4j-api 2.0.13), version 2.0.0a over the root's 1.0.0, the commonUdpPortLock on its four socket-binding test tasks, and its coordinates and POM name."},
+      {f:1,t:5,l:"compile · test",n:"The module compiles on the build JDK (no jvmTarget or toolchain is set, #47) and test runs every class; a failing test fails the build. Level tasks run only when named."},
+      {f:5,t:1,l:"jars · results",ret:true,n:"Jars and test results come back to the build."},
+      {f:4,t:4,self:true,l:"verifyJavaFloor (#47)",planned:true,n:"Planned, not built: unit 2 adds WebToolsBuild.JAVA_FLOOR = 11, the compiler settings from it, and verifyJavaFloor in check."},
+      {f:0,t:1,l:"publishToMavenCentral",n:"The vanniktech task the publishing plugin configures; every publication is signed. Who runs it and when is not recorded in the repository."},
+      {f:1,t:6,l:"signed jars · POM · .module",n:"io.github.spartanlaboratories:webtools-udp:<version>, and likewise for the other two modules. #61 left every published byte as it was."}
+    ]
+  }
+};
+
+/* =========================================================================
+   C4 — a Structurizr DSL reader for the subset this workspace uses (hierarchical
+   identifiers; person / softwareSystem / container / component with tags; relationships;
+   systemContext / container / component / dynamic views; element styles), and renderers
+   that lay the views out by rank. Structurizr Lite would render the same file.
+   ========================================================================= */
+function parseDsl(src){
+  const M={elements:{},order:[],rels:[],views:[],styles:[]}, stack=[];
+  const TYPE={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+  const tok=l=>{const out=[],re=/"([^"]*)"|(\S+)/g;let m;while((m=re.exec(l)))out.push(m[1]!==undefined?{s:m[1]}:{t:m[2]});return out;};
+  const strs=T=>T.filter(x=>x.s!==undefined).map(x=>x.s);
+  const parentEl=()=>{for(let i=stack.length-1;i>=0;i--) if(stack[i].kind==="element") return stack[i].id; return null;};
+  const inBlock=k=>stack.some(f=>f.kind===k);
+  const splitTags=s=>(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+  src.split(/\r?\n/).forEach(raw=>{
+    let line=raw.trim(); if(!line||line.startsWith("//")) return;
+    if(line==="}"){ stack.pop(); return; }
+    const opens=line.endsWith("{"); if(opens) line=line.slice(0,-1).trim();
+    const T=tok(line); if(!T.length){ if(opens) stack.push({kind:"anon"}); return; }
+    const t0=T[0].t;
+    if(["workspace","model","views","styles"].includes(t0)){ if(opens) stack.push({kind:t0}); return; }
+    if(t0==="!identifiers") return;
+    if(inBlock("styles")){ if(t0==="element"){ const props={}, body=T.slice(2).map(x=>x.t!==undefined?x.t:x.s).filter(x=>x!=="{"&&x!=="}"); for(let i=0;i+1<body.length;i+=2) props[body[i]]=body[i+1]; M.styles.push({tag:T[1].s,props}); } return; }
+    if(inBlock("views")){
+      const cur=stack[stack.length-1];
+      if(cur&&cur.kind==="view"&&cur.view.type==="dynamic"&&T.length>=3&&T[1].t==="->"){ cur.view.steps.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:""}); return; }
+      if(["systemContext","container","component","dynamic"].includes(t0)){ const v={type:t0,scope:T[1].t,key:T[2]?T[2].s:t0,desc:T[3]?T[3].s:"",steps:[]}; M.views.push(v); if(opens) stack.push({kind:"view",view:v}); return; }
+      if(opens) stack.push({kind:"anon"}); return;
+    }
+    if(T.length>=3&&T[1].t==="->"){ M.rels.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:"",tech:T[4]?T[4].s:""}); if(opens) stack.push({kind:"anon"}); return; }
+    if(T.length>=3&&T[1].t==="="&&TYPE[T[2].t]){
+      const type=T[2].t, S=strs(T.slice(3)), parent=parentEl(), id=parent?parent+"."+t0:t0;
+      const el={id,ident:t0,type,name:S[0]||t0,desc:S[1]||"",tech:"",tags:[],parent};
+      if(type==="person"||type==="softwareSystem") el.tags=splitTags(S[2]); else { el.tech=S[2]||""; el.tags=splitTags(S[3]); }
+      el.tags=["Element",TYPE[type],...el.tags];
+      M.elements[id]=el; M.order.push(id);
+      if(opens) stack.push({kind:"element",id}); return;
+    }
+    if(opens) stack.push({kind:"anon"});
+  });
+  return M;
+}
+const C4=parseDsl(document.getElementById("dsl").textContent);
+$("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
+
+const el=id=>C4.elements[id];
+function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
+function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
+function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
+function styleFor(e){ const st={background:"#dddddd",color:"#000000",border:"solid",shape:"box",opacity:"100"}; e.tags.forEach(tag=>C4.styles.forEach(s=>{ if(s.tag===tag) Object.assign(st,s.props); })); return st; }
+const TYPE_LABEL={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+const LEVEL={systemContext:["1","System Context"],container:["2","Containers"],component:["3","Components"],dynamic:["⟲","Dynamic"]};
+const fit=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+function wrap(s,maxChars){ const out=[]; let cur=""; s.split(/\s+/).forEach(w=>{ if((cur+" "+w).trim().length>maxChars){ if(cur) out.push(cur); cur=w; } else cur=(cur+" "+w).trim(); }); if(cur) out.push(cur); return out; }
+function edgePoint(box,tx,ty){ const [x,y,w,h]=box,cx=x+w/2,cy=y+h/2,dx=tx-cx,dy=ty-cy; if(!dx&&!dy) return [cx,cy]; const t=Math.min(Math.abs(w/2/(dx||1e-9)),Math.abs(h/2/(dy||1e-9))); return [cx+dx*t,cy+dy*t]; }
+
+/* Which elements a view shows and how the model's relationships map onto them (Structurizr's "include *" with implied relationships). */
+function resolveView(v){
+  let scoped, map;
+  if(v.type==="systemContext"){ scoped=[v.scope]; map=id=>isWithin(id,v.scope)?v.scope:topOf(id); }
+  else if(v.type==="container"){ scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):topOf(id); }
+  else if(v.type==="component"){ const sys=el(v.scope).parent; scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):(sys&&isWithin(id,sys)?childIn(id,sys):topOf(id)); }
+  else { const ids=[]; v.steps.forEach(s=>{[s.from,s.to].forEach(x=>{ if(!ids.includes(x)) ids.push(x); });}); return {els:ids,scoped:[],rels:v.steps.map((s,i)=>({a:s.from,b:s.to,desc:s.desc,num:i+1})),boundary:null}; }
+  const els=new Set(scoped), rels=[], seen={};
+  C4.rels.forEach(r=>{ const a=map(r.from), b=map(r.to); if(!a||!b||a===b) return; if(!scoped.includes(a)&&!scoped.includes(b)) return; els.add(a); els.add(b); const k=a+">"+b; if(seen[k]){ seen[k].n++; return; } seen[k]={a,b,desc:r.desc,n:1,dashed:el(r.from).tags.includes("Planned")||el(r.to).tags.includes("Planned")}; rels.push(seen[k]); });
+  const s=el(v.scope);
+  return {els:C4.order.filter(id=>els.has(id)),scoped,rels,boundary:v.type==="systemContext"?null:{label:`${s.name} · ${TYPE_LABEL[s.type]}${s.tech?" · "+s.tech:""}`}};
+}
+
+/* Layout: the scoped elements sit inside a boundary frame in bands (public surface / internals / outside the
+   stack), people outside on the left, other systems outside on the right. Internals are ordered by the mean
+   position of the public elements they touch, so most relationships run straight down. Relationships are
+   routed orthogonally through lanes in the gaps between bands, so no line crosses a card. */
+const bandOf=id=>{ const t=el(id).tags; return t.includes("Planned")||t.includes("Standalone")?2:t.includes("Internal")?1:0; };
+const BAND_NAMES={component:["PUBLIC SURFACE","INTERNALS","OUTSIDE THE STACK · PLANNED"],container:["SYSTEMS","INTERNAL","PLANNED"],systemContext:["","",""]};
+function layoutC4(R,vtype){
+  const W=184,H=118,GX=22,GY=20,PAD=18,LANE=12,LABEL=26;
+  const scoped=R.scoped.filter(id=>R.els.includes(id));
+  const left=R.els.filter(id=>!scoped.includes(id)&&el(id).type==="person");
+  const right=R.els.filter(id=>!scoped.includes(id)&&el(id).type!=="person");
+  const raw=[[],[],[]]; scoped.forEach(id=>raw[bandOf(id)].push(id));
+  const idx0={}; raw[0].forEach((id,i)=>idx0[id]=i);
+  const bary=id=>{ const ns=R.rels.filter(r=>r.a===id||r.b===id).map(r=>r.a===id?r.b:r.a).filter(n=>idx0[n]!==undefined).map(n=>idx0[n]); return ns.length?ns.reduce((s,x)=>s+x,0)/ns.length:99; };
+  raw[1].sort((p,q)=>bary(p)-bary(q)||scoped.indexOf(p)-scoped.indexOf(q));
+  const bands=[],names=[]; raw.forEach((b,i)=>{ if(b.length){ bands.push(b); names.push((BAND_NAMES[vtype]||BAND_NAMES.component)[i]); } });
+  const bandIndex={}; bands.forEach((b,i)=>b.forEach(id=>bandIndex[id]=i));
+  const laneCount=new Array(bands.length+1).fill(0);
+  const plans=R.rels.map(r=>{
+    const ia=bandIndex[r.a], ib=bandIndex[r.b], p={r};
+    if(ia===undefined&&ib===undefined){ p.kind="ext"; p.sides=[]; }
+    else if(ia===undefined){ p.kind="fromExt"; p.region=ib; p.sides=[[r.a,"inner"],[r.b,"top"]]; }
+    else if(ib===undefined){ p.kind="toExt"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"inner"]]; }
+    else if(ia===ib){ p.kind="same"; p.below=ia!==0; p.region=ia===0?0:ia+1; const s=p.below?"bottom":"top"; p.sides=[[r.a,s],[r.b,s]]; }
+    else if(ib===ia+1){ p.kind="down"; p.region=ib; p.sides=[[r.a,"bottom"],[r.b,"top"]]; }
+    else if(ib===ia-1){ p.kind="up"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"bottom"]]; }
+    else { p.kind="around"; p.upward=ib<ia; p.region=p.upward?ia:ia+1; p.region2=ib; p.sides=[[r.a,p.upward?"top":"bottom"],[r.b,"top"]]; }
+    if(p.region!==undefined) p.lane=laneCount[p.region]++;
+    if(p.region2!==undefined) p.lane2=laneCount[p.region2]++;
+    return p;
+  });
+  const regionH=laneCount.map(n=>Math.max(36,n*LANE+22));
+  const innerW=Math.max(W,...bands.map(b=>b.length*W+(b.length-1)*GX))+2*GX;
+  const bx0=PAD+(left.length?W+2*GX:0), pos={}, regionY=[], bandBox=[];
+  let y=PAD+(R.boundary?LABEL:0);
+  bands.forEach((b,i)=>{ regionY[i]=y; y+=regionH[i]; const total=b.length*W+(b.length-1)*GX, x0=bx0+(innerW-total)/2; b.forEach((id,k)=>pos[id]=[x0+k*(W+GX),y,W,H]); bandBox[i]=[y,y+H]; y+=H; });
+  regionY[bands.length]=y; y+=regionH[bands.length];
+  const boundary=R.boundary?{x:bx0,y:PAD,w:innerW,h:y-PAD,label:R.boundary.label}:null;
+  const cy0=bands.length?(bandBox[0][0]+bandBox[0][1])/2:y/2;
+  // Clamp the column's start once, not each card: a column taller than the band row would otherwise pin several cards to PAD, one on top of another.
+  const stack=(ids,x)=>{ const tot=ids.length*H+(ids.length-1)*GY, y0=Math.max(PAD,cy0-tot/2); ids.forEach((id,k)=>pos[id]=[x,y0+k*(H+GY),W,H]); };
+  stack(left,PAD); stack(right,bx0+innerW+2*GX);
+  const width=bx0+innerW+(right.length?2*GX+W:0)+PAD;
+  const height=Math.max(y+PAD,...Object.values(pos).map(p=>p[1]+p[3]+PAD));
+  return {pos,width,height,boundary,regionY,bands,names,bandBox,plans,LANE,bx0,innerW,left,right};
+}
+function drawRoutes(svg,L){
+  const slots={}; L.plans.forEach(p=>p.sides.forEach(([id,side])=>{ const k=id+"|"+side; (slots[k]=slots[k]||{n:0,k:0}).n++; }));
+  const take=(id,side)=>{ const s=slots[id+"|"+side]; const off=(s.k-(s.n-1)/2)*16; s.k++; return off; };
+  const P=L.pos, laneY=(rg,l)=>L.regionY[rg]+12+l*L.LANE;
+  const box=id=>{ const [x,y,w,h]=P[id]; return {x,y,w,h,cx:x+w/2,cy:y+h/2,top:y,bottom:y+h,left:x,right:x+w}; };
+  const innerX=id=>L.left.includes(id)?box(id).right:box(id).left;
+  const turnX=(id,lane)=>L.left.includes(id)?L.bx0-10-(lane%4)*6:L.bx0+L.innerW+10+(lane%4)*6;
+  L.plans.forEach(p=>{
+    const r=p.r, A=box(r.a), B=box(r.b); let d, seg;
+    switch(p.kind){
+      case "ext": { const [ax,ay]=edgePoint(P[r.a],B.cx,B.cy),[bx,by]=edgePoint(P[r.b],A.cx,A.cy); d=`M${ax},${ay} L${bx},${by}`; seg=[(ax+bx)/2,(ay+by)/2]; break; }
+      case "same": { const ly=laneY(p.region,p.lane), s=p.below?"bottom":"top", ax=A.cx+take(r.a,s), bx=B.cx+take(r.b,s), ya=p.below?A.bottom:A.top, yb=p.below?B.bottom:B.top; d=`M${ax},${ya} L${ax},${ly} L${bx},${ly} L${bx},${yb}`; seg=[(ax+bx)/2,ly]; break; }
+      case "down": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"bottom"), bx=B.cx+take(r.b,"top"); d=`M${ax},${A.bottom} L${ax},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(ax+bx)/2,ly]; break; }
+      case "up": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), bx=B.cx+take(r.b,"bottom"); d=`M${ax},${A.top} L${ax},${ly} L${bx},${ly} L${bx},${B.bottom}`; seg=[(ax+bx)/2,ly]; break; }
+      case "fromExt": { const ly=laneY(p.region,p.lane), ay=A.cy+take(r.a,"inner"), xi=innerX(r.a), xt=turnX(r.a,p.lane), bx=B.cx+take(r.b,"top"); d=`M${xi},${ay} L${xt},${ay} L${xt},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(xt+bx)/2,ly]; break; }
+      case "toExt": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), by=B.cy+take(r.b,"inner"), xt=turnX(r.b,p.lane), xi=innerX(r.b); d=`M${ax},${A.top} L${ax},${ly} L${xt},${ly} L${xt},${by} L${xi},${by}`; seg=[(ax+xt)/2,ly]; break; }
+      case "around": { const l1=laneY(p.region,p.lane), l2=laneY(p.region2,p.lane2), ya=p.upward?A.top:A.bottom, ax=A.cx+take(r.a,p.upward?"top":"bottom"), bx=B.cx+take(r.b,"top"), xs=L.bx0+L.innerW-10; d=`M${ax},${ya} L${ax},${l1} L${xs},${l1} L${xs},${l2} L${bx},${l2} L${bx},${B.top}`; seg=[(bx+xs)/2,l2]; break; }
+    }
+    const g=mk("g",{class:"c4rel"+(r.dashed?" dashed":""),"data-a":r.a,"data-b":r.b},svg);
+    mk("path",{d,"marker-end":"url(#c4arr)"},g);
+    const label=fit(r.desc.split(/[—;:]/)[0].trim(),30), lw=label.length*5.1+12;
+    mk("rect",{class:"lbg",x:seg[0]-lw/2,y:seg[1]-7,width:lw,height:13,rx:6.5},g);
+    txt(g,seg[0],seg[1]+3,label,"","middle");
+  });
+}
+function drawFrame(svg,L){
+  if(L.boundary){ const b=L.boundary; mk("rect",{class:"c4bound",x:b.x,y:b.y,width:b.w,height:b.h,rx:10},svg); const g=mk("g",{class:"c4boundl"},svg); const tw=b.label.length*6.3+18; mk("rect",{x:b.x+12,y:b.y-10,width:tw,height:20,rx:10},g); txt(g,b.x+21,b.y+4,b.label,""); }
+  if(L.bands.length>1) L.bands.forEach((b,i)=>txt(svg,L.bx0+14,L.bandBox[i][0]-6,L.names[i],"c4band"));
+}
+/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the page's own ink. */
+function glyph(g,type,x,y,color){
+  if(type==="person"){ mk("circle",{cx:x+7,cy:y+4,r:3.2,fill:color},g); mk("path",{d:`M${x+1},${y+14} a6,6 0 0 1 12,0 z`,fill:color},g); }
+  else if(type==="softwareSystem"){ mk("rect",{x:x+1,y:y+1,width:9,height:9,rx:1.5,fill:color,opacity:.55},g); mk("rect",{x:x+4,y:y+4,width:9,height:9,rx:1.5,fill:color},g); }
+  else if(type==="container"){ mk("rect",{x:x+1,y:y+3,width:12,height:10,rx:2,fill:color},g); mk("rect",{x:x+1,y:y+1,width:6,height:3,rx:1,fill:color},g); }
+  else { mk("rect",{x:x+4,y:y+1,width:9,height:12,rx:1.5,fill:color},g); mk("rect",{x:x+1,y:y+3.5,width:6,height:2.5,fill:color},g); mk("rect",{x:x+1,y:y+8,width:6,height:2.5,fill:color},g); }
+}
+function cardEvents(g,id){
+  const go=()=>selectC4(id);
+  g.addEventListener("click",go); g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); go(); } });
+  g.addEventListener("mouseenter",()=>document.querySelectorAll("#svg-c4 .c4rel").forEach(x=>x.classList.toggle("hl",x.dataset.a===id||x.dataset.b===id)));
+  g.addEventListener("mouseleave",()=>document.querySelectorAll("#svg-c4 .c4rel.hl").forEach(x=>x.classList.remove("hl")));
+}
+function drawCard(svg,id,box){
+  const e=el(id), st=styleFor(e), [x,y,w,h]=box, g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
+  const dash=st.border==="dashed"?"6 4":st.border==="dotted"?"2 3":"none";
+  mk("rect",{class:"card",x,y,width:w,height:h,rx:7,"stroke-dasharray":dash},g);
+  mk("path",{class:"hdr",d:`M${x+7},${y} H${x+w-7} a7,7 0 0 1 7,7 V${y+30} H${x} V${y+7} a7,7 0 0 1 7,-7 Z`,fill:st.background},g);
+  glyph(g,e.type,x+10,y+8,st.color);
+  const name=mk("text",{x:x+30,y:y+20,class:"n",fill:st.color},g); name.textContent=fit(e.name,24);
+  txt(g,x+10,y+46,fit(`[${TYPE_LABEL[e.type]}${e.tech?" · "+e.tech:""}]`,38),"m");
+  const room=Math.floor((h-60-16)/12), lines=wrap(e.desc,38).slice(0,Math.max(0,room)); if(lines.length) txt(g,x+10,y+60,lines,"d",null,12);
+  const tags=e.tags.slice(2); if(tags.length) txt(g,x+10,y+h-7,fit(tags.join(" · "),40),"tg");
+  cardEvents(g,id);
+}
+/* The dynamic view is a sequence, so it is drawn as one: the elements as lifelines in order of first appearance, the steps as numbered messages. */
+function renderDynamic(R,svg){
+  const cols=R.els, X=i=>112+i*150, Y0=98, DY=44, H=Y0+R.rels.length*DY+14, W=112+(cols.length-1)*150+112;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  cols.forEach((id,i)=>{ const x=X(i); mk("line",{x1:x,y1:68,x2:x,y2:H-6,class:"c4life"},svg); });
+  R.rels.forEach(r=>{
+    const i=cols.indexOf(r.a), j=cols.indexOf(r.b), y=Y0+(r.num-1)*DY, a=X(i), b=X(j), g=mk("g",{class:"c4rel","data-a":r.a,"data-b":r.b,"data-num":r.num},svg);
+    if(i===j){ mk("path",{d:`M${a},${y-10} L${a+34},${y-10} L${a+34},${y+8} L${a+2},${y+8}`,"marker-end":"url(#c4arr)"},g); txt(g,a+42,y+2,fit(r.desc,40),""); }
+    else { const dir=b>a?1:-1; mk("path",{d:`M${a},${y} L${b-dir*3},${y}`,"marker-end":"url(#c4arr)"},g); const label=fit(r.desc.split(/[—;]/)[0].trim(),44), mx=(a+b)/2, lw=label.length*5.2+12; mk("rect",{class:"lbg",x:mx-lw/2,y:y-18,width:lw,height:14,rx:7},g); txt(g,mx,y-8,label,"","middle"); }
+    const nb=mk("g",{class:"num"},g); mk("circle",{cx:Math.min(a,b)-13,cy:y,r:9},nb); txt(nb,Math.min(a,b)-13,y+3.5,String(r.num),"","middle");
+    g.style.cursor="pointer"; g.addEventListener("click",()=>selectC4Step(r.num));
+  });
+  cols.forEach((id,i)=>{ const e=el(id), st=styleFor(e), x=X(i), g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name},svg);
+    mk("rect",{class:"card",x:x-66,y:14,width:132,height:50,rx:6},g);
+    mk("path",{class:"hdr",d:`M${x-60},14 H${x+60} a6,6 0 0 1 6,6 V40 H${x-66} V20 a6,6 0 0 1 6,-6 Z`,fill:st.background},g);
+    glyph(g,e.type,x-60,20,st.color);
+    const n=mk("text",{x:x-42,y:32,class:"n",fill:st.color},g); n.textContent=fit(e.name,15);
+    txt(g,x,56,fit(`[${TYPE_LABEL[e.type]}]`,22),"m","middle");
+    cardEvents(g,id); });
+  return W;
+}
+
+let c4View=null, c4Sel=null, c4Zoom="fit";
+/* fit: the whole view scaled into the panel; 1:1: natural size, scrolling sideways inside the canvas. */
+function applyZoom(){ const svg=$("#svg-c4"); svg.style.width = c4Zoom==="fit" ? "100%" : (c4View&&c4View.width ? c4View.width+"px" : "100%"); document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.z===c4Zoom))); }
+function renderC4(vi){
+  const v=C4.views[vi], R=resolveView(v), svg=$("#svg-c4"); c4View={v,R}; c4Sel=null; svg.innerHTML="";
+  const d=mk("defs",{},svg); const m=mk("marker",{id:"c4arr",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"8",markerHeight:"8",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--rel)"},m);
+  const s=el(v.scope), [lv,lname]=LEVEL[v.type];
+  $("#c4-head").innerHTML=`<span class="lvl">LEVEL ${lv} · ${lname.toUpperCase()}</span><span class="ttl">${esc(s.name)} — ${esc(v.key)}</span><span class="desc">${esc(v.desc||"")}</span><span class="zoom" role="group" aria-label="Zoom"><button data-z="fit">fit</button><button data-z="1">1:1</button></span>`;
+  document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.addEventListener("click",()=>{ c4Zoom=b.dataset.z; applyZoom(); }));
+  if(v.type==="dynamic") c4View.width=renderDynamic(R,svg);
+  else { const L=layoutC4(R,v.type); c4View.width=L.width; svg.setAttribute("viewBox",`0 0 ${L.width} ${L.height}`); drawFrame(svg,L); drawRoutes(svg,L); R.els.forEach(id=>drawCard(svg,id,L.pos[id])); }
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===String(vi))));
+  $("#dsl-view").hidden=true; $("#c4-canvas").hidden=false; $("#c4-head").hidden=false; $("#c4-key").hidden=false;
+  applyZoom(); inspectC4();
+}
+/* The inspector for what the C4 tab has on screen: the source, else the selected element or dynamic step, else the view itself. */
+function inspectC4(){
+  if(!$("#dsl-view").hidden) return showDsl();
+  const {v,R}=c4View, [lv,lname]=LEVEL[v.type], sel=$("#svg-c4 .c4el.sel"), cur=$("#svg-c4 .c4rel.cur");
+  if(sel) selectC4(sel.dataset.id); else if(cur) selectC4Step(+cur.dataset.num); else if(v.type==="dynamic") c4StepList();
+  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${R.els.length} elements · ${R.rels.length} relationships · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
+}
+function selectC4(id){
+  const e=el(id); c4Sel=id;
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.toggle("sel",g.dataset.id===id); g.classList.remove("dim"); });
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ g.classList.remove("cur"); g.classList.toggle("dim",g.dataset.a!==id&&g.dataset.b!==id); });
+  const out=C4.rels.filter(r=>r.from===id), inn=C4.rels.filter(r=>r.to===id);
+  const mapNode=Object.entries(MODEL.c4).filter(([,c])=>c===id).map(([n])=>n);
+  let html=`<div class="kicker">C4 ELEMENT · ${TYPE_LABEL[e.type].toUpperCase()}</div><div class="name">${esc(e.name)}</div><div class="vis">${esc(e.tech||"")}</div><p>${esc(e.desc)}</p><dl>`;
+  html+=`<dt>Tags</dt><dd>${e.tags.map(t=>`<span class="tchip">${esc(t)}</span>`).join("")}</dd>`;
+  html+=`<dt>Identifier</dt><dd><code>${e.id}</code></dd>`;
+  if(out.length) html+=`<dt>Uses</dt><dd>${out.map(r=>`→ <b>${esc(el(r.to).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(inn.length) html+=`<dt>Used by</dt><dd>${inn.map(r=>`← <b>${esc(el(r.from).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(mapNode.length) html+=`<dt>On the component map</dt><dd><button class="linkbtn" data-node="${mapNode[0]}">${esc(MODEL.structure.nodes.find(n=>n.id===mapNode[0]).t)} → open in Structure</button></dd>`;
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-node]"); if(b) b.addEventListener("click",()=>{ show("t-structure"); selectNode(b.dataset.node); });
+}
+function c4StepList(){
+  const {v}=c4View;
+  inspect(`<div class="kicker">C4 · DYNAMIC VIEW</div><div class="name">${esc(v.key)}</div><div class="vis">${v.steps.length} numbered steps · click one</div><p>${esc(v.desc)}</p><ol class="steps-list" id="c4steps">${v.steps.map((s,i)=>`<li data-step="${i+1}"><b>${i+1}</b><span>${esc(el(s.from).name)} → ${esc(el(s.to).name)}</span></li>`).join("")}</ol>`);
+  document.querySelectorAll("#c4steps li").forEach(li=>li.addEventListener("click",()=>selectC4Step(+li.dataset.step)));
+}
+function selectC4Step(n){
+  const {v}=c4View, s=v.steps[n-1];
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ const on=+g.dataset.num===n; g.classList.toggle("cur",on); g.classList.toggle("dim",!on); });
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.remove("sel"); g.classList.toggle("dim",g.dataset.id!==s.from&&g.dataset.id!==s.to); });
+  if(!document.getElementById("c4steps")) c4StepList();
+  document.querySelectorAll("#c4steps li").forEach(li=>li.classList.toggle("on",+li.dataset.step===n));
+  const old=document.getElementById("c4stepnote"); if(old) old.remove();
+  const p=document.createElement("p"); p.id="c4stepnote"; p.innerHTML=`<b>${n}.</b> ${esc(el(s.from).name)} → ${esc(el(s.to).name)}: ${esc(s.desc)}`; $("#insp-body").appendChild(p);
+}
+function showDsl(){
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
+  $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
+  if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. The presenter edits it when a run changes the structure, re-embeds it here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this page.</p>`);
+}
+(function buildLadderAndKey(){
+  const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
+  C4.views.forEach((v,i)=>{ const b=document.createElement("button"); const isLevel=v.type!=="dynamic"; b.className="rung"+(isLevel?" lvl":" sep")+(isLevel&&levels[levels.length-1]===v?" last":""); b.dataset.v=String(i); b.setAttribute("aria-pressed","false"); const [lv,nm]=LEVEL[v.type]; b.innerHTML=`<span class="lv">${lv}</span><span class="nm">${nm}</span><span class="sc">${esc(v.type==="dynamic"?v.key:el(v.scope).name)}</span>`; b.addEventListener("click",()=>renderC4(i)); host.appendChild(b); });
+  const d=document.createElement("button"); d.className="rung sep"; d.dataset.v="dsl"; d.setAttribute("aria-pressed","false"); d.innerHTML=`<span class="lv">{ }</span><span class="nm">Source</span><span class="sc">workspace.dsl</span>`; d.addEventListener("click",showDsl); host.appendChild(d);
+  // The legend: one swatch per DSL element style (element kinds, External, Internal, Standalone, Planned), then the line encodings.
+  $("#c4-key").innerHTML=C4.styles.filter(s=>s.props.background&&C4.order.some(id=>el(id).tags.includes(s.tag))).map(s=>`<span><i style="background:${esc(s.props.background)};border-style:${esc(s.props.border||"solid")};opacity:${(+s.props.opacity||100)/100}"></i>${esc(s.tag)}</span>`).join("")+`<span><i class="arrow"></i>relationship, labelled with its DSL description</span><span><i class="arrow dashed"></i>to or from a Planned element</span><span><i class="frame"></i>boundary: the view's scope</span>`;
+})();
+function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type==="component"&&isWithin(elementId,v.scope)); renderC4(vi>=0?vi:0); selectC4(elementId); }
+
+/* ---------- Structure ---------- */
+function renderStructure(){
+  const svg=$("#svg-structure"); if(svg.dataset.done) return; svg.dataset.done="1";
+  mk("rect",{x:430,y:48,width:140,height:400,rx:6,class:"band"},svg);
+  MODEL.structure.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
+  MODEL.structure.nodes.forEach(n=>{
+    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind?" "+n.kind:""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
+    mk("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:n.chip?17:5},g);
+    const subs=Array.isArray(n.s)?n.s:[n.s];
+    if(n.chip){ txt(g,n.x+n.w/2,n.y+14,n.t,"t","middle"); txt(g,n.x+n.w/2,n.y+26,subs,"s","middle"); }
+    else if(n.container){ txt(g,n.x+10,n.y+18,n.t,"t"); txt(g,n.x+10,n.y+32,subs,"s"); }
+    else { txt(g,n.x+8,n.y+16,n.t,"t"); txt(g,n.x+8,n.y+29,subs,"s",null,11); }
+    const go=()=>selectNode(n.id);
+    g.addEventListener("click",go);
+    g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+  });
+  MODEL.structure.notes.forEach(nt=>txt(svg,nt.x,nt.y,nt.lines,"note",null,13));
+}
+function selectNode(id){
+  const n=MODEL.structure.nodes.find(x=>x.id===id); if(!n) return;
+  document.querySelectorAll("#svg-structure .node").forEach(g=>g.classList.toggle("sel",g.dataset.id===id));
+  const d=n.d||{}; const sideName=(MODEL.sides||{})[n.side]||n.side||"";
+  let html=`<div class="kicker">${n.chip?"DATAGRAM TAG":"COMPONENT"} · ${sideName.toUpperCase()}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc(d.vis||"")}</div><p>${esc(d.role||"")}</p><dl>`;
+  if(d.files&&d.files.length) html+=`<dt>Source</dt><dd>${d.files.map(flink).join("<br>")}</dd>`;
+  if(d.threads&&d.threads.length) html+=`<dt>Runs on</dt><dd>${d.threads.map(t=>`<span class="tchip ${MODEL.threads[t].side}">${t}</span>`).join("")}</dd>`;
+  if(d.issues&&d.issues.length) html+=`<dt>Open issues</dt><dd>${d.issues.map(ilink).join(" · ")}</dd>`;
+  const c4id=MODEL.c4[id]; if(c4id&&el(c4id)){ const e=el(c4id); html+=`<dt>In the C4 model</dt><dd><button class="linkbtn" data-c4="${c4id}">${esc(e.name)} · ${e.tags.slice(2).map(esc).join(", ")||"component"} → open</button></dd>`; }
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-c4]"); if(b) b.addEventListener("click",()=>openC4(b.dataset.c4));
+}
+
+/* ---------- Threads ---------- */
+function selectThread(id){
+  const t=MODEL.threads[id]; if(!t) return;
+  document.querySelectorAll(".thread").forEach(x=>x.classList.toggle("sel",x.dataset.t===id));
+  let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((MODEL.sides||{})[t.side]||t.side).toUpperCase())}${t.daemon===false?"":" · DAEMON"}</div><div class="name">${id}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
+  if(t.sends.length) html+=`<dt>Puts on the wire</dt><dd>${t.sends.map(esc).join("<br>")}</dd>`;
+  if(t.note) html+=`<dt>Note</dt><dd>${esc(t.note)}</dd>`;
+  if(t.issues&&t.issues.length) html+=`<dt>Open issues</dt><dd>${t.issues.map(ilink).join(" · ")}</dd>`;
+  inspect(html+"</dl>");
+}
+document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
+
+/* ---------- Decision path (MODEL.flows) ----------
+   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the page draws the
+   grid, builds the controls, and lights the path the rules return. Nothing here is specific to one system. */
+const CW=138,CH=70,NW=118,NH=50,X0=12,Y0=12;
+const fx=n=>X0+n.c*CW, fy=n=>Y0+n.r*CH;
+// An end's stripe is status-coloured by its level, and always drawn with the level's name beside it.
+// This page's ends: RUNS (green), FAILS (red), NOT RUN (grey), each with its glyph; DELIVER and WARN keep the template's colours.
+const LVL_COL={DELIVER:"var(--good)",WARN:"var(--serious)","✓ RUNS":"var(--good)","✗ FAILS":"var(--critical)"};
+const lvlCol=l=>LVL_COL[l]||"var(--muted)";
+const flowState={}; let flowVariant=MODEL.flows[0].id;
+const flowOf=()=>MODEL.flows.find(v=>v.id===flowVariant);
+function flowStateFor(v){ if(!flowState[v.id]){ flowState[v.id]={}; v.controls.forEach(c=>flowState[v.id][c.key]=c.def); } return flowState[v.id]; }
+function seg(label,id,options,current){ return `<label>${esc(label)} <span class="seg" id="${id}">${options.map(([v,l])=>`<button data-v="${esc(v)}" aria-pressed="${String(v===current)}">${esc(l)}</button>`).join("")}</span></label>`; }
+function buildFlowControls(){
+  const v=flowOf(), s=flowStateFor(v), host=$("#flow-ctl");
+  host.innerHTML=(MODEL.flows.length>1?seg("Variant","seg-variant",MODEL.flows.map(f=>[f.id,f.label]),v.id):"")+v.controls.map(c=>seg(c.label,"seg-"+c.key,c.options,s[c.key])).join("");
+  if(MODEL.flows.length>1) document.querySelectorAll("#seg-variant button").forEach(b=>b.addEventListener("click",()=>{ flowVariant=b.dataset.v; renderFlow(); }));
+  v.controls.forEach(c=>document.querySelectorAll("#seg-"+c.key+" button").forEach(b=>b.addEventListener("click",()=>{ s[c.key]=b.dataset.v; document.querySelectorAll("#seg-"+c.key+" button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); highlightFlow(); })));
+}
+function renderFlow(){
+  const F=flowOf(), svg=$("#svg-flow"); svg.innerHTML=""; buildFlowControls();
+  arrowDefs(svg,"farr","var(--line)");
+  let maxC=0,maxR=0; Object.values(F.nodes).forEach(n=>{ maxC=Math.max(maxC,n.c); maxR=Math.max(maxR,n.r); });
+  svg.setAttribute("viewBox",`0 0 ${X0*2+(maxC+1)*CW} ${Y0+(maxR+1)*CH+22}`);
+  F.edges.forEach(([a,b,label])=>{
+    const A=F.nodes[a],B=F.nodes[b]; let d, lx, ly, anchor="start";
+    if(A.r===B.r){ d=`M${fx(A)+NW},${fy(A)+NH/2} L${fx(B)},${fy(B)+NH/2}`; lx=(fx(A)+NW+fx(B))/2; ly=fy(A)+NH/2-5; anchor="middle"; }
+    else if(A.c===B.c){ d=`M${fx(A)+NW/2},${fy(A)+NH} L${fx(B)+NW/2},${fy(B)}`; lx=fx(A)+NW/2+6; ly=(fy(A)+NH+fy(B))/2+3; }
+    else { const tx=fx(A)+NW+10, ty=fy(B)+NH/2; d=`M${fx(A)+NW},${fy(A)+NH/2} L${tx},${fy(A)+NH/2} L${tx},${ty} L${fx(B)},${ty}`; lx=tx+4; ly=ty-5; }
+    mk("path",{d,class:"fedge"+(A.planned||B.planned?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
+    if(label){ const t=txt(svg,lx,ly,label,"flabel",anchor); t.dataset.e=a+">"+b; }
+  });
+  Object.entries(F.nodes).forEach(([id,n])=>{
+    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(n.planned?" planned":""),"data-id":id},svg);
+    if(n.k==="d") mk("polygon",{points:`${x+12},${y} ${x+NW-12},${y} ${x+NW},${y+NH/2} ${x+NW-12},${y+NH} ${x+12},${y+NH} ${x},${y+NH/2}`},g);
+    else mk("rect",{x,y,width:NW,height:NH,rx:n.k==="t"?3:6},g);
+    // The stripe's colour goes in style, not the fill attribute: .fnode.t rect would otherwise repaint it surface-grey.
+    if(n.k==="t"){ mk("rect",{x,y,width:4,height:NH,rx:1,class:"stripe",style:`fill:${lvlCol(n.lvl)}`},g); if(n.lvl) txt(g,x+NW-6,y+10,n.lvl,"lvl","end"); }
+    txt(g,x+NW/2+(n.k==="t"?2:0),y+(n.t.length>1?21:28),n.t,"","middle",12);
+  });
+  if(F.foot) txt(svg,X0,Y0+(maxR+1)*CH+12,F.foot,"flabel");
+  flowKey(F);
+  highlightFlow();
+}
+/* The legend for the flow on screen: its shapes, the outcome levels its ends use (grouped by stripe colour), lit and faded, planned. */
+function flowKey(F){
+  const ends=new Map(); Object.values(F.nodes).filter(n=>n.k==="t").forEach(n=>{ const c=lvlCol(n.lvl), l=ends.get(c)||[]; if(n.lvl&&!l.includes(n.lvl)) l.push(n.lvl); ends.set(c,l); });
+  $("#flow-key").innerHTML=`<span><i class="hex"></i>decision</span><span><i></i>step</span>`+[...ends].map(([c,l])=>`<span><i class="end" style="border-left-color:${c}"></i>ends · ${esc(l.join(" · ")||"outcome")}</span>`).join("")+`<span><i class="ln on"></i>the path these inputs take</span><span><i class="ln off"></i>not taken</span><span><i class="pln"></i>planned, not built</span>`;
+}
+function highlightFlow(){
+  const F=flowOf(), s=flowStateFor(F), res=F.rules(s), set=new Set(res.path), svg=$("#svg-flow"), irr=new Set(res.irrelevant||[]);
+  svg.querySelectorAll(".fnode").forEach(g=>{ const on=set.has(g.dataset.id); g.classList.toggle("on",on); g.classList.toggle("off",!on); });
+  const onEdges=new Set(); for(let i=0;i<res.path.length-1;i++) onEdges.add(res.path[i]+">"+res.path[i+1]);
+  svg.querySelectorAll(".fedge,.flabel").forEach(x=>{ if(!x.dataset.e) return; const on=onEdges.has(x.dataset.e); x.classList.toggle("on",on); x.classList.toggle("off",!on); if(x.classList.contains("fedge")) x.setAttribute("marker-end",on?"url(#farr-on)":"url(#farr)"); });
+  const first=F.controls[0], title=F.names&&F.names[s[first.key]] ? F.names[s[first.key]] : (first.options.find(o=>o[0]===s[first.key])||[,""])[1];
+  const facts=F.controls.slice(1).filter(c=>!irr.has(c.key)).map(c=>`${c.label.toLowerCase()} ${(c.options.find(o=>o[0]===s[c.key])||[,""])[1]}`);
+  $("#outcome").innerHTML=`<code>${esc(title)}</code>${facts.map(f=>" · "+esc(f)).join("")} → ${esc(res.outcome)}`;
+  inspect(`<div class="kicker">${esc(F.kicker||"PATH")} · ${esc(F.label.toUpperCase())}</div><div class="name">${esc(title)}</div><div class="vis">${F.runsOn?"on "+esc(F.runsOn):""}</div><p>${esc(res.outcome)}</p><dl><dt>Path</dt><dd>${res.path.join(" → ")}</dd></dl>`);
+  F.controls.forEach(c=>document.querySelectorAll("#seg-"+c.key+" button").forEach(b=>b.setAttribute("aria-disabled",String(irr.has(c.key)))));
+}
+
+/* ---------- Sequence ---------- */
+const seq={cur:0,timer:null};
+const lane=l=>typeof l==="string"?{n:l}:l;
+function renderSeq(){
+  const svg=$("#svg-seq"); if(svg.dataset.done) return; svg.dataset.done="1";
+  const S=MODEL.sequence, LX=i=>80+i*140, Y0=70, DY=40, H=Y0+S.steps.length*DY+10;
+  svg.setAttribute("viewBox",`0 0 1000 ${H}`);
+  arrowDefs(svg,"sarr2","var(--ink-2)");
+  S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.steps.forEach((s,i)=>{
+    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(s.planned?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
+    if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
+    else { const a=LX(s.f), b=LX(s.t), dir=b>a?1:-1; mk("line",{x1:a,y1:y,x2:b-dir*2,y2:y,"marker-end":s.ret?"url(#sarr2-open)":"url(#sarr2)"},g); const mx=(a+b)/2, w=s.l.length*5.3+10; mk("rect",{class:"lbg",x:mx-w/2,y:y-17,width:w,height:14,rx:2},g); txt(g,mx,y-6,s.l,"","middle"); txt(g,Math.min(a,b)-8,y+3,`${i+1}`,"num","end"); }
+    g.addEventListener("click",()=>gotoStep(i)); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); gotoStep(i); } });
+  });
+  seqKey(S);
+  gotoStep(0);
+}
+/* The legend for the sequence: the lifeline owners it shows (each in its side's hue), then the line encodings and planned. */
+function seqKey(S){
+  const sw={server:"pub srv",client:"pub cli",wire:"pub wir",consumer:"con",external:"ext"}, sides=[...new Set(S.lifelines.map(lane).map(l=>l.side).filter(Boolean))];
+  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span><span><i class="ln dash"></i>return, open head</span>`+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`;
+}
+function gotoStep(i){
+  const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
+  document.querySelectorAll("#svg-seq .msg").forEach(g=>{ const k=+g.dataset.i; g.classList.toggle("cur",k===seq.cur); g.classList.toggle("future",k>seq.cur); });
+  $("#seq-pos").textContent=`step ${seq.cur+1} of ${S.steps.length}`;
+  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${s.planned?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
+}
+$("#seq-prev").addEventListener("click",()=>gotoStep(seq.cur-1));
+$("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
+$("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
+
+/* ---------- Tabs ---------- */
+const tabs=[...document.querySelectorAll(".tab")];
+const DEFAULT_INSPECT={structure:"<p>Click a component for its role, source files, the processes it runs in, open issues and its place in the C4 model.</p>",threads:"<p>Click a process or a lock for when it starts and what runs on it.</p>",lifecycles:"<p>The lifecycle facts are on the cards themselves, each with its source.</p>"};
+function show(id){
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  const name=id.replace("t-","");
+  if(name==="structure") renderStructure();
+  if(name==="c4" && !c4View) renderC4(C4.views.findIndex(v=>v.type==="component"));
+  if(name==="datagrams") renderFlow();
+  if(name==="reliable") renderSeq();
+  if(name!=="reliable" && seq.timer){ clearInterval(seq.timer); seq.timer=null; $("#seq-play").textContent="play"; $("#seq-play").setAttribute("aria-pressed","false"); }
+  // The inspector follows the tab it lands on: its kept selection, else its default text, else a generic hint, never the last
+  // tab's. renderFlow() above has already written the Decision path's.
+  const node=$("#svg-structure .node.sel"), thread=$("#p-threads .thread.sel");
+  if(name==="structure"&&node) selectNode(node.dataset.id); else if(name==="threads"&&thread) selectThread(thread.dataset.t);
+  else if(name==="c4") inspectC4(); else if(name==="reliable") gotoStep(seq.cur);
+  else if(name!=="datagrams") inspect(DEFAULT_INSPECT[name]||"<p>Select an item on this tab to see its details here.</p>");
+  try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
+}
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+let start="t-structure";
+try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
+const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
+show(start);
+</script>
+</body>
+</html>
