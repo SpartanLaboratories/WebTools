@@ -42,12 +42,27 @@ version. Every release follows the organisation's steps once #58's practices exi
   (`webtools-udp/build.gradle.kts:103-117`) and its `version` line (`:101`) stay verbatim.
   `webtools-scraping` and `webtools-browser` gain an explicit `version = "1.0.0a"`.
 - **Level tasks select by package** (`com.spartanlabs.testing.<level>.*`) instead of by JUnit tag
-  (`build.gradle.kts:60`). On the existing modules they select the same 99 test classes. The
-  `@Tag` annotations on 95 of those files stay and become redundant.
-- **`./gradlew build` does more work.** It adds `verifyJavaFloor` on every published module,
-  `apiCheck` on the two new modules, the fixtures-publication TestKit check (a publish and two
-  resolutions), and one Kotlin/JS compile per check module (compile only; their test tasks are
-  disabled). Until #58 brings CI, these guards run only on a developer's build.
+  (`build.gradle.kts:60`).
+  - On the existing modules they select the same 95 test classes the tags did, measured with
+    `--test-dry-run` before and after unit 1. The other 4 of the 99 test files hold support code
+    and no test.
+  - The `@Tag` annotations on those 95 classes stay and become redundant.
+- **`build-logic` has its own level tests.**
+  - `./gradlew :build-logic:test` is its pre-commit gate: the gating, component and deterministic
+    levels, in seconds.
+  - Its TestKit tasks, `:build-logic:integrationTest`, `:build-logic:e2eTest` and
+    `:build-logic:nonfunctionalTest`, run on demand and one after another. Their first run
+    downloads about 910 MB into `build-logic/build/testkit/home`.
+  - A later unit that adds a convention plugin or a build check adds its TestKit class there (§8).
+- **`./gradlew build` does more work.** It adds:
+  - `verifyJavaFloor` on every published module;
+  - `apiCheck` on the two new modules;
+  - the fixtures-publication TestKit check (a publish and two resolutions), once unit 4 attaches it
+    to a `check` that `build` reaches (§8);
+  - one Kotlin/JS compile per check module (compile only; their test tasks are disabled).
+
+  `build-logic`'s own tests are not part of it. Until #58 brings CI, these guards run only on a
+  developer's build.
 - **Build host.** The bytecode floor no longer depends on the JDK that runs the build; Gradle
   9.7.1 itself needs JDK 17 to 26. Kotlin 2.2.0 on Gradle 9.7.1 sits outside Kotlin's
   documented range: it works, but Gradle 10 forces a KGP move (architecture §12). IntelliJ
@@ -115,7 +130,7 @@ happens to it:
 - **#58** (CI, CONTRIBUTING, CHANGELOG, tags, the foojay bump). Nothing here waits on it to merge.
   Releasing waits on it. Its CHANGELOG is where Experimental-to-Supported promotions will be
   recorded. Its CI would be the first place the floor guard, the publication check, the check
-  modules and the level tasks run on every change.
+  modules, the level tasks and `build-logic`'s own tests run on every change.
 - **#50** (`webtools-udp` multiplatform) can reuse the multiplatform convention plugin, the
   check-module pattern and the logging seam; nothing here is designed for it.
 
@@ -147,9 +162,76 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 
 | Unit | Open point it settles |
 |---|---|
+| 2 `java-floor` | The floor's effect on dependency resolution. KGP copies the `jvm` target's attributes onto the `jvm` classpaths; this was read in KGP 2.2.0's source, not exercised. Its plan adds the TestKit assertion (§8). |
 | 3 `http-core` | First compile of the opt-in marker, a gated interface, a default that names it, and a consumer without the opt-in, in `commonMain` and `jvmMain`; its plan starts here. |
-| 4 `test-support` | The fixtures-publication check is the only guard on the experimental publishing API. Central's validation of the fixtures jar, and signing a multiplatform publication with an adhoc variant, are first exercised at the first release. |
+| 4 `test-support` | The fixtures-publication check is the only guard on the experimental publishing API. Central's validation of the fixtures jar, and signing a multiplatform publication with an adhoc variant, are first exercised at the first release. Where the check attaches: the root project has no `check` task (§8). |
 | 8 `call-budget` | How a `Mutex`-based ledger closes without suspending (the port's non-suspend `close()`). |
 | 9 `call-facades` | The generic `Endpoint<T>` factory-over-class resolution; whether `RateLimited.retryAfter` still needs the `max` with the budget's `pausedFor` once `complete` has applied the signals. |
 | 10 `feeds` | The feeds check module's dependency on the http check module's `js` output (fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
+
+## 8. What the later units build on: unit 1 as built
+
+Unit 1, `build-logic` (#61), is built. Its as-built record is
+[`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
+seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
+[`61-build-logic/impact.md`](61-build-logic/impact.md) §4. What it settles for the units still to
+come:
+
+**Unit 2, `java-floor` (#47).**
+- **Seams.** `WebToolsBuild.JAVA_FLOOR` goes beside `LEVEL_PACKAGE_ROOT`. The floor settings fill
+  the two places marked `TODO(#47)`, one in the Kotlin/JVM plugin and one in the multiplatform
+  plugin.
+- **The floor reaches dependency resolution.**
+  - KGP 2.2.0 copies the `jvm` target's attributes onto every configuration of every `jvm`
+    compilation, the classpaths included.
+  - So `JAVA_FLOOR` becomes the JVM version that every `jvm` classpath requests: `main`, `test` and
+    unit 4's fixtures compilation.
+  - Gradle then rejects a dependency whose metadata declares a higher JVM, test-only ones
+    included. Every candidate today is at or below 11.
+  - Unit 2 adds a TestKit assertion on the sample's `jvmRuntimeClasspath`.
+- **One TestKit expectation changes.** `expectedJvmVersion` in
+  `PublishedJvmVersionAttributeIntegrationTest`, today the test JVM's feature version, becomes
+  `11`.
+- **New `build-logic` tests** go in a level package, because every `build-logic` test task fails
+  on an empty run.
+
+**Units 3 `http-core` and 10 `feeds`.**
+- **What the multiplatform plugin carries:**
+  - the `jvm()` target;
+  - publishing;
+  - the test dependencies;
+  - the level tasks, with a lifecycle `test`;
+  - the attribute;
+  - the validator, with the ASM pin.
+- **What a module adds:**
+  - `explicitApi()`;
+  - its dependencies, its coordinates, and its POM name and description;
+  - its dump, `api/<project name>.api`, committed with its first public declaration, because
+    `apiCheck` fails until the dump exists.
+- **What a module must not do:** apply the validator again, on itself or on an ancestor, or
+  declare a second JVM-based target.
+- **`webtools.kotlin-common-check`** (unit 3) declares its own repositories. The plugin markers
+  already in `build-logic` cover it.
+- **The README.** "Build & test" describes `build-logic`, its three plugin ids and the
+  package-selection rule. Units 3, 10 and 11 extend it to five modules and the
+  `commonTest`/`jvmTest` layout.
+
+**Unit 4, `test-support` (#63).**
+- **What it can reuse.** The TestKit harness is there: `SampleProject`, `ProjectWorkspace`,
+  `NestedBuild`, `TestReports`, `ModuleMetadata`, `PomFile` and `BuildLogicSource`. So is the
+  shared TestKit home.
+- **A new task that starts nested builds** lives in `build-logic/build.gradle.kts`. It sets the
+  same system properties and takes `usesService(testKitHomeLock)`, so it never uses the home
+  alongside the other nested-build tasks.
+- **No module script may reassign `runtimeDependencyFiles`.**
+  - The multiplatform plugin's level tasks read the test compilation's `runtimeDependencyFiles`
+    once.
+  - `associateWith` adds to the configuration behind it, so the fixtures compilation reaches them.
+  - That holds only while no module script reassigns the property.
+- **Where the publication check attaches is open.**
+  - Architecture §6.1 wires it into the root `check`. But the root project has no `check` task: the
+    root build keeps only `group` and `version`.
+  - Unit 4's plan chooses between two places:
+    - a root lifecycle `check`, which changes the root build's shape;
+    - the `check` of `webtools-http`, the module whose publication the check covers.

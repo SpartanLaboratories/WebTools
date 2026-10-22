@@ -466,7 +466,8 @@ server-wide replacement to point a `ReplaceWith` at.
 ## Build & test
 
 The repo is a Gradle multi-module build; the three modules are `:webtools-udp`,
-`:webtools-scraping`, `:webtools-browser`.
+`:webtools-scraping`, `:webtools-browser`. The configuration they share lives in the included
+`build-logic/` build (see below).
 
 ```sh
 ./gradlew build                    # compile + full test suite, every module
@@ -479,9 +480,35 @@ The repo is a Gradle multi-module build; the three modules are `:webtools-udp`,
 ./gradlew e2eTest                  # Level 4b - full-stack flows
 ./gradlew nonfunctionalTest        # Level 4c - robustness / security properties
 ./gradlew uatTest                  # Level 5  - manual acceptance (mostly @Disabled)
+./gradlew :build-logic:test        # build-logic's pre-commit gate: its gating, component and deterministic checks
+./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest  # on demand: TestKit checks
 ```
 
 Each module organises its tests by the project's 5-level testing hierarchy under
-`<module>/src/test/kotlin/com/spartanlabs/testing/<level>/webtools/<module>/` and JUnit-tags
-them, so any level can be run or gated on its own. Shared fixtures live under
-`testing/support/`.
+`<module>/src/test/kotlin/com/spartanlabs/testing/<level>/webtools/<module>/`. A level task
+selects its tests by package (`com.spartanlabs.testing.<level>.*`), so any level can be run or
+gated on its own; a test class outside those packages runs under `test` only. Shared fixtures live
+under `testing/support/`.
+
+### Shared build logic
+
+`build-logic/` is a Gradle build included through `pluginManagement { includeBuild("build-logic") }`
+in `settings.gradle.kts`. It holds the build configuration every module shares as three convention
+plugins, which a module applies by id in its `plugins {}` block:
+
+| Plugin id | Configures |
+|---|---|
+| `webtools.published-library` | the Maven Central publishing skeleton: signing and the shared POM metadata |
+| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: test dependencies, JUnit Platform, the level test tasks; applies `webtools.published-library` |
+| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (no module uses it yet); applies binary-compatibility-validator — commit `api/<module>.api` — and sets the `TargetJvmVersion` attribute; applies `webtools.published-library` |
+
+Change shared build behaviour there, not in a module's build file: a module's `build.gradle.kts`
+adds its dependencies, its coordinates, its POM name and description, and any configuration that
+belongs to it alone (for example `webtools-udp`'s version and its UDP-port lock).
+
+`build-logic`'s own tests use the same level packages, and each of its levels with tests has a task
+of the same name (`./gradlew :build-logic:gatingTest`, …). `./gradlew build` runs none of them.
+`:build-logic:test` runs the levels that start no nested build, in seconds.
+`:build-logic:integrationTest`, `:build-logic:e2eTest` and `:build-logic:nonfunctionalTest` run
+nested Gradle builds against generated projects; their first run downloads the Kotlin compiler and
+the test dependencies into `build-logic/build/testkit/home`, so it needs the network.
