@@ -1,0 +1,1981 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="dashboard" content="plan-board">
+<title>Plan board</title>
+<style>
+/* Plan board template (dashboards skill, plan set: plan/RULES.md; shared rules: GUIDANCE.md). One issue's planning and
+   development record as a timeline: every row is a part of the change (on a tracking board, a unit), and its four cells are
+   the phases it passed through. 1 GAP what was missing at the baseline; 2 CONSIDERED every option weighed, with its verdict;
+   3 VERDICT the decision and its defence; 4 AS BUILT what exists and every change from the verdict. Columns 1-3 are written
+   once; column 4 records every difference. The WIP strip under the header shows where the run is right now.
+   The page renders at load from plan.json, embedded verbatim below (plan/scripts/embed.js). Never hand-edit a page.
+   Tokens, header, chips, KPIs, tabs, stage, inspector, legends (.key on every tab and on the strip), Context and footer are
+   the system templates'. Colour plan (GUIDANCE.md §1): --sys-1..6 are the systems' registry slots, identical to the system
+   pages'; --good / --warning / --serious / --critical are status, always beside a glyph and a word; --accent is the glow on
+   the work in progress and nothing else. Dashed = planned or pending, and nothing else. */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --accent:#6d47e0;
+  --on:#0e1420; --focus:#2a78d6; --link:#2a78d6;
+  --sys-1:#2a78d6;--sys-2:#eb6834;--sys-3:#1baf7a;--sys-4:#eda100;--sys-5:#e87ba4;--sys-6:#008300;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--accent:#a58bff;--on:#eef1f6;--focus:#3987e5;--link:#6aa6f0;--sys-1:#3987e5;--sys-2:#d95926;--sys-3:#199e70;--sys-4:#c98500;--sys-5:#d55181;--sys-6:#008300;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--accent:#a58bff;--on:#eef1f6;--focus:#3987e5;--link:#6aa6f0;--sys-1:#3987e5;--sys-2:#d95926;--sys-3:#199e70;--sys-4:#c98500;--sys-5:#d55181;--sys-6:#008300;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
+.crumbs a{text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono);overflow-wrap:anywhere}
+.function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
+.chip b{color:var(--ink);font-weight:600}
+.chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+.chip.model{border-style:dashed}
+.chip.status{border-left:3px solid var(--line)}
+.chip.status.planned{border-style:dashed}
+.chip.status.built{border-left-color:var(--good)}
+.chip.status.abandoned{border-left-color:var(--critical)}
+.chip[data-sys]{border-left:4px solid var(--c)}
+
+/* the WIP strip: where the run is right now */
+.wip{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:10px 14px 10px;margin:12px 0 0}
+.wip.landed{border-left-color:var(--good)}
+.wip.halted{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
+.wip.escalated{border-left-color:var(--serious)}
+.wip.cancelled{border-left-color:var(--critical)}
+.wip-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:13px;color:var(--ink-2)}
+.wip-head .state{font-weight:700;color:var(--ink);font-size:14px}
+.wip-head .state i{font-style:normal;margin-right:5px}
+.wip-head .upd{font:11px var(--mono);color:var(--muted);margin-left:auto}
+.wip-detail{margin:6px 0 4px;font-size:13px;color:var(--ink);max-width:110ch}
+.wip-wait{margin:6px 0 4px;font-size:13px;color:var(--ink);font-weight:600}
+.wip-sub{font:700 10.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:8px 0 2px}
+.steps{list-style:none;margin:4px 0 2px;padding:0;display:flex;flex-wrap:wrap;gap:6px 0;align-items:center}
+.steps li{display:inline-flex;align-items:center;font:11.5px var(--mono);color:var(--ink-2);white-space:nowrap}
+.steps li+li::before{content:"";display:inline-block;width:16px;border-top:2px solid var(--ink-2);margin:0 4px}
+.steps li.todo+li::before,.steps li.cur+li.todo::before{border-top-style:dashed;border-top-color:var(--muted)}
+.steps .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;flex:none;background:var(--ink-2);border:2px solid var(--ink-2)}
+.steps li.todo{color:var(--muted)}
+.steps li.todo .dot{background:none;border:2px dashed var(--muted)}
+.steps li.cur{color:var(--ink);font-weight:700}
+.steps li.cur .dot{background:var(--accent);border-color:var(--accent)}
+.chain{list-style:none;margin:4px 0 2px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chain li a,.chain li span.u{display:inline-flex;align-items:center;gap:5px;font:11.5px var(--mono);padding:3px 7px;border:1px solid var(--line);border-left:4px solid var(--c,var(--muted));border-radius:4px;background:var(--surface);text-decoration:none;color:var(--ink-2)}
+.chain li.pending a,.chain li.pending span.u{border-style:dashed;border-left-style:solid}
+.chain li.done a{color:var(--ink)}
+.wip-facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 0;font-size:12.5px;color:var(--ink-2)}
+.wip-facts>span{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.wip-facts .l{font:700 10.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.wip-facts a{text-decoration:none;border-bottom:1px solid var(--line)}
+.wip .key{margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
+
+/* the glow: the one thing being worked on (GUIDANCE.md §1). Steady outline when motion is reduced; static while halted. */
+@keyframes glow{0%,100%{box-shadow:0 0 0 1.5px var(--accent),0 0 0 0 transparent}50%{box-shadow:0 0 0 1.5px var(--accent),0 0 14px 4px color-mix(in srgb,var(--accent) 50%,transparent)}}
+@keyframes glowsoft{0%,100%{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}50%{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 70%,transparent),0 0 9px 2px color-mix(in srgb,var(--accent) 25%,transparent)}}
+.glow{animation:glow 2s ease-in-out infinite}
+.glow-soft{animation:glowsoft 2s ease-in-out infinite}
+.steps li.cur.glow,.steps li.cur.held{animation:none;box-shadow:none}
+.steps li.cur.glow .dot{animation:glow 2s ease-in-out infinite}
+.held{outline:2px solid var(--accent);outline-offset:1px}
+@media (prefers-reduced-motion:reduce){.glow,.glow-soft,.steps li.cur.glow .dot{animation:none!important}.glow{outline:2px solid var(--accent);outline-offset:1px}.glow-soft{outline:1px solid var(--accent)}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:13px;font-weight:400;color:var(--ink-2)}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
+.kpi .seg-bar i{display:block;height:100%;background:var(--ink-2)}
+.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--line)}
+
+/* tabs + stage */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink)}
+.tab.model::after{content:" JSON";font:10px var(--mono);color:var(--muted);vertical-align:super}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static;max-height:none}}
+.stage>div{min-width:0}
+.view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.view h2{font-size:15px;margin:0 0 4px}
+.view h2 small{font:11px var(--mono);color:var(--muted);font-weight:400}
+.lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;max-height:calc(100vh - 24px);overflow:auto}
+.inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.inspector .name{font-weight:700;font-size:15px;word-break:break-word}
+.inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.inspector p{margin:0 0 8px;color:var(--ink-2);font-size:13px}
+.inspector p.lead{color:var(--ink)}
+.inspector dl{margin:0;font-size:12.5px}
+.inspector dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-top:8px}
+.inspector dd{margin:2px 0 0;color:var(--ink-2)}
+.inspector dd ul,.inspector dd ol{margin:0;padding-left:16px}
+.inspector dd li{margin:2px 0}
+.inspector a{text-decoration:none;border-bottom:1px solid var(--line)}
+.inspector a:hover{border-bottom-color:var(--ink)}
+.steps-list{margin:4px 0 0;padding:0;list-style:none;font-size:12.5px}
+.steps-list li{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--hair);color:var(--ink-2)}
+.steps-list li b{font-family:var(--mono);color:var(--ink);font-size:11.5px;white-space:nowrap}
+.steps-list .files{display:block;font:11px var(--mono);color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.steps-list .check{display:block;font-size:12px;margin-top:2px}
+.steps-list .check::before{content:"check: ";color:var(--muted)}
+a.more{font:11px var(--mono);color:var(--link);text-decoration:none;white-space:nowrap}
+a.more:hover{text-decoration:underline}
+
+/* Legends: every tab, panel and the strip carry one .key listing exactly the encodings drawn there (GUIDANCE.md §2). */
+.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.key i.sbar{border-color:var(--line);border-left:4px solid var(--c)}
+.key i.pln{border-style:dashed;background:none;border-color:var(--muted)}
+.key i.node{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink-2)}
+.key i.node.hollow{background:none;border:2px dashed var(--muted)}
+.key i.node.acc{background:var(--accent)}
+.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}
+.key i.ln.dash{border-top-style:dashed;border-top-color:var(--muted)}
+.key i.gl{border-color:var(--accent);box-shadow:0 0 6px 2px color-mix(in srgb,var(--accent) 45%,transparent)}
+.key i.hold{border:2px solid var(--accent)}
+.key i.wait{border-color:var(--warning);background:color-mix(in srgb,var(--warning) 25%,var(--surface))}
+.key .vp,.key .badge{align-self:center}
+
+/* status pills: the colour is the left bar and a tint; the glyph and the word carry the meaning (never colour alone) */
+.vp{--sc:var(--muted);display:inline-flex;align-items:center;gap:5px;font:600 10.5px/1.2 var(--mono);padding:2px 6px;border-radius:3px;border:1px solid var(--line);border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 14%,var(--surface));color:var(--ink);white-space:nowrap;letter-spacing:.02em}
+.vp i,.key .vp i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none}
+.vp.good{--sc:var(--good)}.vp.warning{--sc:var(--warning)}.vp.serious{--sc:var(--serious)}.vp.critical{--sc:var(--critical)}
+.vp.neutral{--sc:var(--muted);background:var(--surface)}
+.vp.dashed{border-style:dashed;border-left-style:dashed;color:var(--ink-2)}
+.badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}
+.badge[data-sys]{border-left:3px solid var(--c)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c,var(--muted));flex:none;vertical-align:-1px;margin-right:5px}
+
+/* the board: a label column and four phase columns; each row's cells joined by a connector, a node on each cell */
+.board{display:grid;grid-template-columns:minmax(150px,190px) repeat(4,minmax(0,1fr));column-gap:14px;align-items:stretch}
+.colhead{position:sticky;top:0;z-index:2;background:var(--surface);padding:6px 4px 8px;border-bottom:2px solid var(--line);box-shadow:-7px 0 0 var(--surface),7px 0 0 var(--surface)}
+.colhead.glow{border-radius:4px}
+.nw{white-space:nowrap}
+.colhead .ph{font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.colhead .q{font-size:12px;color:var(--ink-2);margin-top:2px}
+.colhead .dt{font:11px var(--mono);color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.colhead .dt a{text-decoration:none;border-bottom:1px solid var(--line)}
+.grouphead{grid-column:1/-1;margin:14px 0 0;font:700 11px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.grouphead small{font:400 11px var(--mono);text-transform:none;letter-spacing:0}
+.rowlab{padding:10px 8px 10px 10px;border-left:4px solid var(--c,var(--muted));margin:8px 0;min-width:0}
+.rowlab .nm{font-weight:700;font-size:13px;overflow-wrap:anywhere}
+.rowlab .wh{font:11px var(--mono);color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.rowlab .sy{font-size:11px;color:var(--ink-2);margin-top:3px}
+.rowlab .un{font:11px var(--mono);color:var(--ink-2);margin-top:4px;display:flex;flex-wrap:wrap;gap:3px 8px}
+.rowlab .un a{text-decoration:none;border-bottom:1px solid var(--line)}
+.cell{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px 8px;margin:8px 0;min-width:0;font-size:12.5px}
+.cell[role="button"]{cursor:pointer}
+.cell[role="button"]:hover{border-color:var(--ink-2)}
+.cell.sel{outline:2px solid var(--on);outline-offset:1px}
+.cell .kick{font:700 10px var(--mono);letter-spacing:.1em;color:var(--muted);margin-bottom:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cell .kick .kind{color:var(--ink-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;letter-spacing:.04em;font-weight:600}
+.cell .sum{color:var(--ink);line-height:1.4;overflow-wrap:anywhere}
+.cell .meta{font:11px var(--mono);color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:2px 8px}
+.cell::before{content:"";position:absolute;left:-15px;top:50%;width:14px;border-top:2px solid var(--ink-2)}
+.cell::after{content:"";position:absolute;left:-6px;top:calc(50% - 5px);width:10px;height:10px;border-radius:50%;background:var(--ink-2)}
+.cell.gap::before{display:none}
+.cell.built{border-left:3px solid var(--sc,var(--line))}
+.cell.built.good{--sc:var(--good)}.cell.built.warning{--sc:var(--warning)}.cell.built.serious{--sc:var(--serious)}.cell.built.critical{--sc:var(--critical)}
+.cell.pending,.cell.deferred{border-style:dashed}
+.cell.pending::before{border-top-style:dashed;border-top-color:var(--muted)}
+.cell.pending::after,.cell.deferred::after{background:var(--surface);border:2px dashed var(--muted)}
+.cell.leave .kick .kind{border-style:dashed}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.opts li{min-width:0}
+.opt{--sc:var(--muted);appearance:none;border:1px solid transparent;border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 10%,transparent);color:var(--ink);font:inherit;font-size:12px;line-height:1.35;text-align:left;padding:3px 6px;border-radius:3px;cursor:pointer;display:grid;grid-template-columns:14px minmax(0,1fr);gap:5px;align-items:start;width:100%;min-width:0;max-width:100%}
+.opt.good{--sc:var(--good)}.opt.warning{--sc:var(--warning)}.opt.critical{--sc:var(--critical)}
+.opt.dashed{border-left-style:dashed}
+.opt>i{font-style:normal;font-weight:700;font-size:11.5px;line-height:1.45}
+.opt>span{min-width:0;overflow-wrap:anywhere}
+.opt .vw{font:600 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-right:5px}
+.opt.critical>span>span:last-child{color:var(--ink-2)}
+.opt:hover{border-color:var(--line)}
+.opt.sel{outline:2px solid var(--on)}
+@media (max-width:900px){
+  .board{display:block}
+  .colhead{display:none}
+  .grouphead{margin-top:18px}
+  .rowlab{margin:14px 0 4px;padding:6px 10px}
+  .cell{margin:6px 0}
+  .cell::before,.cell::after{display:none}
+}
+
+/* controls, tables, cards */
+.ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
+.ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:hover:not([aria-pressed="true"]){background:var(--surface-2)}
+.scroll{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:7px 6px;border-top:1px solid var(--hair);vertical-align:top}
+.tbl td{overflow-wrap:anywhere}
+.tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-top:0}
+.tbl tr[data-sys]>:first-child{border-left:4px solid var(--c)}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover{background:var(--surface-2)}
+.tbl .sub{font-size:12px;color:var(--ink-2);margin-top:2px}
+.tbl.dec{min-width:720px}
+.tbl.dec td:first-child{color:var(--ink-2);font-size:12px}
+.bcards{display:grid;gap:10px}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px 10px 14px;border-left:4px solid var(--c,var(--muted));min-width:0;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.bcard.st-pending,.bcard.st-deferred{border-style:dashed;border-left-style:solid}
+.bcard .bh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:4px}
+.bcard .bh .nm{font-weight:700;color:var(--ink);font-size:13px}
+.bcard .bh .wh{font:11px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.bcard p{margin:4px 0 6px}
+.bcard .changes{margin:0;padding-left:18px}
+.bcard .changes li{margin:4px 0}
+.bcard .changes b{color:var(--ink);font-weight:600}
+.bcard .changes small{display:block;font:11px var(--mono);color:var(--muted);margin-top:1px}
+.bcard .meta{font:11px var(--mono);color:var(--muted);margin-top:6px;overflow-wrap:anywhere}
+.bcard .meta a{text-decoration:none;border-bottom:1px solid var(--line)}
+pre.src{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow:auto;color:var(--ink);max-height:70vh}
+pre.src .k{color:var(--link);font-weight:600} pre.src .s{color:var(--ink-2)}
+
+/* chain (tracking boards): the units as a dependency graph in landing order */
+.chainsvg{display:block;max-width:none}
+.chainsvg .edge{fill:none;stroke:var(--ink-2);stroke-width:1.4}
+.chainsvg .edge.todo{stroke:var(--muted);stroke-dasharray:5 4}
+.chainsvg .unit{cursor:pointer}
+.chainsvg .unit rect.box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.chainsvg .unit.pending rect.box{stroke:var(--muted);stroke-dasharray:6 4}
+.chainsvg .unit rect.bar{fill:var(--c,var(--muted))}
+.chainsvg .unit rect.st{fill:var(--sc,var(--muted))}
+.chainsvg .unit.good{--sc:var(--good)}.chainsvg .unit.warning{--sc:var(--warning)}.chainsvg .unit.serious{--sc:var(--serious)}.chainsvg .unit.critical{--sc:var(--critical)}
+.chainsvg .unit text{fill:var(--ink);font:11px var(--mono)}
+.chainsvg .unit text.t{font:700 11.5px var(--sans)}
+.chainsvg .unit text.s{fill:var(--ink-2);font-size:10px}
+.chainsvg .unit.glow rect.box{stroke:var(--accent);stroke-width:2}
+.chainsvg .unit.glow{animation:none;box-shadow:none}
+.chainsvg .unit.glow rect.box{animation:svgglow 2s ease-in-out infinite}
+@keyframes svgglow{0%,100%{stroke-width:1.5;filter:none}50%{stroke-width:3;filter:drop-shadow(0 0 5px var(--accent))}}
+@media (prefers-reduced-motion:reduce){.chainsvg .unit.glow rect.box{animation:none}}
+.chainsvg .unit.sel rect.box{stroke:var(--on);stroke-width:2.5}
+.chainsvg .arrow{fill:var(--ink-2)}
+
+/* context */
+.context{margin-top:24px}
+.context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h3{font-size:13px;margin:0 0 8px}
+.card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.card .lede{margin:0}
+.trail{list-style:none;margin:0;padding:0;font-size:12.5px}
+.trail li{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.trail .d{font:11px var(--mono);color:var(--muted);white-space:nowrap;padding-top:2px}
+.trail .ph{font:700 9.5px var(--mono);letter-spacing:.1em;color:var(--muted);margin-right:6px}
+.trail .t{color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.trail .t b{color:var(--ink);font-weight:600}
+.trail .t a{text-decoration:none;border-bottom:1px solid var(--line)}
+.issues{list-style:none;margin:0;padding:0;font-size:12.5px}
+.issues li{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.issues li>a,.issues li>b{font-family:var(--mono);text-decoration:none;color:var(--ink-2);font-weight:400}
+.issues li>a:hover{color:var(--ink)}
+.issues span{color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.issues span a{text-decoration:none;border-bottom:1px solid var(--line)}
+.docs{margin:0;padding:0;list-style:none;font-size:12.5px}
+.docs li{padding:4px 0;border-top:1px solid var(--hair);color:var(--ink-2);overflow-wrap:anywhere}
+.docs a{text-decoration:none;border-bottom:1px solid var(--line);color:var(--ink)}
+.docs a:hover{border-bottom-color:var(--ink)}
+.notes p{margin:0 0 6px;font-size:12.5px;color:var(--ink-2)}
+.notes ul{margin:0 0 6px;padding-left:18px;font-size:12.5px;color:var(--ink-2)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+footer code{color:var(--ink-2)}
+footer a{text-decoration:none;border-bottom:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="h1"></h1>
+  <p class="function" id="function"></p>
+  <div class="chips" id="chips"></div>
+</header>
+
+<!-- presenter: the WIP strip is rendered from plan.json "wip" (plan/RULES.md §3); the strip carries its own legend. -->
+<section class="wip" id="wip" aria-label="Work in progress"></section>
+
+<div class="kpis" id="kpis"></div>
+
+<!-- presenter: three views of the same rows plus the source; a tracking board adds Chain. Every tab carries a legend. -->
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t-timeline" aria-controls="p-timeline" aria-selected="true">Timeline</button>
+  <button class="tab" role="tab" id="t-decisions" aria-controls="p-decisions" aria-selected="false">Decisions</button>
+  <button class="tab" role="tab" id="t-built" aria-controls="p-built" aria-selected="false">As built</button>
+  <button class="tab" role="tab" id="t-chain" aria-controls="p-chain" aria-selected="false">Chain</button>
+  <button class="tab model" role="tab" id="t-source" aria-controls="p-source" aria-selected="false">Source</button>
+</div>
+
+<div class="stage">
+<div>
+  <section class="view" role="tabpanel" id="p-timeline" aria-labelledby="t-timeline">
+    <h2>Timeline: gap, considered, verdict, as built</h2>
+    <p class="lede" id="timeline-lede"></p>
+    <div class="board" id="board"></div>
+    <div class="key" id="timeline-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-decisions" aria-labelledby="t-decisions" hidden>
+    <h2>Decision log</h2>
+    <p class="lede">Every option from every row, with its verdict and the reason. Declined options stay on record: they are what a later plan must argue against before reopening a question. An option deferred at plan time shows how column 4 settled it.</p>
+    <div class="ctl" id="dec-ctl"></div>
+    <div class="scroll"><table class="tbl dec" id="dec-table"></table></div>
+    <div class="key" id="decisions-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-built" aria-labelledby="t-built" hidden>
+    <h2>As built: what exists, and every change from the verdict</h2>
+    <p class="lede">One card per row. Its state says how the built thing relates to the verdict; each change names what moved, why, and in which stage or review it was decided. The verdict column is never edited to match: this register is where the difference lives.</p>
+    <div class="ctl" id="built-ctl"></div>
+    <div class="bcards" id="built-list"></div>
+    <div class="key" id="built-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-chain" aria-labelledby="t-chain" hidden>
+    <h2>Chain: the units in landing order</h2>
+    <p class="lede">Each unit is a sub-issue, planned and built at its own level on its own board. An arrow runs from a unit to the units it blocks; columns are the earliest a unit can start. Click a unit for its row.</p>
+    <div class="scroll" id="chain-frame"></div>
+    <div class="key" id="chain-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-source" aria-labelledby="t-source" hidden>
+    <h2>plan.json <small>the committed file, embedded verbatim</small></h2>
+    <p class="lede">The page is built from this file at load. The presenter writes it at each event of the issue's run; <code>plan/scripts/embed.js</code> copies it in here and <code>plan/scripts/check.js</code> verifies the copy and the rules.</p>
+    <pre class="src" id="source-view" tabindex="0"></pre>
+    <div class="key" id="source-key"></div>
+  </section>
+</div>
+
+<aside class="inspector" id="inspector" aria-live="polite">
+  <h2>Inspector</h2>
+  <div id="insp-body"><p>Select a cell, an option or a card to see its detail here.</p></div>
+</aside>
+</div>
+
+<section class="context">
+  <h2>Context</h2>
+  <div class="cards" id="context"></div>
+</section>
+
+<footer id="footer"></footer>
+<!-- Lineage: the plan set's own template (plan/RULES.md), built on the system templates' tokens, header, chips, KPIs, tab/stage/
+     inspector layout, legends, Context and footer. It has no Systems, Structure, C4, Threads, Lifecycles or Guarantees content,
+     because its subject is one change, not a running system; the system pages carry those. A page that diverges from this
+     template records the divergence here (GUIDANCE.md §7). -->
+</div>
+
+<!-- A verbatim copy of plan.json (plan/scripts/embed.js). Do not edit here: edit plan.json and re-embed. -->
+<script type="application/json" id="plan">
+{
+  "schema": "plan-board/1",
+  "repo": "SpartanLaboratories/WebTools",
+  "issue": 38,
+  "slug": "38-handshake-empty-name",
+  "folder": "docs/plans/38-handshake-empty-name",
+  "kind": "issue",
+  "level": null,
+  "title": "Malformed Iam refusal",
+  "issueTitle": "Handshake parsing accepts an empty peer name on extra whitespace",
+  "function": "The `webtools-udp` server trims an unframed handshake line and splits it on a single space, so `Iam  x` registered a peer named `\"\"` and a bare `Iam` died in a stack-trace WARN. This plan makes the server refuse every malformed `Iam` line with `REFUSED malformed`, from any origin, before `admit` and without touching a registration, and moves the KDoc, tests and living documents that said otherwise. A contained bugfix in one module, shipped as `webtools-udp` `2.0.0a`.",
+  "status": "built",
+  "parent": null,
+  "branch": "fix/issue-38-handshake-empty-name",
+  "baseline": {
+    "ref": "master",
+    "sha": "85cfbbe",
+    "date": "2026-10-19"
+  },
+  "asBuilt": {
+    "ref": "master",
+    "sha": "ca57a57",
+    "date": "2026-10-20",
+    "pr": 59,
+    "merge": "806ce8e",
+    "version": "webtools-udp 2.0.0a"
+  },
+  "systems": [
+    {
+      "slug": "webtools-udp",
+      "name": "webtools-udp",
+      "slot": 1,
+      "top": "webtools-udp",
+      "status": "built",
+      "page": null
+    }
+  ],
+  "wip": {
+    "step": "landed",
+    "since": "2026-10-20",
+    "updated": "2026-10-20",
+    "detail": "Merged through PR #59 as 806ce8e; the board was written after the fact as the worked example.",
+    "steps": [
+      "research",
+      "architecture",
+      "plan",
+      "branch",
+      "implementation",
+      "qa",
+      "remediation",
+      "landing",
+      "landed"
+    ],
+    "current": [],
+    "qa": [
+      {
+        "pass": 1,
+        "verdict": "changes-requested",
+        "findings": {
+          "documentation": 10,
+          "test": 8
+        },
+        "note": "Stage C added to the plan"
+      },
+      {
+        "pass": 2,
+        "verdict": "changes-requested",
+        "findings": {
+          "documentation": 4,
+          "test": 1
+        },
+        "note": "5 LOW items; Stage D added; no third review run, by the maintainer's decision"
+      }
+    ],
+    "qaMax": null,
+    "waitingOn": null,
+    "resume": null,
+    "blockers": {
+      "waitsOn": [],
+      "blocks": []
+    },
+    "landing": {
+      "pr": 59,
+      "merge": "806ce8e",
+      "version": "webtools-udp 2.0.0a",
+      "date": "2026-10-20"
+    }
+  },
+  "milestones": [
+    {
+      "column": "gap",
+      "label": "Research",
+      "date": "2026-10-19",
+      "ref": "research/README.md",
+      "note": "three questions, three findings files, verification and a summary in seven commits, 77b3786 to 9b1fff7"
+    },
+    {
+      "column": "considered",
+      "label": "Architecture",
+      "date": "2026-10-20",
+      "ref": "architecture.md",
+      "note": "§9 alternatives, §10 decomposition into one unit in two stages"
+    },
+    {
+      "column": "verdict",
+      "label": "Plan accepted",
+      "date": "2026-10-20",
+      "ref": "56a2121",
+      "note": "Commit 1 carried plan.md, architecture.md and impact.md with the test housekeeping"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-10-20",
+      "ref": "PR #59",
+      "note": "Stages A to D in five commits, then the 2.0.0a bump ca57a57; merged as 806ce8e"
+    }
+  ],
+  "trail": [
+    {
+      "date": "2026-09-24",
+      "column": "gap",
+      "label": "Issue #38 opened: `Iam  x` registers a peer named `\"\"`; proposes rejecting empty tokens or splitting on `\\s+`",
+      "ref": "#38"
+    },
+    {
+      "date": "2026-10-19",
+      "column": "gap",
+      "label": "Baseline: master at the merge of #51",
+      "ref": "85cfbbe"
+    },
+    {
+      "date": "2026-10-19",
+      "column": "gap",
+      "label": "Research: blast radius, malformed-line handling, refusal reply text; verification; summary aligned with the settled design",
+      "ref": "9b1fff7"
+    },
+    {
+      "date": "2026-10-20",
+      "column": "verdict",
+      "label": "Commit 1: A-1 and A-2 test housekeeping, with the plan documents",
+      "ref": "56a2121"
+    },
+    {
+      "date": "2026-10-20",
+      "column": "built",
+      "label": "Commit 2: Stage A code, KDoc and tests",
+      "ref": "1605bdd"
+    },
+    {
+      "date": "2026-10-20",
+      "column": "built",
+      "label": "First review: changes requested, 10 documentation and 8 test findings; Stage C added to the plan",
+      "ref": ""
+    },
+    {
+      "date": "2026-10-20",
+      "column": "built",
+      "label": "Second review: 5 LOW items, 4 documentation and 1 test; Stage D added",
+      "ref": ""
+    },
+    {
+      "date": "2026-10-20",
+      "column": "built",
+      "label": "Commits 3 to 5: contracts and regions, the remaining tests, then Stage B's documents with every reference recomputed",
+      "ref": "16d6849"
+    },
+    {
+      "date": "2026-10-20",
+      "column": "built",
+      "label": "Version bump to `webtools-udp` `2.0.0a`; PR #59 opened and merged",
+      "ref": "ca57a57"
+    }
+  ],
+  "rows": [
+    {
+      "id": "validity-rule",
+      "group": "Code",
+      "name": "Handshake line validity rule",
+      "system": "webtools-udp",
+      "where": "main/HandshakeProtocol.kt",
+      "gap": {
+        "kind": "bug",
+        "summary": "`parseHandshake` is `runCatching { require(verb); require(size >= 2); Handshake(tokens[1], tokens.getOrElse(2) { \"\" }) }`: `Iam  x` parses to a handshake named `\"\"`, `Iam bob  tok` to one indistinguishable from `Iam bob`, and a bare `Iam` is a `Result.failure` carrying a stack trace. Absent and present-but-empty slots are conflated, and the handshake's only throw path sits here.",
+        "detail": "The split on a single U+0020 keeps consecutive empty strings, so a run of spaces produces an empty slot. `Result` is the module's type for operational failures; its domain outcomes (`Admission`, `SendOutcome`, `ReceiveOutcome`, `OfferResult`) are sealed types.",
+        "evidence": [
+          "main/HandshakeProtocol.kt:55-59 — `parseHandshake` with `getOrElse(2) { \"\" }`",
+          "main/HandshakeProtocol.kt:68-69, :77 — `extraTokenCount`; verb-only `isHandshake`",
+          "research/malformed-line-handling.md §3.2, §5.A — the sealed-outcome finding and the totality argument"
+        ],
+        "source": "research/README.md",
+        "link": "research/README.md#how-a-malformed-line-is-represented-and-routed"
+      },
+      "options": [
+        {
+          "id": "sealed-outcome",
+          "name": "A sealed `HandshakeParse` outcome with a `HandshakeDefect` enum",
+          "summary": "A total `parseHandshake(tokens): HandshakeParse` with three arms, `NotAHandshake`, `Malformed(defect)` and `Valid(handshake)`; the credential slot read with `getOrNull`, so absent (`null`, carried as `\"\"`) and present-but-empty (malformed) are told apart.",
+          "verdict": "accepted",
+          "why": "Fits the module's idiom for domain outcomes, gives the coordinator a compiler-checked exhaustive `when`, carries the defect for the log, and allocates no exception on the path a hostile sender drives. KEEP-0127 reserves `Result` for generic failures.",
+          "source": "architecture.md §5.1",
+          "link": "architecture.md#9-alternatives-considered"
+        },
+        {
+          "id": "keep-result",
+          "name": "Keep `Result<Handshake>` and treat every post-recognition failure as malformed",
+          "verdict": "declined",
+          "why": "`runCatching` catches every `Throwable`, so an unrelated bug inside the parse would be answered `REFUSED malformed` instead of surfacing; it carries no defect for the log; it builds a stack-trace-bearing exception per hostile datagram.",
+          "wins": "Only if zero churn in the two existing parse tests mattered more than those points.",
+          "source": "architecture.md §9"
+        },
+        {
+          "id": "typed-exception",
+          "name": "A typed `MalformedHandshakeException` inside `Result`",
+          "verdict": "declined",
+          "why": "The stack-trace cost stays and exhaustiveness is lost: the coordinator would need `exceptionOrNull() as?` plus an `else` for failures it does not know.",
+          "wins": "If the project paradigm forbade sealed outcomes, which it does not (`Admission`, `SendOutcome`).",
+          "source": "architecture.md §9"
+        },
+        {
+          "id": "precheck",
+          "name": "A separate validity check before parsing",
+          "verdict": "declined",
+          "why": "Two copies of the slot logic, a `Result` that can no longer fail, and a check a caller can forget.",
+          "source": "architecture.md §9"
+        },
+        {
+          "id": "split-whitespace",
+          "name": "Split on `\\s+`, the issue's second proposal",
+          "verdict": "declined",
+          "why": "Redefines the wire format and silently turns `Iam bob  tok` into a different valid line. The single-U+0020 split is the contract.",
+          "source": "architecture.md §1.1, §9"
+        },
+        {
+          "id": "credential-type",
+          "name": "A `String?` credential or a `Credential` sum type in `Handshake`",
+          "verdict": "declined",
+          "why": "The only consumer maps it straight back to `String` for `admit`, and `\"\"` inside a `Handshake` is unambiguous once the slot read rejects present-but-empty.",
+          "source": "architecture.md §9"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "`HandshakeProtocol` gains a sealed `HandshakeParse`, a three-entry `HandshakeDefect` enum with fixed log-safe labels, a total `parseHandshake` that checks the verb through `isHandshake`, then the name, then the credential, and `MALFORMED_REFUSAL_DATAGRAM` built once beside `REGISTERED_DATAGRAM`. `Handshake`, `isHandshake` and `extraTokenCount` keep their signatures; `MIN_TOKENS` goes.",
+        "defense": "One definition of recognition (`isHandshake` feeds the `NotAHandshake` arm), one definition of validity, no throw path left in the handshake, and the name slot checked before the credential slot so `Iam  x y` reports the name defect. The sealed type is closed on purpose: the routing's exhaustive `when` is what guarantees that a future arm, such as #53's, is routed.",
+        "steps": [
+          {
+            "id": "A-3",
+            "what": "Replace the whole of `main/HandshakeProtocol.kt`: the sealed outcome, the enum, the total parse, the precomputed refusal bytes.",
+            "files": [
+              "main/HandshakeProtocol.kt"
+            ],
+            "check": "`./gradlew :webtools-udp:compileKotlin`; `grep -rn \"getOrThrow\\|isFailure\"` on the two parse tests prints nothing",
+            "link": "plan.md#a-3-mainhandshakeprotocolkt--replace-the-whole-file"
+          }
+        ],
+        "tests": [
+          "Level 1 — `HandshakeProtocolGatingTest`, replaced: every outcome",
+          "Level 4a — `HandshakeProtocolTest`, replaced: the truth table, totality, the reply bytes, the #53 gap pinned"
+        ],
+        "risks": [
+          "Nothing public changes: `HandshakeParse`, `HandshakeDefect` and the constant are `internal` inside an `internal object`"
+        ],
+        "source": "plan.md §5, §7 A-3, §8 T-1 and T-7",
+        "link": "plan.md#a-3-mainhandshakeprotocolkt--replace-the-whole-file"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Built as decided in Commit 2: the sealed outcome, the enum, the total parse with `getOrNull`, and the refusal bytes built once. Two review rounds reworded its KDoc.",
+        "changes": [
+          {
+            "what": "The reply-bytes KDoc no longer cites `refusedMessage`'s internals; that rationale moved to a `//` comment.",
+            "why": "A KDoc states a contract, not another function's implementation (first review, documentation finding 9).",
+            "when": "Stage C · first review",
+            "ref": "d3807b0"
+          },
+          {
+            "what": "The KDoc calls the two replies fixed-text replies whose bytes never come from the application, not replies sent \"without consulting the application\".",
+            "why": "A new origin's `REGISTERED 2` follows `admit`, so the old sentence was false (second review, item 1).",
+            "when": "Stage D · second review",
+            "ref": "d3807b0"
+          }
+        ],
+        "files": [
+          "main/HandshakeProtocol.kt"
+        ],
+        "tests": "gating 83 (+6) and deterministic 96 (+7) cover every parse outcome, totality, the verb check before any slot check, the reply bytes and the pinned #53 gap",
+        "commits": [
+          "1605bdd",
+          "d3807b0"
+        ],
+        "verified": "All levels pass; `grep -rn getOrThrow` on the two parse tests prints nothing.",
+        "link": "final-implementation.md#code"
+      }
+    },
+    {
+      "id": "routing",
+      "group": "Code",
+      "name": "Unframed-datagram routing",
+      "system": "webtools-udp",
+      "where": "main/HandshakeCoordinator.kt",
+      "gap": {
+        "kind": "bug",
+        "summary": "`classify` splits the trimmed text twice (`isHandshake(text.split(' ')) -> handleHandshake(origin, text.split(' '))`) and `handleHandshake` parses first and routes a `Result`: a bare `Iam` ends in the listener's stack-trace WARN with no reply; `Iam  x` and `Iam bob  tok` get `REGISTERED 2` from a registered origin and reach `admit` from an unknown one, registering the name `\"\"`.",
+        "detail": "An exception anywhere inside `accept` ends the `mcups-listener` thread (`flatMap` is a plain `fold`; `receiveLoop` has no `try`), so every new path has to be exception-free. The liveness stamp for a registered origin runs before classification and is out of scope.",
+        "evidence": [
+          "main/HandshakeCoordinator.kt:220-232 — the `null`-tag branch; two splits at :227",
+          "main/HandshakeCoordinator.kt:243-293 — `handleHandshake`: parse, extra-token DEBUG, `findByOrigin`, `admit`, supersede, register",
+          "main/MultiConnectionUDPServer.kt:326-340 — `receiveLoop` logs a `Result.failure` with the exception at :336",
+          "main/ResultExtensions.kt:19-20 — `flatMap` does not catch"
+        ],
+        "source": "research/README.md",
+        "link": "research/README.md#how-a-malformed-line-is-represented-and-routed"
+      },
+      "options": [
+        {
+          "id": "one-parse-four-way",
+          "name": "One split, one parse, an exhaustive `when` that routes four ways",
+          "summary": "`NotAHandshake` → today's \"sender may be pre-2.0\" WARN; `Malformed` → one WARN and `REFUSED malformed` to any origin, returning the send's `Result`; `Valid` → the extra-token DEBUG, then today's registered-origin retransmit or the untouched `admit`, supersede, register path.",
+          "verdict": "accepted",
+          "why": "One token list per hostile datagram instead of two, no exception allocation, and the compiler checks that every outcome is routed. The malformed arm returns the send's `Result` exactly as the `admit` refusal does, so the listener adds no stack-trace WARN.",
+          "source": "architecture.md §5.2",
+          "link": "architecture.md#9-alternatives-considered"
+        },
+        {
+          "id": "silence-registered",
+          "name": "Silence, or `REGISTERED 2`, for a registered origin's malformed line",
+          "summary": "What the research recommended, following DTLS, WireGuard and ENet, which discard a bad first message silently.",
+          "verdict": "declined",
+          "why": "The registered peer and the unknown peer would follow different rules for the same bytes, and `REGISTERED 2` would answer an accept to a line the server defines as malformed. One reply for every malformed line keeps the rule one sentence; the reflection and client-WARN costs are stated in the protocol doc.",
+          "wins": "If a strict 3x anti-amplification bound were adopted as a module requirement; it is not.",
+          "source": "architecture.md §9; research/README.md § Where the findings differ"
+        },
+        {
+          "id": "require-gate",
+          "name": "Keep `isHandshake` as the gate in `classify` and a `require` on the verb inside `parseHandshake`",
+          "verdict": "declined",
+          "why": "An exception inside `accept` ends the listener thread; a total parse with a `NotAHandshake` arm costs one `when` arm and removes the only throw path.",
+          "wins": "Only once #54's guard existed, and even then the arm is cheaper.",
+          "source": "architecture.md §9"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "`classify`'s `null` branch splits once and calls a new `routeUnframed`, an exhaustive `when` over `HandshakeParse`. `refuseMalformed` handles the malformed arm with one WARN (`Refusing malformed handshake from {} ({}); origin registered: {}`: the origin, the defect label, the flag) and `send(MALFORMED_REFUSAL_DATAGRAM, origin)`. `handleHandshake` keeps the valid line's lookup and retransmit; `admitAndRegister` is today's body moved verbatim, #49 ordering included.",
+        "defense": "The malformed arm never reaches `admit`, never looks up by name, never supersedes, registers nothing and fires no `onRegistered`; its registration lookup is read-only, for the log field. The WARN never carries the line, its tokens, the name or the credential, and attaches no exception (CWE-117; the OWASP logging guidance). `accept`'s `@return` narrows to: failure only when a reply could not be delivered or `admit` threw.",
+        "steps": [
+          {
+            "id": "A-4",
+            "what": "Five edits to `main/HandshakeCoordinator.kt`, top to bottom: the single split in `classify`, `routeUnframed`, `refuseMalformed`, the narrowed `handleHandshake`, `admitAndRegister`.",
+            "files": [
+              "main/HandshakeCoordinator.kt"
+            ],
+            "check": "`compileKotlin`; the component tests assert the WARN text through `LogCapture`",
+            "link": "plan.md#a-4-mainhandshakecoordinatorkt--five-edits-top-to-bottom"
+          }
+        ],
+        "tests": [
+          "Level 1 — `HandshakeCoordinatorGatingTest`, one new test",
+          "Level 2 — `HandshakeCoordinatorTest`: the three shapes from unknown and registered origins, `Iam bob tok  x`, no supersede, no `admit`, no `onRegistered`, the reply addressed to the origin only, the log content",
+          "Level 3 — the `MultiConnectionUDPServerTest` flip; `MultiConnectionUDPServerAdmissionTest`: `admit` never consulted, the trailing space trimmed",
+          "Level 4c — a malformed burst leaves the listener alive"
+        ],
+        "risks": [
+          "Reflection: a forged source that knows a registered client's `ip:port` can make the server send it 17-byte datagrams at the sender's rate; payload ratio 5.7 on a 3-byte trigger, inside the range `admit` refusals already produce; no state created; stated in the protocol doc with #57",
+          "Log noise until #41 lands: one WARN per malformed datagram, without the stack trace a bare `Iam` cost before",
+          "A spoofed malformed line still refreshes a registered origin's idle timer: pre-existing, the stamp runs before classification"
+        ],
+        "source": "plan.md §5, §7 A-4, §12",
+        "link": "plan.md#a-4-mainhandshakecoordinatorkt--five-edits-top-to-bottom"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Built as decided in Commit 2. The first review found the KDoc overstated the registration guarantee and understated `accept`'s failures; Commit 3 fixed both, marked the #49 ordering and added the module's first `//region`s.",
+        "changes": [
+          {
+            "what": "The registration guarantee reads precisely: not torn down, superseded or re-screened, no `onClientDisconnect`, but the liveness stamp still refreshed when idle detection is on.",
+            "why": "\"The registration is left exactly as it is\" was false with idle detection on; the research (blast-radius pitfall P5) had the caveat and the design dropped it (first review, finding 1).",
+            "when": "Stage C · first review",
+            "ref": "d3807b0"
+          },
+          {
+            "what": "`accept`'s `@return` names three failure sources, an undeliverable reply, a throwing `admit` and a handler that cannot be handed to `dispatch`; the two-argument `accept` gained `@param`, `@return` and its trimmed-text precondition.",
+            "why": "The planned `@return` omitted dispatch hand-off rejection (first review, findings 3 and 4).",
+            "when": "Stage C · first review",
+            "ref": "d3807b0"
+          },
+          {
+            "what": "`admitAndRegister` carries `FIXME(#49)` at the registration line and its KDoc names #49 as a known defect.",
+            "why": "The planned KDoc narrated the move and called the ordering \"deliberate\" (first review, finding 7).",
+            "when": "Stage C · first review",
+            "ref": "d3807b0"
+          },
+          {
+            "what": "Six `//region`s: Inbound routing, Handshake state machine, Delivery to bound handlers, ClientChannel and scheduler shutdown, Liveness, Server-wide fan-out.",
+            "why": "First review, finding 10; the repository's first regions.",
+            "when": "Stage C · first review",
+            "ref": "d3807b0"
+          }
+        ],
+        "files": [
+          "main/HandshakeCoordinator.kt"
+        ],
+        "tests": "component 235 (+12), integration 115 (+5), nonfunctional 65 (+3): the shapes from both origins, the send failure, the WARN content, a retry after a refusal, bursts with and without a registered socket",
+        "commits": [
+          "1605bdd",
+          "d3807b0"
+        ],
+        "verified": "A hostile CR/LF line stays out of the log (4c); the listener survives a malformed burst and the registration count is unchanged.",
+        "link": "final-implementation.md#stage-c-after-the-first-review"
+      }
+    },
+    {
+      "id": "refusal-reply",
+      "group": "Code",
+      "name": "The refusal reply",
+      "system": "webtools-udp",
+      "where": "main/HandshakeProtocol.kt · main/HandshakeWireFormat.kt",
+      "gap": {
+        "kind": "missing",
+        "summary": "No reply exists for a malformed line: a bare `Iam` draws nothing and the empty-slot shapes draw an accept. The one reply builder, `HandshakeWireFormat.refusedMessage`, trims and collapses its reason and compiles a `Regex` on every call, the wrong cost on a path the sender paces.",
+        "evidence": [
+          "main/HandshakeWireFormat.kt:117-120 — `refusedMessage` compiles a `Regex` per call at :118",
+          "research/refusal-reply-text.md §6.1, §7 — the text and the amplification arithmetic"
+        ],
+        "source": "research/README.md",
+        "link": "research/README.md#what-the-refusal-says"
+      },
+      "options": [
+        {
+          "id": "refused-malformed",
+          "name": "`REFUSED malformed`: one fixed reason, bytes built once",
+          "summary": "17 bytes, the same for all three shapes, built once through `refusedMessage(\"malformed\")` into an `internal val` beside `REGISTERED_DATAGRAM`; the defect goes to the server log only.",
+          "verdict": "accepted",
+          "why": "A hand-rolled client's author needs a cause; one reason for three shapes gives a prober no oracle; precomputing avoids a `Regex` per hostile datagram. Payload ratio 5.7 on the 3-byte trigger (1.45 on the wire), in the range `admit` refusals already produce: the README's own `invalid credential` example is 5.2.",
+          "source": "architecture.md §5.1, §9; research/refusal-reply-text.md",
+          "link": "architecture.md#9-alternatives-considered"
+        },
+        {
+          "id": "malformed-handshake",
+          "name": "`REFUSED malformed handshake`",
+          "verdict": "declined",
+          "why": "Repeats \"handshake\" inside the client's own exception message (\"Server refused the handshake: …\") and gives the 3-byte trigger a ratio of 9.",
+          "source": "architecture.md §9"
+        },
+        {
+          "id": "per-slot-reason",
+          "name": "A reason that names the slot",
+          "verdict": "declined",
+          "why": "Three replies instead of one, longer, and an oracle for a prober.",
+          "source": "architecture.md §9"
+        },
+        {
+          "id": "bare-refused",
+          "name": "A bare `REFUSED`",
+          "verdict": "declined",
+          "why": "Leaves the hand-rolled-client author, who is exactly who sends a malformed line, with no cause; SMTP likewise advises against bare codes.",
+          "source": "architecture.md §9; research/refusal-reply-text.md C1"
+        },
+        {
+          "id": "configurable-reason",
+          "name": "A parameterised or configurable reason text",
+          "verdict": "declined",
+          "why": "The reason is informative wire text a third-party client must not branch on, and an application's `admit` may return the same word; making it configurable invites the branching the protocol doc warns against.",
+          "source": "architecture.md §8"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "`MALFORMED_REFUSAL_DATAGRAM`, an `internal val ByteArray` on `HandshakeProtocol`, built once from `HandshakeWireFormat.refusedMessage(\"malformed\")`; the reason string is a `private const val`. `HandshakeWireFormat` itself is not edited in code.",
+        "defense": "The reply verb and its handling are already Stable Core (`REFUSED_REPLY`, `isRefused`, `refusalReason`); only the reason text is new and it sits outside the contract, so no consumer can build on it. The shared array is read-only, like `REGISTERED_DATAGRAM`.",
+        "steps": [
+          {
+            "id": "A-3 (part)",
+            "what": "Add the constant and the private reason beside `REGISTERED_DATAGRAM`.",
+            "files": [
+              "main/HandshakeProtocol.kt"
+            ],
+            "check": "Level 4a asserts the bytes equal `REFUSED malformed`",
+            "link": "plan.md#a-3-mainhandshakeprotocolkt--replace-the-whole-file"
+          }
+        ],
+        "tests": [
+          "Level 4a — the reply bytes equal `REFUSED malformed`",
+          "Level 3 — a bare `Iam` over a real socket gets `REFUSED malformed`"
+        ],
+        "risks": [
+          "If the release label or the reason ever changed, every KDoc and protocol-doc mention changes with it"
+        ],
+        "source": "plan.md §5, §7 A-3",
+        "link": "plan.md#5-design"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in Commit 2: 17 bytes, built once, the reason informative. Protocol doc §3 says the reason is not a contract.",
+        "files": [
+          "main/HandshakeProtocol.kt"
+        ],
+        "commits": [
+          "1605bdd"
+        ],
+        "verified": "4a asserts the bytes; 3 and 4b observe the reply over loopback.",
+        "link": "final-implementation.md#behaviour"
+      }
+    },
+    {
+      "id": "public-kdoc",
+      "group": "Code",
+      "name": "Public KDoc contracts",
+      "system": "webtools-udp",
+      "where": "main/MultiConnectionUDPServer.kt · main/HandshakeWireFormat.kt",
+      "gap": {
+        "kind": "debt",
+        "summary": "The class and `admit` KDoc of `MultiConnectionUDPServer` and the `REFUSED` section of `HandshakeWireFormat` say that `REFUSED` comes only from `admit` and that the default admits every well-formed `Iam`. After the fix both sentences are false, and `admit`'s input domain (never an empty name; credential `\"\"` only when absent) is stated nowhere.",
+        "evidence": [
+          "main/MultiConnectionUDPServer.kt:15-23, :43-54, :354-386 — class and `admit` KDoc",
+          "main/HandshakeWireFormat.kt:35-39, :52-57 — the `REFUSED` reply section and `REFUSED_REPLY`"
+        ],
+        "source": "architecture.md §5.3",
+        "link": "architecture.md#53-public-kdoc-no-behaviour-change"
+      },
+      "options": [
+        {
+          "id": "restate",
+          "name": "Restate both KDocs: refused before `admit`, whatever the origin's state; `admit` never sees an empty name",
+          "verdict": "accepted",
+          "why": "Documents enforced behaviour; it narrows `admit`'s input domain and is additive for every existing override. Stable Core wording, no signature change. No alternative was weighed: a reader of the public API must not learn the rule from the protocol doc alone.",
+          "source": "architecture.md §5.3, §8",
+          "link": "architecture.md#53-public-kdoc-no-behaviour-change"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "KDoc only, no code: `MultiConnectionUDPServer` (class KDoc, `admit`) and `HandshakeWireFormat` (the `REFUSED` reply section, `REFUSED_REPLY`) state that a malformed `Iam` is refused `REFUSED malformed` before `admit` and whatever the origin's state, that `admit` never sees an empty `name` and sees `credential` as `\"\"` only when absent, and that the reason text is informative.",
+        "defense": "The `admit` KDoc is where an implementer of a server looks; the protocol doc is where a client author looks. Both must say the same thing.",
+        "steps": [
+          {
+            "id": "A-5",
+            "what": "`main/MultiConnectionUDPServer.kt`, KDoc only.",
+            "files": [
+              "main/MultiConnectionUDPServer.kt"
+            ],
+            "link": "plan.md#a-5-mainmulticonnectionudpserverkt--kdoc-only-no-code"
+          },
+          {
+            "id": "A-6",
+            "what": "`main/HandshakeWireFormat.kt`, KDoc only.",
+            "files": [
+              "main/HandshakeWireFormat.kt"
+            ],
+            "link": "plan.md#a-6-mainhandshakewireformatkt--kdoc-only-no-code"
+          }
+        ],
+        "tests": [
+          "none: documentation"
+        ],
+        "risks": [],
+        "source": "plan.md §7 A-5, A-6",
+        "link": "plan.md#a-5-mainmulticonnectionudpserverkt--kdoc-only-no-code"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Written in Commit 2 and corrected in Commit 3: the planned text got the release history wrong and the liveness wording loose.",
+        "changes": [
+          {
+            "what": "Release labels split and qualified: refusal by `admit` is `webtools-udp` `1.4.0`, the malformed refusal is `webtools-udp` `2.0.0a`.",
+            "why": "The planned KDoc said a `1.4.0`+ server refuses malformed lines, while every release up to `2.0.0` registers the empty-slot shapes; and `2.0.0a` was also a version of the retired combined artifact, so the artifact is named (first review finding 2; second review item 2).",
+            "when": "Stages C and D · both reviews",
+            "ref": "d3807b0"
+          },
+          {
+            "what": "The liveness text says any datagram from a registered client refreshes its stamp.",
+            "why": "It read as if only application data and keepalives did (second review, item 3).",
+            "when": "Stage D · second review",
+            "ref": "d3807b0"
+          },
+          {
+            "what": "\"Identical to pre-`1.4.0` behaviour\" is limited to well-formed lines.",
+            "why": "First review, finding 2.",
+            "when": "Stage C · first review",
+            "ref": "d3807b0"
+          }
+        ],
+        "files": [
+          "main/MultiConnectionUDPServer.kt",
+          "main/HandshakeWireFormat.kt"
+        ],
+        "commits": [
+          "1605bdd",
+          "d3807b0"
+        ],
+        "verified": "None of the superseded phrases remains in the sources (final-implementation.md §6).",
+        "link": "final-implementation.md#stage-c-after-the-first-review"
+      }
+    },
+    {
+      "id": "tests",
+      "group": "Tests",
+      "name": "Test coverage, levels 1 to 4c",
+      "system": "webtools-udp",
+      "where": "test/gating · component · integration · deterministic · e2e · nonfunctional",
+      "gap": {
+        "kind": "missing",
+        "summary": "Two tests assert today's silence for a bare `Iam` (`HandshakeCoordinatorTest` \"a nameless Iam fails and registers nothing\"; `MultiConnectionUDPServerTest:248`), two read `parseHandshake` as a `Result` and assert its failure type, and nothing covers the empty-slot shapes, a registered origin's malformed line, the log content or a malformed burst.",
+        "detail": "Baseline counts on 85cfbbe: gating 77, component 223, deterministic 89, integration 110, nonfunctional 62, e2e 33, uat 13.",
+        "evidence": [
+          "test/component/.../HandshakeCoordinatorTest.kt:238-246",
+          "test/integration/.../MultiConnectionUDPServerTest.kt:245-259",
+          "test/deterministic/.../HandshakeProtocolTest.kt:40-43, :55-58; test/gating/.../HandshakeProtocolGatingTest.kt:27-30"
+        ],
+        "source": "architecture.md §10",
+        "link": "architecture.md#10-decomposition"
+      },
+      "options": [
+        {
+          "id": "levels-1-4c",
+          "name": "Flip the two silence tests; new cases at levels 1, 2, 3, 4a and 4c",
+          "summary": "Nine test steps, T-1 to T-9, with expected counts after Stage A: gating 80, component 234, deterministic 95, integration 114, nonfunctional 63.",
+          "verdict": "accepted",
+          "why": "Each level pins a different claim: the parse table (4a), the routing and the log contract (2), the wire (3), listener survival under a burst (4c).",
+          "source": "plan.md §8",
+          "link": "plan.md#8-tests--stage-a-a-7"
+        },
+        {
+          "id": "e2e-4b",
+          "name": "A level-4b case through the library client",
+          "summary": "A library client with an empty name gets a typed `malformed` refusal.",
+          "verdict": "deferred",
+          "why": "Optional in the plan: once #52 makes `handshake(\"\")` fail locally the case stops reaching the server, so every socket-level test of the new branch sends from a raw `DatagramSocket` instead.",
+          "source": "plan.md §8 T-9"
+        },
+        {
+          "id": "uat-l5",
+          "name": "A level-5 UAT step",
+          "verdict": "declined",
+          "why": "The change's observable surface is the wire reply and the server log, which the level-3, 4b and 4c tests exercise end to end over real loopback sockets.",
+          "source": "plan.md §8 T-9; confirmed by the maintainer at the first review"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "T-1 to T-8: replace `HandshakeProtocolGatingTest` and `HandshakeProtocolTest`, one new gating test on the coordinator, the component cases for both origins with `LogCapture` on the WARN, `FramingComponentTest` for `Iam<TAB>bob`, the integration flip and four admission tests, and a 4c burst mirroring `MultiConnectionUDPServerAdmissionNonFunctionalTest:104`.",
+        "defense": "Every acceptance clause in the plan has a test at the level that can observe it; the burst test proves requirement 8 (no throw path) instead of arguing it.",
+        "steps": [
+          {
+            "id": "A-7 · T-1..T-9",
+            "what": "Add and flip the tests after A-3 to A-6 compile.",
+            "files": [
+              "test/gating/webtools/udp/HandshakeProtocolGatingTest.kt",
+              "test/gating/webtools/udp/HandshakeCoordinatorGatingTest.kt",
+              "test/component/webtools/udp/HandshakeCoordinatorTest.kt",
+              "test/component/webtools/udp/FramingComponentTest.kt",
+              "test/integration/webtools/udp/MultiConnectionUDPServerTest.kt",
+              "test/integration/webtools/udp/MultiConnectionUDPServerAdmissionTest.kt",
+              "test/deterministic/webtools/udp/HandshakeProtocolTest.kt",
+              "test/nonfunctional/webtools/udp/MultiConnectionUDPServerAdmissionNonFunctionalTest.kt"
+            ],
+            "check": "the §8.1 level runs end BUILD SUCCESSFUL with the expected counts",
+            "link": "plan.md#8-tests--stage-a-a-7"
+          }
+        ],
+        "tests": [
+          "The steps are the tests"
+        ],
+        "risks": [
+          "The socket-binding tasks are serialised by `commonUdpPortLock`: run them in one Gradle invocation, not in parallel shells"
+        ],
+        "source": "plan.md §8, §8.1",
+        "link": "plan.md#8-tests--stage-a-a-7"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Stage A's tests landed in Commit 2; the first review asked for eight more and the second corrected one probe. Final counts against 85cfbbe: gating 83 (+6), component 235 (+12), integration 115 (+5), deterministic 96 (+7), e2e 34 (+1), nonfunctional 65 (+3), uat 13 (unchanged, skipped). All pass.",
+        "changes": [
+          {
+            "what": "Gating cases for the `CREDENTIAL_EMPTY` and `NotAHandshake` arms, a registered origin's malformed line, and the non-`Iam` drop asserting nothing was sent.",
+            "why": "First review, test findings 1 and 2.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2"
+          },
+          {
+            "what": "A component test named for `deliverData` never reached it (byte `0x00` is unframed): renamed and strengthened, plus a real no-handler `deliverData` test.",
+            "why": "First review, test finding 3.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2"
+          },
+          {
+            "what": "Integration: a retry on the same socket after a malformed refusal, and an empty-credential line from a registered socket. Deterministic: the verb check runs before any slot check; one test renamed after its behaviour.",
+            "why": "First review, test findings 4 to 6.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2"
+          },
+          {
+            "what": "The deferred 4b e2e test was added: a library client with an empty name gets a typed `malformed` refusal, pinned until #52.",
+            "why": "Maintainer decision at the first review: it pins the client-visible behaviour and flips when #52 makes the call fail locally.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2",
+            "settles": {
+              "option": "e2e-4b",
+              "verdict": "accepted"
+            }
+          },
+          {
+            "what": "Two 4c tests: a burst that includes a registered socket, and a hostile CR/LF line that must stay out of the log.",
+            "why": "First review, test finding 8.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2"
+          },
+          {
+            "what": "A bare `Thread.sleep(200)` in a 4c test became the named constant `CONNECT_SETTLE_MILLIS` with a comment.",
+            "why": "First review, documentation finding 8.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2"
+          },
+          {
+            "what": "The registered-socket burst test probes the peer with `pushToAll`, which consults the registry, and asserts that no `onClientDisconnect` fired and that only the registering line reached `admit`.",
+            "why": "It probed through the captured `Connection`, which never consults the registry (second review, item 5).",
+            "when": "Stage D · second review",
+            "ref": "c6be0f2"
+          }
+        ],
+        "commits": [
+          "1605bdd",
+          "c6be0f2"
+        ],
+        "verified": "All automated levels pass; the plan's expected counts after Stage C match the final tree.",
+        "link": "final-implementation.md#tests"
+      }
+    },
+    {
+      "id": "test-housekeeping",
+      "group": "Tests",
+      "name": "Test housekeeping",
+      "system": "webtools-udp",
+      "where": "test/component/.../HandshakeCoordinatorTest.kt:577 · test/integration/.../ChannelByteGuardIntegrationTest.kt:25",
+      "gap": {
+        "kind": "debt",
+        "summary": "A string literal at `HandshakeCoordinatorTest.kt:577` holds raw NUL and SOH bytes, so ripgrep (and the `Grep` tool) skips the whole file and a tool that normalises them corrupts the test. The comment at `ChannelByteGuardIntegrationTest.kt:25` points at a stale line range of the raw-socket peer in `FramingNonFunctionalTest.kt` (`:187-215` on 85cfbbe).",
+        "evidence": [
+          "test/component/.../HandshakeCoordinatorTest.kt:577",
+          "test/integration/.../ChannelByteGuardIntegrationTest.kt:25",
+          "research/codebase-blast-radius.md — editing hazards"
+        ],
+        "source": "architecture.md §1.10, §11",
+        "link": "architecture.md#1-requirements"
+      },
+      "options": [
+        {
+          "id": "escapes-first",
+          "name": "Replace the bytes with the escapes `\"\\u0000\\u0001\"` as the first edit to the file; refresh the comment",
+          "verdict": "accepted",
+          "why": "The same string, a searchable file, and no later edit can corrupt the bytes because they are gone before any other edit lands. Verified with `grep -a -c -P '\\x00'` returning 0 and a hunk-limited `git diff`. No alternative was weighed.",
+          "source": "architecture.md §10 Stage A housekeeping",
+          "link": "architecture.md#10-decomposition"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "A-1 and A-2 land first, in their own commit with the plan documents.",
+        "defense": "Ordering is the whole point: every later edit to `HandshakeCoordinatorTest.kt` is safe only once the bytes are escapes.",
+        "steps": [
+          {
+            "id": "A-1",
+            "what": "Escape the NUL and SOH bytes with a byte-aware edit.",
+            "files": [
+              "test/component/webtools/udp/HandshakeCoordinatorTest.kt"
+            ],
+            "check": "`grep -a -c -P '\\x00' …HandshakeCoordinatorTest.kt` prints 0",
+            "link": "plan.md#a-1-testcomponentwebtoolsudphandshakecoordinatortestkt--escape-the-nulsoh-bytes-first-edit-to-this-file"
+          },
+          {
+            "id": "A-2",
+            "what": "Refresh the comment's line range.",
+            "files": [
+              "test/integration/webtools/udp/ChannelByteGuardIntegrationTest.kt"
+            ],
+            "link": "plan.md#a-2-testintegrationwebtoolsudpchannelbyteguardintegrationtestkt25--comment"
+          }
+        ],
+        "tests": [
+          "The component suite still passes: the string is unchanged"
+        ],
+        "risks": [],
+        "source": "plan.md §7 A-1, A-2",
+        "link": "plan.md#a-1-testcomponentwebtoolsudphandshakecoordinatortestkt--escape-the-nulsoh-bytes-first-edit-to-this-file"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Commit 1 (56a2121), as the first edit to the file.",
+        "files": [
+          "test/component/webtools/udp/HandshakeCoordinatorTest.kt",
+          "test/integration/webtools/udp/ChannelByteGuardIntegrationTest.kt"
+        ],
+        "commits": [
+          "56a2121"
+        ],
+        "verified": "`grep -a -c -P '\\x00'` prints 0; component 223 still passed before Stage A's code.",
+        "link": "final-implementation.md#1-commits"
+      }
+    },
+    {
+      "id": "protocol-doc",
+      "group": "Documents",
+      "name": "Protocol document",
+      "system": "webtools-udp",
+      "where": "docs/webtools-udp-protocol.md §3, §8, §9",
+      "gap": {
+        "kind": "debt",
+        "summary": "§3 carries an \"as-built quirk\" paragraph describing the defect, §8 has the bare-`Iam` row as silence, and 21 of the document's 37 source line references are stale, measured before #40 and the 2.0.0 KDoc pass.",
+        "evidence": [
+          "docs/webtools-udp-protocol.md:58-101 — §3; the quirk paragraph at :74-78",
+          "docs/webtools-udp-protocol.md:315-342 — §8; the bare-`Iam` row at :321",
+          "research/codebase-blast-radius.md §5 — anchors for every reference"
+        ],
+        "source": "research/README.md",
+        "link": "research/README.md#what-the-change-touches"
+      },
+      "options": [
+        {
+          "id": "stage-b-last",
+          "name": "A separate Stage B after the code is final, recomputing every reference from the inventory's anchors",
+          "verdict": "accepted",
+          "why": "References into the four edited production files can only be computed after Stage A's code and KDoc are final, and a separate commit lets the documentation pass be reviewed on its own.",
+          "source": "architecture.md §10, §11 Ordering constraint",
+          "link": "architecture.md#10-decomposition"
+        },
+        {
+          "id": "docs-with-code",
+          "name": "Edit the documents in the same commit as the code",
+          "verdict": "declined",
+          "why": "Line numbers would be guessed, not computed.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "§3: the rule, the registered-origin trade-off, the known #53 gap, the \"informative, not contract\" status of the reason, and a Boundary-Ring note on the replies an unverified source can draw (sizes, ratios, no address validation, no rate limit, #57). §8: replace the bare-`Iam` row, add the empty-slot and registered-origin rows, tighten the non-`Iam` row. Recheck all 37 references and refresh the 21 stale ones.",
+        "defense": "The protocol doc is the wire contract's home; a third-party client author reads it, not the KDoc.",
+        "steps": [
+          {
+            "id": "B-0..B-7",
+            "what": "Pre-checks (CRLF working tree, LF index), the fixed references, the computed references, §3 prose, §8 rows, then the reference check script.",
+            "files": [
+              "docs/webtools-udp-protocol.md"
+            ],
+            "check": "every `File.kt:N` reference prints the first and last line its prose cites",
+            "link": "plan.md#10-file-by-file-changes--stage-b-living-documents"
+          }
+        ],
+        "tests": [
+          "B-7 reference check"
+        ],
+        "risks": [
+          "The document is CRLF in the working tree with an LF index: an editor that writes LF produces a whole-file diff; `git diff --stat` after each edit",
+          "Non-ASCII (`—`, `→`, `§`) must survive the edit path"
+        ],
+        "source": "plan.md §10",
+        "link": "plan.md#10-file-by-file-changes--stage-b-living-documents"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Stage B landed last, in Commit 5 (16d6849), after Stages C and D were final, with three corrections the reviews asked for and every reference recomputed from the final sources.",
+        "changes": [
+          {
+            "what": "§9 gains a row for servers before 2.0.0a, with its source cited; the scope line names 2.0.0a.",
+            "why": "First review finding 2; the second review's item 4 extended the citation to row 4.",
+            "when": "Stages C and D",
+            "ref": "16d6849"
+          },
+          {
+            "what": "The list of library-client calls that send a malformed line states the rule, with examples.",
+            "why": "It was wrong in both directions: it missed `handshake(\"bob \", credential = \"tok\")` and `handshake(\"a  b\")` and included the valid `credential = \" \"` (first review, finding 5).",
+            "when": "Stage C · first review",
+            "ref": "16d6849"
+          },
+          {
+            "what": "\"A registered source can draw two replies\" is scoped to handshake replies and lists the transport's own `0x82` and `0xA1`.",
+            "why": "It read as exhaustive (first review, finding 6).",
+            "when": "Stage C · first review",
+            "ref": "16d6849"
+          }
+        ],
+        "files": [
+          "docs/webtools-udp-protocol.md"
+        ],
+        "commits": [
+          "16d6849"
+        ],
+        "verified": "The C-7 reference check and D-7's checks were re-run on the final tree; the file keeps CRLF.",
+        "link": "final-implementation.md#documents"
+      }
+    },
+    {
+      "id": "architecture-doc-readme",
+      "group": "Documents",
+      "name": "Architecture document and README",
+      "system": "webtools-udp",
+      "where": "docs/webtools-udp-architecture.md · README.md",
+      "gap": {
+        "kind": "debt",
+        "summary": "The architecture doc's `:52` reference points at `MultiConnectionUDPServer.kt:254`, which moved, and its handshake node describes the old routing. The README's handshake sections (`:103-135`, `:217-251`) say nothing about a malformed line.",
+        "evidence": [
+          "docs/webtools-udp-architecture.md:52, :111-112",
+          "README.md:103-135, :217-251"
+        ],
+        "source": "architecture.md §1.9",
+        "link": "architecture.md#1-requirements"
+      },
+      "options": [
+        {
+          "id": "reword",
+          "name": "Refresh the reference and reword the node; update the README's message table, the retransmit and credential paragraph, the `admit` paragraph and \"Handshake screening & credentials\"",
+          "verdict": "accepted",
+          "why": "Both are living documents that describe the handshake; the README defines well-formed and links the rule rather than repeating it. No alternative was weighed.",
+          "source": "architecture.md §10 Stage B",
+          "link": "architecture.md#10-decomposition"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "B-5 and B-6 in Stage B.",
+        "defense": "Small wording changes; the README gains a definition of well-formed, not a second copy of the rule.",
+        "steps": [
+          {
+            "id": "B-5",
+            "what": "Architecture doc: the `:52` reference and the handshake node.",
+            "files": [
+              "docs/webtools-udp-architecture.md"
+            ],
+            "link": "plan.md#b-5-architecture-doc-docswebtools-udp-architecturemd"
+          },
+          {
+            "id": "B-6",
+            "what": "README: the four handshake passages.",
+            "files": [
+              "README.md"
+            ],
+            "link": "plan.md#b-6-readme-readmemd"
+          }
+        ],
+        "tests": [],
+        "risks": [],
+        "source": "plan.md §10 B-5, B-6",
+        "link": "plan.md#b-5-architecture-doc-docswebtools-udp-architecturemd"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Commit 5 (16d6849). The architecture doc's reference reads `MultiConnectionUDPServer.kt:277`, the `coordinator` field. The README's install snippet moved to 2.0.0a with the version bump.",
+        "files": [
+          "docs/webtools-udp-architecture.md",
+          "README.md"
+        ],
+        "commits": [
+          "16d6849",
+          "ca57a57"
+        ],
+        "verified": "Read by hand when the as-built record was written.",
+        "link": "final-implementation.md#documents"
+      }
+    },
+    {
+      "id": "release",
+      "group": "Release",
+      "name": "Release: webtools-udp 2.0.0a",
+      "system": "webtools-udp",
+      "where": "webtools-udp/build.gradle.kts:92",
+      "gap": {
+        "kind": "missing",
+        "summary": "The fix changes wire behaviour, so it needs a release; `webtools-udp` is at `2.0.0`. The module's convention for a bugfix is a letter suffix, and the plan's commits must not edit the build file.",
+        "evidence": [
+          "webtools-udp/build.gradle.kts:92 on 85cfbbe — `version = \"2.0.0\"`"
+        ],
+        "source": "architecture.md §1.7",
+        "link": "architecture.md#1-requirements"
+      },
+      "options": [
+        {
+          "id": "own-commit",
+          "name": "The release manager bumps to `2.0.0a` in its own `build:` commit after the plan's commits",
+          "verdict": "accepted",
+          "why": "Keeps the plan's commits free of the build file and leaves the pick to the release manager at landing; the README's install snippet moves with it.",
+          "source": "plan.md header; §14 step 6",
+          "link": "plan.md#14-sequencing--follow-ups"
+        },
+        {
+          "id": "in-plan",
+          "name": "Bump inside the plan's commits",
+          "verdict": "declined",
+          "why": "The plan's commits do not edit `webtools-udp/build.gradle.kts`; the version is the release manager's call.",
+          "source": "plan.md § Target version"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "`webtools-udp` `2.0.0a`, set after Commit 5.",
+        "defense": "A letter for a fix, the third number for an addition: the module's stated convention.",
+        "steps": [
+          {
+            "id": "release",
+            "what": "Bump the version and the README install snippet.",
+            "files": [
+              "webtools-udp/build.gradle.kts",
+              "README.md"
+            ],
+            "link": "plan.md#14-sequencing--follow-ups"
+          }
+        ],
+        "tests": [],
+        "risks": [],
+        "source": "plan.md §14",
+        "link": "plan.md#14-sequencing--follow-ups"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "ca57a57, then PR #59 opened and merged the same evening (806ce8e). The registry records `webtools-udp` 2.0.0a; Maven Central still carries 2.0.0 until the release is published.",
+        "files": [
+          "webtools-udp/build.gradle.kts",
+          "README.md"
+        ],
+        "commits": [
+          "ca57a57"
+        ],
+        "verified": "docs/dashboards/systems.json: version 2.0.0a, published 2.0.0.",
+        "link": "final-implementation.md#1-commits"
+      }
+    },
+    {
+      "id": "whitespace-in-tokens",
+      "group": "Left for later",
+      "name": "Non-space whitespace inside a token (#53)",
+      "system": "webtools-udp",
+      "where": "main/HandshakeProtocol.kt",
+      "gap": {
+        "kind": "risk",
+        "summary": "`Iam bob<TAB>tok` survives the trim as one token and registers the name `bob<TAB>tok`; a tab, CR/LF or NBSP inside a name or credential reaches the registry and the logs.",
+        "evidence": [
+          "research/README.md § Known gaps",
+          "#53's issue text"
+        ],
+        "source": "architecture.md §1.6",
+        "link": "architecture.md#4-non-goals"
+      },
+      "options": [
+        {
+          "id": "leave-to-53",
+          "name": "Leave it to #53, document it as a known gap, pin it with a test",
+          "verdict": "accepted",
+          "why": "#53 settles it together with #52's client-side checks; it widens `HandshakeDefect` and adds checks inside `parseHandshake`, reusing this change's `Malformed` arm, reply constant and log template without change. #53 inherits the rule that every malformed line is refused whatever the origin.",
+          "source": "architecture.md §4, §7",
+          "link": "architecture.md#4-non-goals"
+        },
+        {
+          "id": "fix-here",
+          "name": "Widen the validity rule now to reject non-space whitespace",
+          "verdict": "declined",
+          "why": "Out of this issue's scope; the client-side half (#52) is not designed yet, and a rule settled in two places would drift.",
+          "source": "architecture.md §4"
+        }
+      ],
+      "verdict": {
+        "kind": "leave",
+        "summary": "Not changed. The protocol doc describes the gap as known and links #53; a 4a test pins today's behaviour and flips when #53 lands.",
+        "defense": "A gap a reader can find in the protocol doc, and a test that fails the day it is fixed, is the cheapest honest handling.",
+        "steps": [
+          {
+            "id": "T-7 (part)",
+            "what": "`HandshakeProtocolTest`: a tab inside a name is still `Valid`, known gap tracked as #53.",
+            "files": [
+              "test/deterministic/webtools/udp/HandshakeProtocolTest.kt"
+            ],
+            "link": "plan.md#t-7-level-4a--testdeterministicwebtoolsudphandshakeprotocoltestkt-replace-the-whole-file"
+          }
+        ],
+        "tests": [
+          "Level 4a — the pinning test"
+        ],
+        "risks": [],
+        "source": "plan.md §4, §12",
+        "link": "plan.md#4-non-goals"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Left as planned: the 4a test `parseHandshake accepts non-space whitespace inside a name - known gap tracked as 53` pins it, protocol doc §3 links #53, and a comment on #53 records that it inherits this change's rule.",
+        "commits": [
+          "1605bdd"
+        ],
+        "verified": "The pinning test passes on the final tree.",
+        "link": "final-implementation.md#8-follow-ups"
+      }
+    },
+    {
+      "id": "client-validation",
+      "group": "Left for later",
+      "name": "Client-side handshake validation (#52)",
+      "system": "webtools-udp",
+      "where": "main/HandshakeWireFormat.kt:72-73 · main/MultiConnectionUDPClient.kt:302",
+      "gap": {
+        "kind": "risk",
+        "summary": "`handshakeMessage(\"\")` builds `Iam ` unvalidated and `MultiConnectionUDPClient.handshake` sends it inside `runCatching`; a library client can still put a malformed line on the wire and learns of it only from the server.",
+        "evidence": [
+          "main/HandshakeWireFormat.kt:72-73",
+          "main/MultiConnectionUDPClient.kt:302",
+          "architecture.md §7 — adoption verdicts"
+        ],
+        "source": "architecture.md §4",
+        "link": "architecture.md#4-non-goals"
+      },
+      "options": [
+        {
+          "id": "leave-to-52",
+          "name": "Leave the client to #52; test the new server branch from raw sockets",
+          "verdict": "accepted",
+          "why": "#52 owns the client; once it lands the library client cannot send a malformed line, which is why every socket-level test of the new branch sends from a `DatagramSocket`.",
+          "source": "architecture.md §4, §7",
+          "link": "architecture.md#4-non-goals"
+        },
+        {
+          "id": "validate-now",
+          "name": "Add the client-side checks in this change",
+          "verdict": "declined",
+          "why": "The issue is the server's rule; #52 is filed and its design will settle both the message builder and `handshake()`.",
+          "source": "architecture.md §4"
+        }
+      ],
+      "verdict": {
+        "kind": "leave",
+        "summary": "Not changed. A library client with an empty name now fails fast with `HandshakeRefusedException`, reason `malformed`; #52 will move that failure local.",
+        "defense": "The protocol doc lists the library-client calls that send a malformed line, so the behaviour is documented until #52 removes it.",
+        "steps": [],
+        "tests": [],
+        "risks": [],
+        "source": "plan.md §4",
+        "link": "plan.md#4-non-goals"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Left as planned, and pinned harder than planned: the first review added the 4b e2e test that fails fast with a typed `malformed` refusal and flips when #52 lands.",
+        "changes": [
+          {
+            "what": "The 4b e2e test `a nameless handshake fails fast with a typed malformed refusal and registers nothing`.",
+            "why": "Maintainer decision at the first review.",
+            "when": "Stage C · first review",
+            "ref": "c6be0f2"
+          }
+        ],
+        "commits": [
+          "c6be0f2"
+        ],
+        "verified": "e2e 34 (+1) passes.",
+        "link": "final-implementation.md#4-decisions-taken-during-the-reviews"
+      }
+    }
+  ],
+  "roadmap": null,
+  "followUps": [
+    {
+      "issue": 52,
+      "note": "Client-side handshake validation. Makes the library client unable to send a malformed line; why the socket-level tests here use a raw socket. The 4b test pins today's behaviour and flips when #52 lands."
+    },
+    {
+      "issue": 53,
+      "note": "Non-space whitespace in names and credentials. Adds `HandshakeDefect` entries and checks inside `parseHandshake`, and replaces the protocol doc's known-gap paragraph. Inherits the rule that every malformed line is refused whatever its origin."
+    },
+    {
+      "issue": 54,
+      "note": "A throwing `onClientConnect` ends the listener thread. Orthogonal: this change adds no throw path; #54's guard lands in `receiveLoop` and around `onRegistered`."
+    },
+    {
+      "issue": 41,
+      "note": "Rate-bounding the per-datagram WARN logs. Covers the new malformed WARN and the client's unframed-drop WARN for a reflected `REFUSED`; the fixed template and defect label are its key."
+    },
+    {
+      "issue": 49,
+      "note": "Registration orphaned when the `REGISTERED` send fails. Its fix lands inside the moved, unchanged admit-and-register path, now marked `FIXME(#49)`."
+    },
+    {
+      "issue": 56,
+      "note": "A registered origin's `Iam` gets `REGISTERED 2` even when it names a different client. Pre-existing and unchanged; the protocol doc states it."
+    },
+    {
+      "issue": 57,
+      "note": "Replies to unverified source addresses, with no rate limit. Unchanged by this fix, which adds one more reply (17 bytes) to the set; the protocol doc advises edge rate limiting."
+    }
+  ],
+  "documents": [
+    {
+      "label": "Issue #38",
+      "path": "https://github.com/SpartanLaboratories/WebTools/issues/38",
+      "note": "the report, with the two proposals the research weighed"
+    },
+    {
+      "label": "PR #59",
+      "path": "https://github.com/SpartanLaboratories/WebTools/pull/59",
+      "note": "the merged change, Stages A to D and the version bump"
+    },
+    {
+      "label": "Research",
+      "path": "research/README.md",
+      "note": "the three questions, verification and summary; findings in `codebase-blast-radius.md`, `malformed-line-handling.md`, `refusal-reply-text.md`"
+    },
+    {
+      "label": "Architecture",
+      "path": "architecture.md",
+      "note": "requirements, current state, system inventory, alternatives (§9), decomposition (§10), risks"
+    },
+    {
+      "label": "plan.md",
+      "path": "plan.md",
+      "note": "the implementer's spec: every step with its file, anchor, text and check, Stages A to D"
+    },
+    {
+      "label": "final-implementation.md",
+      "path": "final-implementation.md",
+      "note": "the as-built record: commits, what was built, how the plan grew, the review decisions"
+    },
+    {
+      "label": "Impact",
+      "path": "impact.md",
+      "note": "wire behaviour before and after, who sees the change, blast radius, adoption verdicts, follow-ups"
+    },
+    {
+      "label": "Protocol reference",
+      "path": "../../webtools-udp-protocol.md",
+      "note": "the living wire reference; §3, §8 and §9 describe the rule"
+    }
+  ],
+  "notes": {
+    "paths": "Paths under `webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/` are abbreviated `main/`; paths under `webtools-udp/src/test/kotlin/com/spartanlabs/testing/` are abbreviated `test/`. Line references are on the baseline 85cfbbe unless a change names a later commit.",
+    "retrofit": "This board was written after the fact, as the worked example for plan boards, from the issue's research, architecture, plan, impact and as-built documents; its dates come from the commits and the pull request. The run predates the work-level labels, so no level is recorded, and its qa passes are the two reviews of the change set. A board kept from the start of a run is updated at every step transition, and its WIP strip shows where the run is.",
+    "corrections": [
+      {
+        "what": "The release row's system is `webtools-udp`: `webtools-udp/build.gradle.kts` sits under that module's registry paths, not the Gradle build's.",
+        "when": "re-templating, 2026-10-22"
+      },
+      {
+        "what": "The tests row's as-built register gains the first review's documentation finding 8 (the `Thread.sleep` constant), which the register had missed; the deferred 4b option is marked as settled by the first review's decision.",
+        "when": "re-templating, 2026-10-22"
+      }
+    ]
+  }
+}
+</script>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function inspect(html){ $("#insp-body").innerHTML=html; bindInspector(); }
+
+/* ---------- The plan (from the embedded file) ---------- */
+const PLAN=JSON.parse(document.getElementById("plan").textContent||"{}");
+const REPO="https://github.com/"+(PLAN.repo||"");
+const ROWS=PLAN.rows||[];
+const WIP=PLAN.wip||{};
+const TRACKING=PLAN.kind==="tracking";
+/* The board's folder from the repository root sets every relative link to the shared pages. */
+const FOLDER=PLAN.folder||("docs/plans/"+(PLAN.slug||""));
+const UP="../".repeat(FOLDER.split("/").filter(Boolean).length);
+const ext=(href,text)=>`<a href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+const ilink=(n,repo)=>ext(`https://github.com/${repo||PLAN.repo}/issues/${n}`,`${repo&&repo!==PLAN.repo?esc(repo.split("/")[1])+"#":"#"}${esc(n)}`);
+const clink=sha=>ext(`${REPO}/commit/${sha}`,`<code>${esc(sha)}</code>`);
+const prlink=n=>ext(`${REPO}/pull/${n}`,`PR #${esc(n)}`);
+/* Plain text with `code` spans, #123 and owner/repo#123 references: escaped, references linked outside code spans only. */
+function linkRefs(t){ return esc(t).replace(/(^|[\s(>;,])([\w.-]+\/[\w.-]+)#(\d+)\b/g,(m,p,r,n)=>p+ilink(n,r)).replace(/(^|[\s(>;,])#(\d+)\b/g,(m,p,n)=>p+ilink(n)); }
+const rich=s=>String(s==null?"":s).split("`").map((part,i)=>i%2?`<code>${esc(part)}</code>`:linkRefs(part)).join("");
+/* The same without links, for text inside a button. */
+const codeOnly=s=>String(s==null?"":s).split("`").map((part,i)=>i%2?`<code>${esc(part)}</code>`:esc(part)).join("");
+/* A reference: a commit sha, "PR #n", "#n", "owner/repo#n", a URL, a relative path with an optional #anchor and suffix, or text. */
+function refHtml(ref,label){
+  if(ref==null||ref==="") return "";
+  const s=String(ref);
+  if(/^[0-9a-f]{7,40}$/.test(s)) return clink(s);
+  let m=s.match(/^PR #?(\d+)$/i); if(m) return prlink(m[1]);
+  m=s.match(/^#(\d+)$/); if(m) return ilink(m[1]);
+  m=s.match(/^([\w.-]+\/[\w.-]+)#(\d+)$/); if(m) return ilink(m[2],m[1]);
+  if(/^https?:\/\//.test(s)) return ext(s,esc(label||s.replace(/^https?:\/\/(www\.)?github\.com\//,"")));
+  m=s.match(/^([\w./-]+\.(?:md|html|json|kt|kts|dsl|txt))(#[\w-]+)?(.*)$/); if(m) return `<a href="${esc(m[1]+(m[2]||""))}">${esc(label||m[1])}</a>${esc(m[3])}`;
+  m=s.match(/^([\w./-]+\/)$/); if(m) return `<a href="${esc(m[1])}">${esc(label||m[1])}</a>`;
+  return rich(s);
+}
+const moreLink=(href,txt)=>href?`<a class="more" href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""}>${esc(txt||"detail")} ›</a>`:"";
+
+/* ---------- Vocabulary (plan/RULES.md §2, §3) ---------- */
+const COLS=[
+  {key:"gap",label:"Gap",q:"What was missing or wrong at the baseline"},
+  {key:"considered",label:"Considered",q:"Every option weighed, each with its verdict"},
+  {key:"verdict",label:"Verdict",q:"The decision and its defence, or why the gap stays"},
+  {key:"built",label:"As built",q:"What exists now, and every change from the verdict"}];
+const STATES={
+  "pending":   {g:"…",label:"pending",   cls:"neutral",dash:true, desc:"not built yet"},
+  "as-planned":{g:"✓",label:"as planned",cls:"good",              desc:"built as the verdict says"},
+  "amended":   {g:"+",label:"amended",   cls:"warning",           desc:"built as decided, plus changes added in implementation or review"},
+  "deviated":  {g:"≠",label:"deviated",  cls:"serious",           desc:"the decision itself changed; each difference listed"},
+  "dropped":   {g:"✕",label:"dropped",   cls:"critical",          desc:"not built, with the reason"},
+  "deferred":  {g:"→",label:"deferred",  cls:"neutral",dash:true, desc:"not built here; moved to the issue named"}};
+const OPT={
+  accepted:{g:"✓",label:"accepted",cls:"good",    desc:"the option the verdict took"},
+  partial: {g:"◐",label:"partial", cls:"warning", desc:"adopted in part: what was taken, what wasn't"},
+  deferred:{g:"◌",label:"deferred",cls:"warning", desc:"left open at plan time, settled in column 4",dash:true},
+  declined:{g:"✕",label:"declined",cls:"critical",desc:"ruled out, with the trade-off"}};
+const QA={approved:{g:"✓",label:"approved",cls:"good"},"changes-requested":{g:"✕",label:"changes requested",cls:"critical"},running:{g:"…",label:"in progress",cls:"neutral",dash:true}};
+const STEP_ORDER=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","landing","landed"];
+const STEP_SPECIAL={halted:{g:"⏸",label:"Waiting on the user",cls:"halted"},escalated:{g:"⇧",label:"Escalated",cls:"escalated"},cancelled:{g:"✕",label:"Cancelled",cls:"cancelled"},landed:{g:"✓",label:"Landed",cls:"landed"}};
+const stateOf=r=>(r.asBuilt&&STATES[r.asBuilt.state])?r.asBuilt.state:"pending";
+const pill=(def,extra,word)=>`<span class="vp ${def.cls}${def.dash?" dashed":""}"><i aria-hidden="true">${def.g}</i>${esc(word||def.label)}${extra||""}</span>`;
+const badge=(st,extra)=>pill(STATES[st]||STATES.pending,extra);
+/* An option's effective verdict: a deferred option settled by an as-built change takes the settlement's colour. */
+function settlement(r,o){ for(const c of ((r.asBuilt||{}).changes||[])){ const s=c.settles; if(s&&(s===o.id||s.option===o.id)) return {verdict:(s.verdict||"accepted"),change:c}; } return null; }
+function optDef(r,o){ const s=o.verdict==="deferred"?settlement(r,o):null; const base=OPT[o.verdict]||OPT.declined; if(!s) return {def:base,word:base.label+(o.verdict==="partial"&&o.chosen?" · chosen":"")};
+  const t=OPT[s.verdict]||OPT.accepted; return {def:{...t,dash:false},word:`deferred → ${t.label}`,settled:s}; }
+
+/* ---------- System colours: the registry slots, identical to the system pages' (plan.json systems[].slot) ---------- */
+const SYSTEMS=PLAN.systems||[];
+const sysOf=slug=>SYSTEMS.find(s=>s.slug===slug);
+function sysColour(slug){ const s=sysOf(slug); return s&&s.slot>=1&&s.slot<=6?`var(--sys-${s.slot})`:"var(--muted)"; }
+const sysName=slug=>{ const s=sysOf(slug); return s?s.name:(slug||"—"); };
+function paint(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=>e.style.setProperty("--c",sysColour(e.dataset.sys))); }
+/* Legend: one entry per colour group present (a system's parts share their top-level system's slot). */
+function sysKey(slugs,cls){ const seen=new Map(); slugs.forEach(sl=>{ const s=sysOf(sl)||{slug:sl,name:sl}; const k=s.slot>=1&&s.slot<=6?"s"+s.slot:"n"; const nm=s.slot>=1&&s.slot<=6?(s.top||s.name):`${s.name} (no system colour)`; if(!seen.has(k)) seen.set(k,{c:sysColour(sl),names:new Set()}); seen.get(k).names.add(nm); });
+  return [...seen.values()].map(v=>`<span><i class="${cls||"sbar"}" style="--c:${v.c}"></i>${esc([...v.names].join(", "))}</span>`).join(""); }
+
+/* ---------- Work in progress: the glowing cells ---------- */
+const STEP=WIP.step||"";
+const HALTED=STEP==="halted", LANDED=STEP==="landed"||PLAN.status==="built", STOPPED=["cancelled"].includes(STEP)||PLAN.status==="abandoned";
+const CURRENT=(LANDED||STOPPED)?[]:(WIP.current||[]);
+const glowCls=strong=>HALTED?" held":strong?" glow":" glow-soft";
+function cellGlow(rowId,col){ if(CURRENT.includes(rowId+"."+col)) return glowCls(true); if(CURRENT.includes(col)) return HALTED?" held":" glow-soft"; return ""; }
+const rowActive=r=>CURRENT.some(a=>a.split(".")[0]===r.id);
+
+/* ---------- Header, chips ---------- */
+const OPTS=ROWS.flatMap(r=>(r.options||[]).map(o=>({row:r,opt:o})));
+const count=(arr,f)=>arr.filter(f).length;
+function renderHeader(){
+  const repoName=(PLAN.repo||"").split("/")[1]||PLAN.repo||"";
+  document.title=`${repoName} · #${PLAN.issue} plan board`;
+  const segs=FOLDER.split("/").filter(Boolean).slice(2);
+  $("#crumbs").innerHTML=`<a href="${UP}docs/dashboards/index.html">${esc(PLAN.repo)}</a> › <a href="${UP}docs/plans/index.html">work board</a>`+segs.map((s,i)=>i<segs.length-1?` › <a href="${"../".repeat(segs.length-1-i)}dashboard.html">${esc(s)}</a>`:` › ${esc(s)}`).join("");
+  $("#h1").textContent=`#${PLAN.issue} · ${PLAN.title||""}`;
+  $("#function").innerHTML=rich(PLAN.function);
+  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
+  const statusText={planned:"planned · nothing built",building:"building",built:"built",abandoned:"abandoned"}[PLAN.status]||PLAN.status;
+  const chips=[
+    `<span class="chip status ${esc(PLAN.status)}">status <b>${esc(statusText)}</b></span>`,
+    `<span class="chip">issue ${ilink(PLAN.issue)}${PLAN.issueTitle?` <b>${rich(PLAN.issueTitle)}</b>`:""}</span>`,
+    `<span class="chip">level <b>${PLAN.level?esc(PLAN.level):"not recorded"}</b>${TRACKING?" · tracking":""}</span>`,
+    PLAN.parent&&PLAN.parent.issue?`<span class="chip">part of ${ilink(PLAN.parent.issue)}${PLAN.parent.board?` · <a href="${esc(PLAN.parent.board)}">board</a>`:""}</span>`:"",
+    PLAN.branch?`<span class="chip">branch <b>${esc(PLAN.branch)}</b></span>`:"",
+    `<span class="chip">baseline <b>${esc(b.ref||"")} ${esc(b.sha||"")}</b>${b.date?` · ${esc(b.date)}`:""}</span>`,
+    a?`<span class="chip">as built <b>${esc(a.ref||"")} ${esc(a.sha||"")}</b>${a.date?` · ${esc(a.date)}`:""}${a.pr?` · ${prlink(a.pr)}`:""}</span>`:`<span class="chip status planned">as built <b>—</b> · not landed</span>`,
+    a&&a.version?`<span class="chip">ships as <b>${esc(a.version)}</b></span>`:"",
+    /* one chip per system, or per top-level system when several of its parts are on the board */
+    ...[...SYSTEMS.reduce((m,s)=>{ const k=s.top||s.name; if(!m.has(k)) m.set(k,[]); m.get(k).push(s); return m; },new Map())].map(([top,ps])=>{ const s=ps[0], one=ps.length===1, nm=one?s.name:top;
+      return `<span class="chip" data-sys="${esc(s.slug)}">${one&&s.page?`<a href="${UP}${esc(s.page)}">${esc(nm)}</a>`:esc(nm)}${one?"":` · ${ps.length} parts`}${ps.every(x=>x.status==="planned")?" · planned":""}</span>`; }),
+    `<span class="chip model">board <b>plan.json</b> · ${ROWS.length} ${TRACKING?"units":"rows"} · ${OPTS.length} options</span>`].filter(Boolean);
+  $("#chips").innerHTML=chips.join(""); paint($("#chips"));
+}
+
+/* ---------- The WIP strip (plan/RULES.md §3) ---------- */
+function stepsLine(steps,cur){ const i=steps.indexOf(cur);
+  return `<ol class="steps" aria-label="Pipeline steps">${steps.map((s,j)=>{ const st=LANDED||j<i?"done":j===i?"cur":"todo"; return `<li class="${st}${st==="cur"&&!LANDED?(HALTED?" held":" glow"):""}"${st==="cur"?' aria-current="step"':""}><span class="dot" aria-hidden="true"></span>${esc(s)}</li>`; }).join("")}</ol>`; }
+function renderWip(){
+  const w=$("#wip"), st=STEP||"—"; w.dataset.step=st;
+  const special=STEP_SPECIAL[LANDED?"landed":st];
+  if(special) w.classList.add(special.cls);
+  const steps=WIP.steps&&WIP.steps.length?WIP.steps:STEP_ORDER;
+  const shownStep=HALTED||st==="escalated"?(WIP.resume||WIP.last||""):st;
+  const head=special?`<span class="state"><i aria-hidden="true">${special.g}</i>${esc(special.label)}</span>`:`<span class="state"><i aria-hidden="true">●</i>Work in progress</span>`;
+  const since=WIP.since?` · since <span class="nw">${esc(WIP.since)}</span>`:"";
+  let h=`<div class="wip-head">${head}<span>step <b>${esc(LANDED?"landed":st)}</b>${since}</span>${WIP.updated?`<span class="upd">updated ${esc(WIP.updated)}</span>`:""}</div>`;
+  if(HALTED) h+=`<p class="wip-wait">Waiting on the user: ${rich(WIP.waitingOn||WIP.detail||"(not stated)")}</p>`;
+  if(st==="escalated"&&WIP.proposedLevel) h+=`<p class="wip-wait">Escalation proposed: level ${esc(WIP.proposedLevel)}.</p>`;
+  const legend=[];
+  if(TRACKING&&ROWS.some(r=>r.unit)){
+    const units=ROWS.filter(r=>r.unit);
+    h+=`<div class="wip-sub">The chain · ${count(units,r=>stateOf(r)!=="pending")} of ${units.length} units landed</div><ol class="chain">${units.map(r=>{ const s=stateOf(r), act=rowActive(r), href=r.unit.board||(r.unit.issue?`${REPO}/issues/${r.unit.issue}`:""); const inner=`${esc(r.unit.n!=null?r.unit.n:"")}${r.unit.issue?` · #${esc(r.unit.issue)}`:""} ${esc(r.unit.slug||r.id)}${s!=="pending"?` ${STATES[s].g}`:""}`; const tag=href?`<a href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""} data-sys="${esc(r.system)}">${inner}</a>`:`<span class="u" data-sys="${esc(r.system)}">${inner}</span>`; return `<li class="${s==="pending"?"pending":"done"}${act&&!LANDED?(HALTED?" held":" glow"):""}">${tag}</li>`; }).join("")}</ol>`;
+    legend.push(sysKey(units.map(r=>r.system)),`<span><i class="pln"></i>dashed: unit not landed</span>`);
+    const act=units.find(rowActive); if(act) h+=`<div class="wip-sub">Unit ${esc(act.unit.n)} · #${esc(act.unit.issue)} · ${esc(act.unit.slug||act.id)}</div>`;
+  }
+  if(st!=="cancelled") h+=stepsLine(steps,LANDED?"landed":shownStep);
+  if(WIP.detail&&!HALTED) h+=`<p class="wip-detail">${rich(WIP.detail)}</p>`;
+  const facts=[];
+  const qa=WIP.qa||[];
+  if(qa.length) facts.push(`<span><span class="l">qa</span>${qa.map(p=>{ const d=QA[p.verdict]||QA.running, f=p.findings||{}; const n=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" / "); return `${pill(d,"",`pass ${p.pass} · ${d.label}`)}${n?` <small>${esc(n)}</small>`:""}`; }).join(" ")}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}</span>`);
+  const bl=WIP.blockers||{}, iref=x=>x.repo&&x.repo!==PLAN.repo?ilink(x.issue,x.repo):ilink(x.issue);
+  if((bl.waitsOn||[]).length) facts.push(`<span><span class="l">waits on</span>${bl.waitsOn.map(iref).join(", ")}</span>`);
+  if((bl.blocks||[]).length) facts.push(`<span><span class="l">blocks</span>${bl.blocks.map(iref).join(", ")}</span>`);
+  const a=PLAN.asBuilt||{}, L=WIP.landing||{};
+  if(LANDED) facts.push(`<span><span class="l">landed</span>${[L.pr||a.pr?prlink(L.pr||a.pr):"",L.merge||a.merge?`merge ${clink(L.merge||a.merge)}`:"",L.version||a.version?esc(L.version||a.version):"",L.date||a.date?esc(L.date||a.date):""].filter(Boolean).join(" · ")}</span>`);
+  if(facts.length) h+=`<div class="wip-facts">${facts.join("")}</div>`;
+  /* the strip's legend: exactly what it drew */
+  if(st!=="cancelled") legend.push(`<span><i class="node"></i>step done</span>`,LANDED?"":HALTED?`<span><i class="hold"></i>current step, paused</span>`:`<span><i class="gl"></i>glow: being worked on now</span>`,LANDED?"":`<span><i class="node hollow"></i>dashed: step to come</span>`);
+  if(HALTED) legend.push(`<span><i class="wait"></i>yellow strip: waiting on the user</span>`);
+  if(LANDED) legend.push(`<span>${pill({g:"✓",cls:"good",label:"landed"})} merged; nothing glows</span>`);
+  const qv=[...new Set(qa.map(p=>p.verdict))].filter(v=>QA[v]); qv.forEach(v=>legend.push(`<span>${pill(QA[v])} qa pass verdict</span>`));
+  w.innerHTML=h+`<div class="key">${legend.filter(Boolean).join("")}</div>`;
+  paint(w);
+}
+
+/* ---------- KPIs ---------- */
+function renderKpis(){
+  const states=Object.keys(STATES).map(k=>[k,count(ROWS,r=>stateOf(r)===k)]);
+  const built=count(ROWS,r=>!["pending","deferred"].includes(stateOf(r)));
+  const groups=[...new Set(ROWS.map(r=>r.group).filter(Boolean))];
+  const by=v=>count(OPTS,x=>x.opt.verdict===v);
+  const leave=count(ROWS,r=>(r.verdict||{}).kind==="leave");
+  const changes=ROWS.reduce((n,r)=>n+((r.asBuilt||{}).changes||[]).length,0);
+  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
+  const days=(a&&a.date&&b.date)?Math.round((Date.parse(a.date)-Date.parse(b.date))/86400000):null;
+  const bar=`<div class="seg-bar" aria-hidden="true">${states.filter(([,n])=>n).map(([k,n])=>`<i class="${STATES[k].cls}" style="flex:${n}"></i>`).join("")}</div>`;
+  const qa=WIP.qa||[];
+  $("#kpis").innerHTML=[
+    `<div class="kpi"><div class="l">${TRACKING?"Units":"Rows"}</div><div class="v">${ROWS.length}</div><div class="s">${groups.length?`${groups.length} group${groups.length>1?"s":""}: ${groups.map(esc).join(", ")}`:"no rows yet"}</div></div>`,
+    `<div class="kpi"><div class="l">Options weighed</div><div class="v">${OPTS.length}</div><div class="s">${["accepted","partial","deferred","declined"].filter(by).map(v=>`${by(v)} ${v}`).join(" · ")||"none yet"}</div></div>`,
+    `<div class="kpi"><div class="l">Verdicts</div><div class="v">${ROWS.length-leave} <small>build</small></div><div class="s">${leave} left for later</div></div>`,
+    `<div class="kpi"><div class="l">As built</div><div class="v">${built} <small>/ ${ROWS.length} ${TRACKING?"units landed":"rows"}</small></div><div class="s">${states.filter(([,n])=>n).map(([k,n])=>`${n} ${STATES[k].label}`).join(" · ")||"—"}${changes?` · ${changes} changes`:""}</div>${ROWS.length?bar:""}</div>`,
+    `<div class="kpi"><div class="l">${LANDED?"Timeline":"QA passes"}</div><div class="v">${LANDED?(days==null?"—":days===0?"same day":`${days} day${days===1?"":"s"}`):`${qa.length}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}`}</div><div class="s">${LANDED?`${b.date?`baseline ${esc(b.date)}`:""}${a&&a.date?` → built ${esc(a.date)}`:""}`:(qa.length?esc(qa.map(p=>`pass ${p.pass}: ${(QA[p.verdict]||QA.running).label}`).join(" · ")):"no qa pass yet")}</div></div>`].join("");
+}
+
+/* ---------- Timeline board ---------- */
+function unitLinks(r){ const u=r.unit; if(!u) return "";
+  const parts=[u.issue?ilink(u.issue):"",u.level?`L${esc(u.level)}`:"",u.board?`<a href="${esc(u.board)}">board</a>`:u.folder?refHtml(u.folder,"folder"):`<span title="no plan folder yet">no folder yet</span>`];
+  return `<div class="un">${parts.filter(Boolean).join("")}</div>`; }
+function cellGap(r){ const g=r.gap||{}; return `<div class="cell gap${cellGlow(r.id,"gap")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="gap" aria-label="Gap: ${esc(r.name)}"><div class="kick">1 · GAP${g.kind?` <span class="kind">${esc(g.kind)}</span>`:""}</div><div class="sum">${rich(g.summary||"Not yet written.")}</div><div class="meta"><span>${(g.evidence||[]).length} evidence</span>${moreLink(g.link,"research")}</div></div>`; }
+function optButton(r,o){ const {def,word}=optDef(r,o); return `<button class="opt ${def.cls}${def.dash?" dashed":""}" data-row="${esc(r.id)}" data-opt="${esc(o.id)}" aria-label="${esc(word)}: ${esc(o.name)}"><i aria-hidden="true">${def.g}</i><span><span class="vw">${esc(word)}</span><span>${codeOnly(o.name)}</span></span></button>`; }
+function cellConsidered(r){ const os=r.options||[]; const acc=os.find(o=>o.verdict==="accepted"||(o.verdict==="partial"&&o.chosen))||os[0]||{};
+  return `<div class="cell considered${cellGlow(r.id,"considered")}" role="group" data-row="${esc(r.id)}" data-col="considered" aria-label="Considered: ${esc(r.name)}"><div class="kick">2 · CONSIDERED <span class="kind">${os.length}</span></div>${os.length?`<ul class="opts">${os.map(o=>`<li>${optButton(r,o)}</li>`).join("")}</ul>`:`<div class="sum">Not yet written.</div>`}${acc.link?`<div class="meta">${moreLink(acc.link,"alternatives")}</div>`:""}</div>`; }
+function cellVerdict(r){ const v=r.verdict||{}, leave=v.kind==="leave"; return `<div class="cell verdict${leave?" leave":""}${cellGlow(r.id,"verdict")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="verdict" aria-label="Verdict: ${esc(r.name)}"><div class="kick">3 · VERDICT <span class="kind">${leave?"leave as is":"build"}</span></div><div class="sum">${rich(v.summary||"Not yet written.")}</div><div class="meta"><span>${(v.steps||[]).length} steps · ${(v.tests||[]).length} tests · ${(v.risks||[]).length} risks</span>${moreLink(v.link,"plan")}</div></div>`; }
+function cellBuilt(r){ const st=stateOf(r), b=r.asBuilt||{}, S=STATES[st]; const extra=st==="deferred"&&b.issue?` → #${esc(b.issue)}`:"";
+  const link=b.link||(r.unit&&(r.unit.board||r.unit.folder))||"";
+  return `<div class="cell built ${S.cls}${st==="pending"?" pending":""}${st==="deferred"?" deferred":""}${cellGlow(r.id,"built")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="built" aria-label="As built: ${esc(r.name)}, ${S.label}"><div class="kick">4 · AS BUILT ${badge(st,extra)}</div><div class="sum">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</div><div class="meta"><span>${(b.changes||[]).length} changes · ${(b.commits||[]).length} commits</span>${moreLink(link,r.unit?(r.unit.board?"board":"folder"):"record")}</div></div>`; }
+const GROUP_ORDER=["Code","Tests","Documents","Release","Left for later"];
+function grouped(){ const groups=[]; ROWS.forEach(r=>{ const g=r.group||""; let G=groups.find(x=>x.name===g); if(!G){ G={name:g,rows:[]}; groups.push(G); } G.rows.push(r); });
+  /* an issue board orders its groups Code, Tests, Documents, Release, Left for later; a tracking board keeps landing order */
+  if(TRACKING) return groups;
+  return groups.sort((a,b)=>{ const i=GROUP_ORDER.indexOf(a.name), j=GROUP_ORDER.indexOf(b.name); return (i<0?GROUP_ORDER.length:i)-(j<0?GROUP_ORDER.length:j)||0; }); }
+function renderBoard(){
+  $("#timeline-lede").textContent=TRACKING
+    ?"One row per unit of the tracking issue, in landing order, in its system's colour. Gap, considered and verdict come from the architecture; each unit is planned and built on its own board, and its as-built cell fills when it lands. A dashed cell is not built yet; the glowing cell is being worked on now."
+    :"One row per part of the change, in its system's colour. Read a row left to right: the gap at the baseline, every option weighed with its verdict, the verdict and its defence, and what was built. A dashed cell is not built yet; a glowing cell is being worked on now. Click a cell or an option for its detail; each cell links the Markdown section that holds the rest.";
+  const ms=c=>(PLAN.milestones||[]).find(m=>m.column===c);
+  let h=`<div class="colhead" aria-hidden="true"></div>`+COLS.map((c,i)=>{ const m=ms(c.key);
+    const dt=m?`${esc(m.label)}${m.date?` · <span class="nw">${esc(m.date)}</span>`:""}${m.ref?` · ${refHtml(m.ref)}`:""}`:(c.key==="built"&&!LANDED?"not landed":"");
+    return `<div class="colhead${CURRENT.includes(c.key)?glowCls(true):""}"><div class="ph">${i+1} · ${esc(c.label).toUpperCase()}</div><div class="q">${esc(c.q)}</div>${dt?`<div class="dt">${dt}</div>`:""}</div>`; }).join("");
+  if(!ROWS.length) h+=`<p class="lede" style="grid-column:1/-1;margin-top:12px">No rows yet: the Gap column is written when the research is verified, the rows with it.</p>`;
+  grouped().forEach(G=>{ if(G.name) h+=`<div class="grouphead">${esc(G.name)} <small>${G.rows.length} ${TRACKING?"unit":"row"}${G.rows.length>1?"s":""}</small></div>`;
+    G.rows.forEach(r=>{ h+=`<div class="rowlab" data-sys="${esc(r.system||"")}" id="row-${esc(r.id)}"><div class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</div>${r.where?`<div class="wh">${esc(r.where)}</div>`:""}<div class="sy"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(sysName(r.system))}</div>${unitLinks(r)}</div>`+cellGap(r)+cellConsidered(r)+cellVerdict(r)+cellBuilt(r); }); });
+  $("#board").innerHTML=h; paint($("#board"));
+  document.querySelectorAll("#board .cell[role=button]").forEach(c=>{ const go=()=>select(c.dataset.row,c.dataset.col); c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  document.querySelectorAll("#board .opt").forEach(o=>o.addEventListener("click",()=>select(o.dataset.row,"considered",o.dataset.opt)));
+  const used=[...new Set(OPTS.map(x=>optDef(x.row,x.opt).word.startsWith("deferred →")?"settled":x.opt.verdict))];
+  const usedSt=[...new Set(ROWS.map(stateOf))];
+  $("#timeline-key").innerHTML=sysKey(ROWS.map(r=>r.system))
+    +["accepted","partial","deferred","declined"].filter(v=>used.includes(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")
+    +(used.includes("settled")?`<span>${pill({...OPT.accepted},"","deferred → accepted")} settled in column 4</span>`:"")
+    +Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")
+    +`<span><i class="node"></i>a phase reached</span>`
+    +(usedSt.some(k=>STATES[k].dash)?`<span><i class="node hollow"></i>dashed: not built yet</span>`:"")
+    +(CURRENT.length?(HALTED?`<span><i class="hold"></i>being worked on, paused while the run waits</span>`:`<span><i class="gl"></i>glow: being worked on now</span>`):"");
+}
+function select(rowId,col,optId){
+  const r=ROWS.find(x=>x.id===rowId); if(!r) return;
+  document.querySelectorAll("#board .cell.sel, #board .opt.sel, .chainsvg .unit.sel").forEach(e=>e.classList.remove("sel"));
+  const cell=document.querySelector(`#board .cell[data-row="${CSS.escape(rowId)}"][data-col="${col}"]`); if(cell) cell.classList.add("sel");
+  if(optId){ const b=document.querySelector(`#board .opt[data-row="${CSS.escape(rowId)}"][data-opt="${CSS.escape(optId)}"]`); if(b) b.classList.add("sel"); }
+  if(col==="gap") inspectGap(r); else if(col==="considered") inspectOption(r,(r.options||[]).find(o=>o.id===optId)||(r.options||[])[0]); else if(col==="verdict") inspectVerdict(r); else inspectBuilt(r);
+  try{ history.replaceState(null,"","#"+rowId+"."+col+(optId?"."+optId:"")); }catch(e){}
+}
+const whereOf=r=>`<span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(sysName(r.system))}${r.where?` · <code>${esc(r.where)}</code>`:""}`;
+const list=(items,f)=>items&&items.length?`<ul>${items.map(x=>`<li>${f?f(x):rich(x)}</li>`).join("")}</ul>`:"";
+function bindInspector(){ document.querySelectorAll("#insp-body .opt").forEach(b=>b.addEventListener("click",()=>select(b.dataset.row,"considered",b.dataset.opt))); paint($("#insp-body")); }
+function inspectGap(r){ const g=r.gap||{}, b=PLAN.baseline||{};
+  inspect(`<div class="kicker">1 · GAP${g.kind?` · ${esc(g.kind).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${rich(g.summary||"")}</p>${g.detail?`<p>${rich(g.detail)}</p>`:""}<dl>${g.evidence&&g.evidence.length?`<dt>Evidence at ${esc(b.sha||"the baseline")}</dt><dd>${list(g.evidence)}</dd>`:""}${g.source?`<dt>Source</dt><dd>${refHtml(g.source)}</dd>`:""}${g.link?`<dt>Detail</dt><dd>${refHtml(g.link)}</dd>`:""}</dl>`); }
+function inspectOption(r,o){ if(!o){ inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${esc(r.name)}</div><p>No options recorded yet.</p>`); return; }
+  const others=(r.options||[]).filter(x=>x!==o), {def,word,settled}=optDef(r,o);
+  const whyLabel={accepted:"Why it was taken",partial:"What was taken, and what wasn't",deferred:"Why it was left open",declined:"Why it was declined"}[o.verdict]||"Why";
+  inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${codeOnly(o.name)}</div><div class="vis">${pill(def,"",word)} ${esc(r.name)}</div>${o.summary?`<p class="lead">${rich(o.summary)}</p>`:""}<dl>${o.why?`<dt>${whyLabel}</dt><dd>${rich(o.why)}</dd>`:""}${settled?`<dt>Settled in column 4</dt><dd>${rich(settled.change.what)}${settled.change.why?` — ${rich(settled.change.why)}`:""}${settled.change.ref?` · ${refHtml(settled.change.ref)}`:""}</dd>`:""}${o.wins?`<dt>Would have won if</dt><dd>${rich(o.wins)}</dd>`:""}${o.source?`<dt>Source</dt><dd>${refHtml(o.source)}</dd>`:""}${o.link?`<dt>Detail</dt><dd>${refHtml(o.link)}</dd>`:""}${others.length?`<dt>Weighed against</dt><dd><ul class="opts">${others.map(x=>`<li>${optButton(r,x)}</li>`).join("")}</ul></dd>`:""}</dl>`); }
+function inspectVerdict(r){ const v=r.verdict||{};
+  inspect(`<div class="kicker">3 · VERDICT · ${v.kind==="leave"?"LEAVE AS IS":"BUILD"}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${rich(v.summary||"")}</p>${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
+function inspectBuilt(r){ const b=r.asBuilt||{}, st=stateOf(r), a=PLAN.asBuilt||{}, u=r.unit;
+  inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → #${esc(b.issue)}`:"")} ${esc(STATES[st].desc)}</div><p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p><dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)} · ${esc(u.slug||"")}${u.issue?` · ${ilink(u.issue)}`:""}${u.level?` · level ${esc(u.level)}`:""}${u.blockedBy&&u.blockedBy.length?` · blocked by ${u.blockedBy.map(n=>ilink(n)).join(", ")}`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch?`<br>branch <code>${esc(u.branch)}</code>`:""}<br>${u.board?`<a href="${esc(u.board)}">its board</a>`:u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}</dd>`:""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
+
+/* ---------- Decision log ---------- */
+let decFilter="all";
+function renderDecisions(){
+  const keys=["all","accepted","partial","deferred","declined"], counts=Object.fromEntries(keys.map(k=>[k,k==="all"?OPTS.length:count(OPTS,x=>x.opt.verdict===k)]));
+  $("#dec-ctl").innerHTML=`<label>show <span class="seg">${keys.filter(k=>k==="all"||counts[k]).map(k=>`<button data-f="${k}" aria-pressed="${decFilter===k}">${k} ${counts[k]}</button>`).join("")}</span></label>`;
+  document.querySelectorAll("#dec-ctl button").forEach(b=>b.addEventListener("click",()=>{ decFilter=b.dataset.f; renderDecisions(); }));
+  const rows=OPTS.filter(x=>decFilter==="all"||x.opt.verdict===decFilter);
+  $("#dec-table").innerHTML=`<thead><tr><th>Row</th><th>Option</th><th>Verdict</th><th>Why</th><th>Source</th></tr></thead><tbody>${rows.map(({row,opt})=>{ const {def,word}=optDef(row,opt); return `<tr data-sys="${esc(row.system||"")}" data-row="${esc(row.id)}" data-opt="${esc(opt.id)}" tabindex="0"><td>${esc(row.name)}</td><td><b>${rich(opt.name)}</b>${opt.summary?`<div class="sub">${rich(opt.summary)}</div>`:""}</td><td>${pill(def,"",word)}</td><td>${rich(opt.why||"")}${opt.wins?`<div class="sub">Would have won if: ${rich(opt.wins)}</div>`:""}</td><td>${opt.source?refHtml(opt.source):""}</td></tr>`; }).join("")}</tbody>`;
+  paint($("#dec-table"));
+  document.querySelectorAll("#dec-table tbody tr").forEach(tr=>{ const go=()=>{ const r=ROWS.find(x=>x.id===tr.dataset.row); inspectOption(r,(r.options||[]).find(o=>o.id===tr.dataset.opt)); }; tr.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); tr.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); }); });
+  const used=new Set(OPTS.map(x=>optDef(x.row,x.opt).word.startsWith("deferred →")?"settled":x.opt.verdict));
+  $("#decisions-key").innerHTML=sysKey(ROWS.map(r=>r.system))+["accepted","partial","deferred","declined"].filter(v=>used.has(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")+(used.has("settled")?`<span>${pill(OPT.accepted,"","deferred → accepted")} settled in column 4</span>`:"")+(OPTS.length?"":`<span><i class="pln"></i>no options recorded yet</span>`);
+}
+
+/* ---------- As-built register ---------- */
+let builtFilter="all";
+function renderBuilt(){
+  const keys=["all",...Object.keys(STATES)], counts=Object.fromEntries(keys.map(k=>[k,k==="all"?ROWS.length:count(ROWS,r=>stateOf(r)===k)]));
+  $("#built-ctl").innerHTML=`<label>show <span class="seg">${keys.filter(k=>k==="all"||counts[k]).map(k=>`<button data-f="${k}" aria-pressed="${builtFilter===k}">${k==="all"?"all":STATES[k].label} ${counts[k]}</button>`).join("")}</span></label>`;
+  document.querySelectorAll("#built-ctl button").forEach(b=>b.addEventListener("click",()=>{ builtFilter=b.dataset.f; renderBuilt(); }));
+  const rows=ROWS.filter(r=>builtFilter==="all"||stateOf(r)===builtFilter);
+  $("#built-list").innerHTML=rows.length?rows.map(r=>{ const b=r.asBuilt||{}, st=stateOf(r);
+    return `<div class="bcard st-${st}${cellGlow(r.id,"built")}" data-sys="${esc(r.system||"")}" data-row="${esc(r.id)}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${STATES[st].label}"><div class="bh"><span class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</span>${badge(st,st==="deferred"&&b.issue?` → #${esc(b.issue)}`:"")}${r.where?`<span class="wh">${esc(r.where)}</span>`:""}</div><p>${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>${b.changes&&b.changes.length?`<ol class="changes">${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol>`:""}<div class="meta">${[b.commits&&b.commits.length?`commits ${b.commits.map(c=>refHtml(c)).join(" ")}`:"",b.files&&b.files.length?`${b.files.length} file${b.files.length>1?"s":""}`:"",b.verified?"verified":"",moreLink(b.link||(r.unit&&(r.unit.board||r.unit.folder)),r.unit?(r.unit.board?"board":"folder"):"record")].filter(Boolean).join(" · ")}</div></div>`; }).join(""):`<p class="lede">No row in this state.</p>`;
+  paint($("#built-list"));
+  document.querySelectorAll("#built-list .bcard").forEach(c=>{ const go=()=>inspectBuilt(ROWS.find(x=>x.id===c.dataset.row)); c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  const usedSt=[...new Set(ROWS.map(stateOf))];
+  $("#built-key").innerHTML=sysKey(ROWS.map(r=>r.system))+Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.some(k=>STATES[k].dash)||!ROWS.length?`<span><i class="pln"></i>dashed card: nothing built</span>`:"")+(CURRENT.some(a=>a.endsWith(".built")||a==="built")?(HALTED?`<span><i class="hold"></i>being worked on, paused</span>`:`<span><i class="gl"></i>glow: being worked on now</span>`):"");
+}
+
+/* ---------- Chain (tracking boards): units as a layered dependency graph ---------- */
+function renderChain(){
+  const units=ROWS.filter(r=>r.unit), byIssue=new Map(units.map(r=>[r.unit.issue,r]));
+  const depth=new Map(); const d=r=>{ if(depth.has(r.id)) return depth.get(r.id); depth.set(r.id,0); const v=Math.max(0,...(r.unit.blockedBy||[]).map(n=>byIssue.get(n)).filter(Boolean).map(x=>d(x)+1)); depth.set(r.id,v); return v; };
+  units.forEach(d);
+  const cols=[]; units.forEach(r=>{ const c=depth.get(r.id); (cols[c]=cols[c]||[]).push(r); });
+  const W=168,H=50,GX=46,GY=14,PAD=10, maxRows=Math.max(1,...cols.map(c=>c?c.length:0));
+  const width=PAD*2+cols.length*W+(cols.length-1)*GX, height=PAD*2+maxRows*H+(maxRows-1)*GY;
+  const pos=new Map(); cols.forEach((c,i)=>(c||[]).forEach((r,j)=>{ const off=(maxRows-c.length)*(H+GY)/2; pos.set(r.id,{x:PAD+i*(W+GX),y:PAD+off+j*(H+GY)}); }));
+  let s=`<svg class="chainsvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Units and what blocks them"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="arrow" d="M0,0 L8,4 L0,8 z"/></marker></defs>`;
+  units.forEach(r=>(r.unit.blockedBy||[]).map(n=>byIssue.get(n)).filter(Boolean).forEach(b=>{ const p=pos.get(b.id), q=pos.get(r.id); const x1=p.x+W,y1=p.y+H/2,x2=q.x-2,y2=q.y+H/2,mx=(x1+x2)/2; s+=`<path class="edge${stateOf(b)==="pending"?" todo":""}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" marker-end="url(#arr)"/>`; }));
+  units.forEach(r=>{ const p=pos.get(r.id), st=stateOf(r), S=STATES[st], act=rowActive(r)&&!HALTED?" glow":rowActive(r)?" held":"";
+    s+=`<g class="unit ${S.cls}${st==="pending"?" pending":""}${act}" data-row="${esc(r.id)}" data-sys="${esc(r.system)}" tabindex="0" role="button" aria-label="Unit ${esc(r.unit.n)}: ${esc(r.name)}, ${S.label}" transform="translate(${p.x},${p.y})"><rect class="box" width="${W}" height="${H}" rx="5"/><rect class="bar" width="5" height="${H}" rx="2"/>${st!=="pending"?`<rect class="st" x="${W-6}" width="6" height="${H}" rx="2"/>`:""}<text class="t" x="12" y="19">${esc(r.unit.n)} · ${esc((r.unit.slug||r.id).slice(0,20))}</text><text class="s" x="12" y="37">#${esc(r.unit.issue)} · L${esc(r.unit.level||"?")} · ${esc(S.g)} ${esc(S.label)}</text></g>`; });
+  s+=`</svg>`;
+  $("#chain-frame").innerHTML=s; paint($("#chain-frame"));
+  document.querySelectorAll(".chainsvg .unit").forEach(g=>{ const go=()=>{ document.querySelectorAll(".chainsvg .unit.sel").forEach(e=>e.classList.remove("sel")); g.classList.add("sel"); inspectBuilt(ROWS.find(x=>x.id===g.dataset.row)); }; g.addEventListener("click",go); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  const usedSt=[...new Set(units.map(stateOf))];
+  $("#chain-key").innerHTML=sysKey(units.map(r=>r.system))+Object.keys(STATES).filter(k=>usedSt.includes(k)&&k!=="pending").map(k=>`<span>${badge(k)} landed: ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.includes("pending")?`<span><i class="pln"></i>dashed: unit not landed</span>`:"")+`<span><i class="ln"></i>arrow: blocks</span>`+(units.some(r=>(r.unit.blockedBy||[]).some(n=>byIssue.has(n)&&stateOf(byIssue.get(n))==="pending"))?`<span><i class="ln dash"></i>dashed arrow: its blocker has not landed</span>`:"")+(units.some(rowActive)?(HALTED?`<span><i class="hold"></i>active unit, paused</span>`:`<span><i class="gl"></i>glow: the unit being worked on now</span>`):"");
+}
+
+/* ---------- Source ---------- */
+function renderSource(){
+  const j=esc(JSON.stringify(PLAN,null,2));
+  $("#source-view").innerHTML=j.replace(/^(\s*)(&quot;[^&]*?&quot;)(:)/gm,'$1<span class="k">$2</span>$3').replace(/(:\s)(&quot;.*&quot;)(,?)$/gm,'$1<span class="s">$2</span>$3');
+  $("#source-key").innerHTML=`<span><b style="color:var(--link)">"key"</b> a field</span><span><b>"text"</b> a value</span><span><i class="pln"></i>this copy is replaced on every <code>embed.js</code> run</span>`;
+}
+
+/* ---------- Context: roadmap, unscheduled and follow-ups, trail, documents, notes ---------- */
+function renderContext(){
+  const cards=[];
+  /* Roadmap: on a tracking board the item is this issue and its units; otherwise the parent tracking issue, if any. */
+  const rm=PLAN.roadmap||null;
+  if(TRACKING){ const units=ROWS.filter(r=>r.unit);
+    cards.push(`<div class="card"><h3>Roadmap <small>#${esc(PLAN.issue)} · ${units.length} units${WIP.updated?` · ${esc(String(WIP.updated).slice(0,10))}`:""}</small></h3><ul class="issues">${units.map(r=>`<li>${r.unit.issue?ilink(r.unit.issue):"<b>—</b>"}<span>${esc(r.unit.n)} · ${esc(r.name)} · ${badge(stateOf(r))}${r.unit.board?` · <a href="${esc(r.unit.board)}">board</a>`:""}</span></li>`).join("")}</ul></div>`); }
+  else if(rm&&rm.issue) cards.push(`<div class="card"><h3>Roadmap <small>${esc(rm.asOf||"")}</small></h3><ul class="issues"><li>${ilink(rm.issue)}<span>${rich(rm.title||"")}${rm.board?` · <a href="${esc(rm.board)}">tracking board</a>`:""}</span></li>${(rm.items||[]).map(i=>`<li>${ilink(i.issue)}<span>${rich(i.title||"")}${i.state?` · ${esc(i.state)}`:""}${i.issue===PLAN.issue?" · this board":""}</span></li>`).join("")}</ul></div>`);
+  else cards.push(`<div class="card"><h3>Roadmap</h3><p class="lede">No roadmap item claims #${esc(PLAN.issue)}: it has no tracking parent. The <a href="${UP}docs/plans/index.html">work board</a> and the <a href="${UP}docs/dashboards/index.html">repository page</a> show the roadmap.</p></div>`);
+  const fu=PLAN.followUps||[];
+  cards.push(`<div class="card"><h3>Follow-ups and related issues <small>${fu.length}</small></h3>${fu.length?`<ul class="issues">${fu.map(f=>(f.issue?`<li>${ilink(f.issue,f.repo)}<span>${rich(f.note||"")}</span></li>`:`<li><b>–</b><span><code>${esc(f.name||"")}</code> <small>not filed</small> — ${rich(f.note||"")}</span></li>`)).join("")}</ul>`:`<p class="lede">None recorded.</p>`}</div>`);
+  const events=[...(PLAN.milestones||[]).map(m=>({date:m.date,phase:m.column,text:`<b>${esc(m.label)}</b>${m.note?` — ${rich(m.note)}`:""}${m.ref?` · ${refHtml(m.ref)}`:""}`})),...(PLAN.trail||[]).map(t=>({date:t.date,phase:t.column||"",text:`${rich(t.label||"")}${t.ref?` · ${refHtml(t.ref)}`:""}`}))].map((e,i)=>({...e,i})).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))||a.i-b.i);
+  const phaseName={gap:"GAP",considered:"CONSIDERED",verdict:"VERDICT",built:"BUILT"};
+  cards.push(`<div class="card"><h3>Trail <small>${events.length} events</small></h3>${events.length?`<ul class="trail">${events.map(e=>`<li><span class="d">${esc(e.date||"")}</span><span class="t">${e.phase?`<span class="ph">${esc(phaseName[e.phase]||e.phase)}</span>`:""}${e.text}</span></li>`).join("")}</ul>`:`<p class="lede">No dated events yet.</p>`}</div>`);
+  const docs=PLAN.documents||[];
+  const shared=[`<li><a href="${UP}docs/plans/index.html">Work board</a> — every run in the repository</li>`,`<li><a href="${UP}docs/dashboards/index.html">System dashboards</a> — the repository as built</li>`,...SYSTEMS.filter(s=>s.page).map(s=>`<li><span class="sw" data-sys="${esc(s.slug)}"></span><a href="${UP}${esc(s.page)}">${esc(s.name)}</a> — its system page</li>`)];
+  cards.push(`<div class="card"><h3>Plans and documents</h3><ul class="docs">${docs.map(d=>`<li>${d.path?refHtml(d.path,d.label||d.path):`<b>${esc(d.label||"")}</b>`}${d.note?` — ${rich(d.note)}`:""}</li>`).join("")}${shared.join("")}</ul></div>`);
+  const notes=PLAN.notes||{}; const nk=Object.keys(notes).filter(k=>notes[k]&&(!Array.isArray(notes[k])||notes[k].length));
+  if(nk.length) cards.push(`<div class="card notes"><h3>Notes</h3>${nk.map(k=>Array.isArray(notes[k])?`<p><b>${esc(k)}.</b></p><ul>${notes[k].map(x=>`<li>${typeof x==="string"?rich(x):`${rich(x.what||"")}${x.when?` <small>(${esc(x.when)})</small>`:""}`}</li>`).join("")}</ul>`:`<p><b>${esc(k)}.</b> ${rich(notes[k])}</p>`).join("")}</div>`);
+  $("#context").innerHTML=cards.join(""); paint($("#context"));
+  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
+  $("#footer").innerHTML=`Built from <code>${esc(FOLDER)}/plan.json</code>, embedded verbatim, against the baseline <code>${esc(b.ref||"")} ${esc(b.sha||"")}</code>${b.date?` (${esc(b.date)})`:""}. ${a?`The as-built column reflects <code>${esc(a.ref||"")} ${esc(a.sha||"")}</code>${a.date?` (${esc(a.date)})`:""}${a.pr?`, merged through ${prlink(a.pr)}`:""}.`:"Nothing has landed yet."} Code and the Markdown beside this page are authoritative on any conflict. Columns 1 to 3 are written once; column 4 records every difference. Maintained by the presenter agent at each event of the issue's <code>/resolve-issue</code> run.`;
+}
+
+/* ---------- Tabs and deep links ---------- */
+if(!TRACKING){ const t=$("#t-chain"), p=$("#p-chain"); if(t) t.remove(); if(p) p.remove(); }
+const tabs=[...document.querySelectorAll(".tab")];
+const DEFAULT_INSPECT={timeline:"<p>Click a cell for its detail: the gap's evidence, an option's reasons, the verdict's steps, tests and risks, or the as-built changes with their reasons. Each cell links the Markdown section that holds the rest.</p>",decisions:"<p>Click a row for the option's full reasons and the options it was weighed against.</p>",built:"<p>Click a card for the row's files, commits, verification and every change from the verdict.</p>",chain:"<p>Click a unit for its as-built state, its issue and its board or folder.</p>",source:"<p>The committed <code>plan.json</code>. Edit the file, then run <code>plan/scripts/embed.js</code> on the folder.</p>"};
+function show(id){
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  const name=id.replace("t-","");
+  if(name==="decisions") renderDecisions();
+  if(name==="built") renderBuilt();
+  if(name==="chain") renderChain();
+  if(name==="source") renderSource();
+  if(DEFAULT_INSPECT[name]) inspect(DEFAULT_INSPECT[name]);
+}
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>{ show(t.id); try{ history.replaceState(null,"","#"+t.id.replace("t-","")); }catch(e){} }); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+
+renderHeader(); renderWip(); renderKpis(); renderBoard(); renderContext();
+const hash=decodeURIComponent(location.hash.replace("#",""));
+let start="t-timeline"; if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
+show(start);
+if(hash&&!document.getElementById("t-"+hash)){ const [rowId,col,optId]=hash.split("."); if(ROWS.some(r=>r.id===rowId)){ select(rowId,COLS.some(c=>c.key===col)?col:"gap",optId); const el=document.getElementById("row-"+rowId); if(el) el.scrollIntoView({block:"center"}); } }
+</script>
+</body>
+</html>
