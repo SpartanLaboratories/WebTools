@@ -13,6 +13,7 @@ Every fallible operation returns `kotlin.Result` rather than throwing, so caller
 to recover.
 
 System dashboards: [`docs/dashboards/`](docs/dashboards/index.html) shows the modules as built at a named commit, with planned systems drawn dashed.
+Plan dashboards: from Issue #38 on, each plan under [`docs/plans/`](docs/plans/README.md) is a page that traces every part of a change through its gap, the options considered, the verdict and the as-built state.
 
 ## Install
 
