@@ -1,13 +1,13 @@
 # Handoff: plan dashboards (work-in-progress draft)
 
 **Status:** draft, not reviewed by the maintainer, no pull request opened. Everything described here is
-pushed on branch `ccr-efec1b93-7rd994` (two commits on top of `master` `0e7b0f8`: `668109c` the skill,
+pushed on branch `plan-dashboard` (two commits on top of `master` `0e7b0f8`: `668109c` the skill,
 `5f981bc` the worked example). The working tree was clean at handoff. Delete this file before the branch
 is merged.
 
 **Kickoff prompt for the next session** (paste as the first message):
 
-> Check out `ccr-efec1b93-7rd994` in SpartanLaboratories/WebTools and read `HANDOFF-plan-dashboard.md`
+> Check out `plan-dashboard` in SpartanLaboratories/WebTools and read `HANDOFF-plan-dashboard.md`
 > at the root. Continue the plan-dashboard work from its "Where to pick up" section. Ask me the open
 > decisions listed there before changing the data model or the directions.
 
@@ -211,7 +211,7 @@ const { chromium } = require("playwright");
    `template/dashboard.html` over the folder's `dashboard.html` and embedding again (the data lives in
    `plan.json`, so nothing is lost; never hand-edit a page).
 5. When the maintainer is satisfied: delete this file, open the pull request from
-   `ccr-efec1b93-7rd994` to `master`. Commit messages on this branch follow the repository's style
+   `plan-dashboard` to `master`. Commit messages on this branch follow the repository's style
    (`docs: ... (Issue #N)` where an issue applies).
 
 Commands from the repository root:
