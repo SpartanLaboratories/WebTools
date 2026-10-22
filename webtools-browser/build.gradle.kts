@@ -2,7 +2,13 @@
 // Selenium Manager (bundled since 4.6) provisions the browser driver at runtime,
 // so no driver binaries are shipped or configured.
 
+plugins {
+    id("webtools.kotlin-jvm-library")
+}
+
 dependencies {
+    // Logging: a library depends only on the slf4j API, never on a concrete backend.
+    api("org.slf4j:slf4j-api:2.0.13")
     implementation("org.seleniumhq.selenium:selenium-java:4.48.0")
 }
 

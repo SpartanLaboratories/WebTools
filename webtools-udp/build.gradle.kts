@@ -1,5 +1,16 @@
 // webtools-udp - a multi-client UDP connection layer with a NAT-traversal handshake.
-// Runtime dependencies: slf4j-api only (inherited from the root build).
+// Runtime dependencies: slf4j-api only, declared below as an api dependency; the Kotlin/JVM setup,
+// test dependencies, level test tasks and publishing skeleton come from the
+// webtools.kotlin-jvm-library convention plugin in build-logic.
+
+plugins {
+    id("webtools.kotlin-jvm-library")
+}
+
+dependencies {
+    // Logging: a library depends only on the slf4j API, never on a concrete backend.
+    api("org.slf4j:slf4j-api:2.0.13")
+}
 
 // Explicit per-module version, overriding the root allprojects { version = "1.0.0" }.
 // 1.1.0: non-breaking addition of the raw binary datagram send/receive path (Issue #8).
