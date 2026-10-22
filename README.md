@@ -12,6 +12,8 @@ independent, single-concern artifacts** — depend only on the one you need:
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover.
 
+System dashboards: [`docs/dashboards/`](docs/dashboards/index.html) shows the modules as built at a named commit, with planned systems drawn dashed.
+
 ## Install
 
 ```kotlin
