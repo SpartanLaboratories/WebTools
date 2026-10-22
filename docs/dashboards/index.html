@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WebTools · dashboards</title>
+<style>
+/* Supersystem / repository page template (system-dashboard skill): the systems as cards, the C4 views rendered from the embedded DSL, context second.
+   Draft A2: the C4 model tab is rendered at runtime from the Structurizr DSL embedded below (a verbatim copy of workspace.dsl). */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --server:#2a78d6; --client:#eb6834; --wire:#1baf7a;
+  --server-soft:#e2edfa; --client-soft:#fdeae1; --wire-soft:#ddf4ea;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --on:#0e1420; --dim:.28; --focus:#2a78d6; --rel:#6b7382;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#d95926;--wire:#199e70;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(217,89,38,.20);--wire-soft:rgba(25,158,112,.22);--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#d95926;--wire:#199e70;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(217,89,38,.20);--wire-soft:rgba(25,158,112,.22);--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.92em}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px}
+.crumbs a{text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)}
+.function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2)}
+.chip b{color:var(--ink);font-weight:600}
+.chip.model{border-style:dashed}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
+.kpi .seg-bar i{display:block;height:100%}
+
+/* tabs + stage */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink)}
+.tab.model::after{content:" DSL";font:10px var(--mono);color:var(--muted);vertical-align:super}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:940px){.stage{grid-template-columns:1fr}.inspector{position:static}}
+.view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.view svg{display:block;width:100%;height:auto}
+.view h2{font-size:15px;margin:0 0 4px}
+.lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
+.inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px}
+.inspector p{margin:0 0 8px;color:var(--ink-2);font-size:13px}
+.inspector dl{margin:0;font-size:12.5px}
+.inspector dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-top:8px}
+.inspector dd{margin:2px 0 0}
+.inspector dd a{font-family:var(--mono);font-size:12px;text-decoration:none;border-bottom:1px solid var(--line)}
+.inspector dd a:hover{border-bottom-color:var(--ink)}
+.linkbtn{appearance:none;border:1px dashed var(--line);background:var(--surface-2);color:var(--ink);font:12px var(--mono);padding:5px 8px;border-radius:4px;cursor:pointer;text-align:left}
+.linkbtn:hover{border-color:var(--ink)}
+.tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
+.tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
+.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface)}
+.key i.pub{background:var(--surface-2)}.key i.std{border-style:dotted}.key i.pln{border-style:dashed;background:none}
+.key i.srv{border-color:var(--server)}.key i.cli{border-color:var(--client)}.key i.wir{border-color:var(--wire)}
+
+/* structure svg */
+.band{fill:var(--surface-2)}
+.lane{font-size:11px;fill:var(--muted);letter-spacing:.1em;font-family:var(--sans)}
+.note{font-size:10.5px;fill:var(--ink-2);font-family:var(--sans)}
+.node{cursor:pointer}
+.node rect{fill:var(--surface);stroke-width:1.5}
+.node.pub rect{stroke-width:2}
+.node.server rect{stroke:var(--server)}.node.server.pub rect{fill:var(--server-soft)}
+.node.client rect{stroke:var(--client)}.node.client.pub rect{fill:var(--client-soft)}
+.node.wire rect{stroke:var(--wire)}.node.wire.pub rect{fill:var(--wire-soft)}
+.node.standalone rect{stroke:var(--muted);stroke-dasharray:3 3;fill:var(--surface-2)}
+.node.container rect{fill-opacity:.55}
+.node text{fill:var(--ink);font-family:var(--sans)}
+.node .t{font-weight:700;font-size:10.5px}
+.node.container .t{font-size:13px}
+.node .s{font-size:10px;fill:var(--ink-2)}
+.node.chip .t{font-family:var(--mono);font-size:11px}
+.node.chip .s{font-family:var(--mono);font-size:8.5px}
+.node.sel rect{stroke:var(--on);stroke-width:3}
+
+/* datagram flow svg */
+.fnode{cursor:default}
+.fnode rect,.fnode polygon{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.fnode.t rect{fill:var(--surface-2)}
+.fnode text{fill:var(--ink);font-size:10.5px;font-family:var(--sans)}
+.fnode .lvl{font-family:var(--mono);font-size:8.5px;fill:var(--muted)}
+.fnode.on rect,.fnode.on polygon{stroke:var(--on);stroke-width:2.5}
+.fnode.off{opacity:var(--dim)}
+.fedge{stroke:var(--line);stroke-width:1.5;fill:none}
+.fedge.on{stroke:var(--on);stroke-width:2.5}
+.fedge.off{opacity:var(--dim)}
+.flabel{font-size:9.5px;fill:var(--muted);font-family:var(--mono)}
+.flabel.on{fill:var(--ink);font-weight:600}
+.flabel.off{opacity:var(--dim)}
+.outcome{font-size:13px;margin:0 0 10px;padding:8px 10px;border-radius:4px;background:var(--surface-2);border-left:3px solid var(--ink)}
+.outcome code{font-weight:600}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
+.ctl label{font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[aria-disabled="true"]{opacity:.35;cursor:default}
+.seg button:hover:not([aria-pressed="true"]):not([aria-disabled="true"]){background:var(--surface-2)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:12px var(--mono);padding:7px 10px;border-radius:5px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* sequence svg */
+.life{stroke:var(--line);stroke-dasharray:3 4}
+.lh rect{fill:var(--surface-2);stroke:var(--line)}
+.lh text{font-size:10.5px;font-weight:700;fill:var(--ink);font-family:var(--mono)}
+.phase rect{fill:var(--surface-2);opacity:.55}
+.phase text{font-size:9.5px;fill:var(--muted);font-family:var(--mono);letter-spacing:.08em}
+.msg{cursor:pointer}
+.msg line,.msg path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+.msg.ret line{stroke-dasharray:5 4}
+.msg text{font-size:10px;fill:var(--ink-2);font-family:var(--sans)}
+.msg .lbg{fill:var(--surface);stroke:none}
+.msg .num{font-family:var(--mono);font-size:9px;fill:var(--muted)}
+.msg.cur line,.msg.cur path{stroke:var(--on);stroke-width:2.5}
+.msg.cur text{fill:var(--ink);font-weight:600}
+.msg.future{opacity:.3}
+
+/* C4 model tab — rendered from the DSL. A level ladder on the left (C4 is about zooming in), typed element
+   cards whose header colour comes from the DSL's styles block, relationships routed orthogonally in lanes,
+   the scope drawn as a boundary frame, and the dynamic view drawn as the sequence it is. */
+.c4wrap{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+.ladder{display:flex;flex-wrap:wrap;gap:7px;min-width:0}
+.rung{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:6px;padding:7px 10px;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:0 8px;align-items:center;min-width:0;position:relative;flex:1 1 150px;max-width:230px}
+.rung .lv{font:700 13px var(--mono);color:var(--muted);grid-row:span 2;text-align:center}
+.rung .nm{font-weight:700;font-size:12.5px;color:var(--ink)}
+.rung .sc{font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rung:hover{border-color:var(--ink-2)}
+.rung[aria-pressed="true"]{border-color:var(--ink);background:var(--surface-2)}
+.rung[aria-pressed="true"] .lv{color:var(--ink)}
+.rung.sep{margin-left:8px}
+.rung.lvl::after{content:"";position:absolute;right:-8px;top:50%;width:8px;height:2px;background:var(--line)}
+.rung.lvl.last::after{display:none}
+.c4main{min-width:0}
+.c4head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:0 0 8px}
+.c4head .zoom{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;align-self:center}
+.c4head .zoom button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:11px var(--mono);padding:5px 9px;cursor:pointer}
+.c4head .zoom button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.c4head .lvl{font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.c4head .ttl{font-weight:700;font-size:14px}
+.c4head .desc{font-size:12.5px;color:var(--ink-2)}
+.c4canvas{border:1px solid var(--line);border-radius:6px;padding:6px;background-color:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1.2px);background-size:22px 22px;overflow-x:auto}
+.c4canvas svg{max-width:none}
+.c4key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
+.c4key span{display:inline-flex;align-items:center;gap:6px}
+.c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
+.c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
+.c4el{cursor:pointer}
+.c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.c4el .hdr{stroke:none}
+.c4el text{font-family:var(--sans)}
+.c4el .n{font-weight:700;font-size:12px}
+.c4el .m{font-size:9.5px;font-family:var(--mono);fill:var(--muted)}
+.c4el .d{font-size:10px;fill:var(--ink-2)}
+.c4el .tg{font-size:8.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.04em}
+.c4el.sel .card{stroke:var(--on);stroke-width:2.5}
+.c4el.hl .card{stroke:var(--ink-2);stroke-width:2}
+.c4el.dim{opacity:.3}
+.c4rel path{stroke:var(--rel);stroke-width:1.4;fill:none;stroke-linejoin:round}
+.c4rel.dashed path{stroke-dasharray:6 4}
+.c4rel text{font-size:9.5px;fill:var(--ink-2);font-family:var(--sans)}
+.c4rel .lbg{fill:var(--surface);stroke:var(--line);stroke-width:.8}
+.c4rel.dim{opacity:.12}
+.c4rel.hl path{stroke:var(--ink);stroke-width:2.2}
+.c4rel.hl text{fill:var(--ink);font-weight:600}
+.c4rel.hl .lbg{stroke:var(--ink-2)}
+.c4rel.cur path{stroke:var(--on);stroke-width:2.5}
+.c4rel.cur text{fill:var(--ink);font-weight:600}
+.c4rel .num circle{fill:var(--ink);stroke:none}
+.c4rel .num text{fill:var(--bg);font-weight:700;font-size:9.5px;font-family:var(--mono)}
+.c4bound{fill:var(--surface-2);fill-opacity:.45;stroke:var(--muted);stroke-dasharray:8 5}
+.c4boundl rect{fill:var(--surface);stroke:var(--muted);stroke-dasharray:8 5}
+.c4boundl text{font:700 10px var(--mono);fill:var(--ink-2)}
+.c4band{font-size:9.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.14em}
+.c4life{stroke:var(--line);stroke-dasharray:3 4}
+pre.dsl{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow-x:auto;color:var(--ink);max-height:70vh}
+pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} pre.dsl .s{color:var(--ink-2)}
+.steps-list{margin:8px 0 0;padding:0;list-style:none;font-size:12.5px}
+.steps-list li{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:4px 0;border-top:1px solid var(--hair);color:var(--ink-2);cursor:pointer}
+.steps-list li b{font-family:var(--mono);color:var(--ink)}
+.steps-list li.on{color:var(--ink)}
+
+/* threads */
+.threads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:700px){.threads{grid-template-columns:1fr}}
+.tside h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 6px}
+.thread{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-left-width:4px;border-radius:4px;margin-bottom:6px;background:var(--surface);cursor:pointer;min-width:0}
+.thread.server{border-left-color:var(--server)}.thread.client{border-left-color:var(--client)}
+.thread .n{font:12px var(--mono);font-weight:600}
+.thread .r{grid-column:1/-1;font-size:12px;color:var(--ink-2)}
+.thread.sel{outline:2px solid var(--on)}
+.pill{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1.5px solid var(--ink-2);color:var(--ink-2);align-self:start;white-space:nowrap}
+.pill.lazy{border-style:dashed}.pill.cond{border-style:dotted}
+.scroll{overflow-x:auto}
+.matrix{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;min-width:560px}
+.matrix th,.matrix td{padding:6px 8px;border-top:1px solid var(--hair);text-align:center;vertical-align:top}
+.matrix th{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix td:first-child{color:var(--ink-2)}
+.matrix .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.matrix tr:hover td{background:var(--surface-2)}
+
+/* lifecycles */
+.lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h3{font-size:13px;margin:0 0 8px}
+.card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.steps li{counter-increment:s;font:12px var(--mono);border:1px solid var(--line);border-radius:4px;padding:5px 8px;background:var(--surface)}
+.steps li::before{content:counter(s) " ";color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:6px 6px;border-top:1px solid var(--hair);vertical-align:top}
+.tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.callout{border-left:3px solid var(--wire);padding:8px 10px;background:var(--surface-2);border-radius:4px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.callout b{color:var(--ink)}
+.states text{font-family:var(--mono);font-size:11px;fill:var(--ink)}
+.states .lab{font-family:var(--sans);font-size:9.5px;fill:var(--muted)}
+.states rect{fill:var(--surface-2);stroke:var(--ink-2);stroke-width:1.5}
+.states .start{fill:var(--server-soft);stroke:var(--server)}
+.states line,.states path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+
+/* context */
+.context{margin-top:24px}
+.context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.issues{list-style:none;margin:0;padding:0;font-size:12.5px}
+.issues li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.issues a:hover{color:var(--ink)}
+.badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
+.badge.bug{border-color:var(--serious)}
+.badge.bug::before{content:"▲ ";color:var(--serious)}
+.badge.planned{border-style:dashed}
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;align-items:center;font-size:12px}
+.bars .lbl{color:var(--ink-2);font-family:var(--mono);font-size:11.5px}
+.bars .trk{height:10px;background:var(--surface-2);border-radius:2px;overflow:hidden;position:relative}
+.bars .fil{position:absolute;left:0;top:0;height:100%;background:var(--server);border-radius:0 4px 4px 0}
+.bars .val{font-variant-numeric:tabular-nums;color:var(--ink)}
+.docs{margin:0;padding:0;list-style:none;font-size:12.5px}
+.docs li{padding:4px 0;border-top:1px solid var(--hair)}
+.docs a{text-decoration:none;border-bottom:1px solid var(--line)}
+.docs a:hover{border-bottom-color:var(--ink)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+footer code{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.syscards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.syscard{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0;border-top:3px solid var(--server)}
+.syscard:hover{border-color:var(--ink-2)}
+.syscard.planned{border-style:dashed;border-top-color:var(--muted)}
+.syscard .nm{font:700 15px var(--mono)}
+.syscard .fn{font-size:13px;color:var(--ink-2);margin:4px 0 8px}
+.syscard .meta{display:flex;flex-wrap:wrap;gap:4px}
+.syscard .meta span{font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;color:var(--ink-2)}
+.syscard .st{font:700 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.syscard.planned .st{color:var(--muted)}
+.syscard.nopage{border-top-color:var(--server)}
+.sysgroup{margin:14px 0 6px;font:700 11px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.sysgroup:first-child{margin-top:0}
+.sysgroup small{font-weight:400;text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="crumbs">SpartanLaboratories/WebTools</div>
+  <h1>WebTools</h1>
+  <p class="function">Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts: <code>webtools-udp</code> for multi-client UDP connections, <code>webtools-scraping</code> for reading URLs, <code>webtools-browser</code> for headless-Chrome screenshots. Issue #55 plans an HTTP client stack beside them; it is drawn dashed and is not built.</p>
+  <div class="chips">
+    <span class="chip">systems <b id="sys-count">…</b></span>
+    <span class="chip">as-is at <b>feat/issue-55-http-client-stack 96c30d6</b> · 2026-10-21</span>
+    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener"><b>#55</b></a> http-client-stack (plan only; last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> at ca57a57)</span>
+    <span class="chip model">C4 model <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
+  </div>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t-systems" aria-controls="p-systems" aria-selected="true">Systems</button>
+  <button class="tab model" role="tab" id="t-c4" aria-controls="p-c4" aria-selected="false">C4 model</button>
+</div>
+
+<div class="stage">
+<div>
+  <section class="view" role="tabpanel" id="p-systems" aria-labelledby="t-systems">
+    <h2>Systems</h2>
+    <p class="lede">Solid cards are built and reflect the commit they name; no built system has its own dashboard page yet. Dashed cards are planned by Issue #55, are not built, and get no page until they are. Hover or focus a card for its paths, parent and plan.</p>
+    <div class="syscards" id="syscards"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
+    <h2>C4 model <small style="font:11px var(--mono);color:var(--muted);font-weight:400">rendered from workspace.dsl at load</small></h2>
+    <p class="lede">How the systems relate: the context the repository sits in, the systems as containers, webtools-http as planned, and how the repository reaches the web today. Dashed cards and lines are planned by Issue #55. Parsed from the DSL beside this page every time it opens.</p>
+    <div class="c4wrap">
+      <nav class="ladder" id="c4-ladder" aria-label="C4 levels"></nav>
+      <div class="c4main">
+        <div class="c4head" id="c4-head"></div>
+        <div class="c4canvas" id="c4-canvas"><svg id="svg-c4" viewBox="0 0 900 300" role="img" aria-label="C4 view"></svg></div>
+        <div class="c4key" id="c4-key"></div>
+        <pre class="dsl" id="dsl-view" hidden></pre>
+      </div>
+    </div>
+  </section>
+</div>
+
+<aside class="inspector" id="inspector" aria-live="polite">
+  <h2>Inspector</h2>
+  <div id="insp-body"><p>Select a system or a C4 element to see its details here.</p></div>
+</aside>
+</div>
+
+<section class="context">
+  <h2>Context · secondary</h2>
+  <div class="cards">
+    <div class="card"><h3>Roadmap</h3>
+      <ul class="docs">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55 HTTP client stack</a> (level 4, plan only) — <code>build-logic</code>, <code>webtools-http</code> with its published test fixtures, the check-only <code>js</code> modules and <code>webtools-feeds</code>. <a href="../plans/55-http-client-stack/architecture.md">Architecture</a> · <a href="../plans/55-http-client-stack/impact.md">impact</a>.</li>
+        <li>Its eleven units (architecture §11), none filed as a sub-issue yet except #47: 1 <code>build-logic</code> · 2 <code>java-floor</code> (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>, to be re-parented under #55) · 3 <code>http-core</code> · 4 <code>test-support</code> · 5 <code>url-policy</code> · 6 <code>okhttp-transport</code> · 7 <code>response-cache</code> · 8 <code>call-budget</code> · 9 <code>call-facades</code> · 10 <code>feeds</code> · 11 <code>http-docs</code>. Landing order 1 → 2 → 3 → 4 → {5 → 6, 7, 8} → 9 → 10 → 11.</li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/50" target="_blank" rel="noopener">#50</a> webtools-udp multiplatform protocol core — open, not planned in this repository yet.</li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a> repository practices (CI, CHANGELOG, tags, foojay) — open; releasing the #55 modules waits on it.</li>
+      </ul></div>
+    <div class="card"><h3>Open issues by system <small>13 open · 2026-10-21</small></h3>
+      <ul class="issues"><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a><span>A throwing onClientConnect kills the server&#39;s listener thread</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/53" target="_blank" rel="noopener">#53</a><span>Server accepts handshake names and credentials containing tabs, CR/LF or other non-space whitespace</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/52" target="_blank" rel="noopener">#52</a><span>Client sends malformed or misparsed handshakes for an empty or whitespace-containing name or credential</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/50" target="_blank" rel="noopener">#50</a><span>webtools-udp: multiplatform protocol core and a datagram-transport seam for a future web client</span><span class="badge">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/49" target="_blank" rel="noopener">#49</a><span>Handshake registration orphaned when the REGISTERED send fails</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/48" target="_blank" rel="noopener">#48</a><span>MultiConnectionUDPServer.stop() blocks ~1 s joining the listener before closing the socket</span><span class="badge bug">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/41" target="_blank" rel="noopener">#41</a><span>webtools-udp: rate-bound the per-datagram-drop WARN logs on server and client</span><span class="badge">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/39" target="_blank" rel="noopener">#39</a><span>Client only checks datagram origin on the reliable-channel receive branch</span><span class="badge">webtools-udp</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span>webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</span><span class="badge bug">all three modules</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span>Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</span><span class="badge">repository</span></li><li><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span>HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</span><span class="badge planned">planned systems</span></li></ul></div>
+    <div class="card"><h3>Documents</h3>
+      <ul class="docs">
+        <li><a href="../../README.md">README</a> — artifacts, install, components, build and test</li>
+        <li><a href="../webtools-udp-architecture.md">webtools-udp architecture</a> — components, threads, locks, lifecycles</li>
+        <li><a href="../webtools-udp-protocol.md">webtools-udp protocol</a> — the wire reference</li>
+        <li><a href="../plans/55-http-client-stack/architecture.md">#55 architecture</a> — the planned systems drawn dashed here</li>
+        <li><a href="systems.json"><code>systems.json</code></a> — the registry this page is built from</li>
+        <li><a href="workspace.dsl"><code>workspace.dsl</code></a> — the C4 model rendered in the C4 tab</li>
+      </ul></div>
+  </div>
+</section>
+
+<footer>Built from <code>docs/dashboards/systems.json</code>, <code>workspace.dsl</code> and the code at <code>feat/issue-55-http-client-stack 96c30d6</code> (2026-10-21). Code is authoritative on any conflict. Planned elements come from Issue #55's architecture and are not built. Maintained by the presenter agent on each <code>/resolve-issue</code> run.</footer>
+<!-- Divergences from the system-dashboard supersystem template (presenter, Issue #55):
+     1. Systems tab: cards grouped under headings (built; planned at repository level; planned inside webtools-http) instead of one flat grid.
+     2. A built system with no page renders as a non-link card marked "built · no page yet" (the template links every built card to its page).
+     3. Planned cards and the inspector show the planning units and sub-issues from the registry's plannedBy.units, plus plannedBy.placement and the Maven Central version (registry field "published").
+     4. workspace.dsl styles "Internal" with a solid border: here it marks the built, unpublished root build, and only Planned may look dashed.
+     5. layoutC4 stack(): the side column's start is clamped once instead of per card; the template clamps each card to PAD, so a column taller than the band row stacked cards on top of each other (a template bug: the fix belongs in the skill's templates). -->
+</div>
+
+<!-- A verbatim copy of docs/dashboards/systems.json (scripts/embed.js … systems). -->
+<script type="application/json" id="systems">
+{
+  "repo": "SpartanLaboratories/WebTools",
+  "updated": "2026-10-21",
+  "systems": [
+    {"slug": "webtools", "name": "WebTools", "kind": "repo", "parent": null, "status": "built",
+     "function": "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts.",
+     "paths": ["settings.gradle.kts", "build.gradle.kts"], "version": null,
+     "asIs": {"ref": "feat/issue-55-http-client-stack", "sha": "96c30d6", "date": "2026-10-21"},
+     "lastAmended": {"issue": 55, "sha": "96c30d6", "note": "plan only: planned systems added; the last code change is #38 at ca57a57"},
+     "page": "index.html", "dsl": "workspace.dsl"},
+
+    {"slug": "webtools-udp", "name": "webtools-udp", "kind": "system", "parent": "webtools", "status": "built",
+     "function": "Multi-client UDP connection layer: a text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels.",
+     "paths": ["webtools-udp/"], "version": "2.0.0a", "published": "2.0.0",
+     "asIs": {"ref": "feat/issue-55-http-client-stack", "sha": "96c30d6", "date": "2026-10-21"},
+     "lastAmended": {"issue": 38, "sha": "ca57a57"},
+     "page": null, "dsl": null},
+    {"slug": "webtools-scraping", "name": "webtools-scraping", "kind": "system", "parent": "webtools", "status": "built",
+     "function": "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers.",
+     "paths": ["webtools-scraping/"], "version": "1.0.0", "published": "1.0.0",
+     "asIs": {"ref": "feat/issue-55-http-client-stack", "sha": "96c30d6", "date": "2026-10-21"},
+     "lastAmended": {"issue": 15, "sha": "c7a923d"},
+     "page": null, "dsl": null},
+    {"slug": "webtools-browser", "name": "webtools-browser", "kind": "system", "parent": "webtools", "status": "built",
+     "function": "WebViewer: renders a URL in headless Chrome and returns the screenshot as a file or an image.",
+     "paths": ["webtools-browser/"], "version": "1.0.0", "published": "1.0.0",
+     "asIs": {"ref": "feat/issue-55-http-client-stack", "sha": "96c30d6", "date": "2026-10-21"},
+     "lastAmended": {"issue": 15, "sha": "07c805e"},
+     "page": null, "dsl": null},
+
+    {"slug": "build-logic", "name": "build-logic", "kind": "system", "parent": "webtools", "status": "planned",
+     "function": "Configure every module from one place: convention plugins, the Java 11 floor constant and its verifyJavaFloor guard, package-selected level tasks, the publishing skeleton.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.1", "placement": "build-logic/ (included build)",
+                   "units": [{"unit": 1, "slug": "build-logic", "subIssue": null}, {"unit": 2, "slug": "java-floor", "subIssue": 47}]}},
+    {"slug": "webtools-http", "name": "webtools-http", "kind": "supersystem", "parent": "webtools", "status": "planned",
+     "function": "A Kotlin Multiplatform suspend HTTP stack: transport, outbound-URL policies, response cache, call budget, call facades, failure model and published test fixtures.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "5, 6.2-6.7", "placement": "webtools-http/ (publishes webtools-http and webtools-http-jvm, 1.0.0)",
+                   "units": [{"unit": 3, "slug": "http-core", "subIssue": null}, {"unit": 4, "slug": "test-support", "subIssue": null}, {"unit": 5, "slug": "url-policy", "subIssue": null}, {"unit": 6, "slug": "okhttp-transport", "subIssue": null}, {"unit": 7, "slug": "response-cache", "subIssue": null}, {"unit": 8, "slug": "call-budget", "subIssue": null}, {"unit": 9, "slug": "call-facades", "subIssue": null}]}},
+    {"slug": "webtools-http-core", "name": "webtools-http common core", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Own the vocabulary every other part of the stack speaks: the opt-in marker, the failure model, request and response types, the transport and wall-clock ports, the logging seam.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.2", "placement": "webtools-http/src/commonMain, jvmMain",
+                   "units": [{"unit": 3, "slug": "http-core", "subIssue": null}]}},
+    {"slug": "webtools-http-url-policy", "name": "outbound-URL policy", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.3.1", "placement": "webtools-http/src/commonMain (policy, classifier), jvmMain (enforcement)",
+                   "units": [{"unit": 5, "slug": "url-policy", "subIssue": null}]}},
+    {"slug": "webtools-http-transport", "name": "OkHttp transport", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.3.2", "placement": "webtools-http/src/jvmMain",
+                   "units": [{"unit": 6, "slug": "okhttp-transport", "subIssue": null}]}},
+    {"slug": "webtools-http-cache", "name": "response cache", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Serve one decoded value per key to many concurrent callers from one load, for a bounded time, never caching a failure.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.4", "placement": "webtools-http/src/commonMain (port), jvmMain (Caffeine)",
+                   "units": [{"unit": 7, "slug": "response-cache", "subIssue": null}]}},
+    {"slug": "webtools-http-budget", "name": "call budget", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Grant permits under a provider's clock-aligned windows and lane shares, pause on server signals, and hold a hard daily stop.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.5", "placement": "webtools-http/src/commonMain",
+                   "units": [{"unit": 8, "slug": "call-budget", "subIssue": null}]}},
+    {"slug": "webtools-http-facades", "name": "call facades", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Compose cache, budget and transport into UpstreamClient (endpoints) and UrlFetcher (administrator-supplied URLs), and own what they built.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.6", "placement": "webtools-http/src/commonMain, jvmMain (owning factories)",
+                   "units": [{"unit": 9, "slug": "call-facades", "subIssue": null}]}},
+    {"slug": "webtools-http-test-fixtures", "name": "published test fixtures", "kind": "system", "parent": "webtools-http", "status": "planned",
+     "function": "Let a consumer test its providers with no network at Level 2 and over loopback at Level 3, through the webtools-http test-fixtures variant.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.7", "placement": "webtools-http/src/jvmTestFixtures (capability webtools-http-test-fixtures)",
+                   "units": [{"unit": 4, "slug": "test-support", "subIssue": null}]}},
+    {"slug": "js-commoncheck", "name": "check-only js modules", "kind": "system", "parent": "webtools", "status": "planned",
+     "function": "Compile each multiplatform module's commonMain for js so a JVM API in common code is a compile error, without publishing anything.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.8", "placement": "webtools-http-commoncheck/, webtools-feeds-commoncheck/ (unpublished)",
+                   "units": [{"unit": 3, "slug": "http-core", "subIssue": null}, {"unit": 10, "slug": "feeds", "subIssue": null}]}},
+    {"slug": "webtools-feeds", "name": "webtools-feeds", "kind": "system", "parent": "webtools", "status": "planned",
+     "function": "Parse RSS and Atom behind a hardened parser port with a Rome default, and fetch feeds with a caller-owned conditional GET over UrlFetcher.",
+     "paths": [],
+     "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.10", "placement": "webtools-feeds/ (publishes webtools-feeds and webtools-feeds-jvm, 1.0.0)",
+                   "units": [{"unit": 10, "slug": "feeds", "subIssue": null}]}}
+  ]
+}
+</script>
+
+<!-- A verbatim copy of workspace.dsl (scripts/embed.js … dsl). -->
+<script type="text/plain" id="dsl">
+// WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
+// As-is at WebTools feat/issue-55-http-client-stack 96c30d6 (2026-10-21): webtools-udp 2.0.0a, webtools-scraping 1.0.0, webtools-browser 1.0.0. Code is authoritative on any conflict.
+// Internal is drawn solid here (it marks the built, unpublished root build); only Planned is dashed.
+// Every element tagged Planned comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11). None of it is built; it is drawn dashed.
+workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts." {
+
+    !identifiers hierarchical
+
+    model {
+        consumer = person "Consumer" "A Kotlin/JVM project that depends on one or more of the published WebTools artifacts."
+        peer     = softwareSystem "UDP peer" "The other end of a webtools-udp session: another server or client process built on the library." "External"
+        web      = softwareSystem "Web servers" "Any HTTP or HTTPS site a caller names by URL." "External"
+        chrome   = softwareSystem "Chrome / Chromium" "The host's local browser install, driven headless through Selenium; Selenium Manager resolves the driver at runtime." "External"
+        bottools = softwareSystem "KotlinBottools" "SpartanLaboratories/KotlinBottools: named by Issue #55 as the first consumer of webtools-http and webtools-feeds, through an internal adapter." "External"
+
+        webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
+            // ---- built: the three published modules ----
+            udp      = container "webtools-udp" "Multi-client UDP connection layer: a text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels." "Kotlin/JVM library · 2.0.0a (unreleased; Central 2.0.0)"
+            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0"
+            browser  = container "webtools-browser" "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0"
+
+            // ---- built: unpublished build configuration ----
+            rootBuild = container "Root build" "build.gradle.kts subprojects block: applies Kotlin/JVM and vanniktech publishing, adds slf4j-api, registers the seven level test tasks by JUnit tag." "Gradle 9.7.1 · Kotlin 2.2.0" "Internal"
+
+            // ---- planned by Issue #55: nothing below is built ----
+            buildLogic = container "build-logic" "Issue #55 units 1 and 2 (unit 2 is #47): included build with convention plugins, WebToolsBuild.JAVA_FLOOR = 11 and verifyJavaFloor, package-selected level tasks." "Gradle included build · unpublished" "Planned"
+            http = container "webtools-http" "Issue #55 units 3 to 9: suspend HTTP stack with outbound-URL policies, response cache, call budget, call facades and published test fixtures." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned" {
+                core      = component "Common core" "Unit 3: opt-in marker, HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain" "Planned"
+                policy    = component "Outbound-URL policy" "Unit 5: Trusted and Untrusted policies, TransportSettings, the common address classifier, GuardedDns and GuardedSocketFactory." "commonMain + jvmMain" "Planned"
+                transport = component "OkHttp transport" "Unit 6: OkHttpTransport, one request per hop, manual redirects, capped body read, failure mapping." "jvmMain · okhttp-jvm 5.5.0" "Planned"
+                cache     = component "Response cache" "Unit 7: ResponseCache port, ResponseCache.Disabled and the CaffeineResponseCache default; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Planned"
+                budget    = component "Call budget" "Unit 8: CallBudget port and WindowedCallBudget, rate signals, BudgetStore and BudgetObserver seams." "commonMain" "Planned"
+                facades   = component "Call facades" "Unit 9: UpstreamClient and UrlFetcher, composing cache, then budget inside the loader, then transport." "commonMain + jvmMain" "Planned"
+                fixtures  = component "Published test fixtures" "Unit 4: test-fixtures variant with VirtualClock, FakeHttpTransport, .http fixtures, FixtureRecorder and LoopbackTransports." "jvmTestFixtures · capability webtools-http-test-fixtures" "Planned"
+            }
+            httpCheck  = container "webtools-http-commoncheck" "Issue #55 unit 3: compiles webtools-http's commonMain for js so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Planned"
+            feeds      = container "webtools-feeds" "Issue #55 unit 10: RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
+            feedsCheck = container "webtools-feeds-commoncheck" "Issue #55 unit 10: compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
+        }
+
+        // ---- as built ----
+        consumer -> webtools.udp "Subclasses the server, drives the client"
+        consumer -> webtools.scraping "Connector open, next, get, skrape, download"
+        consumer -> webtools.browser "WebViewer getPage, screenshot"
+        webtools.udp -> peer "UDP datagrams: handshake, then framed transport"
+        webtools.scraping -> web "HTTP via URLConnection, Unirest, skrapeit, jsoup"
+        webtools.browser -> chrome "Drives headless Chrome through Selenium"
+        chrome -> web "Resolves and fetches the page itself"
+        webtools.rootBuild -> webtools.udp "Configures: subprojects block"
+        webtools.rootBuild -> webtools.scraping "Configures: subprojects block"
+        webtools.rootBuild -> webtools.browser "Configures: subprojects block"
+
+        // ---- planned by Issue #55 (dashed: one end is Planned) ----
+        webtools.buildLogic -> webtools.rootBuild "Would replace: every module, including the three built ones, applies a convention plugin and the Java 11 floor"
+        webtools.buildLogic -> webtools.http "Would configure: multiplatform plugin; the common-check plugin also configures both check modules"
+        webtools.buildLogic -> webtools.feeds "Would configure: multiplatform plugin"
+        webtools.httpCheck -> webtools.http.core "Would compile commonMain for js"
+        webtools.feedsCheck -> webtools.feeds "Would compile commonMain for js"
+        webtools.feeds -> webtools.http.facades "Would fetch through UrlFetcher: api dependency"
+        consumer -> webtools.http.facades "Would call UpstreamClient, UrlFetcher"
+        consumer -> webtools.feeds "Would fetch feeds: FeedFetcher"
+        bottools -> webtools.http.facades "Would call through an internal adapter"
+        bottools -> webtools.feeds "Would fetch feeds through its adapter"
+        bottools -> webtools.http.fixtures "Would test with testFixtures(...)"
+        webtools.http.facades -> webtools.http.cache "Would load through: cache first"
+        webtools.http.facades -> webtools.http.budget "Would acquire a permit in the loader"
+        webtools.http.facades -> webtools.http.transport "Would execute the request"
+        webtools.http.facades -> webtools.http.policy "Would pre-check a fetched URL"
+        webtools.http.transport -> webtools.http.policy "Would check every hop and address"
+        webtools.http.transport -> webtools.http.core "Would implement HttpTransport"
+        webtools.http.fixtures -> webtools.http.core "Would fake HttpTransport"
+        webtools.http.fixtures -> webtools.http.transport "Would build it for loopback tests"
+        webtools.http.transport -> web "Would fetch: one request per hop, capped"
+    }
+
+    views {
+        systemContext webtools "Context" "WebTools, who uses it and what it talks to. Dashed lines lead to planned elements." {
+            include *
+            autoLayout lr
+        }
+        container webtools "Containers" "The three built modules, the root build that configures them, and the systems Issue #55 plans (dashed)." {
+            include *
+            autoLayout lr
+        }
+        component webtools.http "HttpPlanned" "webtools-http as Issue #55 plans it. Every element is planned; nothing here is built." {
+            include *
+            autoLayout lr
+        }
+        dynamic webtools "HttpToday" "How the repository reaches the web today, as built: Connector.get and WebViewer.screenshot." {
+            consumer -> webtools.scraping "Connector.get(url)"
+            webtools.scraping -> web "Unirest GET; Unirest.setTimeouts(0, 0) at init"
+            consumer -> webtools.browser "WebViewer.screenshot(url)"
+            webtools.browser -> chrome "Headless Chrome via Selenium, driver.get(url)"
+            chrome -> web "Chrome resolves and fetches the page"
+            autoLayout lr
+        }
+        styles {
+            element "Person"          { shape person  background #08427b color #ffffff }
+            element "Software System" { background #1168bd color #ffffff }
+            element "External"        { background #999999 color #ffffff }
+            element "Container"       { background #438dd5 color #ffffff }
+            element "Component"       { background #85bbf0 color #000000 }
+            element "Internal"        { background #c6dcf5 color #000000 }
+            element "Standalone"      { background #eeeeee color #000000 border dotted }
+            element "Planned"         { background #ffffff color #666666 border dashed opacity 60 }
+        }
+    }
+}
+</script>
+
+<script>
+"use strict";
+const NS="http://www.w3.org/2000/svg";
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","text-anchor":anchor||"start"},p);(Array.isArray(lines)?lines:[lines]).forEach((l,i)=>{const s=mk("tspan",{x,dy:i?(dy||12):0},t);s.textContent=l;});return t;};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function inspect(html){ $("#insp-body").innerHTML=html; }
+// This page has no component map; the C4 inspector's map link is unused.
+const MODEL={c4:{},structure:{nodes:[]}};
+function selectNode(){}
+
+/* ---------- Systems (from the embedded registry) ---------- */
+const REG=JSON.parse(document.getElementById("systems").textContent);
+const SYSTEMS=REG.systems.filter(s=>s.kind!=="repo");
+$("#sys-count").textContent=`${SYSTEMS.filter(s=>s.status==="built").length} built · ${SYSTEMS.filter(s=>s.status==="planned").length} planned`;
+/* Divergence (see footer): cards grouped under headings; a built system without a page is a non-link card;
+   planned cards carry their planning units and sub-issues from plannedBy.units. */
+const unitsOf=s=>((s.plannedBy||{}).units||[]);
+const unitLabel=u=>`unit ${u.unit} ${u.slug} · ${u.subIssue?"#"+u.subIssue:"sub-issue not filed"}`;
+function card(s){
+  const planned=s.status==="planned", linked=!planned&&!!s.page;
+  const meta=planned
+    ? [`planned by #${(s.plannedBy||{}).issue||"?"}`+((s.plannedBy||{}).section?` §${s.plannedBy.section}`:""), ...unitsOf(s).map(u=>`unit ${u.unit}${u.subIssue?" · #"+u.subIssue:""}`)]
+    : [`v${s.version||"?"}`+(s.published&&s.published!==s.version?` (Central ${s.published})`:""), s.asIs?`as-is ${s.asIs.sha} · ${s.asIs.date}`:"", s.lastAmended?`amended by #${s.lastAmended.issue}`:""].filter(Boolean);
+  const tag=linked?"a":"span", href=linked?` href="${esc(s.page)}"`:"";
+  const st=planned?(s.kind==="supersystem"?"planned supersystem · no page":"planned · no page"):(linked?"built":"built · no page yet");
+  return `<${tag} class="syscard ${planned?"planned":"built"}${!planned&&!linked?" nopage":""}"${href} data-slug="${esc(s.slug)}" tabindex="0"><div class="st">${st}</div><div class="nm">${esc(s.name)}</div><div class="fn">${esc(s.function||"")}</div><div class="meta">${meta.map(m=>`<span>${esc(m)}</span>`).join("")}</div></${tag}>`;
+}
+function renderSystems(){
+  const repoSlug=(REG.systems.find(s=>s.kind==="repo")||{}).slug;
+  const built=SYSTEMS.filter(s=>s.status==="built");
+  const plannedTop=SYSTEMS.filter(s=>s.status==="planned"&&(s.parent===repoSlug||!s.parent));
+  const groups=[["Built",`${built.length} systems · as-is at the commit each card names`,built],["Planned · repository level",`${plannedTop.length} · Issue #55 · not built`,plannedTop]];
+  SYSTEMS.filter(s=>s.kind==="supersystem").forEach(sup=>{ const kids=SYSTEMS.filter(s=>s.parent===sup.slug); if(kids.length) groups.push([`${sup.status==="planned"?"Planned · ":""}inside ${sup.name}`,`${kids.length} subsystems${sup.status==="planned"?" · not built":""}`,kids]); });
+  $("#syscards").outerHTML=`<div id="syscards">${groups.filter(g=>g[2].length).map(([h,sub,list])=>`<div class="sysgroup">${esc(h)} <small>${esc(sub)}</small></div><div class="syscards">${list.map(card).join("")}</div>`).join("")}</div>`;
+  document.querySelectorAll(".syscard").forEach(c=>{ const show=()=>{ const s=SYSTEMS.find(x=>x.slug===c.dataset.slug), pb=s.plannedBy;
+    inspect(`<div class="kicker">${(s.kind==="supersystem"?"SUPERSYSTEM":"SYSTEM")} · ${s.status.toUpperCase()}</div><div class="name">${esc(s.name)}</div><div class="vis">${esc((s.paths||[]).join(" · ")||"no code paths yet")}</div><p>${esc(s.function||"")}</p><dl>`
+      +(s.page?`<dt>Dashboard</dt><dd><a href="${esc(s.page)}">${esc(s.page)}</a></dd>`:(s.status==="built"?`<dt>Dashboard</dt><dd>none yet</dd>`:""))
+      +(s.status==="built"&&s.version?`<dt>Version</dt><dd>${esc(s.version)} in the build${s.published?` · Maven Central latest ${esc(s.published)}`:""}</dd>`:"")
+      +(s.lastAmended?`<dt>Last amended</dt><dd>#${s.lastAmended.issue} · <code>${esc(s.lastAmended.sha)}</code>${s.lastAmended.note?` · ${esc(s.lastAmended.note)}`:""}</dd>`:"")
+      +(s.parent?`<dt>Parent</dt><dd>${esc(s.parent)}</dd>`:"")
+      +(pb?`<dt>Planned by</dt><dd>#${pb.issue}${pb.section?` · §${esc(pb.section)}`:""} · <a href="../../${esc(pb.architecture||"")}">${esc(pb.architecture||"")}</a></dd>`:"")
+      +(pb&&pb.placement?`<dt>Planned placement</dt><dd><code>${esc(pb.placement)}</code></dd>`:"")
+      +(unitsOf(s).length?`<dt>Units</dt><dd>${unitsOf(s).map(u=>esc(unitLabel(u))).join("<br>")}</dd>`:"")
+      +`</dl>`); }; c.addEventListener("mouseenter",show); c.addEventListener("focus",show); });
+}
+renderSystems();
+
+/* =========================================================================
+   C4 — a Structurizr DSL reader for the subset this workspace uses (hierarchical
+   identifiers; person / softwareSystem / container / component with tags; relationships;
+   systemContext / container / component / dynamic views; element styles), and renderers
+   that lay the views out by rank. Structurizr Lite would render the same file.
+   ========================================================================= */
+function parseDsl(src){
+  const M={elements:{},order:[],rels:[],views:[],styles:[]}, stack=[];
+  const TYPE={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+  const tok=l=>{const out=[],re=/"([^"]*)"|(\S+)/g;let m;while((m=re.exec(l)))out.push(m[1]!==undefined?{s:m[1]}:{t:m[2]});return out;};
+  const strs=T=>T.filter(x=>x.s!==undefined).map(x=>x.s);
+  const parentEl=()=>{for(let i=stack.length-1;i>=0;i--) if(stack[i].kind==="element") return stack[i].id; return null;};
+  const inBlock=k=>stack.some(f=>f.kind===k);
+  const splitTags=s=>(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+  src.split(/\r?\n/).forEach(raw=>{
+    let line=raw.trim(); if(!line||line.startsWith("//")) return;
+    if(line==="}"){ stack.pop(); return; }
+    const opens=line.endsWith("{"); if(opens) line=line.slice(0,-1).trim();
+    const T=tok(line); if(!T.length){ if(opens) stack.push({kind:"anon"}); return; }
+    const t0=T[0].t;
+    if(["workspace","model","views","styles"].includes(t0)){ if(opens) stack.push({kind:t0}); return; }
+    if(t0==="!identifiers") return;
+    if(inBlock("styles")){ if(t0==="element"){ const props={}, body=T.slice(2).map(x=>x.t!==undefined?x.t:x.s).filter(x=>x!=="{"&&x!=="}"); for(let i=0;i+1<body.length;i+=2) props[body[i]]=body[i+1]; M.styles.push({tag:T[1].s,props}); } return; }
+    if(inBlock("views")){
+      const cur=stack[stack.length-1];
+      if(cur&&cur.kind==="view"&&cur.view.type==="dynamic"&&T.length>=3&&T[1].t==="->"){ cur.view.steps.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:""}); return; }
+      if(["systemContext","container","component","dynamic"].includes(t0)){ const v={type:t0,scope:T[1].t,key:T[2]?T[2].s:t0,desc:T[3]?T[3].s:"",steps:[]}; M.views.push(v); if(opens) stack.push({kind:"view",view:v}); return; }
+      if(opens) stack.push({kind:"anon"}); return;
+    }
+    if(T.length>=3&&T[1].t==="->"){ M.rels.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:"",tech:T[4]?T[4].s:""}); if(opens) stack.push({kind:"anon"}); return; }
+    if(T.length>=3&&T[1].t==="="&&TYPE[T[2].t]){
+      const type=T[2].t, S=strs(T.slice(3)), parent=parentEl(), id=parent?parent+"."+t0:t0;
+      const el={id,ident:t0,type,name:S[0]||t0,desc:S[1]||"",tech:"",tags:[],parent};
+      if(type==="person"||type==="softwareSystem") el.tags=splitTags(S[2]); else { el.tech=S[2]||""; el.tags=splitTags(S[3]); }
+      el.tags=["Element",TYPE[type],...el.tags];
+      M.elements[id]=el; M.order.push(id);
+      if(opens) stack.push({kind:"element",id}); return;
+    }
+    if(opens) stack.push({kind:"anon"});
+  });
+  return M;
+}
+const C4=parseDsl(document.getElementById("dsl").textContent);
+$("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
+
+const el=id=>C4.elements[id];
+function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
+function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
+function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
+function styleFor(e){ const st={background:"#dddddd",color:"#000000",border:"solid",shape:"box",opacity:"100"}; e.tags.forEach(tag=>C4.styles.forEach(s=>{ if(s.tag===tag) Object.assign(st,s.props); })); return st; }
+const TYPE_LABEL={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+const LEVEL={systemContext:["1","System Context"],container:["2","Containers"],component:["3","Components"],dynamic:["⟲","Dynamic"]};
+const fit=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+function wrap(s,maxChars){ const out=[]; let cur=""; s.split(/\s+/).forEach(w=>{ if((cur+" "+w).trim().length>maxChars){ if(cur) out.push(cur); cur=w; } else cur=(cur+" "+w).trim(); }); if(cur) out.push(cur); return out; }
+function edgePoint(box,tx,ty){ const [x,y,w,h]=box,cx=x+w/2,cy=y+h/2,dx=tx-cx,dy=ty-cy; if(!dx&&!dy) return [cx,cy]; const t=Math.min(Math.abs(w/2/(dx||1e-9)),Math.abs(h/2/(dy||1e-9))); return [cx+dx*t,cy+dy*t]; }
+
+/* Which elements a view shows and how the model's relationships map onto them (Structurizr's "include *" with implied relationships). */
+function resolveView(v){
+  let scoped, map;
+  if(v.type==="systemContext"){ scoped=[v.scope]; map=id=>isWithin(id,v.scope)?v.scope:topOf(id); }
+  else if(v.type==="container"){ scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):topOf(id); }
+  else if(v.type==="component"){ const sys=el(v.scope).parent; scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):(sys&&isWithin(id,sys)?childIn(id,sys):topOf(id)); }
+  else { const ids=[]; v.steps.forEach(s=>{[s.from,s.to].forEach(x=>{ if(!ids.includes(x)) ids.push(x); });}); return {els:ids,scoped:[],rels:v.steps.map((s,i)=>({a:s.from,b:s.to,desc:s.desc,num:i+1})),boundary:null}; }
+  const els=new Set(scoped), rels=[], seen={};
+  C4.rels.forEach(r=>{ const a=map(r.from), b=map(r.to); if(!a||!b||a===b) return; if(!scoped.includes(a)&&!scoped.includes(b)) return; els.add(a); els.add(b); const k=a+">"+b; if(seen[k]){ seen[k].n++; return; } seen[k]={a,b,desc:r.desc,n:1,dashed:el(r.from).tags.includes("Planned")||el(r.to).tags.includes("Planned")}; rels.push(seen[k]); });
+  const s=el(v.scope);
+  return {els:C4.order.filter(id=>els.has(id)),scoped,rels,boundary:v.type==="systemContext"?null:{label:`${s.name} · ${TYPE_LABEL[s.type]}${s.tech?" · "+s.tech:""}`}};
+}
+
+/* Layout: the scoped elements sit inside a boundary frame in bands (public surface / internals / outside the
+   stack), people outside on the left, other systems outside on the right. Internals are ordered by the mean
+   position of the public elements they touch, so most relationships run straight down. Relationships are
+   routed orthogonally through lanes in the gaps between bands, so no line crosses a card. */
+const bandOf=id=>{ const t=el(id).tags; return t.includes("Planned")||t.includes("Standalone")?2:t.includes("Internal")?1:0; };
+const BAND_NAMES={component:["PUBLIC SURFACE","INTERNALS","OUTSIDE THE STACK · PLANNED"],container:["SYSTEMS","INTERNAL","PLANNED"],systemContext:["","",""]};
+function layoutC4(R,vtype){
+  const W=184,H=118,GX=22,GY=20,PAD=18,LANE=12,LABEL=26;
+  const scoped=R.scoped.filter(id=>R.els.includes(id));
+  const left=R.els.filter(id=>!scoped.includes(id)&&el(id).type==="person");
+  const right=R.els.filter(id=>!scoped.includes(id)&&el(id).type!=="person");
+  const raw=[[],[],[]]; scoped.forEach(id=>raw[bandOf(id)].push(id));
+  const idx0={}; raw[0].forEach((id,i)=>idx0[id]=i);
+  const bary=id=>{ const ns=R.rels.filter(r=>r.a===id||r.b===id).map(r=>r.a===id?r.b:r.a).filter(n=>idx0[n]!==undefined).map(n=>idx0[n]); return ns.length?ns.reduce((s,x)=>s+x,0)/ns.length:99; };
+  raw[1].sort((p,q)=>bary(p)-bary(q)||scoped.indexOf(p)-scoped.indexOf(q));
+  const bands=[],names=[]; raw.forEach((b,i)=>{ if(b.length){ bands.push(b); names.push((BAND_NAMES[vtype]||BAND_NAMES.component)[i]); } });
+  const bandIndex={}; bands.forEach((b,i)=>b.forEach(id=>bandIndex[id]=i));
+  const laneCount=new Array(bands.length+1).fill(0);
+  const plans=R.rels.map(r=>{
+    const ia=bandIndex[r.a], ib=bandIndex[r.b], p={r};
+    if(ia===undefined&&ib===undefined){ p.kind="ext"; p.sides=[]; }
+    else if(ia===undefined){ p.kind="fromExt"; p.region=ib; p.sides=[[r.a,"inner"],[r.b,"top"]]; }
+    else if(ib===undefined){ p.kind="toExt"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"inner"]]; }
+    else if(ia===ib){ p.kind="same"; p.below=ia!==0; p.region=ia===0?0:ia+1; const s=p.below?"bottom":"top"; p.sides=[[r.a,s],[r.b,s]]; }
+    else if(ib===ia+1){ p.kind="down"; p.region=ib; p.sides=[[r.a,"bottom"],[r.b,"top"]]; }
+    else if(ib===ia-1){ p.kind="up"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"bottom"]]; }
+    else { p.kind="around"; p.upward=ib<ia; p.region=p.upward?ia:ia+1; p.region2=ib; p.sides=[[r.a,p.upward?"top":"bottom"],[r.b,"top"]]; }
+    if(p.region!==undefined) p.lane=laneCount[p.region]++;
+    if(p.region2!==undefined) p.lane2=laneCount[p.region2]++;
+    return p;
+  });
+  const regionH=laneCount.map(n=>Math.max(36,n*LANE+22));
+  const innerW=Math.max(W,...bands.map(b=>b.length*W+(b.length-1)*GX))+2*GX;
+  const bx0=PAD+(left.length?W+2*GX:0), pos={}, regionY=[], bandBox=[];
+  let y=PAD+(R.boundary?LABEL:0);
+  bands.forEach((b,i)=>{ regionY[i]=y; y+=regionH[i]; const total=b.length*W+(b.length-1)*GX, x0=bx0+(innerW-total)/2; b.forEach((id,k)=>pos[id]=[x0+k*(W+GX),y,W,H]); bandBox[i]=[y,y+H]; y+=H; });
+  regionY[bands.length]=y; y+=regionH[bands.length];
+  const boundary=R.boundary?{x:bx0,y:PAD,w:innerW,h:y-PAD,label:R.boundary.label}:null;
+  const cy0=bands.length?(bandBox[0][0]+bandBox[0][1])/2:y/2;
+  const stack=(ids,x)=>{ const tot=ids.length*H+(ids.length-1)*GY, y0=Math.max(PAD,cy0-tot/2); ids.forEach((id,k)=>pos[id]=[x,y0+k*(H+GY),W,H]); }; /* divergence 5: clamp the column start once, so stacked side cards never overlap */
+  stack(left,PAD); stack(right,bx0+innerW+2*GX);
+  const width=bx0+innerW+(right.length?2*GX+W:0)+PAD;
+  const height=Math.max(y+PAD,...Object.values(pos).map(p=>p[1]+p[3]+PAD));
+  return {pos,width,height,boundary,regionY,bands,names,bandBox,plans,LANE,bx0,innerW,left,right};
+}
+function drawRoutes(svg,L){
+  const slots={}; L.plans.forEach(p=>p.sides.forEach(([id,side])=>{ const k=id+"|"+side; (slots[k]=slots[k]||{n:0,k:0}).n++; }));
+  const take=(id,side)=>{ const s=slots[id+"|"+side]; const off=(s.k-(s.n-1)/2)*16; s.k++; return off; };
+  const P=L.pos, laneY=(rg,l)=>L.regionY[rg]+12+l*L.LANE;
+  const box=id=>{ const [x,y,w,h]=P[id]; return {x,y,w,h,cx:x+w/2,cy:y+h/2,top:y,bottom:y+h,left:x,right:x+w}; };
+  const innerX=id=>L.left.includes(id)?box(id).right:box(id).left;
+  const turnX=(id,lane)=>L.left.includes(id)?L.bx0-10-(lane%4)*6:L.bx0+L.innerW+10+(lane%4)*6;
+  L.plans.forEach(p=>{
+    const r=p.r, A=box(r.a), B=box(r.b); let d, seg;
+    switch(p.kind){
+      case "ext": { const [ax,ay]=edgePoint(P[r.a],B.cx,B.cy),[bx,by]=edgePoint(P[r.b],A.cx,A.cy); d=`M${ax},${ay} L${bx},${by}`; seg=[(ax+bx)/2,(ay+by)/2]; break; }
+      case "same": { const ly=laneY(p.region,p.lane), s=p.below?"bottom":"top", ax=A.cx+take(r.a,s), bx=B.cx+take(r.b,s), ya=p.below?A.bottom:A.top, yb=p.below?B.bottom:B.top; d=`M${ax},${ya} L${ax},${ly} L${bx},${ly} L${bx},${yb}`; seg=[(ax+bx)/2,ly]; break; }
+      case "down": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"bottom"), bx=B.cx+take(r.b,"top"); d=`M${ax},${A.bottom} L${ax},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(ax+bx)/2,ly]; break; }
+      case "up": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), bx=B.cx+take(r.b,"bottom"); d=`M${ax},${A.top} L${ax},${ly} L${bx},${ly} L${bx},${B.bottom}`; seg=[(ax+bx)/2,ly]; break; }
+      case "fromExt": { const ly=laneY(p.region,p.lane), ay=A.cy+take(r.a,"inner"), xi=innerX(r.a), xt=turnX(r.a,p.lane), bx=B.cx+take(r.b,"top"); d=`M${xi},${ay} L${xt},${ay} L${xt},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(xt+bx)/2,ly]; break; }
+      case "toExt": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), by=B.cy+take(r.b,"inner"), xt=turnX(r.b,p.lane), xi=innerX(r.b); d=`M${ax},${A.top} L${ax},${ly} L${xt},${ly} L${xt},${by} L${xi},${by}`; seg=[(ax+xt)/2,ly]; break; }
+      case "around": { const l1=laneY(p.region,p.lane), l2=laneY(p.region2,p.lane2), ya=p.upward?A.top:A.bottom, ax=A.cx+take(r.a,p.upward?"top":"bottom"), bx=B.cx+take(r.b,"top"), xs=L.bx0+L.innerW-10; d=`M${ax},${ya} L${ax},${l1} L${xs},${l1} L${xs},${l2} L${bx},${l2} L${bx},${B.top}`; seg=[(bx+xs)/2,l2]; break; }
+    }
+    const g=mk("g",{class:"c4rel"+(r.dashed?" dashed":""),"data-a":r.a,"data-b":r.b},svg);
+    mk("path",{d,"marker-end":"url(#c4arr)"},g);
+    const label=fit(r.desc.split(/[—;:]/)[0].trim(),30), lw=label.length*5.1+12;
+    mk("rect",{class:"lbg",x:seg[0]-lw/2,y:seg[1]-7,width:lw,height:13,rx:6.5},g);
+    txt(g,seg[0],seg[1]+3,label,"","middle");
+  });
+}
+function drawFrame(svg,L){
+  if(L.boundary){ const b=L.boundary; mk("rect",{class:"c4bound",x:b.x,y:b.y,width:b.w,height:b.h,rx:10},svg); const g=mk("g",{class:"c4boundl"},svg); const tw=b.label.length*6.3+18; mk("rect",{x:b.x+12,y:b.y-10,width:tw,height:20,rx:10},g); txt(g,b.x+21,b.y+4,b.label,""); }
+  if(L.bands.length>1) L.bands.forEach((b,i)=>txt(svg,L.bx0+14,L.bandBox[i][0]-6,L.names[i],"c4band"));
+}
+/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the page's own ink. */
+function glyph(g,type,x,y,color){
+  if(type==="person"){ mk("circle",{cx:x+7,cy:y+4,r:3.2,fill:color},g); mk("path",{d:`M${x+1},${y+14} a6,6 0 0 1 12,0 z`,fill:color},g); }
+  else if(type==="softwareSystem"){ mk("rect",{x:x+1,y:y+1,width:9,height:9,rx:1.5,fill:color,opacity:.55},g); mk("rect",{x:x+4,y:y+4,width:9,height:9,rx:1.5,fill:color},g); }
+  else if(type==="container"){ mk("rect",{x:x+1,y:y+3,width:12,height:10,rx:2,fill:color},g); mk("rect",{x:x+1,y:y+1,width:6,height:3,rx:1,fill:color},g); }
+  else { mk("rect",{x:x+4,y:y+1,width:9,height:12,rx:1.5,fill:color},g); mk("rect",{x:x+1,y:y+3.5,width:6,height:2.5,fill:color},g); mk("rect",{x:x+1,y:y+8,width:6,height:2.5,fill:color},g); }
+}
+function cardEvents(g,id){
+  const go=()=>selectC4(id);
+  g.addEventListener("click",go); g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); go(); } });
+  g.addEventListener("mouseenter",()=>document.querySelectorAll("#svg-c4 .c4rel").forEach(x=>x.classList.toggle("hl",x.dataset.a===id||x.dataset.b===id)));
+  g.addEventListener("mouseleave",()=>document.querySelectorAll("#svg-c4 .c4rel.hl").forEach(x=>x.classList.remove("hl")));
+}
+function drawCard(svg,id,box){
+  const e=el(id), st=styleFor(e), [x,y,w,h]=box, g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
+  const dash=st.border==="dashed"?"6 4":st.border==="dotted"?"2 3":"none";
+  mk("rect",{class:"card",x,y,width:w,height:h,rx:7,"stroke-dasharray":dash},g);
+  mk("path",{class:"hdr",d:`M${x+7},${y} H${x+w-7} a7,7 0 0 1 7,7 V${y+30} H${x} V${y+7} a7,7 0 0 1 7,-7 Z`,fill:st.background},g);
+  glyph(g,e.type,x+10,y+8,st.color);
+  const name=mk("text",{x:x+30,y:y+20,class:"n",fill:st.color},g); name.textContent=fit(e.name,24);
+  txt(g,x+10,y+46,fit(`[${TYPE_LABEL[e.type]}${e.tech?" · "+e.tech:""}]`,38),"m");
+  const room=Math.floor((h-60-16)/12), lines=wrap(e.desc,38).slice(0,Math.max(0,room)); if(lines.length) txt(g,x+10,y+60,lines,"d",null,12);
+  const tags=e.tags.slice(2); if(tags.length) txt(g,x+10,y+h-7,fit(tags.join(" · "),40),"tg");
+  cardEvents(g,id);
+}
+/* The dynamic view is a sequence, so it is drawn as one: the elements as lifelines in order of first appearance, the steps as numbered messages. */
+function renderDynamic(R,svg){
+  const cols=R.els, X=i=>112+i*150, Y0=98, DY=44, H=Y0+R.rels.length*DY+14, W=112+(cols.length-1)*150+112;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  cols.forEach((id,i)=>{ const x=X(i); mk("line",{x1:x,y1:68,x2:x,y2:H-6,class:"c4life"},svg); });
+  R.rels.forEach(r=>{
+    const i=cols.indexOf(r.a), j=cols.indexOf(r.b), y=Y0+(r.num-1)*DY, a=X(i), b=X(j), g=mk("g",{class:"c4rel","data-a":r.a,"data-b":r.b,"data-num":r.num},svg);
+    if(i===j){ mk("path",{d:`M${a},${y-10} L${a+34},${y-10} L${a+34},${y+8} L${a+2},${y+8}`,"marker-end":"url(#c4arr)"},g); txt(g,a+42,y+2,fit(r.desc,40),""); }
+    else { const dir=b>a?1:-1; mk("path",{d:`M${a},${y} L${b-dir*3},${y}`,"marker-end":"url(#c4arr)"},g); const label=fit(r.desc.split(/[—;]/)[0].trim(),44), mx=(a+b)/2, lw=label.length*5.2+12; mk("rect",{class:"lbg",x:mx-lw/2,y:y-18,width:lw,height:14,rx:7},g); txt(g,mx,y-8,label,"","middle"); }
+    const nb=mk("g",{class:"num"},g); mk("circle",{cx:Math.min(a,b)-13,cy:y,r:9},nb); txt(nb,Math.min(a,b)-13,y+3.5,String(r.num),"","middle");
+    g.style.cursor="pointer"; g.addEventListener("click",()=>selectC4Step(r.num));
+  });
+  cols.forEach((id,i)=>{ const e=el(id), st=styleFor(e), x=X(i), g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name},svg);
+    mk("rect",{class:"card",x:x-66,y:14,width:132,height:50,rx:6},g);
+    mk("path",{class:"hdr",d:`M${x-60},14 H${x+60} a6,6 0 0 1 6,6 V40 H${x-66} V20 a6,6 0 0 1 6,-6 Z`,fill:st.background},g);
+    glyph(g,e.type,x-60,20,st.color);
+    const n=mk("text",{x:x-42,y:32,class:"n",fill:st.color},g); n.textContent=fit(e.name,15);
+    txt(g,x,56,fit(`[${TYPE_LABEL[e.type]}]`,22),"m","middle");
+    cardEvents(g,id); });
+  return W;
+}
+
+let c4View=null, c4Sel=null, c4Zoom="fit";
+/* fit: the whole view scaled into the panel; 1:1: natural size, scrolling sideways inside the canvas. */
+function applyZoom(){ const svg=$("#svg-c4"); svg.style.width = c4Zoom==="fit" ? "100%" : (c4View&&c4View.width ? c4View.width+"px" : "100%"); document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.z===c4Zoom))); }
+function renderC4(vi){
+  const v=C4.views[vi], R=resolveView(v), svg=$("#svg-c4"); c4View={v,R}; c4Sel=null; svg.innerHTML="";
+  const d=mk("defs",{},svg); const m=mk("marker",{id:"c4arr",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"8",markerHeight:"8",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--rel)"},m);
+  const s=el(v.scope), [lv,lname]=LEVEL[v.type];
+  $("#c4-head").innerHTML=`<span class="lvl">LEVEL ${lv} · ${lname.toUpperCase()}</span><span class="ttl">${esc(s.name)} — ${esc(v.key)}</span><span class="desc">${esc(v.desc||"")}</span><span class="zoom" role="group" aria-label="Zoom"><button data-z="fit">fit</button><button data-z="1">1:1</button></span>`;
+  document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.addEventListener("click",()=>{ c4Zoom=b.dataset.z; applyZoom(); }));
+  if(v.type==="dynamic"){ c4View.width=renderDynamic(R,svg); c4StepList(); }
+  else { const L=layoutC4(R,v.type); c4View.width=L.width; svg.setAttribute("viewBox",`0 0 ${L.width} ${L.height}`); drawFrame(svg,L); drawRoutes(svg,L); R.els.forEach(id=>drawCard(svg,id,L.pos[id]));
+    inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${R.els.length} elements · ${R.rels.length} relationships · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`); }
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===String(vi))));
+  $("#dsl-view").hidden=true; $("#c4-canvas").hidden=false; $("#c4-head").hidden=false; $("#c4-key").hidden=false;
+  applyZoom();
+}
+function selectC4(id){
+  const e=el(id); c4Sel=id;
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.toggle("sel",g.dataset.id===id); g.classList.remove("dim"); });
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ g.classList.remove("cur"); g.classList.toggle("dim",g.dataset.a!==id&&g.dataset.b!==id); });
+  const out=C4.rels.filter(r=>r.from===id), inn=C4.rels.filter(r=>r.to===id);
+  const mapNode=Object.entries(MODEL.c4).filter(([,c])=>c===id).map(([n])=>n);
+  let html=`<div class="kicker">C4 ELEMENT · ${TYPE_LABEL[e.type].toUpperCase()}</div><div class="name">${esc(e.name)}</div><div class="vis">${esc(e.tech||"")}</div><p>${esc(e.desc)}</p><dl>`;
+  html+=`<dt>Tags</dt><dd>${e.tags.map(t=>`<span class="tchip">${esc(t)}</span>`).join("")}</dd>`;
+  html+=`<dt>Identifier</dt><dd><code>${e.id}</code></dd>`;
+  if(out.length) html+=`<dt>Uses</dt><dd>${out.map(r=>`→ <b>${esc(el(r.to).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(inn.length) html+=`<dt>Used by</dt><dd>${inn.map(r=>`← <b>${esc(el(r.from).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(mapNode.length) html+=`<dt>On the component map</dt><dd><button class="linkbtn" data-node="${mapNode[0]}">${esc(MODEL.structure.nodes.find(n=>n.id===mapNode[0]).t)} → open in Structure</button></dd>`;
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-node]"); if(b) b.addEventListener("click",()=>{ show("t-structure"); selectNode(b.dataset.node); });
+}
+function c4StepList(){
+  const {v}=c4View;
+  inspect(`<div class="kicker">C4 · DYNAMIC VIEW</div><div class="name">${esc(v.key)}</div><div class="vis">${v.steps.length} numbered steps · click one</div><p>${esc(v.desc)}</p><ol class="steps-list" id="c4steps">${v.steps.map((s,i)=>`<li data-step="${i+1}"><b>${i+1}</b><span>${esc(el(s.from).name)} → ${esc(el(s.to).name)}</span></li>`).join("")}</ol>`);
+  document.querySelectorAll("#c4steps li").forEach(li=>li.addEventListener("click",()=>selectC4Step(+li.dataset.step)));
+}
+function selectC4Step(n){
+  const {v}=c4View, s=v.steps[n-1];
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ const on=+g.dataset.num===n; g.classList.toggle("cur",on); g.classList.toggle("dim",!on); });
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.remove("sel"); g.classList.toggle("dim",g.dataset.id!==s.from&&g.dataset.id!==s.to); });
+  if(!document.getElementById("c4steps")) c4StepList();
+  document.querySelectorAll("#c4steps li").forEach(li=>li.classList.toggle("on",+li.dataset.step===n));
+  const old=document.getElementById("c4stepnote"); if(old) old.remove();
+  const p=document.createElement("p"); p.id="c4stepnote"; p.innerHTML=`<b>${n}.</b> ${esc(el(s.from).name)} → ${esc(el(s.to).name)}: ${esc(s.desc)}`; $("#insp-body").appendChild(p);
+}
+function showDsl(){
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
+  $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
+  if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. The presenter edits it when a run changes the structure, re-embeds it here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this page.</p>`);
+}
+(function buildLadderAndKey(){
+  const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
+  C4.views.forEach((v,i)=>{ const b=document.createElement("button"); const isLevel=v.type!=="dynamic"; b.className="rung"+(isLevel?" lvl":" sep")+(isLevel&&levels[levels.length-1]===v?" last":""); b.dataset.v=String(i); b.setAttribute("aria-pressed","false"); const [lv,nm]=LEVEL[v.type]; b.innerHTML=`<span class="lv">${lv}</span><span class="nm">${nm}</span><span class="sc">${esc(v.type==="dynamic"?v.key:el(v.scope).name)}</span>`; b.addEventListener("click",()=>renderC4(i)); host.appendChild(b); });
+  const d=document.createElement("button"); d.className="rung sep"; d.dataset.v="dsl"; d.setAttribute("aria-pressed","false"); d.innerHTML=`<span class="lv">{ }</span><span class="nm">Source</span><span class="sc">workspace.dsl</span>`; d.addEventListener("click",showDsl); host.appendChild(d);
+  $("#c4-key").innerHTML=C4.styles.filter(s=>s.props.background).map(s=>`<span><i style="background:${esc(s.props.background)};border-style:${esc(s.props.border||"solid")};opacity:${(+s.props.opacity||100)/100}"></i>${esc(s.tag)}</span>`).join("")+`<span><i class="arrow"></i>relationship, labelled with its DSL description</span>`;
+})();
+function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type==="component"&&isWithin(elementId,v.scope)); renderC4(vi>=0?vi:0); selectC4(elementId); }
+
+/* ---------- Tabs ---------- */
+const tabs=[...document.querySelectorAll(".tab")];
+function show(id){
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  if(id==="t-c4" && !c4View) renderC4(Math.max(0,C4.views.findIndex(v=>v.type==="container")));
+  if(id==="t-systems") inspect("<p>Hover or focus a system card for its paths, parent and dashboard link.</p>");
+  try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
+}
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+let start="t-systems"; try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
+const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
+show(start);
+</script>
+</body>
+</html>
