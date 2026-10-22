@@ -1,20 +1,20 @@
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-22T21:52:36Z",
+  "generated": "2026-10-22T23:14:17Z",
   "asOf": "2026-10-22",
   "tree": {
     "ref": "master",
-    "sha": "439beda"
+    "sha": "1e27071"
   },
   "systems": [
     {
-      "slug": "build-logic",
-      "name": "build-logic",
+      "slug": "gradle-build",
+      "name": "Gradle build",
       "slot": 4,
       "top": "Gradle build",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/gradle-build/index.html"
     },
     {
       "slug": "webtools-http-core",
@@ -94,15 +94,7 @@
       "slot": 1,
       "top": "webtools-udp",
       "status": "built",
-      "page": null
-    },
-    {
-      "slug": "build",
-      "name": "Gradle build",
-      "slot": 4,
-      "top": "Gradle build",
-      "status": "built",
-      "page": null
+      "page": "docs/dashboards/webtools-udp/index.html"
     }
   ],
   "groups": [
@@ -144,26 +136,11 @@
       "folder": "55-http-client-stack/",
       "branch": "feat/issue-55-http-client-stack",
       "system": null,
-      "step": "qa",
-      "detail": "Unit 1, #61 (`build-logic`), is in qa on `feat/issue-61-build-logic`: pass 2 of at most 3 is under way; pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated. Units 2 to 11 have not started.",
-      "since": "2026-10-22",
-      "updated": "2026-10-22T21:35:10Z",
-      "qa": [
-        {
-          "pass": 1,
-          "verdict": "changes-requested",
-          "findings": {
-            "documentation": 14,
-            "test": 9,
-            "code": 0
-          },
-          "note": "all findings remediated"
-        },
-        {
-          "pass": 2,
-          "verdict": "running"
-        }
-      ],
+      "step": "implementation",
+      "detail": "Unit 1, #61 (`build-logic`), landed through PR #74 as 1e27071 with no version moved. Unit 2, #47 (`java-floor`), is up next and has not started; its one blocker, #61, has landed. Units 3 to 11 follow in landing order.",
+      "since": "2026-10-22T21:58:56Z",
+      "updated": "2026-10-22T23:04:39Z",
+      "qa": [],
       "qaMax": 3,
       "status": "building",
       "landed": null,
@@ -175,7 +152,7 @@
     {
       "issue": 61,
       "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
-      "state": "OPEN",
+      "state": "CLOSED",
       "level": 3,
       "created": "2026-10-22",
       "parent": 55,
@@ -190,33 +167,48 @@
           "state": "OPEN"
         }
       ],
-      "board": null,
-      "folder": "https://github.com/SpartanLaboratories/WebTools/tree/feat/issue-61-build-logic/docs/plans/55-http-client-stack/61-build-logic",
+      "board": "55-http-client-stack/61-build-logic/dashboard.html",
+      "folder": "55-http-client-stack/61-build-logic/",
       "branch": "feat/issue-61-build-logic",
-      "system": "build-logic",
-      "step": "qa",
-      "detail": "Unit 1, #61 (`build-logic`), is in qa on `feat/issue-61-build-logic`: pass 2 of at most 3 is under way; pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated. Units 2 to 11 have not started.",
+      "system": "gradle-build",
+      "step": "landed",
+      "detail": "Merged through PR #74 as 1e27071; no version moved. The board was written after the landing, from the issue folder's documents: the run predates the dashboards service.",
+      "since": "2026-10-22T21:58:56Z",
+      "updated": "2026-10-22T22:22:20Z",
       "qa": [
         {
           "pass": 1,
           "verdict": "changes-requested",
+          "date": "2026-10-22",
           "findings": {
             "documentation": 14,
             "test": 9,
             "code": 0
           },
-          "note": "all findings remediated"
+          "note": "all remediated through amendment 1"
         },
         {
           "pass": 2,
-          "verdict": "running"
+          "verdict": "approved",
+          "date": "2026-10-22",
+          "findings": {
+            "documentation": 5,
+            "test": 1,
+            "code": 0
+          },
+          "note": "passed the code review and the narrowed Level-5 pass; six minor fixes applied on the spot, no third pass"
         }
       ],
       "qaMax": 3,
-      "status": "building",
-      "landed": null,
-      "active": true,
-      "systemName": "build-logic",
+      "status": "landed",
+      "landed": {
+        "pr": 74,
+        "merge": "1e27071",
+        "version": "none: published output identical to 834ce4a",
+        "date": "2026-10-22"
+      },
+      "active": false,
+      "systemName": "Gradle build",
       "group": "55",
       "order": 1
     },
@@ -230,7 +222,7 @@
       "waitsOn": [
         {
           "issue": 61,
-          "state": "OPEN"
+          "state": "CLOSED"
         }
       ],
       "blocks": [
@@ -242,15 +234,17 @@
       "board": null,
       "folder": "55-http-client-stack/47-java-23-bytecode/",
       "branch": null,
-      "system": "build-logic",
+      "system": "gradle-build",
       "step": null,
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "active": false,
-      "systemName": "build-logic",
+      "next": true,
+      "blockedBy": [],
+      "systemName": "Gradle build",
       "group": "55",
       "order": 2
     },
@@ -268,7 +262,7 @@
         },
         {
           "issue": 61,
-          "state": "OPEN"
+          "state": "CLOSED"
         }
       ],
       "blocks": [
@@ -668,7 +662,7 @@
         {
           "issue": 61,
           "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
-          "state": "OPEN",
+          "state": "CLOSED",
           "level": 3
         },
         {
@@ -743,7 +737,7 @@
         "enhancement"
       ],
       "created": "2026-10-20",
-      "system": "build"
+      "system": "gradle-build"
     },
     {
       "issue": 57,

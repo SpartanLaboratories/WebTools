@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>webtools-udp model</title>
+<style>
+/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → Guarantees bubbles → Context cards → provenance footer.
+   System page template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
+   Colour plan: --server / --client / --wire are the page's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
+   (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned. */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --server:#2a78d6; --client:#eb6834; --wire:#1baf7a;
+  --server-soft:#e2edfa; --client-soft:#fdeae1; --wire-soft:#ddf4ea;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --ph-1:#a49bed; --ph-2:#6250d6; --ph-3:#352a91;
+  --on:#0e1420; --dim:.28; --focus:#2a78d6; --rel:#6b7382;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#d95926;--wire:#199e70;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(217,89,38,.20);--wire-soft:rgba(25,158,112,.22);--ph-1:#5546c0;--ph-2:#8a7ee6;--ph-3:#c9c2f7;--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#d95926;--wire:#199e70;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(217,89,38,.20);--wire-soft:rgba(25,158,112,.22);--ph-1:#5546c0;--ph-2:#8a7ee6;--ph-3:#c9c2f7;--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.92em}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px}
+.crumbs a{text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)}
+.function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2)}
+.chip b{color:var(--ink);font-weight:600}
+.chip.model{border-style:dashed}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
+.kpi .seg-bar i{display:block;height:100%}
+
+/* tabs + stage */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink)}
+.tab.model::after{content:" DSL";font:10px var(--mono);color:var(--muted);vertical-align:super}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static}}
+.stage>div{min-width:0}
+.view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.view svg{display:block;width:100%;height:auto}
+.view h2{font-size:15px;margin:0 0 4px}
+.lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
+.inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px}
+.inspector p{margin:0 0 8px;color:var(--ink-2);font-size:13px}
+.inspector dl{margin:0;font-size:12.5px}
+.inspector dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-top:8px}
+.inspector dd{margin:2px 0 0}
+.inspector dd a{font-family:var(--mono);font-size:12px;text-decoration:none;border-bottom:1px solid var(--line)}
+.inspector dd a:hover{border-bottom-color:var(--ink)}
+.linkbtn{appearance:none;border:1px dashed var(--line);background:var(--surface-2);color:var(--ink);font:12px var(--mono);padding:5px 8px;border-radius:4px;cursor:pointer;text-align:left}
+.linkbtn:hover{border-color:var(--ink)}
+.tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
+.tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
+/* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
+   ending with planned. check-page.js fails a tab without a visible one. */
+.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.key i.pub{background:var(--surface-2)}.key i.std{border-style:dotted}.key i.pln{border-style:dashed;background:none;opacity:.6}
+.key i.srv{border-color:var(--server)}.key i.cli{border-color:var(--client)}.key i.wir{border-color:var(--wire)}
+.key i.pub.srv{background:var(--server-soft)}.key i.pub.cli{background:var(--client-soft)}.key i.pub.wir{background:var(--wire-soft)}
+.key i.con{border-color:var(--ink)}.key i.ext{border-color:var(--muted);background:var(--surface-2)}
+.key i.bs{border-left:4px solid var(--server)}.key i.bc{border-left:4px solid var(--client)}.key i.bw{border-left:4px solid var(--wire)}
+.key i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.key i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.key i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
+.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
+.key i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
+.key i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
+.key i.band{border:0;background:var(--surface-2)}
+.key i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
+.key .pill{align-self:center}
+
+/* structure svg */
+.band{fill:var(--surface-2)}
+.lane{font-size:11px;fill:var(--muted);letter-spacing:.1em;font-family:var(--sans)}
+.note{font-size:10.5px;fill:var(--ink-2);font-family:var(--sans)}
+.node{cursor:pointer}
+.node rect{fill:var(--surface);stroke-width:1.5}
+.node.pub rect{stroke-width:2}
+.node.server rect{stroke:var(--server)}.node.server.pub rect{fill:var(--server-soft)}
+.node.client rect{stroke:var(--client)}.node.client.pub rect{fill:var(--client-soft)}
+.node.wire rect{stroke:var(--wire)}.node.wire.pub rect{fill:var(--wire-soft)}
+.node.standalone rect{stroke:var(--muted);stroke-dasharray:2 3;fill:var(--surface-2)}
+.node.planned{opacity:.6}.node.planned rect{stroke-dasharray:6 4}
+.node.container rect{fill-opacity:.55}
+.node text{fill:var(--ink);font-family:var(--sans)}
+.node .t{font-weight:700;font-size:10.5px}
+.node.container .t{font-size:13px}
+.node .s{font-size:10px;fill:var(--ink-2)}
+.node.chip .t{font-family:var(--mono);font-size:11px}
+.node.chip .s{font-family:var(--mono);font-size:8.5px}
+.node.sel rect{stroke:var(--on);stroke-width:3}
+
+/* datagram flow svg */
+.fnode{cursor:default}
+.fnode rect,.fnode polygon{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.fnode.t rect{fill:var(--surface-2)}
+.fnode rect.stripe,.fnode.on rect.stripe{stroke:none}
+.fnode text{fill:var(--ink);font-size:10.5px;font-family:var(--sans)}
+.fnode .lvl{font-family:var(--mono);font-size:8.5px;fill:var(--muted)}
+.fnode.on rect,.fnode.on polygon{stroke:var(--on);stroke-width:2.5}
+.fnode.off{opacity:var(--dim)}
+.fnode.planned rect,.fnode.planned polygon{stroke-dasharray:6 4}.fnode.planned:not(.off){opacity:.6}
+.fedge{stroke:var(--line);stroke-width:1.5;fill:none}
+.fedge.on{stroke:var(--on);stroke-width:2.5}
+.fedge.off{opacity:var(--dim)}
+.fedge.planned{stroke-dasharray:6 4}
+.flabel{font-size:9.5px;fill:var(--muted);font-family:var(--mono)}
+.flabel.on{fill:var(--ink);font-weight:600}
+.flabel.off{opacity:var(--dim)}
+.outcome{font-size:13px;margin:0 0 10px;padding:8px 10px;border-radius:4px;background:var(--surface-2);border-left:3px solid var(--ink)}
+.outcome code{font-weight:600}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
+.ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
+/* A segmented control wraps onto a second row at phone width rather than pushing the page sideways. */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[aria-disabled="true"]{opacity:.35;cursor:default}
+.seg button:hover:not([aria-pressed="true"]):not([aria-disabled="true"]){background:var(--surface-2)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:12px var(--mono);padding:7px 10px;border-radius:5px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* sequence svg */
+.life{stroke:var(--line);stroke-dasharray:3 4}
+.lh rect{fill:var(--surface-2);stroke:var(--line)}
+.lh.server rect{fill:var(--server-soft);stroke:var(--server)}.lh.client rect{fill:var(--client-soft);stroke:var(--client)}.lh.wire rect{fill:var(--wire-soft);stroke:var(--wire)}
+.lh.consumer rect{fill:var(--surface);stroke:var(--ink)}.lh.external rect{fill:var(--surface-2);stroke:var(--muted)}
+.lh.planned{opacity:.6}.lh.planned rect{stroke-dasharray:6 4}
+.lh text{font-size:10.5px;font-weight:700;fill:var(--ink);font-family:var(--mono)}
+.phase rect{fill:var(--surface-2);opacity:.55}
+.phase text{font-size:9.5px;fill:var(--muted);font-family:var(--mono);letter-spacing:.08em}
+.msg{cursor:pointer}
+.msg line,.msg path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+.msg.ret line{stroke-dasharray:5 4}
+.msg text{font-size:10px;fill:var(--ink-2);font-family:var(--sans)}
+.msg .lbg{fill:var(--surface);stroke:none}
+.msg .num{font-family:var(--mono);font-size:9px;fill:var(--muted)}
+.msg.cur line,.msg.cur path{stroke:var(--on);stroke-width:2.5}
+.msg.cur text{fill:var(--ink);font-weight:600}
+.msg.future{opacity:.3}
+.msg.planned line,.msg.planned path{stroke-dasharray:6 4}.msg.planned:not(.future){opacity:.6}
+
+/* C4 model tab — rendered from the DSL. A level ladder on the left (C4 is about zooming in), typed element
+   cards whose header colour comes from the DSL's styles block, relationships routed orthogonally in lanes,
+   the scope drawn as a boundary frame, and the dynamic view drawn as the sequence it is. */
+.c4wrap{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+.ladder{display:flex;flex-wrap:wrap;gap:7px;min-width:0}
+.rung{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:6px;padding:7px 10px;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:0 8px;align-items:center;min-width:0;position:relative;flex:1 1 150px;max-width:230px}
+.rung .lv{font:700 13px var(--mono);color:var(--muted);grid-row:span 2;text-align:center}
+.rung .nm{font-weight:700;font-size:12.5px;color:var(--ink)}
+.rung .sc{font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rung:hover{border-color:var(--ink-2)}
+.rung[aria-pressed="true"]{border-color:var(--ink);background:var(--surface-2)}
+.rung[aria-pressed="true"] .lv{color:var(--ink)}
+.rung.sep{margin-left:8px}
+.rung.lvl::after{content:"";position:absolute;right:-8px;top:50%;width:8px;height:2px;background:var(--line)}
+.rung.lvl.last::after{display:none}
+.c4main{min-width:0}
+.c4head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:0 0 8px}
+.c4head .zoom{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;align-self:center}
+.c4head .zoom button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:11px var(--mono);padding:5px 9px;cursor:pointer}
+.c4head .zoom button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.c4head .lvl{font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.c4head .ttl{font-weight:700;font-size:14px}
+.c4head .desc{font-size:12.5px;color:var(--ink-2)}
+.c4canvas{border:1px solid var(--line);border-radius:6px;padding:6px;background-color:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1.2px);background-size:22px 22px;overflow-x:auto}
+.c4canvas svg{max-width:none}
+.c4key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
+.c4key span{display:inline-flex;align-items:center;gap:6px}
+.c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
+.c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
+.c4key i.arrow.dashed{border-top-style:dashed}
+.c4key i.frame{background:var(--surface-2);border:1.5px dashed var(--muted);border-radius:4px}
+.c4el{cursor:pointer}
+.c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.c4el .hdr{stroke:none}
+.c4el text{font-family:var(--sans)}
+.c4el .n{font-weight:700;font-size:12px}
+.c4el .m{font-size:9.5px;font-family:var(--mono);fill:var(--muted)}
+.c4el .d{font-size:10px;fill:var(--ink-2)}
+.c4el .tg{font-size:8.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.04em}
+.c4el.sel .card{stroke:var(--on);stroke-width:2.5}
+.c4el.hl .card{stroke:var(--ink-2);stroke-width:2}
+.c4el.dim{opacity:.3}
+.c4rel path{stroke:var(--rel);stroke-width:1.4;fill:none;stroke-linejoin:round}
+.c4rel.dashed path{stroke-dasharray:6 4}
+.c4rel text{font-size:9.5px;fill:var(--ink-2);font-family:var(--sans)}
+.c4rel .lbg{fill:var(--surface);stroke:var(--line);stroke-width:.8}
+.c4rel.dim{opacity:.12}
+.c4rel.hl path{stroke:var(--ink);stroke-width:2.2}
+.c4rel.hl text{fill:var(--ink);font-weight:600}
+.c4rel.hl .lbg{stroke:var(--ink-2)}
+.c4rel.cur path{stroke:var(--on);stroke-width:2.5}
+.c4rel.cur text{fill:var(--ink);font-weight:600}
+.c4rel .num circle{fill:var(--ink);stroke:none}
+.c4rel .num text{fill:var(--bg);font-weight:700;font-size:9.5px;font-family:var(--mono)}
+.c4bound{fill:var(--surface-2);fill-opacity:.45;stroke:var(--muted);stroke-dasharray:8 5}
+.c4boundl rect{fill:var(--surface);stroke:var(--muted);stroke-dasharray:8 5}
+.c4boundl text{font:700 10px var(--mono);fill:var(--ink-2)}
+.c4band{font-size:9.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.14em}
+.c4life{stroke:var(--line);stroke-dasharray:3 4}
+pre.dsl{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow-x:auto;color:var(--ink);max-height:70vh}
+pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} pre.dsl .s{color:var(--ink-2)}
+.steps-list{margin:8px 0 0;padding:0;list-style:none;font-size:12.5px}
+.steps-list li{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:4px 0;border-top:1px solid var(--hair);color:var(--ink-2);cursor:pointer}
+.steps-list li b{font-family:var(--mono);color:var(--ink)}
+.steps-list li.on{color:var(--ink)}
+
+/* threads */
+.threads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:700px){.threads{grid-template-columns:1fr}}
+.tside h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 6px}
+.thread{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-left-width:4px;border-radius:4px;margin-bottom:6px;background:var(--surface);cursor:pointer;min-width:0}
+.thread.server{border-left-color:var(--server)}.thread.client{border-left-color:var(--client)}.thread.wire{border-left-color:var(--wire)}
+.thread.planned{border-style:dashed;opacity:.6}
+.thread .n{font:12px var(--mono);font-weight:600}
+.thread .r{grid-column:1/-1;font-size:12px;color:var(--ink-2)}
+.thread.sel{outline:2px solid var(--on)}
+/* When a thread starts: filled = eagerly, outlined = lazily on first use, dotted = only under a condition. Dashed stays free for planned. */
+.pill{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1.5px solid var(--ink-2);color:var(--ink-2);align-self:start;white-space:nowrap}
+.pill.eager{background:var(--ink-2);color:var(--surface)}.pill.cond{border-style:dotted}.pill.planned{border-style:dashed;opacity:.6}
+.scroll{overflow-x:auto}
+.matrix{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;min-width:560px}
+.matrix th,.matrix td{padding:6px 8px;border-top:1px solid var(--hair);text-align:center;vertical-align:top}
+.matrix th{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix td:first-child{color:var(--ink-2)}
+.matrix .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.matrix tr:hover td{background:var(--surface-2)}
+
+/* lifecycles */
+.lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h3{font-size:13px;margin:0 0 8px}
+.card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.steps li{counter-increment:s;font:12px var(--mono);border:1px solid var(--line);border-radius:4px;padding:5px 8px;background:var(--surface)}
+.steps li::before{content:counter(s) " ";color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:6px 6px;border-top:1px solid var(--hair);vertical-align:top}
+.tbl td{overflow-wrap:anywhere}
+.tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+/* Phases (the Lifecycles colour plan): .ph1 start / creation, .ph2 run / steady state, .ph3 stop / teardown. A class sets --ph;
+   a card takes it as its top rule, a callout as its left rule, a step or table row as a left mark, a state box as its stroke. */
+.ph1{--ph:var(--ph-1)}.ph2{--ph:var(--ph-2)}.ph3{--ph:var(--ph-3)}
+.card.ph1,.card.ph2,.card.ph3{border-top:3px solid var(--ph)}
+.steps li.ph1,.steps li.ph2,.steps li.ph3{border-left:3px solid var(--ph)}.steps li.planned{border-style:dashed;opacity:.6}
+.tbl tr.ph1>:first-child,.tbl tr.ph2>:first-child,.tbl tr.ph3>:first-child{border-left:3px solid var(--ph)}
+.callout{border-left:3px solid var(--ph,var(--ink-2));padding:8px 10px;background:var(--surface-2);border-radius:4px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.callout b{color:var(--ink)}
+.states text{font-family:var(--mono);font-size:11px;fill:var(--ink)}
+.states .lab{font-family:var(--sans);font-size:9.5px;fill:var(--muted)}
+.states rect{fill:var(--surface-2);stroke:var(--ink-2);stroke-width:1.5}
+.states rect.ph1,.states rect.ph2,.states rect.ph3{stroke:var(--ph);stroke-width:2;fill:color-mix(in srgb,var(--ph) 14%,var(--surface))}
+.states rect.planned{stroke-dasharray:6 4;opacity:.6}
+.states line,.states path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+
+/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled bubble per guarantee */
+.guarantees{margin-top:20px}
+.guarantees>h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.bubbles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.bubble{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.bubble h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
+.bubble h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.bubble ul{margin:0;padding:0 0 0 15px}
+.bubble li{margin:3px 0}
+.bubble p{margin:6px 0 0}
+.bubble code{color:var(--ink)}
+.bubble .gap{color:var(--muted);font-style:italic}
+.bubble .badge{margin-left:2px}
+
+/* context */
+.context{margin-top:24px}
+.context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.issues{list-style:none;margin:0;padding:0;font-size:12.5px}
+.issues li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.issues a:hover{color:var(--ink)}
+.badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
+.badge.bug{border-color:var(--serious)}
+.badge.bug::before{content:"▲ ";color:var(--serious)}
+.badge.planned{border-style:dashed}
+.badge.closed{color:var(--muted)}
+.tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+@media (max-width:520px){.issues li{grid-template-columns:auto 1fr}.issues li>.tags{grid-column:2;justify-content:flex-start}}
+/* roadmap: each item (a tracking issue, or an entry in the repository's roadmap document) with the issues mapped to it */
+.roadmap{list-style:none;margin:0;padding:0;font-size:12.5px}
+.roadmap>li{padding:6px 0;border-top:1px solid var(--hair)}
+.roadmap .ri{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
+.roadmap .ri>span:nth-child(2){font-weight:600;color:var(--ink)}
+.roadmap .ri small{font:400 11px var(--mono);color:var(--muted)}
+.roadmap .ri a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.roadmap .issues{margin:4px 0 0 14px}
+.roadmap .more{margin:4px 0 0 14px;font-size:12px;color:var(--muted)}
+/* one series (test classes), so one neutral fill: a hue here would read as a side */
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;align-items:center;font-size:12px}
+.bars .lbl{color:var(--ink-2);font-family:var(--mono);font-size:11.5px}
+.bars .trk{height:10px;background:var(--surface-2);border-radius:2px;overflow:hidden;position:relative}
+.bars .fil{position:absolute;left:0;top:0;height:100%;background:var(--ink-2);border-radius:0 4px 4px 0}
+.bars .val{font-variant-numeric:tabular-nums;color:var(--ink)}
+.docs{margin:0;padding:0;list-style:none;font-size:12.5px}
+.docs li{padding:4px 0;border-top:1px solid var(--hair)}
+.docs a{text-decoration:none;border-bottom:1px solid var(--line)}
+.docs a:hover{border-bottom-color:var(--ink)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+footer code{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="crumbs"><a href="../index.html">WebTools</a> › webtools-udp</div>
+  <h1>webtools-udp</h1>
+  <p class="function">A multi-connection UDP transport for the JVM: many clients handshake onto one server port, then exchange framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probing and idle detection.</p>
+  <div class="chips">
+    <span class="chip">version <b>2.0.0a</b></span>
+    <span class="chip">wire protocol <b>2</b></span>
+    <span class="chip">common port <b>9998</b></span>
+    <span class="chip">Kotlin/JVM</span>
+    <span class="chip">as-is at <b>master 1e27071</b> · 2026-10-22</span>
+    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener"><b>#61</b></a> build-logic · db98325 (build file only; published output identical) · last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> · ca57a57</span>
+    <span class="chip model">C4 model <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
+  </div>
+</header>
+
+<section class="kpis" aria-label="Key figures">
+  <div class="kpi"><div class="l">Source</div><div class="v">36 files</div><div class="s">5,326 lines · one package</div></div>
+  <div class="kpi"><div class="l">Types</div><div class="v">18 public</div><div class="s">21 internal</div><div class="seg-bar" aria-hidden="true"><i style="width:46%;background:var(--ink)"></i><i style="width:54%;background:var(--line)"></i></div></div>
+  <div class="kpi"><div class="l">Threads</div><div class="v">11 named</div><div class="s">6 server · 5 client · all daemon</div><div class="seg-bar" aria-hidden="true"><i style="width:55%;background:var(--server)"></i><i style="width:45%;background:var(--client)"></i></div></div>
+  <div class="kpi"><div class="l">Datagram tags</div><div class="v">6 in use</div><div class="s">0x80 · 0x81 · 0x82 · 0x90 · 0xA0 · 0xA1</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">92 classes</div><div class="s">across all 7 testing levels</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">11</div><div class="s">8 bugs · 1 planned system · 2 untyped</div></div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t-structure" aria-controls="p-structure" aria-selected="true">Structure</button>
+  <button class="tab model" role="tab" id="t-c4" aria-controls="p-c4" aria-selected="false">C4 model</button>
+  <button class="tab" role="tab" id="t-threads" aria-controls="p-threads" aria-selected="false">Threads</button>
+  <button class="tab" role="tab" id="t-datagrams" aria-controls="p-datagrams" aria-selected="false">Datagram path</button>
+  <button class="tab" role="tab" id="t-reliable" aria-controls="p-reliable" aria-selected="false">Reliable sequence</button>
+  <button class="tab" role="tab" id="t-lifecycles" aria-controls="p-lifecycles" aria-selected="false">Lifecycles</button>
+</div>
+
+<div class="stage">
+<div>
+  <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
+    <h2>Component map</h2>
+    <p class="lede">Nesting is ownership. Filled boxes are public types, outlined boxes internal. Click any box for its role, files and threads — and its place in the C4 model.</p>
+    <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of webtools-udp"></svg>
+    <div class="key"><span><i class="pub srv"></i>public · server</span><span><i class="srv"></i>internal · server</span><span><i class="pub cli"></i>public · client</span><span><i class="cli"></i>internal · client</span><span><i class="pub wir"></i>public · shared</span><span><i class="wir"></i>internal · shared</span><span><i class="std"></i>standalone, outside the stack</span><span><i class="pln"></i>planned, not built</span></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
+    <h2>C4 model <small style="font:11px var(--mono);color:var(--muted);font-weight:400">rendered from workspace.dsl at load</small></h2>
+    <p class="lede">The Structurizr DSL beside this page is the formal model: elements, their relationships, tags and styles. These views are parsed from it every time the page opens — nothing here is drawn by hand, so the model and the dashboard cannot disagree. Step down the ladder to zoom in; hover an element to see what it touches. Structurizr Lite or <code>structurizr-cli</code> render the same file.</p>
+    <div class="c4wrap">
+      <nav class="ladder" id="c4-ladder" aria-label="C4 levels"></nav>
+      <div class="c4main">
+        <div class="c4head" id="c4-head"></div>
+        <div class="c4canvas" id="c4-canvas"><svg id="svg-c4" viewBox="0 0 900 300" role="img" aria-label="C4 view"></svg></div>
+        <div class="c4key" id="c4-key"></div>
+        <pre class="dsl" id="dsl-view" hidden></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
+    <h2>Thread inventory</h2>
+    <p class="lede">Eleven threads, every one named, all daemon, coloured by the endpoint that owns them. Filled pills are created eagerly, outlined ones lazily on first use, dotted ones only under a condition. Click a thread for what runs on it.</p>
+    <div class="threads">
+      <div class="tside"><h3>Server · mcups-*</h3>
+        <div class="thread server" data-t="mcups-listener" tabindex="0" role="button"><span class="n">mcups-listener</span><span class="pill eager">eager</span><span class="r">receive · accept() liveness stamp · tag switch · handshake incl. admit / onClientConnect · inline 0x82 replies · reliable ack processing</span></div>
+        <div class="thread server" data-t="mcups-dispatch" tabindex="0" role="button"><span class="n">mcups-dispatch</span><span class="pill lazy">lazy · first dispatch</span><span class="r">every message handler, unreliable and reliable · onClientDisconnect</span></div>
+        <div class="thread server" data-t="mcups-liveness" tabindex="0" role="button"><span class="n">mcups-liveness</span><span class="pill cond">if idleTimeoutMillis &gt; 0</span><span class="r">the idle sweep</span></div>
+        <div class="thread server" data-t="mcups-keepalive" tabindex="0" role="button"><span class="n">mcups-keepalive</span><span class="pill lazy">lazy · startKeepAlive</span><span class="r">the keepalive tick, poll-divided</span></div>
+        <div class="thread server" data-t="mcups-probe" tabindex="0" role="button"><span class="n">mcups-probe</span><span class="pill lazy">lazy · startProbe</span><span class="r">the probe tick, exact cadence</span></div>
+        <div class="thread server" data-t="mcups-retransmit" tabindex="0" role="button"><span class="n">mcups-retransmit</span><span class="pill lazy">lazy · first engine</span><span class="r">the retransmit tick, exact cadence (50 ms)</span></div>
+      </div>
+      <div class="tside"><h3>Client · mcupc-*</h3>
+        <div class="thread client" data-t="mcupc-listener" tabindex="0" role="button"><span class="n">mcupc-listener</span><span class="pill lazy">lazy · ensureListening()</span><span class="r">receive · tag switch · inline 0x82 replies · reliable ack processing</span></div>
+        <div class="thread client" data-t="mcupc-dispatch" tabindex="0" role="button"><span class="n">mcupc-dispatch</span><span class="pill lazy">lazy · first dispatch</span><span class="r">handlers</span></div>
+        <div class="thread client" data-t="mcupc-keepalive" tabindex="0" role="button"><span class="n">mcupc-keepalive</span><span class="pill lazy">lazy</span><span class="r">the keepalive tick</span></div>
+        <div class="thread client" data-t="mcupc-probe" tabindex="0" role="button"><span class="n">mcupc-probe</span><span class="pill lazy">lazy</span><span class="r">the probe tick</span></div>
+        <div class="thread client" data-t="mcupc-retransmit" tabindex="0" role="button"><span class="n">mcupc-retransmit</span><span class="pill lazy">lazy</span><span class="r">the retransmit tick</span></div>
+      </div>
+    </div>
+    <div class="key"><span><i class="bs"></i>server endpoint · mcups-*</span><span><i class="bc"></i>client endpoint · mcupc-*</span><span><span class="pill eager">eager</span>created eagerly</span><span><span class="pill lazy">lazy</span>created on first use</span><span><span class="pill cond">if …</span>only under a condition</span><span><span class="pill planned">planned</span>planned, not built</span><span><i class="dot"></i>puts it on the wire (table below)</span></div>
+    <h2 style="margin-top:16px">Outbound send paths</h2>
+    <p class="lede">Which thread puts each kind of datagram on the wire. A reliable message's first transmission runs on the caller's thread; retransmits and standalone acks on the side's own retransmit thread.</p>
+    <div class="scroll"><table class="matrix">
+      <thead><tr><th>Traffic</th><th>Caller's thread</th><th>Listener</th><th>Keepalive</th><th>Probe</th><th>Retransmit</th></tr></thead>
+      <tbody>
+        <tr><td>First transmission of an unreliable <code>send</code> / <code>push</code> / <code>pushToAll</code></td><td><span class="dot"></span></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>First transmission of a reliable <code>send</code> (<code>0xA0</code>)</td><td><span class="dot"></span></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>A retransmitted <code>0xA0</code> / a standalone <code>0xA1</code></td><td></td><td></td><td></td><td></td><td><span class="dot"></span></td></tr>
+        <tr><td>An inline <code>0x82</code> probe reply</td><td></td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td>A scheduled keepalive <code>0x80</code></td><td></td><td></td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td>A one-shot keepalive (<code>sendKeepAlive()</code> / <code>Connection.keepAlive()</code>)</td><td><span class="dot"></span></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>A scheduled probe <code>0x81</code></td><td></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
+        <tr><td>The client's <code>Iam</code> handshake datagram (<code>handshake()</code> blocks until the reply or the timeout)</td><td><span class="dot"></span></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td><code>REGISTERED</code> / <code>REFUSED</code> handshake reply, server side</td><td></td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-datagrams" aria-labelledby="t-datagrams" hidden>
+    <h2>Inbound datagram path</h2>
+    <p class="lede">Pick what arrives and from whom; the path the listener thread takes lights up. Hexagons are decisions; shaded boxes are where the datagram ends, their stripe coloured by the log level it ends at.</p>
+    <div class="ctl" id="flow-ctl"></div>
+    <p class="outcome" id="outcome"></p>
+    <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Inbound dispatch flow"></svg>
+    <div class="key" id="flow-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
+    <h2>The reliable sequence, server side</h2>
+    <p class="lede">A reliable-ordered send, its arrival at the peer's listener, and the 50 ms retransmit tick, each lifeline in the colour of who owns it. Step through it, or click any message. The client mirrors it on mcupc-* threads.</p>
+    <div class="ctl">
+      <button class="btn" id="seq-prev">‹ prev</button>
+      <button class="btn" id="seq-next">next ›</button>
+      <button class="btn" id="seq-play" aria-pressed="false">play</button>
+      <span id="seq-pos" style="font:12px var(--mono);color:var(--muted)"></span>
+    </div>
+    <svg id="svg-seq" viewBox="0 0 1000 600" role="img" aria-label="Reliable channel sequence diagram"></svg>
+    <div class="key" id="seq-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
+    <h2>Lifecycles and concurrency</h2>
+    <p class="lede">Ordered shutdowns, the connection states, when a reliable engine comes and goes, and the locking rules — coloured by phase.</p>
+    <div class="lgrid">
+      <div class="card ph3"><h3>Server <code>stop()</code> <small>every step runs even if an earlier one fails</small></h3>
+        <ol class="steps"><li>stopNotifying</li><li>terminateAll</li><li>listener join ≤ 1 s</li><li>close socket</li><li>liveness</li><li>keepalive</li><li>probe</li><li>retransmit</li><li>dispatch</li></ol>
+        <div class="callout"><b>No <code>onClientDisconnect</code> fires</b> on stop. The 1 s join before the socket closes is open as <a href="https://github.com/SpartanLaboratories/WebTools/issues/48" target="_blank" rel="noopener">#48</a>.</div></div>
+      <div class="card ph3"><h3>Client <code>stop()</code> <small>each step is its own runCatching</small></h3>
+        <ol class="steps"><li>stopped = true</li><li>listening = false</li><li>join</li><li>keepalive</li><li>probe</li><li>retransmit</li><li>engine.close()</li><li>close socket</li><li>dispatch</li></ol>
+        <div class="callout"><b>No goodbye on the wire.</b> Neither <code>terminate()</code> nor either side's <code>stop()</code> sends the peer anything; wire protocol 2 has no disconnect datagram. A peer learns the other side has gone only through its own idle detection.</div></div>
+      <div class="card ph2"><h3>Connection states</h3>
+        <svg class="states" viewBox="0 0 640 190" role="img" aria-label="Connection state transitions">
+          <defs><marker id="sarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink-2)"/></marker></defs>
+          <line x1="320" y1="4" x2="320" y2="26" marker-end="url(#sarr)"/><text class="lab" x="328" y="16">Iam accepted: admit → register → REGISTERED 2</text>
+          <rect class="ph2" x="240" y="28" width="160" height="40" rx="5"/><text x="320" y="53" text-anchor="middle">REGISTERED</text>
+          <path d="M270,68 L120,118" marker-end="url(#sarr)"/><text class="lab" x="150" y="86" text-anchor="middle">a later handshake supersedes</text>
+          <line x1="320" y1="68" x2="320" y2="118" marker-end="url(#sarr)"/><text class="lab" x="328" y="98">terminate()</text>
+          <path d="M370,68 L520,118" marker-end="url(#sarr)"/><text class="lab" x="490" y="86" text-anchor="middle">idle sweep · mcups-liveness</text>
+          <rect class="ph3" x="40" y="120" width="160" height="40" rx="5"/><text x="120" y="145" text-anchor="middle">SUPERSEDED</text>
+          <rect class="ph3" x="240" y="120" width="160" height="40" rx="5"/><text x="320" y="145" text-anchor="middle">TERMINATED</text>
+          <rect class="ph3" x="440" y="120" width="160" height="40" rx="5"/><text x="520" y="145" text-anchor="middle">TIMEOUT</text>
+          <text class="lab" x="520" y="178" text-anchor="middle">notify-only · stays addressable</text>
+        </svg></div>
+      <div class="card"><h3>Reliable engine: creation and teardown</h3>
+        <table class="tbl"><thead><tr><th></th><th>Client</th><th>Server</th></tr></thead><tbody>
+          <tr class="ph1"><td>Created on</td><td>the first reliable <b>send</b>, or the first inbound <code>0xA0</code>/<code>0xA1</code> from <code>serverEndpoint</code> on channel <code>0x00</code> — <b>not</b> on <code>channel(RELIABLE_ORDERED).actuate*</code></td><td>the first send, the first <code>bindReliable</code> (<code>actuate*</code> / <code>startReliable</code>), or the first inbound <code>0xA0</code>/<code>0xA1</code> on channel <code>0x00</code> from a registered origin</td></tr>
+          <tr class="ph1"><td>Never for</td><td colspan="2">a non-zero-channel frame — dropped before the engine is reached</td></tr>
+          <tr class="ph3"><td>Torn down by</td><td colspan="2"><code>terminate()</code>, a supersede, or <code>stop()</code>: the engine closes and every in-flight or buffered message is discarded</td></tr>
+        </tbody></table></div>
+      <div class="card ph2"><h3>Concurrency rules</h3>
+        <div class="callout"><b>Lock order is engine → buffer</b>, never reversed. <code>ReliableChannelEngine</code> is <code>@Synchronized</code>; three threads contend per connection — the app thread (<code>send</code>), the listener (inbound), the retransmit tick. The 32-per-tick cap bounds how long the tick holds the lock.</div>
+        <div class="callout"><b>One dispatch executor per side</b> serialises unreliable <i>and</i> reliable delivery, so head-of-line blocking on the reliable plane also delays unreliable delivery to that connection.</div>
+        <div class="callout"><code>reliableEngineFor</code>, <code>reliableEngine()</code> and <code>ensureListening()</code> are <code>@Synchronized</code>; <code>ensureListening()</code> is idempotent.</div></div>
+    </div>
+    <div class="key"><span><i class="ph1"></i>start · creation</span><span><i class="ph2"></i>run · the live state and the rules that hold</span><span><i class="ph3"></i>stop · teardown and the disconnect reasons</span><span><i class="pln"></i>planned, not built</span></div>
+  </section>
+</div>
+
+<aside class="inspector" id="inspector" aria-live="polite">
+  <h2>Inspector</h2>
+  <div id="insp-body"><p>Select a component, C4 element, thread, datagram or sequence step to see its details here.</p></div>
+</aside>
+</div>
+
+<section class="guarantees" aria-label="Guarantees">
+  <h2>Guarantees</h2>
+  <div class="bubbles">
+    <div class="bubble"><h3>Failure model</h3>
+      <ul>
+        <li>Fallible calls return <code>kotlin.Result</code>. Typed failures: <code>HandshakeRefusedException</code>, <code>IncompatibleProtocolException</code> from <code>handshake()</code>; <code>ReliableWindowFullException</code>, <code>ReliableMessageTooLargeException</code> from a reliable <code>send</code>.</li>
+        <li>Thrown only at construction: <code>SocketException</code> when its port cannot be bound, <code>IllegalArgumentException</code> for a bad parameter.</li>
+        <li>Retried inside: a reliable message, until acked. Not retried: an unreliable datagram; <code>handshake()</code> (4 s timeout — the caller retries).</li>
+        <li>Only logged: a dropped datagram; a throwing <code>admit</code> (the client times out). A throwing <code>onClientConnect</code> kills <code>mcups-listener</code> (<a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a>).</li>
+      </ul></div>
+    <div class="bubble"><h3>Extension points</h3>
+      <ul>
+        <li><code>MultiConnectionUDPServer</code>, abstract: <code>onClientConnect</code>, <code>admit</code>, <code>onClientDisconnect</code>; constructor knobs for the receive buffer, idle timeout and reliable cap.</li>
+        <li><code>Connection</code>, <code>UdpChannel</code>: interfaces; of the <code>Connection</code>s, only <code>UDPConnection</code> carries a reliable channel.</li>
+        <li>Open sets that may grow without a major: <code>ReliableSendFailure</code> subtypes; <code>DeliveryMode</code>, <code>DatagramType</code>, <code>DisconnectReason</code> entries — keep an <code>else</code>.</li>
+        <li>All <span class="badge">Stable Core</span>; the module has no <code>@SupportedExtension</code> or <code>@RequiresOptIn</code> marker.</li>
+      </ul></div>
+    <div class="bubble"><h3>Test levels <small>92 classes</small></h3>
+      <div class="bars" role="table" aria-label="Test classes per testing level">
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:90%"></span></span><span class="val">19</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">21</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:95%"></span></span><span class="val">20</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:43%"></span></span><span class="val">9</span>
+        <span class="lbl">L4b e2e</span><span class="trk"><span class="fil" style="width:52%"></span></span><span class="val">11</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:52%"></span></span><span class="val">11</span>
+        <span class="lbl">L5 UAT</span><span class="trk"><span class="fil" style="width:5%"></span></span><span class="val">1</span>
+      </div>
+      <p>Packages <code>com.spartanlabs.testing.&lt;level&gt;.webtools.udp</code>; <code>./gradlew gatingTest</code>, <code>componentTest</code>, … run one level, each selecting its package (the level tasks come from <code>webtools.kotlin-jvm-library</code>). <span class="gap">No test-inspector report is committed.</span></p></div>
+    <div class="bubble"><h3>Compatibility &amp; versioning</h3>
+      <ul>
+        <li><code>2.0.0a</code>, wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
+        <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a, <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener">#38</a>), the third number for an addition, the major for a break.</li>
+        <li>Deprecate, don't break: the eight members deprecated in 2.0.0 (with <code>ReplaceWith</code>) work through 2.x and go at 3.0.0.</li>
+        <li><span class="gap">Not checked: the build keeps no ABI dump.</span> JDK floor: the README says 11+; 2.0.0 ships Java 23 bytecode (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>).</li>
+      </ul></div>
+    <div class="bubble"><h3>Thread safety</h3>
+      <ul>
+        <li>Any thread: the server's sends (one socket, copy-on-write registry); the client's <code>send</code>, keepalive and probe start/stop, and its idempotent <code>stop()</code>.</li>
+        <li>Shareable values: <code>UdpChannel</code> (stateless), <code>LinkQuality</code> (immutable).</li>
+        <li>Never raced: the client's <code>handshake()</code> — once, before <code>start</code> — and <code>start</code> itself (documented, not enforced).</li>
+        <li>Callbacks: <code>admit</code> and <code>onClientConnect</code> on <code>mcups-listener</code>; handlers and <code>onClientDisconnect</code> on the side's one dispatch thread. <span class="gap">Racing the server's <code>start*</code> and <code>stop()</code>: not documented.</span></li>
+      </ul></div>
+    <div class="bubble"><h3>Resources to close</h3>
+      <ul>
+        <li><code>MultiConnectionUDPServer.stop()</code>: frees port 9998 and the <code>mcups-*</code> threads; single-use. Skipped, the port stays bound and the next server in that JVM fails to bind.</li>
+        <li><code>MultiConnectionUDPClient.stop()</code>: frees its port and <code>mcupc-*</code> threads; idempotent. Neither endpoint is <code>AutoCloseable</code>; <code>UDPSendReceiveServer</code> is, and its <code>close()</code> only logs a failure (<code>shutDown()</code> returns it).</li>
+        <li><code>Connection.terminate()</code>: a timed-out peer stays registered until terminated (<code>TIMEOUT</code> only notifies); it drops the peer's in-flight reliable messages, keepalive and probe.</li>
+        <li>All threads are daemons; nothing goes on the wire at close.</li>
+      </ul></div>
+    <div class="bubble"><h3>On your classpath</h3>
+      <ul>
+        <li><code>org.slf4j:slf4j-api:2.0.13</code> — <code>api</code> in the module's own build file; no backend ships (logback is test-only), so bring one.</li>
+        <li><code>org.jetbrains.kotlin:kotlin-stdlib:2.2.0</code> — from the Kotlin/JVM plugin, which <code>webtools.kotlin-jvm-library</code> applies; compile scope in the generated POM.</li>
+        <li>Nothing else.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="context">
+  <h2>Context</h2>
+  <div class="cards">
+    <div class="card"><h3>Roadmap <small>1 item · 2026-10-22</small></h3>
+      <ol class="roadmap">
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span>HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes <small>tracking issue</small></span><span class="tags"><span class="badge">open</span><span class="badge">L4</span></span></div>
+          <ul class="issues">
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span>webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">open</span><span class="badge">L2</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span>Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks <small>landed in 1e27071: this module's build file now applies <code>webtools.kotlin-jvm-library</code>; published output identical</small></span><span class="tags"><span class="badge">closed</span><span class="badge">L3</span></span></li>
+          </ul>
+          <p class="more">Its nine other sub-issues, #62–#70, belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
+      </ol></div>
+    <div class="card"><h3>Unscheduled issues <small>10 open · 2026-10-22</small></h3>
+      <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a><span>A throwing onClientConnect kills the server's listener thread</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/53" target="_blank" rel="noopener">#53</a><span>Server accepts handshake names and credentials containing tabs, CR/LF or other non-space whitespace</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/52" target="_blank" rel="noopener">#52</a><span>Client sends malformed or misparsed handshakes for an empty or whitespace-containing name or credential</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/50" target="_blank" rel="noopener">#50</a><span>Multiplatform protocol core and a datagram-transport seam for a future web client</span><span class="tags"><span class="badge planned">planned system</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/49" target="_blank" rel="noopener">#49</a><span>Handshake registration orphaned when the REGISTERED send fails</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/48" target="_blank" rel="noopener">#48</a><span>MultiConnectionUDPServer.stop() blocks ~1 s joining the listener before closing the socket</span><span class="tags"><span class="badge bug">bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/41" target="_blank" rel="noopener">#41</a><span>Rate-bound the per-datagram-drop WARN logs on server and client</span><span class="tags"><span class="badge">untyped</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/39" target="_blank" rel="noopener">#39</a><span>Client only checks datagram origin on the reliable-channel receive branch</span><span class="tags"><span class="badge">untyped</span></span></li>
+      </ul></div>
+    <div class="card"><h3>Plans and documents</h3>
+      <ul class="docs">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-architecture.md" target="_blank" rel="noopener">webtools-udp-architecture.md</a> — components, threads, locks, lifecycles, datagram paths (this dashboard's source)</li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-protocol.md" target="_blank" rel="noopener">webtools-udp-protocol.md</a> — the bytes</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it</li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/14-reliable-ordered-channel/architecture.md" target="_blank" rel="noopener">#14 reliable-ordered channel</a> — the design that added the reliable plane, in four stages</li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/34-probe-cadence/plan.md" target="_blank" rel="noopener">#34 probe cadence</a> · <a href="https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans/38-handshake-empty-name" target="_blank" rel="noopener">#38 handshake empty name</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/40-channel-byte-guard/plan.md" target="_blank" rel="noopener">#40 channel-byte guard</a></li>
+        <li>Plan boards that amended this module: <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>The <a href="../gradle-build/index.html">Gradle build</a> page — the convention plugin, level tasks and publishing this module is built with</li>
+        <li>Earlier plans: #3 public client handshake · #5 prune stale registrations · #8 binary datagram path · #9 receive buffer · #10 connection liveness · #11 handshake refusal and credential · #12 scheduled keepalive · #13 link-quality probe · #15 split into three modules</li>
+      </ul></div>
+  </div>
+</section>
+
+<footer>Drawn from <code>docs/webtools-udp-architecture.md</code>, <code>workspace.dsl</code> and the code at master <code>1e27071</code> (the module's source is unchanged since <code>806ce8e</code>). Code is authoritative on any conflict. Maintained by the presenter agent, refreshed after each landing that changes this module: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
+<!-- Divergences from the system-dashboard template (presenter, 2026-10-22; this page started from the skill's worked example, system/examples/webtools-udp, brought to 1e27071):
+     1. The core tabs are named for what they show: "Datagram path" (the decision path, two variants: server and client) and "Reliable sequence" (the sequence).
+     2. The Threads tab carries an "Outbound send paths" matrix under the inventory; the KPI row names the module's wire facts (datagram tags) in place of "Contracts".
+     3. The protocol core #50 proposes is drawn as a planned (dashed) component; it has no plan yet, so it is labelled proposed.
+     Nothing is removed. All three live in what a page fills in (MODEL, hand-written panels, header); the page's CSS, tab set and
+     renderer are the template's (brought back to it at 1e27071: its older renderer had drifted), so no template-divergence is declared. -->
+</div>
+
+<!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
+     and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
+<script type="text/plain" id="dsl">
+// webtools-udp — C4 model as code (Structurizr DSL).
+// Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
+// As-is at WebTools master 1e27071 (2026-10-22), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin. Code is authoritative on any conflict.
+workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
+
+    !identifiers hierarchical
+
+    model {
+        dev  = person "Game developer" "Builds a game server or client on the library: subclasses MultiConnectionUDPServer, drives MultiConnectionUDPClient."
+        peer = softwareSystem "Peer endpoint" "The other side of a UDP session — another server or client process built on webtools-udp." "External"
+
+        webtools = softwareSystem "WebTools" "Three Kotlin/JVM library modules published to Maven Central under io.github.spartanlaboratories." {
+            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0"
+            browser  = container "webtools-browser"  "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0"
+            gradleBuild    = container "Gradle build" "Builds, tests and publishes every module; the included build-logic build holds the convention plugins the modules apply. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0" "Internal"
+            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.0a · wire protocol 2" {
+
+                // ---- public surface ----
+                server      = component "MultiConnectionUDPServer" "Binds the common port 9998; owns the listener and dispatch threads and three lazily created schedulers; exposes start* / pushToAll* / stop; subclass hooks onClientConnect, admit, onClientDisconnect." "abstract class" "Public"
+                client      = component "MultiConnectionUDPClient" "One socket; handshake(); channel(mode); keepalive and probe conveniences; at most one reliable engine and one link-quality tracker." "class" "Public"
+                connection  = component "UDPConnection" "One named peer as the server sees it: channel(mode), terminate, keepalive and probe control. Owns no socket — delegates to ClientChannel." "class · implements Connection" "Public"
+                channel     = component "UdpChannel" "The delivery-mode-scoped send/bind view returned by channel(mode); DeliveryMode is UNRELIABLE or RELIABLE_ORDERED." "interface · 3 implementations" "Public"
+                wire        = component "Wire formats" "HandshakeWireFormat (UTF-8 text), TransportWireFormat (framed control + unreliable), ReliableWireFormat (0xA0 / 0xA1), DatagramType tag-byte enum." "codecs" "Public"
+                sendreceive = component "UDPSendReceiveServer" "Standalone two-socket primitive outside the connection stack: no handshake, no Connection, no DeliveryMode — and never will have one." "class" "Public,Standalone"
+
+                // ---- internals ----
+                coordinator = component "HandshakeCoordinator" "The server's handshake state machine and tag-byte router; implements ClientChannel; owns Registrations." "internal class" "Internal"
+                registry    = component "Registrations" "Copy-on-write registry of connected clients: one Registration per peer with handlers, liveness stamps and per-peer state." "internal class" "Internal"
+                engine      = component "ReliableChannelEngine" "One reliable plane per connection: send, ack processing, retransmit tick, reorder, close. Parts: RetransmitBuffer, ReorderBuffer, RtoEstimator, SerialSequence." "internal · @Synchronized · lock order engine → buffer" "Internal"
+                scheduler   = component "PeriodicScheduler" "Per-endpoint repeating-task seam: schedule (poll-divided, keepalive) and scheduleTick (exact cadence, probe and retransmit), each on one lazily created daemon executor." "internal class" "Internal"
+                quality     = component "LinkQualityTracker" "The probe's RTT and loss estimator (Rtt maths); snapshot exposed as LinkQuality." "internal class" "Internal"
+                timing      = component "Timing rules" "KeepAlive, Liveness and HandshakeProtocol — pure timing and parsing rules." "internal" "Internal"
+
+                // ---- planned, not built ----
+                core        = component "Protocol core" "Issue #50: a multiplatform protocol core and a datagram-transport seam for a future web client. Proposed, not built." "proposed" "Planned"
+            }
+        }
+
+        // People and systems
+        dev -> webtools.udp "Builds a game server or client on"
+        dev -> webtools.udp.server "Subclasses; implements onClientConnect"
+        dev -> webtools.udp.client "Constructs; handshake(); channel(mode)"
+        dev -> webtools.udp.connection "Calls channel(mode).send / actuate on each peer's Connection"
+        webtools.udp.coordinator -> dev "Delivers payloads to the bound handlers on mcups-dispatch"
+
+        // Ownership inside the server
+        webtools.udp.server -> webtools.udp.coordinator "Owns; every datagram is routed through it"
+        webtools.udp.coordinator -> webtools.udp.registry "Owns"
+        webtools.udp.registry -> webtools.udp.engine "Owns 0..1 per Registration"
+        webtools.udp.registry -> webtools.udp.quality "Owns 0..1 per Registration"
+        webtools.udp.connection -> webtools.udp.coordinator "Delegates to, via ClientChannel"
+        webtools.udp.coordinator -> webtools.udp.engine "Creates on first use; sends and feeds inbound datagrams"
+        webtools.udp.engine -> webtools.udp.coordinator "Returns deliverable payloads, in order"
+
+        // Ownership inside the client
+        webtools.udp.client -> webtools.udp.engine "Owns 0..1"
+        webtools.udp.client -> webtools.udp.quality "Owns 0..1"
+
+        // Shared seams
+        webtools.udp.connection -> webtools.udp.channel "Returns from channel(mode)"
+        webtools.udp.client -> webtools.udp.channel "Returns from channel(mode)"
+        webtools.udp.server -> webtools.udp.scheduler "Owns 3, lazily"
+        webtools.udp.client -> webtools.udp.scheduler "Owns 3, lazily"
+        webtools.udp.scheduler -> webtools.udp.engine "Drives onRetransmitTick every 50 ms"
+        webtools.udp.coordinator -> webtools.udp.wire "Encodes and decodes with"
+        webtools.udp.client -> webtools.udp.wire "Encodes and decodes with"
+        webtools.udp.engine -> webtools.udp.wire "ReliableWireFormat"
+        webtools.udp.coordinator -> webtools.udp.timing "Applies"
+
+        // The wire
+        webtools.udp.server -> peer "UDP datagrams, port 9998"
+        webtools.udp.client -> peer "UDP datagrams"
+        webtools.udp.engine -> peer "0xA0 / 0xA1 frames"
+        peer -> webtools.udp.server "Datagrams arrive on mcups-listener"
+
+        // The build
+        webtools.gradleBuild -> webtools.udp "Configures: webtools.kotlin-jvm-library (Kotlin/JVM, test dependencies, level tasks, publishing)"
+
+        // Planned
+        webtools.udp.core -> webtools.udp.wire "Would absorb (planned)"
+    }
+
+    views {
+        systemContext webtools "Context" "WebTools and who touches it." {
+            include *
+            autoLayout lr
+        }
+
+        container webtools "Containers" "The three published modules and the Gradle build that configures them." {
+            include *
+            autoLayout lr
+        }
+
+        component webtools.udp "Components" "webtools-udp as built at master 1e27071; the planned protocol core is drawn dashed." {
+            include *
+            autoLayout tb
+        }
+
+        dynamic webtools.udp "ReliableSend" "A reliable-ordered send and receive, server side, as built." {
+            dev -> webtools.udp.connection "channel(RELIABLE_ORDERED).send(bytes)"
+            webtools.udp.connection -> webtools.udp.coordinator "send, via ClientChannel"
+            webtools.udp.coordinator -> webtools.udp.engine "reliableEngineFor(reg) — created on first use, arms scheduleTick(50 ms); sendReliable(bytes)"
+            webtools.udp.engine -> peer "0xA0 seq · ack · ackBits · payload — on the caller's thread; success = accepted, not delivered"
+            peer -> webtools.udp.server "0xA0 or 0xA1, received on mcups-listener"
+            webtools.udp.server -> webtools.udp.coordinator "accept · tag switch · findByOrigin · channel-byte check"
+            webtools.udp.coordinator -> webtools.udp.engine "onInboundDatagram: acks first (Karn), then the reorder buffer"
+            webtools.udp.engine -> webtools.udp.coordinator "in-order payloads"
+            webtools.udp.coordinator -> dev "each payload, in order, on mcups-dispatch"
+            webtools.udp.scheduler -> webtools.udp.engine "onRetransmitTick every 50 ms: resend due 0xA0 (≤ 32, RTO doubled up to 5 s) or a standalone 0xA1; idle channel is silent"
+            autoLayout lr
+        }
+
+        styles {
+            element "Person"          { shape person  background #08427b color #ffffff }
+            element "Software System" { background #1168bd color #ffffff }
+            element "External"        { background #999999 color #ffffff }
+            element "Container"       { background #438dd5 color #ffffff }
+            element "Component"       { background #85bbf0 color #000000 }
+            element "Internal"        { background #c6dcf5 color #000000 border solid }
+            element "Standalone"      { background #eeeeee color #000000 border dotted }
+            element "Planned"         { background #ffffff color #666666 border dashed opacity 60 }
+        }
+    }
+}
+</script>
+
+<script>
+"use strict";
+const REPO="https://github.com/SpartanLaboratories/WebTools";
+const SRC=REPO+"/blob/master/webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/";
+const NS="http://www.w3.org/2000/svg";
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","text-anchor":anchor||"start"},p);(Array.isArray(lines)?lines:[lines]).forEach((l,i)=>{const s=mk("tspan",{x,dy:i?(dy||12):0},t);s.textContent=l;});return t;};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
+const ilink=n=>`<a href="${REPO}/issues/${n}" target="_blank" rel="noopener">#${n}</a>`;
+function inspect(html){ $("#insp-body").innerHTML=html; }
+function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker",{id,viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:color||"var(--ink-2)"},m); const mo=mk("marker",{id:id+"-open",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10",fill:"none",stroke:color||"var(--ink-2)","stroke-width":"1.5"},mo); const mon=mk("marker",{id:id+"-on",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--on)"},mon); }
+
+/* =========================================================================
+   MODEL — the as-built behaviour this page draws (threads, flows, sequence) and the
+   hand-placed component map. Structure also lives in the DSL above; `c4` maps map
+   nodes to their DSL element so the two views cross-reference.
+   ========================================================================= */
+const MODEL = {
+  sides:{server:"server endpoint",client:"client endpoint",wire:"shared",consumer:"the consumer's thread",external:"the peer, outside this process"},
+  c4:{srv:"webtools.udp.server",cli:"webtools.udp.client",coord:"webtools.udp.coordinator",regs:"webtools.udp.registry",reg:"webtools.udp.registry",engS:"webtools.udp.engine",engC:"webtools.udp.engine",lqS:"webtools.udp.quality",lqC:"webtools.udp.quality",conn:"webtools.udp.connection",sched:"webtools.udp.scheduler",schedS:"webtools.udp.scheduler",schedC:"webtools.udp.scheduler",codecs:"webtools.udp.wire",rules:"webtools.udp.timing",iface:"webtools.udp.channel",chanimpl:"webtools.udp.channel",sr:"webtools.udp.sendreceive",iam:"webtools.udp.wire",t80:"webtools.udp.wire",t81:"webtools.udp.wire",t82:"webtools.udp.wire",t90:"webtools.udp.wire",tA0:"webtools.udp.wire",tA1:"webtools.udp.wire"},
+  structure: {
+    lanes:[["SERVER ENDPOINT",40,44,"start"],["CLIENT ENDPOINT",580,44,"start"],["WIRE",500,44,"middle"],["SHARED INTERNALS",40,474,"start"]],
+    notes:[{x:596,y:168,lines:["At most one reliable engine and one link-quality","tracker: the client holds a single server session.","No registration table — only the reliable branch","screens origin (#39). The REGISTERED / REFUSED","reply is read inside handshake(), before the","listener starts."]}],
+    nodes:[
+      {id:"srv",side:"server",vis:"pub",container:true,x:40,y:56,w:380,h:384,t:"MultiConnectionUDPServer",s:"abstract · binds the common port 9998 · owns the listener and dispatch threads",
+        d:{role:"Binds the common port; owns the listener and dispatch threads and the three lazily created schedulers; exposes start* / pushToAll* / stop. Subclass hooks: onClientConnect, admit (screen or refuse a handshake, validate an opaque credential), onClientDisconnect; idleTimeoutMillis turns on idle detection.",vis:"public · abstract class",files:["MultiConnectionUDPServer.kt"],threads:["mcups-listener","mcups-dispatch","mcups-liveness","mcups-keepalive","mcups-probe","mcups-retransmit"],issues:[57,56,54,53,49,48]}},
+      {id:"cli",side:"client",vis:"pub",container:true,x:580,y:56,w:380,h:384,t:"MultiConnectionUDPClient",s:"one socket · handshake() · channel(mode) · its own listener and dispatch threads",
+        d:{role:"One socket; handshake(); its own listener and dispatch threads; channel(mode) is the entry point; startKeepAlive / startProbe / linkQuality conveniences; at most one reliable engine and one link-quality tracker.",vis:"public · class",files:["MultiConnectionUDPClient.kt"],threads:["mcupc-listener","mcupc-dispatch","mcupc-keepalive","mcupc-probe","mcupc-retransmit"],issues:[52,39]}},
+      {id:"coord",side:"server",vis:"int",container:true,x:56,y:152,w:348,h:276,t:"HandshakeCoordinator",s:"handshake state machine · tag-byte router · implements ClientChannel",
+        d:{role:"The server's handshake state machine, tag-byte router and ClientChannel implementation. Every inbound datagram passes through it on the listener thread; it owns Registrations.",vis:"internal",files:["HandshakeCoordinator.kt","ClientChannel.kt"],threads:["mcups-listener"],issues:[57,56,53,49]}},
+      {id:"regs",side:"server",vis:"int",container:true,x:72,y:196,w:316,h:216,t:"Registrations",s:"copy-on-write registry of connected clients",d:{role:"Copy-on-write registry of connected clients and their per-peer state.",vis:"internal",files:["Registrations.kt"],threads:["mcups-listener","mcups-liveness"]}},
+      {id:"reg",side:"server",vis:"int",container:true,x:88,y:238,w:284,h:160,t:"Registration  0..N",s:"handlers · liveness stamps · per-peer state",d:{role:"One connected peer's state: its handlers, liveness stamps, and — once needed — its reliable engine and link-quality tracker.",vis:"internal",files:["Registrations.kt"]}},
+      {id:"conn",side:"server",vis:"pub",x:56,y:96,w:150,h:44,t:"UDPConnection",s:"per peer · owns no socket",d:{role:"The production Connection: one named peer as the server sees it. channel(mode), terminate, keepalive and probe control; the deprecated push / actuate* still work. Owns no socket — delegates to ClientChannel.",vis:"public · internal constructor",files:["UDPConnection.kt","Connection.kt"],threads:[]}},
+      {id:"common",side:"server",vis:"int",x:214,y:96,w:100,h:44,t:"CommonChannel",s:"the one socket",d:{role:"Wraps the server's single socket.",vis:"internal",files:["CommonChannel.kt"]}},
+      {id:"schedS",side:"server",vis:"int",x:322,y:96,w:82,h:44,t:"Schedulers ×3",s:"lazy",d:{role:"Three lazily created PeriodicSchedulers: keepalive (poll-divided), probe and retransmit (exact cadence). Each backs one daemon thread.",vis:"internal",files:["PeriodicScheduler.kt"],threads:["mcups-keepalive","mcups-probe","mcups-retransmit"]}},
+      {id:"engS",side:"server",vis:"int",x:98,y:304,w:138,h:60,t:"ReliableChannelEngine",s:"0..1 · @Synchronized",d:{role:"One reliable plane per connection: send, ack processing, retransmit tick, reorder, close. Created on the first send, the first bindReliable, or the first inbound 0xA0/0xA1 on channel 0x00 from a registered origin.",vis:"internal",files:["ReliableChannelEngine.kt"],threads:["mcups-listener","mcups-retransmit"]}},
+      {id:"lqS",side:"server",vis:"int",x:246,y:304,w:116,h:60,t:"LinkQualityTracker",s:"0..1",d:{role:"The probe's estimator for one peer; its snapshot is LinkQuality.",vis:"internal",files:["LinkQualityTracker.kt","LinkQuality.kt"],threads:["mcups-listener","mcups-probe"]}},
+      {id:"schedC",side:"client",vis:"int",x:596,y:96,w:150,h:44,t:"Schedulers ×3",s:"keepalive · probe · retransmit · lazy",d:{role:"Three lazily created PeriodicSchedulers, one daemon thread each.",vis:"internal",files:["PeriodicScheduler.kt"],threads:["mcupc-keepalive","mcupc-probe","mcupc-retransmit"]}},
+      {id:"engC",side:"client",vis:"int",x:596,y:304,w:170,h:60,t:"ReliableChannelEngine",s:"0..1 · for the single server session",d:{role:"Created on the first reliable send, or the first inbound 0xA0/0xA1 from serverEndpoint on channel 0x00 — not on channel(RELIABLE_ORDERED).actuate*.",vis:"internal",files:["ReliableChannelEngine.kt"],threads:["mcupc-listener","mcupc-retransmit"]}},
+      {id:"lqC",side:"client",vis:"int",x:780,y:304,w:164,h:60,t:"LinkQualityTracker",s:"0..1",d:{role:"The probe's estimator for the server session.",vis:"internal",files:["LinkQualityTracker.kt"],threads:["mcupc-listener","mcupc-probe"]}},
+      {id:"iam",side:"wire",vis:"pub",chip:true,x:455,y:60,w:90,h:34,t:"Iam …",s:"text handshake",d:{role:"The plain UTF-8 handshake line the client sends first; the server answers REGISTERED 2 or REFUSED. Byte 0 is below 0x80, which is how the listener tells it from a framed datagram.",vis:"HandshakeWireFormat · public",files:["HandshakeWireFormat.kt","HandshakeProtocol.kt"],issues:[57,56,53,52,49]}},
+      {id:"t80",side:"wire",vis:"pub",chip:true,x:455,y:108,w:90,h:34,t:"0x80",s:"KEEPALIVE",d:{role:"Keepalive. Its only effect on arrival is the liveness stamp in accept(); then it is dropped at TRACE.",vis:"DatagramType · public",files:["DatagramType.kt","KeepAlive.kt"]}},
+      {id:"t81",side:"wire",vis:"pub",chip:true,x:455,y:156,w:90,h:34,t:"0x81",s:"PROBE_PING",d:{role:"Probe ping; answered inline on the listener thread with 0x82. The server answers only a registered origin; the client answers every valid ping.",vis:"DatagramType · public",files:["DatagramType.kt","LinkQualityTracker.kt"],issues:[39]}},
+      {id:"t82",side:"wire",vis:"pub",chip:true,x:455,y:204,w:90,h:34,t:"0x82",s:"PROBE_PONG",d:{role:"Probe pong; completeProbe(seq) on the origin's LinkQualityTracker.",vis:"DatagramType · public",files:["DatagramType.kt"],issues:[39]}},
+      {id:"t90",side:"wire",vis:"pub",chip:true,x:455,y:252,w:90,h:34,t:"0x90",s:"UNRELIABLE",d:{role:"Unreliable data: tag, channel byte, payload. Channel byte must be 0x00 (the channel-byte guard, #40); the stripped payload goes to the dispatch thread.",vis:"TransportWireFormat · public",files:["TransportWireFormat.kt"]}},
+      {id:"tA0",side:"wire",vis:"pub",chip:true,x:455,y:300,w:90,h:34,t:"0xA0",s:"RELIABLE data",d:{role:"Reliable-ordered data: seq, ack, ackBits, payload. Acks are processed first, then the reorder buffer releases in-order payloads.",vis:"ReliableWireFormat · public",files:["ReliableWireFormat.kt","SerialSequence.kt"]}},
+      {id:"tA1",side:"wire",vis:"pub",chip:true,x:455,y:348,w:90,h:34,t:"0xA1",s:"RELIABLE ack",d:{role:"A standalone ack, sent by the retransmit tick when ackPending is set and nothing is due for resend.",vis:"ReliableWireFormat · public",files:["ReliableWireFormat.kt"]}},
+      {id:"codecs",side:"wire",vis:"pub",chip:false,x:455,y:396,w:90,h:48,t:"Wire formats",s:["Handshake · Transport","Reliable · DatagramType"],d:{role:"The three codecs and the tag-byte enum. The bytes themselves are specified in docs/webtools-udp-protocol.md.",vis:"public",files:["HandshakeWireFormat.kt","TransportWireFormat.kt","ReliableWireFormat.kt","DatagramType.kt"]}},
+      {id:"sched",side:"wire",vis:"int",x:40,y:486,w:150,h:50,t:"PeriodicScheduler",s:["schedule · scheduleTick","PeriodicSchedule seam"],d:{role:"The per-endpoint repeating-task seam: schedule (poll-divided, keepalive) and scheduleTick (exact cadence, probe and retransmit), each backed by one lazily created daemon executor.",vis:"internal",files:["PeriodicScheduler.kt"]}},
+      {id:"parts",side:"wire",vis:"int",x:200,y:486,w:300,h:50,t:"Reliable engine parts",s:["RetransmitBuffer · ReorderBuffer · RtoEstimator","SerialSequence · ReliableWireFormat"],d:{role:"The engine's parts: the in-flight window, the receive reorder window, the private RTO estimator, the 0xA0/0xA1 codec, RFC 1982 serial arithmetic.",vis:"internal",files:["ReliableRetransmitBuffer.kt","ReliableReorderBuffer.kt","ReliableRtoEstimator.kt","SerialSequence.kt","ReliableWireFormat.kt"]}},
+      {id:"rules",side:"wire",vis:"int",x:510,y:486,w:170,h:50,t:"Timing & maths",s:["Rtt · KeepAlive · Liveness","HandshakeProtocol"],d:{role:"Pure rules: RTT/RTO maths, keepalive and idle-sweep timing, Iam parsing.",vis:"internal",files:["Rtt.kt","KeepAlive.kt","Liveness.kt","HandshakeProtocol.kt"]}},
+      {id:"chanimpl",side:"wire",vis:"int",x:690,y:486,w:130,h:50,t:"UdpChannel impls",s:["Unreliable · Reliable","Unsupported"],d:{role:"The UdpChannel implementations behind Connection.channel and the client's channel(mode).",vis:"internal",files:["UdpChannel.kt","UDPConnection.kt"]}},
+      {id:"iface",side:"wire",vis:"pub",x:830,y:486,w:130,h:50,t:"Contracts",s:["Connection · UdpChannel"],d:{role:"The consumer-facing interfaces: Connection (one named peer) and UdpChannel (the delivery-mode-scoped send/bind view).",vis:"public · interfaces",files:["Connection.kt","UdpChannel.kt"]}},
+      {id:"vals",side:"wire",vis:"pub",x:40,y:548,w:290,h:50,t:"Value types",s:["DeliveryMode · DatagramType · Admission","DisconnectReason · LinkQuality"],d:{role:"The delivery-mode enum, the tag-byte enum, admit's result, the disconnect reasons and the probe's snapshot value.",vis:"public",files:["DeliveryMode.kt","DatagramType.kt","Admission.kt","DisconnectReason.kt","LinkQuality.kt"]}},
+      {id:"fails",side:"wire",vis:"pub",x:340,y:548,w:280,h:50,t:"Typed failures",s:["HandshakeRefused · IncompatibleProtocol","ReliableSendFailure · WindowFull · MessageTooLarge"],d:{role:"Result.failure payloads — never thrown. ReliableWindowFullException(256) and ReliableMessageTooLargeException are the two ReliableSendFailure cases.",vis:"public",files:["HandshakeRefusedException.kt","IncompatibleProtocolException.kt","ReliableSendFailure.kt","ReliableWindowFullException.kt","ReliableMessageTooLargeException.kt"]}},
+      {id:"sr",side:"wire",vis:"pub",kind:"standalone",x:630,y:548,w:330,h:50,t:"UDPSendReceiveServer",s:["standalone two-socket primitive — no handshake,","no Connection, no DeliveryMode · outside the stack"],d:{role:"A separate sendSocket and listenSocket, no handshake and no registration, so nothing to key a reliable engine or a retransmit schedule to. It deliberately has no DeliveryMode/UdpChannel surface and never will.",vis:"public · standalone",files:["UDPSendReceiveServer.kt"]}}
+    ]
+  },
+  threads:{
+    "mcups-listener":{side:"server",created:"eagerly, at construction",runs:"receive; accept() (the liveness stamp); the tag switch; the handshake including admit / onClientConnect; inline 0x82 replies; reliable ack processing.",sends:["inline 0x82 probe replies","REGISTERED / REFUSED handshake replies"],note:"A throwing onClientConnect kills this thread — open as #54.",issues:[54,57]},
+    "mcups-dispatch":{side:"server",created:"lazily, on the first dispatch — a payload for a bound handler, or an onClientDisconnect",runs:"every message handler, unreliable and reliable, and onClientDisconnect. One single-threaded executor, so head-of-line blocking on the reliable plane also delays unreliable delivery.",sends:[]},
+    "mcups-liveness":{side:"server",created:"at construction, only if idleTimeoutMillis > 0",runs:"the idle sweep; a timed-out connection moves to TIMEOUT (notify-only, still addressable).",sends:[]},
+    "mcups-keepalive":{side:"server",created:"lazily, on the first startKeepAlive",runs:"the keepalive tick, poll-divided (KeepAlive.pollIntervalMillis).",sends:["scheduled 0x80 keepalives"]},
+    "mcups-probe":{side:"server",created:"lazily, on the first startProbe",runs:"the probe tick, exact cadence (scheduleTick).",sends:["scheduled 0x81 probes"],issues:[]},
+    "mcups-retransmit":{side:"server",created:"lazily, on the first reliable engine",runs:"the retransmit tick every 50 ms: resend due 0xA0 (at most 32 per tick, RTO doubled up to 5 s), else a standalone 0xA1 if ackPending, else nothing.",sends:["retransmitted 0xA0","standalone 0xA1"]},
+    "mcupc-listener":{side:"client",created:"lazily, on the first ensureListening() — start, startBytes, or any channel(...).actuate*",runs:"receive; the tag switch; inline 0x82 replies; reliable ack processing. No liveness stamp, no handshake branch.",sends:["inline 0x82 probe replies"],issues:[39]},
+    "mcupc-dispatch":{side:"client",created:"lazily, on the first dispatch — a payload for a bound handler",runs:"handlers.",sends:[]},
+    "mcupc-keepalive":{side:"client",created:"lazily",runs:"the keepalive tick.",sends:["scheduled 0x80 keepalives"]},
+    "mcupc-probe":{side:"client",created:"lazily",runs:"the probe tick.",sends:["scheduled 0x81 probes"]},
+    "mcupc-retransmit":{side:"client",created:"lazily",runs:"the retransmit tick.",sends:["retransmitted 0xA0","standalone 0xA1"]}
+  },
+  flows:[
+    {id:"server",label:"server",kicker:"DATAGRAM PATH",runsOn:"mcups-listener",foot:"runs on mcups-listener · delivery hands off to mcups-dispatch",
+     controls:[
+       {key:"tag",label:"Byte 0",def:"90",options:[["iam","Iam …"],["text","other text"],["80","0x80"],["81","0x81"],["82","0x82"],["90","0x90"],["A0","0xA0"],["A1","0xA1"],["rsv","reserved"]]},
+       {key:"origin",label:"Origin",def:"yes",options:[["yes","registered"],["no","unknown"]]},
+       {key:"ch",label:"Channel byte",def:"yes",options:[["yes","0x00"],["no","≠ 0x00"]]}],
+     names:{iam:"Iam … (text handshake)",text:"other text (byte 0 < 0x80)","80":"0x80 KEEPALIVE","81":"0x81 PROBE_PING","82":"0x82 PROBE_PONG","90":"0x90 UNRELIABLE",A0:"0xA0 RELIABLE data",A1:"0xA1 RELIABLE ack",rsv:"reserved tag"},
+     nodes:{
+      RX:{c:0,r:0,k:"p",t:["receive()","on the common socket"]},
+      STAMP:{c:1,r:0,k:"p",t:["accept(): stamp","liveness if registered"]},
+      TAG:{c:2,r:0,k:"d",t:["byte 0","≥ 0x80?"]},
+      ISIAM:{c:2,r:1,k:"d",t:["first token","exactly Iam?"]},
+      HS:{c:2,r:2,k:"p",t:["handshake","state machine"]},
+      DROPT:{c:3,r:1,k:"t",lvl:"WARN",t:["drop:","sender may be pre-2.0"]},
+      SWITCH:{c:3,r:0,k:"d",t:["DatagramType","ofTagByte"]},
+      KA:{c:4,r:0,k:"t",lvl:"TRACE",t:["drop keepalive"]},
+      PING:{c:4,r:1,k:"p",t:["reply 0x82 inline","registered origin only"]},
+      PONG:{c:4,r:2,k:"p",t:["completeProbe(seq)","on the origin's tracker"]},
+      UNREL:{c:4,r:3,k:"d",t:["origin","registered?"]},
+      CHU:{c:5,r:3,k:"d",t:["channel byte","0x00?"]},
+      DISPU:{c:6,r:3,k:"t",lvl:"DELIVER",t:["stripped payload","→ mcups-dispatch"]},
+      DROPU:{c:4,r:4,k:"t",lvl:"DEBUG",t:["drop"]},
+      DROPCU:{c:5,r:4,k:"t",lvl:"WARN",t:["drop"]},
+      REL:{c:4,r:5,k:"d",t:["origin","registered?"]},
+      CHR:{c:5,r:5,k:"d",t:["channel byte","0x00?"]},
+      ENGINE:{c:6,r:5,k:"p",t:["reliableEngineFor(reg)","created here if none"]},
+      DROPR:{c:4,r:6,k:"t",lvl:"DEBUG",t:["drop · no engine"]},
+      DROPCR:{c:5,r:6,k:"t",lvl:"WARN",t:["drop · no engine"]},
+      ACK:{c:6,r:6,k:"p",t:["onInboundDatagram:","acks first, then reorder"]},
+      DISPR:{c:6,r:7,k:"t",lvl:"DELIVER",t:["in-order payloads","→ mcups-dispatch"]},
+      DROP:{c:4,r:7,k:"t",lvl:"WARN",t:["drop reserved tag"]}},
+     edges:[["RX","STAMP"],["STAMP","TAG"],["TAG","ISIAM","no"],["ISIAM","HS","yes"],["ISIAM","DROPT","no"],["TAG","SWITCH","yes"],["SWITCH","KA","0x80"],["SWITCH","PING","0x81"],["SWITCH","PONG","0x82"],["SWITCH","UNREL","0x90"],["SWITCH","REL","0xA0 · 0xA1"],["SWITCH","DROP","reserved"],["UNREL","DROPU","no"],["UNREL","CHU","yes"],["CHU","DROPCU","no"],["CHU","DISPU","yes"],["REL","DROPR","no"],["REL","CHR","yes"],["CHR","DROPCR","no"],["CHR","ENGINE","yes"],["ENGINE","ACK"],["ACK","DISPR"]],
+     // The decision table: given the control state, the path through the nodes, the outcome, and which controls do not matter for it.
+     rules(s){
+       const p=["RX","STAMP","TAG"], reg=s.origin==="yes", chz=s.ch==="yes", R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
+       if(s.tag==="iam"){ p.push("ISIAM","HS"); return R(reg?"A registered origin repeating Iam is answered with REGISTERED 2 again.":"A new origin: admit → supersede → register → REGISTERED 2, or REFUSED. A malformed line from any origin gets REFUSED malformed.",["ch"]); }
+       if(s.tag==="text"){ p.push("ISIAM","DROPT"); return R("Byte 0 below 0x80 and not an Iam line: WARN 'sender may be pre-2.0', dropped.",["origin","ch"]); }
+       p.push("SWITCH");
+       switch(s.tag){
+         case "80": p.push("KA"); return R("Keepalive: dropped at TRACE. Its only effect was the liveness stamp in accept().",["origin","ch"]);
+         case "81": p.push("PING"); return R(reg?"Registered origin: a 0x82 pong goes back inline, on mcups-listener.":"Unknown origin: not answered — only a registered origin gets a pong.",["ch"]);
+         case "82": p.push("PONG"); return R("completeProbe(seq) on that origin's LinkQualityTracker.",["origin","ch"]);
+         case "90": p.push("UNREL"); if(!reg){ p.push("DROPU"); return R("Unknown origin: dropped at DEBUG.",["ch"]); } p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: dropped at WARN — the channel-byte guard (#40)."); } p.push("DISPU"); return R("The stripped payload is handed to mcups-dispatch, where the bound handler runs.");
+         case "A0": case "A1": p.push("REL"); if(!reg){ p.push("DROPR"); return R("Unknown origin: dropped at DEBUG; no engine is created.",["ch"]); } p.push("CHR"); if(!chz){ p.push("DROPCR"); return R("Non-zero channel byte: dropped at WARN; no engine is created."); } p.push("ENGINE","ACK"); if(s.tag==="A0"){ p.push("DISPR"); return R("reliableEngineFor(reg) creates the engine if this is the first channel-0x00 reliable inbound. Acks first, then the reorder buffer releases in-order payloads to mcups-dispatch."); } return R("A standalone ack: the engine is created if needed, the acks are processed (Karn's rule), nothing is delivered — an ack carries no payload.");
+         default: p.push("DROP"); return R("Reserved tag: dropped at WARN.",["origin","ch"]);
+       }
+     }},
+    {id:"client",label:"client",kicker:"DATAGRAM PATH",runsOn:"mcupc-listener",foot:"runs on mcupc-listener · delivery hands off to mcupc-dispatch",
+     controls:[
+       {key:"tag",label:"Byte 0",def:"90",options:[["iam","Iam …"],["text","other text"],["80","0x80"],["81","0x81"],["82","0x82"],["90","0x90"],["A0","0xA0"],["A1","0xA1"],["rsv","reserved"]]},
+       {key:"origin",label:"Origin",def:"yes",options:[["yes","the server"],["no","a stranger"]]},
+       {key:"ch",label:"Channel byte",def:"yes",options:[["yes","0x00"],["no","≠ 0x00"]]}],
+     names:{iam:"Iam … (text handshake)",text:"other text (byte 0 < 0x80)","80":"0x80 KEEPALIVE","81":"0x81 PROBE_PING","82":"0x82 PROBE_PONG","90":"0x90 UNRELIABLE",A0:"0xA0 RELIABLE data",A1:"0xA1 RELIABLE ack",rsv:"reserved tag"},
+     nodes:{
+      RX:{c:0,r:0,k:"p",t:["receive()","on the client socket"]},
+      TAG:{c:1,r:0,k:"d",t:["byte 0","≥ 0x80?"]},
+      DROPT:{c:1,r:1,k:"t",lvl:"WARN",t:["drop: no handshake","branch in the session"]},
+      SWITCH:{c:2,r:0,k:"d",t:["DatagramType","ofTagByte"]},
+      KA:{c:3,r:0,k:"t",lvl:"TRACE",t:["drop keepalive"]},
+      PING:{c:3,r:1,k:"p",t:["reply 0x82 inline","any origin"]},
+      PONG:{c:3,r:2,k:"p",t:["completeProbe(seq)","any origin"]},
+      CHU:{c:3,r:3,k:"d",t:["channel byte","0x00?"]},
+      DISPU:{c:4,r:3,k:"t",lvl:"DELIVER",t:["stripped payload","→ mcupc-dispatch"]},
+      DROPCU:{c:3,r:4,k:"t",lvl:"WARN",t:["drop · names the","actual origin"]},
+      ORIGIN:{c:3,r:5,k:"d",t:["origin ==","serverEndpoint?"]},
+      CHR:{c:4,r:5,k:"d",t:["channel byte","0x00?"]},
+      ENGINE:{c:5,r:5,k:"p",t:["reliableEngine()","created here if none"]},
+      DROPR:{c:3,r:6,k:"t",lvl:"DEBUG",t:["drop · no engine"]},
+      DROPCR:{c:4,r:6,k:"t",lvl:"WARN",t:["drop · no engine"]},
+      ACK:{c:5,r:6,k:"p",t:["onInboundDatagram:","acks first, then reorder"]},
+      DISPR:{c:5,r:7,k:"t",lvl:"DELIVER",t:["in-order payloads","→ mcupc-dispatch"]},
+      DROP:{c:3,r:7,k:"t",lvl:"DEBUG",t:["drop reserved tag"]}},
+     edges:[["RX","TAG"],["TAG","DROPT","no"],["TAG","SWITCH","yes"],["SWITCH","KA","0x80"],["SWITCH","PING","0x81"],["SWITCH","PONG","0x82"],["SWITCH","CHU","0x90"],["SWITCH","ORIGIN","0xA0 · 0xA1"],["SWITCH","DROP","reserved"],["CHU","DROPCU","no"],["CHU","DISPU","yes"],["ORIGIN","DROPR","no"],["ORIGIN","CHR","yes"],["CHR","DROPCR","no"],["CHR","ENGINE","yes"],["ENGINE","ACK"],["ACK","DISPR"]],
+     rules(s){
+       const p=["RX","TAG"], reg=s.origin==="yes", chz=s.ch==="yes", R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
+       if(s.tag==="iam"||s.tag==="text"){ p.push("DROPT"); return R("A byte-0 < 0x80 datagram during the session is WARN-dropped: the REGISTERED / REFUSED reply was read inside handshake(), before the listener started.",["origin","ch"]); }
+       p.push("SWITCH");
+       switch(s.tag){
+         case "80": p.push("KA"); return R("Keepalive: dropped at TRACE. No origin screening on the client (#39).",["origin","ch"]);
+         case "81": p.push("PING"); return R("Every valid ping is answered inline with 0x82 — whatever its source (#39).",["origin","ch"]);
+         case "82": p.push("PONG"); return R("completeProbe(seq) on the client's tracker — no origin screening (#39).",["origin","ch"]);
+         case "90": p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: WARN naming the datagram's actual origin. The check applies to every 0x90, whatever its source.",["origin"]); } p.push("DISPU"); return R("Handed to mcupc-dispatch — from any source: the 0x90 branch has no origin screening (#39).",["origin"]);
+         case "A0": case "A1": p.push("ORIGIN"); if(!reg){ p.push("DROPR"); return R("Not from serverEndpoint: dropped at DEBUG whatever its channel byte; no engine is created.",["ch"]); } p.push("CHR"); if(!chz){ p.push("DROPCR"); return R("Non-zero channel byte: dropped at WARN; no engine is created."); } p.push("ENGINE","ACK"); if(s.tag==="A0"){ p.push("DISPR"); return R("The engine is created on this first channel-0x00 inbound if none exists — not on actuate*. Acks first, then the reorder buffer releases in-order payloads to mcupc-dispatch."); } return R("A standalone ack from the server: acks are processed; nothing is delivered.");
+         default: p.push("DROP"); return R("Reserved tag: dropped at DEBUG on the client (WARN on the server).",["origin","ch"]);
+       }
+     }}
+  ],
+  sequence:{
+    kicker:"RELIABLE SEQUENCE",
+    lifelines:[{n:"app thread",side:"consumer"},{n:"HandshakeCoordinator",side:"server"},{n:"ReliableChannelEngine",side:"server"},{n:"mcups-listener",side:"server"},{n:"mcups-retransmit",side:"server"},{n:"mcups-dispatch",side:"server"},{n:"peer (UDP)",side:"external"}],
+    phases:[["SEND · app thread",0,4],["RECEIVE · listener → dispatch",5,10],["TICK · every 50 ms",11,12]],
+    steps:[
+      {f:0,t:1,l:"channel(RELIABLE_ORDERED).send(bytes)",n:"The app thread calls send on the connection's reliable channel. Over reliableMaxMessageBytes → failure(ReliableMessageTooLargeException) and nothing is sent."},
+      {f:1,t:2,l:"reliableEngineFor(reg) · arms scheduleTick(50 ms)",n:"The engine is created on first use and the 50 ms retransmit tick is armed on mcups-retransmit."},
+      {f:1,t:2,l:"sendReliable(bytes)",n:"If the in-flight window is full the engine answers WindowFull and the caller gets failure(ReliableWindowFullException(256))."},
+      {f:2,t:6,l:"0xA0 seq · ack · ackBits · payload",n:"The first transmission is sent on the caller's thread, inside send. ackPending := false."},
+      {f:1,t:0,l:"success — accepted for delivery, not a receipt",ret:true,n:"success means the message is in the window and will be retransmitted until acked; it is not a delivery receipt."},
+      {f:6,t:3,l:"0xA0 or 0xA1",n:"A frame from the peer arrives on mcups-listener."},
+      {f:3,t:1,l:"accept · tag switch · findByOrigin · channel check",n:"accept() stamps liveness; the tag switch routes on byte 0; the registration is looked up by origin; a non-zero channel byte is WARN-dropped here, before the engine is touched (#40)."},
+      {f:1,t:2,l:"reliableEngineFor(reg) · onInboundDatagram(bytes)",n:"If this is the first channel-0x00 reliable inbound, the engine is created here. Acks are processed first — Karn's rule: no RTT sample from a retransmitted message — then, for 0xA0, ackPending := true and the frame enters the reorder buffer."},
+      {f:2,t:1,l:"payloads now deliverable, in order",ret:true,n:"The reorder buffer releases whatever is now contiguous."},
+      {f:1,t:5,l:"each payload, in order",n:"Handed to the single dispatch executor, which also carries unreliable delivery — hence head-of-line blocking across both planes."},
+      {f:5,t:5,l:"the bound reliable handler runs here",self:true,n:"Consumer code runs on mcups-dispatch."},
+      {f:4,t:2,l:"onRetransmitTick()",n:"Every 50 ms, on the side's own retransmit thread; the engine lock is held for at most 32 resends."},
+      {f:2,t:6,l:"resend due 0xA0 (≤ 32 per tick) · or a standalone 0xA1 · or nothing",n:"Messages past their RTO are resent (RTO doubled up to 5 s). With nothing due and ackPending set, a standalone 0xA1 goes out. Otherwise nothing — an idle channel is silent. Either send clears ackPending."}
+    ]
+  }
+};
+
+/* =========================================================================
+   C4 — a Structurizr DSL reader for the subset this workspace uses (hierarchical
+   identifiers; person / softwareSystem / container / component with tags; relationships;
+   systemContext / container / component / dynamic views; element styles), and renderers
+   that lay the views out by rank. Structurizr Lite would render the same file.
+   ========================================================================= */
+function parseDsl(src){
+  const M={elements:{},order:[],rels:[],views:[],styles:[]}, stack=[];
+  const TYPE={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+  const tok=l=>{const out=[],re=/"([^"]*)"|(\S+)/g;let m;while((m=re.exec(l)))out.push(m[1]!==undefined?{s:m[1]}:{t:m[2]});return out;};
+  const strs=T=>T.filter(x=>x.s!==undefined).map(x=>x.s);
+  const parentEl=()=>{for(let i=stack.length-1;i>=0;i--) if(stack[i].kind==="element") return stack[i].id; return null;};
+  const inBlock=k=>stack.some(f=>f.kind===k);
+  const splitTags=s=>(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+  src.split(/\r?\n/).forEach(raw=>{
+    let line=raw.trim(); if(!line||line.startsWith("//")) return;
+    if(line==="}"){ stack.pop(); return; }
+    const opens=line.endsWith("{"); if(opens) line=line.slice(0,-1).trim();
+    const T=tok(line); if(!T.length){ if(opens) stack.push({kind:"anon"}); return; }
+    const t0=T[0].t;
+    if(["workspace","model","views","styles"].includes(t0)){ if(opens) stack.push({kind:t0}); return; }
+    if(t0==="!identifiers") return;
+    if(inBlock("styles")){ if(t0==="element"){ const props={}, body=T.slice(2).map(x=>x.t!==undefined?x.t:x.s).filter(x=>x!=="{"&&x!=="}"); for(let i=0;i+1<body.length;i+=2) props[body[i]]=body[i+1]; M.styles.push({tag:T[1].s,props}); } return; }
+    if(inBlock("views")){
+      const cur=stack[stack.length-1];
+      if(cur&&cur.kind==="view"&&cur.view.type==="dynamic"&&T.length>=3&&T[1].t==="->"){ cur.view.steps.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:""}); return; }
+      if(["systemContext","container","component","dynamic"].includes(t0)){ const v={type:t0,scope:T[1].t,key:T[2]?T[2].s:t0,desc:T[3]?T[3].s:"",steps:[]}; M.views.push(v); if(opens) stack.push({kind:"view",view:v}); return; }
+      if(opens) stack.push({kind:"anon"}); return;
+    }
+    if(T.length>=3&&T[1].t==="->"){ M.rels.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:"",tech:T[4]?T[4].s:""}); if(opens) stack.push({kind:"anon"}); return; }
+    if(T.length>=3&&T[1].t==="="&&TYPE[T[2].t]){
+      const type=T[2].t, S=strs(T.slice(3)), parent=parentEl(), id=parent?parent+"."+t0:t0;
+      const el={id,ident:t0,type,name:S[0]||t0,desc:S[1]||"",tech:"",tags:[],parent};
+      if(type==="person"||type==="softwareSystem") el.tags=splitTags(S[2]); else { el.tech=S[2]||""; el.tags=splitTags(S[3]); }
+      el.tags=["Element",TYPE[type],...el.tags];
+      M.elements[id]=el; M.order.push(id);
+      if(opens) stack.push({kind:"element",id}); return;
+    }
+    if(opens) stack.push({kind:"anon"});
+  });
+  return M;
+}
+const C4=parseDsl(document.getElementById("dsl").textContent);
+$("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
+
+const el=id=>C4.elements[id];
+function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
+function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
+function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
+function styleFor(e){ const st={background:"#dddddd",color:"#000000",border:"solid",shape:"box",opacity:"100"}; e.tags.forEach(tag=>C4.styles.forEach(s=>{ if(s.tag===tag) Object.assign(st,s.props); })); return st; }
+const TYPE_LABEL={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+const LEVEL={systemContext:["1","System Context"],container:["2","Containers"],component:["3","Components"],dynamic:["⟲","Dynamic"]};
+const fit=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+function wrap(s,maxChars){ const out=[]; let cur=""; s.split(/\s+/).forEach(w=>{ if((cur+" "+w).trim().length>maxChars){ if(cur) out.push(cur); cur=w; } else cur=(cur+" "+w).trim(); }); if(cur) out.push(cur); return out; }
+function edgePoint(box,tx,ty){ const [x,y,w,h]=box,cx=x+w/2,cy=y+h/2,dx=tx-cx,dy=ty-cy; if(!dx&&!dy) return [cx,cy]; const t=Math.min(Math.abs(w/2/(dx||1e-9)),Math.abs(h/2/(dy||1e-9))); return [cx+dx*t,cy+dy*t]; }
+
+/* Which elements a view shows and how the model's relationships map onto them (Structurizr's "include *" with implied relationships). */
+function resolveView(v){
+  let scoped, map;
+  if(v.type==="systemContext"){ scoped=[v.scope]; map=id=>isWithin(id,v.scope)?v.scope:topOf(id); }
+  else if(v.type==="container"){ scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):topOf(id); }
+  else if(v.type==="component"){ const sys=el(v.scope).parent; scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):(sys&&isWithin(id,sys)?childIn(id,sys):topOf(id)); }
+  else { const ids=[]; v.steps.forEach(s=>{[s.from,s.to].forEach(x=>{ if(!ids.includes(x)) ids.push(x); });}); return {els:ids,scoped:[],rels:v.steps.map((s,i)=>({a:s.from,b:s.to,desc:s.desc,num:i+1})),boundary:null}; }
+  const els=new Set(scoped), rels=[], seen={};
+  C4.rels.forEach(r=>{ const a=map(r.from), b=map(r.to); if(!a||!b||a===b) return; if(!scoped.includes(a)&&!scoped.includes(b)) return; els.add(a); els.add(b); const k=a+">"+b; if(seen[k]){ seen[k].n++; return; } seen[k]={a,b,desc:r.desc,n:1,dashed:el(r.from).tags.includes("Planned")||el(r.to).tags.includes("Planned")}; rels.push(seen[k]); });
+  const s=el(v.scope);
+  return {els:C4.order.filter(id=>els.has(id)),scoped,rels,boundary:v.type==="systemContext"?null:{label:`${s.name} · ${TYPE_LABEL[s.type]}${s.tech?" · "+s.tech:""}`}};
+}
+
+/* Layout: the scoped elements sit inside a boundary frame in bands (public surface / internals / outside the
+   stack), people outside on the left, other systems outside on the right. Internals are ordered by the mean
+   position of the public elements they touch, so most relationships run straight down. Relationships are
+   routed orthogonally through lanes in the gaps between bands, so no line crosses a card. */
+const bandOf=id=>{ const t=el(id).tags; return t.includes("Planned")||t.includes("Standalone")?2:t.includes("Internal")?1:0; };
+const BAND_NAMES={component:["PUBLIC SURFACE","INTERNALS","OUTSIDE THE STACK · PLANNED"],container:["SYSTEMS","INTERNAL","PLANNED"],systemContext:["","",""]};
+function layoutC4(R,vtype){
+  const W=184,H=118,GX=22,GY=20,PAD=18,LANE=12,LABEL=26;
+  const scoped=R.scoped.filter(id=>R.els.includes(id));
+  const left=R.els.filter(id=>!scoped.includes(id)&&el(id).type==="person");
+  const right=R.els.filter(id=>!scoped.includes(id)&&el(id).type!=="person");
+  const raw=[[],[],[]]; scoped.forEach(id=>raw[bandOf(id)].push(id));
+  const idx0={}; raw[0].forEach((id,i)=>idx0[id]=i);
+  const bary=id=>{ const ns=R.rels.filter(r=>r.a===id||r.b===id).map(r=>r.a===id?r.b:r.a).filter(n=>idx0[n]!==undefined).map(n=>idx0[n]); return ns.length?ns.reduce((s,x)=>s+x,0)/ns.length:99; };
+  raw[1].sort((p,q)=>bary(p)-bary(q)||scoped.indexOf(p)-scoped.indexOf(q));
+  const bands=[],names=[]; raw.forEach((b,i)=>{ if(b.length){ bands.push(b); names.push((BAND_NAMES[vtype]||BAND_NAMES.component)[i]); } });
+  const bandIndex={}; bands.forEach((b,i)=>b.forEach(id=>bandIndex[id]=i));
+  const laneCount=new Array(bands.length+1).fill(0);
+  const plans=R.rels.map(r=>{
+    const ia=bandIndex[r.a], ib=bandIndex[r.b], p={r};
+    if(ia===undefined&&ib===undefined){ p.kind="ext"; p.sides=[]; }
+    else if(ia===undefined){ p.kind="fromExt"; p.region=ib; p.sides=[[r.a,"inner"],[r.b,"top"]]; }
+    else if(ib===undefined){ p.kind="toExt"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"inner"]]; }
+    else if(ia===ib){ p.kind="same"; p.below=ia!==0; p.region=ia===0?0:ia+1; const s=p.below?"bottom":"top"; p.sides=[[r.a,s],[r.b,s]]; }
+    else if(ib===ia+1){ p.kind="down"; p.region=ib; p.sides=[[r.a,"bottom"],[r.b,"top"]]; }
+    else if(ib===ia-1){ p.kind="up"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"bottom"]]; }
+    else { p.kind="around"; p.upward=ib<ia; p.region=p.upward?ia:ia+1; p.region2=ib; p.sides=[[r.a,p.upward?"top":"bottom"],[r.b,"top"]]; }
+    if(p.region!==undefined) p.lane=laneCount[p.region]++;
+    if(p.region2!==undefined) p.lane2=laneCount[p.region2]++;
+    return p;
+  });
+  const regionH=laneCount.map(n=>Math.max(36,n*LANE+22));
+  const innerW=Math.max(W,...bands.map(b=>b.length*W+(b.length-1)*GX))+2*GX;
+  const bx0=PAD+(left.length?W+2*GX:0), pos={}, regionY=[], bandBox=[];
+  let y=PAD+(R.boundary?LABEL:0);
+  bands.forEach((b,i)=>{ regionY[i]=y; y+=regionH[i]; const total=b.length*W+(b.length-1)*GX, x0=bx0+(innerW-total)/2; b.forEach((id,k)=>pos[id]=[x0+k*(W+GX),y,W,H]); bandBox[i]=[y,y+H]; y+=H; });
+  regionY[bands.length]=y; y+=regionH[bands.length];
+  const boundary=R.boundary?{x:bx0,y:PAD,w:innerW,h:y-PAD,label:R.boundary.label}:null;
+  const cy0=bands.length?(bandBox[0][0]+bandBox[0][1])/2:y/2;
+  // Clamp the column's start once, not each card: a column taller than the band row would otherwise pin several cards to PAD, one on top of another.
+  const stack=(ids,x)=>{ const tot=ids.length*H+(ids.length-1)*GY, y0=Math.max(PAD,cy0-tot/2); ids.forEach((id,k)=>pos[id]=[x,y0+k*(H+GY),W,H]); };
+  stack(left,PAD); stack(right,bx0+innerW+2*GX);
+  const width=bx0+innerW+(right.length?2*GX+W:0)+PAD;
+  const height=Math.max(y+PAD,...Object.values(pos).map(p=>p[1]+p[3]+PAD));
+  return {pos,width,height,boundary,regionY,bands,names,bandBox,plans,LANE,bx0,innerW,left,right};
+}
+function drawRoutes(svg,L){
+  const slots={}; L.plans.forEach(p=>p.sides.forEach(([id,side])=>{ const k=id+"|"+side; (slots[k]=slots[k]||{n:0,k:0}).n++; }));
+  const take=(id,side)=>{ const s=slots[id+"|"+side]; const off=(s.k-(s.n-1)/2)*16; s.k++; return off; };
+  const P=L.pos, laneY=(rg,l)=>L.regionY[rg]+12+l*L.LANE;
+  const box=id=>{ const [x,y,w,h]=P[id]; return {x,y,w,h,cx:x+w/2,cy:y+h/2,top:y,bottom:y+h,left:x,right:x+w}; };
+  const innerX=id=>L.left.includes(id)?box(id).right:box(id).left;
+  const turnX=(id,lane)=>L.left.includes(id)?L.bx0-10-(lane%4)*6:L.bx0+L.innerW+10+(lane%4)*6;
+  L.plans.forEach(p=>{
+    const r=p.r, A=box(r.a), B=box(r.b); let d, seg;
+    switch(p.kind){
+      case "ext": { const [ax,ay]=edgePoint(P[r.a],B.cx,B.cy),[bx,by]=edgePoint(P[r.b],A.cx,A.cy); d=`M${ax},${ay} L${bx},${by}`; seg=[(ax+bx)/2,(ay+by)/2]; break; }
+      case "same": { const ly=laneY(p.region,p.lane), s=p.below?"bottom":"top", ax=A.cx+take(r.a,s), bx=B.cx+take(r.b,s), ya=p.below?A.bottom:A.top, yb=p.below?B.bottom:B.top; d=`M${ax},${ya} L${ax},${ly} L${bx},${ly} L${bx},${yb}`; seg=[(ax+bx)/2,ly]; break; }
+      case "down": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"bottom"), bx=B.cx+take(r.b,"top"); d=`M${ax},${A.bottom} L${ax},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(ax+bx)/2,ly]; break; }
+      case "up": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), bx=B.cx+take(r.b,"bottom"); d=`M${ax},${A.top} L${ax},${ly} L${bx},${ly} L${bx},${B.bottom}`; seg=[(ax+bx)/2,ly]; break; }
+      case "fromExt": { const ly=laneY(p.region,p.lane), ay=A.cy+take(r.a,"inner"), xi=innerX(r.a), xt=turnX(r.a,p.lane), bx=B.cx+take(r.b,"top"); d=`M${xi},${ay} L${xt},${ay} L${xt},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(xt+bx)/2,ly]; break; }
+      case "toExt": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), by=B.cy+take(r.b,"inner"), xt=turnX(r.b,p.lane), xi=innerX(r.b); d=`M${ax},${A.top} L${ax},${ly} L${xt},${ly} L${xt},${by} L${xi},${by}`; seg=[(ax+xt)/2,ly]; break; }
+      case "around": { const l1=laneY(p.region,p.lane), l2=laneY(p.region2,p.lane2), ya=p.upward?A.top:A.bottom, ax=A.cx+take(r.a,p.upward?"top":"bottom"), bx=B.cx+take(r.b,"top"), xs=L.bx0+L.innerW-10; d=`M${ax},${ya} L${ax},${l1} L${xs},${l1} L${xs},${l2} L${bx},${l2} L${bx},${B.top}`; seg=[(bx+xs)/2,l2]; break; }
+    }
+    const g=mk("g",{class:"c4rel"+(r.dashed?" dashed":""),"data-a":r.a,"data-b":r.b},svg);
+    mk("path",{d,"marker-end":"url(#c4arr)"},g);
+    const label=fit(r.desc.split(/[—;:]/)[0].trim(),30), lw=label.length*5.1+12;
+    mk("rect",{class:"lbg",x:seg[0]-lw/2,y:seg[1]-7,width:lw,height:13,rx:6.5},g);
+    txt(g,seg[0],seg[1]+3,label,"","middle");
+  });
+}
+function drawFrame(svg,L){
+  if(L.boundary){ const b=L.boundary; mk("rect",{class:"c4bound",x:b.x,y:b.y,width:b.w,height:b.h,rx:10},svg); const g=mk("g",{class:"c4boundl"},svg); const tw=b.label.length*6.3+18; mk("rect",{x:b.x+12,y:b.y-10,width:tw,height:20,rx:10},g); txt(g,b.x+21,b.y+4,b.label,""); }
+  if(L.bands.length>1) L.bands.forEach((b,i)=>txt(svg,L.bx0+14,L.bandBox[i][0]-6,L.names[i],"c4band"));
+}
+/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the page's own ink. */
+function glyph(g,type,x,y,color){
+  if(type==="person"){ mk("circle",{cx:x+7,cy:y+4,r:3.2,fill:color},g); mk("path",{d:`M${x+1},${y+14} a6,6 0 0 1 12,0 z`,fill:color},g); }
+  else if(type==="softwareSystem"){ mk("rect",{x:x+1,y:y+1,width:9,height:9,rx:1.5,fill:color,opacity:.55},g); mk("rect",{x:x+4,y:y+4,width:9,height:9,rx:1.5,fill:color},g); }
+  else if(type==="container"){ mk("rect",{x:x+1,y:y+3,width:12,height:10,rx:2,fill:color},g); mk("rect",{x:x+1,y:y+1,width:6,height:3,rx:1,fill:color},g); }
+  else { mk("rect",{x:x+4,y:y+1,width:9,height:12,rx:1.5,fill:color},g); mk("rect",{x:x+1,y:y+3.5,width:6,height:2.5,fill:color},g); mk("rect",{x:x+1,y:y+8,width:6,height:2.5,fill:color},g); }
+}
+function cardEvents(g,id){
+  const go=()=>selectC4(id);
+  g.addEventListener("click",go); g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); go(); } });
+  g.addEventListener("mouseenter",()=>document.querySelectorAll("#svg-c4 .c4rel").forEach(x=>x.classList.toggle("hl",x.dataset.a===id||x.dataset.b===id)));
+  g.addEventListener("mouseleave",()=>document.querySelectorAll("#svg-c4 .c4rel.hl").forEach(x=>x.classList.remove("hl")));
+}
+function drawCard(svg,id,box){
+  const e=el(id), st=styleFor(e), [x,y,w,h]=box, g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
+  const dash=st.border==="dashed"?"6 4":st.border==="dotted"?"2 3":"none";
+  mk("rect",{class:"card",x,y,width:w,height:h,rx:7,"stroke-dasharray":dash},g);
+  mk("path",{class:"hdr",d:`M${x+7},${y} H${x+w-7} a7,7 0 0 1 7,7 V${y+30} H${x} V${y+7} a7,7 0 0 1 7,-7 Z`,fill:st.background},g);
+  glyph(g,e.type,x+10,y+8,st.color);
+  const name=mk("text",{x:x+30,y:y+20,class:"n",fill:st.color},g); name.textContent=fit(e.name,24);
+  txt(g,x+10,y+46,fit(`[${TYPE_LABEL[e.type]}${e.tech?" · "+e.tech:""}]`,38),"m");
+  const room=Math.floor((h-60-16)/12), lines=wrap(e.desc,38).slice(0,Math.max(0,room)); if(lines.length) txt(g,x+10,y+60,lines,"d",null,12);
+  const tags=e.tags.slice(2); if(tags.length) txt(g,x+10,y+h-7,fit(tags.join(" · "),40),"tg");
+  cardEvents(g,id);
+}
+/* The dynamic view is a sequence, so it is drawn as one: the elements as lifelines in order of first appearance, the steps as numbered messages. */
+function renderDynamic(R,svg){
+  const cols=R.els, X=i=>112+i*150, Y0=98, DY=44, H=Y0+R.rels.length*DY+14, W=112+(cols.length-1)*150+112;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  cols.forEach((id,i)=>{ const x=X(i); mk("line",{x1:x,y1:68,x2:x,y2:H-6,class:"c4life"},svg); });
+  R.rels.forEach(r=>{
+    const i=cols.indexOf(r.a), j=cols.indexOf(r.b), y=Y0+(r.num-1)*DY, a=X(i), b=X(j), g=mk("g",{class:"c4rel","data-a":r.a,"data-b":r.b,"data-num":r.num},svg);
+    if(i===j){ mk("path",{d:`M${a},${y-10} L${a+34},${y-10} L${a+34},${y+8} L${a+2},${y+8}`,"marker-end":"url(#c4arr)"},g); txt(g,a+42,y+2,fit(r.desc,40),""); }
+    else { const dir=b>a?1:-1; mk("path",{d:`M${a},${y} L${b-dir*3},${y}`,"marker-end":"url(#c4arr)"},g); const label=fit(r.desc.split(/[—;]/)[0].trim(),44), mx=(a+b)/2, lw=label.length*5.2+12; mk("rect",{class:"lbg",x:mx-lw/2,y:y-18,width:lw,height:14,rx:7},g); txt(g,mx,y-8,label,"","middle"); }
+    const nb=mk("g",{class:"num"},g); mk("circle",{cx:Math.min(a,b)-13,cy:y,r:9},nb); txt(nb,Math.min(a,b)-13,y+3.5,String(r.num),"","middle");
+    g.style.cursor="pointer"; g.addEventListener("click",()=>selectC4Step(r.num));
+  });
+  cols.forEach((id,i)=>{ const e=el(id), st=styleFor(e), x=X(i), g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name},svg);
+    mk("rect",{class:"card",x:x-66,y:14,width:132,height:50,rx:6},g);
+    mk("path",{class:"hdr",d:`M${x-60},14 H${x+60} a6,6 0 0 1 6,6 V40 H${x-66} V20 a6,6 0 0 1 6,-6 Z`,fill:st.background},g);
+    glyph(g,e.type,x-60,20,st.color);
+    const n=mk("text",{x:x-42,y:32,class:"n",fill:st.color},g); n.textContent=fit(e.name,15);
+    txt(g,x,56,fit(`[${TYPE_LABEL[e.type]}]`,22),"m","middle");
+    cardEvents(g,id); });
+  return W;
+}
+
+let c4View=null, c4Sel=null, c4Zoom="fit";
+/* fit: the whole view scaled into the panel; 1:1: natural size, scrolling sideways inside the canvas. */
+function applyZoom(){ const svg=$("#svg-c4"); svg.style.width = c4Zoom==="fit" ? "100%" : (c4View&&c4View.width ? c4View.width+"px" : "100%"); document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.z===c4Zoom))); }
+function renderC4(vi){
+  const v=C4.views[vi], R=resolveView(v), svg=$("#svg-c4"); c4View={v,R}; c4Sel=null; svg.innerHTML="";
+  const d=mk("defs",{},svg); const m=mk("marker",{id:"c4arr",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"8",markerHeight:"8",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--rel)"},m);
+  const s=el(v.scope), [lv,lname]=LEVEL[v.type];
+  $("#c4-head").innerHTML=`<span class="lvl">LEVEL ${lv} · ${lname.toUpperCase()}</span><span class="ttl">${esc(s.name)} — ${esc(v.key)}</span><span class="desc">${esc(v.desc||"")}</span><span class="zoom" role="group" aria-label="Zoom"><button data-z="fit">fit</button><button data-z="1">1:1</button></span>`;
+  document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.addEventListener("click",()=>{ c4Zoom=b.dataset.z; applyZoom(); }));
+  if(v.type==="dynamic") c4View.width=renderDynamic(R,svg);
+  else { const L=layoutC4(R,v.type); c4View.width=L.width; svg.setAttribute("viewBox",`0 0 ${L.width} ${L.height}`); drawFrame(svg,L); drawRoutes(svg,L); R.els.forEach(id=>drawCard(svg,id,L.pos[id])); }
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===String(vi))));
+  $("#dsl-view").hidden=true; $("#c4-canvas").hidden=false; $("#c4-head").hidden=false; $("#c4-key").hidden=false;
+  applyZoom(); inspectC4();
+}
+/* The inspector for what the C4 tab has on screen: the source, else the selected element or dynamic step, else the view itself. */
+function inspectC4(){
+  if(!$("#dsl-view").hidden) return showDsl();
+  const {v,R}=c4View, [lv,lname]=LEVEL[v.type], sel=$("#svg-c4 .c4el.sel"), cur=$("#svg-c4 .c4rel.cur");
+  if(sel) selectC4(sel.dataset.id); else if(cur) selectC4Step(+cur.dataset.num); else if(v.type==="dynamic") c4StepList();
+  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${R.els.length} elements · ${R.rels.length} relationships · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
+}
+function selectC4(id){
+  const e=el(id); c4Sel=id;
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.toggle("sel",g.dataset.id===id); g.classList.remove("dim"); });
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ g.classList.remove("cur"); g.classList.toggle("dim",g.dataset.a!==id&&g.dataset.b!==id); });
+  const out=C4.rels.filter(r=>r.from===id), inn=C4.rels.filter(r=>r.to===id);
+  const mapNode=Object.entries(MODEL.c4).filter(([,c])=>c===id).map(([n])=>n);
+  let html=`<div class="kicker">C4 ELEMENT · ${TYPE_LABEL[e.type].toUpperCase()}</div><div class="name">${esc(e.name)}</div><div class="vis">${esc(e.tech||"")}</div><p>${esc(e.desc)}</p><dl>`;
+  html+=`<dt>Tags</dt><dd>${e.tags.map(t=>`<span class="tchip">${esc(t)}</span>`).join("")}</dd>`;
+  html+=`<dt>Identifier</dt><dd><code>${e.id}</code></dd>`;
+  if(out.length) html+=`<dt>Uses</dt><dd>${out.map(r=>`→ <b>${esc(el(r.to).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(inn.length) html+=`<dt>Used by</dt><dd>${inn.map(r=>`← <b>${esc(el(r.from).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(mapNode.length) html+=`<dt>On the component map</dt><dd><button class="linkbtn" data-node="${mapNode[0]}">${esc(MODEL.structure.nodes.find(n=>n.id===mapNode[0]).t)} → open in Structure</button></dd>`;
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-node]"); if(b) b.addEventListener("click",()=>{ show("t-structure"); selectNode(b.dataset.node); });
+}
+function c4StepList(){
+  const {v}=c4View;
+  inspect(`<div class="kicker">C4 · DYNAMIC VIEW</div><div class="name">${esc(v.key)}</div><div class="vis">${v.steps.length} numbered steps · click one</div><p>${esc(v.desc)}</p><ol class="steps-list" id="c4steps">${v.steps.map((s,i)=>`<li data-step="${i+1}"><b>${i+1}</b><span>${esc(el(s.from).name)} → ${esc(el(s.to).name)}</span></li>`).join("")}</ol>`);
+  document.querySelectorAll("#c4steps li").forEach(li=>li.addEventListener("click",()=>selectC4Step(+li.dataset.step)));
+}
+function selectC4Step(n){
+  const {v}=c4View, s=v.steps[n-1];
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ const on=+g.dataset.num===n; g.classList.toggle("cur",on); g.classList.toggle("dim",!on); });
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.remove("sel"); g.classList.toggle("dim",g.dataset.id!==s.from&&g.dataset.id!==s.to); });
+  if(!document.getElementById("c4steps")) c4StepList();
+  document.querySelectorAll("#c4steps li").forEach(li=>li.classList.toggle("on",+li.dataset.step===n));
+  const old=document.getElementById("c4stepnote"); if(old) old.remove();
+  const p=document.createElement("p"); p.id="c4stepnote"; p.innerHTML=`<b>${n}.</b> ${esc(el(s.from).name)} → ${esc(el(s.to).name)}: ${esc(s.desc)}`; $("#insp-body").appendChild(p);
+}
+function showDsl(){
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
+  $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
+  if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. The presenter edits it when a run changes the structure, re-embeds it here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this page.</p>`);
+}
+(function buildLadderAndKey(){
+  const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
+  C4.views.forEach((v,i)=>{ const b=document.createElement("button"); const isLevel=v.type!=="dynamic"; b.className="rung"+(isLevel?" lvl":" sep")+(isLevel&&levels[levels.length-1]===v?" last":""); b.dataset.v=String(i); b.setAttribute("aria-pressed","false"); const [lv,nm]=LEVEL[v.type]; b.innerHTML=`<span class="lv">${lv}</span><span class="nm">${nm}</span><span class="sc">${esc(v.type==="dynamic"?v.key:el(v.scope).name)}</span>`; b.addEventListener("click",()=>renderC4(i)); host.appendChild(b); });
+  const d=document.createElement("button"); d.className="rung sep"; d.dataset.v="dsl"; d.setAttribute("aria-pressed","false"); d.innerHTML=`<span class="lv">{ }</span><span class="nm">Source</span><span class="sc">workspace.dsl</span>`; d.addEventListener("click",showDsl); host.appendChild(d);
+  // The legend: one swatch per DSL element style (element kinds, External, Internal, Standalone, Planned), then the line encodings.
+  $("#c4-key").innerHTML=C4.styles.filter(s=>s.props.background&&C4.order.some(id=>el(id).tags.includes(s.tag))).map(s=>`<span><i style="background:${esc(s.props.background)};border-style:${esc(s.props.border||"solid")};opacity:${(+s.props.opacity||100)/100}"></i>${esc(s.tag)}</span>`).join("")+`<span><i class="arrow"></i>relationship, labelled with its DSL description</span><span><i class="arrow dashed"></i>to or from a Planned element</span><span><i class="frame"></i>boundary: the view's scope</span>`;
+})();
+function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type==="component"&&isWithin(elementId,v.scope)); renderC4(vi>=0?vi:0); selectC4(elementId); }
+
+/* ---------- Structure ---------- */
+function renderStructure(){
+  const svg=$("#svg-structure"); if(svg.dataset.done) return; svg.dataset.done="1";
+  mk("rect",{x:430,y:48,width:140,height:400,rx:6,class:"band"},svg);
+  MODEL.structure.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
+  MODEL.structure.nodes.forEach(n=>{
+    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind?" "+n.kind:""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
+    mk("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:n.chip?17:5},g);
+    const subs=Array.isArray(n.s)?n.s:[n.s];
+    if(n.chip){ txt(g,n.x+n.w/2,n.y+14,n.t,"t","middle"); txt(g,n.x+n.w/2,n.y+26,subs,"s","middle"); }
+    else if(n.container){ txt(g,n.x+10,n.y+18,n.t,"t"); txt(g,n.x+10,n.y+32,subs,"s"); }
+    else { txt(g,n.x+8,n.y+16,n.t,"t"); txt(g,n.x+8,n.y+29,subs,"s",null,11); }
+    const go=()=>selectNode(n.id);
+    g.addEventListener("click",go);
+    g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+  });
+  MODEL.structure.notes.forEach(nt=>txt(svg,nt.x,nt.y,nt.lines,"note",null,13));
+}
+function selectNode(id){
+  const n=MODEL.structure.nodes.find(x=>x.id===id); if(!n) return;
+  document.querySelectorAll("#svg-structure .node").forEach(g=>g.classList.toggle("sel",g.dataset.id===id));
+  const d=n.d||{}; const sideName=(MODEL.sides||{})[n.side]||n.side||"";
+  let html=`<div class="kicker">${n.chip?"DATAGRAM TAG":"COMPONENT"} · ${sideName.toUpperCase()}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc(d.vis||"")}</div><p>${esc(d.role||"")}</p><dl>`;
+  if(d.files&&d.files.length) html+=`<dt>Source</dt><dd>${d.files.map(flink).join("<br>")}</dd>`;
+  if(d.threads&&d.threads.length) html+=`<dt>Runs on</dt><dd>${d.threads.map(t=>`<span class="tchip ${MODEL.threads[t].side}">${t}</span>`).join("")}</dd>`;
+  if(d.issues&&d.issues.length) html+=`<dt>Open issues</dt><dd>${d.issues.map(ilink).join(" · ")}</dd>`;
+  const c4id=MODEL.c4[id]; if(c4id&&el(c4id)){ const e=el(c4id); html+=`<dt>In the C4 model</dt><dd><button class="linkbtn" data-c4="${c4id}">${esc(e.name)} · ${e.tags.slice(2).map(esc).join(", ")||"component"} → open</button></dd>`; }
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-c4]"); if(b) b.addEventListener("click",()=>openC4(b.dataset.c4));
+}
+
+/* ---------- Threads ---------- */
+function selectThread(id){
+  const t=MODEL.threads[id]; if(!t) return;
+  document.querySelectorAll(".thread").forEach(x=>x.classList.toggle("sel",x.dataset.t===id));
+  let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((MODEL.sides||{})[t.side]||t.side).toUpperCase())}${t.daemon===false?"":" · DAEMON"}</div><div class="name">${id}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
+  if(t.sends.length) html+=`<dt>Puts on the wire</dt><dd>${t.sends.map(esc).join("<br>")}</dd>`;
+  if(t.note) html+=`<dt>Note</dt><dd>${esc(t.note)}</dd>`;
+  if(t.issues&&t.issues.length) html+=`<dt>Open issues</dt><dd>${t.issues.map(ilink).join(" · ")}</dd>`;
+  inspect(html+"</dl>");
+}
+document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
+
+/* ---------- Decision path (MODEL.flows) ----------
+   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the page draws the
+   grid, builds the controls, and lights the path the rules return. Nothing here is specific to one system. */
+const CW=138,CH=70,NW=118,NH=50,X0=12,Y0=12;
+const fx=n=>X0+n.c*CW, fy=n=>Y0+n.r*CH;
+// An end's stripe is status-coloured by its level, and always drawn with the level's name beside it.
+const lvlCol=l=>l==="DELIVER"?"var(--good)":l==="WARN"?"var(--serious)":"var(--muted)";
+const flowState={}; let flowVariant=MODEL.flows[0].id;
+const flowOf=()=>MODEL.flows.find(v=>v.id===flowVariant);
+function flowStateFor(v){ if(!flowState[v.id]){ flowState[v.id]={}; v.controls.forEach(c=>flowState[v.id][c.key]=c.def); } return flowState[v.id]; }
+function seg(label,id,options,current){ return `<label>${esc(label)} <span class="seg" id="${id}">${options.map(([v,l])=>`<button data-v="${esc(v)}" aria-pressed="${String(v===current)}">${esc(l)}</button>`).join("")}</span></label>`; }
+function buildFlowControls(){
+  const v=flowOf(), s=flowStateFor(v), host=$("#flow-ctl");
+  host.innerHTML=(MODEL.flows.length>1?seg("Variant","seg-variant",MODEL.flows.map(f=>[f.id,f.label]),v.id):"")+v.controls.map(c=>seg(c.label,"seg-"+c.key,c.options,s[c.key])).join("");
+  if(MODEL.flows.length>1) document.querySelectorAll("#seg-variant button").forEach(b=>b.addEventListener("click",()=>{ flowVariant=b.dataset.v; renderFlow(); }));
+  v.controls.forEach(c=>document.querySelectorAll("#seg-"+c.key+" button").forEach(b=>b.addEventListener("click",()=>{ s[c.key]=b.dataset.v; document.querySelectorAll("#seg-"+c.key+" button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); highlightFlow(); })));
+}
+function renderFlow(){
+  const F=flowOf(), svg=$("#svg-flow"); svg.innerHTML=""; buildFlowControls();
+  arrowDefs(svg,"farr","var(--line)");
+  let maxC=0,maxR=0; Object.values(F.nodes).forEach(n=>{ maxC=Math.max(maxC,n.c); maxR=Math.max(maxR,n.r); });
+  svg.setAttribute("viewBox",`0 0 ${X0*2+(maxC+1)*CW} ${Y0+(maxR+1)*CH+22}`);
+  F.edges.forEach(([a,b,label])=>{
+    const A=F.nodes[a],B=F.nodes[b]; let d, lx, ly, anchor="start";
+    if(A.r===B.r){ d=`M${fx(A)+NW},${fy(A)+NH/2} L${fx(B)},${fy(B)+NH/2}`; lx=(fx(A)+NW+fx(B))/2; ly=fy(A)+NH/2-5; anchor="middle"; }
+    else if(A.c===B.c){ d=`M${fx(A)+NW/2},${fy(A)+NH} L${fx(B)+NW/2},${fy(B)}`; lx=fx(A)+NW/2+6; ly=(fy(A)+NH+fy(B))/2+3; }
+    else { const tx=fx(A)+NW+10, ty=fy(B)+NH/2; d=`M${fx(A)+NW},${fy(A)+NH/2} L${tx},${fy(A)+NH/2} L${tx},${ty} L${fx(B)},${ty}`; lx=tx+4; ly=ty-5; }
+    mk("path",{d,class:"fedge"+(A.planned||B.planned?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
+    if(label){ const t=txt(svg,lx,ly,label,"flabel",anchor); t.dataset.e=a+">"+b; }
+  });
+  Object.entries(F.nodes).forEach(([id,n])=>{
+    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(n.planned?" planned":""),"data-id":id},svg);
+    if(n.k==="d") mk("polygon",{points:`${x+12},${y} ${x+NW-12},${y} ${x+NW},${y+NH/2} ${x+NW-12},${y+NH} ${x+12},${y+NH} ${x},${y+NH/2}`},g);
+    else mk("rect",{x,y,width:NW,height:NH,rx:n.k==="t"?3:6},g);
+    // The stripe's colour goes in style, not the fill attribute: .fnode.t rect would otherwise repaint it surface-grey.
+    if(n.k==="t"){ mk("rect",{x,y,width:4,height:NH,rx:1,class:"stripe",style:`fill:${lvlCol(n.lvl)}`},g); if(n.lvl) txt(g,x+NW-6,y+10,n.lvl,"lvl","end"); }
+    txt(g,x+NW/2+(n.k==="t"?2:0),y+(n.t.length>1?21:28),n.t,"","middle",12);
+  });
+  if(F.foot) txt(svg,X0,Y0+(maxR+1)*CH+12,F.foot,"flabel");
+  flowKey(F);
+  highlightFlow();
+}
+/* The legend for the flow on screen: its shapes, the outcome levels its ends use (grouped by stripe colour), lit and faded, planned. */
+function flowKey(F){
+  const ends=new Map(); Object.values(F.nodes).filter(n=>n.k==="t").forEach(n=>{ const c=lvlCol(n.lvl), l=ends.get(c)||[]; if(n.lvl&&!l.includes(n.lvl)) l.push(n.lvl); ends.set(c,l); });
+  $("#flow-key").innerHTML=`<span><i class="hex"></i>decision</span><span><i></i>step</span>`+[...ends].map(([c,l])=>`<span><i class="end" style="border-left-color:${c}"></i>ends · ${esc(l.join(" · ")||"outcome")}</span>`).join("")+`<span><i class="ln on"></i>the path these inputs take</span><span><i class="ln off"></i>not taken</span><span><i class="pln"></i>planned, not built</span>`;
+}
+function highlightFlow(){
+  const F=flowOf(), s=flowStateFor(F), res=F.rules(s), set=new Set(res.path), svg=$("#svg-flow"), irr=new Set(res.irrelevant||[]);
+  svg.querySelectorAll(".fnode").forEach(g=>{ const on=set.has(g.dataset.id); g.classList.toggle("on",on); g.classList.toggle("off",!on); });
+  const onEdges=new Set(); for(let i=0;i<res.path.length-1;i++) onEdges.add(res.path[i]+">"+res.path[i+1]);
+  svg.querySelectorAll(".fedge,.flabel").forEach(x=>{ if(!x.dataset.e) return; const on=onEdges.has(x.dataset.e); x.classList.toggle("on",on); x.classList.toggle("off",!on); if(x.classList.contains("fedge")) x.setAttribute("marker-end",on?"url(#farr-on)":"url(#farr)"); });
+  const first=F.controls[0], title=F.names&&F.names[s[first.key]] ? F.names[s[first.key]] : (first.options.find(o=>o[0]===s[first.key])||[,""])[1];
+  const facts=F.controls.slice(1).filter(c=>!irr.has(c.key)).map(c=>`${c.label.toLowerCase()} ${(c.options.find(o=>o[0]===s[c.key])||[,""])[1]}`);
+  $("#outcome").innerHTML=`<code>${esc(title)}</code>${facts.map(f=>" · "+esc(f)).join("")} → ${esc(res.outcome)}`;
+  inspect(`<div class="kicker">${esc(F.kicker||"PATH")} · ${esc(F.label.toUpperCase())}</div><div class="name">${esc(title)}</div><div class="vis">${F.runsOn?"on "+esc(F.runsOn):""}</div><p>${esc(res.outcome)}</p><dl><dt>Path</dt><dd>${res.path.join(" → ")}</dd></dl>`);
+  F.controls.forEach(c=>document.querySelectorAll("#seg-"+c.key+" button").forEach(b=>b.setAttribute("aria-disabled",String(irr.has(c.key)))));
+}
+
+/* ---------- Sequence ---------- */
+const seq={cur:0,timer:null};
+const lane=l=>typeof l==="string"?{n:l}:l;
+function renderSeq(){
+  const svg=$("#svg-seq"); if(svg.dataset.done) return; svg.dataset.done="1";
+  const S=MODEL.sequence, LX=i=>80+i*140, Y0=70, DY=40, H=Y0+S.steps.length*DY+10;
+  svg.setAttribute("viewBox",`0 0 1000 ${H}`);
+  arrowDefs(svg,"sarr2","var(--ink-2)");
+  S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.steps.forEach((s,i)=>{
+    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(s.planned?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
+    if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
+    else { const a=LX(s.f), b=LX(s.t), dir=b>a?1:-1; mk("line",{x1:a,y1:y,x2:b-dir*2,y2:y,"marker-end":s.ret?"url(#sarr2-open)":"url(#sarr2)"},g); const mx=(a+b)/2, w=s.l.length*5.3+10; mk("rect",{class:"lbg",x:mx-w/2,y:y-17,width:w,height:14,rx:2},g); txt(g,mx,y-6,s.l,"","middle"); txt(g,Math.min(a,b)-8,y+3,`${i+1}`,"num","end"); }
+    g.addEventListener("click",()=>gotoStep(i)); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); gotoStep(i); } });
+  });
+  seqKey(S);
+  gotoStep(0);
+}
+/* The legend for the sequence: the lifeline owners it shows (each in its side's hue), then the line encodings and planned. */
+function seqKey(S){
+  const sw={server:"pub srv",client:"pub cli",wire:"pub wir",consumer:"con",external:"ext"}, sides=[...new Set(S.lifelines.map(lane).map(l=>l.side).filter(Boolean))];
+  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span><span><i class="ln dash"></i>return, open head</span>`+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`;
+}
+function gotoStep(i){
+  const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
+  document.querySelectorAll("#svg-seq .msg").forEach(g=>{ const k=+g.dataset.i; g.classList.toggle("cur",k===seq.cur); g.classList.toggle("future",k>seq.cur); });
+  $("#seq-pos").textContent=`step ${seq.cur+1} of ${S.steps.length}`;
+  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${s.planned?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
+}
+$("#seq-prev").addEventListener("click",()=>gotoStep(seq.cur-1));
+$("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
+$("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
+
+/* ---------- Tabs ---------- */
+const tabs=[...document.querySelectorAll(".tab")];
+const DEFAULT_INSPECT={structure:"<p>Click a component or a datagram tag for its role, source files, threads, open issues and its place in the C4 model.</p>",threads:"<p>Click a thread for when it is created, what runs on it and what it puts on the wire.</p>",lifecycles:"<p>The lifecycle facts are on the cards themselves. The connection-state diagram and the engine table come straight from §7 of the architecture document.</p>"};
+function show(id){
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  const name=id.replace("t-","");
+  if(name==="structure") renderStructure();
+  if(name==="c4" && !c4View) renderC4(C4.views.findIndex(v=>v.type==="component"));
+  if(name==="datagrams") renderFlow();
+  if(name==="reliable") renderSeq();
+  if(name!=="reliable" && seq.timer){ clearInterval(seq.timer); seq.timer=null; $("#seq-play").textContent="play"; $("#seq-play").setAttribute("aria-pressed","false"); }
+  // The inspector follows the tab it lands on: its kept selection, else its default text, else a generic hint, never the last
+  // tab's. renderFlow() above has already written the Decision path's.
+  const node=$("#svg-structure .node.sel"), thread=$("#p-threads .thread.sel");
+  if(name==="structure"&&node) selectNode(node.dataset.id); else if(name==="threads"&&thread) selectThread(thread.dataset.t);
+  else if(name==="c4") inspectC4(); else if(name==="reliable") gotoStep(seq.cur);
+  else if(name!=="datagrams") inspect(DEFAULT_INSPECT[name]||"<p>Select an item on this tab to see its details here.</p>");
+  try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
+}
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+let start="t-structure";
+try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
+const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
+show(start);
+</script>
+</body>
+</html>

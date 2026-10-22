@@ -20,12 +20,12 @@
   "asBuilt": null,
   "systems": [
     {
-      "slug": "build-logic",
-      "name": "build-logic",
+      "slug": "gradle-build",
+      "name": "Gradle build",
       "slot": 4,
       "top": "Gradle build",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/gradle-build/index.html"
     },
     {
       "slug": "webtools-http-core",
@@ -101,10 +101,10 @@
     }
   ],
   "wip": {
-    "step": "qa",
-    "since": "2026-10-22",
-    "updated": "2026-10-22T21:35:10Z",
-    "detail": "Unit 1, #61 (`build-logic`), is in qa on `feat/issue-61-build-logic`: pass 2 of at most 3 is under way; pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated. Units 2 to 11 have not started.",
+    "step": "implementation",
+    "since": "2026-10-22T21:58:56Z",
+    "updated": "2026-10-22T23:04:39Z",
+    "detail": "Unit 1, #61 (`build-logic`), landed through PR #74 as 1e27071 with no version moved. Unit 2, #47 (`java-floor`), is up next and has not started; its one blocker, #61, has landed. Units 3 to 11 follow in landing order.",
     "steps": [
       "sizing",
       "interview",
@@ -117,25 +117,9 @@
       "landing",
       "landed"
     ],
-    "current": [
-      "build-logic.built"
-    ],
-    "qa": [
-      {
-        "pass": 1,
-        "verdict": "changes-requested",
-        "findings": {
-          "documentation": 14,
-          "test": 9,
-          "code": 0
-        },
-        "note": "all findings remediated"
-      },
-      {
-        "pass": 2,
-        "verdict": "running"
-      }
-    ],
+    "current": [],
+    "next": "java-floor",
+    "qa": [],
     "qaMax": 3,
     "waitingOn": null,
     "resume": null,
@@ -230,6 +214,18 @@
       "column": "verdict",
       "label": "PR #71 merged: the system dashboards rebuilt to the new conventions",
       "ref": "0e7b0f8"
+    },
+    {
+      "date": "2026-10-22",
+      "column": "built",
+      "label": "Unit 1, #61: qa pass 1 changes requested (14 documentation, 9 test findings), remediated; qa pass 2 passed with six minor fixes",
+      "ref": ""
+    },
+    {
+      "date": "2026-10-22",
+      "column": "built",
+      "label": "Unit 1, #61, landed: PR #74 merged; published output identical, no version moved",
+      "ref": "1e27071"
     }
   ],
   "rows": [
@@ -237,7 +233,7 @@
       "id": "build-logic",
       "group": "Build",
       "name": "Shared build logic",
-      "system": "build-logic",
+      "system": "gradle-build",
       "where": "build-logic/ (included build)",
       "unit": {
         "n": 1,
@@ -247,8 +243,8 @@
         "blockedBy": [],
         "versions": "none: published POMs and metadata identical",
         "branch": "feat/issue-61-build-logic",
-        "folder": "https://github.com/SpartanLaboratories/WebTools/tree/feat/issue-61-build-logic/docs/plans/55-http-client-stack/61-build-logic",
-        "board": null
+        "folder": "61-build-logic/",
+        "board": "61-build-logic/dashboard.html"
       },
       "gap": {
         "kind": "debt",
@@ -294,7 +290,7 @@
         "steps": [],
         "tests": [
           "The three modules publish identical POMs and metadata",
-          "The package filter selects the same 99 test classes the tag filter did"
+          "The package filter selects the same 95 test classes the tag filter did"
         ],
         "leaves": [
           "The Java floor and its guard (unit 2)",
@@ -308,15 +304,45 @@
         "link": "architecture.md#11-decomposition"
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": "In progress as #61 on `feat/issue-61-build-logic`: qa pass 2 of at most 3 is under way. Pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated."
+        "state": "landed",
+        "summary": "Landed through PR #74 as 1e27071 (#61, level 3): the included build with `WebToolsBuild` and its three convention plugins, the three modules on `webtools.kotlin-jvm-library`, the root script cut to `group` and `version`, the level tasks selecting by package. The published output is identical to `834ce4a`, so no version moved.",
+        "changes": [
+          {
+            "what": "The level selection was proven under `--test-dry-run`, without running a module's test body: the same 95 classes as the tags selected on `834ce4a`.",
+            "why": "The testing rule runs only the tests that exercise a change; the change touches neither the modules' code nor their tests, and identical published output shows them unaffected.",
+            "when": "#61 amendment 1 · after qa pass 1",
+            "ref": "c1fa76e"
+          },
+          {
+            "what": "`build-logic` carries its own tests at six levels, one task per level, on a Gradle TestKit harness with one shared TestKit home that unit 4's publication check reuses.",
+            "why": "#61's plan and its amendments: the multiplatform plugin has no module to exercise it until unit 3.",
+            "when": "#61 plan and amendments 1 and 2",
+            "ref": "c1fa76e"
+          }
+        ],
+        "files": [
+          "build-logic/",
+          "settings.gradle.kts",
+          "build.gradle.kts",
+          "webtools-udp/build.gradle.kts",
+          "webtools-scraping/build.gradle.kts",
+          "webtools-browser/build.gradle.kts",
+          "README.md"
+        ],
+        "commits": [
+          "c1fa76e",
+          "db98325",
+          "960cfa4"
+        ],
+        "verified": "qa pass 1 changes requested (14 documentation, 9 test), pass 2 passed with six minor fixes; every build-logic task green from the root.",
+        "link": "61-build-logic/final-implementation.md"
       }
     },
     {
       "id": "java-floor",
       "group": "Build",
       "name": "Java 11 floor (#47)",
-      "system": "build-logic",
+      "system": "gradle-build",
       "where": "build-logic/ · webtools-scraping, webtools-browser build files",
       "unit": {
         "n": 2,
@@ -1209,6 +1235,11 @@
       "note": "ten questions, verification and summary, with the findings files beside it"
     },
     {
+      "label": "#61 board",
+      "path": "61-build-logic/dashboard.html",
+      "note": "unit 1, build-logic: gap, options, verdict and as built"
+    },
+    {
       "label": "#47 research",
       "path": "47-java-23-bytecode/research/README.md",
       "note": "the Java 11 floor, unit 2's evidence"
@@ -1221,6 +1252,13 @@
   ],
   "notes": {
     "paths": "Paths under `webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/` are abbreviated `common/` in the architecture; `jvmMain` likewise `jvm/`. Line references are to the baseline 806ce8e.",
-    "units": "Gap, considered and verdict come from the architecture and are written once. Each unit's own board, in its folder, carries its rows; its as-built cell here fills when it lands, and its row then links its board. Unit 11 is level 1 and gets no folder or board."
+    "units": "Gap, considered and verdict come from the architecture and are written once. Each unit's own board, in its folder, carries its rows; its as-built cell here fills when it lands, and its row then links its board. Unit 11 is level 1 and gets no folder or board.",
+    "systems": "build-logic was a planned part of the Gradle build until #61 landed; it is now part of the built Gradle build (registry slug `gradle-build`, the same colour slot), so this board's systems and its build-logic and java-floor rows name `gradle-build`.",
+    "corrections": [
+      {
+        "what": "Unit 1's verdict said the package filter selects the same 99 test classes the tag filter did. The 99 are test files, of which 4 are `testing/support` helpers holding no test, so the figure is 95 classes (#61's plan §2, measured by its procedure B).",
+        "when": "landing refresh after #61, 2026-10-22"
+      }
+    ]
   }
 }
