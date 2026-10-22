@@ -70,9 +70,25 @@ ports live in `commonMain`, and its OkHttp and Caffeine defaults live in `jvmMai
   - a fixture recorder that runs only when an environment variable is set, never in CI, and
     strips keys before writing.
 
-**A feeds module** (for example `webtools-feeds`) is built on `webtools-http`. It parses RSS and
-Atom behind a port with a default implementation, and fetches feeds with a conditional GET
-(`ETag`, `Last-Modified`).
+**A feeds module** (for example `webtools-feeds`) is built on `webtools-http`.
+- It parses RSS and Atom behind a port with a default implementation.
+- It fetches feeds with a conditional GET (`ETag`, `Last-Modified`).
+- It is a Kotlin Multiplatform module like `webtools-http`:
+  - the parser port and the feed model live in `commonMain`;
+  - the Rome default lives in `jvmMain`;
+  - it publishes `webtools-feeds` and `webtools-feeds-jvm`;
+  - its tests that use the `webtools-http` fakes live in `jvmTest`.
+
+**Common code.** Platform-specific implementations do not live in `commonMain`. Common code
+holds the contracts, and `jvmMain` implements them.
+- A seam that consumers or the test fakes substitute is an interface: the transport, the cache,
+  the budget and the clock, for example.
+- A plain platform value type that nobody substitutes is an `expect`/`actual` declaration, and
+  its JVM `actual` may be a typealias to the platform type.
+- The mechanism is chosen per type, and the reason is recorded.
+- Every multiplatform module's `commonMain` is also compiled for `js` by an unpublished
+  check-only module. A JVM API in `commonMain` is then a compile error, and nothing new is
+  published.
 
 **Stability.**
 - Stable Core: what consumers call or configure.
@@ -83,8 +99,9 @@ Atom behind a port with a default implementation, and fetches feeds with a condi
 
 **Constraints across the repository.**
 
-- **Java 11 for every module.** Every module, the existing three included, targets Java 11, set
-  once in the root build.
+- **Java 11 for every module.** Every module, the existing three included, targets Java 11. The
+  setting is one constant, `WebToolsBuild.JAVA_FLOOR`, in the included `build-logic` build,
+  and every module reads it. The root build file keeps only `group` and `version`.
   - Today every published WebTools artifact is Java 23 bytecode and declares
     `org.gradle.jvm.version: 23` in its Gradle Module Metadata.
   - The README promises "JDK 11 or newer".
@@ -96,8 +113,9 @@ Atom behind a port with a default implementation, and fetches feeds with a condi
   - Every library is an `implementation` dependency, and none appears in a public signature.
   - Nothing from skrapeit, jsoup, unirest, Ktor or Jackson reaches a consumer of the new
     modules.
-  - Policy numbers (windows, margins, wait caps, TTLs, cache size) are constructor parameters
-    with defaults.
+  - Policy numbers (windows, margins, wait caps, TTLs, cache size) are builder properties with
+    defaults. A configurable type is built by a public factory function that takes a builder
+    lambda and calls an `internal` constructor.
 - **Code standards.**
   - `explicitApi()` applies to the new modules.
   - Every public declaration has Level-2 KDoc.
@@ -559,8 +577,7 @@ The repository claims the findings rest on were checked against `master` at `806
   - A target cannot be declared and then left unpublished: the root `.module` keeps a dangling
     `available-at`.
   - An unpublished check-only module that compiles the same `commonMain` directory for `js`
-    works.
-  - See Consideration 1.
+    works, and is how every multiplatform module is checked (settled design 1 below).
 
 ### What the change touches
 
@@ -772,7 +789,8 @@ The repository claims the findings rest on were checked against `master` at `806
 - **Java callers are a non-goal,** because `suspend`, `Result` and `Duration` mangle JVM names.
 - **Defaulted parameters.** Adding a defaulted parameter to a public constructor or function
   breaks binary compatibility for Kotlin callers. `@JvmOverloads` does not repair it, and
-  `@IntroducedAt` needs Kotlin 2.3. See Consideration 3.
+  `@IntroducedAt` needs Kotlin 2.3. Configurable types are therefore built by factory
+  functions with builder lambdas (settled design 3 below).
 - Source: [`api-shape-and-failures.md`](api-shape-and-failures.md).
 
 ### Feeds module
@@ -806,7 +824,11 @@ The repository claims the findings rest on were checked against `master` at `806
     path.
 - **Parsing is a plain function, not `suspend`.** It is CPU-bound, bounded by the byte cap, and
   moved off the caller's thread by the fetcher.
-- **The module's shape** is Consideration 2.
+- **The module is Kotlin Multiplatform** (settled design 2 below).
+  - Its port, model and fetcher signatures stay free of JVM types.
+  - Rome sits in `jvmMain`.
+  - The fetcher, the prolog scan and the hardening suite follow the conventions in
+    [`api-shape-and-failures.md`](api-shape-and-failures.md).
 - Source: [`feed-parsing.md`](feed-parsing.md).
 
 ### Where the findings differ, and which view holds
@@ -842,46 +864,51 @@ The repository claims the findings rest on were checked against `master` at `806
 - **Redirect permanence.** `HttpResponse.redirectChain` records URLs only, so a feed fetcher
   cannot tell a permanent move from a temporary one. Recording each hop's status in the chain
   closes that.
+- **The feed fetcher's path to the network.** The feeds findings have the fetcher call
+  `HttpTransport.execute` directly. The API-shape findings define `UrlFetcher` as the stack's raw
+  path for administrator-supplied URLs.
+  - **The fetcher composes a `UrlFetcher`.** It gets the policy pre-check and a throttle
+    returned as `RateLimited`, so a poller backs off without parsing `Retry-After` itself. It
+    also gets the stack's failure conventions without repeating them.
+  - **Fakes still reach it,** because a `UrlFetcher` wraps any `HttpTransport`.
+  - **An `untrusted(...)` factory** builds and owns the `Untrusted` stack, and is the documented
+    path.
 
-### Considerations
+### Settled design that follows from the findings
 
-1. **How `commonMain` is kept free of JVM-only API.**
-   - (a) No check. The ports sit in `commonMain`, unenforced.
-   - (b) An unpublished check-only module that compiles the same `commonMain` for `js`. No new
-     coordinate is published.
-   - (c) A published `js` target. This adds a `webtools-http-js` artifact, a klib that needs a
-     Kotlin 2.2+ consumer.
-
-   Both (b) and (c) need every `commonMain` dependency to be multiplatform, and a `js` `actual`
-   for the logging seam.
-
-   **Recommendation: (b).** It turns "the ports are common code" into a compile error without
-   publishing an artifact that no consumer needs.
-2. **The feeds module's shape.**
-   - (a) JVM-only, with one coordinate, `webtools-feeds`.
-   - (b) Kotlin Multiplatform, like `webtools-http`. The port and the model go in `commonMain`
-     and Rome in `jvmMain`, giving two coordinates: `webtools-feeds` and `webtools-feeds-jvm`.
-
-   Both build, publish and substitute in a composite (measured).
-
-   **Recommendation: (a).** Every parser candidate is JVM-only and no non-JVM consumer exists.
-   Public signatures free of JVM types keep a later move to (b) open.
-3. **How policy numbers are supplied.**
-   - (a) Factory functions with builder lambdas over `internal` constructors. Policy numbers are
-     builder properties with defaults, so a property can be added in a minor without a binary
-     break.
-   - (b) Flat public constructors with defaulted parameters. Each release that adds one keeps
-     the previous constructor as a hidden overload, and the ABI check is the only guard.
-
-   **Recommendation: (a).** It removes a class of silent binary break, and call sites read the
-   same apart from the lambda.
-4. **Where the single Java 11 setting lives.** The root build's shared configuration moves into
-   the included `build-logic` build.
-   - (a) The one constant lives there, as `WebToolsBuild.JAVA_FLOOR`.
-   - (b) A property in the root `gradle.properties` that the plugins read. How an included build
-     reads it in a consumer's composite is unmeasured.
-
-   **Recommendation: (a),** which was measured in a consumer's nested composite.
+1. **`commonMain` holds contracts, and `jvmMain` holds the platform implementations.**
+   - **Interfaces** carry the seams that consumers or the test fakes substitute: the transport,
+     the cache, the budget, the clock, the signal reader, the store, the observer and the feed
+     parser.
+   - **`expect`/`actual`** carries plain platform value types that nobody substitutes. Their
+     JVM `actual` may be a typealias to the platform type. The choice is made per type and
+     recorded with its reason.
+   - **Enforcement.** Every multiplatform module's `commonMain`, the feeds module's included, is
+     compiled for `js` by an unpublished check-only module. A JVM API in `commonMain` is
+     therefore a compile error, and no new artifact is published.
+   - **What the check needs.** Every `commonMain` dependency must be multiplatform. Every
+     `expect` declaration, including the logging seam, needs a `js` `actual` in the check-only
+     module.
+   - **Why an unpublished module.** A target can be neither declared nor left unpublished in
+     the module itself.
+2. **The feeds module is Kotlin Multiplatform, like `webtools-http`.**
+   - The parser port and the feed model live in `commonMain`, and the Rome default in
+     `jvmMain`.
+   - It publishes `webtools-feeds` and `webtools-feeds-jvm`.
+   - Its tests that use the `webtools-http` fakes live in `jvmTest`, because the fakes are a
+     JVM test-fixtures compilation. A multiplatform module declares them as
+     `"jvmTestImplementation"(testFixtures(project(":webtools-http")))`.
+   - Its `commonMain` gets its own check-only `js` compile.
+3. **Configurable types are built by public factory functions** that take builder lambdas and
+   call `internal` constructors. Policy numbers are builder properties with defaults, so a new
+   one can be added in a feature release without a binary break.
+   - The configurable types are `TransportSettings`, the policies, `CachePolicy`, `Endpoint`,
+     `HttpRequest`, `HttpResponse`, `RateSignals`, `RateWindow`, and the configuration of every
+     supplied default and facade.
+   - A type whose every constructor parameter is required and is its meaning keeps a public
+     constructor: `Lane`, `CacheKey`, `Lookup.Found` and the failure leaves.
+4. **The Java 11 floor is one constant, `WebToolsBuild.JAVA_FLOOR`, in the included `build-logic`
+   build.** Every module reads it, and the root build file keeps only `group` and `version`.
 
 ### Known gaps
 

@@ -6,7 +6,8 @@ client stack; its research is in [`../../research/`](../../research/README.md)).
 
 ## The work
 
-Every WebTools module targets Java 11, and the setting lives once in the root build.
+Every WebTools module targets Java 11. The setting is one constant, `WebToolsBuild.JAVA_FLOOR`,
+in the included `build-logic` build, and every module reads it.
 
 - **Bytecode and metadata.** Each published artifact's class files are Java 11 bytecode (major
   version 55) or lower. Its Gradle Module Metadata declares `org.gradle.jvm.version: 11`.
