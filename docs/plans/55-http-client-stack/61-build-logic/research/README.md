@@ -378,8 +378,15 @@ These were checked against `feat/issue-61-build-logic`:
   - A `jvm-test-suite` is not used, because a suite cannot share the `test` source directory
     (harness F11, F12).
 - **Test dependencies.** JUnit Jupiter through its BOM, plus `junit-platform-launcher` at
-  runtime: Gradle 9 requires an explicit launcher for JUnit 5 in a plain `test` source set.
-  Reading `module.json` also needs a JSON parser on the test classpath (harness F1, F6).
+  runtime: Gradle 9 requires an explicit launcher for JUnit 5 in a plain `test` source set
+  (harness F1).
+- **No JSON dependency.** `module.json` is read with `groovy.json.JsonSlurper`. The `gradleApi()`
+  dependency that `java-gradle-plugin` puts on the test classpath carries Gradle's bundled Groovy
+  modules, and `groovy-json` is one of them:
+  [`DependencyClassPathProvider.GROOVY_MODULES`](https://github.com/gradle/gradle/blob/v9.7.1/subprojects/core/src/main/java/org/gradle/api/internal/DependencyClassPathProvider.java)
+  lists it, and
+  [`DependencyClassPathNotationConverter.gradleApiFileCollection`](https://github.com/gradle/gradle/blob/v9.7.1/platforms/software/dependency-management/src/main/java/org/gradle/api/internal/notations/DependencyClassPathNotationConverter.java)
+  adds those jars to `gradleApi()`. The 9.7.1 distribution ships `groovy-json-4.0.32.jar`.
 - **TestKit home and Windows.**
   - The nested builds' Gradle user home is TestKit's default,
     `build-logic/build/tmp/integrationTest/.gradle-test-kit`. It is shared by every test and
@@ -413,6 +420,11 @@ That check's own plan settles three things this unit does not need:
 - **The `mavenPublishing {}` accessor.** Whether the accessor exists in a script that receives
   vanniktech only through another precompiled plugin is unmeasured. Listing vanniktech in the
   multiplatform plugin's own `plugins {}` block removes the question.
+- **The JSON parser.** The harness findings suggest adding kotlinx-serialization-json to read
+  `module.json`. Groovy's `JsonSlurper` is already on the test classpath through `gradleApi()`, so
+  no dependency is added.
+- **Heap and timeout.** The harness findings sketch `-Xmx1g` for the nested daemon and 20 minutes
+  for the task timeout, both as placeholders. The first runs set the real values.
 
 ### Known gaps
 
