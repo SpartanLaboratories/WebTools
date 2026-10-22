@@ -1,0 +1,1966 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="dashboard" content="plan-board">
+<title>Plan board</title>
+<style>
+/* Plan board template (dashboards skill, plan set: plan/RULES.md; shared rules: GUIDANCE.md). One issue's planning and
+   development record as a timeline: every row is a part of the change (on a tracking board, a unit), and its four cells are
+   the phases it passed through. 1 GAP what was missing at the baseline; 2 CONSIDERED every option weighed, with its verdict;
+   3 VERDICT the decision and its defence; 4 AS BUILT what exists and every change from the verdict. Columns 1-3 are written
+   once; column 4 records every difference. The WIP strip under the header shows where the run is right now.
+   The page renders at load from plan.json, embedded verbatim below (plan/scripts/embed.js). Never hand-edit a page.
+   Tokens, header, chips, KPIs, tabs, stage, inspector, legends (.key on every tab and on the strip), Context and footer are
+   the system templates'. Colour plan (GUIDANCE.md §1): --sys-1..6 are the systems' registry slots, identical to the system
+   pages'; --good / --warning / --serious / --critical are status, always beside a glyph and a word; --accent is the glow on
+   the work in progress and nothing else. Dashed = planned or pending, and nothing else. */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --accent:#6d47e0;
+  --on:#0e1420; --focus:#2a78d6; --link:#2a78d6;
+  --sys-1:#2a78d6;--sys-2:#eb6834;--sys-3:#1baf7a;--sys-4:#eda100;--sys-5:#e87ba4;--sys-6:#008300;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--accent:#a58bff;--on:#eef1f6;--focus:#3987e5;--link:#6aa6f0;--sys-1:#3987e5;--sys-2:#d95926;--sys-3:#199e70;--sys-4:#c98500;--sys-5:#d55181;--sys-6:#008300;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--accent:#a58bff;--on:#eef1f6;--focus:#3987e5;--link:#6aa6f0;--sys-1:#3987e5;--sys-2:#d95926;--sys-3:#199e70;--sys-4:#c98500;--sys-5:#d55181;--sys-6:#008300;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
+.crumbs a{text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono);overflow-wrap:anywhere}
+.function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
+.chip b{color:var(--ink);font-weight:600}
+.chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+.chip.model{border-style:dashed}
+.chip.status{border-left:3px solid var(--line)}
+.chip.status.planned{border-style:dashed}
+.chip.status.built{border-left-color:var(--good)}
+.chip.status.abandoned{border-left-color:var(--critical)}
+.chip[data-sys]{border-left:4px solid var(--c)}
+
+/* the WIP strip: where the run is right now */
+.wip{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:10px 14px 10px;margin:12px 0 0}
+.wip.landed{border-left-color:var(--good)}
+.wip.halted{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
+.wip.escalated{border-left-color:var(--serious)}
+.wip.cancelled{border-left-color:var(--critical)}
+.wip-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-size:13px;color:var(--ink-2)}
+.wip-head .state{font-weight:700;color:var(--ink);font-size:14px}
+.wip-head .state i{font-style:normal;margin-right:5px}
+.wip-head .upd{font:11px var(--mono);color:var(--muted);margin-left:auto}
+.wip-detail{margin:6px 0 4px;font-size:13px;color:var(--ink);max-width:110ch}
+.wip-wait{margin:6px 0 4px;font-size:13px;color:var(--ink);font-weight:600}
+.wip-sub{font:700 10.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:8px 0 2px}
+.steps{list-style:none;margin:4px 0 2px;padding:0;display:flex;flex-wrap:wrap;gap:6px 0;align-items:center}
+.steps li{display:inline-flex;align-items:center;font:11.5px var(--mono);color:var(--ink-2);white-space:nowrap}
+.steps li+li::before{content:"";display:inline-block;width:16px;border-top:2px solid var(--ink-2);margin:0 4px}
+.steps li.todo+li::before,.steps li.cur+li.todo::before{border-top-style:dashed;border-top-color:var(--muted)}
+.steps .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;flex:none;background:var(--ink-2);border:2px solid var(--ink-2)}
+.steps li.todo{color:var(--muted)}
+.steps li.todo .dot{background:none;border:2px dashed var(--muted)}
+.steps li.cur{color:var(--ink);font-weight:700}
+.steps li.cur .dot{background:var(--accent);border-color:var(--accent)}
+.chain{list-style:none;margin:4px 0 2px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chain li a,.chain li span.u{display:inline-flex;align-items:center;gap:5px;font:11.5px var(--mono);padding:3px 7px;border:1px solid var(--line);border-left:4px solid var(--c,var(--muted));border-radius:4px;background:var(--surface);text-decoration:none;color:var(--ink-2)}
+.chain li.pending a,.chain li.pending span.u{border-style:dashed;border-left-style:solid}
+.chain li.done a{color:var(--ink)}
+.wip-facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 0;font-size:12.5px;color:var(--ink-2)}
+.wip-facts>span{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.wip-facts .l{font:700 10.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.wip-facts a{text-decoration:none;border-bottom:1px solid var(--line)}
+.wip .key{margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
+
+/* the glow: the one thing being worked on (GUIDANCE.md §1). Steady outline when motion is reduced; static while halted. */
+@keyframes glow{0%,100%{box-shadow:0 0 0 1.5px var(--accent),0 0 0 0 transparent}50%{box-shadow:0 0 0 1.5px var(--accent),0 0 14px 4px color-mix(in srgb,var(--accent) 50%,transparent)}}
+@keyframes glowsoft{0%,100%{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}50%{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 70%,transparent),0 0 9px 2px color-mix(in srgb,var(--accent) 25%,transparent)}}
+.glow{animation:glow 2s ease-in-out infinite}
+.glow-soft{animation:glowsoft 2s ease-in-out infinite}
+.steps li.cur.glow,.steps li.cur.held{animation:none;box-shadow:none}
+.steps li.cur.glow .dot{animation:glow 2s ease-in-out infinite}
+.held{outline:2px solid var(--accent);outline-offset:1px}
+@media (prefers-reduced-motion:reduce){.glow,.glow-soft,.steps li.cur.glow .dot{animation:none!important}.glow{outline:2px solid var(--accent);outline-offset:1px}.glow-soft{outline:1px solid var(--accent)}}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:13px;font-weight:400;color:var(--ink-2)}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
+.kpi .seg-bar i{display:block;height:100%;background:var(--ink-2)}
+.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--line)}
+
+/* tabs + stage */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink)}
+.tab.model::after{content:" JSON";font:10px var(--mono);color:var(--muted);vertical-align:super}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static;max-height:none}}
+.stage>div{min-width:0}
+.view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.view h2{font-size:15px;margin:0 0 4px}
+.view h2 small{font:11px var(--mono);color:var(--muted);font-weight:400}
+.lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;max-height:calc(100vh - 24px);overflow:auto}
+.inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.inspector .name{font-weight:700;font-size:15px;word-break:break-word}
+.inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.inspector p{margin:0 0 8px;color:var(--ink-2);font-size:13px}
+.inspector p.lead{color:var(--ink)}
+.inspector dl{margin:0;font-size:12.5px}
+.inspector dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-top:8px}
+.inspector dd{margin:2px 0 0;color:var(--ink-2)}
+.inspector dd ul,.inspector dd ol{margin:0;padding-left:16px}
+.inspector dd li{margin:2px 0}
+.inspector a{text-decoration:none;border-bottom:1px solid var(--line)}
+.inspector a:hover{border-bottom-color:var(--ink)}
+.steps-list{margin:4px 0 0;padding:0;list-style:none;font-size:12.5px}
+.steps-list li{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--hair);color:var(--ink-2)}
+.steps-list li b{font-family:var(--mono);color:var(--ink);font-size:11.5px;white-space:nowrap}
+.steps-list .files{display:block;font:11px var(--mono);color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.steps-list .check{display:block;font-size:12px;margin-top:2px}
+.steps-list .check::before{content:"check: ";color:var(--muted)}
+a.more{font:11px var(--mono);color:var(--link);text-decoration:none;white-space:nowrap}
+a.more:hover{text-decoration:underline}
+
+/* Legends: every tab, panel and the strip carry one .key listing exactly the encodings drawn there (GUIDANCE.md §2). */
+.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.key i.sbar{border-color:var(--line);border-left:4px solid var(--c)}
+.key i.pln{border-style:dashed;background:none;border-color:var(--muted)}
+.key i.node{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink-2)}
+.key i.node.hollow{background:none;border:2px dashed var(--muted)}
+.key i.node.acc{background:var(--accent)}
+.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}
+.key i.ln.dash{border-top-style:dashed;border-top-color:var(--muted)}
+.key i.gl{border-color:var(--accent);box-shadow:0 0 6px 2px color-mix(in srgb,var(--accent) 45%,transparent)}
+.key i.hold{border:2px solid var(--accent)}
+.key i.wait{border-color:var(--warning);background:color-mix(in srgb,var(--warning) 25%,var(--surface))}
+.key .vp,.key .badge{align-self:center}
+
+/* status pills: the colour is the left bar and a tint; the glyph and the word carry the meaning (never colour alone) */
+.vp{--sc:var(--muted);display:inline-flex;align-items:center;gap:5px;font:600 10.5px/1.2 var(--mono);padding:2px 6px;border-radius:3px;border:1px solid var(--line);border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 14%,var(--surface));color:var(--ink);white-space:nowrap;letter-spacing:.02em}
+.vp i,.key .vp i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none}
+.vp.good{--sc:var(--good)}.vp.warning{--sc:var(--warning)}.vp.serious{--sc:var(--serious)}.vp.critical{--sc:var(--critical)}
+.vp.neutral{--sc:var(--muted);background:var(--surface)}
+.vp.dashed{border-style:dashed;border-left-style:dashed;color:var(--ink-2)}
+.badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}
+.badge[data-sys]{border-left:3px solid var(--c)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c,var(--muted));flex:none;vertical-align:-1px;margin-right:5px}
+
+/* the board: a label column and four phase columns; each row's cells joined by a connector, a node on each cell */
+.board{display:grid;grid-template-columns:minmax(150px,190px) repeat(4,minmax(0,1fr));column-gap:14px;align-items:stretch}
+.colhead{position:sticky;top:0;z-index:2;background:var(--surface);padding:6px 4px 8px;border-bottom:2px solid var(--line);box-shadow:-7px 0 0 var(--surface),7px 0 0 var(--surface)}
+.colhead.glow{border-radius:4px}
+.nw{white-space:nowrap}
+.colhead .ph{font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.colhead .q{font-size:12px;color:var(--ink-2);margin-top:2px}
+.colhead .dt{font:11px var(--mono);color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.colhead .dt a{text-decoration:none;border-bottom:1px solid var(--line)}
+.grouphead{grid-column:1/-1;margin:14px 0 0;font:700 11px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.grouphead small{font:400 11px var(--mono);text-transform:none;letter-spacing:0}
+.rowlab{padding:10px 8px 10px 10px;border-left:4px solid var(--c,var(--muted));margin:8px 0;min-width:0}
+.rowlab .nm{font-weight:700;font-size:13px;overflow-wrap:anywhere}
+.rowlab .wh{font:11px var(--mono);color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.rowlab .sy{font-size:11px;color:var(--ink-2);margin-top:3px}
+.rowlab .un{font:11px var(--mono);color:var(--ink-2);margin-top:4px;display:flex;flex-wrap:wrap;gap:3px 8px}
+.rowlab .un a{text-decoration:none;border-bottom:1px solid var(--line)}
+.cell{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px 8px;margin:8px 0;min-width:0;font-size:12.5px}
+.cell[role="button"]{cursor:pointer}
+.cell[role="button"]:hover{border-color:var(--ink-2)}
+.cell.sel{outline:2px solid var(--on);outline-offset:1px}
+.cell .kick{font:700 10px var(--mono);letter-spacing:.1em;color:var(--muted);margin-bottom:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cell .kick .kind{color:var(--ink-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;letter-spacing:.04em;font-weight:600}
+.cell .sum{color:var(--ink);line-height:1.4;overflow-wrap:anywhere}
+.cell .meta{font:11px var(--mono);color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:2px 8px}
+.cell::before{content:"";position:absolute;left:-15px;top:50%;width:14px;border-top:2px solid var(--ink-2)}
+.cell::after{content:"";position:absolute;left:-6px;top:calc(50% - 5px);width:10px;height:10px;border-radius:50%;background:var(--ink-2)}
+.cell.gap::before{display:none}
+.cell.built{border-left:3px solid var(--sc,var(--line))}
+.cell.built.good{--sc:var(--good)}.cell.built.warning{--sc:var(--warning)}.cell.built.serious{--sc:var(--serious)}.cell.built.critical{--sc:var(--critical)}
+.cell.pending,.cell.deferred{border-style:dashed}
+.cell.pending::before{border-top-style:dashed;border-top-color:var(--muted)}
+.cell.pending::after,.cell.deferred::after{background:var(--surface);border:2px dashed var(--muted)}
+.cell.leave .kick .kind{border-style:dashed}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.opts li{min-width:0}
+.opt{--sc:var(--muted);appearance:none;border:1px solid transparent;border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 10%,transparent);color:var(--ink);font:inherit;font-size:12px;line-height:1.35;text-align:left;padding:3px 6px;border-radius:3px;cursor:pointer;display:grid;grid-template-columns:14px minmax(0,1fr);gap:5px;align-items:start;width:100%;min-width:0;max-width:100%}
+.opt.good{--sc:var(--good)}.opt.warning{--sc:var(--warning)}.opt.critical{--sc:var(--critical)}
+.opt.dashed{border-left-style:dashed}
+.opt>i{font-style:normal;font-weight:700;font-size:11.5px;line-height:1.45}
+.opt>span{min-width:0;overflow-wrap:anywhere}
+.opt .vw{font:600 9.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-right:5px}
+.opt.critical>span>span:last-child{color:var(--ink-2)}
+.opt:hover{border-color:var(--line)}
+.opt.sel{outline:2px solid var(--on)}
+@media (max-width:900px){
+  .board{display:block}
+  .colhead{display:none}
+  .grouphead{margin-top:18px}
+  .rowlab{margin:14px 0 4px;padding:6px 10px}
+  .cell{margin:6px 0}
+  .cell::before,.cell::after{display:none}
+}
+
+/* controls, tables, cards */
+.ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
+.ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:hover:not([aria-pressed="true"]){background:var(--surface-2)}
+.scroll{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:7px 6px;border-top:1px solid var(--hair);vertical-align:top}
+.tbl td{overflow-wrap:anywhere}
+.tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-top:0}
+.tbl tr[data-sys]>:first-child{border-left:4px solid var(--c)}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover{background:var(--surface-2)}
+.tbl .sub{font-size:12px;color:var(--ink-2);margin-top:2px}
+.tbl.dec{min-width:720px}
+.tbl.dec td:first-child{color:var(--ink-2);font-size:12px}
+.bcards{display:grid;gap:10px}
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px 10px 14px;border-left:4px solid var(--c,var(--muted));min-width:0;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.bcard.st-pending,.bcard.st-deferred{border-style:dashed;border-left-style:solid}
+.bcard .bh{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:4px}
+.bcard .bh .nm{font-weight:700;color:var(--ink);font-size:13px}
+.bcard .bh .wh{font:11px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.bcard p{margin:4px 0 6px}
+.bcard .changes{margin:0;padding-left:18px}
+.bcard .changes li{margin:4px 0}
+.bcard .changes b{color:var(--ink);font-weight:600}
+.bcard .changes small{display:block;font:11px var(--mono);color:var(--muted);margin-top:1px}
+.bcard .meta{font:11px var(--mono);color:var(--muted);margin-top:6px;overflow-wrap:anywhere}
+.bcard .meta a{text-decoration:none;border-bottom:1px solid var(--line)}
+pre.src{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow:auto;color:var(--ink);max-height:70vh}
+pre.src .k{color:var(--link);font-weight:600} pre.src .s{color:var(--ink-2)}
+
+/* chain (tracking boards): the units as a dependency graph in landing order */
+.chainsvg{display:block;max-width:none}
+.chainsvg .edge{fill:none;stroke:var(--ink-2);stroke-width:1.4}
+.chainsvg .edge.todo{stroke:var(--muted);stroke-dasharray:5 4}
+.chainsvg .unit{cursor:pointer}
+.chainsvg .unit rect.box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.chainsvg .unit.pending rect.box{stroke:var(--muted);stroke-dasharray:6 4}
+.chainsvg .unit rect.bar{fill:var(--c,var(--muted))}
+.chainsvg .unit rect.st{fill:var(--sc,var(--muted))}
+.chainsvg .unit.good{--sc:var(--good)}.chainsvg .unit.warning{--sc:var(--warning)}.chainsvg .unit.serious{--sc:var(--serious)}.chainsvg .unit.critical{--sc:var(--critical)}
+.chainsvg .unit text{fill:var(--ink);font:11px var(--mono)}
+.chainsvg .unit text.t{font:700 11.5px var(--sans)}
+.chainsvg .unit text.s{fill:var(--ink-2);font-size:10px}
+.chainsvg .unit.glow rect.box{stroke:var(--accent);stroke-width:2}
+.chainsvg .unit.glow{animation:none;box-shadow:none}
+.chainsvg .unit.glow rect.box{animation:svgglow 2s ease-in-out infinite}
+@keyframes svgglow{0%,100%{stroke-width:1.5;filter:none}50%{stroke-width:3;filter:drop-shadow(0 0 5px var(--accent))}}
+@media (prefers-reduced-motion:reduce){.chainsvg .unit.glow rect.box{animation:none}}
+.chainsvg .unit.sel rect.box{stroke:var(--on);stroke-width:2.5}
+.chainsvg .arrow{fill:var(--ink-2)}
+
+/* context */
+.context{margin-top:24px}
+.context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h3{font-size:13px;margin:0 0 8px}
+.card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.card .lede{margin:0}
+.trail{list-style:none;margin:0;padding:0;font-size:12.5px}
+.trail li{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.trail .d{font:11px var(--mono);color:var(--muted);white-space:nowrap;padding-top:2px}
+.trail .ph{font:700 9.5px var(--mono);letter-spacing:.1em;color:var(--muted);margin-right:6px}
+.trail .t{color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.trail .t b{color:var(--ink);font-weight:600}
+.trail .t a{text-decoration:none;border-bottom:1px solid var(--line)}
+.issues{list-style:none;margin:0;padding:0;font-size:12.5px}
+.issues li{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.issues li>a,.issues li>b{font-family:var(--mono);text-decoration:none;color:var(--ink-2);font-weight:400}
+.issues li>a:hover{color:var(--ink)}
+.issues span{color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
+.issues span a{text-decoration:none;border-bottom:1px solid var(--line)}
+.docs{margin:0;padding:0;list-style:none;font-size:12.5px}
+.docs li{padding:4px 0;border-top:1px solid var(--hair);color:var(--ink-2);overflow-wrap:anywhere}
+.docs a{text-decoration:none;border-bottom:1px solid var(--line);color:var(--ink)}
+.docs a:hover{border-bottom-color:var(--ink)}
+.notes p{margin:0 0 6px;font-size:12.5px;color:var(--ink-2)}
+.notes ul{margin:0 0 6px;padding-left:18px;font-size:12.5px;color:var(--ink-2)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+footer code{color:var(--ink-2)}
+footer a{text-decoration:none;border-bottom:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="crumbs" id="crumbs"></div>
+  <h1 id="h1"></h1>
+  <p class="function" id="function"></p>
+  <div class="chips" id="chips"></div>
+</header>
+
+<!-- presenter: the WIP strip is rendered from plan.json "wip" (plan/RULES.md §3); the strip carries its own legend. -->
+<section class="wip" id="wip" aria-label="Work in progress"></section>
+
+<div class="kpis" id="kpis"></div>
+
+<!-- presenter: three views of the same rows plus the source; a tracking board adds Chain. Every tab carries a legend. -->
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t-timeline" aria-controls="p-timeline" aria-selected="true">Timeline</button>
+  <button class="tab" role="tab" id="t-decisions" aria-controls="p-decisions" aria-selected="false">Decisions</button>
+  <button class="tab" role="tab" id="t-built" aria-controls="p-built" aria-selected="false">As built</button>
+  <button class="tab" role="tab" id="t-chain" aria-controls="p-chain" aria-selected="false">Chain</button>
+  <button class="tab model" role="tab" id="t-source" aria-controls="p-source" aria-selected="false">Source</button>
+</div>
+
+<div class="stage">
+<div>
+  <section class="view" role="tabpanel" id="p-timeline" aria-labelledby="t-timeline">
+    <h2>Timeline: gap, considered, verdict, as built</h2>
+    <p class="lede" id="timeline-lede"></p>
+    <div class="board" id="board"></div>
+    <div class="key" id="timeline-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-decisions" aria-labelledby="t-decisions" hidden>
+    <h2>Decision log</h2>
+    <p class="lede">Every option from every row, with its verdict and the reason. Declined options stay on record: they are what a later plan must argue against before reopening a question. An option deferred at plan time shows how column 4 settled it.</p>
+    <div class="ctl" id="dec-ctl"></div>
+    <div class="scroll"><table class="tbl dec" id="dec-table"></table></div>
+    <div class="key" id="decisions-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-built" aria-labelledby="t-built" hidden>
+    <h2>As built: what exists, and every change from the verdict</h2>
+    <p class="lede">One card per row. Its state says how the built thing relates to the verdict; each change names what moved, why, and in which stage or review it was decided. The verdict column is never edited to match: this register is where the difference lives.</p>
+    <div class="ctl" id="built-ctl"></div>
+    <div class="bcards" id="built-list"></div>
+    <div class="key" id="built-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-chain" aria-labelledby="t-chain" hidden>
+    <h2>Chain: the units in landing order</h2>
+    <p class="lede">Each unit is a sub-issue, planned and built at its own level on its own board. An arrow runs from a unit to the units it blocks; columns are the earliest a unit can start. Click a unit for its row.</p>
+    <div class="scroll" id="chain-frame"></div>
+    <div class="key" id="chain-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-source" aria-labelledby="t-source" hidden>
+    <h2>plan.json <small>the committed file, embedded verbatim</small></h2>
+    <p class="lede">The page is built from this file at load. The presenter writes it at each event of the issue's run; <code>plan/scripts/embed.js</code> copies it in here and <code>plan/scripts/check.js</code> verifies the copy and the rules.</p>
+    <pre class="src" id="source-view" tabindex="0"></pre>
+    <div class="key" id="source-key"></div>
+  </section>
+</div>
+
+<aside class="inspector" id="inspector" aria-live="polite">
+  <h2>Inspector</h2>
+  <div id="insp-body"><p>Select a cell, an option or a card to see its detail here.</p></div>
+</aside>
+</div>
+
+<section class="context">
+  <h2>Context</h2>
+  <div class="cards" id="context"></div>
+</section>
+
+<footer id="footer"></footer>
+<!-- Lineage: the plan set's own template (plan/RULES.md), built on the system templates' tokens, header, chips, KPIs, tab/stage/
+     inspector layout, legends, Context and footer. It has no Systems, Structure, C4, Threads, Lifecycles or Guarantees content,
+     because its subject is one change, not a running system; the system pages carry those. A page that diverges from this
+     template records the divergence here (GUIDANCE.md §7). -->
+</div>
+
+<!-- A verbatim copy of plan.json (plan/scripts/embed.js). Do not edit here: edit plan.json and re-embed. -->
+<script type="application/json" id="plan">
+{
+  "schema": "plan-board/1",
+  "repo": "SpartanLaboratories/WebTools",
+  "issue": 55,
+  "slug": "55-http-client-stack",
+  "folder": "docs/plans/55-http-client-stack",
+  "kind": "tracking",
+  "level": 4,
+  "title": "HTTP client stack",
+  "issueTitle": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+  "function": "BotTools needs a suspend HTTP stack: a transport, an outbound-URL guard, a response cache, a call budget and test fakes. This tracking issue designs it as a new Kotlin Multiplatform module `webtools-http`, a feeds module `webtools-feeds` on top of it, the shared `build-logic` with the Java 11 floor that folds in #47, and their documentation, and builds it as eleven units, each a sub-issue planned and built at its own level on its own board.",
+  "status": "building",
+  "parent": null,
+  "branch": "feat/issue-55-http-client-stack",
+  "baseline": {
+    "ref": "master",
+    "sha": "806ce8e",
+    "date": "2026-10-20"
+  },
+  "asBuilt": null,
+  "systems": [
+    {
+      "slug": "build-logic",
+      "name": "build-logic",
+      "slot": 4,
+      "top": "Gradle build",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-core",
+      "name": "webtools-http common core",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-test-fixtures",
+      "name": "published test fixtures",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-url-policy",
+      "name": "outbound-URL policy",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-transport",
+      "name": "OkHttp transport",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-cache",
+      "name": "response cache",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-budget",
+      "name": "call budget",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-facades",
+      "name": "call facades",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-feeds",
+      "name": "webtools-feeds",
+      "slot": 6,
+      "top": "webtools-feeds",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools",
+      "name": "WebTools",
+      "slot": 0,
+      "top": "WebTools",
+      "status": "built",
+      "page": "docs/dashboards/index.html"
+    }
+  ],
+  "wip": {
+    "step": "qa",
+    "since": "2026-10-22",
+    "updated": "2026-10-22T21:35:10Z",
+    "detail": "Unit 1, #61 (`build-logic`), is in qa on `feat/issue-61-build-logic`: pass 2 of at most 3 is under way; pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated. Units 2 to 11 have not started.",
+    "steps": [
+      "sizing",
+      "interview",
+      "research",
+      "plan",
+      "branch",
+      "implementation",
+      "qa",
+      "remediation",
+      "landing",
+      "landed"
+    ],
+    "current": [
+      "build-logic.built"
+    ],
+    "qa": [
+      {
+        "pass": 1,
+        "verdict": "changes-requested",
+        "findings": {
+          "documentation": 14,
+          "test": 9,
+          "code": 0
+        },
+        "note": "all findings remediated"
+      },
+      {
+        "pass": 2,
+        "verdict": "running"
+      }
+    ],
+    "qaMax": 3,
+    "waitingOn": null,
+    "resume": null,
+    "blockers": {
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 9,
+          "repo": "SpartanLaboratories/KotlinBottools"
+        },
+        {
+          "issue": 16,
+          "repo": "SpartanLaboratories/KotlinBottools"
+        }
+      ]
+    },
+    "landing": null
+  },
+  "milestones": [
+    {
+      "column": "gap",
+      "label": "Research verified",
+      "date": "2026-10-21",
+      "ref": "research/README.md",
+      "note": "ten questions and findings files; 231 outside-world claims re-opened at source, 227 hold, none fails"
+    },
+    {
+      "column": "considered",
+      "label": "Architecture",
+      "date": "2026-10-21",
+      "ref": "architecture.md",
+      "note": "§10 alternatives, §11 decomposition into eleven units, §14 considerations: none open"
+    },
+    {
+      "column": "verdict",
+      "label": "Plan merged, sub-issues filed",
+      "date": "2026-10-21",
+      "ref": "PR #60",
+      "note": "the plan-only docs PR merged as 834ce4a; #61 and #62 to #70 filed and #47 re-parented, with blocked-by links in landing order"
+    }
+  ],
+  "trail": [
+    {
+      "date": "2026-10-20",
+      "column": "gap",
+      "label": "Issue #55 opened",
+      "ref": "#55"
+    },
+    {
+      "date": "2026-10-20",
+      "column": "gap",
+      "label": "Research questions for the HTTP client stack",
+      "ref": "9357e00"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "gap",
+      "label": "Research verification results and summary",
+      "ref": "3b4a746"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "considered",
+      "label": "The design the research settled, stated in the research summary",
+      "ref": "96c30d6"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "considered",
+      "label": "Architecture and impact",
+      "ref": "b022d3a"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "verdict",
+      "label": "PR #60 merged: architecture, research and the system dashboards' planned systems",
+      "ref": "834ce4a"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "verdict",
+      "label": "Sub-issues filed: #61, #62 to #70; #47 re-parented as unit 2"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "built",
+      "label": "Unit 1, #61: research questions, findings, verification and summary on `feat/issue-61-build-logic`",
+      "ref": "c80881b"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "verdict",
+      "label": "PR #71 merged: the system dashboards rebuilt to the new conventions",
+      "ref": "0e7b0f8"
+    }
+  ],
+  "rows": [
+    {
+      "id": "build-logic",
+      "group": "Build",
+      "name": "Shared build logic",
+      "system": "build-logic",
+      "where": "build-logic/ (included build)",
+      "unit": {
+        "n": 1,
+        "slug": "build-logic",
+        "issue": 61,
+        "level": 3,
+        "blockedBy": [],
+        "versions": "none: published POMs and metadata identical",
+        "branch": "feat/issue-61-build-logic",
+        "folder": "https://github.com/SpartanLaboratories/WebTools/tree/feat/issue-61-build-logic/docs/plans/55-http-client-stack/61-build-logic",
+        "board": null
+      },
+      "gap": {
+        "kind": "debt",
+        "summary": "Every module is configured by the root build's `subprojects {}` block: both plugins, `api(slf4j-api)`, the seven level tasks selecting by JUnit tag over `sourceSets[\"test\"]`, and the publishing skeleton. A multiplatform module cannot join without branching that block, which Gradle documents as improper cross-project configuration.",
+        "evidence": [
+          "build.gradle.kts:17-92 — the `subprojects {}` block",
+          "build.gradle.kts:44-62 — the level tasks; the tag filter at :60",
+          "webtools-udp/build.gradle.kts:103-117 — the port lock calls `tasks.named` at module evaluation"
+        ],
+        "source": "architecture.md §2, §6.1",
+        "link": "architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "included-build",
+          "name": "An included `build-logic` build with three convention plugins and `WebToolsBuild`",
+          "verdict": "accepted",
+          "why": "One place decides every module's compile target, test layout and publishing shape; plugins are applied by id, typed, and a change does not invalidate the whole configuration.",
+          "source": "architecture.md §6.1",
+          "link": "architecture.md#61-shared-build-logic--build-logic"
+        },
+        {
+          "id": "subprojects-withid",
+          "name": "Root `subprojects {}` with `plugins.withId` branches",
+          "verdict": "declined",
+          "why": "Cross-project configuration is what Gradle documents as improper, and the KMP extension needs string-typed `extensions.configure`.",
+          "wins": "If an included build were unwanted: it is the smallest diff.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "buildsrc",
+          "name": "`buildSrc`",
+          "verdict": "declined",
+          "why": "Works (measured), but invalidates the whole configuration on every change.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Create the included build with `WebToolsBuild` (the level list and `registerLevelTasks`) and the plugins `webtools.published-library`, `webtools.kotlin-jvm-library` and `webtools.kotlin-multiplatform-library`; cut the root build to `group` and `version`; put the three modules on the JVM plugin with their own `api(slf4j-api)`; keep the UDP port lock verbatim; select the level tasks by package.",
+        "defense": "Level 3: the build is one system and the change is additive build behaviour with no library API change. Measured: the three modules publish identical output.",
+        "steps": [],
+        "tests": [
+          "The three modules publish identical POMs and metadata",
+          "The package filter selects the same 99 test classes the tag filter did"
+        ],
+        "leaves": [
+          "The Java floor and its guard (unit 2)",
+          "Any KMP module and the common-check plugin (unit 3)",
+          "The fixtures-publication check (unit 4)"
+        ],
+        "risks": [
+          "Kotlin 2.2.0 on Gradle 9.7.1 is outside Kotlin's documented range; `build-logic` pins the version once, so the move is one line"
+        ],
+        "source": "architecture.md §11 unit 1",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": "In progress as #61 on `feat/issue-61-build-logic`: qa pass 2 of at most 3 is under way. Pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated."
+      }
+    },
+    {
+      "id": "java-floor",
+      "group": "Build",
+      "name": "Java 11 floor (#47)",
+      "system": "build-logic",
+      "where": "build-logic/ · webtools-scraping, webtools-browser build files",
+      "unit": {
+        "n": 2,
+        "slug": "java-floor",
+        "issue": 47,
+        "level": 2,
+        "blockedBy": [
+          61
+        ],
+        "versions": "webtools-scraping and webtools-browser 1.0.0 → 1.0.0a; webtools-udp rides in the unreleased 2.0.0a",
+        "branch": null,
+        "folder": "47-java-23-bytecode/",
+        "board": null
+      },
+      "gap": {
+        "kind": "bug",
+        "summary": "Every published artifact is Java 23 bytecode declaring `org.gradle.jvm.version: 23`, while the README promises JDK 11 or newer. No build file sets `jvmToolchain`, `jvmTarget` or `-Xjdk-release`.",
+        "evidence": [
+          "README.md:26 — \"JDK 11 or newer\"",
+          "build.gradle.kts — no `jvmTarget`, `-Xjdk-release` or toolchain",
+          "47-java-23-bytecode/research/java-11-floor.md F1-F5 — `jvmTarget` alone compiles JDK 21 calls; with `-Xjdk-release=11` they are rejected"
+        ],
+        "source": "architecture.md §2; java-11-floor.md",
+        "link": "47-java-23-bytecode/research/java-11-floor.md"
+      },
+      "options": [
+        {
+          "id": "floor-constant",
+          "name": "`WebToolsBuild.JAVA_FLOOR = 11` wiring `jvmTarget`, `-Xjdk-release` and the KMP attribute, with a `verifyJavaFloor` guard in `check`",
+          "verdict": "accepted",
+          "why": "The API limit on the build JDK without the foojay bump; the guard fails the build rather than let a Java 23 class or a wrong attribute reach a publication.",
+          "source": "architecture.md §6.1",
+          "link": "architecture.md#61-shared-build-logic--build-logic"
+        },
+        {
+          "id": "toolchain",
+          "name": "`jvmToolchain(11)` as the floor",
+          "verdict": "declined",
+          "why": "The same API limit at the cost of the foojay bump and a JDK 11 on every consumer's composite machine, and it still writes no KMP attribute.",
+          "wins": "If the level tests had to run on a JDK 11 inside this work.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Add `JAVA_FLOOR = 11` and wire `jvmTarget`, `-Xjdk-release` and the Java compatibility settings (JVM plugin) and the `TargetJvmVersion` attribute (KMP plugin) from it; add `verifyJavaFloor` into `check`; set `1.0.0a` on `webtools-scraping` and `webtools-browser` and extend `webtools-udp`'s `2.0.0a` note; add the build-JDK note to the README.",
+        "defense": "Level 2: a bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
+        "steps": [],
+        "tests": [
+          "`verifyJavaFloor`: no class above major 55, `org.gradle.jvm.version` 11 on every API and runtime variant"
+        ],
+        "leaves": [
+          "A JDK 11 test launcher (follow-up)",
+          "The foojay bump (#58)"
+        ],
+        "risks": [
+          "`1.0.0a` orders below `1.0.0`: a consumer graph that also asks for `1.0.0` keeps the defect unless it pins with `strictly`; the README and the release note say so"
+        ],
+        "source": "architecture.md §11 unit 2",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "http-core",
+      "group": "webtools-http",
+      "name": "webtools-http common core",
+      "system": "webtools-http-core",
+      "where": "webtools-http/src/commonMain, jvmMain · webtools-http-commoncheck/",
+      "unit": {
+        "n": 3,
+        "slug": "http-core",
+        "issue": 62,
+        "level": 3,
+        "blockedBy": [
+          61,
+          47
+        ],
+        "versions": "webtools-http 1.0.0 (new, unreleased)",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No HTTP stack exists. `Connector` is the only HTTP client: a blocking, stateful line reader over `URLConnection` that sets the JVM-wide `http.agent` on every connect and calls `Unirest.setTimeouts(0, 0)` in its `init`. Nothing offers a suspend request, a typed failure model or a transport port.",
+        "evidence": [
+          "webtools-scraping/.../Connector.kt:85, :218, :229 — `URLConnection`",
+          "Connector.kt:150 — JVM-wide `http.agent`",
+          "Connector.kt:65 — `Unirest.setTimeouts(0, 0)`"
+        ],
+        "source": "architecture.md §2; research/codebase-blast-radius.md",
+        "link": "architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "open-failures-builders",
+          "name": "Open failure hierarchy in `kotlin.Result`, builders over `internal` constructors, one opt-in marker through `@SubclassOptInRequired`",
+          "verdict": "accepted",
+          "why": "Adding a failure leaf or a builder property never breaks a consumer's compiled code, and the supplied defaults are usable without opting in.",
+          "source": "architecture.md §6.2, §9",
+          "link": "architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "sealed-failures",
+          "name": "A sealed failure root, or enums for library-produced reasons",
+          "verdict": "declined",
+          "why": "Each added leaf or entry is a compile error in a consumer's exhaustive `when` and a runtime `NoWhenBranchMatchedException` in a compiled one.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "flat-constructors",
+          "name": "Flat constructors with defaulted parameters plus hidden deprecated overloads",
+          "verdict": "declined",
+          "why": "A permanent overload per addition kept correct by hand; `@IntroducedAt` is Kotlin 2.3+.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "kotlin-time",
+          "name": "`kotlin.time.Clock`/`Instant` or kotlinx-datetime in signatures",
+          "verdict": "declined",
+          "why": "An error-level opt-in on every 2.2.x consumer, and the budget needs no calendar arithmetic.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "fun-interface",
+          "name": "`fun interface` for `WallClock`",
+          "verdict": "declined",
+          "why": "A `fun interface` cannot carry the subclass gate; one rule for every seam.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "scheduling-type",
+          "name": "An opaque `Scheduling` type in place of `CoroutineDispatcher`, keeping coroutines `implementation`",
+          "verdict": "declined",
+          "why": "A consumer could no longer pass its own dispatcher, and the coroutines runtime is part of what a suspend API is.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "kotlin-logging",
+          "name": "kotlin-logging in `commonMain`",
+          "verdict": "declined",
+          "why": "A startup line and a runtime dependency on every consumer, with no gain on one published target; an `internal expect fun` seam is the smallest thing that logs.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "js-target",
+          "name": "A published `js` target instead of check-only modules",
+          "verdict": "declined",
+          "why": "A coordinate and a klib nothing consumes, Node and Yarn downloads for tests, and a published surface the requirements do not name.",
+          "wins": "The day a non-JVM consumer exists.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "kgp-abi",
+          "name": "KGP's built-in `abiValidation` instead of BCV",
+          "verdict": "declined",
+          "why": "Experimental on 2.2.0 and its DSL changed by 2.4.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Create `webtools-http` (KMP plugin, `explicitApi()`, the ABI dump) and `webtools-http-commoncheck` with the `webtools.kotlin-common-check` plugin; deliver the marker, the failure model, the request and response types, `HttpTransport`, `WallClock`, the logging seam and the internal `flatMap`; add the README artifact row and install line.",
+        "defense": "Level 3: one new module's additive API. Its plan starts with the compile proof of the marker, a gated interface, a default naming it and a consumer without opt-in.",
+        "steps": [],
+        "tests": [
+          "Level 4a in `commonTest`: parsing, validation, query encoding",
+          "`jvmTest`: the `Url`-vs-`HttpUrl` differential"
+        ],
+        "leaves": [
+          "Every default implementation and policy (units 4-9)"
+        ],
+        "risks": [
+          "The public surface has not been compiled; the opt-in behaviour comes from compiler test data and one JVM-only measurement"
+        ],
+        "source": "architecture.md §11 unit 3",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "test-support",
+      "group": "webtools-http",
+      "name": "Published test fixtures",
+      "system": "webtools-http-test-fixtures",
+      "where": "webtools-http/src/jvmTestFixtures",
+      "unit": {
+        "n": 4,
+        "slug": "test-support",
+        "issue": 63,
+        "level": 3,
+        "blockedBy": [
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "A consumer has no fake transport, no single time source shared by cache, budget and `delay`, and no recorder. Kotlin has no first-class test-fixtures feature for a multiplatform module (KT-63142, KT-69482 open).",
+        "evidence": [
+          "research/kmp-test-fixtures.md F4-F7 — a JVM-only `testFixtures` compilation through the experimental `adhocSoftwareComponent` resolves from a file repository and through `includeBuild`"
+        ],
+        "source": "research/README.md § Test support and time",
+        "link": "research/README.md#test-support-and-time"
+      },
+      "options": [
+        {
+          "id": "recipe-b",
+          "name": "A hand-built `testFixtures` compilation published as a variant (recipe B)",
+          "verdict": "accepted",
+          "why": "One coordinate and one version, with the fixtures' dependencies reaching only the consumer's test classpath.",
+          "source": "architecture.md §6.7",
+          "link": "architecture.md#67-published-test-support"
+        },
+        {
+          "id": "recipe-a",
+          "name": "The `java-test-fixtures` plugin beside the KMP plugin (recipe A)",
+          "verdict": "declined",
+          "why": "Identical consumer contract, but it re-implements an internal Gradle variant mapping and carries a KGP-2.2.0-only workaround.",
+          "wins": "If recipe B stops working on a later KGP: A is the fallback.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "testing-artifact",
+          "name": "A separate `webtools-http-testing` artifact",
+          "verdict": "declined",
+          "why": "Ruled out by requirement 3: one coordinate, one version.",
+          "wins": "If the experimental publishing API were removed without replacement.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "binary-fixtures",
+          "name": "A full binary guarantee for the fixtures",
+          "verdict": "declined",
+          "why": "Consumers compile their tests against the fixtures in their own build and publish no jars against them; builders would make every fake ceremonious.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver the fixtures compilation and its publication, `VirtualClock`, `FakeHttpTransport`, `Fixture`/`FixtureLoader` with the `.http` codec, `FixtureRecorder` with `RecordingGate` and `Redaction`, the `.gitattributes` line, the fixtures-publication check in `build-logic` wired into `check`, and the README's `testFixtures(...)` line.",
+        "defense": "Level 3: one system, the fixtures variant; the build check is this unit's own test.",
+        "steps": [],
+        "tests": [
+          "The fixtures-publication TestKit check: capability, `org.gradle.jvm.version` 11, no test libraries on the main variants"
+        ],
+        "leaves": [
+          "`LoopbackTransports` and the `MockWebServer` helpers (unit 6)",
+          "The budget fakes (unit 8)"
+        ],
+        "risks": [
+          "The fixtures rest on an experimental publishing API; only the publication check notices a change"
+        ],
+        "source": "architecture.md §11 unit 4",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "url-policy",
+      "group": "webtools-http",
+      "name": "Outbound-URL policy",
+      "system": "webtools-http-url-policy",
+      "where": "webtools-http/src/commonMain (policy, classifier), jvmMain (enforcement)",
+      "unit": {
+        "n": 5,
+        "slug": "url-policy",
+        "issue": 64,
+        "level": 3,
+        "blockedBy": [
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "risk",
+        "summary": "Nothing decides which URLs may be fetched. OkHttp never consults `Dns` for a digits-and-dots or colon host, so a resolver guard alone misses every IP-literal host, and native redirect follow-up reached `169.254.169.254` through a resolver guard.",
+        "evidence": [
+          "research/outbound-url-policy.md F1, F4",
+          "research/http-transport.md — interceptors run after the connect"
+        ],
+        "source": "research/README.md § Outbound-URL policy",
+        "link": "research/README.md#outbound-url-policy"
+      },
+      "options": [
+        {
+          "id": "three-layers",
+          "name": "A closed `Trusted`/`Untrusted` pair checked in three layers: pre-check, resolver guard, socket factory",
+          "verdict": "accepted",
+          "why": "Every layer alone leaks (measured on 39 host forms); together the socket factory backstops the resolver guard.",
+          "source": "architecture.md §6.3.1",
+          "link": "architecture.md#631-outbound-url-policy-common-plus-jvm-enforcement"
+        },
+        {
+          "id": "single-guard",
+          "name": "A resolver guard only, or a network interceptor or `EventListener` as the guard",
+          "verdict": "declined",
+          "why": "A resolver guard misses every IP-literal host; interceptors run after the connect and a listener cannot veto.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "guard-seam",
+          "name": "A consumer-implemented `UrlGuard` seam at 1.0.0",
+          "verdict": "declined",
+          "why": "A callback that can return \"allow\" can silently defeat `Untrusted`, and no real consumer has shaped the seam.",
+          "wins": "Later, as a deny-only interface.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `OutboundUrlPolicy` with `Trusted`/`Untrusted` builders, `TransportSettings` with both default sets, the `internal` classification core in `commonMain`, and the JVM enforcement types with stub-based Level 2 tests.",
+        "defense": "Level 3: one subsystem, additive.",
+        "steps": [],
+        "tests": [
+          "Level 4a in `commonTest`: every IANA row's first and last address, the host-form catalogue, the published bypass vectors",
+          "`jvmTest`: the JDK-predicate-gap and differential tests"
+        ],
+        "leaves": [
+          "Wiring into a client (unit 6)"
+        ],
+        "risks": [
+          "Every `TransportSettings` number is a judgement default, not a measurement"
+        ],
+        "source": "architecture.md §11 unit 5",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "okhttp-transport",
+      "group": "webtools-http",
+      "name": "OkHttp transport",
+      "system": "webtools-http-transport",
+      "where": "webtools-http/src/jvmMain",
+      "unit": {
+        "n": 6,
+        "slug": "okhttp-transport",
+        "issue": 65,
+        "level": 3,
+        "blockedBy": [
+          64,
+          63
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "OkHttp 5.5.0 re-sends a `503` carrying `Retry-After: 0` and a `421` regardless of client flags, strips only `Authorization` on a cross-host redirect, and a body read after `executeAsync` returns is not cancellable (29.4 s against 0 ms).",
+        "evidence": [
+          "research/http-transport.md F1-F5"
+        ],
+        "source": "research/README.md § Transport",
+        "link": "research/README.md#transport"
+      },
+      "options": [
+        {
+          "id": "manual-loop",
+          "name": "A manual redirect loop, a fail-closed one-exchange guard and a capped body read inside the callback",
+          "verdict": "accepted",
+          "why": "One request per hop whatever re-send paths OkHttp has, the hop check before the socket, and cancellation that reaches the body.",
+          "source": "architecture.md §6.3.2",
+          "link": "architecture.md#632-okhttp-transport-jvm"
+        },
+        {
+          "id": "native-redirects",
+          "name": "OkHttp-native redirects",
+          "verdict": "declined",
+          "why": "The hop check would run after the socket, only `Authorization` is stripped, the cap is fixed at 20.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "execute-async",
+          "name": "`okhttp-coroutines`' `executeAsync` as published",
+          "verdict": "declined",
+          "why": "It requires coroutines 1.11.0, and the body read after it returns is not cancellable.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "public-client",
+          "name": "A public `OkHttpClient` in a signature",
+          "verdict": "declined",
+          "why": "No library type in a public signature; the donor client stays an `internal` constructor parameter for the fixtures.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `OkHttpTransport` (factory and `internal` constructor), `ExchangeGuard`, the redirect loop, the capped in-callback body read, the failure mapping, `close()` and the transport's logging; add `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` to the fixtures.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 3 against `mockwebserver3`: one request for `503` + `Retry-After: 0`, `408`, `429` and each hop; caps; cancel during an endless body; hop 2 refused",
+          "Level 4c: slow drip, endless chunked, redirect chain over the cap"
+        ],
+        "leaves": [
+          "Sizing from `maxBurst` (unit 9)"
+        ],
+        "risks": [
+          "A consumer's newer OkHttp 5.x wins resolution; the fail-closed guard does not depend on which re-send paths exist"
+        ],
+        "source": "architecture.md §11 unit 6",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "response-cache",
+      "group": "webtools-http",
+      "name": "Response cache",
+      "system": "webtools-http-cache",
+      "where": "webtools-http/src/commonMain (port), jvmMain (Caffeine)",
+      "unit": {
+        "n": 7,
+        "slug": "response-cache",
+        "issue": 66,
+        "level": 3,
+        "blockedBy": [
+          63,
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No response cache exists. Caffeine 3.3.1's `AsyncCache.get` is single-flight, but exceptional completion logs a WARNING per failure and leaves a joinable failed future, and `CompletionStage.await()` cancels the shared future while `asDeferred().await()` does not.",
+        "evidence": [
+          "research/response-cache.md F1-F7"
+        ],
+        "source": "research/README.md § Response cache",
+        "link": "research/README.md#response-cache"
+      },
+      "options": [
+        {
+          "id": "caffeine-default",
+          "name": "A `ResponseCache` port with `CaffeineResponseCache`: failure as a value, `asDeferred` waiting, compare-and-remove for `maxAge`",
+          "verdict": "accepted",
+          "why": "One load serves many concurrent callers, a failure is never cached, and one waiter's cancellation does not cancel the shared load.",
+          "source": "architecture.md §6.4",
+          "link": "architecture.md#64-response-cache"
+        },
+        {
+          "id": "cache-variants",
+          "name": "A typed cache per endpoint; Aedile; `scope.future { }` with exceptional completion; invalidate-before-get for `maxAge`",
+          "verdict": "declined",
+          "why": "Multiplies bounds; pins Caffeine 3.2.4 and runs loads in the first caller's context; logs a WARNING per failure; ran 10-12 loads for 50 stale callers against 1.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "store5-cancel",
+          "name": "Cancelling the shared load when the last waiter leaves (Store5)",
+          "verdict": "declined",
+          "why": "A ref-counted multicaster with its own race class; the wasted work is bounded by `maxWait` plus the call timeout.",
+          "wins": "If abandoned reservations piled up.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver the `ResponseCache` port, `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats`, `ResponseCache.Disabled` and `CaffeineResponseCache` with the load-start, failure-as-value, `asDeferred` waiting, `maxAge` and `Closed` behaviours.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 2 on `VirtualClock`: hits, expiry, miss TTL, `maxAge`, coalescing, one waiter's cancellation, close",
+          "Level 4a: key canonicalisation",
+          "Level 4c: the size bound and the 2,000-retry failure-identity check"
+        ],
+        "leaves": [
+          "The loader's content (unit 9)"
+        ],
+        "risks": [
+          "A shared load carries the first caller's lane and wait cap"
+        ],
+        "source": "architecture.md §11 unit 7",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "call-budget",
+      "group": "webtools-http",
+      "name": "Call budget",
+      "system": "webtools-http-budget",
+      "where": "webtools-http/src/commonMain",
+      "unit": {
+        "n": 8,
+        "slug": "call-budget",
+        "issue": 67,
+        "level": 3,
+        "blockedBy": [
+          63,
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No call budget exists. OpenDota and Open-Meteo count in fixed wall-clock windows and count refused requests; a greedy token bucket let 119 calls into one server minute against 60.",
+        "evidence": [
+          "research/call-budget.md F1, F2, F10"
+        ],
+        "source": "research/README.md § Call budget",
+        "link": "research/README.md#call-budget"
+      },
+      "options": [
+        {
+          "id": "windowed",
+          "name": "`WindowedCallBudget`: clock-aligned fixed windows with lanes, pauses on server signals and a hard daily stop",
+          "verdict": "accepted",
+          "why": "Aligned windows with a 1 s guard overspent in 0 of 1,000 skewed trials.",
+          "source": "architecture.md §6.5",
+          "link": "architecture.md#65-call-budget"
+        },
+        {
+          "id": "bucket",
+          "name": "A token bucket, GCRA or Bucket4j as the default",
+          "verdict": "declined",
+          "why": "A greedy bucket doubles at every provider boundary; GCRA paces below what a clock-reset provider allows; Bucket4j is JVM-only, needs Java 17 and offers no suspending FIFO with refunds, lanes or pauses.",
+          "wins": "Later, as another implementation of the port for multi-process counting.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "lend-reserve",
+          "name": "Lending unused lane reserve",
+          "verdict": "declined",
+          "why": "In a plan-ahead ledger it drove interactive grants to zero (measured).",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "observer-logging",
+          "name": "Logging through `BudgetObserver` only",
+          "verdict": "declined",
+          "why": "Silent unless every constructing path installs an observer.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `CallBudget`, `Permit`, `withPermit`, `Lane`, `RateWindow`, `RateSignals` and their reader, `RetryAfter`, `BudgetStore` with `InMemoryBudgetStore`, `BudgetObserver`, `CallBudget.Unlimited` and `WindowedCallBudget` in `commonMain`, with the non-suspend `close()` plus `flush()`; add `RecordingBudgetObserver` and `FakeBudgetStore` to the fixtures.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 2 on `VirtualClock`: FIFO, refunds, lane floors, pauses, hard stop, restore, write-ahead after a crash",
+          "Level 4a: the HTTP-date table against `java.time`, window arithmetic, a seeded property test"
+        ],
+        "leaves": [
+          "Reading signals from a real response (unit 9)"
+        ],
+        "risks": [
+          "How a `Mutex`-based ledger closes without suspending is unit 8's plan to settle (architecture §13)"
+        ],
+        "source": "architecture.md §11 unit 8",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "call-facades",
+      "group": "webtools-http",
+      "name": "Call facades",
+      "system": "webtools-http-facades",
+      "where": "webtools-http/src/commonMain, jvmMain (owning factories)",
+      "unit": {
+        "n": 9,
+        "slug": "call-facades",
+        "issue": 68,
+        "level": 3,
+        "blockedBy": [
+          67,
+          66,
+          65
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "The cache, the budget and the transport do not compose themselves, and the order they run in decides what a refusal, a throttle or a decode failure costs a caller.",
+        "evidence": [
+          "architecture.md §7.2 — cache, then budget inside the loader, then transport"
+        ],
+        "source": "architecture.md §7.2",
+        "link": "architecture.md#72-the-call-path-cache-then-budget-inside-the-loader-then-transport"
+      },
+      "options": [
+        {
+          "id": "two-facades",
+          "name": "Two facades: `UpstreamClient` for endpoints and `UrlFetcher` for administrator-supplied URLs",
+          "verdict": "accepted",
+          "why": "Two types encode the invariant that an untrusted URL cannot reach `call` and `fetch` cannot be handed an endpoint's cache.",
+          "source": "architecture.md §6.6",
+          "link": "architecture.md#66-call-facades"
+        },
+        {
+          "id": "one-facade",
+          "name": "One facade class",
+          "verdict": "declined",
+          "why": "Loses that invariant.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "decoder-per-call",
+          "name": "A decoder per call",
+          "verdict": "declined",
+          "why": "The cache key cannot see it, so inconsistent decoders would corrupt a shared entry.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `Endpoint`, `CallSpec`, `FetchSpec`, `UpstreamClient`, `UrlFetcher`, their configs, the common factories and the JVM owning factories with the `maxBurst` dispatcher sizing and the cache → budget → transport closing order; the README how-to.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 2 on the fake transport: a refusal costs nothing; a `429` with `Retry-After` pauses the budget; a decode failure is never stored; non-`GET` bypasses the cache",
+          "Level 3: a real end-to-end call over loopback"
+        ],
+        "leaves": [
+          "Feeds (unit 10)"
+        ],
+        "risks": [
+          "The generic `Endpoint<T>` factory-over-class resolution is argued from precedents and checked in this unit's plan"
+        ],
+        "source": "architecture.md §11 unit 9",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "feeds",
+      "group": "webtools-feeds",
+      "name": "webtools-feeds",
+      "system": "webtools-feeds",
+      "where": "webtools-feeds/ · webtools-feeds-commoncheck/",
+      "unit": {
+        "n": 10,
+        "slug": "feeds",
+        "issue": 69,
+        "level": 3,
+        "blockedBy": [
+          68,
+          63
+        ],
+        "versions": "webtools-feeds 1.0.0 (new, unreleased)",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No feed parsing or conditional GET exists. Rome 2.1.0 refuses DOCTYPE by default but skips a hardening feature its SAX provider does not recognise and last released on 2023-03-12; rssreader 3.12.0 swallows malformed XML into an empty stream and ignores Atom `rel`.",
+        "evidence": [
+          "research/feed-parsing.md F1, F2"
+        ],
+        "source": "research/README.md § Feeds module",
+        "link": "research/README.md#feeds-module"
+      },
+      "options": [
+        {
+          "id": "rome-port",
+          "name": "A multiplatform parser port with a hardened Rome default, a prolog scan, and a stateless conditional GET over `UrlFetcher`",
+          "verdict": "accepted",
+          "why": "The port, the scan and a fixed-heap Level 4c suite bound Rome's exposure, and a streaming parser can replace it behind the same port.",
+          "source": "architecture.md §6.10",
+          "link": "architecture.md#610-webtools-feeds"
+        },
+        {
+          "id": "stateful-fetcher",
+          "name": "A stateful feed fetcher holding validators",
+          "verdict": "declined",
+          "why": "An unbounded map keyed by administrator-supplied URLs, lost on restart.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "on-transport",
+          "name": "The feed fetcher on `HttpTransport` directly",
+          "verdict": "declined",
+          "why": "`UrlFetcher` gives the free policy pre-check and a throttle as `RateLimited` without parsing `Retry-After` itself.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "rssreader",
+          "name": "rssreader 3.12.0 or prof18's parser as the default",
+          "verdict": "declined",
+          "why": "Silent on malformed XML and ignoring Atom `rel`; or needing Kotlin 2.4.10 and an unhardened SAX parser.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "jvm-only",
+          "name": "A JVM-only feeds module",
+          "verdict": "declined",
+          "why": "Ruled out by requirement 4.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "contract-fixtures",
+          "name": "Publishing `FeedParserContract` as a fixtures variant at 1.0.0",
+          "verdict": "declined",
+          "why": "Doubles the exposure to the experimental publishing API, is unprobed for a module whose tests use another module's fixtures, and no second parser exists to use it.",
+          "wins": "With `FeedParser`'s graduation.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Create `webtools-feeds` and its check module; deliver the port, model, limits, validators, `FeedFetch`, `FeedFailure`, `FeedFetcher` and the prolog scan in `commonMain`, `RomeFeedParser` and `FeedFetcher.untrusted` in `jvmMain`; README artifact row, install line and how-to.",
+        "defense": "Level 3: one new module built on published seams; depending on a sibling module does not make it two systems.",
+        "steps": [],
+        "tests": [
+          "Level 2 on the fakes: conditional headers, `304` → `NotModified`",
+          "Level 3 through `LoopbackTransports.untrusted`",
+          "Level 4a: the prolog scan and the id and link rules",
+          "Level 4c: the hardening suite with a fixed heap"
+        ],
+        "leaves": [
+          "A published `FeedParserContract` variant (with `FeedParser`'s graduation)"
+        ],
+        "risks": [
+          "Rome is dormant and its DOM amplification on a hostile 2 MiB document is unmeasured"
+        ],
+        "source": "architecture.md §11 unit 10",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "http-docs",
+      "group": "Documents",
+      "name": "HTTP-stack documentation",
+      "system": "webtools",
+      "where": "docs/webtools-http-architecture.md · README.md",
+      "unit": {
+        "n": 11,
+        "slug": "http-docs",
+        "issue": 70,
+        "level": 1,
+        "blockedBy": [
+          69
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "The README describes three artifacts and three modules, and no evergreen document describes an HTTP stack.",
+        "evidence": [
+          "README.md:3-4 — three artifacts",
+          "README.md:463-466 — three modules"
+        ],
+        "source": "architecture.md §6.11",
+        "link": "architecture.md#611-documentation"
+      },
+      "options": [
+        {
+          "id": "evergreen",
+          "name": "An evergreen `docs/webtools-http-architecture.md` modelled on the `webtools-udp` one, and a final README pass",
+          "verdict": "accepted",
+          "why": "Each unit edits its own README part as it lands; the last unit makes the whole consistent with what landed. No alternative was weighed.",
+          "source": "architecture.md §6.11",
+          "link": "architecture.md#611-documentation"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Write `docs/webtools-http-architecture.md` and make the final README pass: the \"HTTP client stack\" and \"Feeds\" sections, the stability notes and the test-layout paragraph.",
+        "defense": "Level 1: Markdown only; no plan folder and no board of its own.",
+        "steps": [],
+        "tests": [],
+        "leaves": [],
+        "risks": [],
+        "source": "architecture.md §11 unit 11",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    }
+  ],
+  "roadmap": null,
+  "followUps": [
+    {
+      "issue": 58,
+      "note": "Repository practices: CI, CONTRIBUTING, CHANGELOG, tags, the foojay bump. Nothing here waits on it to merge; releasing waits on it, and its CHANGELOG records seam graduations."
+    },
+    {
+      "issue": 50,
+      "note": "`webtools-udp` multiplatform: can reuse the multiplatform plugin, the check-module pattern and the logging seam; nothing here is designed for it."
+    },
+    {
+      "name": "connector-get-skrape-on-webtools-http",
+      "note": "Move `Connector.get` and `skrape` onto the stack once `webtools-http` 1.0.0 is released."
+    },
+    {
+      "name": "connector-download-fetch-half",
+      "note": "The fetch half of `Connector.download` as a capped-bytes GET."
+    },
+    {
+      "name": "connector-line-reader-api",
+      "note": "A suspend replacement for `Connector`'s line-reader API."
+    },
+    {
+      "name": "webviewer-url-precheck",
+      "note": "A URL-level pre-check for administrator-supplied URLs in `webtools-browser`."
+    },
+    {
+      "name": "remove-redundant-test-tags",
+      "note": "Drop the 95 `@Tag` annotations the package filter makes redundant. Optional."
+    },
+    {
+      "name": "jdk11-test-launcher",
+      "note": "Run the level tasks on a JDK 11 launcher, after #58's foojay bump."
+    }
+  ],
+  "documents": [
+    {
+      "label": "Issue #55",
+      "path": "https://github.com/SpartanLaboratories/WebTools/issues/55",
+      "note": "the tracking issue and its sub-issues"
+    },
+    {
+      "label": "Architecture",
+      "path": "architecture.md",
+      "note": "requirements, current state, the eleven systems, interactions, alternatives (§10), decomposition (§11), risks, known gaps"
+    },
+    {
+      "label": "Impact",
+      "path": "impact.md",
+      "note": "published artifacts, blast radius, adoption, follow-ups, the open points each unit inherits (§7)"
+    },
+    {
+      "label": "Research",
+      "path": "research/README.md",
+      "note": "ten questions, verification and summary, with the findings files beside it"
+    },
+    {
+      "label": "#47 research",
+      "path": "47-java-23-bytecode/research/README.md",
+      "note": "the Java 11 floor, unit 2's evidence"
+    },
+    {
+      "label": "PR #60",
+      "path": "https://github.com/SpartanLaboratories/WebTools/pull/60",
+      "note": "the merged plan"
+    }
+  ],
+  "notes": {
+    "paths": "Paths under `webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/` are abbreviated `common/` in the architecture; `jvmMain` likewise `jvm/`. Line references are to the baseline 806ce8e.",
+    "units": "Gap, considered and verdict come from the architecture and are written once. Each unit's own board, in its folder, carries its rows; its as-built cell here fills when it lands, and its row then links its board. Unit 11 is level 1 and gets no folder or board."
+  }
+}
+</script>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function inspect(html){ $("#insp-body").innerHTML=html; bindInspector(); }
+
+/* ---------- The plan (from the embedded file) ---------- */
+const PLAN=JSON.parse(document.getElementById("plan").textContent||"{}");
+const REPO="https://github.com/"+(PLAN.repo||"");
+const ROWS=PLAN.rows||[];
+const WIP=PLAN.wip||{};
+const TRACKING=PLAN.kind==="tracking";
+/* The board's folder from the repository root sets every relative link to the shared pages. */
+const FOLDER=PLAN.folder||("docs/plans/"+(PLAN.slug||""));
+const UP="../".repeat(FOLDER.split("/").filter(Boolean).length);
+const ext=(href,text)=>`<a href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
+const ilink=(n,repo)=>ext(`https://github.com/${repo||PLAN.repo}/issues/${n}`,`${repo&&repo!==PLAN.repo?esc(repo.split("/")[1])+"#":"#"}${esc(n)}`);
+const clink=sha=>ext(`${REPO}/commit/${sha}`,`<code>${esc(sha)}</code>`);
+const prlink=n=>ext(`${REPO}/pull/${n}`,`PR #${esc(n)}`);
+/* Plain text with `code` spans, #123 and owner/repo#123 references: escaped, references linked outside code spans only. */
+function linkRefs(t){ return esc(t).replace(/(^|[\s(>;,])([\w.-]+\/[\w.-]+)#(\d+)\b/g,(m,p,r,n)=>p+ilink(n,r)).replace(/(^|[\s(>;,])#(\d+)\b/g,(m,p,n)=>p+ilink(n)); }
+const rich=s=>String(s==null?"":s).split("`").map((part,i)=>i%2?`<code>${esc(part)}</code>`:linkRefs(part)).join("");
+/* The same without links, for text inside a button. */
+const codeOnly=s=>String(s==null?"":s).split("`").map((part,i)=>i%2?`<code>${esc(part)}</code>`:esc(part)).join("");
+/* A reference: a commit sha, "PR #n", "#n", "owner/repo#n", a URL, a relative path with an optional #anchor and suffix, or text. */
+function refHtml(ref,label){
+  if(ref==null||ref==="") return "";
+  const s=String(ref);
+  if(/^[0-9a-f]{7,40}$/.test(s)) return clink(s);
+  let m=s.match(/^PR #?(\d+)$/i); if(m) return prlink(m[1]);
+  m=s.match(/^#(\d+)$/); if(m) return ilink(m[1]);
+  m=s.match(/^([\w.-]+\/[\w.-]+)#(\d+)$/); if(m) return ilink(m[2],m[1]);
+  if(/^https?:\/\//.test(s)) return ext(s,esc(label||s.replace(/^https?:\/\/(www\.)?github\.com\//,"")));
+  m=s.match(/^([\w./-]+\.(?:md|html|json|kt|kts|dsl|txt))(#[\w-]+)?(.*)$/); if(m) return `<a href="${esc(m[1]+(m[2]||""))}">${esc(label||m[1])}</a>${esc(m[3])}`;
+  m=s.match(/^([\w./-]+\/)$/); if(m) return `<a href="${esc(m[1])}">${esc(label||m[1])}</a>`;
+  return rich(s);
+}
+const moreLink=(href,txt)=>href?`<a class="more" href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""}>${esc(txt||"detail")} ›</a>`:"";
+
+/* ---------- Vocabulary (plan/RULES.md §2, §3) ---------- */
+const COLS=[
+  {key:"gap",label:"Gap",q:"What was missing or wrong at the baseline"},
+  {key:"considered",label:"Considered",q:"Every option weighed, each with its verdict"},
+  {key:"verdict",label:"Verdict",q:"The decision and its defence, or why the gap stays"},
+  {key:"built",label:"As built",q:"What exists now, and every change from the verdict"}];
+const STATES={
+  "pending":   {g:"…",label:"pending",   cls:"neutral",dash:true, desc:"not built yet"},
+  "as-planned":{g:"✓",label:"as planned",cls:"good",              desc:"built as the verdict says"},
+  "amended":   {g:"+",label:"amended",   cls:"warning",           desc:"built as decided, plus changes added in implementation or review"},
+  "deviated":  {g:"≠",label:"deviated",  cls:"serious",           desc:"the decision itself changed; each difference listed"},
+  "dropped":   {g:"✕",label:"dropped",   cls:"critical",          desc:"not built, with the reason"},
+  "deferred":  {g:"→",label:"deferred",  cls:"neutral",dash:true, desc:"not built here; moved to the issue named"}};
+const OPT={
+  accepted:{g:"✓",label:"accepted",cls:"good",    desc:"the option the verdict took"},
+  partial: {g:"◐",label:"partial", cls:"warning", desc:"adopted in part: what was taken, what wasn't"},
+  deferred:{g:"◌",label:"deferred",cls:"warning", desc:"left open at plan time, settled in column 4",dash:true},
+  declined:{g:"✕",label:"declined",cls:"critical",desc:"ruled out, with the trade-off"}};
+const QA={approved:{g:"✓",label:"approved",cls:"good"},"changes-requested":{g:"✕",label:"changes requested",cls:"critical"},running:{g:"…",label:"in progress",cls:"neutral",dash:true}};
+const STEP_ORDER=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","landing","landed"];
+const STEP_SPECIAL={halted:{g:"⏸",label:"Waiting on the user",cls:"halted"},escalated:{g:"⇧",label:"Escalated",cls:"escalated"},cancelled:{g:"✕",label:"Cancelled",cls:"cancelled"},landed:{g:"✓",label:"Landed",cls:"landed"}};
+const stateOf=r=>(r.asBuilt&&STATES[r.asBuilt.state])?r.asBuilt.state:"pending";
+const pill=(def,extra,word)=>`<span class="vp ${def.cls}${def.dash?" dashed":""}"><i aria-hidden="true">${def.g}</i>${esc(word||def.label)}${extra||""}</span>`;
+const badge=(st,extra)=>pill(STATES[st]||STATES.pending,extra);
+/* An option's effective verdict: a deferred option settled by an as-built change takes the settlement's colour. */
+function settlement(r,o){ for(const c of ((r.asBuilt||{}).changes||[])){ const s=c.settles; if(s&&(s===o.id||s.option===o.id)) return {verdict:(s.verdict||"accepted"),change:c}; } return null; }
+function optDef(r,o){ const s=o.verdict==="deferred"?settlement(r,o):null; const base=OPT[o.verdict]||OPT.declined; if(!s) return {def:base,word:base.label+(o.verdict==="partial"&&o.chosen?" · chosen":"")};
+  const t=OPT[s.verdict]||OPT.accepted; return {def:{...t,dash:false},word:`deferred → ${t.label}`,settled:s}; }
+
+/* ---------- System colours: the registry slots, identical to the system pages' (plan.json systems[].slot) ---------- */
+const SYSTEMS=PLAN.systems||[];
+const sysOf=slug=>SYSTEMS.find(s=>s.slug===slug);
+function sysColour(slug){ const s=sysOf(slug); return s&&s.slot>=1&&s.slot<=6?`var(--sys-${s.slot})`:"var(--muted)"; }
+const sysName=slug=>{ const s=sysOf(slug); return s?s.name:(slug||"—"); };
+function paint(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=>e.style.setProperty("--c",sysColour(e.dataset.sys))); }
+/* Legend: one entry per colour group present (a system's parts share their top-level system's slot). */
+function sysKey(slugs,cls){ const seen=new Map(); slugs.forEach(sl=>{ const s=sysOf(sl)||{slug:sl,name:sl}; const k=s.slot>=1&&s.slot<=6?"s"+s.slot:"n"; const nm=s.slot>=1&&s.slot<=6?(s.top||s.name):`${s.name} (no system colour)`; if(!seen.has(k)) seen.set(k,{c:sysColour(sl),names:new Set()}); seen.get(k).names.add(nm); });
+  return [...seen.values()].map(v=>`<span><i class="${cls||"sbar"}" style="--c:${v.c}"></i>${esc([...v.names].join(", "))}</span>`).join(""); }
+
+/* ---------- Work in progress: the glowing cells ---------- */
+const STEP=WIP.step||"";
+const HALTED=STEP==="halted", LANDED=STEP==="landed"||PLAN.status==="built", STOPPED=["cancelled"].includes(STEP)||PLAN.status==="abandoned";
+const CURRENT=(LANDED||STOPPED)?[]:(WIP.current||[]);
+const glowCls=strong=>HALTED?" held":strong?" glow":" glow-soft";
+function cellGlow(rowId,col){ if(CURRENT.includes(rowId+"."+col)) return glowCls(true); if(CURRENT.includes(col)) return HALTED?" held":" glow-soft"; return ""; }
+const rowActive=r=>CURRENT.some(a=>a.split(".")[0]===r.id);
+
+/* ---------- Header, chips ---------- */
+const OPTS=ROWS.flatMap(r=>(r.options||[]).map(o=>({row:r,opt:o})));
+const count=(arr,f)=>arr.filter(f).length;
+function renderHeader(){
+  const repoName=(PLAN.repo||"").split("/")[1]||PLAN.repo||"";
+  document.title=`${repoName} · #${PLAN.issue} plan board`;
+  const segs=FOLDER.split("/").filter(Boolean).slice(2);
+  $("#crumbs").innerHTML=`<a href="${UP}docs/dashboards/index.html">${esc(PLAN.repo)}</a> › <a href="${UP}docs/plans/index.html">work board</a>`+segs.map((s,i)=>i<segs.length-1?` › <a href="${"../".repeat(segs.length-1-i)}dashboard.html">${esc(s)}</a>`:` › ${esc(s)}`).join("");
+  $("#h1").textContent=`#${PLAN.issue} · ${PLAN.title||""}`;
+  $("#function").innerHTML=rich(PLAN.function);
+  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
+  const statusText={planned:"planned · nothing built",building:"building",built:"built",abandoned:"abandoned"}[PLAN.status]||PLAN.status;
+  const chips=[
+    `<span class="chip status ${esc(PLAN.status)}">status <b>${esc(statusText)}</b></span>`,
+    `<span class="chip">issue ${ilink(PLAN.issue)}${PLAN.issueTitle?` <b>${rich(PLAN.issueTitle)}</b>`:""}</span>`,
+    `<span class="chip">level <b>${PLAN.level?esc(PLAN.level):"not recorded"}</b>${TRACKING?" · tracking":""}</span>`,
+    PLAN.parent&&PLAN.parent.issue?`<span class="chip">part of ${ilink(PLAN.parent.issue)}${PLAN.parent.board?` · <a href="${esc(PLAN.parent.board)}">board</a>`:""}</span>`:"",
+    PLAN.branch?`<span class="chip">branch <b>${esc(PLAN.branch)}</b></span>`:"",
+    `<span class="chip">baseline <b>${esc(b.ref||"")} ${esc(b.sha||"")}</b>${b.date?` · ${esc(b.date)}`:""}</span>`,
+    a?`<span class="chip">as built <b>${esc(a.ref||"")} ${esc(a.sha||"")}</b>${a.date?` · ${esc(a.date)}`:""}${a.pr?` · ${prlink(a.pr)}`:""}</span>`:`<span class="chip status planned">as built <b>—</b> · not landed</span>`,
+    a&&a.version?`<span class="chip">ships as <b>${esc(a.version)}</b></span>`:"",
+    /* one chip per system, or per top-level system when several of its parts are on the board */
+    ...[...SYSTEMS.reduce((m,s)=>{ const k=s.top||s.name; if(!m.has(k)) m.set(k,[]); m.get(k).push(s); return m; },new Map())].map(([top,ps])=>{ const s=ps[0], one=ps.length===1, nm=one?s.name:top;
+      return `<span class="chip" data-sys="${esc(s.slug)}">${one&&s.page?`<a href="${UP}${esc(s.page)}">${esc(nm)}</a>`:esc(nm)}${one?"":` · ${ps.length} parts`}${ps.every(x=>x.status==="planned")?" · planned":""}</span>`; }),
+    `<span class="chip model">board <b>plan.json</b> · ${ROWS.length} ${TRACKING?"units":"rows"} · ${OPTS.length} options</span>`].filter(Boolean);
+  $("#chips").innerHTML=chips.join(""); paint($("#chips"));
+}
+
+/* ---------- The WIP strip (plan/RULES.md §3) ---------- */
+function stepsLine(steps,cur){ const i=steps.indexOf(cur);
+  return `<ol class="steps" aria-label="Pipeline steps">${steps.map((s,j)=>{ const st=LANDED||j<i?"done":j===i?"cur":"todo"; return `<li class="${st}${st==="cur"&&!LANDED?(HALTED?" held":" glow"):""}"${st==="cur"?' aria-current="step"':""}><span class="dot" aria-hidden="true"></span>${esc(s)}</li>`; }).join("")}</ol>`; }
+function renderWip(){
+  const w=$("#wip"), st=STEP||"—"; w.dataset.step=st;
+  const special=STEP_SPECIAL[LANDED?"landed":st];
+  if(special) w.classList.add(special.cls);
+  const steps=WIP.steps&&WIP.steps.length?WIP.steps:STEP_ORDER;
+  const shownStep=HALTED||st==="escalated"?(WIP.resume||WIP.last||""):st;
+  const head=special?`<span class="state"><i aria-hidden="true">${special.g}</i>${esc(special.label)}</span>`:`<span class="state"><i aria-hidden="true">●</i>Work in progress</span>`;
+  const since=WIP.since?` · since <span class="nw">${esc(WIP.since)}</span>`:"";
+  let h=`<div class="wip-head">${head}<span>step <b>${esc(LANDED?"landed":st)}</b>${since}</span>${WIP.updated?`<span class="upd">updated ${esc(WIP.updated)}</span>`:""}</div>`;
+  if(HALTED) h+=`<p class="wip-wait">Waiting on the user: ${rich(WIP.waitingOn||WIP.detail||"(not stated)")}</p>`;
+  if(st==="escalated"&&WIP.proposedLevel) h+=`<p class="wip-wait">Escalation proposed: level ${esc(WIP.proposedLevel)}.</p>`;
+  const legend=[];
+  if(TRACKING&&ROWS.some(r=>r.unit)){
+    const units=ROWS.filter(r=>r.unit);
+    h+=`<div class="wip-sub">The chain · ${count(units,r=>stateOf(r)!=="pending")} of ${units.length} units landed</div><ol class="chain">${units.map(r=>{ const s=stateOf(r), act=rowActive(r), href=r.unit.board||(r.unit.issue?`${REPO}/issues/${r.unit.issue}`:""); const inner=`${esc(r.unit.n!=null?r.unit.n:"")}${r.unit.issue?` · #${esc(r.unit.issue)}`:""} ${esc(r.unit.slug||r.id)}${s!=="pending"?` ${STATES[s].g}`:""}`; const tag=href?`<a href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""} data-sys="${esc(r.system)}">${inner}</a>`:`<span class="u" data-sys="${esc(r.system)}">${inner}</span>`; return `<li class="${s==="pending"?"pending":"done"}${act&&!LANDED?(HALTED?" held":" glow"):""}">${tag}</li>`; }).join("")}</ol>`;
+    legend.push(sysKey(units.map(r=>r.system)),`<span><i class="pln"></i>dashed: unit not landed</span>`);
+    const act=units.find(rowActive); if(act) h+=`<div class="wip-sub">Unit ${esc(act.unit.n)} · #${esc(act.unit.issue)} · ${esc(act.unit.slug||act.id)}</div>`;
+  }
+  if(st!=="cancelled") h+=stepsLine(steps,LANDED?"landed":shownStep);
+  if(WIP.detail&&!HALTED) h+=`<p class="wip-detail">${rich(WIP.detail)}</p>`;
+  const facts=[];
+  const qa=WIP.qa||[];
+  if(qa.length) facts.push(`<span><span class="l">qa</span>${qa.map(p=>{ const d=QA[p.verdict]||QA.running, f=p.findings||{}; const n=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" / "); return `${pill(d,"",`pass ${p.pass} · ${d.label}`)}${n?` <small>${esc(n)}</small>`:""}`; }).join(" ")}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}</span>`);
+  const bl=WIP.blockers||{}, iref=x=>x.repo&&x.repo!==PLAN.repo?ilink(x.issue,x.repo):ilink(x.issue);
+  if((bl.waitsOn||[]).length) facts.push(`<span><span class="l">waits on</span>${bl.waitsOn.map(iref).join(", ")}</span>`);
+  if((bl.blocks||[]).length) facts.push(`<span><span class="l">blocks</span>${bl.blocks.map(iref).join(", ")}</span>`);
+  const a=PLAN.asBuilt||{}, L=WIP.landing||{};
+  if(LANDED) facts.push(`<span><span class="l">landed</span>${[L.pr||a.pr?prlink(L.pr||a.pr):"",L.merge||a.merge?`merge ${clink(L.merge||a.merge)}`:"",L.version||a.version?esc(L.version||a.version):"",L.date||a.date?esc(L.date||a.date):""].filter(Boolean).join(" · ")}</span>`);
+  if(facts.length) h+=`<div class="wip-facts">${facts.join("")}</div>`;
+  /* the strip's legend: exactly what it drew */
+  if(st!=="cancelled") legend.push(`<span><i class="node"></i>step done</span>`,LANDED?"":HALTED?`<span><i class="hold"></i>current step, paused</span>`:`<span><i class="gl"></i>glow: being worked on now</span>`,LANDED?"":`<span><i class="node hollow"></i>dashed: step to come</span>`);
+  if(HALTED) legend.push(`<span><i class="wait"></i>yellow strip: waiting on the user</span>`);
+  if(LANDED) legend.push(`<span>${pill({g:"✓",cls:"good",label:"landed"})} merged; nothing glows</span>`);
+  const qv=[...new Set(qa.map(p=>p.verdict))].filter(v=>QA[v]); qv.forEach(v=>legend.push(`<span>${pill(QA[v])} qa pass verdict</span>`));
+  w.innerHTML=h+`<div class="key">${legend.filter(Boolean).join("")}</div>`;
+  paint(w);
+}
+
+/* ---------- KPIs ---------- */
+function renderKpis(){
+  const states=Object.keys(STATES).map(k=>[k,count(ROWS,r=>stateOf(r)===k)]);
+  const built=count(ROWS,r=>!["pending","deferred"].includes(stateOf(r)));
+  const groups=[...new Set(ROWS.map(r=>r.group).filter(Boolean))];
+  const by=v=>count(OPTS,x=>x.opt.verdict===v);
+  const leave=count(ROWS,r=>(r.verdict||{}).kind==="leave");
+  const changes=ROWS.reduce((n,r)=>n+((r.asBuilt||{}).changes||[]).length,0);
+  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
+  const days=(a&&a.date&&b.date)?Math.round((Date.parse(a.date)-Date.parse(b.date))/86400000):null;
+  const bar=`<div class="seg-bar" aria-hidden="true">${states.filter(([,n])=>n).map(([k,n])=>`<i class="${STATES[k].cls}" style="flex:${n}"></i>`).join("")}</div>`;
+  const qa=WIP.qa||[];
+  $("#kpis").innerHTML=[
+    `<div class="kpi"><div class="l">${TRACKING?"Units":"Rows"}</div><div class="v">${ROWS.length}</div><div class="s">${groups.length?`${groups.length} group${groups.length>1?"s":""}: ${groups.map(esc).join(", ")}`:"no rows yet"}</div></div>`,
+    `<div class="kpi"><div class="l">Options weighed</div><div class="v">${OPTS.length}</div><div class="s">${["accepted","partial","deferred","declined"].filter(by).map(v=>`${by(v)} ${v}`).join(" · ")||"none yet"}</div></div>`,
+    `<div class="kpi"><div class="l">Verdicts</div><div class="v">${ROWS.length-leave} <small>build</small></div><div class="s">${leave} left for later</div></div>`,
+    `<div class="kpi"><div class="l">As built</div><div class="v">${built} <small>/ ${ROWS.length} ${TRACKING?"units landed":"rows"}</small></div><div class="s">${states.filter(([,n])=>n).map(([k,n])=>`${n} ${STATES[k].label}`).join(" · ")||"—"}${changes?` · ${changes} changes`:""}</div>${ROWS.length?bar:""}</div>`,
+    `<div class="kpi"><div class="l">${LANDED?"Timeline":"QA passes"}</div><div class="v">${LANDED?(days==null?"—":days===0?"same day":`${days} day${days===1?"":"s"}`):`${qa.length}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}`}</div><div class="s">${LANDED?`${b.date?`baseline ${esc(b.date)}`:""}${a&&a.date?` → built ${esc(a.date)}`:""}`:(qa.length?esc(qa.map(p=>`pass ${p.pass}: ${(QA[p.verdict]||QA.running).label}`).join(" · ")):"no qa pass yet")}</div></div>`].join("");
+}
+
+/* ---------- Timeline board ---------- */
+function unitLinks(r){ const u=r.unit; if(!u) return "";
+  const parts=[u.issue?ilink(u.issue):"",u.level?`L${esc(u.level)}`:"",u.board?`<a href="${esc(u.board)}">board</a>`:u.folder?refHtml(u.folder,"folder"):`<span title="no plan folder yet">no folder yet</span>`];
+  return `<div class="un">${parts.filter(Boolean).join("")}</div>`; }
+function cellGap(r){ const g=r.gap||{}; return `<div class="cell gap${cellGlow(r.id,"gap")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="gap" aria-label="Gap: ${esc(r.name)}"><div class="kick">1 · GAP${g.kind?` <span class="kind">${esc(g.kind)}</span>`:""}</div><div class="sum">${rich(g.summary||"Not yet written.")}</div><div class="meta"><span>${(g.evidence||[]).length} evidence</span>${moreLink(g.link,"research")}</div></div>`; }
+function optButton(r,o){ const {def,word}=optDef(r,o); return `<button class="opt ${def.cls}${def.dash?" dashed":""}" data-row="${esc(r.id)}" data-opt="${esc(o.id)}" aria-label="${esc(word)}: ${esc(o.name)}"><i aria-hidden="true">${def.g}</i><span><span class="vw">${esc(word)}</span><span>${codeOnly(o.name)}</span></span></button>`; }
+function cellConsidered(r){ const os=r.options||[]; const acc=os.find(o=>o.verdict==="accepted"||(o.verdict==="partial"&&o.chosen))||os[0]||{};
+  return `<div class="cell considered${cellGlow(r.id,"considered")}" role="group" data-row="${esc(r.id)}" data-col="considered" aria-label="Considered: ${esc(r.name)}"><div class="kick">2 · CONSIDERED <span class="kind">${os.length}</span></div>${os.length?`<ul class="opts">${os.map(o=>`<li>${optButton(r,o)}</li>`).join("")}</ul>`:`<div class="sum">Not yet written.</div>`}${acc.link?`<div class="meta">${moreLink(acc.link,"alternatives")}</div>`:""}</div>`; }
+function cellVerdict(r){ const v=r.verdict||{}, leave=v.kind==="leave"; return `<div class="cell verdict${leave?" leave":""}${cellGlow(r.id,"verdict")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="verdict" aria-label="Verdict: ${esc(r.name)}"><div class="kick">3 · VERDICT <span class="kind">${leave?"leave as is":"build"}</span></div><div class="sum">${rich(v.summary||"Not yet written.")}</div><div class="meta"><span>${(v.steps||[]).length} steps · ${(v.tests||[]).length} tests · ${(v.risks||[]).length} risks</span>${moreLink(v.link,"plan")}</div></div>`; }
+function cellBuilt(r){ const st=stateOf(r), b=r.asBuilt||{}, S=STATES[st]; const extra=st==="deferred"&&b.issue?` → #${esc(b.issue)}`:"";
+  const link=b.link||(r.unit&&(r.unit.board||r.unit.folder))||"";
+  return `<div class="cell built ${S.cls}${st==="pending"?" pending":""}${st==="deferred"?" deferred":""}${cellGlow(r.id,"built")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="built" aria-label="As built: ${esc(r.name)}, ${S.label}"><div class="kick">4 · AS BUILT ${badge(st,extra)}</div><div class="sum">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</div><div class="meta"><span>${(b.changes||[]).length} changes · ${(b.commits||[]).length} commits</span>${moreLink(link,r.unit?(r.unit.board?"board":"folder"):"record")}</div></div>`; }
+const GROUP_ORDER=["Code","Tests","Documents","Release","Left for later"];
+function grouped(){ const groups=[]; ROWS.forEach(r=>{ const g=r.group||""; let G=groups.find(x=>x.name===g); if(!G){ G={name:g,rows:[]}; groups.push(G); } G.rows.push(r); });
+  /* an issue board orders its groups Code, Tests, Documents, Release, Left for later; a tracking board keeps landing order */
+  if(TRACKING) return groups;
+  return groups.sort((a,b)=>{ const i=GROUP_ORDER.indexOf(a.name), j=GROUP_ORDER.indexOf(b.name); return (i<0?GROUP_ORDER.length:i)-(j<0?GROUP_ORDER.length:j)||0; }); }
+function renderBoard(){
+  $("#timeline-lede").textContent=TRACKING
+    ?"One row per unit of the tracking issue, in landing order, in its system's colour. Gap, considered and verdict come from the architecture; each unit is planned and built on its own board, and its as-built cell fills when it lands. A dashed cell is not built yet; the glowing cell is being worked on now."
+    :"One row per part of the change, in its system's colour. Read a row left to right: the gap at the baseline, every option weighed with its verdict, the verdict and its defence, and what was built. A dashed cell is not built yet; a glowing cell is being worked on now. Click a cell or an option for its detail; each cell links the Markdown section that holds the rest.";
+  const ms=c=>(PLAN.milestones||[]).find(m=>m.column===c);
+  let h=`<div class="colhead" aria-hidden="true"></div>`+COLS.map((c,i)=>{ const m=ms(c.key);
+    const dt=m?`${esc(m.label)}${m.date?` · <span class="nw">${esc(m.date)}</span>`:""}${m.ref?` · ${refHtml(m.ref)}`:""}`:(c.key==="built"&&!LANDED?"not landed":"");
+    return `<div class="colhead${CURRENT.includes(c.key)?glowCls(true):""}"><div class="ph">${i+1} · ${esc(c.label).toUpperCase()}</div><div class="q">${esc(c.q)}</div>${dt?`<div class="dt">${dt}</div>`:""}</div>`; }).join("");
+  if(!ROWS.length) h+=`<p class="lede" style="grid-column:1/-1;margin-top:12px">No rows yet: the Gap column is written when the research is verified, the rows with it.</p>`;
+  grouped().forEach(G=>{ if(G.name) h+=`<div class="grouphead">${esc(G.name)} <small>${G.rows.length} ${TRACKING?"unit":"row"}${G.rows.length>1?"s":""}</small></div>`;
+    G.rows.forEach(r=>{ h+=`<div class="rowlab" data-sys="${esc(r.system||"")}" id="row-${esc(r.id)}"><div class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</div>${r.where?`<div class="wh">${esc(r.where)}</div>`:""}<div class="sy"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(sysName(r.system))}</div>${unitLinks(r)}</div>`+cellGap(r)+cellConsidered(r)+cellVerdict(r)+cellBuilt(r); }); });
+  $("#board").innerHTML=h; paint($("#board"));
+  document.querySelectorAll("#board .cell[role=button]").forEach(c=>{ const go=()=>select(c.dataset.row,c.dataset.col); c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  document.querySelectorAll("#board .opt").forEach(o=>o.addEventListener("click",()=>select(o.dataset.row,"considered",o.dataset.opt)));
+  const used=[...new Set(OPTS.map(x=>optDef(x.row,x.opt).word.startsWith("deferred →")?"settled":x.opt.verdict))];
+  const usedSt=[...new Set(ROWS.map(stateOf))];
+  $("#timeline-key").innerHTML=sysKey(ROWS.map(r=>r.system))
+    +["accepted","partial","deferred","declined"].filter(v=>used.includes(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")
+    +(used.includes("settled")?`<span>${pill({...OPT.accepted},"","deferred → accepted")} settled in column 4</span>`:"")
+    +Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")
+    +`<span><i class="node"></i>a phase reached</span>`
+    +(usedSt.some(k=>STATES[k].dash)?`<span><i class="node hollow"></i>dashed: not built yet</span>`:"")
+    +(CURRENT.length?(HALTED?`<span><i class="hold"></i>being worked on, paused while the run waits</span>`:`<span><i class="gl"></i>glow: being worked on now</span>`):"");
+}
+function select(rowId,col,optId){
+  const r=ROWS.find(x=>x.id===rowId); if(!r) return;
+  document.querySelectorAll("#board .cell.sel, #board .opt.sel, .chainsvg .unit.sel").forEach(e=>e.classList.remove("sel"));
+  const cell=document.querySelector(`#board .cell[data-row="${CSS.escape(rowId)}"][data-col="${col}"]`); if(cell) cell.classList.add("sel");
+  if(optId){ const b=document.querySelector(`#board .opt[data-row="${CSS.escape(rowId)}"][data-opt="${CSS.escape(optId)}"]`); if(b) b.classList.add("sel"); }
+  if(col==="gap") inspectGap(r); else if(col==="considered") inspectOption(r,(r.options||[]).find(o=>o.id===optId)||(r.options||[])[0]); else if(col==="verdict") inspectVerdict(r); else inspectBuilt(r);
+  try{ history.replaceState(null,"","#"+rowId+"."+col+(optId?"."+optId:"")); }catch(e){}
+}
+const whereOf=r=>`<span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(sysName(r.system))}${r.where?` · <code>${esc(r.where)}</code>`:""}`;
+const list=(items,f)=>items&&items.length?`<ul>${items.map(x=>`<li>${f?f(x):rich(x)}</li>`).join("")}</ul>`:"";
+function bindInspector(){ document.querySelectorAll("#insp-body .opt").forEach(b=>b.addEventListener("click",()=>select(b.dataset.row,"considered",b.dataset.opt))); paint($("#insp-body")); }
+function inspectGap(r){ const g=r.gap||{}, b=PLAN.baseline||{};
+  inspect(`<div class="kicker">1 · GAP${g.kind?` · ${esc(g.kind).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${rich(g.summary||"")}</p>${g.detail?`<p>${rich(g.detail)}</p>`:""}<dl>${g.evidence&&g.evidence.length?`<dt>Evidence at ${esc(b.sha||"the baseline")}</dt><dd>${list(g.evidence)}</dd>`:""}${g.source?`<dt>Source</dt><dd>${refHtml(g.source)}</dd>`:""}${g.link?`<dt>Detail</dt><dd>${refHtml(g.link)}</dd>`:""}</dl>`); }
+function inspectOption(r,o){ if(!o){ inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${esc(r.name)}</div><p>No options recorded yet.</p>`); return; }
+  const others=(r.options||[]).filter(x=>x!==o), {def,word,settled}=optDef(r,o);
+  const whyLabel={accepted:"Why it was taken",partial:"What was taken, and what wasn't",deferred:"Why it was left open",declined:"Why it was declined"}[o.verdict]||"Why";
+  inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${codeOnly(o.name)}</div><div class="vis">${pill(def,"",word)} ${esc(r.name)}</div>${o.summary?`<p class="lead">${rich(o.summary)}</p>`:""}<dl>${o.why?`<dt>${whyLabel}</dt><dd>${rich(o.why)}</dd>`:""}${settled?`<dt>Settled in column 4</dt><dd>${rich(settled.change.what)}${settled.change.why?` — ${rich(settled.change.why)}`:""}${settled.change.ref?` · ${refHtml(settled.change.ref)}`:""}</dd>`:""}${o.wins?`<dt>Would have won if</dt><dd>${rich(o.wins)}</dd>`:""}${o.source?`<dt>Source</dt><dd>${refHtml(o.source)}</dd>`:""}${o.link?`<dt>Detail</dt><dd>${refHtml(o.link)}</dd>`:""}${others.length?`<dt>Weighed against</dt><dd><ul class="opts">${others.map(x=>`<li>${optButton(r,x)}</li>`).join("")}</ul></dd>`:""}</dl>`); }
+function inspectVerdict(r){ const v=r.verdict||{};
+  inspect(`<div class="kicker">3 · VERDICT · ${v.kind==="leave"?"LEAVE AS IS":"BUILD"}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${rich(v.summary||"")}</p>${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
+function inspectBuilt(r){ const b=r.asBuilt||{}, st=stateOf(r), a=PLAN.asBuilt||{}, u=r.unit;
+  inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → #${esc(b.issue)}`:"")} ${esc(STATES[st].desc)}</div><p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p><dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)} · ${esc(u.slug||"")}${u.issue?` · ${ilink(u.issue)}`:""}${u.level?` · level ${esc(u.level)}`:""}${u.blockedBy&&u.blockedBy.length?` · blocked by ${u.blockedBy.map(n=>ilink(n)).join(", ")}`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch?`<br>branch <code>${esc(u.branch)}</code>`:""}<br>${u.board?`<a href="${esc(u.board)}">its board</a>`:u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}</dd>`:""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
+
+/* ---------- Decision log ---------- */
+let decFilter="all";
+function renderDecisions(){
+  const keys=["all","accepted","partial","deferred","declined"], counts=Object.fromEntries(keys.map(k=>[k,k==="all"?OPTS.length:count(OPTS,x=>x.opt.verdict===k)]));
+  $("#dec-ctl").innerHTML=`<label>show <span class="seg">${keys.filter(k=>k==="all"||counts[k]).map(k=>`<button data-f="${k}" aria-pressed="${decFilter===k}">${k} ${counts[k]}</button>`).join("")}</span></label>`;
+  document.querySelectorAll("#dec-ctl button").forEach(b=>b.addEventListener("click",()=>{ decFilter=b.dataset.f; renderDecisions(); }));
+  const rows=OPTS.filter(x=>decFilter==="all"||x.opt.verdict===decFilter);
+  $("#dec-table").innerHTML=`<thead><tr><th>Row</th><th>Option</th><th>Verdict</th><th>Why</th><th>Source</th></tr></thead><tbody>${rows.map(({row,opt})=>{ const {def,word}=optDef(row,opt); return `<tr data-sys="${esc(row.system||"")}" data-row="${esc(row.id)}" data-opt="${esc(opt.id)}" tabindex="0"><td>${esc(row.name)}</td><td><b>${rich(opt.name)}</b>${opt.summary?`<div class="sub">${rich(opt.summary)}</div>`:""}</td><td>${pill(def,"",word)}</td><td>${rich(opt.why||"")}${opt.wins?`<div class="sub">Would have won if: ${rich(opt.wins)}</div>`:""}</td><td>${opt.source?refHtml(opt.source):""}</td></tr>`; }).join("")}</tbody>`;
+  paint($("#dec-table"));
+  document.querySelectorAll("#dec-table tbody tr").forEach(tr=>{ const go=()=>{ const r=ROWS.find(x=>x.id===tr.dataset.row); inspectOption(r,(r.options||[]).find(o=>o.id===tr.dataset.opt)); }; tr.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); tr.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); }); });
+  const used=new Set(OPTS.map(x=>optDef(x.row,x.opt).word.startsWith("deferred →")?"settled":x.opt.verdict));
+  $("#decisions-key").innerHTML=sysKey(ROWS.map(r=>r.system))+["accepted","partial","deferred","declined"].filter(v=>used.has(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")+(used.has("settled")?`<span>${pill(OPT.accepted,"","deferred → accepted")} settled in column 4</span>`:"")+(OPTS.length?"":`<span><i class="pln"></i>no options recorded yet</span>`);
+}
+
+/* ---------- As-built register ---------- */
+let builtFilter="all";
+function renderBuilt(){
+  const keys=["all",...Object.keys(STATES)], counts=Object.fromEntries(keys.map(k=>[k,k==="all"?ROWS.length:count(ROWS,r=>stateOf(r)===k)]));
+  $("#built-ctl").innerHTML=`<label>show <span class="seg">${keys.filter(k=>k==="all"||counts[k]).map(k=>`<button data-f="${k}" aria-pressed="${builtFilter===k}">${k==="all"?"all":STATES[k].label} ${counts[k]}</button>`).join("")}</span></label>`;
+  document.querySelectorAll("#built-ctl button").forEach(b=>b.addEventListener("click",()=>{ builtFilter=b.dataset.f; renderBuilt(); }));
+  const rows=ROWS.filter(r=>builtFilter==="all"||stateOf(r)===builtFilter);
+  $("#built-list").innerHTML=rows.length?rows.map(r=>{ const b=r.asBuilt||{}, st=stateOf(r);
+    return `<div class="bcard st-${st}${cellGlow(r.id,"built")}" data-sys="${esc(r.system||"")}" data-row="${esc(r.id)}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${STATES[st].label}"><div class="bh"><span class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</span>${badge(st,st==="deferred"&&b.issue?` → #${esc(b.issue)}`:"")}${r.where?`<span class="wh">${esc(r.where)}</span>`:""}</div><p>${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>${b.changes&&b.changes.length?`<ol class="changes">${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol>`:""}<div class="meta">${[b.commits&&b.commits.length?`commits ${b.commits.map(c=>refHtml(c)).join(" ")}`:"",b.files&&b.files.length?`${b.files.length} file${b.files.length>1?"s":""}`:"",b.verified?"verified":"",moreLink(b.link||(r.unit&&(r.unit.board||r.unit.folder)),r.unit?(r.unit.board?"board":"folder"):"record")].filter(Boolean).join(" · ")}</div></div>`; }).join(""):`<p class="lede">No row in this state.</p>`;
+  paint($("#built-list"));
+  document.querySelectorAll("#built-list .bcard").forEach(c=>{ const go=()=>inspectBuilt(ROWS.find(x=>x.id===c.dataset.row)); c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  const usedSt=[...new Set(ROWS.map(stateOf))];
+  $("#built-key").innerHTML=sysKey(ROWS.map(r=>r.system))+Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.some(k=>STATES[k].dash)||!ROWS.length?`<span><i class="pln"></i>dashed card: nothing built</span>`:"")+(CURRENT.some(a=>a.endsWith(".built")||a==="built")?(HALTED?`<span><i class="hold"></i>being worked on, paused</span>`:`<span><i class="gl"></i>glow: being worked on now</span>`):"");
+}
+
+/* ---------- Chain (tracking boards): units as a layered dependency graph ---------- */
+function renderChain(){
+  const units=ROWS.filter(r=>r.unit), byIssue=new Map(units.map(r=>[r.unit.issue,r]));
+  const depth=new Map(); const d=r=>{ if(depth.has(r.id)) return depth.get(r.id); depth.set(r.id,0); const v=Math.max(0,...(r.unit.blockedBy||[]).map(n=>byIssue.get(n)).filter(Boolean).map(x=>d(x)+1)); depth.set(r.id,v); return v; };
+  units.forEach(d);
+  const cols=[]; units.forEach(r=>{ const c=depth.get(r.id); (cols[c]=cols[c]||[]).push(r); });
+  const W=168,H=50,GX=46,GY=14,PAD=10, maxRows=Math.max(1,...cols.map(c=>c?c.length:0));
+  const width=PAD*2+cols.length*W+(cols.length-1)*GX, height=PAD*2+maxRows*H+(maxRows-1)*GY;
+  const pos=new Map(); cols.forEach((c,i)=>(c||[]).forEach((r,j)=>{ const off=(maxRows-c.length)*(H+GY)/2; pos.set(r.id,{x:PAD+i*(W+GX),y:PAD+off+j*(H+GY)}); }));
+  let s=`<svg class="chainsvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Units and what blocks them"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="arrow" d="M0,0 L8,4 L0,8 z"/></marker></defs>`;
+  units.forEach(r=>(r.unit.blockedBy||[]).map(n=>byIssue.get(n)).filter(Boolean).forEach(b=>{ const p=pos.get(b.id), q=pos.get(r.id); const x1=p.x+W,y1=p.y+H/2,x2=q.x-2,y2=q.y+H/2,mx=(x1+x2)/2; s+=`<path class="edge${stateOf(b)==="pending"?" todo":""}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" marker-end="url(#arr)"/>`; }));
+  units.forEach(r=>{ const p=pos.get(r.id), st=stateOf(r), S=STATES[st], act=rowActive(r)&&!HALTED?" glow":rowActive(r)?" held":"";
+    s+=`<g class="unit ${S.cls}${st==="pending"?" pending":""}${act}" data-row="${esc(r.id)}" data-sys="${esc(r.system)}" tabindex="0" role="button" aria-label="Unit ${esc(r.unit.n)}: ${esc(r.name)}, ${S.label}" transform="translate(${p.x},${p.y})"><rect class="box" width="${W}" height="${H}" rx="5"/><rect class="bar" width="5" height="${H}" rx="2"/>${st!=="pending"?`<rect class="st" x="${W-6}" width="6" height="${H}" rx="2"/>`:""}<text class="t" x="12" y="19">${esc(r.unit.n)} · ${esc((r.unit.slug||r.id).slice(0,20))}</text><text class="s" x="12" y="37">#${esc(r.unit.issue)} · L${esc(r.unit.level||"?")} · ${esc(S.g)} ${esc(S.label)}</text></g>`; });
+  s+=`</svg>`;
+  $("#chain-frame").innerHTML=s; paint($("#chain-frame"));
+  document.querySelectorAll(".chainsvg .unit").forEach(g=>{ const go=()=>{ document.querySelectorAll(".chainsvg .unit.sel").forEach(e=>e.classList.remove("sel")); g.classList.add("sel"); inspectBuilt(ROWS.find(x=>x.id===g.dataset.row)); }; g.addEventListener("click",go); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  const usedSt=[...new Set(units.map(stateOf))];
+  $("#chain-key").innerHTML=sysKey(units.map(r=>r.system))+Object.keys(STATES).filter(k=>usedSt.includes(k)&&k!=="pending").map(k=>`<span>${badge(k)} landed: ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.includes("pending")?`<span><i class="pln"></i>dashed: unit not landed</span>`:"")+`<span><i class="ln"></i>arrow: blocks</span>`+(units.some(r=>(r.unit.blockedBy||[]).some(n=>byIssue.has(n)&&stateOf(byIssue.get(n))==="pending"))?`<span><i class="ln dash"></i>dashed arrow: its blocker has not landed</span>`:"")+(units.some(rowActive)?(HALTED?`<span><i class="hold"></i>active unit, paused</span>`:`<span><i class="gl"></i>glow: the unit being worked on now</span>`):"");
+}
+
+/* ---------- Source ---------- */
+function renderSource(){
+  const j=esc(JSON.stringify(PLAN,null,2));
+  $("#source-view").innerHTML=j.replace(/^(\s*)(&quot;[^&]*?&quot;)(:)/gm,'$1<span class="k">$2</span>$3').replace(/(:\s)(&quot;.*&quot;)(,?)$/gm,'$1<span class="s">$2</span>$3');
+  $("#source-key").innerHTML=`<span><b style="color:var(--link)">"key"</b> a field</span><span><b>"text"</b> a value</span><span><i class="pln"></i>this copy is replaced on every <code>embed.js</code> run</span>`;
+}
+
+/* ---------- Context: roadmap, unscheduled and follow-ups, trail, documents, notes ---------- */
+function renderContext(){
+  const cards=[];
+  /* Roadmap: on a tracking board the item is this issue and its units; otherwise the parent tracking issue, if any. */
+  const rm=PLAN.roadmap||null;
+  if(TRACKING){ const units=ROWS.filter(r=>r.unit);
+    cards.push(`<div class="card"><h3>Roadmap <small>#${esc(PLAN.issue)} · ${units.length} units${WIP.updated?` · ${esc(String(WIP.updated).slice(0,10))}`:""}</small></h3><ul class="issues">${units.map(r=>`<li>${r.unit.issue?ilink(r.unit.issue):"<b>—</b>"}<span>${esc(r.unit.n)} · ${esc(r.name)} · ${badge(stateOf(r))}${r.unit.board?` · <a href="${esc(r.unit.board)}">board</a>`:""}</span></li>`).join("")}</ul></div>`); }
+  else if(rm&&rm.issue) cards.push(`<div class="card"><h3>Roadmap <small>${esc(rm.asOf||"")}</small></h3><ul class="issues"><li>${ilink(rm.issue)}<span>${rich(rm.title||"")}${rm.board?` · <a href="${esc(rm.board)}">tracking board</a>`:""}</span></li>${(rm.items||[]).map(i=>`<li>${ilink(i.issue)}<span>${rich(i.title||"")}${i.state?` · ${esc(i.state)}`:""}${i.issue===PLAN.issue?" · this board":""}</span></li>`).join("")}</ul></div>`);
+  else cards.push(`<div class="card"><h3>Roadmap</h3><p class="lede">No roadmap item claims #${esc(PLAN.issue)}: it has no tracking parent. The <a href="${UP}docs/plans/index.html">work board</a> and the <a href="${UP}docs/dashboards/index.html">repository page</a> show the roadmap.</p></div>`);
+  const fu=PLAN.followUps||[];
+  cards.push(`<div class="card"><h3>Follow-ups and related issues <small>${fu.length}</small></h3>${fu.length?`<ul class="issues">${fu.map(f=>(f.issue?`<li>${ilink(f.issue,f.repo)}<span>${rich(f.note||"")}</span></li>`:`<li><b>–</b><span><code>${esc(f.name||"")}</code> <small>not filed</small> — ${rich(f.note||"")}</span></li>`)).join("")}</ul>`:`<p class="lede">None recorded.</p>`}</div>`);
+  const events=[...(PLAN.milestones||[]).map(m=>({date:m.date,phase:m.column,text:`<b>${esc(m.label)}</b>${m.note?` — ${rich(m.note)}`:""}${m.ref?` · ${refHtml(m.ref)}`:""}`})),...(PLAN.trail||[]).map(t=>({date:t.date,phase:t.column||"",text:`${rich(t.label||"")}${t.ref?` · ${refHtml(t.ref)}`:""}`}))].map((e,i)=>({...e,i})).sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))||a.i-b.i);
+  const phaseName={gap:"GAP",considered:"CONSIDERED",verdict:"VERDICT",built:"BUILT"};
+  cards.push(`<div class="card"><h3>Trail <small>${events.length} events</small></h3>${events.length?`<ul class="trail">${events.map(e=>`<li><span class="d">${esc(e.date||"")}</span><span class="t">${e.phase?`<span class="ph">${esc(phaseName[e.phase]||e.phase)}</span>`:""}${e.text}</span></li>`).join("")}</ul>`:`<p class="lede">No dated events yet.</p>`}</div>`);
+  const docs=PLAN.documents||[];
+  const shared=[`<li><a href="${UP}docs/plans/index.html">Work board</a> — every run in the repository</li>`,`<li><a href="${UP}docs/dashboards/index.html">System dashboards</a> — the repository as built</li>`,...SYSTEMS.filter(s=>s.page).map(s=>`<li><span class="sw" data-sys="${esc(s.slug)}"></span><a href="${UP}${esc(s.page)}">${esc(s.name)}</a> — its system page</li>`)];
+  cards.push(`<div class="card"><h3>Plans and documents</h3><ul class="docs">${docs.map(d=>`<li>${d.path?refHtml(d.path,d.label||d.path):`<b>${esc(d.label||"")}</b>`}${d.note?` — ${rich(d.note)}`:""}</li>`).join("")}${shared.join("")}</ul></div>`);
+  const notes=PLAN.notes||{}; const nk=Object.keys(notes).filter(k=>notes[k]&&(!Array.isArray(notes[k])||notes[k].length));
+  if(nk.length) cards.push(`<div class="card notes"><h3>Notes</h3>${nk.map(k=>Array.isArray(notes[k])?`<p><b>${esc(k)}.</b></p><ul>${notes[k].map(x=>`<li>${typeof x==="string"?rich(x):`${rich(x.what||"")}${x.when?` <small>(${esc(x.when)})</small>`:""}`}</li>`).join("")}</ul>`:`<p><b>${esc(k)}.</b> ${rich(notes[k])}</p>`).join("")}</div>`);
+  $("#context").innerHTML=cards.join(""); paint($("#context"));
+  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
+  $("#footer").innerHTML=`Built from <code>${esc(FOLDER)}/plan.json</code>, embedded verbatim, against the baseline <code>${esc(b.ref||"")} ${esc(b.sha||"")}</code>${b.date?` (${esc(b.date)})`:""}. ${a?`The as-built column reflects <code>${esc(a.ref||"")} ${esc(a.sha||"")}</code>${a.date?` (${esc(a.date)})`:""}${a.pr?`, merged through ${prlink(a.pr)}`:""}.`:"Nothing has landed yet."} Code and the Markdown beside this page are authoritative on any conflict. Columns 1 to 3 are written once; column 4 records every difference. Maintained by the presenter agent at each event of the issue's <code>/resolve-issue</code> run.`;
+}
+
+/* ---------- Tabs and deep links ---------- */
+if(!TRACKING){ const t=$("#t-chain"), p=$("#p-chain"); if(t) t.remove(); if(p) p.remove(); }
+const tabs=[...document.querySelectorAll(".tab")];
+const DEFAULT_INSPECT={timeline:"<p>Click a cell for its detail: the gap's evidence, an option's reasons, the verdict's steps, tests and risks, or the as-built changes with their reasons. Each cell links the Markdown section that holds the rest.</p>",decisions:"<p>Click a row for the option's full reasons and the options it was weighed against.</p>",built:"<p>Click a card for the row's files, commits, verification and every change from the verdict.</p>",chain:"<p>Click a unit for its as-built state, its issue and its board or folder.</p>",source:"<p>The committed <code>plan.json</code>. Edit the file, then run <code>plan/scripts/embed.js</code> on the folder.</p>"};
+function show(id){
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  const name=id.replace("t-","");
+  if(name==="decisions") renderDecisions();
+  if(name==="built") renderBuilt();
+  if(name==="chain") renderChain();
+  if(name==="source") renderSource();
+  if(DEFAULT_INSPECT[name]) inspect(DEFAULT_INSPECT[name]);
+}
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>{ show(t.id); try{ history.replaceState(null,"","#"+t.id.replace("t-","")); }catch(e){} }); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+
+renderHeader(); renderWip(); renderKpis(); renderBoard(); renderContext();
+const hash=decodeURIComponent(location.hash.replace("#",""));
+let start="t-timeline"; if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
+show(start);
+if(hash&&!document.getElementById("t-"+hash)){ const [rowId,col,optId]=hash.split("."); if(ROWS.some(r=>r.id===rowId)){ select(rowId,COLS.some(c=>c.key===col)?col:"gap",optId); const el=document.getElementById("row-"+rowId); if(el) el.scrollIntoView({block:"center"}); } }
+</script>
+</body>
+</html>
