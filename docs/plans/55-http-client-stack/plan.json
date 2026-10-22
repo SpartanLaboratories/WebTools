@@ -1,0 +1,1226 @@
+{
+  "schema": "plan-board/1",
+  "repo": "SpartanLaboratories/WebTools",
+  "issue": 55,
+  "slug": "55-http-client-stack",
+  "folder": "docs/plans/55-http-client-stack",
+  "kind": "tracking",
+  "level": 4,
+  "title": "HTTP client stack",
+  "issueTitle": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+  "function": "BotTools needs a suspend HTTP stack: a transport, an outbound-URL guard, a response cache, a call budget and test fakes. This tracking issue designs it as a new Kotlin Multiplatform module `webtools-http`, a feeds module `webtools-feeds` on top of it, the shared `build-logic` with the Java 11 floor that folds in #47, and their documentation, and builds it as eleven units, each a sub-issue planned and built at its own level on its own board.",
+  "status": "building",
+  "parent": null,
+  "branch": "feat/issue-55-http-client-stack",
+  "baseline": {
+    "ref": "master",
+    "sha": "806ce8e",
+    "date": "2026-10-20"
+  },
+  "asBuilt": null,
+  "systems": [
+    {
+      "slug": "build-logic",
+      "name": "build-logic",
+      "slot": 4,
+      "top": "Gradle build",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-core",
+      "name": "webtools-http common core",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-test-fixtures",
+      "name": "published test fixtures",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-url-policy",
+      "name": "outbound-URL policy",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-transport",
+      "name": "OkHttp transport",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-cache",
+      "name": "response cache",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-budget",
+      "name": "call budget",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-facades",
+      "name": "call facades",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-feeds",
+      "name": "webtools-feeds",
+      "slot": 6,
+      "top": "webtools-feeds",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools",
+      "name": "WebTools",
+      "slot": 0,
+      "top": "WebTools",
+      "status": "built",
+      "page": "docs/dashboards/index.html"
+    }
+  ],
+  "wip": {
+    "step": "qa",
+    "since": "2026-10-22",
+    "updated": "2026-10-22T21:35:10Z",
+    "detail": "Unit 1, #61 (`build-logic`), is in qa on `feat/issue-61-build-logic`: pass 2 of at most 3 is under way; pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated. Units 2 to 11 have not started.",
+    "steps": [
+      "sizing",
+      "interview",
+      "research",
+      "plan",
+      "branch",
+      "implementation",
+      "qa",
+      "remediation",
+      "landing",
+      "landed"
+    ],
+    "current": [
+      "build-logic.built"
+    ],
+    "qa": [
+      {
+        "pass": 1,
+        "verdict": "changes-requested",
+        "findings": {
+          "documentation": 14,
+          "test": 9,
+          "code": 0
+        },
+        "note": "all findings remediated"
+      },
+      {
+        "pass": 2,
+        "verdict": "running"
+      }
+    ],
+    "qaMax": 3,
+    "waitingOn": null,
+    "resume": null,
+    "blockers": {
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 9,
+          "repo": "SpartanLaboratories/KotlinBottools"
+        },
+        {
+          "issue": 16,
+          "repo": "SpartanLaboratories/KotlinBottools"
+        }
+      ]
+    },
+    "landing": null
+  },
+  "milestones": [
+    {
+      "column": "gap",
+      "label": "Research verified",
+      "date": "2026-10-21",
+      "ref": "research/README.md",
+      "note": "ten questions and findings files; 231 outside-world claims re-opened at source, 227 hold, none fails"
+    },
+    {
+      "column": "considered",
+      "label": "Architecture",
+      "date": "2026-10-21",
+      "ref": "architecture.md",
+      "note": "§10 alternatives, §11 decomposition into eleven units, §14 considerations: none open"
+    },
+    {
+      "column": "verdict",
+      "label": "Plan merged, sub-issues filed",
+      "date": "2026-10-21",
+      "ref": "PR #60",
+      "note": "the plan-only docs PR merged as 834ce4a; #61 and #62 to #70 filed and #47 re-parented, with blocked-by links in landing order"
+    }
+  ],
+  "trail": [
+    {
+      "date": "2026-10-20",
+      "column": "gap",
+      "label": "Issue #55 opened",
+      "ref": "#55"
+    },
+    {
+      "date": "2026-10-20",
+      "column": "gap",
+      "label": "Research questions for the HTTP client stack",
+      "ref": "9357e00"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "gap",
+      "label": "Research verification results and summary",
+      "ref": "3b4a746"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "considered",
+      "label": "The design the research settled, stated in the research summary",
+      "ref": "96c30d6"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "considered",
+      "label": "Architecture and impact",
+      "ref": "b022d3a"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "verdict",
+      "label": "PR #60 merged: architecture, research and the system dashboards' planned systems",
+      "ref": "834ce4a"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "verdict",
+      "label": "Sub-issues filed: #61, #62 to #70; #47 re-parented as unit 2"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "built",
+      "label": "Unit 1, #61: research questions, findings, verification and summary on `feat/issue-61-build-logic`",
+      "ref": "c80881b"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "verdict",
+      "label": "PR #71 merged: the system dashboards rebuilt to the new conventions",
+      "ref": "0e7b0f8"
+    }
+  ],
+  "rows": [
+    {
+      "id": "build-logic",
+      "group": "Build",
+      "name": "Shared build logic",
+      "system": "build-logic",
+      "where": "build-logic/ (included build)",
+      "unit": {
+        "n": 1,
+        "slug": "build-logic",
+        "issue": 61,
+        "level": 3,
+        "blockedBy": [],
+        "versions": "none: published POMs and metadata identical",
+        "branch": "feat/issue-61-build-logic",
+        "folder": "https://github.com/SpartanLaboratories/WebTools/tree/feat/issue-61-build-logic/docs/plans/55-http-client-stack/61-build-logic",
+        "board": null
+      },
+      "gap": {
+        "kind": "debt",
+        "summary": "Every module is configured by the root build's `subprojects {}` block: both plugins, `api(slf4j-api)`, the seven level tasks selecting by JUnit tag over `sourceSets[\"test\"]`, and the publishing skeleton. A multiplatform module cannot join without branching that block, which Gradle documents as improper cross-project configuration.",
+        "evidence": [
+          "build.gradle.kts:17-92 — the `subprojects {}` block",
+          "build.gradle.kts:44-62 — the level tasks; the tag filter at :60",
+          "webtools-udp/build.gradle.kts:103-117 — the port lock calls `tasks.named` at module evaluation"
+        ],
+        "source": "architecture.md §2, §6.1",
+        "link": "architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "included-build",
+          "name": "An included `build-logic` build with three convention plugins and `WebToolsBuild`",
+          "verdict": "accepted",
+          "why": "One place decides every module's compile target, test layout and publishing shape; plugins are applied by id, typed, and a change does not invalidate the whole configuration.",
+          "source": "architecture.md §6.1",
+          "link": "architecture.md#61-shared-build-logic--build-logic"
+        },
+        {
+          "id": "subprojects-withid",
+          "name": "Root `subprojects {}` with `plugins.withId` branches",
+          "verdict": "declined",
+          "why": "Cross-project configuration is what Gradle documents as improper, and the KMP extension needs string-typed `extensions.configure`.",
+          "wins": "If an included build were unwanted: it is the smallest diff.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "buildsrc",
+          "name": "`buildSrc`",
+          "verdict": "declined",
+          "why": "Works (measured), but invalidates the whole configuration on every change.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Create the included build with `WebToolsBuild` (the level list and `registerLevelTasks`) and the plugins `webtools.published-library`, `webtools.kotlin-jvm-library` and `webtools.kotlin-multiplatform-library`; cut the root build to `group` and `version`; put the three modules on the JVM plugin with their own `api(slf4j-api)`; keep the UDP port lock verbatim; select the level tasks by package.",
+        "defense": "Level 3: the build is one system and the change is additive build behaviour with no library API change. Measured: the three modules publish identical output.",
+        "steps": [],
+        "tests": [
+          "The three modules publish identical POMs and metadata",
+          "The package filter selects the same 99 test classes the tag filter did"
+        ],
+        "leaves": [
+          "The Java floor and its guard (unit 2)",
+          "Any KMP module and the common-check plugin (unit 3)",
+          "The fixtures-publication check (unit 4)"
+        ],
+        "risks": [
+          "Kotlin 2.2.0 on Gradle 9.7.1 is outside Kotlin's documented range; `build-logic` pins the version once, so the move is one line"
+        ],
+        "source": "architecture.md §11 unit 1",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": "In progress as #61 on `feat/issue-61-build-logic`: qa pass 2 of at most 3 is under way. Pass 1 requested changes (14 documentation, 9 test, 0 code findings), all remediated."
+      }
+    },
+    {
+      "id": "java-floor",
+      "group": "Build",
+      "name": "Java 11 floor (#47)",
+      "system": "build-logic",
+      "where": "build-logic/ · webtools-scraping, webtools-browser build files",
+      "unit": {
+        "n": 2,
+        "slug": "java-floor",
+        "issue": 47,
+        "level": 2,
+        "blockedBy": [
+          61
+        ],
+        "versions": "webtools-scraping and webtools-browser 1.0.0 → 1.0.0a; webtools-udp rides in the unreleased 2.0.0a",
+        "branch": null,
+        "folder": "47-java-23-bytecode/",
+        "board": null
+      },
+      "gap": {
+        "kind": "bug",
+        "summary": "Every published artifact is Java 23 bytecode declaring `org.gradle.jvm.version: 23`, while the README promises JDK 11 or newer. No build file sets `jvmToolchain`, `jvmTarget` or `-Xjdk-release`.",
+        "evidence": [
+          "README.md:26 — \"JDK 11 or newer\"",
+          "build.gradle.kts — no `jvmTarget`, `-Xjdk-release` or toolchain",
+          "47-java-23-bytecode/research/java-11-floor.md F1-F5 — `jvmTarget` alone compiles JDK 21 calls; with `-Xjdk-release=11` they are rejected"
+        ],
+        "source": "architecture.md §2; java-11-floor.md",
+        "link": "47-java-23-bytecode/research/java-11-floor.md"
+      },
+      "options": [
+        {
+          "id": "floor-constant",
+          "name": "`WebToolsBuild.JAVA_FLOOR = 11` wiring `jvmTarget`, `-Xjdk-release` and the KMP attribute, with a `verifyJavaFloor` guard in `check`",
+          "verdict": "accepted",
+          "why": "The API limit on the build JDK without the foojay bump; the guard fails the build rather than let a Java 23 class or a wrong attribute reach a publication.",
+          "source": "architecture.md §6.1",
+          "link": "architecture.md#61-shared-build-logic--build-logic"
+        },
+        {
+          "id": "toolchain",
+          "name": "`jvmToolchain(11)` as the floor",
+          "verdict": "declined",
+          "why": "The same API limit at the cost of the foojay bump and a JDK 11 on every consumer's composite machine, and it still writes no KMP attribute.",
+          "wins": "If the level tests had to run on a JDK 11 inside this work.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Add `JAVA_FLOOR = 11` and wire `jvmTarget`, `-Xjdk-release` and the Java compatibility settings (JVM plugin) and the `TargetJvmVersion` attribute (KMP plugin) from it; add `verifyJavaFloor` into `check`; set `1.0.0a` on `webtools-scraping` and `webtools-browser` and extend `webtools-udp`'s `2.0.0a` note; add the build-JDK note to the README.",
+        "defense": "Level 2: a bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
+        "steps": [],
+        "tests": [
+          "`verifyJavaFloor`: no class above major 55, `org.gradle.jvm.version` 11 on every API and runtime variant"
+        ],
+        "leaves": [
+          "A JDK 11 test launcher (follow-up)",
+          "The foojay bump (#58)"
+        ],
+        "risks": [
+          "`1.0.0a` orders below `1.0.0`: a consumer graph that also asks for `1.0.0` keeps the defect unless it pins with `strictly`; the README and the release note say so"
+        ],
+        "source": "architecture.md §11 unit 2",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "http-core",
+      "group": "webtools-http",
+      "name": "webtools-http common core",
+      "system": "webtools-http-core",
+      "where": "webtools-http/src/commonMain, jvmMain · webtools-http-commoncheck/",
+      "unit": {
+        "n": 3,
+        "slug": "http-core",
+        "issue": 62,
+        "level": 3,
+        "blockedBy": [
+          61,
+          47
+        ],
+        "versions": "webtools-http 1.0.0 (new, unreleased)",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No HTTP stack exists. `Connector` is the only HTTP client: a blocking, stateful line reader over `URLConnection` that sets the JVM-wide `http.agent` on every connect and calls `Unirest.setTimeouts(0, 0)` in its `init`. Nothing offers a suspend request, a typed failure model or a transport port.",
+        "evidence": [
+          "webtools-scraping/.../Connector.kt:85, :218, :229 — `URLConnection`",
+          "Connector.kt:150 — JVM-wide `http.agent`",
+          "Connector.kt:65 — `Unirest.setTimeouts(0, 0)`"
+        ],
+        "source": "architecture.md §2; research/codebase-blast-radius.md",
+        "link": "architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "open-failures-builders",
+          "name": "Open failure hierarchy in `kotlin.Result`, builders over `internal` constructors, one opt-in marker through `@SubclassOptInRequired`",
+          "verdict": "accepted",
+          "why": "Adding a failure leaf or a builder property never breaks a consumer's compiled code, and the supplied defaults are usable without opting in.",
+          "source": "architecture.md §6.2, §9",
+          "link": "architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "sealed-failures",
+          "name": "A sealed failure root, or enums for library-produced reasons",
+          "verdict": "declined",
+          "why": "Each added leaf or entry is a compile error in a consumer's exhaustive `when` and a runtime `NoWhenBranchMatchedException` in a compiled one.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "flat-constructors",
+          "name": "Flat constructors with defaulted parameters plus hidden deprecated overloads",
+          "verdict": "declined",
+          "why": "A permanent overload per addition kept correct by hand; `@IntroducedAt` is Kotlin 2.3+.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "kotlin-time",
+          "name": "`kotlin.time.Clock`/`Instant` or kotlinx-datetime in signatures",
+          "verdict": "declined",
+          "why": "An error-level opt-in on every 2.2.x consumer, and the budget needs no calendar arithmetic.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "fun-interface",
+          "name": "`fun interface` for `WallClock`",
+          "verdict": "declined",
+          "why": "A `fun interface` cannot carry the subclass gate; one rule for every seam.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "scheduling-type",
+          "name": "An opaque `Scheduling` type in place of `CoroutineDispatcher`, keeping coroutines `implementation`",
+          "verdict": "declined",
+          "why": "A consumer could no longer pass its own dispatcher, and the coroutines runtime is part of what a suspend API is.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "kotlin-logging",
+          "name": "kotlin-logging in `commonMain`",
+          "verdict": "declined",
+          "why": "A startup line and a runtime dependency on every consumer, with no gain on one published target; an `internal expect fun` seam is the smallest thing that logs.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "js-target",
+          "name": "A published `js` target instead of check-only modules",
+          "verdict": "declined",
+          "why": "A coordinate and a klib nothing consumes, Node and Yarn downloads for tests, and a published surface the requirements do not name.",
+          "wins": "The day a non-JVM consumer exists.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "kgp-abi",
+          "name": "KGP's built-in `abiValidation` instead of BCV",
+          "verdict": "declined",
+          "why": "Experimental on 2.2.0 and its DSL changed by 2.4.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Create `webtools-http` (KMP plugin, `explicitApi()`, the ABI dump) and `webtools-http-commoncheck` with the `webtools.kotlin-common-check` plugin; deliver the marker, the failure model, the request and response types, `HttpTransport`, `WallClock`, the logging seam and the internal `flatMap`; add the README artifact row and install line.",
+        "defense": "Level 3: one new module's additive API. Its plan starts with the compile proof of the marker, a gated interface, a default naming it and a consumer without opt-in.",
+        "steps": [],
+        "tests": [
+          "Level 4a in `commonTest`: parsing, validation, query encoding",
+          "`jvmTest`: the `Url`-vs-`HttpUrl` differential"
+        ],
+        "leaves": [
+          "Every default implementation and policy (units 4-9)"
+        ],
+        "risks": [
+          "The public surface has not been compiled; the opt-in behaviour comes from compiler test data and one JVM-only measurement"
+        ],
+        "source": "architecture.md §11 unit 3",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "test-support",
+      "group": "webtools-http",
+      "name": "Published test fixtures",
+      "system": "webtools-http-test-fixtures",
+      "where": "webtools-http/src/jvmTestFixtures",
+      "unit": {
+        "n": 4,
+        "slug": "test-support",
+        "issue": 63,
+        "level": 3,
+        "blockedBy": [
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "A consumer has no fake transport, no single time source shared by cache, budget and `delay`, and no recorder. Kotlin has no first-class test-fixtures feature for a multiplatform module (KT-63142, KT-69482 open).",
+        "evidence": [
+          "research/kmp-test-fixtures.md F4-F7 — a JVM-only `testFixtures` compilation through the experimental `adhocSoftwareComponent` resolves from a file repository and through `includeBuild`"
+        ],
+        "source": "research/README.md § Test support and time",
+        "link": "research/README.md#test-support-and-time"
+      },
+      "options": [
+        {
+          "id": "recipe-b",
+          "name": "A hand-built `testFixtures` compilation published as a variant (recipe B)",
+          "verdict": "accepted",
+          "why": "One coordinate and one version, with the fixtures' dependencies reaching only the consumer's test classpath.",
+          "source": "architecture.md §6.7",
+          "link": "architecture.md#67-published-test-support"
+        },
+        {
+          "id": "recipe-a",
+          "name": "The `java-test-fixtures` plugin beside the KMP plugin (recipe A)",
+          "verdict": "declined",
+          "why": "Identical consumer contract, but it re-implements an internal Gradle variant mapping and carries a KGP-2.2.0-only workaround.",
+          "wins": "If recipe B stops working on a later KGP: A is the fallback.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "testing-artifact",
+          "name": "A separate `webtools-http-testing` artifact",
+          "verdict": "declined",
+          "why": "Ruled out by requirement 3: one coordinate, one version.",
+          "wins": "If the experimental publishing API were removed without replacement.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "binary-fixtures",
+          "name": "A full binary guarantee for the fixtures",
+          "verdict": "declined",
+          "why": "Consumers compile their tests against the fixtures in their own build and publish no jars against them; builders would make every fake ceremonious.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver the fixtures compilation and its publication, `VirtualClock`, `FakeHttpTransport`, `Fixture`/`FixtureLoader` with the `.http` codec, `FixtureRecorder` with `RecordingGate` and `Redaction`, the `.gitattributes` line, the fixtures-publication check in `build-logic` wired into `check`, and the README's `testFixtures(...)` line.",
+        "defense": "Level 3: one system, the fixtures variant; the build check is this unit's own test.",
+        "steps": [],
+        "tests": [
+          "The fixtures-publication TestKit check: capability, `org.gradle.jvm.version` 11, no test libraries on the main variants"
+        ],
+        "leaves": [
+          "`LoopbackTransports` and the `MockWebServer` helpers (unit 6)",
+          "The budget fakes (unit 8)"
+        ],
+        "risks": [
+          "The fixtures rest on an experimental publishing API; only the publication check notices a change"
+        ],
+        "source": "architecture.md §11 unit 4",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "url-policy",
+      "group": "webtools-http",
+      "name": "Outbound-URL policy",
+      "system": "webtools-http-url-policy",
+      "where": "webtools-http/src/commonMain (policy, classifier), jvmMain (enforcement)",
+      "unit": {
+        "n": 5,
+        "slug": "url-policy",
+        "issue": 64,
+        "level": 3,
+        "blockedBy": [
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "risk",
+        "summary": "Nothing decides which URLs may be fetched. OkHttp never consults `Dns` for a digits-and-dots or colon host, so a resolver guard alone misses every IP-literal host, and native redirect follow-up reached `169.254.169.254` through a resolver guard.",
+        "evidence": [
+          "research/outbound-url-policy.md F1, F4",
+          "research/http-transport.md — interceptors run after the connect"
+        ],
+        "source": "research/README.md § Outbound-URL policy",
+        "link": "research/README.md#outbound-url-policy"
+      },
+      "options": [
+        {
+          "id": "three-layers",
+          "name": "A closed `Trusted`/`Untrusted` pair checked in three layers: pre-check, resolver guard, socket factory",
+          "verdict": "accepted",
+          "why": "Every layer alone leaks (measured on 39 host forms); together the socket factory backstops the resolver guard.",
+          "source": "architecture.md §6.3.1",
+          "link": "architecture.md#631-outbound-url-policy-common-plus-jvm-enforcement"
+        },
+        {
+          "id": "single-guard",
+          "name": "A resolver guard only, or a network interceptor or `EventListener` as the guard",
+          "verdict": "declined",
+          "why": "A resolver guard misses every IP-literal host; interceptors run after the connect and a listener cannot veto.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "guard-seam",
+          "name": "A consumer-implemented `UrlGuard` seam at 1.0.0",
+          "verdict": "declined",
+          "why": "A callback that can return \"allow\" can silently defeat `Untrusted`, and no real consumer has shaped the seam.",
+          "wins": "Later, as a deny-only interface.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `OutboundUrlPolicy` with `Trusted`/`Untrusted` builders, `TransportSettings` with both default sets, the `internal` classification core in `commonMain`, and the JVM enforcement types with stub-based Level 2 tests.",
+        "defense": "Level 3: one subsystem, additive.",
+        "steps": [],
+        "tests": [
+          "Level 4a in `commonTest`: every IANA row's first and last address, the host-form catalogue, the published bypass vectors",
+          "`jvmTest`: the JDK-predicate-gap and differential tests"
+        ],
+        "leaves": [
+          "Wiring into a client (unit 6)"
+        ],
+        "risks": [
+          "Every `TransportSettings` number is a judgement default, not a measurement"
+        ],
+        "source": "architecture.md §11 unit 5",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "okhttp-transport",
+      "group": "webtools-http",
+      "name": "OkHttp transport",
+      "system": "webtools-http-transport",
+      "where": "webtools-http/src/jvmMain",
+      "unit": {
+        "n": 6,
+        "slug": "okhttp-transport",
+        "issue": 65,
+        "level": 3,
+        "blockedBy": [
+          64,
+          63
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "OkHttp 5.5.0 re-sends a `503` carrying `Retry-After: 0` and a `421` regardless of client flags, strips only `Authorization` on a cross-host redirect, and a body read after `executeAsync` returns is not cancellable (29.4 s against 0 ms).",
+        "evidence": [
+          "research/http-transport.md F1-F5"
+        ],
+        "source": "research/README.md § Transport",
+        "link": "research/README.md#transport"
+      },
+      "options": [
+        {
+          "id": "manual-loop",
+          "name": "A manual redirect loop, a fail-closed one-exchange guard and a capped body read inside the callback",
+          "verdict": "accepted",
+          "why": "One request per hop whatever re-send paths OkHttp has, the hop check before the socket, and cancellation that reaches the body.",
+          "source": "architecture.md §6.3.2",
+          "link": "architecture.md#632-okhttp-transport-jvm"
+        },
+        {
+          "id": "native-redirects",
+          "name": "OkHttp-native redirects",
+          "verdict": "declined",
+          "why": "The hop check would run after the socket, only `Authorization` is stripped, the cap is fixed at 20.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "execute-async",
+          "name": "`okhttp-coroutines`' `executeAsync` as published",
+          "verdict": "declined",
+          "why": "It requires coroutines 1.11.0, and the body read after it returns is not cancellable.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "public-client",
+          "name": "A public `OkHttpClient` in a signature",
+          "verdict": "declined",
+          "why": "No library type in a public signature; the donor client stays an `internal` constructor parameter for the fixtures.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `OkHttpTransport` (factory and `internal` constructor), `ExchangeGuard`, the redirect loop, the capped in-callback body read, the failure mapping, `close()` and the transport's logging; add `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` to the fixtures.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 3 against `mockwebserver3`: one request for `503` + `Retry-After: 0`, `408`, `429` and each hop; caps; cancel during an endless body; hop 2 refused",
+          "Level 4c: slow drip, endless chunked, redirect chain over the cap"
+        ],
+        "leaves": [
+          "Sizing from `maxBurst` (unit 9)"
+        ],
+        "risks": [
+          "A consumer's newer OkHttp 5.x wins resolution; the fail-closed guard does not depend on which re-send paths exist"
+        ],
+        "source": "architecture.md §11 unit 6",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "response-cache",
+      "group": "webtools-http",
+      "name": "Response cache",
+      "system": "webtools-http-cache",
+      "where": "webtools-http/src/commonMain (port), jvmMain (Caffeine)",
+      "unit": {
+        "n": 7,
+        "slug": "response-cache",
+        "issue": 66,
+        "level": 3,
+        "blockedBy": [
+          63,
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No response cache exists. Caffeine 3.3.1's `AsyncCache.get` is single-flight, but exceptional completion logs a WARNING per failure and leaves a joinable failed future, and `CompletionStage.await()` cancels the shared future while `asDeferred().await()` does not.",
+        "evidence": [
+          "research/response-cache.md F1-F7"
+        ],
+        "source": "research/README.md § Response cache",
+        "link": "research/README.md#response-cache"
+      },
+      "options": [
+        {
+          "id": "caffeine-default",
+          "name": "A `ResponseCache` port with `CaffeineResponseCache`: failure as a value, `asDeferred` waiting, compare-and-remove for `maxAge`",
+          "verdict": "accepted",
+          "why": "One load serves many concurrent callers, a failure is never cached, and one waiter's cancellation does not cancel the shared load.",
+          "source": "architecture.md §6.4",
+          "link": "architecture.md#64-response-cache"
+        },
+        {
+          "id": "cache-variants",
+          "name": "A typed cache per endpoint; Aedile; `scope.future { }` with exceptional completion; invalidate-before-get for `maxAge`",
+          "verdict": "declined",
+          "why": "Multiplies bounds; pins Caffeine 3.2.4 and runs loads in the first caller's context; logs a WARNING per failure; ran 10-12 loads for 50 stale callers against 1.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "store5-cancel",
+          "name": "Cancelling the shared load when the last waiter leaves (Store5)",
+          "verdict": "declined",
+          "why": "A ref-counted multicaster with its own race class; the wasted work is bounded by `maxWait` plus the call timeout.",
+          "wins": "If abandoned reservations piled up.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver the `ResponseCache` port, `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats`, `ResponseCache.Disabled` and `CaffeineResponseCache` with the load-start, failure-as-value, `asDeferred` waiting, `maxAge` and `Closed` behaviours.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 2 on `VirtualClock`: hits, expiry, miss TTL, `maxAge`, coalescing, one waiter's cancellation, close",
+          "Level 4a: key canonicalisation",
+          "Level 4c: the size bound and the 2,000-retry failure-identity check"
+        ],
+        "leaves": [
+          "The loader's content (unit 9)"
+        ],
+        "risks": [
+          "A shared load carries the first caller's lane and wait cap"
+        ],
+        "source": "architecture.md §11 unit 7",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "call-budget",
+      "group": "webtools-http",
+      "name": "Call budget",
+      "system": "webtools-http-budget",
+      "where": "webtools-http/src/commonMain",
+      "unit": {
+        "n": 8,
+        "slug": "call-budget",
+        "issue": 67,
+        "level": 3,
+        "blockedBy": [
+          63,
+          62
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No call budget exists. OpenDota and Open-Meteo count in fixed wall-clock windows and count refused requests; a greedy token bucket let 119 calls into one server minute against 60.",
+        "evidence": [
+          "research/call-budget.md F1, F2, F10"
+        ],
+        "source": "research/README.md § Call budget",
+        "link": "research/README.md#call-budget"
+      },
+      "options": [
+        {
+          "id": "windowed",
+          "name": "`WindowedCallBudget`: clock-aligned fixed windows with lanes, pauses on server signals and a hard daily stop",
+          "verdict": "accepted",
+          "why": "Aligned windows with a 1 s guard overspent in 0 of 1,000 skewed trials.",
+          "source": "architecture.md §6.5",
+          "link": "architecture.md#65-call-budget"
+        },
+        {
+          "id": "bucket",
+          "name": "A token bucket, GCRA or Bucket4j as the default",
+          "verdict": "declined",
+          "why": "A greedy bucket doubles at every provider boundary; GCRA paces below what a clock-reset provider allows; Bucket4j is JVM-only, needs Java 17 and offers no suspending FIFO with refunds, lanes or pauses.",
+          "wins": "Later, as another implementation of the port for multi-process counting.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "lend-reserve",
+          "name": "Lending unused lane reserve",
+          "verdict": "declined",
+          "why": "In a plan-ahead ledger it drove interactive grants to zero (measured).",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "observer-logging",
+          "name": "Logging through `BudgetObserver` only",
+          "verdict": "declined",
+          "why": "Silent unless every constructing path installs an observer.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `CallBudget`, `Permit`, `withPermit`, `Lane`, `RateWindow`, `RateSignals` and their reader, `RetryAfter`, `BudgetStore` with `InMemoryBudgetStore`, `BudgetObserver`, `CallBudget.Unlimited` and `WindowedCallBudget` in `commonMain`, with the non-suspend `close()` plus `flush()`; add `RecordingBudgetObserver` and `FakeBudgetStore` to the fixtures.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 2 on `VirtualClock`: FIFO, refunds, lane floors, pauses, hard stop, restore, write-ahead after a crash",
+          "Level 4a: the HTTP-date table against `java.time`, window arithmetic, a seeded property test"
+        ],
+        "leaves": [
+          "Reading signals from a real response (unit 9)"
+        ],
+        "risks": [
+          "How a `Mutex`-based ledger closes without suspending is unit 8's plan to settle (architecture §13)"
+        ],
+        "source": "architecture.md §11 unit 8",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "call-facades",
+      "group": "webtools-http",
+      "name": "Call facades",
+      "system": "webtools-http-facades",
+      "where": "webtools-http/src/commonMain, jvmMain (owning factories)",
+      "unit": {
+        "n": 9,
+        "slug": "call-facades",
+        "issue": 68,
+        "level": 3,
+        "blockedBy": [
+          67,
+          66,
+          65
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "The cache, the budget and the transport do not compose themselves, and the order they run in decides what a refusal, a throttle or a decode failure costs a caller.",
+        "evidence": [
+          "architecture.md §7.2 — cache, then budget inside the loader, then transport"
+        ],
+        "source": "architecture.md §7.2",
+        "link": "architecture.md#72-the-call-path-cache-then-budget-inside-the-loader-then-transport"
+      },
+      "options": [
+        {
+          "id": "two-facades",
+          "name": "Two facades: `UpstreamClient` for endpoints and `UrlFetcher` for administrator-supplied URLs",
+          "verdict": "accepted",
+          "why": "Two types encode the invariant that an untrusted URL cannot reach `call` and `fetch` cannot be handed an endpoint's cache.",
+          "source": "architecture.md §6.6",
+          "link": "architecture.md#66-call-facades"
+        },
+        {
+          "id": "one-facade",
+          "name": "One facade class",
+          "verdict": "declined",
+          "why": "Loses that invariant.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "decoder-per-call",
+          "name": "A decoder per call",
+          "verdict": "declined",
+          "why": "The cache key cannot see it, so inconsistent decoders would corrupt a shared entry.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Deliver `Endpoint`, `CallSpec`, `FetchSpec`, `UpstreamClient`, `UrlFetcher`, their configs, the common factories and the JVM owning factories with the `maxBurst` dispatcher sizing and the cache → budget → transport closing order; the README how-to.",
+        "defense": "Level 3.",
+        "steps": [],
+        "tests": [
+          "Level 2 on the fake transport: a refusal costs nothing; a `429` with `Retry-After` pauses the budget; a decode failure is never stored; non-`GET` bypasses the cache",
+          "Level 3: a real end-to-end call over loopback"
+        ],
+        "leaves": [
+          "Feeds (unit 10)"
+        ],
+        "risks": [
+          "The generic `Endpoint<T>` factory-over-class resolution is argued from precedents and checked in this unit's plan"
+        ],
+        "source": "architecture.md §11 unit 9",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "feeds",
+      "group": "webtools-feeds",
+      "name": "webtools-feeds",
+      "system": "webtools-feeds",
+      "where": "webtools-feeds/ · webtools-feeds-commoncheck/",
+      "unit": {
+        "n": 10,
+        "slug": "feeds",
+        "issue": 69,
+        "level": 3,
+        "blockedBy": [
+          68,
+          63
+        ],
+        "versions": "webtools-feeds 1.0.0 (new, unreleased)",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "No feed parsing or conditional GET exists. Rome 2.1.0 refuses DOCTYPE by default but skips a hardening feature its SAX provider does not recognise and last released on 2023-03-12; rssreader 3.12.0 swallows malformed XML into an empty stream and ignores Atom `rel`.",
+        "evidence": [
+          "research/feed-parsing.md F1, F2"
+        ],
+        "source": "research/README.md § Feeds module",
+        "link": "research/README.md#feeds-module"
+      },
+      "options": [
+        {
+          "id": "rome-port",
+          "name": "A multiplatform parser port with a hardened Rome default, a prolog scan, and a stateless conditional GET over `UrlFetcher`",
+          "verdict": "accepted",
+          "why": "The port, the scan and a fixed-heap Level 4c suite bound Rome's exposure, and a streaming parser can replace it behind the same port.",
+          "source": "architecture.md §6.10",
+          "link": "architecture.md#610-webtools-feeds"
+        },
+        {
+          "id": "stateful-fetcher",
+          "name": "A stateful feed fetcher holding validators",
+          "verdict": "declined",
+          "why": "An unbounded map keyed by administrator-supplied URLs, lost on restart.",
+          "source": "architecture.md §10",
+          "link": "architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "on-transport",
+          "name": "The feed fetcher on `HttpTransport` directly",
+          "verdict": "declined",
+          "why": "`UrlFetcher` gives the free policy pre-check and a throttle as `RateLimited` without parsing `Retry-After` itself.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "rssreader",
+          "name": "rssreader 3.12.0 or prof18's parser as the default",
+          "verdict": "declined",
+          "why": "Silent on malformed XML and ignoring Atom `rel`; or needing Kotlin 2.4.10 and an unhardened SAX parser.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "jvm-only",
+          "name": "A JVM-only feeds module",
+          "verdict": "declined",
+          "why": "Ruled out by requirement 4.",
+          "source": "architecture.md §10"
+        },
+        {
+          "id": "contract-fixtures",
+          "name": "Publishing `FeedParserContract` as a fixtures variant at 1.0.0",
+          "verdict": "declined",
+          "why": "Doubles the exposure to the experimental publishing API, is unprobed for a module whose tests use another module's fixtures, and no second parser exists to use it.",
+          "wins": "With `FeedParser`'s graduation.",
+          "source": "architecture.md §10"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Create `webtools-feeds` and its check module; deliver the port, model, limits, validators, `FeedFetch`, `FeedFailure`, `FeedFetcher` and the prolog scan in `commonMain`, `RomeFeedParser` and `FeedFetcher.untrusted` in `jvmMain`; README artifact row, install line and how-to.",
+        "defense": "Level 3: one new module built on published seams; depending on a sibling module does not make it two systems.",
+        "steps": [],
+        "tests": [
+          "Level 2 on the fakes: conditional headers, `304` → `NotModified`",
+          "Level 3 through `LoopbackTransports.untrusted`",
+          "Level 4a: the prolog scan and the id and link rules",
+          "Level 4c: the hardening suite with a fixed heap"
+        ],
+        "leaves": [
+          "A published `FeedParserContract` variant (with `FeedParser`'s graduation)"
+        ],
+        "risks": [
+          "Rome is dormant and its DOM amplification on a hostile 2 MiB document is unmeasured"
+        ],
+        "source": "architecture.md §11 unit 10",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    },
+    {
+      "id": "http-docs",
+      "group": "Documents",
+      "name": "HTTP-stack documentation",
+      "system": "webtools",
+      "where": "docs/webtools-http-architecture.md · README.md",
+      "unit": {
+        "n": 11,
+        "slug": "http-docs",
+        "issue": 70,
+        "level": 1,
+        "blockedBy": [
+          69
+        ],
+        "versions": "none",
+        "branch": null,
+        "folder": null,
+        "board": null
+      },
+      "gap": {
+        "kind": "missing",
+        "summary": "The README describes three artifacts and three modules, and no evergreen document describes an HTTP stack.",
+        "evidence": [
+          "README.md:3-4 — three artifacts",
+          "README.md:463-466 — three modules"
+        ],
+        "source": "architecture.md §6.11",
+        "link": "architecture.md#611-documentation"
+      },
+      "options": [
+        {
+          "id": "evergreen",
+          "name": "An evergreen `docs/webtools-http-architecture.md` modelled on the `webtools-udp` one, and a final README pass",
+          "verdict": "accepted",
+          "why": "Each unit edits its own README part as it lands; the last unit makes the whole consistent with what landed. No alternative was weighed.",
+          "source": "architecture.md §6.11",
+          "link": "architecture.md#611-documentation"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Write `docs/webtools-http-architecture.md` and make the final README pass: the \"HTTP client stack\" and \"Feeds\" sections, the stability notes and the test-layout paragraph.",
+        "defense": "Level 1: Markdown only; no plan folder and no board of its own.",
+        "steps": [],
+        "tests": [],
+        "leaves": [],
+        "risks": [],
+        "source": "architecture.md §11 unit 11",
+        "link": "architecture.md#11-decomposition"
+      },
+      "asBuilt": {
+        "state": "pending",
+        "summary": ""
+      }
+    }
+  ],
+  "roadmap": null,
+  "followUps": [
+    {
+      "issue": 58,
+      "note": "Repository practices: CI, CONTRIBUTING, CHANGELOG, tags, the foojay bump. Nothing here waits on it to merge; releasing waits on it, and its CHANGELOG records seam graduations."
+    },
+    {
+      "issue": 50,
+      "note": "`webtools-udp` multiplatform: can reuse the multiplatform plugin, the check-module pattern and the logging seam; nothing here is designed for it."
+    },
+    {
+      "name": "connector-get-skrape-on-webtools-http",
+      "note": "Move `Connector.get` and `skrape` onto the stack once `webtools-http` 1.0.0 is released."
+    },
+    {
+      "name": "connector-download-fetch-half",
+      "note": "The fetch half of `Connector.download` as a capped-bytes GET."
+    },
+    {
+      "name": "connector-line-reader-api",
+      "note": "A suspend replacement for `Connector`'s line-reader API."
+    },
+    {
+      "name": "webviewer-url-precheck",
+      "note": "A URL-level pre-check for administrator-supplied URLs in `webtools-browser`."
+    },
+    {
+      "name": "remove-redundant-test-tags",
+      "note": "Drop the 95 `@Tag` annotations the package filter makes redundant. Optional."
+    },
+    {
+      "name": "jdk11-test-launcher",
+      "note": "Run the level tasks on a JDK 11 launcher, after #58's foojay bump."
+    }
+  ],
+  "documents": [
+    {
+      "label": "Issue #55",
+      "path": "https://github.com/SpartanLaboratories/WebTools/issues/55",
+      "note": "the tracking issue and its sub-issues"
+    },
+    {
+      "label": "Architecture",
+      "path": "architecture.md",
+      "note": "requirements, current state, the eleven systems, interactions, alternatives (§10), decomposition (§11), risks, known gaps"
+    },
+    {
+      "label": "Impact",
+      "path": "impact.md",
+      "note": "published artifacts, blast radius, adoption, follow-ups, the open points each unit inherits (§7)"
+    },
+    {
+      "label": "Research",
+      "path": "research/README.md",
+      "note": "ten questions, verification and summary, with the findings files beside it"
+    },
+    {
+      "label": "#47 research",
+      "path": "47-java-23-bytecode/research/README.md",
+      "note": "the Java 11 floor, unit 2's evidence"
+    },
+    {
+      "label": "PR #60",
+      "path": "https://github.com/SpartanLaboratories/WebTools/pull/60",
+      "note": "the merged plan"
+    }
+  ],
+  "notes": {
+    "paths": "Paths under `webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/` are abbreviated `common/` in the architecture; `jvmMain` likewise `jvm/`. Line references are to the baseline 806ce8e.",
+    "units": "Gap, considered and verdict come from the architecture and are written once. Each unit's own board, in its folder, carries its rows; its as-built cell here fills when it lands, and its row then links its board. Unit 11 is level 1 and gets no folder or board."
+  }
+}
