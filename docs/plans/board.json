@@ -1,11 +1,11 @@
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-23T02:39:10Z",
+  "generated": "2026-10-23T20:10:10Z",
   "asOf": "2026-10-23",
   "tree": {
     "ref": "master",
-    "sha": "3949b52"
+    "sha": "77a69bc"
   },
   "systems": [
     {
@@ -138,7 +138,7 @@
       "step": "implementation",
       "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is up next and no longer blocked: both its blockers have landed. Units 4 to 11 follow in landing order.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-23T02:30:00Z",
+      "updated": "2026-10-23T20:07:49Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -247,9 +247,9 @@
       "branch": null,
       "system": "gradle-build",
       "step": "landed",
-      "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. Unit 3 of #55, #62, is no longer blocked by this issue.",
+      "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. The as-built record and the impact were reconciled after the landing (PR #78). Unit 3 of #55, #62, is no longer blocked by this issue.",
       "since": "2026-10-23T02:21:55Z",
-      "updated": "2026-10-23T02:30:00Z",
+      "updated": "2026-10-23T20:07:49Z",
       "qa": [
         {
           "pass": 1,

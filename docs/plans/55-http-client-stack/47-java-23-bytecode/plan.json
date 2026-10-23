@@ -41,8 +41,8 @@
   "wip": {
     "step": "landed",
     "since": "2026-10-23T02:21:55Z",
-    "updated": "2026-10-23T02:30:00Z",
-    "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. Unit 3 of #55, #62, is no longer blocked by this issue.",
+    "updated": "2026-10-23T20:07:49Z",
+    "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. The as-built record and the impact were reconciled after the landing (PR #78). Unit 3 of #55, #62, is no longer blocked by this issue.",
     "steps": [
       "sizing",
       "research",
@@ -184,6 +184,12 @@
       "column": "built",
       "label": "PR #76 merged; #47 closed",
       "ref": "3949b52"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "As-built record and impact reconciled after the landing (PR #78): procedures C, D, E and G recorded (`javap -protected` identical, every class loads on a real JDK 11, `build-logic` green on JDK 17), no deviation from the plan; `impact.md` written",
+      "ref": "77a69bc"
     }
   ],
   "rows": [
@@ -214,8 +220,8 @@
           "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"
         ],
         "tests": "deterministic `WebToolsBuildJavaFloorDeterministicTest` 3; integration `JvmJavaFloorIntegrationTest` and `MultiplatformJavaFloorIntegrationTest` green",
-        "verified": "Procedure A compiled the three modules under the floor, and procedure B's guard passed on each; the as-built record leaves procedure C's comparison with `36fd879`, D's load on a real JDK 11 and E's JDK 17 run to the planner's reconciliation, and records none of them.",
-        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22",
+        "verified": "Procedures A to E, recorded after landing: the three modules compile under the floor with no warning and the guard passes on each; against a `36fd879` build every class went from major 67 to 55 with `javap -protected` identical; every class loads on a real JDK 11 (98, 4 and 2, none failing; the baseline jars load none); `build-logic`'s suites pass on JDK 17 and JDK 23.",
+        "link": "final-implementation.md#62-the-reconciliation-runs-2026-10-22-after-landing",
         "commits": [
           "a96d969"
         ]
@@ -300,8 +306,8 @@
           "build-logic/src/test/kotlin/com/spartanlabs/testing/integration/webtools/buildlogic/PublishedJvmVersionAttributeIntegrationTest.kt"
         ],
         "tests": "component `JavaFloorScanComponentTest` 18, `VerifyJavaFloorComponentTest` 7 and `RegisterVerifyJavaFloorComponentTest` 4; integration 39, end-to-end 5, non-functional 2, all green",
-        "verified": "Procedure B: the guard passes on all three modules, each with 2 library variants declaring 11. `:build-logic:test` 47 tests green after qa pass 1.",
-        "link": "final-implementation.md#qa-pass-1--minor-fixes",
+        "verified": "Procedure B: the guard passes on all three modules, each with 2 library variants declaring 11. `:build-logic:test` 47 tests green after qa pass 1, and all four `build-logic` suites (47, 39, 5 and 2 tests) green again with every task re-run (procedure E).",
+        "link": "final-implementation.md#3-qa-pass-1--minor-fixes",
         "commits": [
           "a96d969"
         ],
@@ -391,7 +397,7 @@
         "files": [
           "README.md"
         ],
-        "verified": "Procedure G's check that each install-block version is on Maven Central is not recorded in the as-built record.",
+        "verified": "Procedure G: `webtools-udp:2.0.0`, `webtools-scraping:1.0.0` and `webtools-browser:1.0.0`, the versions the install block names, are on Maven Central, and the lettered versions are not. The manual pass read the README diff against the build files.",
         "link": "final-implementation.md#doc-fixes-build-logicsrcmainkotlin",
         "commits": [
           "9e47ac0"
@@ -464,8 +470,8 @@
           "webtools-browser/build.gradle.kts",
           "webtools-udp/build.gradle.kts"
         ],
-        "verified": "Procedure C's metadata read: each `module.json` declares 11 on `apiElements` and `runtimeElements`; its POM and `javap -protected` comparison with `36fd879` is not recorded in the as-built record.",
-        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22",
+        "verified": "Procedure C, against a `36fd879` build: each `.module` file differs only in `org.gradle.jvm.version` (23 → 11) on `apiElements` and `runtimeElements`, and for the two legacy modules in their version; `webtools-udp`'s POM is identical and the two legacy POMs differ only in `<version>`.",
+        "link": "final-implementation.md#62-the-reconciliation-runs-2026-10-22-after-landing",
         "commits": [
           "e249f52"
         ]
@@ -523,8 +529,8 @@
       },
       "asBuilt": {
         "state": "as-planned",
-        "summary": "Left as decided: the level tests run on the build JDK, and no module test suite ran in this change. A JDK 11 launcher stays a follow-up after #58.",
-        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22"
+        "summary": "Left as decided: the level tests run on the build JDK, and no test task of the three modules ran, before or after. A JDK 11 launcher stays a follow-up after #58.",
+        "link": "final-implementation.md#10-known-gaps"
       },
       "options": [
         {
@@ -563,6 +569,14 @@
     {
       "name": "Release the lettered versions",
       "note": "publishes `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a and moves the README's install lines to them; it needs the maintainer's explicit instruction"
+    },
+    {
+      "name": "floor-scan-message",
+      "note": "optional: `JavaFloorScan` reads a non-numeric `org.gradle.jvm.version` as absent, so a string `\"11\"` is reported as declaring nothing; the message should name the value found, and its pinning test changes with it"
+    },
+    {
+      "name": "architecture-udp-ordering-wording",
+      "note": "`../architecture.md` §12 still calls `webtools-udp` unaffected by the lettered-version ordering; a dated callout on that document needs the maintainer's approval"
     }
   ],
   "documents": [
@@ -592,9 +606,14 @@
       "note": "§6.1 shared build logic and §11 unit 2, the scope this unit takes"
     },
     {
+      "label": "Impact",
+      "path": "impact.md",
+      "note": "published artifacts, blast radius, adoption, what #62 and the later units inherit, follow-ups, known gaps"
+    },
+    {
       "label": "Final implementation",
       "path": "final-implementation.md",
-      "note": "the as-built record: the regression test before and after, the builds and tests run, deviations (none), qa pass 1's fixes"
+      "note": "the as-built record: what was built, deviations (none), qa pass 1's fixes, the regression test before and after, procedures A to G, known gaps"
     }
   ],
   "notes": {
@@ -606,7 +625,7 @@
   },
   "impact": {
     "basis": "as-built",
-    "summary": "A fix to the published bytes, built as planned: every module's class files are Java 11 bytecode built against the Java 11 API, and its Gradle Module Metadata declares `org.gradle.jvm.version: 11` instead of 23, so consumers on JDK 11 to 22 can load it once released. No source, public API or wire format changed. The fix rides in `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a, none of them published yet.",
+    "summary": "A fix to the published bytes, built as planned: every module's class files are Java 11 bytecode built against the Java 11 API, and its Gradle Module Metadata declares `org.gradle.jvm.version: 11` instead of 23; every class loads on a real JDK 11, so consumers on JDK 11 to 22 can use it once released. No source, public API or wire format changed. The fix rides in `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a, none of them published yet.",
     "none": null,
     "release": {
       "bump": "fix",
@@ -620,15 +639,15 @@
         "system": null,
         "effect": "behaviour",
         "summary": "The released Java 23 builds fail to load with `UnsupportedClassVersionError`; the lettered versions load once published. Consumers on JDK 23 or newer see no difference.",
-        "link": "plan.md#risks-and-callers-affected"
+        "link": "impact.md#3-adoption"
       },
       {
         "who": "`webtools-udp`, `webtools-scraping`, `webtools-browser` artifacts",
         "kind": "artifact",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "Class files went from major 67 to 55 (98, 4 and 2 classes, measured) and the metadata's JVM version from 23 to 11 on the API and runtime variants; the `javap -protected` and POM comparison with `36fd879` is not recorded.",
-        "link": "plan.md#requirements"
+        "summary": "Class files went from major 67 to 55 (98, 4 and 2 classes) and the metadata's JVM version from 23 to 11 on the API and runtime variants. Measured against `36fd879`: `javap -protected` is identical for every class, `webtools-udp`'s POM is identical and the two legacy POMs differ only in `<version>`.",
+        "link": "impact.md#1-published-artifacts"
       },
       {
         "who": "Later units of #55 (`http-core`, `test-support`, `feeds`)",
@@ -636,15 +655,15 @@
         "system": null,
         "effect": "behaviour",
         "summary": "They inherit a multiplatform plugin that compiles their `jvm()` target at the floor, sets the attribute, runs `verifyJavaFloor` in `check` and carries no ASM pin; Gradle rejects any dependency declaring a higher JVM.",
-        "link": "plan.md#risks-and-callers-affected"
+        "link": "impact.md#4-what-62-and-the-later-units-inherit"
       },
       {
         "who": "Repository builds",
         "kind": "operator",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "A module's `check` also builds its sources and javadoc jars and metadata and runs the guard, about a second for the largest module. Building still needs a JDK 17 to 26.",
-        "link": "plan.md#risks-and-callers-affected"
+        "summary": "A module's `check` also builds its sources and javadoc jars and metadata and runs the guard, about a second for the largest module; `./gradlew verifyJavaFloor` runs the guard alone. Building still needs a JDK 17 to 26.",
+        "link": "impact.md#build"
       },
       {
         "who": "BotTools (`SpartanLaboratories/KotlinBottools`)",
@@ -652,7 +671,7 @@
         "system": null,
         "effect": "none",
         "summary": "On JDK 21, it was not blocked and needs nothing.",
-        "link": "plan.md#risks-and-callers-affected"
+        "link": "impact.md#3-adoption"
       }
     ],
     "adaptation": [
@@ -661,21 +680,21 @@
         "system": null,
         "need": "required",
         "summary": "Move to the lettered versions once they are published, requesting them `strictly` where the graph also asks for the plain release.",
-        "link": "plan.md#risks-and-callers-affected"
+        "link": "impact.md#3-adoption"
       },
       {
         "who": "Consumers on JDK 23 or newer",
         "system": null,
         "need": "none",
         "summary": "Nothing to change.",
-        "link": "plan.md#risks-and-callers-affected"
+        "link": "impact.md#3-adoption"
       },
       {
         "who": "`webtools-http` and the later multiplatform modules",
         "system": null,
         "need": "required",
-        "summary": "Set no `jvmTarget`, toolchain, flag or `TargetJvmVersion` of their own, declare no second JVM-based target, and use the Java 11 API only; `test-support`'s fixtures variants take the attribute from `WebToolsBuild.JAVA_FLOOR` and add their jar to the guard.",
-        "link": "plan.md#risks-and-callers-affected"
+        "summary": "Set no `jvmTarget`, toolchain, flag or `TargetJvmVersion` of their own, declare no second JVM-based target, call no JDK API newer than 11 and use no `@JvmRecord`; `test-support`'s fixtures variants set the attribute from `WebToolsBuild.JAVA_FLOOR` and add their jar to the guard.",
+        "link": "impact.md#4-what-62-and-the-later-units-inherit"
       }
     ],
     "api": [
@@ -691,17 +710,17 @@
     "conversion": [
       {
         "what": "On JDK 11 to 22, move to `webtools-udp` 2.0.0a or `webtools-scraping` / `webtools-browser` 1.0.0a once they are published.",
-        "link": "plan.md#risks-and-callers-affected",
+        "link": "impact.md#3-adoption",
         "compat": "notable"
       },
       {
         "what": "Where the dependency graph also asks for the plain release, request the lettered version `strictly`.",
-        "link": "plan.md#risks-and-callers-affected",
+        "link": "impact.md#3-adoption",
         "compat": "notable"
       }
     ],
     "changes": [],
-    "source": "final-implementation.md (no deviations) and plan.md",
-    "link": "final-implementation.md#deviations"
+    "source": "impact.md (reconciled after landing) and final-implementation.md (no deviations)",
+    "link": "impact.md#1-published-artifacts"
   }
 }
