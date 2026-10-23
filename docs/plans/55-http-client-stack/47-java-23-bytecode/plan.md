@@ -9,10 +9,10 @@
   Unit 1's as-built record: [`../61-build-logic/final-implementation.md`](../61-build-logic/final-implementation.md)
   and [`../61-build-logic/impact.md`](../61-build-logic/impact.md) §4. Research:
   [`research/README.md`](research/README.md) and [`research/java-11-floor.md`](research/java-11-floor.md).
-- **Branch:** `fix/issue-47-java-floor`, to be cut from `master` at `36fd879`.
-- **Commit:** TBD. This `plan.md` is committed in the same commit as the fix (see *Version control*), so
-  `git log --follow` binds the two.
-- **PR:** TBD (closes #47).
+- **Branch:** `fix/issue-47-java-floor`, cut from `master` at `36fd879`.
+- **Commit:** `a96d969`, the fix commit, which carries this `plan.md` (so `git log --follow` binds the
+  two). The other commits of the PR are listed in [`final-implementation.md`](final-implementation.md).
+- **PR:** #76, merged as `3949b52`; closes #47.
 - **What this plans:**
   - the Java 11 floor as one constant, `WebToolsBuild.JAVA_FLOOR = 11`, from which both library convention
     plugins set `jvmTarget`, `-Xjdk-release`, the Java compatibility settings and the `TargetJvmVersion`
@@ -22,7 +22,10 @@
   - the versions `webtools-scraping` and `webtools-browser` `1.0.0a` and the floor noted in `webtools-udp`'s
     unreleased `2.0.0a`;
   - the README: the install line, the Java floor and the build JDK.
-- **Status:** planning only.
+- **Status:** implemented and landed in PR #76. The as-built record is
+  [`final-implementation.md`](final-implementation.md) and the impact is [`impact.md`](impact.md). The
+  collapsed blocks below are the plan's versions; the nine qa pass 1 changes to them (seven comments and
+  KDoc, two tests) are listed in the as-built record.
 - **Versions:** `webtools-udp` stays `2.0.0a` (unreleased); `webtools-scraping` `1.0.0` → `1.0.0a`;
   `webtools-browser` `1.0.0` → `1.0.0a`. Nothing is published.
 - **Baseline:** `master` at `36fd879`. Line references are to it.
