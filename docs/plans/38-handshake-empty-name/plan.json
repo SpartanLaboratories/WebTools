@@ -1226,7 +1226,7 @@
   ],
   "notes": {
     "paths": "Paths under `webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/` are abbreviated `main/`; paths under `webtools-udp/src/test/kotlin/com/spartanlabs/testing/` are abbreviated `test/`. Line references are on the baseline 85cfbbe unless a change names a later commit.",
-    "retrofit": "This board was written after the fact, as the worked example for plan boards, from the issue's research, architecture, plan, impact and as-built documents; its dates come from the commits and the pull request. The run predates the work-level labels, so no level is recorded, and its qa passes are the two reviews of the change set. A board kept from the start of a run is updated at every step transition, and its WIP strip shows where the run is.",
+    "retrofit": "This board was written after the fact, as the worked example for plan boards, from the issue's research, architecture, plan, impact and as-built documents; its dates come from the commits and the pull request. Its qa passes are the two reviews of the change set. A board kept from the start of a run is updated at every step transition, and its WIP strip shows where the run is.",
     "corrections": [
       {
         "what": "The release row's system is `webtools-udp`: `webtools-udp/build.gradle.kts` sits under that module's registry paths, not the Gradle build's.",
@@ -1237,5 +1237,124 @@
         "when": "re-templating, 2026-10-22"
       }
     ]
+  },
+  "impact": {
+    "basis": "as-built",
+    "summary": "A bugfix with no API change: a malformed `Iam` is now answered `REFUSED malformed` instead of being accepted or ignored. Server applications and clients that send well-formed handshakes see no difference; a library client's malformed handshake now fails fast. It ships as the bugfix release `webtools-udp` `2.0.0a`.",
+    "none": null,
+    "release": {
+      "bump": "fix",
+      "version": "webtools-udp 2.0.0a",
+      "note": "the bugfix release after `2.0.0`, set in its own `build:` commit"
+    },
+    "downstream": [
+      {
+        "who": "Server applications (subclasses of `MultiConnectionUDPServer`)",
+        "kind": "consumer",
+        "system": "webtools-udp",
+        "effect": "behaviour",
+        "summary": "`admit` never sees an empty `name`, and sees `credential` as `\"\"` only when the client sent none; `onClientConnect` never fires for an empty name. No signature changes.",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "who": "Library clients (`MultiConnectionUDPClient`)",
+        "kind": "consumer",
+        "system": "webtools-udp",
+        "effect": "behaviour",
+        "summary": "`handshake(\"\")` used to time out, and `handshake(\"\", credential = \"tok\")` registered under the empty name; both now fail fast with `HandshakeRefusedException` and `reason == \"malformed\"`. Once #52 lands, these calls fail locally instead.",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "who": "Third-party and hand-rolled clients",
+        "kind": "consumer",
+        "system": null,
+        "effect": "behaviour",
+        "summary": "A malformed line is now refused rather than accepted or ignored, and a `REFUSED` can arrive mid-session when a malformed `Iam` is sent from, or forged as, their address; the server keeps them registered.",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "who": "Operators",
+        "kind": "operator",
+        "system": "webtools-udp",
+        "effect": "behaviour",
+        "summary": "One WARN per malformed line, carrying the origin, a fixed defect label and the registered flag, never the line; the stack-trace WARN a bare `Iam` drew is gone. The server has no reply rate limiting (#57).",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "who": "`io.github.spartanlaboratories:webtools-udp`",
+        "kind": "artifact",
+        "system": "webtools-udp",
+        "effect": "none",
+        "summary": "No API change. A consumer whose clients send well-formed handshakes sees no difference on the wire; the fix ships as `2.0.0a`.",
+        "link": "impact.md#5-downstream-consumers"
+      }
+    ],
+    "adaptation": [
+      {
+        "who": "Server applications",
+        "system": "webtools-udp",
+        "need": "none",
+        "summary": "No signature changes, and nothing to adopt.",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "who": "Third-party and hand-rolled clients",
+        "system": null,
+        "need": "optional",
+        "summary": "They should not take a stray `REFUSED` on an established session as a disconnect: the server keeps them registered. The protocol doc says so.",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "who": "Deployments exposed to untrusted networks",
+        "system": null,
+        "need": "optional",
+        "summary": "Rate-limit unregistered sources at the edge: a bare `Iam` draws a payload ratio of 5.7, and the server has no address validation or reply rate limiting (#57).",
+        "link": "impact.md#2-who-sees-the-change"
+      }
+    ],
+    "api": [
+      {
+        "surface": "`MultiConnectionUDPServer.admit` (KDoc)",
+        "system": "webtools-udp",
+        "change": "changed",
+        "tier": "stable-core",
+        "summary": "The KDoc states that `name` is never empty and that `credential` is `\"\"` only when absent: enforced behaviour documented, additive for every existing override. No signature change.",
+        "link": "architecture.md#8-extension--stability"
+      },
+      {
+        "surface": "`REFUSED` reply to a malformed `Iam` (wire)",
+        "system": "webtools-udp",
+        "change": "added",
+        "tier": "stable-core",
+        "summary": "The protocol doc gains the behaviour; the reply verb and its handling (`REFUSED_REPLY`, `isRefused`, `refusalReason`) were already Stable Core. The reason text `malformed` is informative and outside the contract.",
+        "link": "architecture.md#8-extension--stability"
+      },
+      {
+        "surface": "`HandshakeParse`, `HandshakeDefect`, `MALFORMED_REFUSAL_DATAGRAM`",
+        "system": "webtools-udp",
+        "change": "added",
+        "tier": "internal",
+        "summary": "Internal, inside an `internal object`: no new public surface, so no stability tier is assigned.",
+        "link": "architecture.md#8-extension--stability"
+      }
+    ],
+    "conversion": [
+      {
+        "what": "Move to `webtools-udp` `2.0.0a`; a server application changes no code.",
+        "link": "impact.md#5-downstream-consumers",
+        "compat": "notable"
+      },
+      {
+        "what": "In a third-party client, treat a `REFUSED` on an established session as non-fatal, as the protocol doc's §3 describes.",
+        "link": "impact.md#2-who-sees-the-change"
+      },
+      {
+        "what": "Where the server faces untrusted networks, rate-limit unregistered sources at the edge until #57 lands.",
+        "link": "impact.md#2-who-sees-the-change"
+      }
+    ],
+    "changes": [],
+    "source": "impact.md",
+    "link": "impact.md#2-who-sees-the-change"
   }
 }

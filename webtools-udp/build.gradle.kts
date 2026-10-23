@@ -109,6 +109,10 @@ dependencies {
 // peer can receive the unframed REFUSED. The parse is total over a new internal sealed
 // HandshakeParse outcome. No public API change; on the wire only the three malformed shapes
 // change, from silence or REGISTERED 2 to REFUSED malformed.
+// The same 2.0.0a also carries the Java 11 floor (Issue #47). The class files are Java 11 bytecode
+// (major 55) built against the Java 11 API, and the Gradle Module Metadata declares
+// org.gradle.jvm.version 11, where 2.0.0 shipped Java 23 bytecode (major 67) declaring 23, which
+// consumers on JDK 11 to 22 could not load. No source or public API change.
 version = "2.0.0a"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,

@@ -8,7 +8,7 @@
   "level": 4,
   "title": "HTTP client stack",
   "issueTitle": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
-  "function": "BotTools needs a suspend HTTP stack: a transport, an outbound-URL guard, a response cache, a call budget and test fakes. This tracking issue designs it as a new Kotlin Multiplatform module `webtools-http`, a feeds module `webtools-feeds` on top of it, the shared `build-logic` with the Java 11 floor that folds in #47, and their documentation, and builds it as eleven units, each a sub-issue planned and built at its own level on its own board.",
+  "function": "BotTools needs a suspend HTTP stack: a transport, an outbound-URL guard, a response cache, a call budget and test fakes. This tracking issue designs it as a new Kotlin Multiplatform module `webtools-http`, a feeds module `webtools-feeds` on top of it, the shared `build-logic` with the Java 11 floor that folds in #47, and their documentation, and builds it as eleven units, each a sub-issue planned and built on its own board.",
   "status": "building",
   "parent": null,
   "branch": "feat/issue-55-http-client-stack",
@@ -103,22 +103,21 @@
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-22T23:04:39Z",
-    "detail": "Unit 1, #61 (`build-logic`), landed through PR #74 as 1e27071 with no version moved. Unit 2, #47 (`java-floor`), is up next and has not started; its one blocker, #61, has landed. Units 3 to 11 follow in landing order.",
+    "updated": "2026-10-23T01:08:55Z",
+    "detail": "Unit 1, #61 (`build-logic`), landed through PR #74 as 1e27071 with no version moved. Unit 2, #47 (`java-floor`), is in progress: its run started at the plan step, its one blocker #61 has landed. Unit 3, #62 (`http-core`), is up next and waits on #47. Units 4 to 11 follow in landing order.",
     "steps": [
       "sizing",
       "interview",
       "research",
-      "plan",
-      "branch",
-      "implementation",
-      "qa",
-      "remediation",
+      "architecture",
       "landing",
+      "implementation",
       "landed"
     ],
-    "current": [],
-    "next": "java-floor",
+    "current": [
+      "java-floor.built"
+    ],
+    "next": "http-core",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -136,7 +135,12 @@
         }
       ]
     },
-    "landing": null
+    "landing": {
+      "pr": 60,
+      "merge": "834ce4a",
+      "version": null,
+      "date": "2026-10-21"
+    }
   },
   "milestones": [
     {
@@ -286,7 +290,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Create the included build with `WebToolsBuild` (the level list and `registerLevelTasks`) and the plugins `webtools.published-library`, `webtools.kotlin-jvm-library` and `webtools.kotlin-multiplatform-library`; cut the root build to `group` and `version`; put the three modules on the JVM plugin with their own `api(slf4j-api)`; keep the UDP port lock verbatim; select the level tasks by package.",
-        "defense": "Level 3: the build is one system and the change is additive build behaviour with no library API change. Measured: the three modules publish identical output.",
+        "defense": "One system, the build, and the change is additive build behaviour with no library API change. Measured: the three modules publish identical output.",
         "steps": [],
         "tests": [
           "The three modules publish identical POMs and metadata",
@@ -305,7 +309,7 @@
       },
       "asBuilt": {
         "state": "landed",
-        "summary": "Landed through PR #74 as 1e27071 (#61, level 3): the included build with `WebToolsBuild` and its three convention plugins, the three modules on `webtools.kotlin-jvm-library`, the root script cut to `group` and `version`, the level tasks selecting by package. The published output is identical to `834ce4a`, so no version moved.",
+        "summary": "Landed through PR #74 as 1e27071 (#61): the included build with `WebToolsBuild` and its three convention plugins, the three modules on `webtools.kotlin-jvm-library`, the root script cut to `group` and `version`, the level tasks selecting by package. The published output is identical to `834ce4a`, so no version moved.",
         "changes": [
           {
             "what": "The level selection was proven under `--test-dry-run`, without running a module's test body: the same 95 classes as the tags selected on `834ce4a`.",
@@ -353,9 +357,44 @@
           61
         ],
         "versions": "webtools-scraping and webtools-browser 1.0.0 → 1.0.0a; webtools-udp rides in the unreleased 2.0.0a",
-        "branch": null,
+        "branch": "fix/issue-47-java-floor",
         "folder": "47-java-23-bytecode/",
-        "board": null
+        "board": "47-java-23-bytecode/dashboard.html",
+        "live": {
+          "step": "remediation",
+          "since": "2026-10-23T02:16:10Z",
+          "updated": "2026-10-23T02:16:10Z",
+          "detail": "QA pass 1: changes requested. Code review passed: the diff matches the plan, the regression test was red before the fix, the jars are class-file major 55 and their metadata declares 11; `build-logic` suites 84/84 (38, 39, 5, 2). 7 documentation items (comments, KDoc) and 2 test gaps (an in-process test of `VerifyJavaFloor.verify()`'s branches; two `JavaFloorScan.moduleMetadata` edge cases), all minor and without fallout, are being fixed on the spot; no second qa pass, then landing. Nothing waits on the user.",
+          "steps": [
+            "sizing",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "landing",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-10-23",
+              "findings": {
+                "documentation": 7,
+                "test": 2,
+                "code": 0
+              },
+              "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "fix/issue-47-java-floor"
+        }
       },
       "gap": {
         "kind": "bug",
@@ -390,7 +429,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Add `JAVA_FLOOR = 11` and wire `jvmTarget`, `-Xjdk-release` and the Java compatibility settings (JVM plugin) and the `TargetJvmVersion` attribute (KMP plugin) from it; add `verifyJavaFloor` into `check`; set `1.0.0a` on `webtools-scraping` and `webtools-browser` and extend `webtools-udp`'s `2.0.0a` note; add the build-JDK note to the README.",
-        "defense": "Level 2: a bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
+        "defense": "A bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
         "steps": [],
         "tests": [
           "`verifyJavaFloor`: no class above major 55, `org.gradle.jvm.version` 11 on every API and runtime variant"
@@ -512,7 +551,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Create `webtools-http` (KMP plugin, `explicitApi()`, the ABI dump) and `webtools-http-commoncheck` with the `webtools.kotlin-common-check` plugin; deliver the marker, the failure model, the request and response types, `HttpTransport`, `WallClock`, the logging seam and the internal `flatMap`; add the README artifact row and install line.",
-        "defense": "Level 3: one new module's additive API. Its plan starts with the compile proof of the marker, a gated interface, a default naming it and a consumer without opt-in.",
+        "defense": "One system: one new module's additive API. Its plan starts with the compile proof of the marker, a gated interface, a default naming it and a consumer without opt-in.",
         "steps": [],
         "tests": [
           "Level 4a in `commonTest`: parsing, validation, query encoding",
@@ -597,7 +636,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Deliver the fixtures compilation and its publication, `VirtualClock`, `FakeHttpTransport`, `Fixture`/`FixtureLoader` with the `.http` codec, `FixtureRecorder` with `RecordingGate` and `Redaction`, the `.gitattributes` line, the fixtures-publication check in `build-logic` wired into `check`, and the README's `testFixtures(...)` line.",
-        "defense": "Level 3: one system, the fixtures variant; the build check is this unit's own test.",
+        "defense": "One system, the fixtures variant; the build check is this unit's own test.",
         "steps": [],
         "tests": [
           "The fixtures-publication TestKit check: capability, `org.gradle.jvm.version` 11, no test libraries on the main variants"
@@ -675,7 +714,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Deliver `OutboundUrlPolicy` with `Trusted`/`Untrusted` builders, `TransportSettings` with both default sets, the `internal` classification core in `commonMain`, and the JVM enforcement types with stub-based Level 2 tests.",
-        "defense": "Level 3: one subsystem, additive.",
+        "defense": "One subsystem, additive.",
         "steps": [],
         "tests": [
           "Level 4a in `commonTest`: every IANA row's first and last address, the host-form catalogue, the published bypass vectors",
@@ -759,7 +798,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Deliver `OkHttpTransport` (factory and `internal` constructor), `ExchangeGuard`, the redirect loop, the capped in-callback body read, the failure mapping, `close()` and the transport's logging; add `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` to the fixtures.",
-        "defense": "Level 3.",
+        "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
           "Level 3 against `mockwebserver3`: one request for `503` + `Retry-After: 0`, `408`, `429` and each hop; caps; cancel during an endless body; hop 2 refused",
@@ -837,7 +876,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Deliver the `ResponseCache` port, `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats`, `ResponseCache.Disabled` and `CaffeineResponseCache` with the load-start, failure-as-value, `asDeferred` waiting, `maxAge` and `Closed` behaviours.",
-        "defense": "Level 3.",
+        "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
           "Level 2 on `VirtualClock`: hits, expiry, miss TTL, `maxAge`, coalescing, one waiter's cancellation, close",
@@ -923,7 +962,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Deliver `CallBudget`, `Permit`, `withPermit`, `Lane`, `RateWindow`, `RateSignals` and their reader, `RetryAfter`, `BudgetStore` with `InMemoryBudgetStore`, `BudgetObserver`, `CallBudget.Unlimited` and `WindowedCallBudget` in `commonMain`, with the non-suspend `close()` plus `flush()`; add `RecordingBudgetObserver` and `FakeBudgetStore` to the fixtures.",
-        "defense": "Level 3.",
+        "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
           "Level 2 on `VirtualClock`: FIFO, refunds, lane floors, pauses, hard stop, restore, write-ahead after a crash",
@@ -1001,7 +1040,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Deliver `Endpoint`, `CallSpec`, `FetchSpec`, `UpstreamClient`, `UrlFetcher`, their configs, the common factories and the JVM owning factories with the `maxBurst` dispatcher sizing and the cache → budget → transport closing order; the README how-to.",
-        "defense": "Level 3.",
+        "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
           "Level 2 on the fake transport: a refusal costs nothing; a `429` with `Retry-After` pauses the budget; a decode failure is never stored; non-`GET` bypasses the cache",
@@ -1100,7 +1139,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Create `webtools-feeds` and its check module; deliver the port, model, limits, validators, `FeedFetch`, `FeedFailure`, `FeedFetcher` and the prolog scan in `commonMain`, `RomeFeedParser` and `FeedFetcher.untrusted` in `jvmMain`; README artifact row, install line and how-to.",
-        "defense": "Level 3: one new module built on published seams; depending on a sibling module does not make it two systems.",
+        "defense": "One new module built on published seams; depending on a sibling module does not make it two systems.",
         "steps": [],
         "tests": [
           "Level 2 on the fakes: conditional headers, `304` → `NotModified`",
@@ -1164,7 +1203,7 @@
       "verdict": {
         "kind": "build",
         "summary": "Write `docs/webtools-http-architecture.md` and make the final README pass: the \"HTTP client stack\" and \"Feeds\" sections, the stability notes and the test-layout paragraph.",
-        "defense": "Level 1: Markdown only; no plan folder and no board of its own.",
+        "defense": "Docs only: Markdown, with no plan folder and no board of its own.",
         "steps": [],
         "tests": [],
         "leaves": [],
@@ -1252,13 +1291,155 @@
   ],
   "notes": {
     "paths": "Paths under `webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/` are abbreviated `common/` in the architecture; `jvmMain` likewise `jvm/`. Line references are to the baseline 806ce8e.",
-    "units": "Gap, considered and verdict come from the architecture and are written once. Each unit's own board, in its folder, carries its rows; its as-built cell here fills when it lands, and its row then links its board. Unit 11 is level 1 and gets no folder or board.",
+    "units": "Gap, considered and verdict come from the architecture and are written once. Each unit's own board, in its folder, carries its rows; its as-built cell here fills when it lands, and its row then links its board. Unit 11 is docs only and gets no folder or board.",
     "systems": "build-logic was a planned part of the Gradle build until #61 landed; it is now part of the built Gradle build (registry slug `gradle-build`, the same colour slot), so this board's systems and its build-logic and java-floor rows name `gradle-build`.",
     "corrections": [
       {
         "what": "Unit 1's verdict said the package filter selects the same 99 test classes the tag filter did. The 99 are test files, of which 4 are `testing/support` helpers holding no test, so the figure is 95 classes (#61's plan §2, measured by its procedure B).",
         "when": "landing refresh after #61, 2026-10-22"
+      },
+      {
+        "what": "The units' verdict defences, the function, unit 1's as-built summary and the units note named each unit's sizing; they now say what the work is (one system, a bug fix, docs only), as a board never shows it. The decisions are unchanged.",
+        "when": "re-templating, 2026-10-23"
       }
     ]
+  },
+  "impact": {
+    "basis": "plan",
+    "summary": "Two new Kotlin Multiplatform artifacts, `webtools-http` and `webtools-feeds` 1.0.0, add a suspend HTTP stack and a feed parser for BotTools, with a published test-fixtures variant. The three existing artifacts change only by the Java 11 floor, and no existing source or public API changes. The tracking plan moves no version itself; each unit's release is its own.",
+    "none": null,
+    "release": {
+      "bump": "none",
+      "version": null,
+      "note": "`java-floor` is the only unit that moves an existing artifact's version; the two new modules stay unreleased at 1.0.0 until the last unit lands"
+    },
+    "downstream": [
+      {
+        "who": "Consumers of `webtools-udp`, `webtools-scraping` and `webtools-browser`",
+        "kind": "consumer",
+        "system": null,
+        "effect": "behaviour",
+        "summary": "They see only the Java 11 floor: Java 11 bytecode declaring `org.gradle.jvm.version: 11`, loadable on JDK 11 to 22. POMs and public API are unchanged.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "`webtools-http` (new artifact)",
+        "kind": "artifact",
+        "system": "webtools-http-core",
+        "effect": "additive",
+        "summary": "The HTTP stack: transport, URL policies, cache, budget, facades and failure model, with `kotlinx-coroutines-core` as `api` and `okhttp-jvm`, `caffeine` and `slf4j-api` at runtime only; a test-fixtures variant carries the fakes.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "`webtools-feeds` (new artifact)",
+        "kind": "artifact",
+        "system": "webtools-feeds",
+        "effect": "additive",
+        "summary": "An RSS/Atom parser port with the Rome default and a conditional-GET fetcher, built on `webtools-http`.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "BotTools (`SpartanLaboratories/KotlinBottools`)",
+        "kind": "repository",
+        "system": null,
+        "effect": "additive",
+        "summary": "The first consumer, through an internal adapter. Its release conditions (Java 21 or lower bytecode, Kotlin 2.2.x-readable metadata, no `-SNAPSHOT` dependency) hold for both new artifacts; its adapter building against the Experimental seams lets them graduate.",
+        "link": "impact.md#4-downstream-consumers"
+      },
+      {
+        "who": "Repository builds",
+        "kind": "operator",
+        "system": "gradle-build",
+        "effect": "behaviour",
+        "summary": "`./gradlew build` adds `verifyJavaFloor`, `apiCheck` on the new modules, the fixtures-publication check and the check-only JS compiles; `build-logic` brings its own level tests, run on demand.",
+        "link": "impact.md#build"
+      }
+    ],
+    "adaptation": [
+      {
+        "who": "Consumers on JDK 11 to 22",
+        "system": null,
+        "need": "required",
+        "summary": "Move to the lettered versions of the existing artifacts once published, requesting them `strictly` where the graph also asks for the plain release.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "Implementers of the new seams",
+        "system": null,
+        "need": "optional",
+        "summary": "Implementing or subclassing a gated seam needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`; calling and passing it do not.",
+        "link": "architecture.md#9-extension--stability"
+      },
+      {
+        "who": "Callers of `Connector` and `WebViewer`",
+        "system": null,
+        "need": "none",
+        "summary": "Unchanged; moving `Connector`'s fetches onto `webtools-http` is a follow-up after its release.",
+        "link": "impact.md#3-adoption"
+      }
+    ],
+    "api": [
+      {
+        "surface": "`webtools-http` and `webtools-feeds` value types, configs and supplied defaults",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "stable-core",
+        "summary": "Final classes built by factory and builder; no public `data class` and no defaulted parameters on Stable Core functions.",
+        "link": "architecture.md#9-extension--stability"
+      },
+      {
+        "surface": "`HttpTransport`, `ResponseCache`, `CallBudget`, `BudgetStore`, `FeedParser` and the other seams",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "experimental",
+        "summary": "Interfaces with supplied defaults; implementing one needs the opt-in, and each graduates to `@SupportedExtension` once BotTools' adapter has built against it.",
+        "link": "architecture.md#9-extension--stability"
+      },
+      {
+        "surface": "Test fixtures (`VirtualClock`, `FakeHttpTransport` and their peers)",
+        "system": "webtools-http-test-fixtures",
+        "change": "added",
+        "tier": "stable-core",
+        "summary": "Stable Core with source compatibility only: no ABI dump covers the fixtures jar.",
+        "link": "architecture.md#9-extension--stability"
+      },
+      {
+        "surface": "`build-logic` plugins and `WebToolsBuild`",
+        "system": "gradle-build",
+        "change": "added",
+        "tier": "internal",
+        "summary": "Internal to the repository and not published.",
+        "link": "architecture.md#9-extension--stability"
+      }
+    ],
+    "conversion": [],
+    "units": [
+      {
+        "unit": "build-logic",
+        "basis": "as-built",
+        "summary": "No downstream effect: the three artifacts' POMs, module metadata and jars are identical to `834ce4a`'s, so no version moved. Inside the repository, `build-logic` holds the shared configuration the later units build on.",
+        "release": {
+          "bump": "none",
+          "version": null
+        },
+        "source": "61-build-logic/impact.md",
+        "link": "61-build-logic/impact.md#1-published-artifacts"
+      },
+      {
+        "unit": "java-floor",
+        "basis": "plan",
+        "summary": "Every module compiles to Java 11 bytecode against the Java 11 API and declares `org.gradle.jvm.version: 11`, so consumers on JDK 11 to 22 can load the lettered versions once published. No source or public API change.",
+        "release": {
+          "bump": "fix",
+          "version": "webtools-scraping, webtools-browser 1.0.0a; webtools-udp 2.0.0a"
+        },
+        "source": "47-java-23-bytecode/plan.md",
+        "link": "47-java-23-bytecode/plan.md#risks-and-callers-affected",
+        "compat": "notable"
+      }
+    ],
+    "changes": [],
+    "source": "impact.md",
+    "link": "impact.md#1-published-artifacts"
   }
 }

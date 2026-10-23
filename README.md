@@ -19,7 +19,7 @@ Plan boards: the [work board](docs/plans/index.html) shows every planning and de
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0a")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -27,6 +27,15 @@ dependencies {
 ```
 
 Requires JDK 11 or newer. Built with Kotlin 2.2.
+
+The Java 11 floor starts with `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser`
+1.0.0a: Java 11 bytecode (class-file major 55), compiled against the Java 11 API. The releases
+already on Maven Central — `webtools-udp` 1.0.0, 1.1.0 and 2.0.0, `webtools-scraping` 1.0.0 and
+`webtools-browser` 1.0.0 — are Java 23 bytecode and fail to load on JDK 22 or older with
+`UnsupportedClassVersionError`. Gradle orders a lettered version below the same version without
+the letter (`1.0.0a` below `1.0.0`, `2.0.0a` below `2.0.0`), so a dependency graph that also asks
+for the plain version keeps the Java 23 build unless it requests the lettered version
+`strictly`. Building the repository needs a JDK 17 to 26; see [Java floor](#java-floor).
 
 `webtools-udp 2.0.0` is a **wire break** for everything after the handshake — see [Migrating to
 2.0](#migrating-to-20). Both ends of a connection must be on `2.0.0`+; a `1.x` ↔ `2.x` pairing
@@ -480,6 +489,7 @@ The repo is a Gradle multi-module build; the three modules are `:webtools-udp`,
 ./gradlew e2eTest                  # Level 4b - full-stack flows
 ./gradlew nonfunctionalTest        # Level 4c - robustness / security properties
 ./gradlew uatTest                  # Level 5  - manual acceptance (mostly @Disabled)
+./gradlew verifyJavaFloor          # the Java 11 floor of every module's jars, metadata and runtime classpath (part of check)
 ./gradlew :build-logic:test        # build-logic's pre-commit gate: its gating, component and deterministic checks
 ./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest  # on demand: TestKit checks
 ```
@@ -490,6 +500,19 @@ selects its tests by package (`com.spartanlabs.testing.<level>.*`), so any level
 gated on its own; a test class outside those packages runs under `test` only. Shared fixtures live
 under `testing/support/`.
 
+### Java floor
+
+Every module compiles to Java 11 bytecode against the Java 11 API, which is what the install
+section's `Requires JDK 11 or newer` rests on. Building needs a JDK 17 to 26, the range Gradle
+9.7.1 runs on, and the level tests run on that JDK too; no JDK 11 is involved. The convention
+plugins set `jvmTarget`, `-Xjdk-release` and the Java compatibility from one constant,
+`WebToolsBuild.JAVA_FLOOR`, so the result does not depend on which of those JDKs builds.
+`verifyJavaFloor`, part of `check`, fails the build when a built jar holds a class above Java 11
+bytecode, when a library variant of the generated Gradle Module Metadata declares another
+`org.gradle.jvm.version`, or when a runtime dependency holds such a class; on success it writes a
+one-line summary to `<module>/build/reports/java-floor/verifyJavaFloor.txt`. Running
+`./gradlew verifyJavaFloor` checks every module without running any module's tests.
+
 ### Shared build logic
 
 `build-logic/` is a Gradle build included through `pluginManagement { includeBuild("build-logic") }`
@@ -499,8 +522,8 @@ plugins, which a module applies by id in its `plugins {}` block:
 | Plugin id | Configures |
 |---|---|
 | `webtools.published-library` | the Maven Central publishing skeleton: signing and the shared POM metadata |
-| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: test dependencies, JUnit Platform, the level test tasks; applies `webtools.published-library` |
-| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (no module uses it yet); applies binary-compatibility-validator — commit `api/<module>.api` — and sets the `TargetJvmVersion` attribute; applies `webtools.published-library` |
+| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the level test tasks; applies `webtools.published-library` |
+| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (no module uses it yet): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
 
 Change shared build behaviour there, not in a module's build file: a module's `build.gradle.kts`
 adds its dependencies, its coordinates, its POM name and description, and any configuration that

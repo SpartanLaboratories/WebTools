@@ -28,8 +28,8 @@ class ConfigurationCacheReuseNonFunctionalTest {
         workspace = ProjectWorkspace.create("cc").getOrThrow()
         workspace.write(SampleProject.multiplatformJvm("sample")).getOrThrow()
         val build = NestedBuild(workspace)
-        build.build("componentTest")
-        secondRun = build.build("componentTest")
+        build.build("componentTest", "verifyJavaFloor")
+        secondRun = build.build("componentTest", "verifyJavaFloor")
     }
 
     @AfterAll
