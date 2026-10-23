@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="template" content="system/template/system.html">
 <meta name="template-divergence" content="Renderer: the decision path's end levels add RUNS (green), FAILS (red) and NOT RUN (grey), each with its glyph, to the template's DELIVER and WARN, because a build's test selection ends in a task that runs, fails or does not run (footer item 4).">
 <title>Gradle build · WebTools</title>
 <style>
@@ -344,24 +345,25 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs"><a href="../index.html">WebTools</a> › gradle-build</div>
   <h1>Gradle build</h1>
-  <p class="function">Builds, tests and publishes every WebTools module from one place: the wrapper and the settings, and the included <code>build-logic</code> build whose three convention plugins give each module its Kotlin setup, its seven package-selected level test tasks and the Maven Central publishing skeleton.</p>
+  <p class="function">Builds, tests and publishes every WebTools module from one place: the wrapper and the settings, and the included <code>build-logic</code> build whose three convention plugins give each module its Kotlin setup at the Java 11 floor with the <code>verifyJavaFloor</code> guard in <code>check</code>, its seven package-selected level test tasks and the Maven Central publishing skeleton.</p>
   <div class="chips">
     <span class="chip">Gradle <b>9.7.1</b></span>
     <span class="chip">Kotlin Gradle plugin <b>2.2.0</b></span>
+    <span class="chip">Java floor <b>11</b> · class-file major 55</span>
     <span class="chip">publishes <b>nothing</b> of its own</span>
-    <span class="chip">as-is at <b>master 1e27071</b> · 2026-10-22</span>
-    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener"><b>#61</b></a> build-logic · db98325</span>
+    <span class="chip">as-is at <b>master 3949b52</b> · <time datetime="2026-10-23T02:21:55Z">2026-10-23 02:21 UTC</time></span>
+    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener"><b>#47</b></a> java-floor · a96d969</span>
     <span class="chip model">C4 model <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
   </div>
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">9 files</div><div class="s">414 lines · the build scripts and build-logic's main sources; wrapper excluded</div></div>
+  <div class="kpi"><div class="l">Source</div><div class="v">11 files</div><div class="s">756 lines · the build scripts and build-logic's main sources; wrapper excluded</div></div>
   <div class="kpi"><div class="l">Plugins</div><div class="v">3 ids</div><div class="s">webtools.* · applied by id, with no version in any script</div></div>
   <div class="kpi"><div class="l">Processes</div><div class="v">3 kinds</div><div class="s">Gradle daemon · test JVMs · TestKit daemon · 2 one-at-a-time locks</div></div>
-  <div class="kpi"><div class="l">Level tasks</div><div class="v">7 per module</div><div class="s">gatingTest … uatTest · by package · not in check</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">12 classes</div><div class="s">49 tests · 6 of 7 levels · build-logic's own</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">5</div><div class="s">1 bug · 3 planned units · 1 enhancement</div></div>
+  <div class="kpi"><div class="l">Tasks per module</div><div class="v">7 + 1</div><div class="s">gatingTest … uatTest, by package, not in check · verifyJavaFloor, in check</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">18 classes</div><div class="s">93 tests · 6 of 7 levels · build-logic's own</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">4</div><div class="s">3 planned units · 1 enhancement</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -377,7 +379,7 @@ footer code{color:var(--ink-2)}
 <div>
   <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
     <h2>Component map</h2>
-    <p class="lede">Nesting is ownership. Filled boxes are what a module's build file may use — the three plugin ids and <code>WebToolsBuild</code> — outlined boxes are the build's internals. The module build files on the left belong to the modules; they are drawn here because they are where the plugins are applied. Click any box for its role, files and the process it runs in — and its place in the C4 model.</p>
+    <p class="lede">Nesting is ownership. Filled boxes are what a module's build file may use — the three plugin ids, <code>WebToolsBuild</code> and the Java floor's task type — outlined boxes are the build's internals. The module build files on the left belong to the modules; they are drawn here because they are where the plugins are applied. Click any box for its role, files and the process it runs in — and its place in the C4 model.</p>
     <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of the Gradle build"></svg>
     <div class="key"><span><i class="pub cli"></i>used by a module · repository build scripts</span><span><i class="cli"></i>internal · repository build scripts</span><span><i class="pub srv"></i>used by a module · build-logic</span><span><i class="srv"></i>internal · build-logic</span><span><i class="pub wir"></i>used by a module · shared</span><span><i class="wir"></i>internal · build-logic's tests</span><span><i class="pln"></i>planned, not built</span></div>
   </section>
@@ -422,6 +424,7 @@ footer code{color:var(--ink-2)}
         <tr><td><code>:build-logic:test</code>, <code>gatingTest</code>, <code>componentTest</code>, <code>deterministicTest</code></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
         <tr><td>The TestKit test classes of <code>integrationTest</code>, <code>e2eTest</code>, <code>nonfunctionalTest</code></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
         <tr><td>The nested builds those classes start, their Kotlin compilation included (<code>in-process</code>)</td><td></td><td></td><td></td><td><span class="dot"></span></td></tr>
+        <tr><td>A module's <code>verifyJavaFloor</code>, in <code>check</code>: its jars, metadata and runtime classpath, read in the task</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
         <tr><td><code>publishToMavenCentral</code> and the <code>sign…Publication</code> tasks</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
       </tbody>
     </table></div>
@@ -438,7 +441,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
     <h2>How a module is configured when <code>./gradlew</code> runs</h2>
-    <p class="lede">From the wrapper to a module's level task, through the included build, each lifeline in the colour of who owns it; the release steps and the planned Java floor close it. Step through it, or click any message.</p>
+    <p class="lede">From the wrapper to a module's level task, through the included build, each lifeline in the colour of who owns it; the Java floor's guard and the release steps close it. Step through it, or click any message.</p>
     <div class="ctl">
       <button class="btn" id="seq-prev">‹ prev</button>
       <button class="btn" id="seq-next">next ›</button>
@@ -454,10 +457,10 @@ footer code{color:var(--ink-2)}
     <p class="lede">The order a build configures in, the path from source to a release, the TestKit home's life, and the rules the scripts hold to — coloured by phase: configure, build and verify, release and teardown.</p>
     <div class="lgrid">
       <div class="card ph1"><h3>Configuration order <small>every <code>./gradlew</code> run</small></h3>
-        <ol class="steps"><li>wrapper starts Gradle 9.7.1</li><li>settings: <code>includeBuild("build-logic")</code>, first</li><li>foojay 0.8.0 · include 3 modules</li><li>root: <code>allprojects</code> group, version 1.0.0</li><li>a module requests its plugin: build-logic compiles, then is cached</li><li>the plugin applies Kotlin, publishing, test dependencies</li><li><code>registerLevelTasks</code>: 7 tasks, lazily</li><li>the module's own lines: dependencies, coordinates, POM</li></ol>
+        <ol class="steps"><li>wrapper starts Gradle 9.7.1</li><li>settings: <code>includeBuild("build-logic")</code>, first</li><li>foojay 0.8.0 · include 3 modules</li><li>root: <code>allprojects</code> group, version 1.0.0</li><li>a module requests its plugin: build-logic compiles, then is cached</li><li>the plugin applies Kotlin at <code>JAVA_FLOOR</code> 11, publishing, test dependencies</li><li><code>registerVerifyJavaFloor</code>, into <code>check</code></li><li><code>registerLevelTasks</code>: 7 tasks, lazily</li><li>the module's own lines: dependencies, coordinates, POM</li></ol>
         <div class="callout"><b>Versions live in one file.</b> Kotlin 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 are plugin markers at literal versions in <code>build-logic/build.gradle.kts</code>; the scripts apply plugins by id, and Gradle forbids versions there.</div></div>
       <div class="card"><h3>Source to release <small>the path every module takes</small></h3>
-        <ol class="steps"><li class="ph2">compile on the build JDK</li><li class="ph2">test: every class</li><li class="ph2">gatingTest … uatTest, on demand</li><li class="ph3">signAllPublications</li><li class="ph3">publishToMavenCentral</li><li class="ph2 planned">verifyJavaFloor (#47)</li></ol>
+        <ol class="steps"><li class="ph2">compile to Java 11 bytecode on the build JDK</li><li class="ph2">test: every class</li><li class="ph2">check: verifyJavaFloor</li><li class="ph2">gatingTest … uatTest, on demand</li><li class="ph3">signAllPublications</li><li class="ph3">publishToMavenCentral</li></ol>
         <div class="callout"><b>No CI and no release record.</b> Who runs <code>publishToMavenCentral</code>, and when, is not recorded in the repository; CI, a CHANGELOG and release tags are open as <a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a>. A release needs the Central credentials and a signing key as Gradle properties, never committed.</div></div>
       <div class="card"><h3>The TestKit home and generated projects <small>build-logic's nested-build tasks</small></h3>
         <table class="tbl"><thead><tr><th></th><th>What happens</th></tr></thead><tbody>
@@ -468,10 +471,10 @@ footer code{color:var(--ink-2)}
         </tbody></table></div>
       <div class="card ph2"><h3>Rules the scripts hold to</h3>
         <div class="callout"><b>Level tasks select by package</b> <code>com.spartanlabs.testing.&lt;level&gt;.*</code>; none is part of <code>check</code>. A module's level task passes when nothing matches; every one of build-logic's own fails on an empty run. A test class outside the level packages runs under <code>test</code> only.</div>
-        <div class="callout"><b>No plugin sets a JVM target or toolchain:</b> class files and <code>org.gradle.jvm.version</code> follow the build JDK until the Java floor lands (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>). No plugin sets <code>explicitApi()</code>.</div>
+        <div class="callout"><b>One Java floor, read from one constant:</b> <code>WebToolsBuild.JAVA_FLOOR = 11</code> sets <code>jvmTarget</code>, <code>-Xjdk-release</code> and the Java compatibility in the JVM plugin, and the <code>jvm()</code> options and <code>TargetJvmVersion</code> in the multiplatform plugin; no module sets its own, and <code>verifyJavaFloor</code> fails one that does. No plugin sets a toolchain or <code>explicitApi()</code>.</div>
         <div class="callout"><b>binary-compatibility-validator only on a multiplatform module,</b> never at the root or on an ancestor; such a module commits <code>api/&lt;project&gt;.api</code>, because <code>apiCheck</code> fails until the dump exists. No module script may assign <code>runtimeDependencyFiles</code>.</div></div>
     </div>
-    <div class="key"><span><i class="ph1"></i>configure · creation</span><span><i class="ph2"></i>build and verify · the rules that hold</span><span><i class="ph3"></i>release · teardown</span><span><i class="pln"></i>planned, not built</span></div>
+    <div class="key"><span><i class="ph1"></i>configure · creation</span><span><i class="ph2"></i>build and verify · the rules that hold</span><span><i class="ph3"></i>release · teardown</span></div>
   </section>
 </div>
 
@@ -489,32 +492,33 @@ footer code{color:var(--ink-2)}
         <li>A failing compile or test fails <code>./gradlew build</code>; nothing is retried.</li>
         <li>Configuration errors fail the build at configuration: a second level-task registration on one project throws <code>InvalidUserDataException</code>.</li>
         <li>A module's level task passes on an empty selection; build-logic's own test tasks fail on one. A multiplatform module's <code>apiCheck</code> fails until its dump is committed.</li>
-        <li><span class="gap">Not checked: the Java floor</span> (<code>verifyJavaFloor</code> is planned, <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>).</li>
+        <li><code>verifyJavaFloor</code>, in <code>check</code>, fails on a class above major 55 in a module's jars or runtime classpath, a library variant declaring another <code>org.gradle.jvm.version</code>, an unreadable input, or nothing to check; it lists up to 20 violations.</li>
       </ul></div>
     <div class="bubble"><h3>Extension points</h3>
       <ul>
         <li>For a module's build file: the plugin ids <code>webtools.kotlin-jvm-library</code> (three modules), <code>webtools.kotlin-multiplatform-library</code> (none yet), <code>webtools.published-library</code>.</li>
-        <li><code>WebToolsBuild</code>, a public object in the default package: <code>LEVELS</code>, <code>LEVEL_PACKAGE_ROOT</code>, <code>registerLevelTasks</code>, readable from any module script.</li>
+        <li><code>WebToolsBuild</code>, a public object in the default package: <code>LEVELS</code>, <code>LEVEL_PACKAGE_ROOT</code>, <code>registerLevelTasks</code>, <code>JAVA_FLOOR</code>, <code>classFileMajor</code>, <code>registerVerifyJavaFloor</code>, readable from any module script.</li>
+        <li>A module that publishes another jar adds it to its <code>verifyJavaFloor</code> task's <code>jars</code> (the <code>VerifyJavaFloor</code> task type is public).</li>
         <li>A module adds its own dependencies, coordinates, POM name and description, and anything that is its alone (webtools-udp's version and port lock).</li>
         <li>Unpublished, used only inside this repository: no stability tier or opt-in marker applies.</li>
       </ul></div>
-    <div class="bubble"><h3>Test levels <small>12 classes · build-logic</small></h3>
+    <div class="bubble"><h3>Test levels <small>18 classes · build-logic</small></h3>
       <div class="bars" role="table" aria-label="Test classes per testing level">
-        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
-        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
-        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">6</span>
-        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
-        <span class="lbl">L4b e2e</span><span class="trk"><span class="fil" style="width:17%"></span></span><span class="val">1</span>
-        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:33%"></span></span><span class="val">2</span>
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:13%"></span></span><span class="val">1</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:50%"></span></span><span class="val">4</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">8</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:25%"></span></span><span class="val">2</span>
+        <span class="lbl">L4b e2e</span><span class="trk"><span class="fil" style="width:13%"></span></span><span class="val">1</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:25%"></span></span><span class="val">2</span>
         <span class="lbl">L5 UAT</span><span class="trk"><span class="fil" style="width:0%"></span></span><span class="val">0</span>
       </div>
-      <p>49 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 7 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1, L2, L4a: 15 tests) is the pre-commit gate; <code>./gradlew build</code> runs none of them. <span class="gap">No test-inspector report is committed.</span></p></div>
+      <p>93 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 8 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1 gating, L2 component, L4a deterministic: 47 tests) is the pre-commit gate; the three nested-build tasks (46 tests) run on demand; <code>./gradlew build</code> runs none of them. <span class="gap">No test-inspector report is committed, and no module test runs on a JDK 11: the level tests run on the build JDK until a JDK 11 launcher follows #58.</span></p></div>
     <div class="bubble"><h3>Compatibility &amp; versioning</h3>
       <ul>
-        <li>The build has no version; it publishes nothing. #61 changed no published byte: each module's POM, module metadata and jars were measured identical to <code>834ce4a</code>'s.</li>
-        <li>Gradle 9.7.1 · Kotlin Gradle plugin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 (ASM 9.9.1 pinned) · foojay 0.8.0.</li>
-        <li>Kotlin 2.2.0 prints a Gradle-10 deprecation at <code>jvm()</code> (KT-78620), so no build runs with <code>--warning-mode=fail</code>. Configuration-cache compatible: a second identical run reuses the entry.</li>
-        <li><span class="gap">No JVM target is set:</span> all three artifacts declare the build JDK's version, against the README's 11+ (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>).</li>
+        <li>The build has no version; it publishes nothing. Since <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a> every module's class files are Java 11 bytecode (major 55) compiled against the Java 11 API, and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, whichever JDK 17 to 26 runs the build.</li>
+        <li>The floor rides in versions set in the modules' own build files: <code>webtools-scraping</code> and <code>webtools-browser</code> <code>1.0.0a</code>, <code>webtools-udp</code> <code>2.0.0a</code>, none published; Maven Central's 1.0.0 and 2.0.0 are Java 23 bytecode. A lettered version orders below the plain one, so a consumer requests it <code>strictly</code>.</li>
+        <li>Gradle 9.7.1 · Kotlin Gradle plugin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 on its own ASM (the pin went with the floor) · foojay 0.8.0.</li>
+        <li>Kotlin 2.2.0 prints a Gradle-10 deprecation at <code>jvm()</code> (KT-78620), so no build runs with <code>--warning-mode=fail</code>. Configuration-cache compatible: a second identical run reuses the entry. <code>-Xjdk-release</code> is an experimental Kotlin flag; <code>verifyJavaFloor</code> is its backstop.</li>
       </ul></div>
     <div class="bubble"><h3>Thread safety</h3>
       <ul>
@@ -532,6 +536,7 @@ footer code{color:var(--ink-2)}
       <ul>
         <li>Nothing from the build itself: <code>build-logic</code> is never published and never on a module's runtime.</li>
         <li>Through the Kotlin plugin it applies, each module's POM carries <code>kotlin-stdlib:2.2.0</code>; each module declares its own <code>api(slf4j-api:2.0.13)</code>.</li>
+        <li>What a module ships is Java 11 bytecode whose metadata declares <code>org.gradle.jvm.version</code> 11, and <code>verifyJavaFloor</code> fails it when a runtime dependency holds a class above Java 11, so nothing it brings needs a newer JVM.</li>
         <li>Test-only, from the plugins: <code>kotlin-test</code>, <code>kotlin-test-junit5</code>, <code>logback-classic:1.5.6</code>.</li>
       </ul></div>
     <div class="bubble"><h3>Releasing</h3>
@@ -539,6 +544,7 @@ footer code{color:var(--ink-2)}
         <li><code>publishToMavenCentral</code> with <code>signAllPublications()</code>: every publication is signed.</li>
         <li>Needs, as Gradle properties and never committed: <code>mavenCentralUsername</code>, <code>mavenCentralPassword</code>, and a signing key (<code>signing.keyId</code>, <code>signing.password</code>, <code>signing.secretKeyRingFile</code>, or the <code>signingInMemoryKey</code> trio).</li>
         <li>A Kotlin/JVM module ships a sources jar and a javadoc jar; a multiplatform one sources jars and an empty javadoc jar.</li>
+        <li><code>check</code> runs <code>verifyJavaFloor</code> before a release. The lettered versions that carry the floor are not published yet; the README's install block names Central's versions until they are.</li>
       </ul></div>
   </div>
 </section>
@@ -546,43 +552,46 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-10-22</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-10-23</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span>HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes <small>tracking issue</small></span><span class="tags"><span class="badge">open</span><span class="badge">L4</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a href="../../plans/55-http-client-stack/dashboard.html">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · 2 of 11 units landed</small></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span>Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks <small>unit 1 · landed in 1e27071: this page</small></span><span class="tags"><span class="badge">closed</span><span class="badge">L3</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span>webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+ <small>unit 2 · the Java floor in build-logic</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">open</span><span class="badge">L2</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span>webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile <small>unit 3 · adds <code>webtools.kotlin-common-check</code> and the first multiplatform module</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span><span class="badge">L3</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span>webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check <small>unit 4 · its publication check reuses this harness</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span><span class="badge">L3</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span>webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code> <small>unit 10 · applies the multiplatform plugin; its check module the common-check plugin</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span><span class="badge">L3</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>unit 1 · landed in 1e27071</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a href="../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>unit 2 · landed in 3949b52: the Java floor and <code>verifyJavaFloor</code> on this page</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span>webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile <small>unit 3 · up next, no longer blocked · adds <code>webtools.kotlin-common-check</code> and the first multiplatform module</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span>webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check <small>unit 4 · its publication check reuses this harness; its fixtures jar joins <code>verifyJavaFloor</code></small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span>webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code> <small>unit 10 · applies the multiplatform plugin; its check module the common-check plugin</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
           </ul>
           <p class="more">6 more of its issues (#64–#68, #70) touch webtools-http and the documentation only.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-10-22</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-10-23</small></h3>
       <ul class="issues">
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span>Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</span><span class="tags"><span class="badge">docs · enhancement</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Plan boards that amended this system: <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — gap, options, verdict and as built · <a href="../../plans/55-http-client-stack/dashboard.html">#55 tracking board</a> — the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>Plan boards that amended this system: <a href="../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html">#47 Java 11 floor</a> — gap, options, verdict and as built · <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — gap, options, verdict and as built · <a href="../../plans/55-http-client-stack/dashboard.html">#55 tracking board</a> — the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li><a href="../../plans/55-http-client-stack/47-java-23-bytecode/plan.md">#47 plan</a> · <a href="../../plans/55-http-client-stack/47-java-23-bytecode/final-implementation.md">as built</a> — the regression test before and after, the guard's reports, qa pass 1's fixes · <a href="../../plans/55-http-client-stack/47-java-23-bytecode/research/README.md">research</a> — the Java 11 floor</li>
         <li><a href="../../plans/55-http-client-stack/61-build-logic/plan.md">#61 plan</a> · <a href="../../plans/55-http-client-stack/61-build-logic/final-implementation.md">as built</a> — every measurement · <a href="../../plans/55-http-client-stack/61-build-logic/impact.md">impact</a> — what units 2, 3, 4 and 10 build on · <a href="../../plans/55-http-client-stack/61-build-logic/research/README.md">research</a></li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.1 shared build logic, §6.8 the check-only js modules, §11 the decomposition</li>
-        <li><a href="../../../README.md">README</a> — "Build &amp; test" and "Shared build logic": the commands, the package rule, the plugin ids</li>
+        <li><a href="../../../README.md">README</a> — "Build &amp; test", "Java floor" and "Shared build logic": the commands, the floor and its guard, the package rule, the plugin ids</li>
         <li><a href="../../plans/15-split-into-three-modules/plan.md">#15 split into three modules</a> — the plan that made the three artifacts and the build as it stood before #61</li>
         <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it · the modules built with it: <a href="../webtools-udp/index.html">webtools-udp</a>, and on the <a href="../index.html">repository page</a> webtools-scraping and webtools-browser</li>
       </ul></div>
   </div>
 </section>
 
-<footer>Drawn from <code>build-logic/</code>, the build scripts, <code>workspace.dsl</code>, #61's <code>final-implementation.md</code> and the README's "Build &amp; test" at <code>master 1e27071</code>. Code is authoritative on any conflict. Maintained by the presenter agent, refreshed when a change to this system lands: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
-<!-- Divergences from the system-dashboard template (presenter, 2026-10-22):
+<footer>Drawn from <code>build-logic/</code>, the build scripts, <code>workspace.dsl</code>, #61's and #47's <code>final-implementation.md</code> and the README's "Build &amp; test" at <code>master 3949b52</code>. Code is authoritative on any conflict. Maintained by the presenter agent, refreshed when a change to this system lands: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
+<!-- Divergences from the system-dashboard template (presenter, 2026-10-23 refresh after #47):
      1. The core tabs are adapted to a build system and named for what they show: "Processes" (the Threads tab: the build starts no runtime threads, so it lists the processes a build run starts and its two build-service locks, with a "which process runs what" matrix), "Test selection" (the decision path, two variants: a module's tasks and build-logic's own) and "Module configuration" (the sequence).
      2. The KPI row names a build's facts: plugins, processes, level tasks, in place of types, threads and contracts.
      3. An eighth Guarantees bubble, "Releasing": what a publish needs, by property key only.
      4. The decision path's end levels are RUNS (green), NOT RUN (grey) and FAILS (red), each with its glyph; the template's lvlCol knows only DELIVER and WARN, so this page's lvlCol adds them.
      5. The structure map draws the three module build files, which belong to the modules, because they are where the plugins are applied; the band in the middle holds what both plugins and module scripts share.
      Nothing is removed. Item 4 changes the renderer and is declared in the head (meta template-divergence); items 1, 2, 3 and 5
-     live in what a page fills in (MODEL, hand-written panels, header), so the page's CSS and tab set are the template's. -->
+     live in what a page fills in (MODEL, hand-written panels, header), so the page's CSS and tab set are the template's.
+     Brought to the template at 3949b52: the times helpers (when, day, localizeTimes) in the script before MODEL, the template
+     marker in the head, test levels named with their labels, no work level in the Context badges. -->
 </div>
 
 
@@ -590,7 +599,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools master 1e27071 (2026-10-22): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools master 3949b52 (2026-10-23): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47. The build publishes nothing of its own. Code is authoritative on any conflict.
 // Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.1, 6.8 and 11) and carry their sub-issue. None of them is built; they are drawn dashed.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
@@ -602,26 +611,26 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         portal  = softwareSystem "Gradle Plugin Portal" "Serves the foojay settings plugin and, with Maven Central, the plugin markers build-logic depends on." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.0a and its UDP-port lock." "Kotlin/JVM library · 2.0.0a"
-            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot helpers. Its build file applies webtools.kotlin-jvm-library." "Kotlin/JVM library · 1.0.0"
-            browser  = container "webtools-browser" "WebViewer: headless-Chrome screenshots. Its build file applies webtools.kotlin-jvm-library." "Kotlin/JVM library · 1.0.0"
+            udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.0a and its UDP-port lock." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode"
+            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot helpers. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
+            browser  = container "webtools-browser" "WebViewer: headless-Chrome screenshots. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
 
-            gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0" "Internal" {
+            gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal" {
                 // ---- what a module build script may use: the plugin ids and WebToolsBuild ----
                 published = component "webtools.published-library" "Applies vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM. Never calls configure(...)." "precompiled script plugin" "Public"
-                jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; test dependencies, JUnit Platform, the seven level tasks over the test source set. No jvmTarget or toolchain." "precompiled script plugin" "Public"
-                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target and its TargetJvmVersion attribute, binary-compatibility-validator 0.18.2 with ASM 9.9.1, level tasks over the jvm test compilation, a lifecycle test task. No module applies it yet." "precompiled script plugin" "Public"
-                levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks: one Test task per level, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches." "Kotlin object · default package" "Public"
+                jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; compiles to the Java floor (jvmTarget, -Xjdk-release, Java compatibility) and puts verifyJavaFloor in check; test dependencies, JUnit Platform, the seven level tasks over the test source set." "precompiled script plugin" "Public"
+                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. No module applies it yet." "precompiled script plugin" "Public"
+                levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks; JAVA_FLOOR = 11, classFileMajor and registerVerifyJavaFloor." "Kotlin object · default package" "Public"
+                floor     = component "Java floor" "#47: WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
 
                 // ---- internals ----
                 wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
                 settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, applies foojay-resolver-convention 0.8.0, includes the three modules." "Gradle Kotlin DSL" "Internal"
                 root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, and the testKitHomeLock build service." "Gradle included build · unpublished" "Internal"
-                harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests." "test sources · Gradle TestKit" "Internal"
+                harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests." "test sources · Gradle TestKit" "Internal"
 
                 // ---- planned by Issue #55, not built ----
-                floor       = component "Java floor" "#47 (unit 2): WebToolsBuild.JAVA_FLOOR = 11, jvmTarget and -Xjdk-release from it in both library plugins, and verifyJavaFloor in check." "planned" "Planned"
                 commonCheck = component "webtools.kotlin-common-check" "#62 (unit 3): a plugin that compiles a multiplatform module's commonMain for js, publishing nothing." "planned" "Planned"
                 jsCheck     = component "check-only js modules" "#62 and #69: webtools-http-commoncheck and webtools-feeds-commoncheck, unpublished." "planned" "Planned"
             }
@@ -643,8 +652,8 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         webtools.gradleBuild.jvmLib -> webtools.gradleBuild.levels "registerLevelTasks over the test source set"
         webtools.gradleBuild.kmpLib -> webtools.gradleBuild.levels "registerLevelTasks over the jvm test compilation"
         webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.0a"
-        webtools.gradleBuild.root -> webtools.scraping "Sets group and version 1.0.0"
-        webtools.gradleBuild.root -> webtools.browser "Sets group and version 1.0.0"
+        webtools.gradleBuild.root -> webtools.scraping "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
+        webtools.gradleBuild.root -> webtools.browser "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
         webtools.gradleBuild.jvmLib -> webtools.udp "Configures: applied by id in its plugins block"
         webtools.gradleBuild.jvmLib -> webtools.scraping "Configures: applied by id in its plugins block"
         webtools.gradleBuild.jvmLib -> webtools.browser "Configures: applied by id in its plugins block"
@@ -652,11 +661,13 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         webtools.gradleBuild.harness -> webtools.gradleBuild.jvmLib "Applies it to generated projects through TestKit"
         webtools.gradleBuild.harness -> webtools.gradleBuild.kmpLib "Applies it to generated projects through TestKit"
         webtools.gradleBuild.harness -> webtools.gradleBuild.logicBuild "Copies its sources into an end-to-end composite"
+        webtools.gradleBuild.logicBuild -> webtools.gradleBuild.floor "Compiles"
+        webtools.gradleBuild.jvmLib -> webtools.gradleBuild.floor "Compiles at JAVA_FLOOR; registerVerifyJavaFloor, wired into check"
+        webtools.gradleBuild.kmpLib -> webtools.gradleBuild.floor "Compiles jvm() at JAVA_FLOOR, TargetJvmVersion 11; registerVerifyJavaFloor, wired into check"
+        webtools.gradleBuild.floor -> webtools.gradleBuild.levels "Reads JAVA_FLOOR and classFileMajor"
+        webtools.gradleBuild.harness -> webtools.gradleBuild.floor "Reads the built jars and module.json files through TestKit"
 
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
-        webtools.gradleBuild.floor -> webtools.gradleBuild.levels "Would add JAVA_FLOOR = 11"
-        webtools.gradleBuild.floor -> webtools.gradleBuild.jvmLib "Would fill the TODO(#47) java floor region"
-        webtools.gradleBuild.floor -> webtools.gradleBuild.kmpLib "Would set TargetJvmVersion to the floor"
         webtools.gradleBuild.jsCheck -> webtools.gradleBuild.commonCheck "Would apply"
         webtools.gradleBuild.logicBuild -> webtools.gradleBuild.commonCheck "Would compile (#62)"
     }
@@ -670,7 +681,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at master 1e27071, with its planned parts dashed: the Java floor (#47) and the js common check (#62, #69)." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at master 3949b52, with its planned parts dashed: the js common check (#62, #69)." {
             include *
             autoLayout tb
         }
@@ -682,6 +693,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             webtools.gradleBuild.jvmLib -> webtools.udp "plugins { id(webtools.kotlin-jvm-library) }"
             webtools.gradleBuild.jvmLib -> webtools.gradleBuild.published "applies the publishing skeleton"
             webtools.gradleBuild.jvmLib -> webtools.gradleBuild.levels "registers gatingTest … uatTest, selected by package"
+            webtools.gradleBuild.jvmLib -> webtools.gradleBuild.floor "compiles at JAVA_FLOOR 11; check runs verifyJavaFloor"
             autoLayout lr
         }
         styles {
@@ -700,6 +712,17 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
 
 <script>
 "use strict";
+/* Times (GUIDANCE.md §6, "Times"): stored as UTC ISO stamps; shown in the viewer's own time zone, with the zone's abbreviation,
+   as a <time> whose datetime and title hold the exact UTC value. A date alone stays a date; a stamp with no zone is shown as written.
+   localizeTimes() formats every <time datetime> the page draws, so a stamp written into hand-made HTML is shown the same way. */
+const STAMP_RE=/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/;
+const utcIso=s=>{ const d=new Date(String(s).replace(" ","T")); return isNaN(d)?null:d.toISOString().replace(/\.000Z$/,"Z"); };
+const LOCAL_FMT={day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZoneName:"short"};
+const when=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s); return u?`<time datetime="${u}" title="${u} (UTC)">${esc(new Date(u).toLocaleString(undefined,LOCAL_FMT))}</time>`:esc(s); };
+const day=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s); return u?`<time datetime="${u}" title="${u} (UTC)">${esc(new Date(u).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}))}</time>`:esc(s); };
+function localizeTimes(root){ (root||document).querySelectorAll("time[datetime]").forEach(t=>{ const u=STAMP_RE.test(t.getAttribute("datetime"))&&utcIso(t.getAttribute("datetime")); if(!u||t.dataset.local) return;
+  t.dataset.local="1"; t.title=`${u} (UTC)`; t.textContent=new Date(u).toLocaleString(undefined,LOCAL_FMT); }); }
+window.addEventListener("DOMContentLoaded",()=>localizeTimes());
 const REPO="https://github.com/SpartanLaboratories/WebTools";
 const SRC=REPO+"/blob/master/"; // every d.files entry is a path from the repository root
 const NS="http://www.w3.org/2000/svg";
@@ -735,32 +758,32 @@ const MODEL = {
       {id:"settings",side:"client",vis:"int",x:236,y:56,w:180,h:56,t:"settings.gradle.kts",s:["includeBuild(build-logic) first","foojay 0.8.0 · 3 modules"],
         d:{role:"Its first statement is pluginManagement { includeBuild(\"build-logic\") }, so the convention plugins resolve by id. It applies foojay-resolver-convention 0.8.0, names the root project WebTools and includes :webtools-udp, :webtools-scraping and :webtools-browser.",vis:"internal · build script",files:["settings.gradle.kts"],threads:["Gradle daemon"],issues:[58]}},
       {id:"root",side:"client",vis:"int",x:40,y:128,w:376,h:50,t:"build.gradle.kts (root)",s:["allprojects { group; version 1.0.0 } · no plugins, no subprojects, no tasks"],
-        d:{role:"Keeps only allprojects { group = \"io.github.spartanlaboratories\"; version = \"1.0.0\" }, under a comment that points at build-logic and the README. It applies no plugin, so the root project has no build, check or test task of its own; ./gradlew build runs each module's.",vis:"internal · build script",files:["build.gradle.kts"],threads:["Gradle daemon"],issues:[]}},
+        d:{role:"Keeps only allprojects { group = \"io.github.spartanlaboratories\"; version = \"1.0.0\" }, under a comment that points at build-logic and the README; every module now overrides the version in its own file. It applies no plugin, so the root project has no build, check or test task of its own; ./gradlew build runs each module's.",vis:"internal · build script",files:["build.gradle.kts"],threads:["Gradle daemon"],issues:[]}},
       {id:"modules",side:"client",vis:"int",container:true,x:40,y:196,w:376,h:186,t:"Module build files",s:"each module's own · applies a plugin by id",
         d:{role:"Each of the three modules applies id(\"webtools.kotlin-jvm-library\") and declares its own api(\"org.slf4j:slf4j-api:2.0.13\"), its coordinates and its POM name and description. These files belong to the modules; they are drawn here because they are where the plugins are applied.",vis:"owned by each module",files:["webtools-udp/build.gradle.kts","webtools-scraping/build.gradle.kts","webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
       {id:"udpB",side:"client",vis:"int",x:56,y:240,w:344,h:40,t:"webtools-udp/build.gradle.kts",s:"jvm plugin · api slf4j · version 2.0.0a · UDP-port lock",
-        d:{role:"Overrides the root version with 2.0.0a and puts test, integrationTest, e2eTest and nonfunctionalTest on the commonUdpPortLock build service (one permit). #61 rewrote only its header and added the plugins and dependencies blocks; the version note, the version line and the port lock are byte-identical.",vis:"owned by webtools-udp",files:["webtools-udp/build.gradle.kts"],threads:["Gradle daemon","commonUdpPortLock"]}},
-      {id:"scrB",side:"client",vis:"int",x:56,y:288,w:344,h:40,t:"webtools-scraping/build.gradle.kts",s:"jvm plugin · api slf4j · skrapeit, jsoup, unirest-java",
-        d:{role:"Adds skrapeit 1.1.5, jsoup 1.15.4 and unirest-java 1.4.9 as implementation; no version line, so it takes the root's 1.0.0.",vis:"owned by webtools-scraping",files:["webtools-scraping/build.gradle.kts"],threads:["Gradle daemon"]}},
-      {id:"brB",side:"client",vis:"int",x:56,y:336,w:344,h:40,t:"webtools-browser/build.gradle.kts",s:"jvm plugin · api slf4j · selenium-java",
-        d:{role:"Adds selenium-java 4.48.0 as implementation; no version line, so it takes the root's 1.0.0.",vis:"owned by webtools-browser",files:["webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
+        d:{role:"Overrides the root version with 2.0.0a and puts test, integrationTest, e2eTest and nonfunctionalTest on the commonUdpPortLock build service (one permit). #47 extended the 2.0.0a note with the Java floor: the unreleased 2.0.0a also carries it. The version line and the port lock are unchanged.",vis:"owned by webtools-udp",files:["webtools-udp/build.gradle.kts"],threads:["Gradle daemon","commonUdpPortLock"]}},
+      {id:"scrB",side:"client",vis:"int",x:56,y:288,w:344,h:40,t:"webtools-scraping/build.gradle.kts",s:"jvm plugin · api slf4j · 1.0.0a · skrapeit, jsoup, unirest-java",
+        d:{role:"Adds skrapeit 1.1.5, jsoup 1.15.4 and unirest-java 1.4.9 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with a note: the bug fix after 1.0.0 that carries the Java floor (#47). Gradle orders 1.0.0a below 1.0.0, so a consumer that also asks for 1.0.0 requests 1.0.0a strictly.",vis:"owned by webtools-scraping",files:["webtools-scraping/build.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"brB",side:"client",vis:"int",x:56,y:336,w:344,h:40,t:"webtools-browser/build.gradle.kts",s:"jvm plugin · api slf4j · 1.0.0a · selenium-java",
+        d:{role:"Adds selenium-java 4.48.0 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with the same note as webtools-scraping: the bug fix after 1.0.0 that carries the Java floor (#47).",vis:"owned by webtools-browser",files:["webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
       {id:"jsCheck",side:"client",vis:"int",kind:"planned",x:40,y:396,w:376,h:44,t:"check-only js modules",s:"planned #62, #69 · webtools-http-commoncheck, webtools-feeds-commoncheck",
         d:{role:"Planned by #55 (architecture §6.8): unpublished modules that compile each multiplatform module's commonMain for js, so a JVM API in common code is a compile error. Not built.",vis:"planned",files:[],issues:[62,69]}},
-      {id:"levels",side:"wire",vis:"pub",x:440,y:96,w:120,h:120,t:"WebToolsBuild",s:["LEVEL_PACKAGE_ROOT","LEVELS · 7 TestLevels","registerLevelTasks","default package"],
-        d:{role:"A public object in the default package, read by both library plugins and readable from any module script. LEVELS holds the seven levels in order; registerLevelTasks registers gatingTest … uatTest as plain Test tasks in the verification group, each on the JUnit Platform, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches. They are registered lazily and never added to check.",vis:"public · object · default package",files:["build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"]}},
-      {id:"floor",side:"wire",vis:"pub",kind:"planned",x:440,y:236,w:120,h:72,t:"Java floor",s:["planned #47","JAVA_FLOOR = 11","verifyJavaFloor"],
-        d:{role:"Planned as unit 2 (#47): WebToolsBuild.JAVA_FLOOR = 11; jvmTarget, -Xjdk-release and the Java compatibility settings from it in the two TODO(#47) places of the library plugins; verifyJavaFloor in check. Not built: class files follow the build JDK today.",vis:"planned",files:[],issues:[47]}},
-      {id:"logic",side:"server",vis:"int",container:true,x:584,y:56,w:376,h:330,t:"build-logic",s:"included build · kotlin-dsl · never published",
-        d:{role:"An included build reached through the settings' pluginManagement. Its precompiled script plugins and WebToolsBuild sit in the default package; it compiles when a module first requests a plugin and is cached afterwards. It is never published and never on a module's runtime classpath.",vis:"internal · included build",files:["build-logic/settings.gradle.kts","build-logic/build.gradle.kts"],threads:["Gradle daemon"],issues:[47,62]}},
+      {id:"levels",side:"wire",vis:"pub",x:440,y:76,w:120,h:132,t:"WebToolsBuild",s:["LEVELS · 7 TestLevels","registerLevelTasks","JAVA_FLOOR = 11","classFileMajor","registerVerifyJavaFloor"],
+        d:{role:"A public object in the default package, read by both library plugins and readable from any module script. LEVELS holds the seven levels in order; registerLevelTasks registers gatingTest … uatTest as plain Test tasks in the verification group, each on the JUnit Platform, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches; they are registered lazily and never added to check. JAVA_FLOOR = 11 is the Java release every published artifact targets; classFileMajor maps a release to its class-file major (11 → 55); registerVerifyJavaFloor registers the verifyJavaFloor task, which the plugins wire into check.",vis:"public · object · default package",files:["build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"]}},
+      {id:"floor",side:"wire",vis:"pub",x:440,y:224,w:120,h:120,t:"Java floor",s:["VerifyJavaFloor","JavaFloorScan","major ≤ 55 · jvm 11","verifyJavaFloor","in check"],
+        d:{role:"Built by #47. The VerifyJavaFloor task type (verifyJavaFloor, in check of every module) reads what a consumer receives: each class in the module's jars outside META-INF/versions/, each library variant of the Gradle Module Metadata it generates, and each class on its resolved runtime classpath. It fails on a class above major 55, a variant whose org.gradle.jvm.version is not 11, an unreadable file, or nothing to check, listing up to 20 violations; on success it writes build/reports/java-floor/verifyJavaFloor.txt. JavaFloorScan holds the pure scans, returning kotlin.Result. Configuration-cache compatible and up to date when its inputs are unchanged.",vis:"public · task type · default package",files:["build-logic/src/main/kotlin/VerifyJavaFloor.kt","build-logic/src/main/kotlin/JavaFloorScan.kt","build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"],issues:[]}},
+      {id:"logic",side:"server",vis:"int",container:true,x:584,y:56,w:376,h:340,t:"build-logic",s:"included build · kotlin-dsl · never published",
+        d:{role:"An included build reached through the settings' pluginManagement. Its precompiled script plugins and WebToolsBuild sit in the default package; it compiles when a module first requests a plugin and is cached afterwards. It is never published and never on a module's runtime classpath.",vis:"internal · included build",files:["build-logic/settings.gradle.kts","build-logic/build.gradle.kts"],threads:["Gradle daemon"],issues:[62]}},
       {id:"published",side:"server",vis:"pub",x:600,y:100,w:344,h:44,t:"webtools.published-library",s:"vanniktech 0.36.0 · mavenCentral() · signing · shared POM",
         d:{role:"Applies com.vanniktech.maven.publish, declares mavenCentral(), and calls publishToMavenCentral(), signAllPublications() and the shared pom {} (inception year, URL, Apache 2.0 licence, developer, SCM). It never calls configure(...), so a Kotlin/JVM module keeps vanniktech's own KotlinJvm(Javadoc(), Sources()).",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.published-library.gradle.kts"],threads:["Gradle daemon"]}},
-      {id:"jvmLib",side:"server",vis:"pub",x:600,y:152,w:344,h:44,t:"webtools.kotlin-jvm-library",s:"Kotlin/JVM 2.2.0 · tests · level tasks · 3 modules apply it",
-        d:{role:"Applies the Kotlin/JVM plugin and webtools.published-library; adds kotlin(\"test\"), kotlin(\"test-junit5\") and logback-classic 1.5.6 as test dependencies; puts every Test task on the JUnit Platform; registers the level tasks over the test source set. Sets no jvmTarget and no toolchain, and marks where the Java floor goes (TODO(#47)).",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts"],threads:["Gradle daemon"],issues:[47]}},
-      {id:"kmpLib",side:"server",vis:"pub",x:600,y:204,w:344,h:56,t:"webtools.kotlin-multiplatform-library",s:["jvm() + TargetJvmVersion · validator 0.18.2 + ASM 9.9.1","level tasks · lifecycle test · no module applies it yet"],
-        d:{role:"Applies Kotlin Multiplatform with one jvm() target, whose TargetJvmVersion attribute is the build JDK's major version (TODO(#47)); webtools.published-library and vanniktech with KotlinMultiplatform(JavadocJar.Empty(), SourcesJar.Sources()); binary-compatibility-validator on its defaults with ASM 9.9.1 on its worker classpath; the level tasks over the jvm test compilation and a lifecycle test task depending on jvmTest. A second JVM-based target would move the ABI dump.",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"],threads:["Gradle daemon"],issues:[47,62,69]}},
-      {id:"logicBuild",side:"server",vis:"int",x:600,y:268,w:344,h:44,t:"build-logic/build.gradle.kts",s:"4 plugin markers · its own level tasks · testKitHomeLock",
+      {id:"jvmLib",side:"server",vis:"pub",x:600,y:152,w:344,h:56,t:"webtools.kotlin-jvm-library",s:["Kotlin/JVM 2.2.0 at the Java floor · verifyJavaFloor in check","tests · level tasks · 3 modules apply it"],
+        d:{role:"Applies the Kotlin/JVM plugin and webtools.published-library. Its java floor region sets jvmTarget 11 and -Xjdk-release=11 from WebToolsBuild.JAVA_FLOOR, and source and target compatibility 11, which write org.gradle.jvm.version 11; registers verifyJavaFloor over the jar and runtimeClasspath and makes check depend on it. Adds kotlin(\"test\"), kotlin(\"test-junit5\") and logback-classic 1.5.6 as test dependencies; puts every Test task on the JUnit Platform; registers the level tasks over the test source set. Sets no toolchain.",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"kmpLib",side:"server",vis:"pub",x:600,y:216,w:344,h:56,t:"webtools.kotlin-multiplatform-library",s:["jvm() at the floor · TargetJvmVersion 11 · validator 0.18.2","verifyJavaFloor · level tasks · lifecycle test · applied by none yet"],
+        d:{role:"Applies Kotlin Multiplatform with one jvm() target compiled with jvmTarget 11 and -Xjdk-release=11, and the TargetJvmVersion attribute set to WebToolsBuild.JAVA_FLOOR, which KGP also copies onto the jvm compilations' classpaths; webtools.published-library and vanniktech with KotlinMultiplatform(JavadocJar.Empty(), SourcesJar.Sources()); binary-compatibility-validator on its defaults, with no ASM pin since the floor removed the need; verifyJavaFloor over the jvm jar and the jvm main runtime classpath, in check; the level tasks over the jvm test compilation and a lifecycle test task depending on jvmTest. A second JVM-based target would move the ABI dump.",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"],threads:["Gradle daemon"],issues:[62,69]}},
+      {id:"logicBuild",side:"server",vis:"int",x:600,y:280,w:344,h:44,t:"build-logic/build.gradle.kts",s:"4 plugin markers · its own level tasks · testKitHomeLock",
         d:{role:"A kotlin-dsl build: the plugin markers for Kotlin JVM and Multiplatform 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 at literal versions; JUnit 5.11.4 for its tests; one test task per level that has tests, each failing on an empty run; test as the fast aggregate; the single-permit testKitHomeLock for the three nested-build tasks.",vis:"internal · build script",files:["build-logic/build.gradle.kts","build-logic/settings.gradle.kts"],threads:["Gradle daemon","testKitHomeLock"]}},
-      {id:"commonCheck",side:"server",vis:"pub",kind:"planned",x:600,y:328,w:344,h:44,t:"webtools.kotlin-common-check",s:"planned #62 · compiles commonMain for js",
+      {id:"commonCheck",side:"server",vis:"pub",kind:"planned",x:600,y:336,w:344,h:44,t:"webtools.kotlin-common-check",s:"planned #62 · compiles commonMain for js",
         d:{role:"Planned as part of unit 3 (#62): a plugin the check-only js modules apply; it declares its own repositories because it does not apply webtools.published-library. Not built.",vis:"planned",files:[],issues:[62]}},
       {id:"harness",side:"wire",vis:"int",container:true,x:40,y:478,w:600,h:120,t:"TestKit harness",s:"testing.support · nested builds of generated projects",
         d:{role:"Generates small projects that apply one plugin each (or a composite that includes a copy of build-logic), runs nested Gradle builds on them through Gradle TestKit with one shared TestKit home, and reads the results from the files they write: test reports by <testcase classname>, module.json, POMs.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/NestedBuild.kt"],threads:["build-logic test JVM","TestKit daemon","testKitHomeLock"],issues:[63]}},
@@ -771,7 +794,8 @@ const MODEL = {
       {id:"hMeta",side:"wire",vis:"int",x:56,y:560,w:135,h:30,t:"ModuleMetadata",s:"",d:{role:"Reads org.gradle.jvm.version from a published module.json.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/ModuleMetadata.kt"]}},
       {id:"hPom",side:"wire",vis:"int",x:199,y:560,w:135,h:30,t:"PomFile",s:"",d:{role:"Parses a published POM, with DOCTYPE declarations refused.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/PomFile.kt"]}},
       {id:"hSource",side:"wire",vis:"int",x:342,y:560,w:135,h:30,t:"BuildLogicSource",s:"",d:{role:"Copies build-logic's settings, build script and src/main into the end-to-end composite, which reaches the plugins through a real includeBuild.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/BuildLogicSource.kt"]}},
-      {id:"tests",side:"wire",vis:"int",x:660,y:478,w:300,h:120,t:"12 test classes · 49 tests",s:["L1 1 · L2 1 · L3 6 · L4a 1 · L4b 1 · L4c 2","test = L1 + L2 + L4a: 15 tests, the gate","integrationTest, e2eTest, nonfunctionalTest:","34 nested-build tests, on demand"],
+      {id:"hJar",side:"wire",vis:"int",x:485,y:560,w:140,h:30,t:"JarClasses",s:"",d:{role:"Reads the class-file major version of every class in a built jar, for the Java-floor integration tests (#47).",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/JarClasses.kt"]}},
+      {id:"tests",side:"wire",vis:"int",x:660,y:478,w:300,h:120,t:"18 test classes · 93 tests",s:["gating 1 · component 4 · integration 8","deterministic 2 · e2e 1 · non-functional 2","test = gating, component, deterministic: 47","nested-build tasks: 46 tests, on demand"],
         d:{role:"build-logic's own tests, one class per file under com.spartanlabs.testing.<level>.webtools.buildlogic. ./gradlew build runs none of them; :build-logic:test is the pre-commit gate; the nested-build tasks run on demand and their first run needs the network.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/"],threads:["build-logic test JVM","TestKit daemon"]}}
     ]
   },
@@ -839,14 +863,14 @@ const MODEL = {
       {f:2,t:4,l:"includeBuild",n:"build-logic is included for plugin resolution; it compiles when a module first requests one of its plugins and is cached afterwards."},
       {f:1,t:3,l:"allprojects",n:"The root script sets group io.github.spartanlaboratories and the default version 1.0.0 on every project. Nothing else."},
       {f:5,t:4,l:"id(webtools.kotlin-jvm-library)",n:"The module's plugins block applies the convention plugin by id, with no version."},
-      {f:4,t:5,l:"Kotlin/JVM · publishing · tests",n:"The plugin applies Kotlin/JVM 2.2.0 and webtools.published-library (vanniktech, mavenCentral(), publishToMavenCentral(), signAllPublications(), the shared POM), adds the test dependencies and puts every Test task on the JUnit Platform."},
+      {f:4,t:5,l:"Kotlin/JVM at the floor · publishing · tests",n:"The plugin applies Kotlin/JVM 2.2.0 with jvmTarget 11, -Xjdk-release=11 and Java compatibility 11 from WebToolsBuild.JAVA_FLOOR, and webtools.published-library (vanniktech, mavenCentral(), publishToMavenCentral(), signAllPublications(), the shared POM); registers verifyJavaFloor and makes check depend on it; adds the test dependencies and puts every Test task on the JUnit Platform."},
       {f:4,t:5,l:"registerLevelTasks",n:"WebToolsBuild registers gatingTest … uatTest over the test source set, each selecting com.spartanlabs.testing.<level>.*; none is added to check."},
       {f:5,t:5,self:true,l:"version 2.0.0a · port lock",n:"webtools-udp's own lines: api(slf4j-api 2.0.13), version 2.0.0a over the root's 1.0.0, the commonUdpPortLock on its four socket-binding test tasks, and its coordinates and POM name."},
-      {f:1,t:5,l:"compile · test",n:"The module compiles on the build JDK (no jvmTarget or toolchain is set, #47) and test runs every class; a failing test fails the build. Level tasks run only when named."},
+      {f:1,t:5,l:"compile · test",n:"The module compiles to Java 11 bytecode against the Java 11 API on whichever JDK runs the build, and test runs every class; a failing test fails the build. Level tasks run only when named."},
       {f:5,t:1,l:"jars · results",ret:true,n:"Jars and test results come back to the build."},
-      {f:4,t:4,self:true,l:"verifyJavaFloor (#47)",planned:true,n:"Planned, not built: unit 2 adds WebToolsBuild.JAVA_FLOOR = 11, the compiler settings from it, and verifyJavaFloor in check."},
+      {f:1,t:5,l:"check: verifyJavaFloor",n:"check runs verifyJavaFloor: it reads the module's jar, the generated .module files and the runtime classpath, and fails on a class above major 55, a library variant not declaring org.gradle.jvm.version 11, or nothing to check. On success it writes build/reports/java-floor/verifyJavaFloor.txt (webtools-udp: 98 classes, 2 variants)."},
       {f:0,t:1,l:"publishToMavenCentral",n:"The vanniktech task the publishing plugin configures; every publication is signed. Who runs it and when is not recorded in the repository."},
-      {f:1,t:6,l:"signed jars · POM · .module",n:"io.github.spartanlaboratories:webtools-udp:<version>, and likewise for the other two modules. #61 left every published byte as it was."}
+      {f:1,t:6,l:"signed jars · POM · .module",n:"io.github.spartanlaboratories:webtools-udp:<version>, and likewise for the other two modules: Java 11 bytecode with org.gradle.jvm.version 11. The lettered versions that carry the floor are not published yet."}
     ]
   }
 };

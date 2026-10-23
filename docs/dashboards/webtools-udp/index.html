@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="template" content="system/template/system.html">
 <title>webtools-udp model</title>
 <style>
 /* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → Guarantees bubbles → Context cards → provenance footer.
@@ -348,9 +349,9 @@ footer code{color:var(--ink-2)}
     <span class="chip">version <b>2.0.0a</b></span>
     <span class="chip">wire protocol <b>2</b></span>
     <span class="chip">common port <b>9998</b></span>
-    <span class="chip">Kotlin/JVM</span>
-    <span class="chip">as-is at <b>master 1e27071</b> · 2026-10-22</span>
-    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener"><b>#61</b></a> build-logic · db98325 (build file only; published output identical) · last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> · ca57a57</span>
+    <span class="chip">Kotlin/JVM · Java <b>11</b> bytecode</span>
+    <span class="chip">as-is at <b>master 3949b52</b> · <time datetime="2026-10-23T02:21:55Z">2026-10-23 02:21 UTC</time></span>
+    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener"><b>#47</b></a> java-floor · e249f52 (build only: the Java 11 floor; source unchanged) · last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> · ca57a57</span>
     <span class="chip model">C4 model <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
   </div>
 </header>
@@ -361,7 +362,7 @@ footer code{color:var(--ink-2)}
   <div class="kpi"><div class="l">Threads</div><div class="v">11 named</div><div class="s">6 server · 5 client · all daemon</div><div class="seg-bar" aria-hidden="true"><i style="width:55%;background:var(--server)"></i><i style="width:45%;background:var(--client)"></i></div></div>
   <div class="kpi"><div class="l">Datagram tags</div><div class="v">6 in use</div><div class="s">0x80 · 0x81 · 0x82 · 0x90 · 0xA0 · 0xA1</div></div>
   <div class="kpi"><div class="l">Tests</div><div class="v">92 classes</div><div class="s">across all 7 testing levels</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">11</div><div class="s">8 bugs · 1 planned system · 2 untyped</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">10</div><div class="s">7 bugs · 1 planned system · 2 untyped</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -531,10 +532,11 @@ footer code{color:var(--ink-2)}
       <p>Packages <code>com.spartanlabs.testing.&lt;level&gt;.webtools.udp</code>; <code>./gradlew gatingTest</code>, <code>componentTest</code>, … run one level, each selecting its package (the level tasks come from <code>webtools.kotlin-jvm-library</code>). <span class="gap">No test-inspector report is committed.</span></p></div>
     <div class="bubble"><h3>Compatibility &amp; versioning</h3>
       <ul>
-        <li><code>2.0.0a</code>, wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
+        <li><code>2.0.0a</code> in the build, unpublished (Central's latest is <code>2.0.0</code>), wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
         <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a, <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener">#38</a>), the third number for an addition, the major for a break.</li>
         <li>Deprecate, don't break: the eight members deprecated in 2.0.0 (with <code>ReplaceWith</code>) work through 2.x and go at 3.0.0.</li>
-        <li><span class="gap">Not checked: the build keeps no ABI dump.</span> JDK floor: the README says 11+; 2.0.0 ships Java 23 bytecode (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>).</li>
+        <li>Java 11 floor since <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>: 2.0.0a is Java 11 bytecode (major 55) compiled against the Java 11 API and declares <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>. Central's 2.0.0 is Java 23 bytecode, and 2.0.0a orders below it, so a consumer requests 2.0.0a <code>strictly</code> once it is published.</li>
+        <li><span class="gap">Not checked: the build keeps no ABI dump.</span></li>
       </ul></div>
     <div class="bubble"><h3>Thread safety</h3>
       <ul>
@@ -554,7 +556,7 @@ footer code{color:var(--ink-2)}
       <ul>
         <li><code>org.slf4j:slf4j-api:2.0.13</code> — <code>api</code> in the module's own build file; no backend ships (logback is test-only), so bring one.</li>
         <li><code>org.jetbrains.kotlin:kotlin-stdlib:2.2.0</code> — from the Kotlin/JVM plugin, which <code>webtools.kotlin-jvm-library</code> applies; compile scope in the generated POM.</li>
-        <li>Nothing else.</li>
+        <li>Nothing else. The jar is Java 11 bytecode and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, so it resolves and loads on JDK 11 or newer (2.0.0a; the published 2.0.0 declares 23).</li>
       </ul></div>
   </div>
 </section>
@@ -562,16 +564,16 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-10-22</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-10-23</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span>HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes <small>tracking issue</small></span><span class="tags"><span class="badge">open</span><span class="badge">L4</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a href="../../plans/55-http-client-stack/dashboard.html">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span>webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">open</span><span class="badge">L2</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span>Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks <small>landed in 1e27071: this module's build file now applies <code>webtools.kotlin-jvm-library</code>; published output identical</small></span><span class="tags"><span class="badge">closed</span><span class="badge">L3</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a href="../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>landed in 3949b52: this module compiles to the Java 11 floor; its 2.0.0a note names it; source unchanged</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>landed in 1e27071: this module's build file now applies <code>webtools.kotlin-jvm-library</code>; published output identical</small></span><span class="tags"><span class="badge">closed</span></span></li>
           </ul>
           <p class="more">Its nine other sub-issues, #62–#70, belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>10 open · 2026-10-22</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>10 open · 2026-10-23</small></h3>
       <ul class="issues">
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="tags"><span class="badge bug">bug</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="tags"><span class="badge bug">bug</span></span></li>
@@ -591,20 +593,21 @@ footer code{color:var(--ink-2)}
         <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/14-reliable-ordered-channel/architecture.md" target="_blank" rel="noopener">#14 reliable-ordered channel</a> — the design that added the reliable plane, in four stages</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/34-probe-cadence/plan.md" target="_blank" rel="noopener">#34 probe cadence</a> · <a href="https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans/38-handshake-empty-name" target="_blank" rel="noopener">#38 handshake empty name</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/40-channel-byte-guard/plan.md" target="_blank" rel="noopener">#40 channel-byte guard</a></li>
-        <li>Plan boards that amended this module: <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
-        <li>The <a href="../gradle-build/index.html">Gradle build</a> page — the convention plugin, level tasks and publishing this module is built with</li>
+        <li>Plan boards that amended this module: <a href="../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html">#47 Java 11 floor</a> — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>The <a href="../gradle-build/index.html">Gradle build</a> page — the convention plugin, the Java floor and its guard, level tasks and publishing this module is built with</li>
         <li>Earlier plans: #3 public client handshake · #5 prune stale registrations · #8 binary datagram path · #9 receive buffer · #10 connection liveness · #11 handshake refusal and credential · #12 scheduled keepalive · #13 link-quality probe · #15 split into three modules</li>
       </ul></div>
   </div>
 </section>
 
-<footer>Drawn from <code>docs/webtools-udp-architecture.md</code>, <code>workspace.dsl</code> and the code at master <code>1e27071</code> (the module's source is unchanged since <code>806ce8e</code>). Code is authoritative on any conflict. Maintained by the presenter agent, refreshed after each landing that changes this module: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
-<!-- Divergences from the system-dashboard template (presenter, 2026-10-22; this page started from the skill's worked example, system/examples/webtools-udp, brought to 1e27071):
+<footer>Drawn from <code>docs/webtools-udp-architecture.md</code>, <code>workspace.dsl</code> and the code at master <code>3949b52</code> (the module's source is unchanged since <code>806ce8e</code>). Code is authoritative on any conflict. Maintained by the presenter agent, refreshed after each landing that changes this module: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
+<!-- Divergences from the system-dashboard template (presenter, 2026-10-23; this page started from the skill's worked example, system/examples/webtools-udp, brought to 3949b52):
      1. The core tabs are named for what they show: "Datagram path" (the decision path, two variants: server and client) and "Reliable sequence" (the sequence).
      2. The Threads tab carries an "Outbound send paths" matrix under the inventory; the KPI row names the module's wire facts (datagram tags) in place of "Contracts".
      3. The protocol core #50 proposes is drawn as a planned (dashed) component; it has no plan yet, so it is labelled proposed.
      Nothing is removed. All three live in what a page fills in (MODEL, hand-written panels, header); the page's CSS, tab set and
-     renderer are the template's (brought back to it at 1e27071: its older renderer had drifted), so no template-divergence is declared. -->
+     renderer are the template's (brought back to it at 1e27071: its older renderer had drifted; at 3949b52 the times helpers in the
+     script before MODEL and the template marker in the head, and no work level in the Context badges), so no template-divergence is declared. -->
 </div>
 
 <!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
@@ -612,7 +615,7 @@ footer code{color:var(--ink-2)}
 <script type="text/plain" id="dsl">
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools master 1e27071 (2026-10-22), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin. Code is authoritative on any conflict.
+// As-is at WebTools master 3949b52 (2026-10-23), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -622,10 +625,10 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         peer = softwareSystem "Peer endpoint" "The other side of a UDP session — another server or client process built on webtools-udp." "External"
 
         webtools = softwareSystem "WebTools" "Three Kotlin/JVM library modules published to Maven Central under io.github.spartanlaboratories." {
-            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0"
-            browser  = container "webtools-browser"  "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0"
-            gradleBuild    = container "Gradle build" "Builds, tests and publishes every module; the included build-logic build holds the convention plugins the modules apply. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0" "Internal"
-            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.0a · wire protocol 2" {
+            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a"
+            browser  = container "webtools-browser"  "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a"
+            gradleBuild    = container "Gradle build" "Builds, tests and publishes every module; the included build-logic build holds the convention plugins the modules apply, at the Java 11 floor. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal"
+            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode · wire protocol 2" {
 
                 // ---- public surface ----
                 server      = component "MultiConnectionUDPServer" "Binds the common port 9998; owns the listener and dispatch threads and three lazily created schedulers; exposes start* / pushToAll* / stop; subclass hooks onClientConnect, admit, onClientDisconnect." "abstract class" "Public"
@@ -686,7 +689,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         peer -> webtools.udp.server "Datagrams arrive on mcups-listener"
 
         // The build
-        webtools.gradleBuild -> webtools.udp "Configures: webtools.kotlin-jvm-library (Kotlin/JVM, test dependencies, level tasks, publishing)"
+        webtools.gradleBuild -> webtools.udp "Configures: webtools.kotlin-jvm-library (Kotlin/JVM at the Java 11 floor, verifyJavaFloor, test dependencies, level tasks, publishing)"
 
         // Planned
         webtools.udp.core -> webtools.udp.wire "Would absorb (planned)"
@@ -703,7 +706,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at master 1e27071; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at master 3949b52; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }
@@ -738,6 +741,17 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
 
 <script>
 "use strict";
+/* Times (GUIDANCE.md §6, "Times"): stored as UTC ISO stamps; shown in the viewer's own time zone, with the zone's abbreviation,
+   as a <time> whose datetime and title hold the exact UTC value. A date alone stays a date; a stamp with no zone is shown as written.
+   localizeTimes() formats every <time datetime> the page draws, so a stamp written into hand-made HTML is shown the same way. */
+const STAMP_RE=/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/;
+const utcIso=s=>{ const d=new Date(String(s).replace(" ","T")); return isNaN(d)?null:d.toISOString().replace(/\.000Z$/,"Z"); };
+const LOCAL_FMT={day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZoneName:"short"};
+const when=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s); return u?`<time datetime="${u}" title="${u} (UTC)">${esc(new Date(u).toLocaleString(undefined,LOCAL_FMT))}</time>`:esc(s); };
+const day=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s); return u?`<time datetime="${u}" title="${u} (UTC)">${esc(new Date(u).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}))}</time>`:esc(s); };
+function localizeTimes(root){ (root||document).querySelectorAll("time[datetime]").forEach(t=>{ const u=STAMP_RE.test(t.getAttribute("datetime"))&&utcIso(t.getAttribute("datetime")); if(!u||t.dataset.local) return;
+  t.dataset.local="1"; t.title=`${u} (UTC)`; t.textContent=new Date(u).toLocaleString(undefined,LOCAL_FMT); }); }
+window.addEventListener("DOMContentLoaded",()=>localizeTimes());
 const REPO="https://github.com/SpartanLaboratories/WebTools";
 const SRC=REPO+"/blob/master/webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/";
 const NS="http://www.w3.org/2000/svg";
