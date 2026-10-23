@@ -1,5 +1,5 @@
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools master 1e27071 (2026-10-22): webtools-udp 2.0.0a, webtools-scraping 1.0.0, webtools-browser 1.0.0, the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61). Code is authoritative on any conflict.
+// As-is at WebTools master 3949b52 (2026-10-23): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61) and the Java 11 floor (#47). Code is authoritative on any conflict.
 // Every element tagged Planned comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11) and carries its sub-issue. None of it is built; it is drawn dashed.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
@@ -16,18 +16,18 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
             // ---- built: the three published modules ----
-            udp      = container "webtools-udp" "Multi-client UDP connection layer: a text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels." "Kotlin/JVM library · 2.0.0a (unreleased; Central 2.0.0)"
-            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0"
-            browser  = container "webtools-browser" "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0"
+            udp      = container "webtools-udp" "Multi-client UDP connection layer: a text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels." "Kotlin/JVM library · 2.0.0a (unreleased; Central 2.0.0) · Java 11 bytecode"
+            scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a (unreleased; Central 1.0.0) · Java 11 bytecode"
+            browser  = container "webtools-browser" "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a (unreleased; Central 1.0.0) · Java 11 bytecode"
 
             // ---- built: the Gradle build (registry slug build), unpublished; its planned parts are dashed ----
-            gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0" "Internal" {
+            gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal" {
                 settings = component "settings.gradle.kts" "Includes build-logic through pluginManagement, applies foojay-resolver-convention 0.8.0, includes :webtools-udp, :webtools-scraping, :webtools-browser." "Gradle Kotlin DSL" "Internal"
                 root     = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 wrapper  = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
                 buildLogic = component "build-logic" "Included build (#61): webtools.published-library, webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, WebToolsBuild with the package-selected level tasks, and its own TestKit tests." "Gradle included build · unpublished" "Internal"
+                floor      = component "Java floor" "#47: WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins; verifyJavaFloor, in every module's check, fails on a class above Java 11 bytecode or a variant declaring another JVM version." "build-logic · Kotlin" "Internal"
                 // planned by Issue #55: nothing below is built
-                floor      = component "Java floor" "#47 (unit 2): WebToolsBuild.JAVA_FLOOR = 11, jvmTarget and -Xjdk-release from it in both library plugins, verifyJavaFloor in check." "planned" "Planned"
                 httpCheck  = component "webtools-http-commoncheck" "#62 (unit 3): compiles webtools-http's commonMain for js so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Planned"
                 feedsCheck = component "webtools-feeds-commoncheck" "#69 (unit 10): compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
             }
@@ -60,14 +60,14 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         webtools.gradleBuild.settings -> webtools.gradleBuild.root "Includes the three modules the root script sets group and version on"
         webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.0a"
         webtools.gradleBuild.buildLogic -> webtools.udp "Configures: webtools.kotlin-jvm-library, applied by id"
-        webtools.gradleBuild.root -> webtools.scraping "Sets group and version 1.0.0"
+        webtools.gradleBuild.root -> webtools.scraping "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
         webtools.gradleBuild.buildLogic -> webtools.scraping "Configures: webtools.kotlin-jvm-library, applied by id"
-        webtools.gradleBuild.root -> webtools.browser "Sets group and version 1.0.0"
+        webtools.gradleBuild.root -> webtools.browser "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
         webtools.gradleBuild.buildLogic -> webtools.browser "Configures: webtools.kotlin-jvm-library, applied by id"
         webtools.gradleBuild.buildLogic -> central "Publishes signed artifacts: vanniktech publishToMavenCentral, from webtools.published-library"
+        webtools.gradleBuild.buildLogic -> webtools.gradleBuild.floor "Applies in both library plugins: JAVA_FLOOR and verifyJavaFloor in check"
 
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
-        webtools.gradleBuild.floor -> webtools.gradleBuild.buildLogic "Would add JAVA_FLOOR and verifyJavaFloor to both library plugins (#47)"
         webtools.gradleBuild.buildLogic -> webtools.http "Would configure: multiplatform plugin"
         webtools.gradleBuild.buildLogic -> webtools.feeds "Would configure: multiplatform plugin"
         webtools.gradleBuild.httpCheck -> webtools.http.core "Would compile commonMain for js"
@@ -99,7 +99,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 1e27071, with build-logic from #61, and its planned parts (dashed): the Java floor (#47) and the check-only js modules (#62, #69)." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 3949b52, with build-logic from #61 and the Java floor from #47, and its planned parts (dashed): the check-only js modules (#62, #69)." {
             include *
             autoLayout lr
         }

@@ -648,8 +648,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-23T01:08:55Z",
-    "detail": "Unit 1, #61 (`build-logic`), landed through PR #74 as 1e27071 with no version moved. Unit 2, #47 (`java-floor`), is in progress: its run started at the plan step, its one blocker #61 has landed. Unit 3, #62 (`http-core`), is up next and waits on #47. Units 4 to 11 follow in landing order.",
+    "updated": "2026-10-23T02:30:00Z",
+    "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is up next and no longer blocked: both its blockers have landed. Units 4 to 11 follow in landing order.",
     "steps": [
       "sizing",
       "interview",
@@ -659,9 +659,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "implementation",
       "landed"
     ],
-    "current": [
-      "java-floor.built"
-    ],
+    "current": [],
     "next": "http-core",
     "qa": [],
     "qaMax": 3,
@@ -775,6 +773,24 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "column": "built",
       "label": "Unit 1, #61, landed: PR #74 merged; published output identical, no version moved",
       "ref": "1e27071"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Unit 2, #47: plan accepted, branch `fix/issue-47-java-floor` cut from 36fd879; implementation with no deviations",
+      "ref": "47-java-23-bytecode/plan.md"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Unit 2, #47: qa pass 1 changes requested (7 documentation, 2 test findings), fixed on the spot; no second pass",
+      "ref": "a96d969"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Unit 2, #47, landed: PR #76 merged; every module on the Java 11 floor, `webtools-scraping` and `webtools-browser` 1.0.0a, none published",
+      "ref": "3949b52"
     }
   ],
   "rows": [
@@ -904,42 +920,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "versions": "webtools-scraping and webtools-browser 1.0.0 → 1.0.0a; webtools-udp rides in the unreleased 2.0.0a",
         "branch": "fix/issue-47-java-floor",
         "folder": "47-java-23-bytecode/",
-        "board": "47-java-23-bytecode/dashboard.html",
-        "live": {
-          "step": "remediation",
-          "since": "2026-10-23T02:16:10Z",
-          "updated": "2026-10-23T02:16:10Z",
-          "detail": "QA pass 1: changes requested. Code review passed: the diff matches the plan, the regression test was red before the fix, the jars are class-file major 55 and their metadata declares 11; `build-logic` suites 84/84 (38, 39, 5, 2). 7 documentation items (comments, KDoc) and 2 test gaps (an in-process test of `VerifyJavaFloor.verify()`'s branches; two `JavaFloorScan.moduleMetadata` edge cases), all minor and without fallout, are being fixed on the spot; no second qa pass, then landing. Nothing waits on the user.",
-          "steps": [
-            "sizing",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "landing",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-10-23",
-              "findings": {
-                "documentation": 7,
-                "test": 2,
-                "code": 0
-              },
-              "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "fix/issue-47-java-floor"
-        }
+        "board": "47-java-23-bytecode/dashboard.html"
       },
       "gap": {
         "kind": "bug",
@@ -990,8 +971,36 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "link": "architecture.md#11-decomposition"
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "landed",
+        "summary": "Landed through PR #76 as 3949b52 (#47): `WebToolsBuild.JAVA_FLOOR = 11` drives `jvmTarget`, `-Xjdk-release` and the Java compatibility settings of both library plugins and the multiplatform `TargetJvmVersion` attribute, `verifyJavaFloor` guards it in `check`, and the ASM pin is gone. The three jars are class-file major 55 and declare `org.gradle.jvm.version` 11. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published.",
+        "changes": [
+          {
+            "what": "The README's install block names `webtools-udp` 2.0.0, the version on Maven Central, in place of the unreleased 2.0.0a, with a paragraph on which releases carry the floor.",
+            "why": "An install block names only versions a consumer can resolve; the lettered versions move in when they are released (#47's plan, Requirements 8).",
+            "when": "#47 plan",
+            "ref": "9e47ac0"
+          }
+        ],
+        "files": [
+          "build-logic/src/main/kotlin/WebToolsBuild.kt",
+          "build-logic/src/main/kotlin/JavaFloorScan.kt",
+          "build-logic/src/main/kotlin/VerifyJavaFloor.kt",
+          "build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts",
+          "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts",
+          "webtools-scraping/build.gradle.kts",
+          "webtools-browser/build.gradle.kts",
+          "webtools-udp/build.gradle.kts",
+          "README.md"
+        ],
+        "commits": [
+          "a96d969",
+          "e249f52",
+          "9e47ac0",
+          "7ca020f",
+          "d28200e"
+        ],
+        "verified": "qa pass 1 changes requested (7 documentation, 2 test), fixed on the spot with no second pass; `build-logic` suites green (47, 39, 5 and 2 tests); the guard passes on all three modules.",
+        "link": "47-java-23-bytecode/final-implementation.md"
       }
     },
     {
@@ -1824,6 +1833,11 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "note": "unit 1, build-logic: gap, options, verdict and as built"
     },
     {
+      "label": "#47 board",
+      "path": "47-java-23-bytecode/dashboard.html",
+      "note": "unit 2, the Java floor: gap, options, verdict and as built"
+    },
+    {
       "label": "#47 research",
       "path": "47-java-23-bytecode/research/README.md",
       "note": "the Java 11 floor, unit 2's evidence"
@@ -1972,14 +1986,15 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       },
       {
         "unit": "java-floor",
-        "basis": "plan",
-        "summary": "Every module compiles to Java 11 bytecode against the Java 11 API and declares `org.gradle.jvm.version: 11`, so consumers on JDK 11 to 22 can load the lettered versions once published. No source or public API change.",
+        "basis": "as-built",
+        "summary": "Built as planned, with no deviation: every module compiles to Java 11 bytecode against the Java 11 API and declares `org.gradle.jvm.version: 11`, so consumers on JDK 11 to 22 can load the lettered versions once they are published. No source or public API change. Later multiplatform units inherit the floor, its attribute and `verifyJavaFloor`.",
         "release": {
           "bump": "fix",
-          "version": "webtools-scraping, webtools-browser 1.0.0a; webtools-udp 2.0.0a"
+          "version": "webtools-scraping, webtools-browser 1.0.0a; webtools-udp 2.0.0a",
+          "note": "set in the build, not published"
         },
-        "source": "47-java-23-bytecode/plan.md",
-        "link": "47-java-23-bytecode/plan.md#risks-and-callers-affected",
+        "source": "47-java-23-bytecode/final-implementation.md",
+        "link": "47-java-23-bytecode/dashboard.html",
         "compat": "notable"
       }
     ],

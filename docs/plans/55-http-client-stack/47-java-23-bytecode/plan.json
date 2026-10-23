@@ -9,7 +9,7 @@
   "title": "Java 11 floor",
   "issueTitle": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
   "function": "The README promises JDK 11 or newer, but every published WebTools artifact is Java 23 bytecode (class-file major 67) whose Gradle Module Metadata declares `org.gradle.jvm.version: 23`, so a consumer on JDK 11 to 22 fails with `UnsupportedClassVersionError`. This run sets one Java floor of 11 in the included `build-logic` build that every module reads, so the published bytecode, its metadata and the JDK API compiled against all match the README. Unit 2 of #55: a bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
-  "status": "building",
+  "status": "built",
   "parent": {
     "issue": 55,
     "board": "../dashboard.html"
@@ -20,7 +20,14 @@
     "sha": "36fd879",
     "date": "2026-10-22"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "ref": "master",
+    "sha": "d28200e",
+    "date": "2026-10-23",
+    "pr": 76,
+    "merge": "3949b52",
+    "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)"
+  },
   "systems": [
     {
       "slug": "gradle-build",
@@ -32,10 +39,10 @@
     }
   ],
   "wip": {
-    "step": "remediation",
-    "since": "2026-10-23T02:16:10Z",
-    "updated": "2026-10-23T02:16:10Z",
-    "detail": "QA pass 1: changes requested. Code review passed: the diff matches the plan, the regression test was red before the fix, the jars are class-file major 55 and their metadata declares 11; `build-logic` suites 84/84 (38, 39, 5, 2). 7 documentation items (comments, KDoc) and 2 test gaps (an in-process test of `VerifyJavaFloor.verify()`'s branches; two `JavaFloorScan.moduleMetadata` edge cases), all minor and without fallout, are being fixed on the spot; no second qa pass, then landing. Nothing waits on the user.",
+    "step": "landed",
+    "since": "2026-10-23T02:21:55Z",
+    "updated": "2026-10-23T02:30:00Z",
+    "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. Unit 3 of #55, #62, is no longer blocked by this issue.",
     "steps": [
       "sizing",
       "research",
@@ -47,9 +54,7 @@
       "landing",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "next": null,
     "qa": [
       {
@@ -69,13 +74,14 @@
     "resume": null,
     "blockers": {
       "waitsOn": [],
-      "blocks": [
-        {
-          "issue": 62
-        }
-      ]
+      "blocks": []
     },
-    "landing": null
+    "landing": {
+      "pr": 76,
+      "merge": "3949b52",
+      "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
+      "date": "2026-10-23"
+    }
   },
   "milestones": [
     {
@@ -98,6 +104,13 @@
       "date": "2026-10-23",
       "ref": "plan.md",
       "note": "a bug fix local to the build, test-first; regression test of record `PublishedJvmVersionAttributeIntegrationTest`, failing today"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-10-23",
+      "ref": "PR #76",
+      "note": "five commits, a96d969 to d28200e; merged as 3949b52; the lettered versions are set in the build and not published"
     }
   ],
   "trail": [
@@ -153,6 +166,24 @@
       "column": "built",
       "label": "QA pass 1: changes requested (7 doc, 2 test, 0 code); code review passed, suites 84/84; the findings are fixed on the spot, then landing",
       "ref": "final-implementation.md"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "QA findings fixed on the spot: KDoc and line comments, the report path in the README, `VerifyJavaFloorComponentTest` and two more `JavaFloorScan` cases; `:build-logic:test` 47 tests green",
+      "ref": "a96d969"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Commits: the floor and its guard, the module versions, the README, the as-built record and the plan boards",
+      "ref": "d28200e"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "PR #76 merged; #47 closed",
+      "ref": "3949b52"
     }
   ],
   "rows": [
@@ -183,8 +214,11 @@
           "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"
         ],
         "tests": "deterministic `WebToolsBuildJavaFloorDeterministicTest` 3; integration `JvmJavaFloorIntegrationTest` and `MultiplatformJavaFloorIntegrationTest` green",
-        "verified": "Procedure A compiled the three modules under the floor; procedure C's baseline comparison, D (JDK 11 load) and E await the planner's reconciliation.",
-        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22"
+        "verified": "Procedure A compiled the three modules under the floor, and procedure B's guard passed on each; the as-built record leaves procedure C's comparison with `36fd879`, D's load on a real JDK 11 and E's JDK 17 run to the planner's reconciliation, and records none of them.",
+        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22",
+        "commits": [
+          "a96d969"
+        ]
       },
       "options": [
         {
@@ -258,16 +292,27 @@
         "link": "research/README.md#summary"
       },
       "asBuilt": {
-        "state": "as-planned",
-        "summary": "Built as decided: `verifyJavaFloor` runs in `check` and scans the jars, the `.module` files and the runtime classpath. The regression test of record failed before the fix (expected 11, was 23) and passes after; the wider red run's 17 failures are green.",
+        "state": "amended",
+        "summary": "Built as decided: `verifyJavaFloor` runs in `check` and scans the jars, the `.module` files and the runtime classpath. The regression test of record failed before the fix (expected 11, was 23) and passes after; the wider red run's 17 failures are green. qa pass 1 added an in-process test of the task and two more scan cases.",
         "files": [
           "build-logic/src/main/kotlin/JavaFloorScan.kt",
           "build-logic/src/main/kotlin/VerifyJavaFloor.kt",
           "build-logic/src/test/kotlin/com/spartanlabs/testing/integration/webtools/buildlogic/PublishedJvmVersionAttributeIntegrationTest.kt"
         ],
-        "tests": "component `JavaFloorScanComponentTest` 16 and `RegisterVerifyJavaFloorComponentTest` 4; integration 39, end-to-end 5, non-functional 2, all green",
-        "verified": "Procedure B: the guard passes on all three modules, each with 2 library variants declaring 11.",
-        "link": "final-implementation.md#regression-test-of-record-fail-before-pass-after"
+        "tests": "component `JavaFloorScanComponentTest` 18, `VerifyJavaFloorComponentTest` 7 and `RegisterVerifyJavaFloorComponentTest` 4; integration 39, end-to-end 5, non-functional 2, all green",
+        "verified": "Procedure B: the guard passes on all three modules, each with 2 library variants declaring 11. `:build-logic:test` 47 tests green after qa pass 1.",
+        "link": "final-implementation.md#qa-pass-1--minor-fixes",
+        "commits": [
+          "a96d969"
+        ],
+        "changes": [
+          {
+            "what": "`VerifyJavaFloorComponentTest` (7 tests) runs `verify()` in process through each of its branches, and `JavaFloorScanComponentTest` gained two `moduleMetadata` cases (16 → 18): a `[]` root, and a string `\"11\"` read as absent. The task's KDoc now names the report path.",
+            "why": "qa pass 1 found two test gaps, `verify()`'s branches untested in process and two metadata edge cases, and seven documentation items; all were fixed on the spot, with no production logic changed and no second pass.",
+            "when": "qa pass 1",
+            "ref": "a96d969"
+          }
+        ]
       },
       "options": [
         {
@@ -341,13 +386,24 @@
         "link": "research/java-11-floor.md#f6-readme-and-documentation"
       },
       "asBuilt": {
-        "state": "as-planned",
-        "summary": "Built as decided: the README keeps \"Requires JDK 11 or newer\", adds which releases carry the floor, a `Java floor` subsection and the `verifyJavaFloor` command, and names `webtools-udp` 2.0.0 in the install block.",
+        "state": "amended",
+        "summary": "Built as decided: the README keeps \"Requires JDK 11 or newer\", adds which releases carry the floor, a `Java floor` subsection and the `verifyJavaFloor` command, and names `webtools-udp` 2.0.0 in the install block. The subsection also names the guard's report file.",
         "files": [
           "README.md"
         ],
-        "verified": "Procedure G's Maven Central check awaits the planner's reconciliation.",
-        "link": "final-implementation.md#deviations"
+        "verified": "Procedure G's check that each install-block version is on Maven Central is not recorded in the as-built record.",
+        "link": "final-implementation.md#doc-fixes-build-logicsrcmainkotlin",
+        "commits": [
+          "9e47ac0"
+        ],
+        "changes": [
+          {
+            "what": "The `Java floor` subsection names `<module>/build/reports/java-floor/verifyJavaFloor.txt`, the one-line report the guard writes on success.",
+            "why": "qa pass 1 asked for the report path in the task's KDoc; the README says the same in one clause.",
+            "when": "qa pass 1",
+            "ref": "9e47ac0"
+          }
+        ]
       },
       "options": [
         {
@@ -408,8 +464,11 @@
           "webtools-browser/build.gradle.kts",
           "webtools-udp/build.gradle.kts"
         ],
-        "verified": "Procedure C's metadata read; its POM and `javap -protected` comparison with `36fd879` awaits the planner's reconciliation.",
-        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22"
+        "verified": "Procedure C's metadata read: each `module.json` declares 11 on `apiElements` and `runtimeElements`; its POM and `javap -protected` comparison with `36fd879` is not recorded in the as-built record.",
+        "link": "final-implementation.md#build-and-tests-run-implementer-2026-10-22",
+        "commits": [
+          "e249f52"
+        ]
       },
       "options": [
         {
@@ -499,7 +558,7 @@
     },
     {
       "issue": 62,
-      "note": "unit 3 of #55 (`http-core`), blocked by this issue"
+      "note": "unit 3 of #55 (`http-core`), up next: both its blockers, #61 and this issue, have landed"
     },
     {
       "name": "Release the lettered versions",
@@ -535,7 +594,7 @@
     {
       "label": "Final implementation",
       "path": "final-implementation.md",
-      "note": "the as-built record: the regression test before and after, the builds and tests run, deviations (none)"
+      "note": "the as-built record: the regression test before and after, the builds and tests run, deviations (none), qa pass 1's fixes"
     }
   ],
   "notes": {
@@ -546,13 +605,13 @@
     "61": "../61-build-logic/dashboard.html"
   },
   "impact": {
-    "basis": "plan",
-    "summary": "A fix to the published bytes: every module's class files become Java 11 bytecode built against the Java 11 API, and its Gradle Module Metadata declares `org.gradle.jvm.version: 11` instead of 23, so consumers on JDK 11 to 22 can load it. No source, public API or wire format changes. The fix rides in `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a, none of them published by this run.",
+    "basis": "as-built",
+    "summary": "A fix to the published bytes, built as planned: every module's class files are Java 11 bytecode built against the Java 11 API, and its Gradle Module Metadata declares `org.gradle.jvm.version: 11` instead of 23, so consumers on JDK 11 to 22 can load it once released. No source, public API or wire format changed. The fix rides in `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a, none of them published yet.",
     "none": null,
     "release": {
       "bump": "fix",
       "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a",
-      "note": "trailing letters; `webtools-udp` keeps its unreleased version, and no tag or publish happens in this run"
+      "note": "trailing letters; `webtools-udp` keeps its unreleased version; nothing was tagged or published, and the README's install block names the versions on Maven Central until the lettered ones are released"
     },
     "downstream": [
       {
@@ -568,7 +627,7 @@
         "kind": "artifact",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "Class files go from major 67 to 55 and the metadata's JVM version from 23 to 11; `javap -protected` is identical and each POM differs only in the two legacy versions.",
+        "summary": "Class files went from major 67 to 55 (98, 4 and 2 classes, measured) and the metadata's JVM version from 23 to 11 on the API and runtime variants; the `javap -protected` and POM comparison with `36fd879` is not recorded.",
         "link": "plan.md#requirements"
       },
       {
@@ -642,7 +701,7 @@
       }
     ],
     "changes": [],
-    "source": "plan.md",
-    "link": "plan.md#risks-and-callers-affected"
+    "source": "final-implementation.md (no deviations) and plan.md",
+    "link": "final-implementation.md#deviations"
   }
 }
