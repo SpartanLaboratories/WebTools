@@ -28,8 +28,8 @@ class JvmConfigurationCacheReuseNonFunctionalTest {
         workspace = ProjectWorkspace.create("ccj").getOrThrow()
         workspace.write(SampleProject.kotlinJvm("sample")).getOrThrow()
         val build = NestedBuild(workspace)
-        build.build("componentTest")
-        secondRun = build.build("componentTest")
+        build.build("componentTest", "verifyJavaFloor")
+        secondRun = build.build("componentTest", "verifyJavaFloor")
     }
 
     @AfterAll

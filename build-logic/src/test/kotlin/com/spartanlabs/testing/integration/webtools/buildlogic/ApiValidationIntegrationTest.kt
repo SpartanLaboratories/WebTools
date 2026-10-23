@@ -17,8 +17,8 @@ import java.nio.file.Files
  * Level 3 - TestKit check of the binary-compatibility-validator wiring in
  * `webtools.kotlin-multiplatform-library`: `apiCheck` fails before a dump exists, `apiDump` writes
  * `api/<rootProject.name>.api`, `apiCheck` then passes, `check` depends on `apiCheck`, and a change
- * to the public API fails `apiCheck`. On a JDK 23 or newer host the `apiDump` step is also the
- * regression guard for the plugin's ASM pin (ASM 9.6 rejects class files above Java 22).
+ * to the public API fails `apiCheck`. The sample compiles to Java 11 bytecode on any build JDK, so
+ * the validator's own ASM reads it with no pin.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiValidationIntegrationTest {

@@ -7,6 +7,7 @@ import com.spartanlabs.testing.support.webtools.buildlogic.ProjectWorkspace
 import com.spartanlabs.testing.support.webtools.buildlogic.SampleProject
 import com.spartanlabs.testing.support.webtools.buildlogic.TestReports
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -27,7 +28,8 @@ import org.junit.jupiter.api.TestInstance
  * - the whole composite configures (a dry run of `build`) with the Kotlin Gradle plugin loaded
  *   once;
  * - the module script prints the level list;
- * - a level task runs in each kind of module.
+ * - a level task runs in each kind of module;
+ * - `verifyJavaFloor` is part of `build` and passes in each kind of module.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IncludedBuildEndToEndTest {
@@ -35,6 +37,7 @@ class IncludedBuildEndToEndTest {
     private lateinit var workspace: ProjectWorkspace
     private lateinit var dryRun: BuildResult
     private lateinit var levelRun: BuildResult
+    private lateinit var floorRun: BuildResult
 
     @BeforeAll
     fun runComposite() {
@@ -44,6 +47,8 @@ class IncludedBuildEndToEndTest {
         val build = NestedBuild(workspace, injectPluginClasspath = false)
         dryRun = build.build("build", "--dry-run")
         levelRun = build.build(":jvm-lib:printLevels", ":jvm-lib:componentTest", ":kmp-lib:componentTest")
+        // run, not build: while the guard is missing the build fails, and only this test should.
+        floorRun = build.run(":jvm-lib:verifyJavaFloor", ":kmp-lib:verifyJavaFloor")
     }
 
     @AfterAll
@@ -53,7 +58,10 @@ class IncludedBuildEndToEndTest {
 
     @Test
     fun `the composite configures through the included build`() {
-        listOf(":jvm-lib:compileKotlin", ":kmp-lib:compileKotlinJvm", ":kmp-lib:apiCheck").forEach { task ->
+        listOf(
+            ":jvm-lib:compileKotlin", ":kmp-lib:compileKotlinJvm", ":kmp-lib:apiCheck",
+            ":jvm-lib:verifyJavaFloor", ":kmp-lib:verifyJavaFloor",
+        ).forEach { task ->
             assertTrue(dryRun.output.contains(task), "$task is not in the build dry run")
         }
     }
@@ -67,6 +75,13 @@ class IncludedBuildEndToEndTest {
     fun `a module script reads WebToolsBuild`() {
         val expected = SampleProject.LEVELS_LINE_PREFIX + WebToolsBuild.LEVELS.joinToString(",") { it.id }
         assertTrue(levelRun.output.lineSequence().any { it.trim() == expected }, "'$expected' was not printed")
+    }
+
+    @Test
+    fun `verifyJavaFloor passes in each kind of module`() {
+        listOf(":jvm-lib:verifyJavaFloor", ":kmp-lib:verifyJavaFloor").forEach { task ->
+            assertEquals(TaskOutcome.SUCCESS, floorRun.task(task)?.outcome, task)
+        }
     }
 
     @Test

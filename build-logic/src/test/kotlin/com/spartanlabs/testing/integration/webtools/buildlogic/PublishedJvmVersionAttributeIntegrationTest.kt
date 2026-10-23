@@ -20,9 +20,10 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PublishedJvmVersionAttributeIntegrationTest {
 
-    // The feature version of the JVM running the tests, which also runs the nested daemon (TestKit
-    // offers no JDK selection): what the plugin sets until the Java floor lands.
-    private val expectedJvmVersion: Int = Runtime.version().feature()
+    // The Java floor, written out: an independent oracle for WebToolsBuild.JAVA_FLOOR. It is not the
+    // feature version of the JVM that runs the tests and the nested daemon, which is what the plugin
+    // wrote before the floor.
+    private val expectedJvmVersion: Int = 11
 
     private val jvmVariants: List<String> = listOf("jvmApiElements-published", "jvmRuntimeElements-published")
 
