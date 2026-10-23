@@ -103,7 +103,7 @@
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-23T02:30:00Z",
+    "updated": "2026-10-23T20:07:49Z",
     "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is up next and no longer blocked: both its blockers have landed. Units 4 to 11 follow in landing order.",
     "steps": [
       "sizing",
@@ -246,6 +246,12 @@
       "column": "built",
       "label": "Unit 2, #47, landed: PR #76 merged; every module on the Java 11 floor, `webtools-scraping` and `webtools-browser` 1.0.0a, none published",
       "ref": "3949b52"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Unit 2, #47: as-built record and impact reconciled after the landing (PR #78); this tracking issue's `impact.md` brought to units 1 and 2 as built",
+      "ref": "77a69bc"
     }
   ],
   "rows": [
@@ -434,6 +440,12 @@
             "why": "An install block names only versions a consumer can resolve; the lettered versions move in when they are released (#47's plan, Requirements 8).",
             "when": "#47 plan",
             "ref": "9e47ac0"
+          },
+          {
+            "what": "The lettered-version ordering is stated for all three artifacts: `2.0.0a` orders below `2.0.0`, the Java 23 build on Central, as `1.0.0a` orders below `1.0.0`, so a `webtools-udp` graph that also asks for `2.0.0` needs `strictly` too.",
+            "why": "`architecture.md` §12 calls `webtools-udp` unaffected by the ordering, and the verdict's risk names `1.0.0a` alone; #47's plan, the README and the reconciled impact state the rule for all three. `architecture.md` is left as written.",
+            "when": "#47 plan; reconciled after landing",
+            "ref": "765289c"
           }
         ],
         "files": [
@@ -454,7 +466,7 @@
           "7ca020f",
           "d28200e"
         ],
-        "verified": "qa pass 1 changes requested (7 documentation, 2 test), fixed on the spot with no second pass; `build-logic` suites green (47, 39, 5 and 2 tests); the guard passes on all three modules.",
+        "verified": "qa pass 1 changes requested (7 documentation, 2 test), fixed on the spot with no second pass; `build-logic` suites green on JDK 23 and JDK 17; against `36fd879` every class is major 55 with `javap -protected` identical; every class loads on a real JDK 11; the guard passes on all three modules.",
         "link": "47-java-23-bytecode/final-implementation.md"
       }
     },
@@ -1259,6 +1271,14 @@
     {
       "name": "jdk11-test-launcher",
       "note": "Run the level tasks on a JDK 11 launcher, after #58's foojay bump."
+    },
+    {
+      "name": "floor-scan-message",
+      "note": "Optional: make `JavaFloorScan`'s message for a non-numeric `org.gradle.jvm.version` name the value found, with its pinning test."
+    },
+    {
+      "name": "release-lettered-versions",
+      "note": "Publish `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a and move the README's install lines to them; it needs the maintainer's explicit instruction."
     }
   ],
   "documents": [
@@ -1291,6 +1311,11 @@
       "label": "#47 board",
       "path": "47-java-23-bytecode/dashboard.html",
       "note": "unit 2, the Java floor: gap, options, verdict and as built"
+    },
+    {
+      "label": "#47 impact",
+      "path": "47-java-23-bytecode/impact.md",
+      "note": "unit 2's impact as built, and what #62 and the later units inherit (§4)"
     },
     {
       "label": "#47 research",
@@ -1442,14 +1467,14 @@
       {
         "unit": "java-floor",
         "basis": "as-built",
-        "summary": "Built as planned, with no deviation: every module compiles to Java 11 bytecode against the Java 11 API and declares `org.gradle.jvm.version: 11`, so consumers on JDK 11 to 22 can load the lettered versions once they are published. No source or public API change. Later multiplatform units inherit the floor, its attribute and `verifyJavaFloor`.",
+        "summary": "Built as planned, with no deviation: every module compiles to Java 11 bytecode against the Java 11 API and declares `org.gradle.jvm.version: 11`, and every class loads on a real JDK 11, so consumers on JDK 11 to 22 can use the lettered versions once they are published. No source or public API change (`javap -protected` identical). Later multiplatform units inherit the floor, its attribute and `verifyJavaFloor`.",
         "release": {
           "bump": "fix",
           "version": "webtools-scraping, webtools-browser 1.0.0a; webtools-udp 2.0.0a",
           "note": "set in the build, not published"
         },
-        "source": "47-java-23-bytecode/final-implementation.md",
-        "link": "47-java-23-bytecode/dashboard.html",
+        "source": "47-java-23-bytecode/impact.md",
+        "link": "47-java-23-bytecode/impact.md#1-published-artifacts",
         "compat": "notable"
       }
     ],
