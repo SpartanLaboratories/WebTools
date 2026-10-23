@@ -8,7 +8,7 @@
   "level": 3,
   "title": "Shared build logic",
   "issueTitle": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
-  "function": "The root build configured every module through one `subprojects {}` block, selecting the seven level test tasks by JUnit tag, and a Kotlin Multiplatform module could not join it without branching the block. This run moves that configuration into an included `build-logic` build with three convention plugins and `WebToolsBuild`, selects the level tasks by package, puts the three modules on `webtools.kotlin-jvm-library`, readies `webtools.kotlin-multiplatform-library` for unit 3, and tests the plugins at every level that has tests on a Gradle TestKit harness. Unit 1 of #55, level 3, a `build:` change with no downstream effect: the published output is byte-identical to `834ce4a`, so no version moves.",
+  "function": "The root build configured every module through one `subprojects {}` block, selecting the seven level test tasks by JUnit tag, and a Kotlin Multiplatform module could not join it without branching the block. This run moves that configuration into an included `build-logic` build with three convention plugins and `WebToolsBuild`, selects the level tasks by package, puts the three modules on `webtools.kotlin-jvm-library`, readies `webtools.kotlin-multiplatform-library` for unit 3, and tests the plugins at every level that has tests on a Gradle TestKit harness. Unit 1 of #55, a `build:` change inside one system with no downstream effect: the published output is byte-identical to `834ce4a`, so no version moves.",
   "status": "built",
   "parent": {
     "issue": 55,
@@ -977,7 +977,7 @@
           "id": "no-bump",
           "name": "No version moves; the commits are typed `build:`",
           "verdict": "accepted",
-          "why": "The published POMs, module metadata and jars stay identical (R7), so no consumer sees a difference, and a level-3 change moves a version only with a downstream effect.",
+          "why": "The published POMs, module metadata and jars stay identical (R7), so no consumer sees a difference, and a change inside one system moves a version only with a downstream effect.",
           "source": "plan.md §12",
           "link": "plan.md#12-version-control"
         },
@@ -1243,6 +1243,48 @@
   "notes": {
     "paths": "Line references marked baseline are to `834ce4a`; others are to the as-built tree at `1e27071`.",
     "retrofit": "This board was written after the landing, from the issue folder's research, plan, impact and as-built documents; the run predates the dashboards service. Columns 1 to 3 come from #55's architecture, this unit's research and the plan's first version; amendments 1 and 2 and the two qa passes are recorded in column 4. The qa findings counts come from the pipeline's reports as #55's board recorded them.",
-    "corrections": []
+    "corrections": [
+      {
+        "what": "The function and the release row's accepted option named the sizing; they now say what the work is (a change inside one system), as a board never shows it. The decisions are unchanged.",
+        "when": "re-templating, 2026-10-23"
+      }
+    ]
+  },
+  "issueBoards": {
+    "47": "../47-java-23-bytecode/dashboard.html"
+  },
+  "impact": {
+    "basis": "as-built",
+    "summary": "No downstream effect: the POMs, the Gradle Module Metadata and the jars of the three artifacts are identical to `834ce4a`'s, so no consumer sees a difference and no version moved. Inside the repository, `build-logic` holds the shared configuration and its own level tests, and the later units of #55 build on its plugins.",
+    "none": "No downstream impact recorded: the published output is byte-identical to `834ce4a`'s (procedure A), so no version moved.",
+    "release": {
+      "bump": "none",
+      "version": null,
+      "note": "a `build:` change; versions stay `2.0.0a` (unreleased), `1.0.0` and `1.0.0`"
+    },
+    "downstream": [
+      {
+        "who": "`webtools-udp`, `webtools-scraping`, `webtools-browser` artifacts",
+        "kind": "artifact",
+        "system": "gradle-build",
+        "effect": "none",
+        "summary": "Nothing changes: POM, module metadata and jars identical to the baseline's.",
+        "link": "impact.md#1-published-artifacts"
+      }
+    ],
+    "adaptation": [
+      {
+        "who": "Consumers of the three artifacts",
+        "system": null,
+        "need": "none",
+        "summary": "Nothing to adopt.",
+        "link": "impact.md#1-published-artifacts"
+      }
+    ],
+    "api": [],
+    "conversion": [],
+    "changes": [],
+    "source": "impact.md",
+    "link": "impact.md#1-published-artifacts"
   }
 }
