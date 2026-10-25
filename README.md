@@ -26,6 +26,8 @@ dependencies {
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
     // not yet on Maven Central: webtools-http 1.0.0 is released when the HTTP client stack is complete
     implementation("io.github.spartanlaboratories:webtools-http:1.0.0")
+    // tests only (Gradle): fakes, a virtual clock, .http fixtures and a recorder; also not yet on Maven Central
+    testImplementation(testFixtures("io.github.spartanlaboratories:webtools-http:1.0.0"))
 }
 ```
 
@@ -35,6 +37,18 @@ Requires JDK 11 or newer. Built with Kotlin 2.2.
 a Gradle build resolves the right one itself, a Maven build depends on `webtools-http-jvm`. It is not on
 Maven Central yet. Its `okhttp-jvm` 5.5.0 dependency requires `kotlin-stdlib` 2.2.21, so a consumer's
 Kotlin standard library resolves to 2.2.21 or newer.
+
+The test-fixtures variant of `webtools-http` (capability
+`io.github.spartanlaboratories:webtools-http-test-fixtures`, a `-test-fixtures.jar` beside the module, JVM
+only) holds the package `com.spartanlabs.webtools.http.testing`: `VirtualClock`, `FakeHttpTransport` with
+`RequestMatch`, `Step` and `Unmatched`, `Fixture` and `FixtureLoader` for `.http` fixture files, and
+`FixtureRecorder` with `RecordingGate` and `Redaction`. `testFixtures(...)` is Gradle-only: a Maven build
+cannot select a variant by capability. The variant adds `kotlinx-coroutines-test` and `mockwebserver3` to the
+test classpath only. Fixture files live in the consumer's own test resources; add
+`**/fixtures/**/*.http -text` to its `.gitattributes` so a checkout does not rewrite their line endings.
+Recording is off unless `WEBTOOLS_HTTP_RECORD` has a recognised value, and never runs where a CI variable
+(`CI`, `GITHUB_ACTIONS`, ...) is set; a build that records declares the variable as an input of its test tasks,
+or Gradle skips them as up to date when only the variable changed.
 
 The Java 11 floor starts with `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser`
 1.0.0a: Java 11 bytecode (class-file major 55), compiled against the Java 11 API. The releases
@@ -500,6 +514,7 @@ The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webt
 ./gradlew verifyJavaFloor          # the Java 11 floor of every published module's jars, metadata and runtime classpath (part of check)
 ./gradlew :webtools-http-commoncheck:build  # compile webtools-http's commonMain for js (no Node.js needed)
 ./gradlew :build-logic:test        # build-logic's pre-commit gate: its gating, component and deterministic checks
+./gradlew :build-logic:fixturesPublicationCheck  # publish a copy of webtools-http to a temporary repository and resolve its test fixtures from it (also part of webtools-http's check)
 ./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest  # on demand: TestKit checks
 ```
 
@@ -512,7 +527,9 @@ Each module organises its tests by the project's 5-level testing hierarchy: a JV
 under `<module>/src/commonTest/kotlin/…` (runs on the JVM target) and `<module>/src/jvmTest/kotlin/…`,
 with the same package. A level task selects its tests by package (`com.spartanlabs.testing.<level>.*`)
 from the module's JVM test compilation, so any level can be run or gated on its own; a test class
-outside those packages runs under `test` only. Shared fixtures live under `testing/support/`.
+outside those packages runs under `test` only. Shared test helpers live under `testing/support/`; the
+published test fixtures of `webtools-http` are a separate source set, `webtools-http/src/jvmTestFixtures`
+(package `com.spartanlabs.webtools.http.testing`).
 
 ### Java floor
 
@@ -542,10 +559,16 @@ plugins, which a module applies by id in its `plugins {}` block:
 
 Change shared build behaviour there, not in a module's build file: a module's `build.gradle.kts`
 adds its dependencies, its coordinates, its POM name and description, and any configuration that
-belongs to it alone (for example `webtools-udp`'s version and its UDP-port lock).
+belongs to it alone (for example `webtools-udp`'s version and its UDP-port lock, or `webtools-http`'s
+test-fixtures variant).
 
 `build-logic`'s own tests use the same level packages, and each of its levels with tests has a task
-of the same name (`./gradlew :build-logic:gatingTest`, …). `./gradlew build` runs none of them.
+of the same name (`./gradlew :build-logic:gatingTest`, …). `./gradlew build` runs none of them, with one
+exception: `webtools-http`'s `check` (so `build`, `check` and `:webtools-http:check`) runs
+`:build-logic:fixturesPublicationCheck`, which publishes a copy of the module with a throwaway signing key
+to a temporary repository and resolves its test fixtures from three build shapes. It takes about a minute
+when its inputs changed and is `UP-TO-DATE` otherwise; its first run needs the network. It is wired only
+when WebTools is the root build, so a build that includes WebTools never runs it.
 `:build-logic:test` runs the levels that start no nested build, in seconds.
 `:build-logic:integrationTest`, `:build-logic:e2eTest` and `:build-logic:nonfunctionalTest` run
 nested Gradle builds against generated projects; their first run downloads the Kotlin compiler and
