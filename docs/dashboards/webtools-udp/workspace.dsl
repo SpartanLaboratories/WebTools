@@ -32,7 +32,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
                 timing      = component "Timing rules" "KeepAlive, Liveness and HandshakeProtocol — pure timing and parsing rules." "internal" "Internal"
 
                 // ---- planned, not built ----
-                core        = component "Protocol core" "Issue #50: a multiplatform protocol core and a datagram-transport seam for a future web client. Proposed, not built." "proposed" "Planned"
+                core        = component "Protocol core" "A multiplatform protocol core and a datagram-transport seam for a future web client, proposed in an open issue. Not built." "proposed" "Planned"
             }
         }
 

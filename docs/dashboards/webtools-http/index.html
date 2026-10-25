@@ -404,11 +404,12 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs"><a href="../index.html">WebTools</a> › webtools-http</div>
   <h1>webtools-http</h1>
-  <p class="function">The common core of a suspend HTTP stack for Kotlin: the request and response types, a canonical <code>Url</code> that parses like OkHttp's <code>HttpUrl</code> and is only ever stricter, a typed failure model returned inside <code>Result</code>, and the transport and wall-clock ports a consumer calls or, with the opt-in, implements. No transport, cache or budget is built yet: those are the stack's later units, drawn dashed.</p>
+  <p class="function">The common core of a suspend HTTP stack for Kotlin: the request and response types, a canonical <code>Url</code> that parses like OkHttp's <code>HttpUrl</code> and is only ever stricter, a typed failure model returned inside <code>Result</code>, and the transport and wall-clock ports a consumer calls or, with the opt-in, implements; and a published test-fixtures variant, so a consumer tests its providers with no network: a scripted fake transport, one virtual clock, <code>.http</code> fixtures and a gated, redacting recorder. No production transport, cache or budget is built yet: those are the stack's later units, drawn dashed.</p>
   <div class="chips">
     <span class="chip" id="chip-version" hidden></span>
     <span class="chip"><span class="ck">platform</span> <b>Kotlin Multiplatform</b> · <code>jvm()</code> · Java 11 bytecode</span>
     <span class="chip"><span class="ck">check-only target</span> <b>js</b> · <code>webtools-http-commoncheck</code></span>
+    <span class="chip"><span class="ck">test fixtures</span> <b><code>testFixtures(…)</code></b> · Gradle only · test classpath</span>
     <span class="chip" id="chip-asis" hidden></span>
     <span class="chip" id="chip-written" hidden></span>
     <span class="chip model"><span class="ck">C4 model</span> <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
@@ -416,19 +417,19 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">27 files</div><div class="s">1,691 lines · commonMain 24 · jvmMain 2 · the check module's jsMain 1</div></div>
-  <div class="kpi"><div class="l">Types</div><div class="v">15 public</div><div class="s">21 nested public · 5 internal · one flat package</div></div>
-  <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">every call runs on the caller's thread or coroutine</div></div>
+  <div class="kpi"><div class="l">Source</div><div class="v">47 files</div><div class="s">3,365 lines · commonMain 24 · jvmMain 2 · jvmTestFixtures 20 · the check module's jsMain 1</div></div>
+  <div class="kpi"><div class="l">Types</div><div class="v">29 public</div><div class="s">15 in the core · 14 in the fixtures · 11 internal · two flat packages</div></div>
+  <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">calls run on the caller's thread or coroutine; the recorder writes on <code>Dispatchers.IO</code></div></div>
   <div class="kpi"><div class="l">Contracts</div><div class="v">2 ports</div><div class="s">an 8-point transport contract · 1 opt-in marker · 294-line ABI dump</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">36 classes</div><div class="s">131 tests across 4 testing levels, on the JVM</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">7</div><div class="s">6 planned units · 1 docs</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">54 classes</div><div class="s">272 tests across 5 testing levels, on the JVM · 18 classes test the fixtures</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">6</div><div class="s">5 planned units · 1 docs</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
   <button class="tab" role="tab" id="t-structure" aria-controls="p-structure" aria-selected="true">Structure</button>
   <button class="tab model" role="tab" id="t-c4" aria-controls="p-c4" aria-selected="false">C4 model</button>
   <button class="tab" role="tab" id="t-threads" aria-controls="p-threads" aria-selected="false">Threads</button>
-  <button class="tab" role="tab" id="t-datagrams" aria-controls="p-datagrams" aria-selected="false">URL parse</button>
+  <button class="tab" role="tab" id="t-datagrams" aria-controls="p-datagrams" aria-selected="false">Decision paths</button>
   <button class="tab" role="tab" id="t-reliable" aria-controls="p-reliable" aria-selected="false">Request</button>
   <button class="tab" role="tab" id="t-lifecycles" aria-controls="p-lifecycles" aria-selected="false">Lifecycles</button>
 </div>
@@ -439,7 +440,7 @@ footer code{color:var(--ink-2)}
     <h2>Component map</h2>
     <p class="lede">Nesting is ownership. Click a box for its role, files and threads, and its place in the C4 model.</p>
     <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of webtools-http"></svg>
-    <div class="key"><span><i class="pub srv"></i>public · common core</span><span><i class="srv"></i>internal · common core</span><span><i class="cli"></i>internal · JVM actuals</span><span><i class="wir"></i>internal · check-only js module</span><span><i class="pln"></i>planned, not built</span></div>
+    <div class="key"><span><i class="pub srv"></i>public · common core</span><span><i class="srv"></i>internal · common core</span><span><i class="pub cli"></i>public · test fixtures, JVM only</span><span><i class="cli"></i>internal · JVM actuals</span><span><i class="wir"></i>internal · check-only js module</span><span><i class="pln"></i>planned, not built</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
@@ -458,32 +459,40 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
     <h2>Thread inventory</h2>
-    <p class="lede">webtools-http 1.0.0 starts no thread, executor or dispatcher of its own. Click a row for what runs there.</p>
+    <p class="lede">webtools-http 1.0.0 starts no thread of its own; the fixtures run on the test's scheduler. Click a row for what runs there.</p>
     <div class="threads">
       <div class="tside"><h3>Common core · on the caller</h3>
         <div class="thread server" data-t="caller's thread or coroutine" tabindex="0" role="button"><span class="n">caller's thread or coroutine</span><span class="pill eager">the caller's</span><span class="r">parsing, the factories, the clock read, the non-fatal helper</span></div>
+      </div>
+      <div class="tside"><h3>Test fixtures · in a consumer's tests</h3>
+        <div class="thread client" data-t="the test's scheduler" tabindex="0" role="button"><span class="n">the test's scheduler</span><span class="pill eager">the test's</span><span class="r">VirtualClock's dispatcher and executor, a fake's delay, advanceBy</span></div>
+        <div class="thread client" data-t="Dispatchers.IO" tabindex="0" role="button"><span class="n">Dispatchers.IO</span><span class="pill cond">recording only</span><span class="r">the recorder's serialise, scrub and write, off the caller's thread</span></div>
       </div>
       <div class="tside"><h3>A transport implementation</h3>
         <div class="thread client planned" data-t="OkHttpTransport's dispatcher" tabindex="0" role="button"><span class="n">OkHttpTransport's dispatcher</span><span class="pill planned">planned</span><span class="r">the blocking I/O of execute, off the caller's thread</span></div>
       </div>
     </div>
-    <div class="key"><span><i class="bs"></i>common core</span><span><i class="bc"></i>JVM: a transport implementation</span><span><span class="pill eager">the caller's</span>runs where the caller calls</span><span><span class="pill planned">planned</span>planned, not built</span><span><i class="dot"></i>does the work (table below)</span></div>
+    <div class="key"><span><i class="bs"></i>common core</span><span><i class="bc"></i>JVM: the test fixtures, a transport implementation</span><span><span class="pill eager">the caller's</span>runs where the caller or the test calls</span><span><span class="pill cond">only …</span>only under a condition</span><span><span class="pill planned">planned</span>planned, not built</span><span><i class="dot"></i>does the work (table below)</span></div>
     <h2 style="margin-top:16px">Who runs what</h2>
-    <p class="lede"><code>HttpTransport</code>'s contract, points 7 and 8, decides the last two rows for every implementation.</p>
+    <p class="lede"><code>HttpTransport</code>'s contract, points 7 and 8, decides the transport rows for every implementation, the fixtures' included.</p>
     <div class="scroll"><table class="matrix">
-      <thead><tr><th>Work</th><th>Caller's thread or coroutine</th><th>A transport's own threads</th></tr></thead>
+      <thead><tr><th>Work</th><th>Caller's thread or coroutine</th><th><code>Dispatchers.IO</code></th><th>A transport's own threads</th></tr></thead>
       <tbody>
-        <tr><td><code>Url.parse</code>, <code>HttpMethod.of</code>, the factories and their builders</td><td><span class="dot"></span></td><td></td></tr>
-        <tr><td><code>WallClock.System.nowEpochMillis()</code>, <code>catchNonFatal</code></td><td><span class="dot"></span></td><td></td></tr>
-        <tr><td>Entering <code>execute(request)</code>, a <code>suspend</code> call; concurrent calls are allowed</td><td><span class="dot"></span></td><td></td></tr>
-        <tr><td>The blocking I/O behind <code>execute</code>: main-safe, on a dispatcher the implementation documents</td><td></td><td><span class="dot"></span></td></tr>
+        <tr><td><code>Url.parse</code>, <code>HttpMethod.of</code>, the factories and their builders</td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>WallClock.System.nowEpochMillis()</code>, <code>catchNonFatal</code></td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td>Entering <code>execute(request)</code>, a <code>suspend</code> call; concurrent calls are allowed</td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>FakeHttpTransport.execute</code>: the stub lookup under its lock, then the step's <code>delay</code>, virtual on the test's scheduler</td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>VirtualClock.advanceBy</code> and the tasks it runs; its <code>maintenanceExecutor</code> runs a task inline</td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>FixtureLoader.load</code>, <code>Fixture.parse</code></td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td>The recorder's serialisation, redaction, scrubbing and atomic write</td><td></td><td><span class="dot"></span></td><td></td></tr>
+        <tr><td>The blocking I/O behind a network transport's <code>execute</code>: main-safe, on a dispatcher the implementation documents</td><td></td><td></td><td><span class="dot"></span></td></tr>
       </tbody>
     </table></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-datagrams" aria-labelledby="t-datagrams" hidden>
-    <h2>How <code>Url.parse</code> decides</h2>
-    <p class="lede">Pick a text; the step that settles it lights up. The first failing step decides the kind.</p>
+    <h2>How <code>Url.parse</code> and the fake transport decide</h2>
+    <p class="lede">Pick a variant and its inputs; the steps that settle it light up.</p>
     <div class="ctl" id="flow-ctl"></div>
     <p class="outcome" id="outcome"></p>
     <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Url.parse decision path"></svg>
@@ -508,7 +517,7 @@ footer code{color:var(--ink-2)}
     <p class="lede">A transport's life, how values are built, and the rules the module holds to.</p>
     <div class="lgrid">
       <div class="card"><h3>A transport's life <small><code>HttpTransport</code>'s contract</small></h3>
-        <ol class="steps"><li class="ph1">constructed by its implementation (none ships yet)</li><li class="ph2"><code>execute(request)</code>: one request per hop, never a retry; concurrent calls allowed</li><li class="ph2">a status in 100..599 is a response, a <code>304</code> included; outside it, <code>Protocol</code></li><li class="ph3"><code>close()</code>: idempotent, non-suspending, never throws</li><li class="ph3">after it, <code>execute</code> returns <code>HttpFailure.Closed("transport")</code></li></ol>
+        <ol class="steps"><li class="ph1">constructed by its implementation (the fixtures' <code>FakeHttpTransport</code> and the recorder's decorator; no network one yet)</li><li class="ph2"><code>execute(request)</code>: one request per hop, never a retry; concurrent calls allowed</li><li class="ph2">a status in 100..599 is a response, a <code>304</code> included; outside it, <code>Protocol</code></li><li class="ph3"><code>close()</code>: idempotent, non-suspending, never throws</li><li class="ph3">after it, <code>execute</code> returns <code>HttpFailure.Closed("transport")</code></li></ol>
         <div class="callout"><b>Cancellation is thrown,</b> never wrapped in a <code>Result</code>.</div></div>
       <div class="card ph1"><h3>Building a value <small>the factories</small></h3>
         <ol class="steps"><li><code>HttpHeaders { add(name, value) }</code>: names are RFC 9110 tokens, values hold no CR, LF or NUL</li><li><code>HttpRequest(method, url) { … }</code> refuses, in order: <code>CONNECT</code>, an unsendable value, a body on <code>GET</code>, <code>HEAD</code> or <code>TRACE</code>, a second content type</li><li><code>HttpResponse(status, url) { … }</code> takes 100..599; <code>RedirectHop</code> 300..399</li></ol>
@@ -517,6 +526,12 @@ footer code{color:var(--ink-2)}
         <div class="callout"><b>Values are immutable.</b> Byte arrays are copied in and read back as copies, so a response shared by several callers cannot be changed by one. <code>Url</code>, <code>HttpMethod</code>, <code>HttpHeaders</code>, <code>RedirectHop</code> and the reasons compare by value; <code>HttpRequest</code>, <code>HttpResponse</code> and <code>RequestBody</code> by identity.</div>
         <div class="callout"><b>Nothing prints a secret.</b> <code>toString()</code> shows names, the method or status, the redacted URL and sizes, never a header value or a body; a failure's message is constant text plus named non-sensitive fields.</div>
         <div class="callout"><b>Common code stays common.</b> <code>webtools-http-commoncheck</code> compiles <code>commonMain</code> for <code>js</code> in <code>check</code>, so a JVM API there is a compile error.</div></div>
+      <div class="card"><h3>A test with the fixtures <small>no network</small></h3>
+        <ol class="steps"><li class="ph1"><code>runTest { val clock = virtualClock() }</code>: one scheduler drives the time source, the wall clock, the dispatcher and the executor</li><li class="ph1"><code>FakeHttpTransport(clock.timeSource).on(match, steps…)</code>: the latest stub that matches wins; its steps run in order and the last repeats</li><li class="ph2"><code>execute(request)</code>: recorded with a virtual stamp, then the step's delay; an unmatched request throws <code>UnmatchedRequestError</code></li><li class="ph2"><code>clock.advanceBy(d)</code>: moves every clock at once and runs what fell due</li><li class="ph3"><code>close()</code>: idempotent; every later call returns <code>Closed("transport")</code></li></ol>
+        <div class="callout"><b>Never at Level 3:</b> real I/O under <code>runTest</code> turns <code>withTimeout</code> into a spurious timeout, as the clock's KDoc says.</div></div>
+      <div class="card"><h3>Recording a fixture <small>behind the gate</small></h3>
+        <ol class="steps"><li class="ph1"><code>RecordingGate.evaluate()</code>: off unless <code>WEBTOOLS_HTTP_RECORD</code> allows it; refused when any of twelve CI variables is set</li><li class="ph1"><code>FixtureRecorder(directory, gate)</code> takes only <code>RecordingGate.Enabled</code></li><li class="ph2"><code>wrap(live, group)</code>: each successful response is redacted, scrubbed of the supplied secrets and written; no request header is written</li><li class="ph2">a file in which a secret's form survives is refused, listed in <code>refused</code>, never written</li><li class="ph3">the wrapper's <code>close()</code> closes the live transport</li></ol>
+        <div class="callout"><b>Replay:</b> <code>Step.fixture(FixtureLoader().load("group/name.http"))</code> reads it back from the consumer's own classpath; a consumer marks <code>**/fixtures/**/*.http</code> <code>-text</code> in its <code>.gitattributes</code>.</div></div>
     </div>
     <div class="key"><span><i class="ph1"></i>start · construction</span><span><i class="ph2"></i>run · steady state and its rules</span><span><i class="ph3"></i>stop · close</span></div>
   </section>
@@ -532,25 +547,26 @@ footer code{color:var(--ink-2)}
   <h2>Guarantees</h2>
   <div class="bubbles">
     <div class="bubble"><h3>Failure model</h3>
-      <ul><li><code>Url.parse</code> and <code>HttpMethod.of</code> return <code>Result.failure(IllegalArgumentException)</code> with a constant message that never echoes the input.</li><li>A port returns its <code>HttpFailure</code> inside the <code>Result</code>: a <code>TransportFailure</code> leaf, an <code>UpstreamFailure</code>, or <code>Closed</code> after <code>close()</code>.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> from a factory given a broken developer-written value; cancellation.</li><li>Retried inside: nothing; a transport sends one request per hop.</li></ul></div>
+      <ul><li><code>Url.parse</code> and <code>HttpMethod.of</code> return <code>Result.failure(IllegalArgumentException)</code> with a constant message that never echoes the input.</li><li>A port returns its <code>HttpFailure</code> inside the <code>Result</code>: a <code>TransportFailure</code> leaf, an <code>UpstreamFailure</code>, or <code>Closed</code> after <code>close()</code>.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> from a factory given a broken developer-written value; cancellation.</li><li>Retried inside: nothing; a transport sends one request per hop.</li><li>Fixtures: the fake returns its scripted <code>Result</code>, <code>BodyTooLarge</code> over its cap and <code>Closed</code> after <code>close()</code>, and throws <code>UnmatchedRequestError</code>, an <code>Error</code>, for a request no stub matches; <code>FixtureLoader.load</code> throws <code>FixtureError</code> naming the resource and line, never a value; the recorder never fails a call: an I/O failure or a surviving secret lands in <code>refused</code>.</li></ul></div>
     <div class="bubble"><h3>Extension points</h3>
-      <ul><li><code>HttpTransport</code>, <code>WallClock</code> — implement <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; calling and passing them are Stable Core</li><li><code>HttpFailure</code>, <code>TransportFailure</code>, <code>UpstreamFailure</code> — subclass <span class="badge">Experimental</span>, the same marker</li><li><code>RefusalReason</code>, <code>ExhaustedReason</code> — may gain constants; keep an <code>else</code> <span class="badge">Stable Core</span></li><li>Every other public type is final or a factory <span class="badge">Stable Core</span></li></ul></div>
-    <div class="bubble"><h3>Test levels <small>36 classes</small></h3>
+      <ul><li><code>HttpTransport</code>, <code>WallClock</code> — implement <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; calling and passing them are Stable Core</li><li><code>HttpFailure</code>, <code>TransportFailure</code>, <code>UpstreamFailure</code> — subclass <span class="badge">Experimental</span>, the same marker</li><li><code>RefusalReason</code>, <code>ExhaustedReason</code> — may gain constants; keep an <code>else</code> <span class="badge">Stable Core</span></li><li>Every other public type is final or a factory <span class="badge">Stable Core</span></li><li>Test fixtures — every class final, <code>RecordingGate</code> and <code>Unmatched</code> sealed; source compatibility only, since no ABI dump covers them. <code>FakeHttpTransport</code> and the recorder's decorator are the worked examples of implementing <code>HttpTransport</code> with the opt-in, <code>VirtualClock</code>'s wall clock of <code>WallClock</code> <span class="badge">Stable Core</span></li></ul></div>
+    <div class="bubble"><h3>Test levels <small>54 classes</small></h3>
       <div class="bars" role="table" aria-label="Test classes per testing level">
-        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:13%"></span></span><span class="val">2</span>
-        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:88%"></span></span><span class="val">14</span>
-        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">16</span>
-        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:25%"></span></span><span class="val">4</span>
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:14%"></span></span><span class="val">3</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">22</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:5%"></span></span><span class="val">1</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:95%"></span></span><span class="val">21</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:32%"></span></span><span class="val">7</span>
       </div>
-      <p>131 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM; three differentials hold OkHttp 5.5.0 as the oracle. No L3 integration, L4b e2e or L5 UAT class. <span class="gap">On <code>js</code> the code is compiled, never tested; three IDE items of the manual L5 pass were not performed.</span></p></div>
+      <p>272 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM; 18 classes (141 tests) test the fixtures, which <code>jvmTest</code> reaches through its association; three differentials hold OkHttp 5.5.0 as the oracle. No L4b e2e or L5 UAT class here: the fixtures' publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. <span class="gap">On <code>js</code> the code is compiled, never tested; seven IDE items of the manual L5 passes, three for the core and four for the fixtures, were not performed.</span></p></div>
     <div class="bubble"><h3>Compatibility &amp; versioning</h3>
-      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (294 lines) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code>, and no permanent check proves the gate.</span></li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
+      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (294 lines) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code>, and no permanent check proves the gate.</span></li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>), released and versioned with the module. No dump covers it; <code>fixturesPublicationCheck</code>, in <code>check</code>, asserts its two variants, their dependencies, a signature beside every published file and its resolution from three build shapes.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
     <div class="bubble"><h3>Thread safety</h3>
-      <ul><li>Safe to share: every value type, which is immutable, and <code>WallClock.System</code>, which is stateless.</li><li><code>HttpTransport.execute</code> may be called concurrently and is main-safe; a <code>WallClock</code> implementation must be safe for concurrent calls.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li></ul></div>
+      <ul><li>Safe to share: every value type, which is immutable, and <code>WallClock.System</code>, which is stateless.</li><li><code>HttpTransport.execute</code> may be called concurrently and is main-safe; a <code>WallClock</code> implementation must be safe for concurrent calls.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li><li>Fixtures: <code>FakeHttpTransport</code> and <code>FixtureRecorder</code> are safe to share, each behind one lock never held across a suspension, their lists snapshots; <code>FixtureLoader</code> is stateless; <code>VirtualClock</code>'s readings are safe from any thread, <code>advanceBy</code> from the test's thread only.</li></ul></div>
     <div class="bubble"><h3>Resources to close</h3>
-      <ul><li><code>HttpTransport</code> is <code>AutoCloseable</code>: <code>close()</code> is idempotent and never throws; the default does nothing.</li><li>No other type holds a resource, and no transport implementation ships in 1.0.0.</li></ul></div>
+      <ul><li><code>HttpTransport</code> is <code>AutoCloseable</code>: <code>close()</code> is idempotent and never throws; the default does nothing.</li><li>Fixtures: <code>FakeHttpTransport.close()</code> is idempotent, and every later call returns <code>Closed</code>; the recorder's wrapper closes its delegate. <code>FixtureRecorder</code> holds no open file: each write goes to a temporary file moved into place.</li><li>No other type holds a resource, and no network transport ships in 1.0.0.</li></ul></div>
     <div class="bubble"><h3>On your classpath</h3>
-      <ul><li><code>org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2</code> — api: a suspend API's runtime</li><li><code>kotlin-stdlib</code> 2.2.0 in compile scope; <code>okhttp-jvm</code> lifts it to 2.2.21 or newer at runtime</li><li>Runtime only: <code>okhttp-jvm</code> 5.5.0, <code>caffeine</code> 3.3.1, <code>slf4j-api</code> 2.0.13; no slf4j backend ships</li></ul></div>
+      <ul><li><code>org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2</code> — api: a suspend API's runtime</li><li><code>kotlin-stdlib</code> 2.2.0 in compile scope; <code>okhttp-jvm</code> lifts it to 2.2.21 or newer at runtime</li><li>Runtime only: <code>okhttp-jvm</code> 5.5.0, <code>caffeine</code> 3.3.1, <code>slf4j-api</code> 2.0.13; no slf4j backend ships</li><li>Test classpath only, through <code>testFixtures(…)</code>: the <code>-test-fixtures.jar</code>, <code>kotlinx-coroutines-test</code> 1.10.2 and <code>mockwebserver3</code> 5.5.0, optional in the root POM and on neither main variant. Gradle only: a Maven build cannot select the variant.</li></ul></div>
   </div>
 </section>
 
@@ -559,12 +575,12 @@ footer code{color:var(--ink-2)}
   <div class="cards">
     <div class="card"><h3>Roadmap <small>1 item · 2026-10-25</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · 3 of 11 units landed</small></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · 4 of 11 units landed</small></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span><a data-board="62">webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile</a> <small>unit 3 · landed in 7de8207: this page</small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · in progress</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · landed in 4fcc6e0: this page's test fixtures</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/64" target="_blank" rel="noopener">#64</a><span><a data-board="64">webtools-http: outbound-URL policies <code>Trusted</code>/<code>Untrusted</code>, <code>TransportSettings</code> and the common address classifier</a> <small>unit 5 · up next</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a><span><a data-board="65">webtools-http: <code>OkHttpTransport</code> with manual redirects, the one-exchange guard, the resolver and socket guards</a> <small>unit 6</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a><span><a data-board="65">webtools-http: <code>OkHttpTransport</code> with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories</a> <small>unit 6 · adds the loopback factories to the fixtures</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/66" target="_blank" rel="noopener">#66</a><span><a data-board="66">webtools-http: <code>ResponseCache</code> port and <code>CaffeineResponseCache</code> default</a> <small>unit 7</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>unit 8</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
@@ -578,10 +594,11 @@ footer code{color:var(--ink-2)}
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Plan boards that amended this system: <a data-issue="62">#62</a> http-core — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>Plan boards that amended this system: <a data-issue="63">#63</a> test-support — the fixtures and their publication check · <a data-issue="62">#62</a> http-core — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
         <li><a href="../../plans/55-http-client-stack/62-http-core/plan.md">#62 plan</a> · <a href="../../plans/55-http-client-stack/62-http-core/final-implementation.md">as built</a> — the compile proof, the differentials, every measurement · <a href="../../plans/55-http-client-stack/62-http-core/impact.md">impact</a> — what the later units build on · <a href="../../plans/55-http-client-stack/62-http-core/research/README.md">research</a></li>
-        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 the common core, §6.8 the check-only js modules, §6.9 the mechanism per type, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/impact.md">#55 impact</a></li>
-        <li><a href="../../../README.md">README</a> — the artifact row and install line, marked not yet released; "Build &amp; test"</li>
+        <li><a href="../../plans/55-http-client-stack/63-test-support/plan.md">#63 plan</a> · <a href="../../plans/55-http-client-stack/63-test-support/final-implementation.md">as built</a> — every measurement, the manual pass and the known gaps · <a href="../../plans/55-http-client-stack/63-test-support/impact.md">impact</a> — the published variant, what the later units add to it · <a href="../../plans/55-http-client-stack/63-test-support/research/README.md">research</a></li>
+        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 the common core, §6.7 the published test support, §6.8 the check-only js modules, §6.9 the mechanism per type, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/impact.md">#55 impact</a></li>
+        <li><a href="../../../README.md">README</a> — the artifact row and install lines, the <code>testFixtures(…)</code> line among them, marked not yet released; the fixtures paragraph and its <code>.gitattributes</code> line; "Build &amp; test"</li>
         <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it · the build it is made with: the <a href="../gradle-build/index.html">Gradle build</a> page</li>
       </ul></div>
   </div>
@@ -590,9 +607,10 @@ footer code{color:var(--ink-2)}
 <footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-dashboard template (presenter, 2026-10-25, the page's first writing at 7de8207):
      None in the template parts: the page's CSS, tab set, script before MODEL and renderer are the template's. What it fills in:
      1. The core tabs are named for what they show: "URL parse" (the decision path: Url.parse's steps) and "Request" (the sequence).
-     2. The Threads tab says the module starts no thread of its own and lists the caller's thread and a planned transport dispatcher.
+     2. The Threads tab says the module starts no thread of its own and lists the caller's thread, the fixtures' two places (the test's scheduler, Dispatchers.IO for the recorder) and a planned transport dispatcher.
      3. The stack's later units are drawn as planned (dashed) components.
-     Nothing is removed. Spliced onto the verified system template on feat/issue-63-test-support at 5d98102
+     4. The page carries two registry systems, webtools-http's common core and its test fixtures (both parts of the planned webtools-http supersystem); the fixtures are a JVM-only compilation and take the JVM side's hue, and the decision path has a second variant for the fake transport.
+     Nothing is removed. Refreshed at the landing of #63 (master 4fcc6e0, 2026-10-25): the fixtures drawn built on every tab, in the Guarantees and the header. Spliced onto the verified system template on feat/issue-63-test-support at 5d98102
      (2026-10-25): the state block and its header chips, the work-board link; issue numbers taken out of the part above Context. --></footer>
 </div>
 
@@ -601,9 +619,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-http",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
-  "lastAmended": {"issue": 62, "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile", "sha": "123c875"},
-  "written": {"sha": "7de8207"}
+  "asIs": {"ref": "master", "sha": "4fcc6e0", "date": "2026-10-25"},
+  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "4fcc6e0"},
+  "written": {"sha": "4fcc6e0"}
 }
 </script>
 
@@ -611,8 +629,8 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http/index.html.
-// As-is at WebTools master 7de8207 (2026-10-25), webtools-http 1.0.0 (new, unreleased): the common core from #62 and its check-only js module. Code is authoritative on any conflict.
-// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.3 to 6.7 and 11) and carry their sub-issue. None of them is built; they are drawn dashed.
+// As-is at WebTools master 4fcc6e0 (2026-10-25), webtools-http 1.0.0 (new, unreleased): the common core from #62, its check-only js module, and the test-fixtures variant from #63. Code is authoritative on any conflict.
+// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.3 to 6.6 and 11). None of them is built; they are drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -621,7 +639,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         consumer = person "Consumer" "A Kotlin service that builds requests, matches the failures and supplies or receives an HttpTransport."
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            http = container "webtools-http" "The common core of a suspend HTTP stack: the opt-in marker, the failure model, the request and response types, Url, and the transport and wall-clock ports. No implementation beyond WallClock.System yet." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
+            http = container "webtools-http" "The common core of a suspend HTTP stack: the opt-in marker, the failure model, the request and response types, Url, and the transport and wall-clock ports; and its published test-fixtures variant. No production implementation beyond WallClock.System yet." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
                 // ---- public surface ----
                 marker    = component "ExperimentalForInheritanceWebToolsApi" "The one opt-in marker: @RequiresOptIn(level = ERROR), used only through @SubclassOptInRequired and @OptIn; never removed." "annotation class" "Public"
                 transport = component "HttpTransport" "suspend execute(request): Result<HttpResponse> and an idempotent close(); an eight-point contract. Implementing it needs the opt-in." "interface · AutoCloseable · gated" "Public"
@@ -635,8 +653,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 syntax    = component "HttpSyntax" "The shared predicates: the token rule, the value rules, the media type, sanitizeReceivedValue." "internal object" "Internal"
                 log       = component "Log seam" "Log with debug, info and warn, through expect fun logger(name): slf4j in jvmMain. No production logging site yet." "internal interface · expect/actual" "Internal"
                 helpers   = component "Helpers" "Result.flatMap, catchNonFatal and expect fun epochMillisNow(): System.currentTimeMillis() in jvmMain." "internal functions · expect/actual" "Internal"
+                // ---- the test-fixtures variant: a JVM-only testFixtures compilation associated with main, published beside it ----
+                fixtures  = component "Test fixtures" "The webtools-http-test-fixtures variant, package com.spartanlabs.webtools.http.testing: VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader for .http and body-only files, and the gated, redacting FixtureRecorder. All final; Stable Core with source compatibility only." "jvmTestFixtures · testFixtures(...) · test classpath only" "Public"
                 // ---- planned by Issue #55, not built ----
-                fixtures  = component "Test fixtures" "VirtualClock, FakeHttpTransport, .http fixtures and the recorder, as a published test-fixtures variant." "planned" "Planned"
                 policy    = component "OutboundUrlPolicy" "Trusted and Untrusted policies, TransportSettings and the address classifier." "planned" "Planned"
                 okhttp    = component "OkHttpTransport" "The OkHttp transport with manual redirects and the resolver and socket guards." "planned" "Planned"
                 cache     = component "ResponseCache" "The cache port and its Caffeine default." "planned" "Planned"
@@ -664,9 +683,13 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.http.failures -> webtools.http.reasons "Carry the refusal and exhaustion reasons"
         webtools.http.clock -> webtools.http.helpers "WallClock.System reads epochMillisNow()"
         webtools.check -> webtools.http "Compiles its commonMain for js, through a relative srcDir"
+        consumer -> webtools.http.fixtures "Tests its providers with testFixtures(...): no network"
+        webtools.http.fixtures -> webtools.http.transport "Implements it with FakeHttpTransport, and decorates a live one to record"
+        webtools.http.fixtures -> webtools.http.clock "Implements it with VirtualClock's wall clock"
+        webtools.http.fixtures -> webtools.http.values "Builds responses from fixtures; parses and writes .http files"
+        webtools.http.fixtures -> webtools.http.failures "Returns Closed and BodyTooLarge as a transport does"
 
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
-        webtools.http.fixtures -> webtools.http.transport "Would fake"
         webtools.http.policy -> webtools.http.failures "Would refuse with RefusedByPolicy"
         webtools.http.okhttp -> webtools.http.transport "Would implement"
         webtools.http.cache -> webtools.http.clock "Would expire by"
@@ -683,7 +706,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at master 7de8207, with the stack's later units dashed." {
+        component webtools.http "Components" "webtools-http as built at master 4fcc6e0, its test fixtures included, with the stack's later units dashed." {
             include *
             autoLayout tb
         }
@@ -779,27 +802,27 @@ function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker"
    nodes to their DSL element so the two views cross-reference.
    ========================================================================= */
 const MODEL = {
-  // The page's colour groups: server = the common core (blue), client = the JVM actuals (purple), wire = the check-only js module (teal);
-  // the consumer's code, and anything outside the module.
-  sides:{server:"common core · commonMain",client:"JVM · jvmMain",wire:"check-only js module",consumer:"the consumer's code",external:"a transport implementation, outside the module"},
+  // The page's colour groups: server = the common core (blue), client = the JVM-only source sets, jvmMain and the test fixtures (purple),
+  // wire = the check-only js module (teal); the consumer's code, and anything outside the module.
+  sides:{server:"common core · commonMain",client:"JVM · jvmMain and the test fixtures",wire:"check-only js module",consumer:"the consumer's code",external:"a transport implementation, outside the module"},
   // Map node id → DSL element id.
   c4:{core:"webtools.http",marker:"webtools.http.marker",transport:"webtools.http.transport",clock:"webtools.http.clock",failures:"webtools.http.failures",tf:"webtools.http.failures",uf:"webtools.http.failures",leaves:"webtools.http.failures",
       req:"webtools.http.values",resp:"webtools.http.values",headers:"webtools.http.values",method:"webtools.http.values",body:"webtools.http.values",hop:"webtools.http.values",reasons:"webtools.http.reasons",
       url:"webtools.http.url",parsing:"webtools.http.pipeline",host:"webtools.http.pipeline",enc:"webtools.http.pipeline",problem:"webtools.http.pipeline",syntax:"webtools.http.syntax",log:"webtools.http.log",helpers:"webtools.http.helpers",epoch:"webtools.http.helpers",
       jvm:"webtools.http.log",logJvm:"webtools.http.log",epochJvm:"webtools.http.helpers",check:"webtools.check",jsAct:"webtools.check",
-      pFix:"webtools.http.fixtures",pPolicy:"webtools.http.policy",pOk:"webtools.http.okhttp",pCache:"webtools.http.cache",pBudget:"webtools.http.budget",pFac:"webtools.http.facades"},
+      fix:"webtools.http.fixtures",fClock:"webtools.http.fixtures",fFake:"webtools.http.fixtures",fFiles:"webtools.http.fixtures",fRec:"webtools.http.fixtures",pPolicy:"webtools.http.policy",pOk:"webtools.http.okhttp",pCache:"webtools.http.cache",pBudget:"webtools.http.budget",pFac:"webtools.http.facades"},
   structure: {
-    lanes:[["COMMON CORE · commonMain",40,44,"start"],["JVM · jvmMain",960,44,"end"],["CHECK MODULE · js",960,240,"end"],["PLANNED · LATER UNITS",960,380,"end"]],
+    lanes:[["COMMON CORE · commonMain",40,44,"start"],["JVM · jvmMain",960,44,"end"],["CHECK MODULE · js",960,212,"end"],["TEST FIXTURES · jvmTestFixtures",960,318,"end"],["PLANNED · LATER UNITS",960,510,"end"]],
     notes:[],
     nodes:[
       {id:"core",side:"server",vis:"pub",container:true,x:40,y:56,w:640,h:540,t:"webtools-http",s:"package com.spartanlabs.webtools.http · explicitApi() · 1.0.0 unreleased",
-        d:{role:"One flat package; internal does the hiding. Built on webtools.kotlin-multiplatform-library with one jvm() target at the Java 11 floor; kotlinx-coroutines-core 1.10.2 is its one api dependency. The opt-in is a language setting of commonMain and jvmMain in its own build file, so the test source sets stay a consumer without it.",vis:"public · module",files:["build.gradle.kts","api/webtools-http.api"],threads:["caller's thread or coroutine"],issues:[63,64,65,66,67,68]}},
+        d:{role:"One flat package; internal does the hiding. Built on webtools.kotlin-multiplatform-library with one jvm() target at the Java 11 floor; kotlinx-coroutines-core 1.10.2 is its one api dependency. The opt-in is a language setting of commonMain and jvmMain in its own build file, so the test source sets and the fixtures stay a consumer without it.",vis:"public · module",files:["build.gradle.kts","api/webtools-http.api"],threads:["caller's thread or coroutine"],issues:[64,65,66,67,68]}},
       {id:"marker",side:"server",vis:"pub",x:56,y:96,w:300,h:44,t:"ExperimentalForInheritanceWebToolsApi",s:"@RequiresOptIn(ERROR) · the one opt-in marker",
         d:{role:"Marks the seams whose implementation or subclassing is Experimental. Applied only through @SubclassOptInRequired on the five gated types and @OptIn in an implementer; never removed. Its message is one string literal, so the module's own errors carry it.",vis:"public · annotation class · Stable Core",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/ExperimentalForInheritanceWebToolsApi.kt"]}},
       {id:"transport",side:"server",vis:"pub",x:368,y:96,w:150,h:44,t:"HttpTransport",s:"suspend execute · close()",
-        d:{role:"The seam between the stack and the network: execute(request): Result<HttpResponse>, and close(), empty by default. Its KDoc states an eight-point contract: one request per hop and no retry; the documented caps; a 304 a response, a status outside 100..599 Protocol; received entries sanitised, not failed; cancellation thrown; Closed after an idempotent close(); concurrent calls allowed; main-safe. No implementation ships in 1.0.0.",vis:"public · interface · AutoCloseable · Experimental (implement)",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/HttpTransport.kt"],threads:["caller's thread or coroutine","OkHttpTransport's dispatcher"],issues:[63,65]}},
+        d:{role:"The seam between the stack and the network: execute(request): Result<HttpResponse>, and close(), empty by default. Its KDoc states an eight-point contract: one request per hop and no retry; the documented caps; a 304 a response, a status outside 100..599 Protocol; received entries sanitised, not failed; cancellation thrown; Closed after an idempotent close(); concurrent calls allowed; main-safe. No production implementation ships in 1.0.0; the fixtures' FakeHttpTransport and the recorder's decorator implement it for tests.",vis:"public · interface · AutoCloseable · Experimental (implement)",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/HttpTransport.kt"],threads:["caller's thread or coroutine","OkHttpTransport's dispatcher"],issues:[65]}},
       {id:"clock",side:"server",vis:"pub",x:528,y:96,w:136,h:44,t:"WallClock",s:"nowEpochMillis · System",
-        d:{role:"Wall-clock milliseconds since the epoch; may step backwards. WallClock.System, nested, final and stateless, reads epochMillisNow() and needs no opt-in. An implementation must be safe for concurrent calls and cheap.",vis:"public · interface · Experimental (implement); System Stable Core",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/WallClock.kt"],threads:["caller's thread or coroutine"],issues:[63,66,67]}},
+        d:{role:"Wall-clock milliseconds since the epoch; may step backwards. WallClock.System, nested, final and stateless, reads epochMillisNow() and needs no opt-in. An implementation must be safe for concurrent calls and cheap.",vis:"public · interface · Experimental (implement); System Stable Core",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/WallClock.kt"],threads:["caller's thread or coroutine"],issues:[66,67]}},
       {id:"failures",side:"server",vis:"pub",container:true,x:56,y:152,w:608,h:124,t:"HttpFailure",s:"abstract · gated · the Result payload of every port and facade",
         d:{role:"The root of the failure model, an Exception subclassed only with the opt-in; catching, matching and reading are Stable Core. Every message is the type's constant text plus named non-sensitive fields; a cause is kept for diagnostics only. Match the groups you care about and keep an else.",vis:"public · abstract class · Experimental (subclass)",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/HttpFailure.kt"],issues:[67,68]}},
       {id:"tf",side:"server",vis:"pub",x:72,y:192,w:284,h:68,t:"TransportFailure",s:["11 final leaves: Timeout · ConnectFailed","DnsFailed · TlsFailed · Protocol · Io","InvalidRequest · RefusedByPolicy · 3 more"],
@@ -833,33 +856,44 @@ const MODEL = {
       {id:"problem",side:"server",vis:"int",x:540,y:450,w:112,h:46,t:"UrlProblem",s:"11 kinds",
         d:{role:"The kinds of failure and their constant messages, carried by the internal UrlParseException that tests read.",vis:"internal",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlProblem.kt"]}},
       {id:"syntax",side:"server",vis:"int",x:56,y:524,w:190,h:56,t:"HttpSyntax",s:["token · values · media type","sanitizeReceivedValue"],
-        d:{role:"The shared predicates the value types use, and the transport and the fixtures will reuse: the token rule, the container and sendable value rules, the media type, the ASCII-only fold and the received-value sanitiser.",vis:"internal · object",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/HttpSyntax.kt"],issues:[63,65]}},
+        d:{role:"The shared predicates the value types use, the fixtures' .http codec reuses through the association, and the transport will reuse: the token rule, the container and sendable value rules, the media type, the ASCII-only fold and the received-value sanitiser.",vis:"internal · object",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/HttpSyntax.kt"],issues:[65]}},
       {id:"log",side:"server",vis:"int",x:254,y:524,w:150,h:56,t:"Log seam",s:["expect logger(name)","debug · info · warn"],
         d:{role:"An internal logging seam with {} placeholders, delivered and tested for the later units; no production code logs yet.",vis:"internal · interface · expect",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/Log.kt"]}},
       {id:"helpers",side:"server",vis:"int",x:412,y:524,w:130,h:56,t:"Helpers",s:["flatMap","catchNonFatal"],
         d:{role:"A third copy of Result.flatMap, whose header names the other two; catchNonFatal, the module's one try/catch, turns an Exception other than CancellationException into a failure and lets an Error through.",vis:"internal · inline functions",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/ResultExtensions.kt","src/commonMain/kotlin/com/spartanlabs/webtools/http/NonFatal.kt"],threads:["caller's thread or coroutine"]}},
       {id:"epoch",side:"server",vis:"int",x:550,y:524,w:114,h:56,t:"epochMillisNow",s:["expect · read by","WallClock.System"],
         d:{role:"The platform's wall clock, as an internal expect function with one actual per target.",vis:"internal · expect",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/EpochMillis.kt"]}},
-      {id:"jvm",side:"client",vis:"int",container:true,x:700,y:56,w:260,h:150,t:"jvmMain",s:"the JVM actuals",
+      {id:"jvm",side:"client",vis:"int",container:true,x:700,y:56,w:260,h:142,t:"jvmMain",s:"the JVM actuals",
         d:{role:"The jvm() target's actuals, compiled to Java 11 bytecode. OkHttp, Caffeine and slf4j are implementation dependencies here; only slf4j is used yet.",vis:"internal · source set",files:["src/jvmMain/kotlin/com/spartanlabs/webtools/http/"]}},
       {id:"logJvm",side:"client",vis:"int",x:716,y:100,w:228,h:42,t:"Log.jvm.kt",s:"slf4j LoggerFactory.getLogger(name)",
         d:{role:"The JVM actual of logger(name), wrapping slf4j; a trailing Throwable argument is the exception, as slf4j reads it.",vis:"internal · actual",files:["src/jvmMain/kotlin/com/spartanlabs/webtools/http/Log.jvm.kt"]}},
       {id:"epochJvm",side:"client",vis:"int",x:716,y:150,w:228,h:42,t:"EpochMillis.jvm.kt",s:"System.currentTimeMillis()",
         d:{role:"The JVM actual of epochMillisNow().",vis:"internal · actual",files:["src/jvmMain/kotlin/com/spartanlabs/webtools/http/EpochMillis.jvm.kt"]}},
-      {id:"check",side:"wire",vis:"int",container:true,x:700,y:252,w:260,h:112,t:"webtools-http-commoncheck",s:"unpublished · commonMain compiled for js",
+      {id:"check",side:"wire",vis:"int",container:true,x:700,y:220,w:260,h:92,t:"webtools-http-commoncheck",s:"unpublished · commonMain compiled for js",
         d:{role:"A sibling module on webtools.kotlin-common-check: it adds ../webtools-http/src/commonMain/kotlin as a source directory, opts in on commonMain and jsMain, and compiles in check, so a JVM API in common code is a compile error. It publishes nothing and runs no test; js() has no environment, so no Node.js.",vis:"internal · module",files:["../webtools-http-commoncheck/build.gradle.kts"]}},
-      {id:"jsAct",side:"wire",vis:"int",x:716,y:300,w:228,h:48,t:"JsActuals.kt",s:["a no-op Log","Date.now() for epochMillisNow"],
+      {id:"jsAct",side:"wire",vis:"int",x:716,y:258,w:228,h:46,t:"JsActuals.kt",s:["a no-op Log","Date.now() for epochMillisNow"],
         d:{role:"The js actuals of the two expect declarations.",vis:"internal · actual",files:["../webtools-http-commoncheck/src/jsMain/kotlin/com/spartanlabs/webtools/http/JsActuals.kt"]}},
-      {id:"pFix",side:"server",vis:"pub",kind:"planned",x:700,y:392,w:260,h:28,t:"Test fixtures",s:"",d:{role:"Planned: VirtualClock, FakeHttpTransport, .http fixtures and the recorder, as a published test-fixtures variant. Not built.",vis:"planned",files:[],issues:[63]}},
-      {id:"pPolicy",side:"server",vis:"pub",kind:"planned",x:700,y:426,w:260,h:28,t:"OutboundUrlPolicy",s:"",d:{role:"Planned: Trusted and Untrusted policies, TransportSettings and the address classifier. Not built.",vis:"planned",files:[],issues:[64]}},
-      {id:"pOk",side:"server",vis:"pub",kind:"planned",x:700,y:460,w:260,h:28,t:"OkHttpTransport",s:"",d:{role:"Planned: the OkHttp transport, the first top-level implementer of a gated port. Not built.",vis:"planned",files:[],issues:[65]}},
-      {id:"pCache",side:"server",vis:"pub",kind:"planned",x:700,y:494,w:260,h:28,t:"ResponseCache",s:"",d:{role:"Planned: the cache port and its Caffeine default. Not built.",vis:"planned",files:[],issues:[66]}},
-      {id:"pBudget",side:"server",vis:"pub",kind:"planned",x:700,y:528,w:260,h:28,t:"CallBudget",s:"",d:{role:"Planned: the budget port and WindowedCallBudget. Not built.",vis:"planned",files:[],issues:[67]}},
-      {id:"pFac",side:"server",vis:"pub",kind:"planned",x:700,y:562,w:260,h:28,t:"UpstreamClient · UrlFetcher",s:"",d:{role:"Planned: the facades composing cache, budget and transport. Not built.",vis:"planned",files:[],issues:[68]}}
+      {id:"fix",side:"client",vis:"pub",container:true,x:700,y:328,w:260,h:168,t:"test fixtures",s:"com.spartanlabs.webtools.http.testing · 20 files",
+        d:{role:"A JVM-only testFixtures compilation associated with main, so it reaches main's internal helpers, and published as the variants testFixturesApiElements and testFixturesRuntimeElements beside a -test-fixtures.jar, capability webtools-http-test-fixtures (recipe B, in the module's own build file). It depends on exactly webtools-http, kotlinx-coroutines-test 1.10.2 and mockwebserver3 5.5.0 (for the transport unit's loopback factories), compiles with -Xexplicit-api=strict and has no source-set opt-in: each of its three implementers of a gated port carries its own @OptIn. Its jar and runtime classpath join verifyJavaFloor; the module's own jvmTest is associated with it. A consumer writes testImplementation(testFixtures(\"io.github.spartanlaboratories:webtools-http:<version>\")), in Gradle only.",vis:"public · test-fixtures variant · Stable Core (source compatibility only)",files:["build.gradle.kts","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/"],threads:["the test's scheduler","Dispatchers.IO"]}},
+      {id:"fClock",side:"client",vis:"pub",x:716,y:372,w:110,h:54,t:"VirtualClock",s:["one scheduler for","every clock"],
+        d:{role:"One virtual clock for a test: a monotonic timeSource, a wallClock, a coroutine dispatcher and a maintenanceExecutor, all driven by one kotlinx-coroutines-test TestCoroutineScheduler, so a cache's ticker, a delay and a wall-clock index move together when advanceBy is called; TestScope.virtualClock() builds one on the test's scheduler. advanceBy runs the tasks due exactly at the target too and refuses a negative duration. Never for real I/O: under runTest a pending real call turns withTimeout into a spurious timeout.",vis:"public · final class · Stable Core",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/VirtualClock.kt"],threads:["the test's scheduler"]}},
+      {id:"fFake",side:"client",vis:"pub",x:834,y:372,w:114,h:54,t:"FakeHttpTransport",s:["stubs · steps","a call log"],
+        d:{role:"A scripted HttpTransport, the worked example of the seam: on(match, steps…) adds a stub, the latest matching stub wins and its steps run in order with the last repeating, each with a virtual-time delay. Every call is recorded with a virtual stamp before its delay; an unmatched request throws UnmatchedRequestError with the redacted URL, unless Unmatched.Respond is set. It mirrors a body cap (BodyTooLarge) and close() (Closed); URL policy, DNS, TLS, redirects and timeouts are the real transport's. With RequestMatch, Step, Unmatched, RecordedCall and UnmatchedRequestError; its query matching transcribes OkHttp 5.5.0's HttpUrl.",vis:"public · final class · Stable Core",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FakeHttpTransport.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RequestMatch.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/Step.kt"],threads:["caller's thread or coroutine","the test's scheduler"]}},
+      {id:"fFiles",side:"client",vis:"pub",x:716,y:432,w:110,h:54,t:"Fixture · Loader",s:["parse · load",".http · body-only"],
+        d:{role:"Fixture holds a status, headers and a body, parsed from a .http file by the internal HttpMessageCodec (strict UTF-8 head, the body verbatim, each fault a FixtureError naming the origin and line, never a value) and written back with the RFC 9110 reason phrase. FixtureLoader reads <root>/<name> from the consumer's own classpath, fixtures by default: a .http name is parsed, any other is a body-only 200 with a Content-Type by its extension. The fixtures jar ships no fixture file.",vis:"public · final classes · Stable Core",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/Fixture.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FixtureLoader.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/HttpMessageCodec.kt"],threads:["caller's thread or coroutine"]}},
+      {id:"fRec",side:"client",vis:"pub",x:834,y:432,w:114,h:54,t:"FixtureRecorder",s:["gate · redaction","scrub · write"],
+        d:{role:"Records a live transport's successful responses as .http files: wrap(delegate, group) returns an internal decorator that hands back the delegate's result untouched. It takes only a RecordingGate.Enabled, which RecordingGate.evaluate() gives when WEBTOOLS_HTTP_RECORD allows it and none of twelve CI variables is set. No request header is written; sensitive query values and headers are redacted, five connection headers dropped, every supplied secret replaced in the whole file, and a file in which a form of one survives is refused, never written. New keeps an existing file, Overwrite rewrites it; writes go through a temporary file and an atomic move.",vis:"public · final class · Stable Core",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FixtureRecorder.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RecordingGate.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/Redaction.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/SecretScrubber.kt"],threads:["Dispatchers.IO"]}},
+      {id:"pPolicy",side:"server",vis:"pub",kind:"planned",x:700,y:520,w:126,h:24,t:"OutboundUrlPolicy",s:"",d:{role:"Planned: Trusted and Untrusted policies, TransportSettings and the address classifier. Not built.",vis:"planned",files:[],issues:[64]}},
+      {id:"pOk",side:"server",vis:"pub",kind:"planned",x:834,y:520,w:126,h:24,t:"OkHttpTransport",s:"",d:{role:"Planned: the OkHttp transport, the first top-level production implementer of a gated port; it adds the loopback factories to the fixtures. Not built.",vis:"planned",files:[],issues:[65]}},
+      {id:"pCache",side:"server",vis:"pub",kind:"planned",x:700,y:550,w:126,h:24,t:"ResponseCache",s:"",d:{role:"Planned: the cache port and its Caffeine default, driven by VirtualClock in its tests. Not built.",vis:"planned",files:[],issues:[66]}},
+      {id:"pBudget",side:"server",vis:"pub",kind:"planned",x:834,y:550,w:126,h:24,t:"CallBudget",s:"",d:{role:"Planned: the budget port and WindowedCallBudget, with its fakes added to the fixtures. Not built.",vis:"planned",files:[],issues:[67]}},
+      {id:"pFac",side:"server",vis:"pub",kind:"planned",x:700,y:580,w:260,h:24,t:"UpstreamClient · UrlFetcher",s:"",d:{role:"Planned: the facades composing cache, budget and transport. Not built.",vis:"planned",files:[],issues:[68]}}
     ]
   },
   threads:{
     "caller's thread or coroutine":{side:"server",kind:"the caller's",daemon:false,created:"never by webtools-http: every call runs where the caller makes it",runs:"Url.parse, HttpMethod.of, the factories and their builders, WallClock.System.nowEpochMillis(), catchNonFatal; and the entry into a transport's suspend execute(request).",sends:[],note:"webtools-http 1.0.0 creates no thread, executor or dispatcher.",issues:[]},
+    "the test's scheduler":{side:"client",kind:"the test's",daemon:false,created:"never by the fixtures: VirtualClock's dispatcher is a StandardTestDispatcher on the TestCoroutineScheduler it is given, under runTest the test's own",runs:"what is dispatched to VirtualClock.dispatcher, a FakeHttpTransport step's delay when the caller runs on that scheduler, the tasks advanceBy makes due; maintenanceExecutor runs each task inline on the thread that submits it.",sends:[],note:"Readings of timeSource, elapsed and wallClock are safe from any thread; advanceBy is for the test's thread.",issues:[]},
+    "Dispatchers.IO":{side:"client",kind:"recording only",daemon:true,created:"never by the fixtures: kotlinx.coroutines' shared I/O pool",runs:"FixtureRecorder's serialisation, redaction, scrubbing and its write through a temporary file and an atomic move, inside withContext(Dispatchers.IO), so the caller's thread never blocks (transport contract point 8).",sends:[],note:"Only while recording is on: the recorder exists only from a RecordingGate.Enabled.",issues:[]},
     "OkHttpTransport's dispatcher":{side:"client",kind:"planned",daemon:false,created:"planned: by the OkHttp transport, through OkHttp's own dispatcher",runs:"the blocking I/O behind execute, off the caller's thread, as point 8 of HttpTransport's contract asks of every implementation.",sends:[],note:"Not built.",issues:[65]}
   },
   flows:[
@@ -886,7 +920,43 @@ const MODEL = {
      rules(s){ const steps=["TRIM","SCAN","SCHEME","AUTH","PORT","HOST"], fail={empty:0,chars:1,scheme:2,user:3,port:4,host:5,idn:5}[s.text];
        const msg=["The URL is empty.","The URL contains whitespace or a control character.","The URL must begin with http:// or https://.","The URL contains user-info.","The URL port must be a number from 1 to 65535.",s.text==="idn"?"The URL host contains an internationalised (xn--) label.":"The URL host is not a valid host name or IP address literal."];
        if(fail==null) return {path:[...steps,"ASM","OK"],outcome:"Result.success: https://example.com/b?q — the host lower-cased and the dot segments resolved; the default port is implied.",irrelevant:[]};
-       return {path:[...steps.slice(0,fail+1),"F"+fail],outcome:`Result.failure(IllegalArgumentException): "${msg[fail]}" The message never echoes the input.`,irrelevant:[]}; }}
+       return {path:[...steps.slice(0,fail+1),"F"+fail],outcome:`Result.failure(IllegalArgumentException): "${msg[fail]}" The message never echoes the input.`,irrelevant:[]}; }},
+    {id:"fake",label:"FakeHttpTransport.execute",kicker:"FAKE TRANSPORT",runsOn:"caller's thread or coroutine",foot:"one lock for the lookup and the log, never held across the delay · the step's delay is virtual on the test's scheduler",
+     controls:[{key:"state",label:"The fake",def:"open",options:[["open","open"],["closed","closed before the call"],["closing","closed during the delay"]]},
+               {key:"match",label:"Stubs",def:"stub",options:[["stub","a stub matches"],["fail","none · Unmatched.Fail"],["respond","none · Unmatched.Respond"]]},
+               {key:"step",label:"The step",def:"respond",options:[["respond","a response"],["failure","a failure"]]},
+               {key:"cap",label:"Body vs maxResponseBytes",def:"within",options:[["within","within, or no cap"],["over","over the cap"]]}],
+     names:{open:"an open fake",closed:"a fake closed before the call",closing:"a fake closed while the step waits"},
+     nodes:{
+      CL:{c:0,r:0,k:"d",t:["closed?"]},
+      MT:{c:1,r:0,k:"d",t:["a stub matches?","(latest added wins)"]},
+      ST:{c:2,r:0,k:"p",t:["its next step;","the last repeats"]},
+      DL:{c:3,r:0,k:"p",t:["delay(step.delay)","in the caller's context"]},
+      CL2:{c:4,r:0,k:"d",t:["closed during","the delay?"]},
+      PR:{c:5,r:0,k:"d",t:["the step","succeeds?"]},
+      CAP:{c:6,r:0,k:"d",t:["over the","body cap?"]},
+      OK:{c:7,r:0,k:"t",lvl:"DELIVER",t:["Result.success","(HttpResponse)"]},
+      R0:{c:0,r:1,k:"t",lvl:"REFUSE",t:["Closed(\"transport\")","not recorded"]},
+      UN:{c:1,r:1,k:"d",t:["Unmatched.Respond","set?"]},
+      TH:{c:1,r:2,k:"t",lvl:"THROW",t:["throws Unmatched-","RequestError"]},
+      R2:{c:4,r:1,k:"t",lvl:"REFUSE",t:["Closed","(\"transport\")"]},
+      FL:{c:5,r:1,k:"t",lvl:"FAIL",t:["Result.failure","(the step's)"]},
+      BT:{c:6,r:1,k:"t",lvl:"REFUSE",t:["BodyTooLarge","(cap, declared)"]}},
+     edges:[["CL","MT","no"],["MT","ST","yes"],["ST","DL"],["DL","CL2"],["CL2","PR","no"],["PR","CAP","yes"],["CAP","OK","no"],
+            ["CL","R0","yes"],["MT","UN","no"],["UN","ST","yes"],["UN","TH","no"],["CL2","R2","yes"],["PR","FL","no"],["CAP","BT","yes"]],
+     rules(s){ const p=["CL"], R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
+       if(s.state==="closed"){ p.push("R0"); return R("Result.failure(HttpFailure.Closed(\"transport\")): a call after close() is not recorded and consumes no step.",["match","step","cap"]); }
+       p.push("MT");
+       if(s.match==="fail"){ p.push("UN","TH"); return R("The call is recorded with matched = false, then UnmatchedRequestError, an Error, is thrown with the method, the redacted URL and the stub count: it fails the test, and passes through a cache loader to each waiter as one.",["step","cap"]); }
+       if(s.match==="respond") p.push("UN");
+       p.push("ST","DL","CL2");
+       const which=s.match==="respond"?"the lenient fake's Unmatched.Respond step":"the stub's next step";
+       if(s.state==="closing"){ p.push("R2"); return R(`The call was recorded and ${which} taken; close() during its delay makes the call return Result.failure(HttpFailure.Closed(\"transport\")).`,["step","cap"]); }
+       p.push("PR");
+       if(s.step==="failure"){ p.push("FL"); return R(`${which[0].toUpperCase()+which.slice(1)} fails, for example with a TransportFailure.Timeout: its Result.failure is returned as it is, and the cap is not applied.`,["cap"]); }
+       p.push("CAP");
+       if(s.cap==="over"){ p.push("BT"); return R("A declared Content-Length or a body above maxResponseBytes becomes Result.failure(TransportFailure.BodyTooLarge(cap, declared)), as the real transport reports its cap."); }
+       p.push("OK"); return R(`Result.success: HttpResponse(status, request.url) { headers; body } from ${which}, or the response a lambda step builds.`); }}
   ],
   sequence:{
     kicker:"REQUEST",

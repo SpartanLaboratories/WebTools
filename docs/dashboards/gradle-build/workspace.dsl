@@ -1,5 +1,5 @@
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools feat/issue-63-test-support 5d98102 (2026-10-25, not yet landed): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, and the webtools.kotlin-common-check plugin from #62. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools master 4fcc6e0 (2026-10-25): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, and the fixtures-publication check from #63. The build publishes nothing of its own. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -13,7 +13,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.0a and its UDP-port lock." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode"
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot helpers. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
             browser  = container "webtools-browser" "WebViewer: headless-Chrome screenshots. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
-            http     = container "webtools-http" "The HTTP stack's common core. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets; 1.0.0 from the root default, unreleased." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased"
+            http     = container "webtools-http" "The HTTP stack's common core and its test fixtures. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets, declares the test-fixtures variant (recipe B) with its jar in verifyJavaFloor, and makes check depend on fixturesPublicationCheck when WebTools is the root build; 1.0.0 from the root default, unreleased." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased"
 
             gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal" {
                 // ---- what a module build script may use: the plugin ids and WebToolsBuild ----
@@ -28,8 +28,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
                 settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, applies foojay-resolver-convention 0.8.0, includes the three modules." "Gradle Kotlin DSL" "Internal"
                 root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
-                logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, and the testKitHomeLock build service." "Gradle included build · unpublished" "Internal"
-                harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests." "test sources · Gradle TestKit" "Internal"
+                logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, fixturesPublicationCheck, the testKitHomeLock build service, and the helpers configureNestedBuilds and copiesWebToolsHttp; bcpg-jdk18on 1.86 for its tests' throwaway signing key." "Gradle included build · unpublished" "Internal"
+                harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses, ModuleSource, ResolutionReport, ThrowawayPgpKey: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests; every nested build runs with ORG_GRADLE_PROJECT_* removed from its environment." "test sources · Gradle TestKit" "Internal"
+                fixturesCheck = component "fixturesPublicationCheck" "A Level 4b Test task selecting FixturesPublicationEndToEndTest: publishes a copy of webtools-http, signed with a throwaway key, to a file repository in its workspace, and resolves testFixtures(...) from a file repository, through a composite and from an in-build multiplatform module, in ten tests. Not part of build-logic's own check." "Test task · Gradle TestKit" "Internal"
                 jsCheck    = component "check-only js modules" "webtools-http-commoncheck compiles webtools-http's commonMain for js with two js actuals, publishing nothing, so a JVM API in common code is a compile error. webtools-feeds-commoncheck is planned." "unpublished module · Kotlin/JS klib" "Internal"
             }
         }
@@ -70,6 +71,10 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.gradleBuild.commonCheck -> webtools.gradleBuild.jsCheck "Configures: applied by id in its plugins block"
         webtools.gradleBuild.jsCheck -> webtools.http "Compiles its commonMain for js, through a relative srcDir"
         webtools.gradleBuild.harness -> webtools.gradleBuild.commonCheck "Applies it to generated projects through TestKit"
+        webtools.gradleBuild.logicBuild -> webtools.gradleBuild.fixturesCheck "Registers it, on testKitHomeLock, with the module's files as inputs"
+        webtools.http -> webtools.gradleBuild.fixturesCheck "check depends on it, only when WebTools is the root build"
+        webtools.gradleBuild.fixturesCheck -> webtools.gradleBuild.harness "Runs its producer and three consumer builds through"
+        webtools.gradleBuild.fixturesCheck -> webtools.http "Copies its build file and sources into the producer build"
     }
 
     views {
@@ -81,7 +86,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at feat/issue-63-test-support 5d98102." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at master 4fcc6e0." {
             include *
             autoLayout tb
         }

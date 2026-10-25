@@ -47,6 +47,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
 .chip b{color:var(--ink);font-weight:600}
 .chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+/* a chip drawn from state.json (renderState()) stays hidden on every layout until it is drawn; one with nothing to say is removed */
+.chip[hidden]{display:none!important}
 /* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
    left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
    long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
@@ -77,8 +79,6 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
 .kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
-.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
-.kpi .seg-bar i{display:block;height:100%}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -350,8 +350,19 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
 .issues a:hover{color:var(--ink)}
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
-.badge.bug{border-color:var(--serious)}
-.badge.bug::before{content:"▲ ";color:var(--serious)}
+/* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
+.badge.bug::before{content:"▲ ";color:var(--ink-2)}
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+.chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
+.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
+.cbar i{display:block;height:100%;background:var(--good)}
+.key .cbar{width:40px}
+.key i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
+.key i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
+.key i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
+.key .badge{align-self:center}
+/* the Guarantees' and the Context's legends (GUIDANCE.md §2), generated from what each section draws */
+.guarantees>.key,.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .badge.planned{border-style:dashed}
 .badge.closed{color:var(--muted)}
 .tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
@@ -379,6 +390,10 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .docs li{padding:4px 0;border-top:1px solid var(--hair)}
 .docs a{text-decoration:none;border-bottom:1px solid var(--line)}
 .docs a:hover{border-bottom-color:var(--ink)}
+/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+.context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
+.context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
 footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 footer code{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -391,12 +406,13 @@ footer code{color:var(--ink-2)}
   <h1>webtools-udp</h1>
   <p class="function">A multi-connection UDP transport for the JVM: many clients handshake onto one server port, then exchange framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probing and idle detection.</p>
   <div class="chips">
-    <span class="chip"><span class="ck">version</span> <b>2.0.0a</b> · Central 2.0.0</span>
+    <span class="chip" id="chip-version" hidden></span>
+    <span class="chip"><span class="ck">Maven Central</span> <b>2.0.0</b></span>
     <span class="chip"><span class="ck">wire protocol</span> <b>2</b></span>
     <span class="chip"><span class="ck">common port</span> <b>9998</b></span>
     <span class="chip"><span class="ck">platform</span> <b>Kotlin/JVM</b> · Java 11 bytecode</span>
-    <span class="chip"><span class="ck">as-is at</span> <b>master 7de8207</b> · <time datetime="2026-10-25T11:51:40Z">2026-10-25 11:51 UTC</time></span>
-    <span class="chip wide"><span class="ck">last amended by</span> <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener"><b>#47</b></a> <a data-board="47">java-floor</a> · e249f52 (build only: the Java 11 floor) · last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> <a data-board="38">handshake-empty-name</a> · ca57a57</span>
+    <span class="chip" id="chip-asis" hidden></span>
+    <span class="chip" id="chip-written" hidden></span>
     <span class="chip model"><span class="ck">C4 model</span> <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
   </div>
 </header>
@@ -509,7 +525,7 @@ footer code{color:var(--ink-2)}
     <div class="lgrid">
       <div class="card ph3"><h3>Server <code>stop()</code> <small>every step runs even if an earlier one fails</small></h3>
         <ol class="steps"><li>stopNotifying</li><li>terminateAll</li><li>listener join ≤ 1 s</li><li>close socket</li><li>liveness</li><li>keepalive</li><li>probe</li><li>retransmit</li><li>dispatch</li></ol>
-        <div class="callout"><b>No <code>onClientDisconnect</code> fires</b> on stop. The 1 s join before the socket closes is open as <a href="https://github.com/SpartanLaboratories/WebTools/issues/48" target="_blank" rel="noopener">#48</a>.</div></div>
+        <div class="callout"><b>No <code>onClientDisconnect</code> fires</b> on stop. The 1 s join before the socket closes is an open issue, listed in the Context section.</div></div>
       <div class="card ph3"><h3>Client <code>stop()</code> <small>each step is its own runCatching</small></h3>
         <ol class="steps"><li>stopped = true</li><li>listening = false</li><li>join</li><li>keepalive</li><li>probe</li><li>retransmit</li><li>engine.close()</li><li>close socket</li><li>dispatch</li></ol>
         <div class="callout"><b>No goodbye on the wire.</b> Neither <code>terminate()</code> nor either side's <code>stop()</code> sends the peer anything; wire protocol 2 has no disconnect datagram. A peer learns the other side has gone only through its own idle detection.</div></div>
@@ -555,7 +571,7 @@ footer code{color:var(--ink-2)}
         <li>Fallible calls return <code>kotlin.Result</code>. Typed failures: <code>HandshakeRefusedException</code>, <code>IncompatibleProtocolException</code> from <code>handshake()</code>; <code>ReliableWindowFullException</code>, <code>ReliableMessageTooLargeException</code> from a reliable <code>send</code>.</li>
         <li>Thrown only at construction: <code>SocketException</code> when its port cannot be bound, <code>IllegalArgumentException</code> for a bad parameter.</li>
         <li>Retried inside: a reliable message, until acked. Not retried: an unreliable datagram; <code>handshake()</code> (4 s timeout — the caller retries).</li>
-        <li>Only logged: a dropped datagram; a throwing <code>admit</code> (the client times out). A throwing <code>onClientConnect</code> kills <code>mcups-listener</code> (<a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a>).</li>
+        <li>Only logged: a dropped datagram; a throwing <code>admit</code> (the client times out). A throwing <code>onClientConnect</code> kills <code>mcups-listener</code>, an open issue.</li>
       </ul></div>
     <div class="bubble"><h3>Extension points</h3>
       <ul>
@@ -578,9 +594,9 @@ footer code{color:var(--ink-2)}
     <div class="bubble"><h3>Compatibility &amp; versioning</h3>
       <ul>
         <li><code>2.0.0a</code> in the build, unpublished (Central's latest is <code>2.0.0</code>), wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
-        <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a, <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener">#38</a>), the third number for an addition, the major for a break.</li>
+        <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a), the third number for an addition, the major for a break.</li>
         <li>Deprecate, don't break: the eight members deprecated in 2.0.0 (with <code>ReplaceWith</code>) work through 2.x and go at 3.0.0.</li>
-        <li>Java 11 floor since <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>: 2.0.0a is Java 11 bytecode (major 55) compiled against the Java 11 API and declares <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>. Central's 2.0.0 is Java 23 bytecode, and 2.0.0a orders below it, so a consumer requests 2.0.0a <code>strictly</code> once it is published.</li>
+        <li>Java 11 floor: 2.0.0a is Java 11 bytecode (major 55) compiled against the Java 11 API and declares <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>. Central's 2.0.0 is Java 23 bytecode, and 2.0.0a orders below it, so a consumer requests 2.0.0a <code>strictly</code> once it is published.</li>
         <li><span class="gap">Not checked: the build keeps no ABI dump.</span></li>
       </ul></div>
     <div class="bubble"><h3>Thread safety</h3>
@@ -652,8 +668,24 @@ footer code{color:var(--ink-2)}
      Nothing is removed. All three live in what a page fills in (MODEL, hand-written panels, header); the page's CSS, tab set and
      renderer are the template's (brought back to it at 1e27071: its older renderer had drifted; at 3949b52 the times helpers in the
      script before MODEL and the template marker in the head, and no work level in the Context badges; at 7de8207 the footer form, solid lifelines,
-     returns and frames, the header halves with labelled tags, the BOARDS links and one-line ledes), so no template-divergence is declared. --></footer>
+     returns and frames, the header halves with labelled tags, the BOARDS links and one-line ledes), so no template-divergence is declared.
+     Spliced onto the verified system template at the landing refresh of #63 (master 4fcc6e0, 2026-10-25): the state block and the header
+     chips drawn from it (the hand-written as-is, version and "last amended by" chips replaced; Maven Central's version kept as a chip of
+     its own), the work-board link, the last amendment said in the Context section; the issue numbers taken out of the part above Context
+     (the Lifecycles, Guarantees, map notes, datagram path, sequence and the DSL's planned protocol core now say "an open issue"; the issues are
+     in the Context). The page's facts are unchanged: #63 touched no code of it. --></footer>
 </div>
+
+<!-- The page's state. A verbatim copy of state.json beside the page (scripts/embed.js state.json index.html state). -->
+<script type="application/json" id="state">
+{
+  "slug": "webtools-udp",
+  "version": "2.0.0a",
+  "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
+  "lastAmended": {"issue": 47, "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+", "sha": "e249f52"},
+  "written": {"sha": "7de8207"}
+}
+</script>
 
 <!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
@@ -692,7 +724,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
                 timing      = component "Timing rules" "KeepAlive, Liveness and HandshakeProtocol — pure timing and parsing rules." "internal" "Internal"
 
                 // ---- planned, not built ----
-                core        = component "Protocol core" "Issue #50: a multiplatform protocol core and a datagram-transport seam for a future web client. Proposed, not built." "proposed" "Planned"
+                core        = component "Protocol core" "A multiplatform protocol core and a datagram-transport seam for a future web client, proposed in an open issue. Not built." "proposed" "Planned"
             }
         }
 
@@ -814,11 +846,35 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    the hand-written ones at load. */
 const BOARDS={"38":"../../plans/38-handshake-empty-name/dashboard.html","47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
 const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
+/* The work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this page when that file exists
+   (else null: no link to a file that is not there; check-page.js fails a committed path that is missing), and "live" the live view's
+   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the work board opens the live view when
+   its marker loads (the board on this machine), else the committed one, else stays plain text: the hand-written
+   <a data-workboard>work board</a>, and the Plans card's line the renderer adds when the page has none. */
+const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // presenter: the work board relative to this page, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
+/* A live marker (plan/RULES.md §5): a script in the git-ignored docs/plans/.live/ that sets one key of window.DASHBOARDS_LIVE; cb gets
+   its value, or null when the marker is not there (a published copy, another clone, no live view on this machine). */
+function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
+  sc.onload=()=>{ const v=(window.DASHBOARDS_LIVE||{})[key]; sc.remove(); cb(v==null?null:v); }; sc.onerror=()=>{ sc.remove(); cb(null); }; document.head.appendChild(sc); }
+const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
+function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_BOARD:{};
+  const docs=[...document.querySelectorAll("section.context .docs")].pop();
+  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
+  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed work board, as of the last landing":href?"The live work board on this machine":"No work board in this checkout"; });
+  set(W.committed||null);
+  liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); }); }
+window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
+/* The page's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
+   restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
+const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
 const ghIssue=n=>`${REPO}/issues/${n}`;
 const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
 const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
-  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; } else a.replaceWith(...a.childNodes); });
+  /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
+     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-page.js (ISSUE TITLE NAMES
+     A WORK LEVEL: #n), never shown as the page's (GUIDANCE.md §5; dashboards-skill/28) */
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
   r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its plan board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
 function inspect(html){ $("#insp-body").innerHTML=html; }
@@ -834,7 +890,7 @@ const MODEL = {
   c4:{srv:"webtools.udp.server",cli:"webtools.udp.client",coord:"webtools.udp.coordinator",regs:"webtools.udp.registry",reg:"webtools.udp.registry",engS:"webtools.udp.engine",engC:"webtools.udp.engine",lqS:"webtools.udp.quality",lqC:"webtools.udp.quality",conn:"webtools.udp.connection",sched:"webtools.udp.scheduler",schedS:"webtools.udp.scheduler",schedC:"webtools.udp.scheduler",codecs:"webtools.udp.wire",rules:"webtools.udp.timing",iface:"webtools.udp.channel",chanimpl:"webtools.udp.channel",sr:"webtools.udp.sendreceive",iam:"webtools.udp.wire",t80:"webtools.udp.wire",t81:"webtools.udp.wire",t82:"webtools.udp.wire",t90:"webtools.udp.wire",tA0:"webtools.udp.wire",tA1:"webtools.udp.wire"},
   structure: {
     lanes:[["SERVER ENDPOINT",40,44,"start"],["CLIENT ENDPOINT",580,44,"start"],["WIRE",500,44,"middle"],["SHARED INTERNALS",40,474,"start"]],
-    notes:[{x:596,y:168,lines:["At most one reliable engine and one link-quality","tracker: the client holds a single server session.","No registration table — only the reliable branch","screens origin (#39). The REGISTERED / REFUSED","reply is read inside handshake(), before the","listener starts."]}],
+    notes:[{x:596,y:168,lines:["At most one reliable engine and one link-quality","tracker: the client holds a single server session.","No registration table — only the reliable branch","screens origin, an open issue. The REGISTERED / REFUSED","reply is read inside handshake(), before the","listener starts."]}],
     nodes:[
       {id:"srv",side:"server",vis:"pub",container:true,x:40,y:56,w:380,h:384,t:"MultiConnectionUDPServer",s:"abstract · binds the common port 9998 · owns the listener and dispatch threads",
         d:{role:"Binds the common port; owns the listener and dispatch threads and the three lazily created schedulers; exposes start* / pushToAll* / stop. Subclass hooks: onClientConnect, admit (screen or refuse a handshake, validate an opaque credential), onClientDisconnect; idleTimeoutMillis turns on idle detection.",vis:"public · abstract class",files:["MultiConnectionUDPServer.kt"],threads:["mcups-listener","mcups-dispatch","mcups-liveness","mcups-keepalive","mcups-probe","mcups-retransmit"],issues:[57,56,54,53,49,48]}},
@@ -856,7 +912,7 @@ const MODEL = {
       {id:"t80",side:"wire",vis:"pub",chip:true,x:455,y:108,w:90,h:34,t:"0x80",s:"KEEPALIVE",d:{role:"Keepalive. Its only effect on arrival is the liveness stamp in accept(); then it is dropped at TRACE.",vis:"DatagramType · public",files:["DatagramType.kt","KeepAlive.kt"]}},
       {id:"t81",side:"wire",vis:"pub",chip:true,x:455,y:156,w:90,h:34,t:"0x81",s:"PROBE_PING",d:{role:"Probe ping; answered inline on the listener thread with 0x82. The server answers only a registered origin; the client answers every valid ping.",vis:"DatagramType · public",files:["DatagramType.kt","LinkQualityTracker.kt"],issues:[39]}},
       {id:"t82",side:"wire",vis:"pub",chip:true,x:455,y:204,w:90,h:34,t:"0x82",s:"PROBE_PONG",d:{role:"Probe pong; completeProbe(seq) on the origin's LinkQualityTracker.",vis:"DatagramType · public",files:["DatagramType.kt"],issues:[39]}},
-      {id:"t90",side:"wire",vis:"pub",chip:true,x:455,y:252,w:90,h:34,t:"0x90",s:"UNRELIABLE",d:{role:"Unreliable data: tag, channel byte, payload. Channel byte must be 0x00 (the channel-byte guard, #40); the stripped payload goes to the dispatch thread.",vis:"TransportWireFormat · public",files:["TransportWireFormat.kt"]}},
+      {id:"t90",side:"wire",vis:"pub",chip:true,x:455,y:252,w:90,h:34,t:"0x90",s:"UNRELIABLE",d:{role:"Unreliable data: tag, channel byte, payload. Channel byte must be 0x00 (the channel-byte guard); the stripped payload goes to the dispatch thread.",vis:"TransportWireFormat · public",files:["TransportWireFormat.kt"]}},
       {id:"tA0",side:"wire",vis:"pub",chip:true,x:455,y:300,w:90,h:34,t:"0xA0",s:"RELIABLE data",d:{role:"Reliable-ordered data: seq, ack, ackBits, payload. Acks are processed first, then the reorder buffer releases in-order payloads.",vis:"ReliableWireFormat · public",files:["ReliableWireFormat.kt","SerialSequence.kt"]}},
       {id:"tA1",side:"wire",vis:"pub",chip:true,x:455,y:348,w:90,h:34,t:"0xA1",s:"RELIABLE ack",d:{role:"A standalone ack, sent by the retransmit tick when ackPending is set and nothing is due for resend.",vis:"ReliableWireFormat · public",files:["ReliableWireFormat.kt"]}},
       {id:"codecs",side:"wire",vis:"pub",chip:false,x:455,y:396,w:90,h:48,t:"Wire formats",s:["Handshake · Transport","Reliable · DatagramType"],d:{role:"The three codecs and the tag-byte enum. The bytes themselves are specified in docs/webtools-udp-protocol.md.",vis:"public",files:["HandshakeWireFormat.kt","TransportWireFormat.kt","ReliableWireFormat.kt","DatagramType.kt"]}},
@@ -925,7 +981,7 @@ const MODEL = {
          case "80": p.push("KA"); return R("Keepalive: dropped at TRACE. Its only effect was the liveness stamp in accept().",["origin","ch"]);
          case "81": p.push("PING"); return R(reg?"Registered origin: a 0x82 pong goes back inline, on mcups-listener.":"Unknown origin: not answered — only a registered origin gets a pong.",["ch"]);
          case "82": p.push("PONG"); return R("completeProbe(seq) on that origin's LinkQualityTracker.",["origin","ch"]);
-         case "90": p.push("UNREL"); if(!reg){ p.push("DROPU"); return R("Unknown origin: dropped at DEBUG.",["ch"]); } p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: dropped at WARN — the channel-byte guard (#40)."); } p.push("DISPU"); return R("The stripped payload is handed to mcups-dispatch, where the bound handler runs.");
+         case "90": p.push("UNREL"); if(!reg){ p.push("DROPU"); return R("Unknown origin: dropped at DEBUG.",["ch"]); } p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: dropped at WARN — the channel-byte guard."); } p.push("DISPU"); return R("The stripped payload is handed to mcups-dispatch, where the bound handler runs.");
          case "A0": case "A1": p.push("REL"); if(!reg){ p.push("DROPR"); return R("Unknown origin: dropped at DEBUG; no engine is created.",["ch"]); } p.push("CHR"); if(!chz){ p.push("DROPCR"); return R("Non-zero channel byte: dropped at WARN; no engine is created."); } p.push("ENGINE","ACK"); if(s.tag==="A0"){ p.push("DISPR"); return R("reliableEngineFor(reg) creates the engine if this is the first channel-0x00 reliable inbound. Acks first, then the reorder buffer releases in-order payloads to mcups-dispatch."); } return R("A standalone ack: the engine is created if needed, the acks are processed (Karn's rule), nothing is delivered — an ack carries no payload.");
          default: p.push("DROP"); return R("Reserved tag: dropped at WARN.",["origin","ch"]);
        }
@@ -961,10 +1017,10 @@ const MODEL = {
        if(s.tag==="iam"||s.tag==="text"){ p.push("DROPT"); return R("A byte-0 < 0x80 datagram during the session is WARN-dropped: the REGISTERED / REFUSED reply was read inside handshake(), before the listener started.",["origin","ch"]); }
        p.push("SWITCH");
        switch(s.tag){
-         case "80": p.push("KA"); return R("Keepalive: dropped at TRACE. No origin screening on the client (#39).",["origin","ch"]);
-         case "81": p.push("PING"); return R("Every valid ping is answered inline with 0x82 — whatever its source (#39).",["origin","ch"]);
-         case "82": p.push("PONG"); return R("completeProbe(seq) on the client's tracker — no origin screening (#39).",["origin","ch"]);
-         case "90": p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: WARN naming the datagram's actual origin. The check applies to every 0x90, whatever its source.",["origin"]); } p.push("DISPU"); return R("Handed to mcupc-dispatch — from any source: the 0x90 branch has no origin screening (#39).",["origin"]);
+         case "80": p.push("KA"); return R("Keepalive: dropped at TRACE. No origin screening on the client: an open issue.",["origin","ch"]);
+         case "81": p.push("PING"); return R("Every valid ping is answered inline with 0x82 — whatever its source: an open issue.",["origin","ch"]);
+         case "82": p.push("PONG"); return R("completeProbe(seq) on the client's tracker — no origin screening: an open issue.",["origin","ch"]);
+         case "90": p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: WARN naming the datagram's actual origin. The check applies to every 0x90, whatever its source.",["origin"]); } p.push("DISPU"); return R("Handed to mcupc-dispatch — from any source: the 0x90 branch has no origin screening: an open issue.",["origin"]);
          case "A0": case "A1": p.push("ORIGIN"); if(!reg){ p.push("DROPR"); return R("Not from serverEndpoint: dropped at DEBUG whatever its channel byte; no engine is created.",["ch"]); } p.push("CHR"); if(!chz){ p.push("DROPCR"); return R("Non-zero channel byte: dropped at WARN; no engine is created."); } p.push("ENGINE","ACK"); if(s.tag==="A0"){ p.push("DISPR"); return R("The engine is created on this first channel-0x00 inbound if none exists — not on actuate*. Acks first, then the reorder buffer releases in-order payloads to mcupc-dispatch."); } return R("A standalone ack from the server: acks are processed; nothing is delivered.");
          default: p.push("DROP"); return R("Reserved tag: dropped at DEBUG on the client (WARN on the server).",["origin","ch"]);
        }
@@ -981,7 +1037,7 @@ const MODEL = {
       {f:2,t:6,l:"0xA0 seq · ack · ackBits · payload",n:"The first transmission is sent on the caller's thread, inside send. ackPending := false."},
       {f:1,t:0,l:"success — accepted for delivery, not a receipt",ret:true,n:"success means the message is in the window and will be retransmitted until acked; it is not a delivery receipt."},
       {f:6,t:3,l:"0xA0 or 0xA1",n:"A frame from the peer arrives on mcups-listener."},
-      {f:3,t:1,l:"accept · tag switch · findByOrigin · channel check",n:"accept() stamps liveness; the tag switch routes on byte 0; the registration is looked up by origin; a non-zero channel byte is WARN-dropped here, before the engine is touched (#40)."},
+      {f:3,t:1,l:"accept · tag switch · findByOrigin · channel check",n:"accept() stamps liveness; the tag switch routes on byte 0; the registration is looked up by origin; a non-zero channel byte is WARN-dropped here, before the engine is touched."},
       {f:1,t:2,l:"reliableEngineFor(reg) · onInboundDatagram(bytes)",n:"If this is the first channel-0x00 reliable inbound, the engine is created here. Acks are processed first — Karn's rule: no RTT sample from a retransmitted message — then, for 0xA0, ackPending := true and the frame enters the reorder buffer."},
       {f:2,t:1,l:"payloads now deliverable, in order",ret:true,n:"The reorder buffer releases whatever is now contiguous."},
       {f:1,t:5,l:"each payload, in order",n:"Handed to the single dispatch executor, which also carries unreliable delivery — hence head-of-line blocking across both planes."},
@@ -1038,6 +1094,15 @@ const C4=parseDsl(document.getElementById("dsl").textContent);
 $("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
 
 const el=id=>C4.elements[id];
+/* Planned, from the data (system/RULES.md §2, "Planned parts"): a part tied to a DSL element — a structure node through MODEL.c4 or its
+   own `part`, a thread, a flow node, a lifeline or a sequence step through `part`, a hand-written element through data-part="<element
+   id>" — is planned while that element carries the Planned tag, so apply-state.js marks it built by editing workspace.dsl alone. A
+   literal kind "planned" or planned:true still draws an untied part dashed. */
+const dslPlanned=id=>!!(id&&el(id)&&el(id).tags.includes("Planned"));
+const isPlanned=x=>!!x&&typeof x==="object"&&(x.planned===true||x.kind==="planned"||dslPlanned(x.part));
+function applyParts(root){ (root||document).querySelectorAll("[data-part]").forEach(e=>e.classList.toggle("planned",dslPlanned(e.dataset.part)));
+  document.querySelectorAll(".thread[data-t]").forEach(e=>{ const t=MODEL.threads[e.dataset.t]; if(t&&t.part) e.classList.toggle("planned",isPlanned(t)); }); }
+applyParts();
 function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
 function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
 function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
@@ -1255,10 +1320,12 @@ function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type=
 /* ---------- Structure ---------- */
 function renderStructure(){
   const svg=$("#svg-structure"); if(svg.dataset.done) return; svg.dataset.done="1";
-  mk("rect",{x:430,y:48,width:140,height:400,rx:6,class:"band"},svg);
+  /* a neutral band behind a lane (the wire between two sides, say), only where MODEL.structure.band asks for one: [x, y, w, h] */
+  const band=MODEL.structure.band; if(Array.isArray(band)&&band.length===4) mk("rect",{x:band[0],y:band[1],width:band[2],height:band[3],rx:6,class:"band"},svg);
   MODEL.structure.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
   MODEL.structure.nodes.forEach(n=>{
-    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind?" "+n.kind:""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
+    const pl=isPlanned(n)||dslPlanned(MODEL.c4[n.id]);
+    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind&&n.kind!=="planned"?" "+n.kind:""}${pl?" planned":""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
     mk("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:n.chip?17:5},g);
     const subs=Array.isArray(n.s)?n.s:[n.s];
     if(n.chip){ txt(g,n.x+n.w/2,n.y+14,n.t,"t","middle"); txt(g,n.x+n.w/2,n.y+26,subs,"s","middle"); }
@@ -1277,7 +1344,6 @@ function selectNode(id){
   let html=`<div class="kicker">${n.chip?"DATAGRAM TAG":"COMPONENT"} · ${sideName.toUpperCase()}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc(d.vis||"")}</div><p>${esc(d.role||"")}</p><dl>`;
   if(d.files&&d.files.length) html+=`<dt>Source</dt><dd>${d.files.map(flink).join("<br>")}</dd>`;
   if(d.threads&&d.threads.length) html+=`<dt>Runs on</dt><dd>${d.threads.map(t=>`<span class="tchip ${MODEL.threads[t].side}">${t}</span>`).join("")}</dd>`;
-  if(d.issues&&d.issues.length) html+=`<dt>Open issues</dt><dd>${d.issues.map(ilink).join(" · ")}</dd>`;
   const c4id=MODEL.c4[id]; if(c4id&&el(c4id)){ const e=el(c4id); html+=`<dt>In the C4 model</dt><dd><button class="linkbtn" data-c4="${c4id}">${esc(e.name)} · ${e.tags.slice(2).map(esc).join(", ")||"component"} → open</button></dd>`; }
   inspect(html+"</dl>");
   const b=$("#insp-body .linkbtn[data-c4]"); if(b) b.addEventListener("click",()=>openC4(b.dataset.c4));
@@ -1290,7 +1356,6 @@ function selectThread(id){
   let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((MODEL.sides||{})[t.side]||t.side).toUpperCase())}${t.daemon===false?"":" · DAEMON"}</div><div class="name">${id}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
   if(t.sends.length) html+=`<dt>Puts on the wire</dt><dd>${t.sends.map(esc).join("<br>")}</dd>`;
   if(t.note) html+=`<dt>Note</dt><dd>${esc(t.note)}</dd>`;
-  if(t.issues&&t.issues.length) html+=`<dt>Open issues</dt><dd>${t.issues.map(ilink).join(" · ")}</dd>`;
   inspect(html+"</dl>");
 }
 document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
@@ -1322,11 +1387,11 @@ function renderFlow(){
     if(A.r===B.r){ d=`M${fx(A)+NW},${fy(A)+NH/2} L${fx(B)},${fy(B)+NH/2}`; lx=(fx(A)+NW+fx(B))/2; ly=fy(A)+NH/2-5; anchor="middle"; }
     else if(A.c===B.c){ d=`M${fx(A)+NW/2},${fy(A)+NH} L${fx(B)+NW/2},${fy(B)}`; lx=fx(A)+NW/2+6; ly=(fy(A)+NH+fy(B))/2+3; }
     else { const tx=fx(A)+NW+10, ty=fy(B)+NH/2; d=`M${fx(A)+NW},${fy(A)+NH/2} L${tx},${fy(A)+NH/2} L${tx},${ty} L${fx(B)},${ty}`; lx=tx+4; ly=ty-5; }
-    mk("path",{d,class:"fedge"+(A.planned||B.planned?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
+    mk("path",{d,class:"fedge"+(isPlanned(A)||isPlanned(B)?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
     if(label){ const t=txt(svg,lx,ly,label,"flabel",anchor); t.dataset.e=a+">"+b; }
   });
   Object.entries(F.nodes).forEach(([id,n])=>{
-    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(n.planned?" planned":""),"data-id":id},svg);
+    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(isPlanned(n)?" planned":""),"data-id":id},svg);
     if(n.k==="d") mk("polygon",{points:`${x+12},${y} ${x+NW-12},${y} ${x+NW},${y+NH/2} ${x+NW-12},${y+NH} ${x+12},${y+NH} ${x},${y+NH/2}`},g);
     else mk("rect",{x,y,width:NW,height:NH,rx:n.k==="t"?3:6},g);
     // The stripe's colour goes in style, not the fill attribute: .fnode.t rect would otherwise repaint it surface-grey.
@@ -1363,9 +1428,9 @@ function renderSeq(){
   svg.setAttribute("viewBox",`0 0 1000 ${H}`);
   arrowDefs(svg,"sarr2","var(--ink-2)");
   S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
-  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(l.planned?" planned":"")},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(isPlanned(l)?" planned":"")},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(isPlanned(l)?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
   S.steps.forEach((s,i)=>{
-    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(s.planned?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
+    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(isPlanned(s)?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
     if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
     else { const a=LX(s.f), b=LX(s.t), dir=b>a?1:-1; mk("line",{x1:a,y1:y,x2:b-dir*2,y2:y,"marker-end":s.ret?"url(#sarr2-open)":"url(#sarr2)"},g); const mx=(a+b)/2, w=s.l.length*5.3+10; mk("rect",{class:"lbg",x:mx-w/2,y:y-17,width:w,height:14,rx:2},g); txt(g,mx,y-6,s.l,"","middle"); txt(g,Math.min(a,b)-8,y+3,`${i+1}`,"num","end"); }
     g.addEventListener("click",()=>gotoStep(i)); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); gotoStep(i); } });
@@ -1376,23 +1441,68 @@ function renderSeq(){
 /* The legend for the sequence: the lifeline owners it shows (each in its side's hue), then the line encodings and planned. */
 function seqKey(S){
   const sw={server:"pub srv",client:"pub cli",wire:"pub wir",consumer:"con",external:"ext"}, sides=[...new Set(S.lifelines.map(lane).map(l=>l.side).filter(Boolean))];
-  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(s=>s.planned)||S.lifelines.some(l=>l&&l.planned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
+  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(isPlanned)||S.lifelines.map(lane).some(isPlanned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
 }
 function gotoStep(i){
   const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
   document.querySelectorAll("#svg-seq .msg").forEach(g=>{ const k=+g.dataset.i; g.classList.toggle("cur",k===seq.cur); g.classList.toggle("future",k>seq.cur); });
   $("#seq-pos").textContent=`step ${seq.cur+1} of ${S.steps.length}`;
-  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${s.planned?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
+  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${isPlanned(s)?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
 }
 $("#seq-prev").addEventListener("click",()=>gotoStep(seq.cur-1));
 $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
+/* ---------- The stamps (state.json) ----------
+   The header's chips: the version (a system page), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
+   the page shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the page
+   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the plan board
+   (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
+function renderState(){
+  const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
+  const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
+  set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
+  const old=document.getElementById("chip-amended"); if(old) old.remove();
+  const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
+  if(!p&&ctx){ p=document.createElement("p"); p.className="amended"; p.id="ctx-amended"; const h2=ctx.querySelector(":scope>h2"); if(h2) h2.after(p); else ctx.prepend(p); }
+  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title)}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
+}
+renderState();
+
+/* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
+   Generated from what each section draws, so a hand-written bubble or card needs no legend of its own: the system swatches present, a
+   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
+   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+function sectionKeys(){
+  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
+    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${m} units landed"><i style="width:${pct}%"></i></span>`; });
+  const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
+    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="key"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
+  const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
+  const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
+  put(G,"guarantees-key",[swatches(G,"swk"),
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
+    has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",
+    has(G,".badge")?`<span><span class="badge">tier</span>a fact: a stability tier, a marker, neutral</span>`:""]);
+  const states=C?[...new Set([...C.querySelectorAll(".tags .badge:not(.bug):not(.planned):not([data-sys])")].map(b=>b.textContent.trim()).filter(t=>/^(open|closed)$/.test(t)))]:[];
+  put(C,"context-key",[swatches(C,"sbar"),
+    states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
+    has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
+    has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
+    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+}
+sectionKeys();
+
 /* ---------- Tabs ---------- */
 const tabs=[...document.querySelectorAll(".tab")];
 const DEFAULT_INSPECT={structure:"<p>Click a component or a datagram tag for its role, source files, threads, open issues and its place in the C4 model.</p>",threads:"<p>Click a thread for when it is created, what runs on it and what it puts on the wire.</p>",lifecycles:"<p>The lifecycle facts are on the cards themselves. The connection-state diagram and the engine table come straight from §7 of the architecture document.</p>"};
 function show(id){
-  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
   const name=id.replace("t-","");
   if(name==="structure") renderStructure();
   if(name==="c4" && !c4View) renderC4(C4.views.findIndex(v=>v.type==="component"));
@@ -1407,7 +1517,11 @@ function show(id){
   else if(name!=="datagrams") inspect(DEFAULT_INSPECT[name]||"<p>Select an item on this tab to see its details here.</p>");
   try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
 }
-tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); });
+/* The tablist's keys (WAI-ARIA tabs; GUIDANCE.md §6): Left and Right move to the previous and next tab, Home and End to the first and the
+   last, each shown at once; only the selected tab is in the Tab order (a roving tabindex), so Tab moves on to the panel. */
+function tabKeys(list,go){ list.forEach((t,i)=>{ t.tabIndex=t.getAttribute("aria-selected")==="true"?0:-1; t.addEventListener("keydown",e=>{ const n=list.length, j={ArrowRight:(i+1)%n,ArrowLeft:(i+n-1)%n,Home:0,End:n-1}[e.key]; if(j==null) return; e.preventDefault(); list[j].focus(); go(list[j].id); }); }); }
+tabKeys(tabs,id=>show(id));
 let start="t-structure";
 try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
 const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;

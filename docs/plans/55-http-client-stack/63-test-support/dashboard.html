@@ -831,7 +831,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   "title": "Published test fixtures",
   "issueTitle": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
   "function": "A consumer of `webtools-http` cannot yet test its providers without the network: the transport port `HttpTransport` that #62 built has no implementation, and nothing gives a test one clock for the cache, the budget and `delay` (#55 architecture §6.7). This run adds a published test-fixtures variant of `webtools-http`, one coordinate with the capability `webtools-http-test-fixtures`, holding the virtual clock, the scripted fake transport, the `.http` fixture codec and the gated recorder, and a publication check in `build-logic` that guards the experimental publishing API the variant rests on. Unit 4 of #55: one system, the fixtures variant; the loopback factories and the budget fakes join it in later units.",
-  "status": "building",
+  "status": "built",
   "parent": {
     "issue": 55,
     "board": "../dashboard.html"
@@ -842,7 +842,14 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "sha": "7de8207",
     "date": "2026-10-25"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "ref": "master",
+    "sha": "f325b20",
+    "merge": "4fcc6e0",
+    "pr": 84,
+    "version": "none moved; webtools-http 1.0.0 new, unreleased",
+    "date": "2026-10-25"
+  },
   "systems": [
     {
       "slug": "webtools-http-test-fixtures",
@@ -862,10 +869,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     }
   ],
   "wip": {
-    "step": "landing",
-    "since": "2026-10-25T21:38:04Z",
-    "updated": "2026-10-25T21:38:04Z",
-    "detail": "Landing accepted by the admin team: sync, commits, PR and merge.",
+    "step": "landed",
+    "since": "2026-10-25T22:03:35Z",
+    "updated": "2026-10-25T22:03:35Z",
+    "detail": "Merged through PR #84 as 4fcc6e0: the test-fixtures variant of `webtools-http` with its fixtures and tests, the fixtures-publication check in `build-logic`, the `.gitattributes` line and the README; one staging deviation; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
     "steps": [
       "sizing",
       "interview",
@@ -986,7 +993,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
         "raised": "plan-accepted",
-        "ref": "plan.md#13-sequencing-and-follow-ups"
+        "ref": "plan.md#13-sequencing-and-follow-ups",
+        "resolved": "Dated corrections (2026-10-25) in architecture.md at §6.1, §6.7 and §12, written with the as-built reconciliation (a95f5cb); §11 already gives the two helpers to unit 6."
       },
       {
         "text": "Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. The planner rules whether §9's row or §6.8's list is amended.",
@@ -1014,9 +1022,9 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       }
     ],
     "event": {
-      "name": "landing",
-      "at": "2026-10-25T21:38:04Z",
-      "note": "accepted by the admin team"
+      "name": "landed",
+      "at": "2026-10-25T22:03:35Z",
+      "note": "the landing refresh: every row resolved, the impact reconciled as built"
     },
     "next": null,
     "qa": [
@@ -1372,6 +1380,20 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             }
           ]
         }
+      ],
+      "landing": [
+        {
+          "since": "2026-10-25T21:38:04Z",
+          "ended": "2026-10-25T22:03:35Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landing",
+            "at": "2026-10-25T21:38:04Z",
+            "note": "accepted by the admin team"
+          },
+          "detail": "Landing accepted by the admin team: sync, commits, PR and merge."
+        }
       ]
     }
   },
@@ -1410,6 +1432,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "date": "2026-10-25",
       "ref": "plan.md",
       "note": "eight stages, S1 to S8, on `feat/issue-63-test-support`; three departures from #55's architecture: the check hangs off `webtools-http`'s `check`, the adhoc variant is signed on every check run, and the `MockWebServer` helpers go to unit 6. No version moves"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-10-25",
+      "ref": "PR #84",
+      "note": "four commits on the research: the variant, fixtures and check 025b245, the README 5048b68, the as-built record a95f5cb and the boards f325b20; merged as 4fcc6e0. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -1563,7 +1592,25 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "built",
+      "label": "Open point resolved: the architecture's wording of where the check attaches, of the signing and of the two helpers carries dated corrections at §6.1, §6.7 and §12",
+      "ref": "plan.md#13-sequencing-and-follow-ups"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "The planner reconciled the as-built record and the impact: one deviation, a staging one (the Level 1 consumer written in S5), and plan Amendments 1 to 3; #55's impact and architecture carry dated corrections",
+      "ref": "a95f5cb"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
       "label": "Landing: the admin team merges it"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Landed in PR #84, merge 4fcc6e0",
+      "ref": "PR #84"
     }
   ],
   "rows": [
@@ -3532,8 +3579,53 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         }
       ],
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "as-planned",
+        "statements": [
+          {
+            "text": "`LoopbackTransports`, `webtoolsUrl`, `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)` were left to unit 6, #65: the fixtures take none of the names, and `Fixture` exposes the status, headers and body they build on.",
+            "state": "as-planned",
+            "ref": "impact.md#4-sibling-units",
+            "excerpt": {
+              "ref": "impact.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts, and the code as built matches them. In short:",
+              "hash": "41bbfab54884"
+            }
+          },
+          {
+            "text": "`RecordingBudgetObserver` and `FakeBudgetStore` were left to unit 8, #67, their names reserved.",
+            "state": "as-planned",
+            "ref": "impact.md#4-sibling-units",
+            "excerpt": {
+              "ref": "impact.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts, and the code as built matches them. In short:",
+              "hash": "41bbfab54884"
+            }
+          },
+          {
+            "text": "`VirtualClockThreeClocksComponentTest` proves the clock with a Caffeine cache standing in; the proof against the real cache and budget is left to units 7 and 8.",
+            "state": "as-planned",
+            "ref": "final-implementation.md#p3---the-fast-loop-after-s2-virtualclock",
+            "excerpt": {
+              "ref": "final-implementation.md#p3---the-fast-loop-after-s2-virtualclock",
+              "heading": "P3 - the fast loop, after S2 (VirtualClock)",
+              "paragraph": "`./gradlew :webtools-http:gatingTest :webtools-http:componentTest :webtools-http:deterministicTest` - BUILD SUCCESSFUL in 16s. `componentTest` result XML lists `VirtualClockComponentTest` (11 tests, 0 failures) and `VirtualClockThreeClocksComponentTest` (2 tests, 0 failures) in `com.spartanlabs.testing.component.webtools.http.testing`; no fixtures class at Level 1 or 4a yet (S4 adds the gating consumer, S3 to S5 the deterministic classes).",
+              "hash": "27370e05d7d6"
+            }
+          },
+          {
+            "text": "`mockwebserver3` 5.5.0 is on the fixtures' API, so unit 6 adds no fixtures dependency; the publication check asserts the list.",
+            "state": "as-planned",
+            "ref": "final-implementation.md#1-what-was-built",
+            "excerpt": {
+              "ref": "final-implementation.md#1-what-was-built",
+              "heading": "1. What was built",
+              "paragraph": "Everything plan §7 lists, in the plan's shape, with plan Amendments 1 to 3. The mechanical fixes made on the way are in §4.",
+              "hash": "47666f65c009"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -3589,7 +3681,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     }
   ],
   "impact": {
-    "basis": "plan",
+    "basis": "as-built",
     "summary": "The root module of `webtools-http`, new and unreleased, gains a test-fixtures variant: two variants with the capability `webtools-http-test-fixtures` and a `-test-fixtures.jar`, whose test libraries reach a consumer's test classpath only. The main variants, the ABI dump and the three existing artifacts do not change, and no version moves. Inside the repository, `build`, `check` and `:webtools-http:check` also run the fixtures-publication check.",
     "none": null,
     "release": {
@@ -3716,7 +3808,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     ],
     "conversion": [],
     "changes": [],
-    "source": "impact.md, with plan.md §6 and §12",
+    "source": "impact.md, reconciled with final-implementation.md; plan.md §6 and §12",
     "link": "impact.md#1-published-artifacts"
   },
   "roadmap": null,
@@ -3761,6 +3853,16 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "label": "#55 tracking board",
       "path": "../dashboard.html",
       "note": "the eleven units in landing order"
+    },
+    {
+      "label": "PR #84",
+      "path": "https://github.com/SpartanLaboratories/WebTools/pull/84",
+      "note": "the merge, as 4fcc6e0"
+    },
+    {
+      "label": "Resolution comment",
+      "path": "https://github.com/SpartanLaboratories/WebTools/issues/63#issuecomment-6403689548",
+      "note": "how #63 was resolved, on the issue"
     }
   ],
   "notes": {
