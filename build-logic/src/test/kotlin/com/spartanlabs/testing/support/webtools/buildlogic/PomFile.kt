@@ -6,7 +6,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * A published POM file, read for the text of its elements by path below `<project>`, for example
- * `licenses/license/name`.
+ * `licenses/license/name`, and for its dependency list.
  */
 class PomFile private constructor(private val project: Element) {
 
@@ -23,11 +23,43 @@ class PomFile private constructor(private val project: Element) {
             ?.textContent
             ?.trim()
 
-    private fun firstChild(parent: Element, name: String): Element? =
+    /**
+     * The POM's `dependencies/dependency` entries, in order.
+     *
+     * @return the dependencies; empty when the POM declares none.
+     */
+    fun dependencies(): List<Dependency> =
+        firstChild(project, "dependencies")
+            ?.let { children(it, "dependency") }
+            .orEmpty()
+            .map { dependency ->
+                Dependency(
+                    groupId = firstChild(dependency, "groupId")?.textContent?.trim().orEmpty(),
+                    artifactId = firstChild(dependency, "artifactId")?.textContent?.trim().orEmpty(),
+                    scope = firstChild(dependency, "scope")?.textContent?.trim(),
+                    optional = firstChild(dependency, "optional")?.textContent?.trim() == "true",
+                )
+            }
+
+    private fun children(parent: Element, name: String): List<Element> =
         (0 until parent.childNodes.length)
             .map { parent.childNodes.item(it) }
             .filterIsInstance<Element>()
-            .firstOrNull { it.tagName == name }
+            .filter { it.tagName == name }
+
+    private fun firstChild(parent: Element, name: String): Element? = children(parent, name).firstOrNull()
+
+    /**
+     * One `<dependency>` of a POM.
+     *
+     * @property groupId the group.
+     * @property artifactId the artifact.
+     * @property scope the scope text, or `null` when none is written.
+     * @property optional true only for the text `true`.
+     */
+    class Dependency(val groupId: String, val artifactId: String, val scope: String?, val optional: Boolean) {
+        override fun toString(): String = "$groupId:$artifactId (scope=$scope, optional=$optional)"
+    }
 
     /** Factory for parsed POM files. */
     companion object {

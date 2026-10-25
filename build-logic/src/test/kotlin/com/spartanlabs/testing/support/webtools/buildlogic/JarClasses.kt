@@ -30,4 +30,15 @@ object JarClasses {
                 }
         }
     }
+
+    /**
+     * The names of the non-directory entries of [jar], in order: classes, resources and `META-INF/` files
+     * alike, so a jar can be checked for entries it must not carry.
+     *
+     * @param jar the jar file.
+     * @return the entry names, as a read-only list; or a failure when the file is missing or is not a zip file.
+     */
+    fun entries(jar: Path): Result<List<String>> = runCatching {
+        ZipFile(jar.toFile()).use { zip -> zip.entries().asSequence().filterNot { it.isDirectory }.map { it.name }.toList() }
+    }
 }

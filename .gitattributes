@@ -2,3 +2,5 @@
 # so an editor that rewrites a file with CRLF cannot inflate its diff.
 *.kt   text eol=lf
 *.kts  text eol=lf
+# Recorded HTTP fixtures hold response bodies byte for byte; a line-ending conversion would change their size.
+**/fixtures/**/*.http -text
