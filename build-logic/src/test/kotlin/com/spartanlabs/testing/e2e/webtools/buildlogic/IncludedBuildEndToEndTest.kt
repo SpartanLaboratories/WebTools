@@ -30,6 +30,9 @@ import org.junit.jupiter.api.TestInstance
  * - the module script prints the level list;
  * - a level task runs in each kind of module;
  * - `verifyJavaFloor` is part of `build` and passes in each kind of module.
+ *
+ * The `webtools.kotlin-common-check` plugin is not part of this composite; it is covered at Level 3 by
+ * [com.spartanlabs.testing.integration.webtools.buildlogic.CommonCheckPluginIntegrationTest].
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IncludedBuildEndToEndTest {
