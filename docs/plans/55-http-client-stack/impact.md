@@ -16,7 +16,7 @@
 | `webtools-udp` | Java 11 floor (landed, #76): class files major 55, `org.gradle.jvm.version` 11 in the module metadata (23 on Central). Public API unchanged (`javap -protected` identical, measured); the UDP port lock unchanged. | rides in the unreleased `2.0.0a` (`webtools-udp/build.gradle.kts:116`); Central holds 1.0.0, 1.1.0 and 2.0.0, all Java 23 | JDK 11–22 can load it once it is published. POM identical; metadata identical except the JVM version. `2.0.0a` orders below `2.0.0`, so a graph that also asks for `2.0.0` keeps the Java 23 build unless it pins with `strictly`, as for the other two. This corrects the architecture's §12, which calls `webtools-udp` unaffected. |
 | `webtools-scraping` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As above. `1.0.0a` orders below `1.0.0`, so a graph that also asks for `1.0.0` keeps the Java 23 build unless it pins with `strictly`. The README and the release note say so. |
 | `webtools-browser` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As for `webtools-scraping`. |
-| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. |
+| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. |
 | `webtools-feeds` (new) | RSS/Atom parser port with the Rome default and a conditional-GET fetcher. Kotlin Multiplatform; publishes `webtools-feeds` and `webtools-feeds-jvm`; no fixtures variant. | `1.0.0` | `webtools-http` and its `api` dependency on the compile classpath; `rome` 2.1.0 and `slf4j-api` at runtime. |
 
 **Not published:** the included `build-logic` build and the check-only modules
@@ -61,7 +61,8 @@ install lines to them. Every release follows the organisation's steps once #58's
   - `apiCheck` on the two new modules;
   - the fixtures-publication TestKit check (a publish and two resolutions), once unit 4 attaches it
     to a `check` that `build` reaches (§8);
-  - one Kotlin/JS compile per check module (compile only; their test tasks are disabled).
+  - one Kotlin/JS compile per check module (compile only: its `js` target has no environment, so it
+    has no test task and needs no Node.js).
 
   `build-logic`'s own tests are not part of it. Until #58 brings CI, these guards run only on a
   developer's build.
@@ -89,9 +90,9 @@ install lines to them. Every release follows the organisation's steps once #58's
 - **`README.md`.** Several units change it:
   - the artifact table and install snippet grow to five artifacts, with the Maven `-jvm` note
     and the Gradle-only `testFixtures(...)` line;
-  - `Requires JDK 11 or newer` (`:29` today, `:26` at the baseline) stays true. Unit 2 has added the
+  - `Requires JDK 11 or newer` (`:32` today, `:26` at the baseline) stays true. Unit 2 has added the
     paragraph on which releases carry the floor and the build-JDK note (a "Java floor" section under
-    Build & test); the consumer `kotlin-stdlib` note is unit 3's;
+    Build & test); unit 3 has added the consumer `kotlin-stdlib` note;
   - the Components section gains `webtools-http` and `webtools-feeds` tables with the tier note;
   - the "HTTP client stack" and "Feeds" how-tos are new;
   - "Build & test" (`:463-484`) describes five modules, `build-logic`, package-selected levels
@@ -174,16 +175,16 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 | Unit | Open point it settles |
 |---|---|
 | 2 `java-floor` | Settled (#76). The floor's effect on dependency resolution is exercised: KGP copies the `jvm` target's attributes onto the four `jvm` classpaths, and `MultiplatformJavaFloorIntegrationTest` asserts that each requests 11 (§8). |
-| 3 `http-core` | First compile of the opt-in marker, a gated interface, a default that names it, and a consumer without the opt-in, in `commonMain` and `jvmMain`; its plan starts here. |
+| 3 `http-core` | Settled (#62). The compile proof held in `commonMain`, `jvmMain` and the check module's `jsMain`: a top-level implementer of a gated port compiles with the module's opt-in and fails to compile without it, with the marker's message in the error; a consumer without the opt-in names the gated types, takes `WallClock.System` as a default and constructs every public leaf; eight subclassing declarations give exactly eight errors in `commonTest` and in `jvmTest`, and none with `@OptIn` ([`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3). The check module compiles `commonMain` for `js()` with no environment, so the root project gains no task (§8). |
 | 4 `test-support` | The fixtures-publication check is the only guard on the experimental publishing API. Central's validation of the fixtures jar, and signing a multiplatform publication with an adhoc variant, are first exercised at the first release. Where the check attaches: the root project has no `check` task (§8). |
 | 8 `call-budget` | How a `Mutex`-based ledger closes without suspending (the port's non-suspend `close()`). |
 | 9 `call-facades` | The generic `Endpoint<T>` factory-over-class resolution; whether `RateLimited.retryAfter` still needs the `max` with the budget's `pausedFor` once `complete` has applied the signals. |
-| 10 `feeds` | The feeds check module's dependency on the http check module's `js` output (fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
+| 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 and 2 as built
+## 8. What the later units build on: units 1 to 3 as built
 
-Units 1 and 2 are built.
+Units 1 to 3 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -192,6 +193,10 @@ Units 1 and 2 are built.
   [`47-java-23-bytecode/final-implementation.md`](47-java-23-bytecode/final-implementation.md). Its
   contracts for the later units are in [`47-java-23-bytecode/impact.md`](47-java-23-bytecode/impact.md)
   §4.
+- **Unit 3, `http-core` (#62).** Its as-built record is
+  [`62-http-core/final-implementation.md`](62-http-core/final-implementation.md). Its contracts for
+  the later units are pinned in [`62-http-core/plan.md`](62-http-core/plan.md) §12 and summarised in
+  [`62-http-core/impact.md`](62-http-core/impact.md) §4.
 
 What they settle for the units still to come:
 
@@ -226,10 +231,102 @@ What they settle for the units still to come:
 - **Lettered versions, `webtools-udp` included.** The architecture's §12 calls `webtools-udp`
   unaffected by the ordering of lettered versions. It is affected: `2.0.0a` orders below `2.0.0`, the
   Java 23 build on Central, as `1.0.0a` orders below `1.0.0`. §1 above states the rule for all three
-  artifacts. `architecture.md` is left as written.
+  artifacts. `architecture.md` §12 carries a dated correction.
 - **Tests.** `expectedJvmVersion` in `PublishedJvmVersionAttributeIntegrationTest` is the literal 11
   (it was the test JVM's feature version). The new `build-logic` tests are in level packages, because
   every `build-logic` test task fails on an empty run, and no Gradle test task was added.
+
+**Unit 3, `http-core` (#62), as built.**
+- **The module.** `webtools-http` (package `com.spartanlabs.webtools.http`, `explicitApi()`) is the
+  first module on `webtools.kotlin-multiplatform-library`.
+  - It holds the opt-in marker `ExperimentalForInheritanceWebToolsApi`, the failure model with its two
+    reason vocabularies, `HttpMethod`, `Url`, `HttpHeaders`, `RequestBody`, `HttpRequest`,
+    `HttpResponse`, `RedirectHop`, and the gated ports `HttpTransport` and `WallClock`, with
+    `WallClock.System`.
+  - Its `internal` helpers `Log`/`logger`, `flatMap`, `catchNonFatal` and `HttpSyntax` serve the later
+    units in the module.
+  - Its dump, `api/webtools-http.api`, is committed; each later unit extends it.
+  - The names it takes, public and `internal`, are listed in
+    [`62-http-core/plan.md`](62-http-core/plan.md) §12. No sibling reuses them.
+- **The opt-in.**
+  - The marker gates only the seams a consumer implements, through `@SubclassOptInRequired`. Nothing a
+    consumer calls needs an opt-in.
+  - The module opts in with `languageSettings.optIn` on `commonMain` and `jvmMain`, in its own build
+    file. In a single-target module only the leaf source set's setting reaches the compiler, and
+    `kotlin { compilerOptions { optIn } }` would reach the test compilations, which stay consumers.
+  - A top-level `jvmMain` implementer of a gated port, such as unit 6's transport or unit 7's cache,
+    needs no `@OptIn`.
+  - An associated compilation does not inherit the setting: unit 4's fixtures source sets opt in
+    themselves for the fakes that implement `HttpTransport` and `WallClock`.
+  - A new gated hierarchy carries its own `@SubclassOptInRequired`. Unit 10's `FeedFailure` does, and
+    extends `HttpFailure` through its `protected` constructors `(message)` and `(message, cause)`.
+- **Failures.** Every leaf an implementer or a decoder creates has a public constructor: every
+  `TransportFailure` leaf, with and without a `cause`; `HttpFailure.Closed(component)`;
+  `HttpFailure.BudgetExhausted(wait, reason, window)`; `HttpFailure.DecodeFailure(cause)`;
+  `UpstreamFailure.UpstreamError(status, headers, body)`. `UpstreamFailure.RateLimited` has an
+  `internal` constructor, for unit 9's facades. Every message is constant.
+- **`HttpTransport.execute` is main-safe** (point 8 of the port's contract): an implementation moves
+  blocking I/O off the caller's thread and documents which dispatcher it uses. Unit 6's OkHttp
+  transport does it through OkHttp's own dispatcher and a cancellable callback; unit 4's fake meets it
+  by never blocking.
+- **Sensitive headers.** `addSensitive` and `setSensitive` mark an entry: it is never printed, and the
+  stack's redirect policy reads the flag. A credential name (`HttpSyntax.isCredentialName`) is
+  sensitive without the flag, and `HttpHeaders.Entry.isSensitive` answers for both. Units 5 and 6
+  build the reading: the `Untrusted` refusal of a sensitive header, and the strip on a cross-origin
+  hop.
+- **`Url`.** `Url.parse` normalises as OkHttp 5.5.0's `HttpUrl` does for an ASCII host and rejects the
+  ambiguous or unsafe. `toString()` is the full canonical URL, query included; `redacted()` is the form
+  the library logs. The differential against `HttpUrl` found no disagreement on the corpus and on
+  4.2 million generated inputs. No query decoder exists.
+- **The check-module pattern.** `webtools.kotlin-common-check` applies the multiplatform plugin,
+  declares `mavenCentral()`, calls `js()` with no environment, and wires `check` to `compileKotlinJs`.
+  - With no environment the `js` target has no test task. `build` downloads no Node.js or Yarn and
+    writes no `kotlin-js-store/`, and the root project gains no plugin and no task, so unit 4's open
+    point below stands.
+  - The cost is the Kotlin Gradle plugin's "JS Environment Not Selected" warning, once per
+    configuration-cache miss. If a release makes it an error, the plugin's TestKit `build` test fails,
+    and the fallback in the plugin's header applies,
+    `js { nodejs { testTask { enabled = false; setDependsOn(emptyList<Any>()) } } }`: it downloads
+    nothing but gives the root project base-plugin tasks.
+  - A check module's own build file adds the sibling's `commonMain` as a relative `srcDir`, the
+    dependencies of that `commonMain`, and the opt-in on `commonMain` and `jsMain`. Its `jsMain` holds
+    an actual for every `expect` declaration.
+  - Unit 10's check module also takes `implementation(project(":webtools-http-commoncheck"))`, which
+    compiled in a probe
+    ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md)
+    F11). The `internal` helpers of `webtools-http` stay invisible to it, so it carries its own
+    `Log`/`logger` and their `jsMain` actual.
+- **What each later unit takes,** beyond the points above. [`62-http-core/plan.md`](62-http-core/plan.md)
+  §12 has the signatures.
+  - **Unit 4 (#63).** The `.http` parser reaches `HttpSyntax` through the association. The
+    `HttpResponse` constructor refuses a status outside 100..599. `UnmatchedRequestError` prints
+    `request.url.redacted()`. `kotlinx-coroutines-test`, on the fixtures variant, and a query decoder,
+    if a matcher needs one, are unit 4's to add.
+  - **Unit 5 (#64).** `Url.host` is canonical, but digits-and-dots and hex-looking text (`127.1`,
+    `0x7f.1`, `2130706433`) stay as written, for the policy to judge. `port` is the effective port, and
+    there is never user-info. `RefusalReason` has nine constants, and `RefusedByPolicy(reason)` is
+    public.
+  - **Unit 6 (#65).** `Url` goes to `HttpUrl` through `request.url.toString().toHttpUrl()`, never
+    rebuilt from its parts. A received status outside 100..599 is `Protocol`; an entry whose name is not
+    a token is dropped; CR, LF and NUL in a received value become SP. `Content-Type` goes as a plain
+    header, with OkHttp's `MediaType` left null, and a method OkHttp requires a body for gets an empty
+    one. OkHttp's exception becomes a failure's `cause` only where the hosts, addresses or URLs in its
+    message are acceptable, and that message is never logged above `DEBUG`.
+  - **Units 7 and 8 (#66, #67).** `Closed("cache")` and `Closed("budget")`; `BudgetExhausted` with
+    `ExhaustedReason`; `WallClock`, with `WallClock.System` the default; `catchNonFatal` and `logger`.
+    A `Url` is not the cache key: its equality is on bytes, and the key is the facade's canonical
+    parameters.
+  - **Unit 9 (#68).** URLs are assembled as text with the `internal` `encodePathSegment` and
+    `encodeQueryComponent`, then parsed again; an empty path segment is `InvalidRequest`.
+    Developer-written headers and bodies are built inside `catchNonFatal`, and a failure becomes
+    `InvalidRequest` before a permit is spent. `HttpResponse.body()` copies on every call, so a facade
+    decodes once.
+  - **Unit 11 (#70).** The tiers and contracts come from the module's KDoc, and the gate's compile-fail
+    texts from [`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3. The
+    evergreen architecture document describes the check module as `js()` with no environment.
+- **The IDE checks unit 3 leaves** (IntelliJ's import of the check module, the gate's error and its
+  `@OptIn` quick fix, Quick Documentation) are the maintainer's, at the latest before unit 4 starts
+  ([`62-http-core/impact.md`](62-http-core/impact.md) §7).
 
 **Units 3 `http-core` and 10 `feeds`.**
 - **What the multiplatform plugin carries:**
@@ -252,9 +349,9 @@ What they settle for the units still to come:
   - call a JDK API newer than 11, or use `@JvmRecord` (it needs JVM 16).
 - **`webtools.kotlin-common-check`** (unit 3) declares its own repositories. The plugin markers
   already in `build-logic` cover it.
-- **The README.** "Build & test" describes `build-logic`, its three plugin ids and the
-  package-selection rule. Units 3, 10 and 11 extend it to five modules and the
-  `commonTest`/`jvmTest` layout.
+- **The README.** "Build & test" describes `build-logic`, its four plugin ids, the package-selection
+  rule, the `commonTest`/`jvmTest` layout and the `js` compile of the check modules. Units 10 and 11
+  extend it to five modules.
 
 **Unit 4, `test-support` (#63).**
 - **What it can reuse.** The TestKit harness is there: `SampleProject`, `ProjectWorkspace`,

@@ -216,9 +216,9 @@ which were not re-run; the source behaviour each one relies on matches the code 
 
 **Wording notes, none of which changes a result:**
 
-- **[`header-and-method-validation.md`](header-and-method-validation.md) claims 19 and 20.** OkHttp
-  writes the ranges as `'!'..'~'` and `' '..'~'`. The quoted `'!'..'~'` and
-  `' '..'~'` are the same ranges.
+- **[`header-and-method-validation.md`](header-and-method-validation.md) claims 19 and 20.** OkHttp's
+  source writes the ranges as `'\u0021'..'\u007e'` and `'\u0020'..'\u007e'`; the findings
+  quote them as `'!'..'~'` and `' '..'~'`, which are the same ranges.
 - **The same file, claim 42.** The `CONNECT` refusal spans two lines of
   `HttpRequestBuilderImpl.java`.
 - **The same file, claim 45.** The advisory now names a fixed Mint version.
