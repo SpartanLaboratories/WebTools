@@ -166,6 +166,7 @@ none fails — [`research/README.md` § Verification](research/README.md)):
   the compiler reject it; a target cannot be declared and left unpublished; an unpublished
   check-only module compiling the same `commonMain` directory for `js` works and downloads
   nothing while its tests are disabled (build topology F3).
+  > **Corrected 2026-10-25 (#62 as built):** `./gradlew build` still downloads Node.js and Yarn; see §6.8.
 - `jvmTarget = 11` alone compiles JDK 21 calls (`MutableList.removeFirst()` bound to
   `List.removeFirst`); `jvmTarget` plus `-Xjdk-release=11` rejects them; a multiplatform
   `jvm()` target writes no `org.gradle.jvm.version` unless the attribute is set explicitly;
@@ -309,6 +310,7 @@ none fails — [`research/README.md` § Verification](research/README.md)):
   - `webtools.kotlin-common-check` — applies the multiplatform plugin with only a `js` target
     whose test task is disabled, for the check-only modules (§6.8). Lands with the first
     check module.
+    > **Corrected 2026-10-25 (#62 as built):** the `js` target has no environment; see §6.8.
   - `verifyJavaFloor` — a typed verification task registered by both library plugins and
     wired into `check`: reads the module's built jars (including the fixtures jar), the
     generated `.module` files and the resolved runtime classpath; fails on any
@@ -718,6 +720,11 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   resources), the consumer build's `inputs.property` for the record variable (documented).
 
 ### 6.8 Check-only `js` modules
+
+> **Corrected 2026-10-25 (#62 as built):** the check modules declare `js()` with no environment.
+> `js { nodejs { testTask { enabled = false } } }` makes `./gradlew build` download Node.js and
+> Yarn, because a disabled task's dependencies still run, and gives the root project base-plugin
+> tasks. See `62-http-core/research/common-check-plugin.md` F2 and F5.
 
 - **Responsibility:** compile each multiplatform module's `commonMain` for a second target so
   that a JVM API in common code is a compile error, without publishing anything.
@@ -1323,6 +1330,9 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   orders below the Java 23 `1.0.0`; a consumer graph that also asks for plain `1.0.0`
   silently keeps the defect unless it pins with `strictly`. `webtools-udp` is unaffected (the
   floor rides in the unreleased `2.0.0a`). The README and the release note say so.
+  > **Corrected 2026-10-25 (#47 as built):** `webtools-udp` is not unaffected: `2.0.0a` orders
+  > below `2.0.0` by the same rule, so a consumer graph that also asks for plain `2.0.0` keeps the
+  > Java 23 build unless it pins `strictly`. See `47-java-23-bytecode/impact.md`.
 - **Central validation of the fixtures jar** (no sources or javadoc of its own) and signing of
   a KMP publication with an adhoc variant were not run against the real validator; the first
   release is where it is settled.

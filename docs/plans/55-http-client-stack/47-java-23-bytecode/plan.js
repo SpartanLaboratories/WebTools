@@ -1,0 +1,768 @@
+/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
+window.dashboardLive&&window.dashboardLive("plan",
+{
+  "schema": "plan-board/1",
+  "repo": "SpartanLaboratories/WebTools",
+  "issue": 47,
+  "slug": "47-java-23-bytecode",
+  "folder": "docs/plans/55-http-client-stack/47-java-23-bytecode",
+  "kind": "issue",
+  "level": 2,
+  "title": "Java 11 floor",
+  "issueTitle": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+  "function": "The README promises JDK 11 or newer, but every published WebTools artifact is Java 23 bytecode (class-file major 67) whose Gradle Module Metadata declares `org.gradle.jvm.version: 23`, so a consumer on JDK 11 to 22 fails with `UnsupportedClassVersionError`. This run sets one Java floor of 11 in the included `build-logic` build that every module reads, so the published bytecode, its metadata and the JDK API compiled against all match the README. Unit 2 of #55: a bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
+  "status": "built",
+  "parent": {
+    "issue": 55,
+    "board": "../dashboard.html"
+  },
+  "branch": "fix/issue-47-java-floor",
+  "baseline": {
+    "ref": "master",
+    "sha": "36fd879",
+    "date": "2026-10-22"
+  },
+  "asBuilt": {
+    "ref": "master",
+    "sha": "d28200e",
+    "date": "2026-10-23",
+    "pr": 76,
+    "merge": "3949b52",
+    "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)"
+  },
+  "systems": [
+    {
+      "slug": "gradle-build",
+      "name": "Gradle build",
+      "slot": 4,
+      "top": "Gradle build",
+      "status": "built",
+      "page": "docs/dashboards/gradle-build/index.html"
+    }
+  ],
+  "wip": {
+    "step": "landed",
+    "since": "2026-10-23T02:21:55Z",
+    "updated": "2026-10-23T20:07:49Z",
+    "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. The as-built record and the impact were reconciled after the landing (PR #78). Unit 3 of #55, #62, is no longer blocked by this issue.",
+    "steps": [
+      "sizing",
+      "research",
+      "plan",
+      "branch",
+      "implementation",
+      "qa",
+      "remediation",
+      "landing",
+      "landed"
+    ],
+    "current": [],
+    "next": null,
+    "qa": [
+      {
+        "pass": 1,
+        "verdict": "changes-requested",
+        "date": "2026-10-23",
+        "findings": {
+          "documentation": 7,
+          "test": 2,
+          "code": 0
+        },
+        "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
+      }
+    ],
+    "qaMax": 3,
+    "waitingOn": null,
+    "resume": null,
+    "blockers": {
+      "waitsOn": [],
+      "blocks": []
+    },
+    "landing": {
+      "pr": 76,
+      "merge": "3949b52",
+      "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
+      "date": "2026-10-23"
+    }
+  },
+  "milestones": [
+    {
+      "column": "gap",
+      "label": "Research verified",
+      "date": "2026-10-21",
+      "ref": "research/README.md",
+      "note": "one question and one findings file, written in #55's planning; all 17 load-bearing claims re-opened at their sources, all hold"
+    },
+    {
+      "column": "considered",
+      "label": "Options weighed",
+      "date": "2026-10-23",
+      "ref": "plan.md",
+      "note": "the plan raised no considerations; beside the option each row takes stand the alternatives #55's architecture (§6.1, §10) and research summary weighed for the floor, its guard and the test JDK"
+    },
+    {
+      "column": "verdict",
+      "label": "Plan accepted",
+      "date": "2026-10-23",
+      "ref": "plan.md",
+      "note": "a bug fix local to the build, test-first; regression test of record `PublishedJvmVersionAttributeIntegrationTest`, failing today"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-10-23",
+      "ref": "PR #76",
+      "note": "five commits, a96d969 to d28200e; merged as 3949b52; the lettered versions are set in the build and not published"
+    }
+  ],
+  "trail": [
+    {
+      "date": "2026-09-28",
+      "column": "gap",
+      "label": "Issue #47 opened: `webtools-udp` 2.0.0 ships Java 23 bytecode while the README claims JDK 11 or newer",
+      "ref": "#47"
+    },
+    {
+      "date": "2026-10-21",
+      "column": "gap",
+      "label": "Research: the Java 11 floor, verified, in #55's planning",
+      "ref": "research/README.md"
+    },
+    {
+      "date": "2026-10-22",
+      "column": "gap",
+      "label": "Blocker #61 (`build-logic`) landed through PR #74",
+      "ref": "1e27071"
+    },
+    {
+      "date": "2026-10-22",
+      "column": "gap",
+      "label": "Baseline: master after the dashboards refresh for #61",
+      "ref": "36fd879"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "considered",
+      "label": "Planner restarted at 00:33Z after an API outage cut it off before it wrote anything; writing `plan.md`"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "verdict",
+      "label": "Plan accepted: one Java floor constant drives the compile settings of both plugins, guarded by `verifyJavaFloor`; the branch is requested",
+      "ref": "plan.md"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Branch `fix/issue-47-java-floor` cut from `master` at `36fd879`; implementation starts test-first",
+      "ref": "36fd879"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Implementation complete with no deviations: the regression test failed first and passes now, `build-logic` suites green, jars at class-file major 55; QA review starts",
+      "ref": "final-implementation.md"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "QA pass 1: changes requested (7 doc, 2 test, 0 code); code review passed, suites 84/84; the findings are fixed on the spot, then landing",
+      "ref": "final-implementation.md"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "QA findings fixed on the spot: KDoc and line comments, the report path in the README, `VerifyJavaFloorComponentTest` and two more `JavaFloorScan` cases; `:build-logic:test` 47 tests green",
+      "ref": "a96d969"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "Commits: the floor and its guard, the module versions, the README, the as-built record and the plan boards",
+      "ref": "d28200e"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "PR #76 merged; #47 closed",
+      "ref": "3949b52"
+    },
+    {
+      "date": "2026-10-23",
+      "column": "built",
+      "label": "As-built record and impact reconciled after the landing (PR #78): procedures C, D, E and G recorded (`javap -protected` identical, every class loads on a real JDK 11, `build-logic` green on JDK 17), no deviation from the plan; `impact.md` written",
+      "ref": "77a69bc"
+    }
+  ],
+  "rows": [
+    {
+      "id": "floor-setting",
+      "group": "Code",
+      "name": "The Java floor setting",
+      "system": "gradle-build",
+      "where": "build-logic/ convention plugins",
+      "gap": {
+        "kind": "bug",
+        "summary": "No build file sets `jvmTarget`, `-Xjdk-release`, a Java `release` or a toolchain, so class files and `org.gradle.jvm.version` follow the JDK that runs the build: every published artifact is Java 23 bytecode (major 67) declaring 23. The multiplatform plugin writes the build JDK's version into its attribute.",
+        "detail": "`jvmTarget` alone lowers the class-file version but not the API surface: on a JDK 23 host, `MutableList.removeFirst()` compiled to JDK 21's `List.removeFirst` with no warning.",
+        "evidence": [
+          "build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts:6-7 — no `jvmTarget` or toolchain; output follows the build JDK until #47",
+          "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts:24-25 — `targetJvmVersion` is `JavaVersion.current()`, marked TODO(#47)",
+          "research/java-11-floor.md F1, F5 — what each setting does; the existing sources compile under `-Xjdk-release=11` with zero errors"
+        ],
+        "source": "research/README.md, Summary; java-11-floor.md F1",
+        "link": "research/README.md#summary"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided: `WebToolsBuild.JAVA_FLOOR = 11` drives `jvmTarget`, `-Xjdk-release` and the Java compatibility settings of the Kotlin/JVM plugin and the `jvm()` options and `TargetJvmVersion` attribute of the multiplatform plugin; the ASM pin is gone. The three modules' jars hold 98, 4 and 2 classes, all class-file major 55, with no compiler warning.",
+        "files": [
+          "build-logic/src/main/kotlin/WebToolsBuild.kt",
+          "build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts",
+          "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"
+        ],
+        "tests": "deterministic `WebToolsBuildJavaFloorDeterministicTest` 3; integration `JvmJavaFloorIntegrationTest` and `MultiplatformJavaFloorIntegrationTest` green",
+        "verified": "Procedures A to E, recorded after landing: the three modules compile under the floor with no warning and the guard passes on each; against a `36fd879` build every class went from major 67 to 55 with `javap -protected` identical; every class loads on a real JDK 11 (98, 4 and 2, none failing; the baseline jars load none); `build-logic`'s suites pass on JDK 17 and JDK 23.",
+        "link": "final-implementation.md#62-the-reconciliation-runs-2026-10-22-after-landing",
+        "commits": [
+          "a96d969"
+        ]
+      },
+      "options": [
+        {
+          "id": "floor-constant",
+          "name": "`WebToolsBuild.JAVA_FLOOR = 11` driving `jvmTarget`, `-Xjdk-release` and the Java compatibility settings (Kotlin/JVM plugin) and the `TargetJvmVersion` attribute (multiplatform plugin), on the JDK that runs the build",
+          "verdict": "accepted",
+          "why": "`-Xjdk-release` limits the API to Java 11, which `jvmTarget` alone does not, and it needs no JDK 11 on the build host. A `jvmToolchain(11)` would need #58's resolver bump, make every consumer's composite build need a JDK 11, and still write no multiplatform attribute.",
+          "source": "plan.md, Root cause and Fix",
+          "link": "plan.md#fix"
+        },
+        {
+          "id": "jvm-target-alone",
+          "name": "`jvmTarget = 11` alone",
+          "verdict": "declined",
+          "why": "It lowers the class-file version but not the API surface: on a JDK 23 host `MutableList.removeFirst()` compiled to JDK 21's `List.removeFirst` without a warning.",
+          "source": "../research/README.md § Build, publishing and the Java 11 floor",
+          "link": "../research/README.md#build-publishing-and-the-java-11-floor"
+        },
+        {
+          "id": "jvm-toolchain",
+          "name": "`jvmToolchain(11)` as the floor",
+          "verdict": "declined",
+          "why": "It gives the same API limit at the cost of the foojay resolver bump and a JDK 11 on every consumer's composite machine, and it still writes no multiplatform attribute.",
+          "wins": "If the level tests had to run on a JDK 11 inside this work.",
+          "source": "../architecture.md §10, §6.1",
+          "link": "../architecture.md#10-alternatives-considered"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Add `JAVA_FLOOR = 11` to `WebToolsBuild` and set `jvmTarget`, `-Xjdk-release` and `java { sourceCompatibility; targetCompatibility }` from it in the Kotlin/JVM plugin, and the `jvm()` compiler options and the `TargetJvmVersion` attribute in the multiplatform plugin. The ASM pin, which existed only because class files followed the build JDK, is removed.",
+        "defense": "A bug fix local to the build: the bytecode, the metadata and the API compiled against change, while no source file, no public signature (`javap -protected` identical) and no POM beyond two versions moves. One constant keeps the flag and `jvmTarget` paired, as Kotlin requires.",
+        "steps": [
+          {
+            "id": "Step 2",
+            "what": "Add `JAVA_FLOOR` and `classFileMajor` to `WebToolsBuild.kt`, with `WebToolsBuildJavaFloorDeterministicTest`.",
+            "files": [
+              "build-logic/src/main/kotlin/WebToolsBuild.kt"
+            ],
+            "check": "`./gradlew :build-logic:test`",
+            "link": "plan.md#fix"
+          },
+          {
+            "id": "Step 3",
+            "what": "Fill the `java floor` regions of the two convention plugins, where the `TODO(#47)` markers are, and remove the multiplatform plugin's ASM pin.",
+            "files": [
+              "build-logic/src/main/kotlin/webtools.kotlin-jvm-library.gradle.kts",
+              "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts"
+            ],
+            "check": "the three `build-logic` TestKit tasks turn green",
+            "link": "plan.md#fix"
+          },
+          {
+            "id": "Procedures A, C, D",
+            "what": "Compile the three modules under the floor, compare their published bytes with the baseline's, and load every class on a real JDK 11.",
+            "files": [],
+            "check": "classes at major 55, `javap -protected` identical, 98, 4 and 2 classes loaded on JDK 11",
+            "link": "plan.md#regression-test"
+          }
+        ],
+        "tests": [
+          "Level 3 — `JvmJavaFloorIntegrationTest` and `MultiplatformJavaFloorIntegrationTest`: class files at major 55, the metadata at 11, `HexFormat` unresolved",
+          "Level 4a — `WebToolsBuildJavaFloorDeterministicTest`: the floor is 11 and maps to major 55",
+          "Level 5 — procedure D: the three new jars load on a real JDK 11"
+        ],
+        "risks": [
+          "`-Xjdk-release` is an `-X` flag Kotlin does not guarantee for every JDK distribution; the `HexFormat` tests are its only automated check, on the JDK that runs the tests",
+          "A module that sets its own `jvmTarget`, toolchain, flag or attribute breaks the pairing; `verifyJavaFloor` then fails that module"
+        ],
+        "source": "plan.md, Fix",
+        "link": "plan.md#fix"
+      }
+    },
+    {
+      "id": "floor-guard",
+      "group": "Tests",
+      "name": "A guard on the floor",
+      "system": "gradle-build",
+      "where": "build-logic/ tests and `check`",
+      "gap": {
+        "kind": "missing",
+        "summary": "Nothing in `check` fails when a class above major 55 or a variant declaring a JVM version other than 11 reaches a publication. The one test of the multiplatform attribute expects whatever JVM runs the tests.",
+        "evidence": [
+          "build-logic/src/test/kotlin/com/spartanlabs/testing/integration/webtools/buildlogic/PublishedJvmVersionAttributeIntegrationTest.kt:25 — expects `Runtime.version().feature()`",
+          "research/java-11-floor.md, Recommendation — the guard over jars, `.module` files and the runtime classpath"
+        ],
+        "source": "research/README.md, Summary",
+        "link": "research/README.md#summary"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Built as decided: `verifyJavaFloor` runs in `check` and scans the jars, the `.module` files and the runtime classpath. The regression test of record failed before the fix (expected 11, was 23) and passes after; the wider red run's 17 failures are green. qa pass 1 added an in-process test of the task and two more scan cases.",
+        "files": [
+          "build-logic/src/main/kotlin/JavaFloorScan.kt",
+          "build-logic/src/main/kotlin/VerifyJavaFloor.kt",
+          "build-logic/src/test/kotlin/com/spartanlabs/testing/integration/webtools/buildlogic/PublishedJvmVersionAttributeIntegrationTest.kt"
+        ],
+        "tests": "component `JavaFloorScanComponentTest` 18, `VerifyJavaFloorComponentTest` 7 and `RegisterVerifyJavaFloorComponentTest` 4; integration 39, end-to-end 5, non-functional 2, all green",
+        "verified": "Procedure B: the guard passes on all three modules, each with 2 library variants declaring 11. `:build-logic:test` 47 tests green after qa pass 1, and all four `build-logic` suites (47, 39, 5 and 2 tests) green again with every task re-run (procedure E).",
+        "link": "final-implementation.md#3-qa-pass-1--minor-fixes",
+        "commits": [
+          "a96d969"
+        ],
+        "changes": [
+          {
+            "what": "`VerifyJavaFloorComponentTest` (7 tests) runs `verify()` in process through each of its branches, and `JavaFloorScanComponentTest` gained two `moduleMetadata` cases (16 → 18): a `[]` root, and a string `\"11\"` read as absent. The task's KDoc now names the report path.",
+            "why": "qa pass 1 found two test gaps, `verify()`'s branches untested in process and two metadata edge cases, and seven documentation items; all were fixed on the spot, with no production logic changed and no second pass.",
+            "when": "qa pass 1",
+            "ref": "a96d969"
+          }
+        ]
+      },
+      "options": [
+        {
+          "id": "verify-java-floor",
+          "name": "A `verifyJavaFloor` task in `check` that scans the built jars, the generated `.module` files and the resolved runtime classpath",
+          "verdict": "accepted",
+          "why": "It reads the files a consumer receives rather than the settings that should produce them, and it fails when there is nothing to check, so a wiring mistake cannot pass silently. The classpath scan catches a Java 17 dependency that publishes no Gradle metadata.",
+          "source": "plan.md, Fix (the guard)",
+          "link": "plan.md#fix"
+        },
+        {
+          "id": "level-test-guard",
+          "name": "The floor's checks as a level test",
+          "verdict": "declined",
+          "why": "The facts live in the publishable files, the built jars and the generated `.module` files, so the guard is a Gradle verification task wired into `check`, not a level test.",
+          "source": "../architecture.md §6.1",
+          "link": "../architecture.md#61-shared-build-logic--build-logic"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Both plugins register `verifyJavaFloor` as a dependency of `check`; it fails on a class above major 55 outside `META-INF/versions/`, a library variant declaring another `org.gradle.jvm.version`, or nothing to check. The regression test of record, `PublishedJvmVersionAttributeIntegrationTest`, expects 11 instead of the test JVM's version and fails today.",
+        "defense": "Nothing that reads the produced bytes exists today, so the defect could not fail a build. The guard is configuration-cache compatible and up to date when its inputs are unchanged.",
+        "steps": [
+          {
+            "id": "Step 1",
+            "what": "Write the tests that name no new symbol (the two TestKit classes, `JarClasses`, the changed attribute, end-to-end and configuration-cache tests) and see them fail.",
+            "files": [
+              "build-logic/src/test/kotlin/com/spartanlabs/testing/integration/webtools/buildlogic/PublishedJvmVersionAttributeIntegrationTest.kt"
+            ],
+            "check": "17 failures on the baseline",
+            "link": "plan.md#regression-test"
+          },
+          {
+            "id": "Step 2",
+            "what": "Add `JavaFloorScan.kt`, `VerifyJavaFloor.kt` and `registerVerifyJavaFloor` in `WebToolsBuild.kt`, with their component tests.",
+            "files": [
+              "build-logic/src/main/kotlin/JavaFloorScan.kt",
+              "build-logic/src/main/kotlin/VerifyJavaFloor.kt"
+            ],
+            "check": "`./gradlew :build-logic:test`: 38 tests",
+            "link": "plan.md#fix"
+          },
+          {
+            "id": "Procedure B",
+            "what": "Run the guard on the three modules.",
+            "files": [],
+            "check": "`./gradlew verifyJavaFloor` succeeds with 98, 4 and 2 classes",
+            "link": "plan.md#regression-test"
+          }
+        ],
+        "tests": [
+          "Level 3 — `PublishedJvmVersionAttributeIntegrationTest`: the `jvm` and root metadata declare 11 (the regression test of record)",
+          "Level 2 — `JavaFloorScanComponentTest` and `RegisterVerifyJavaFloorComponentTest`: the scans and the task's registration",
+          "Level 4b — `IncludedBuildEndToEndTest`: `verifyJavaFloor` runs through the real `includeBuild`",
+          "Level 4c — the two configuration-cache tests: a second run reuses the cache"
+        ],
+        "risks": [
+          "The guard checks bytes and metadata, not API references: a class compiled against a newer API at major 55 passes it"
+        ],
+        "source": "plan.md, Fix and Regression test",
+        "link": "plan.md#regression-test"
+      }
+    },
+    {
+      "id": "readme-floor",
+      "group": "Documents",
+      "name": "The README's JDK requirement",
+      "system": "gradle-build",
+      "where": "README.md",
+      "gap": {
+        "kind": "bug",
+        "summary": "The README's only statement of a JDK floor, \"Requires JDK 11 or newer\", is false for every published artifact; a consumer on JDK 11 to 22 fails with `UnsupportedClassVersionError`.",
+        "evidence": [
+          "README.md:29 — \"Requires JDK 11 or newer\"",
+          "research/java-11-floor.md F6 — README and documentation"
+        ],
+        "source": "research/README.md, The work; java-11-floor.md F6",
+        "link": "research/java-11-floor.md#f6-readme-and-documentation"
+      },
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Built as decided: the README keeps \"Requires JDK 11 or newer\", adds which releases carry the floor, a `Java floor` subsection and the `verifyJavaFloor` command, and names `webtools-udp` 2.0.0 in the install block. The subsection also names the guard's report file.",
+        "files": [
+          "README.md"
+        ],
+        "verified": "Procedure G: `webtools-udp:2.0.0`, `webtools-scraping:1.0.0` and `webtools-browser:1.0.0`, the versions the install block names, are on Maven Central, and the lettered versions are not. The manual pass read the README diff against the build files.",
+        "link": "final-implementation.md#doc-fixes-build-logicsrcmainkotlin",
+        "commits": [
+          "9e47ac0"
+        ],
+        "changes": [
+          {
+            "what": "The `Java floor` subsection names `<module>/build/reports/java-floor/verifyJavaFloor.txt`, the one-line report the guard writes on success.",
+            "why": "qa pass 1 asked for the report path in the task's KDoc; the README says the same in one clause.",
+            "when": "qa pass 1",
+            "ref": "9e47ac0"
+          }
+        ]
+      },
+      "options": [
+        {
+          "id": "readme-true",
+          "name": "Keep \"Requires JDK 11 or newer\", say which releases carry the floor and what the build JDK is, and name only versions on Maven Central in the install block",
+          "verdict": "accepted",
+          "why": "The sentence becomes true for the lettered versions. The install block cannot name versions that are not published yet, so the release that publishes them moves those lines.",
+          "source": "plan.md, Requirements 8 and Risks",
+          "link": "plan.md#risks-and-callers-affected"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Keep the sentence; add a paragraph on which releases carry the floor and how Gradle orders a lettered version, a `Java floor` subsection in Build & test, the `verifyJavaFloor` command and the plugins' new duties. The `webtools-udp` install line goes from `2.0.0a` to `2.0.0`, the version on Maven Central.",
+        "defense": "The README is the repository's only statement of the floor; it must be true for what a consumer can install today and say how to get the fix.",
+        "steps": [
+          {
+            "id": "Step 4",
+            "what": "Edit `README.md` as the plan's diff shows, keeping its line endings.",
+            "files": [
+              "README.md"
+            ],
+            "check": "procedure G: each version the install block names is on Maven Central",
+            "link": "plan.md#fix"
+          }
+        ],
+        "tests": [],
+        "risks": [
+          "The install block names Java 23 builds until the lettered versions are released; the paragraph below it says so"
+        ],
+        "source": "plan.md, Fix (README diff)",
+        "link": "plan.md#fix"
+      }
+    },
+    {
+      "id": "module-versions",
+      "group": "Release",
+      "name": "Versions that carry the floor",
+      "system": "gradle-build",
+      "where": "webtools-scraping, webtools-browser, webtools-udp build files",
+      "gap": {
+        "kind": "bug",
+        "summary": "`webtools-scraping` and `webtools-browser` 1.0.0 are on Maven Central as Java 23 bytecode and share the root default `1.0.0`; the fix needs a version a consumer can ask for. `webtools-udp` is at the unreleased `2.0.0a`.",
+        "detail": "`1.0.0a` orders below `1.0.0` in Gradle, so a consumer that needs the fix requests it with `strictly`.",
+        "evidence": [
+          "build.gradle.kts:12 — the default `version = \"1.0.0\"`",
+          "webtools-udp/build.gradle.kts:112 — `version = \"2.0.0a\"`",
+          "research/java-11-floor.md F7 — the versioning effect"
+        ],
+        "source": "research/README.md, Summary; java-11-floor.md F7",
+        "link": "research/java-11-floor.md#f7-versioning-effect-for-the-plan-release-timing-is-not-settled-here"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided: `webtools-scraping` and `webtools-browser` at `1.0.0a` with a note, `webtools-udp`'s `2.0.0a` note extended. Each module's metadata declares `org.gradle.jvm.version` 11 on its library variants. Nothing tagged or published.",
+        "files": [
+          "webtools-scraping/build.gradle.kts",
+          "webtools-browser/build.gradle.kts",
+          "webtools-udp/build.gradle.kts"
+        ],
+        "verified": "Procedure C, against a `36fd879` build: each `.module` file differs only in `org.gradle.jvm.version` (23 → 11) on `apiElements` and `runtimeElements`, and for the two legacy modules in their version; `webtools-udp`'s POM is identical and the two legacy POMs differ only in `<version>`.",
+        "link": "final-implementation.md#62-the-reconciliation-runs-2026-10-22-after-landing",
+        "commits": [
+          "e249f52"
+        ]
+      },
+      "options": [
+        {
+          "id": "lettered-versions",
+          "name": "`webtools-scraping` and `webtools-browser` to `1.0.0a`; `webtools-udp` keeps the unreleased `2.0.0a`, its note naming the floor",
+          "verdict": "accepted",
+          "why": "The floor changes no source and no API, so it is a fix and takes a trailing letter. Nothing is published in this run.",
+          "source": "plan.md, Version control",
+          "link": "plan.md#version-control"
+        }
+      ],
+      "verdict": {
+        "kind": "build",
+        "summary": "Set `version = \"1.0.0a\"` with a note in the two legacy modules' build files and extend `webtools-udp`'s `2.0.0a` note; no tag, no publish.",
+        "defense": "A consumer needs a version to ask for the fixed build. The release itself needs the maintainer's explicit instruction and is a separate step.",
+        "steps": [
+          {
+            "id": "Step 4",
+            "what": "Edit the three module build files.",
+            "files": [
+              "webtools-scraping/build.gradle.kts",
+              "webtools-browser/build.gradle.kts",
+              "webtools-udp/build.gradle.kts"
+            ],
+            "check": "procedure C: each POM identical except the legacy versions; each `.module` differs only in `org.gradle.jvm.version` (23 → 11) and the version",
+            "link": "plan.md#version-control"
+          }
+        ],
+        "tests": [],
+        "risks": [
+          "Lettered versions order below the plain ones (`1.0.0a` below `1.0.0`, `2.0.0a` below `2.0.0`): a graph that also asks for the plain version keeps the Java 23 build unless it requests the lettered one `strictly`"
+        ],
+        "source": "plan.md, Version control and Risks",
+        "link": "plan.md#version-control"
+      }
+    },
+    {
+      "id": "jdk11-test-launcher",
+      "group": "Left for later",
+      "name": "Tests on a JDK 11 launcher",
+      "system": "gradle-build",
+      "where": "settings.gradle.kts · level test tasks",
+      "gap": {
+        "kind": "risk",
+        "summary": "The level tests run on the build JDK, not on a JDK 11. A JDK 11 launcher or toolchain needs foojay-resolver-convention 1.0.0, because 0.8.0 fails on Gradle 9.7.1 once a JDK must be provisioned; that bump is #58's.",
+        "evidence": [
+          "settings.gradle.kts:6 — foojay-resolver-convention 0.8.0",
+          "research/java-11-floor.md F2, F3 — the resolver on Gradle 9.7.1; where the tests run"
+        ],
+        "source": "research/README.md, Summary; java-11-floor.md Considerations 1",
+        "link": "research/java-11-floor.md#1-do-the-level-test-tasks-run-on-a-jdk-11-launcher-in-this-work"
+      },
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Left as decided: the level tests run on the build JDK, and no test task of the three modules ran, before or after. A JDK 11 launcher stays a follow-up after #58.",
+        "link": "final-implementation.md#10-known-gaps"
+      },
+      "options": [
+        {
+          "id": "leave-to-58",
+          "name": "Leave it: the level tests keep running on the build JDK, and a JDK 11 launcher follows #58's resolver bump",
+          "verdict": "accepted",
+          "why": "No module test suite runs in this change; procedures A to D compile, guard and load the three modules on a real JDK 11 instead.",
+          "source": "plan.md, Known gaps",
+          "link": "plan.md#known-gaps"
+        },
+        {
+          "id": "launcher-now",
+          "name": "Run the level tests on a JDK 11 launcher in this work",
+          "verdict": "declined",
+          "why": "A JDK 11 launcher or toolchain needs the foojay resolver bump, since 0.8.0 fails on Gradle 9.7.1 the moment a JDK must be provisioned, and that bump is #58's; the floor's mechanism needs no JDK 11 at all.",
+          "source": "../research/README.md § Build, publishing and the Java 11 floor; ../architecture.md §4",
+          "link": "../research/README.md#build-publishing-and-the-java-11-floor"
+        }
+      ],
+      "verdict": {
+        "kind": "leave",
+        "summary": "Not changed: the level tests run on the build JDK, and `jdk11-test-launcher` stays a follow-up after #58.",
+        "defense": "A JDK 11 launcher needs foojay-resolver-convention 1.0.0, which #58 owns; the plan's verification loads every class on a JDK 11 without it.",
+        "steps": [],
+        "tests": [],
+        "risks": [
+          "No module test suite runs on JDK 11 until then"
+        ],
+        "source": "plan.md, Known gaps",
+        "link": "plan.md#known-gaps"
+      }
+    }
+  ],
+  "roadmap": null,
+  "followUps": [
+    {
+      "issue": 58,
+      "note": "owns the foojay resolver bump that a JDK 11 test launcher would need"
+    },
+    {
+      "issue": 62,
+      "note": "unit 3 of #55 (`http-core`), up next: both its blockers, #61 and this issue, have landed"
+    },
+    {
+      "name": "Release the lettered versions",
+      "note": "publishes `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a and moves the README's install lines to them; it needs the maintainer's explicit instruction"
+    },
+    {
+      "name": "floor-scan-message",
+      "note": "optional: `JavaFloorScan` reads a non-numeric `org.gradle.jvm.version` as absent, so a string `\"11\"` is reported as declaring nothing; the message should name the value found, and its pinning test changes with it"
+    },
+    {
+      "name": "architecture-udp-ordering-wording",
+      "note": "`../architecture.md` §12 still calls `webtools-udp` unaffected by the lettered-version ordering; a dated callout on that document needs the maintainer's approval"
+    }
+  ],
+  "documents": [
+    {
+      "label": "Issue #47",
+      "path": "https://github.com/SpartanLaboratories/WebTools/issues/47",
+      "note": "the report, with its two proposals: compile for 11 or correct the README"
+    },
+    {
+      "label": "Research",
+      "path": "research/README.md",
+      "note": "the question, verification and summary; findings in `java-11-floor.md`"
+    },
+    {
+      "label": "Findings",
+      "path": "research/java-11-floor.md",
+      "note": "mechanism, the foojay resolver, the test JDK, every dependency's floor, versioning"
+    },
+    {
+      "label": "Plan",
+      "path": "plan.md",
+      "note": "root cause, fix, the regression test of record, verification procedures A to G, risks and version control"
+    },
+    {
+      "label": "#55 architecture",
+      "path": "../architecture.md",
+      "note": "§6.1 shared build logic and §11 unit 2, the scope this unit takes"
+    },
+    {
+      "label": "Impact",
+      "path": "impact.md",
+      "note": "published artifacts, blast radius, adoption, what #62 and the later units inherit, follow-ups, known gaps"
+    },
+    {
+      "label": "Final implementation",
+      "path": "final-implementation.md",
+      "note": "the as-built record: what was built, deviations (none), qa pass 1's fixes, the regression test before and after, procedures A to G, known gaps"
+    }
+  ],
+  "notes": {
+    "paths": "Paths are relative to the repository root; `build-logic/` is the included build #61 added.",
+    "corrections": [
+      {
+        "what": "Four options #55's documents weighed for this unit were missing from the Considered column and are added, declined as #55 declined them: `jvmTarget` alone and `jvmToolchain(11)` for the floor setting, a level test for the guard, and a JDK 11 launcher in this work. The considered milestone's note names the sources. No verdict changed; the Gap column already rested on #55's research and is unchanged.",
+        "when": "the rule for a sub-issue of a signed-off tracking plan (Gap and Considered from the parent's documents), 2026-10-25"
+      }
+    ]
+  },
+  "issueBoards": {
+    "61": "../61-build-logic/dashboard.html",
+    "62": "../62-http-core/dashboard.html"
+  },
+  "impact": {
+    "basis": "as-built",
+    "summary": "A fix to the published bytes, built as planned: every module's class files are Java 11 bytecode built against the Java 11 API, and its Gradle Module Metadata declares `org.gradle.jvm.version: 11` instead of 23; every class loads on a real JDK 11, so consumers on JDK 11 to 22 can use it once released. No source, public API or wire format changed. The fix rides in `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser` 1.0.0a, none of them published yet.",
+    "none": null,
+    "release": {
+      "bump": "fix",
+      "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a",
+      "note": "trailing letters; `webtools-udp` keeps its unreleased version; nothing was tagged or published, and the README's install block names the versions on Maven Central until the lettered ones are released"
+    },
+    "downstream": [
+      {
+        "who": "Consumers on JDK 11 to 22",
+        "kind": "consumer",
+        "system": null,
+        "effect": "behaviour",
+        "summary": "The released Java 23 builds fail to load with `UnsupportedClassVersionError`; the lettered versions load once published. Consumers on JDK 23 or newer see no difference.",
+        "link": "impact.md#3-adoption"
+      },
+      {
+        "who": "`webtools-udp`, `webtools-scraping`, `webtools-browser` artifacts",
+        "kind": "artifact",
+        "system": "gradle-build",
+        "effect": "behaviour",
+        "summary": "Class files went from major 67 to 55 (98, 4 and 2 classes) and the metadata's JVM version from 23 to 11 on the API and runtime variants. Measured against `36fd879`: `javap -protected` is identical for every class, `webtools-udp`'s POM is identical and the two legacy POMs differ only in `<version>`.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "Later units of #55 (`http-core`, `test-support`, `feeds`)",
+        "kind": "system",
+        "system": null,
+        "effect": "behaviour",
+        "summary": "They inherit a multiplatform plugin that compiles their `jvm()` target at the floor, sets the attribute, runs `verifyJavaFloor` in `check` and carries no ASM pin; Gradle rejects any dependency declaring a higher JVM.",
+        "link": "impact.md#4-what-62-and-the-later-units-inherit"
+      },
+      {
+        "who": "Repository builds",
+        "kind": "operator",
+        "system": "gradle-build",
+        "effect": "behaviour",
+        "summary": "A module's `check` also builds its sources and javadoc jars and metadata and runs the guard, about a second for the largest module; `./gradlew verifyJavaFloor` runs the guard alone. Building still needs a JDK 17 to 26.",
+        "link": "impact.md#build"
+      },
+      {
+        "who": "BotTools (`SpartanLaboratories/KotlinBottools`)",
+        "kind": "repository",
+        "system": null,
+        "effect": "none",
+        "summary": "On JDK 21, it was not blocked and needs nothing.",
+        "link": "impact.md#3-adoption"
+      }
+    ],
+    "adaptation": [
+      {
+        "who": "Consumers on JDK 11 to 22",
+        "system": null,
+        "need": "required",
+        "summary": "Move to the lettered versions once they are published, requesting them `strictly` where the graph also asks for the plain release.",
+        "link": "impact.md#3-adoption"
+      },
+      {
+        "who": "Consumers on JDK 23 or newer",
+        "system": null,
+        "need": "none",
+        "summary": "Nothing to change.",
+        "link": "impact.md#3-adoption"
+      },
+      {
+        "who": "`webtools-http` and the later multiplatform modules",
+        "system": null,
+        "need": "required",
+        "summary": "Set no `jvmTarget`, toolchain, flag or `TargetJvmVersion` of their own, declare no second JVM-based target, call no JDK API newer than 11 and use no `@JvmRecord`; `test-support`'s fixtures variants set the attribute from `WebToolsBuild.JAVA_FLOOR` and add their jar to the guard.",
+        "link": "impact.md#4-what-62-and-the-later-units-inherit"
+      }
+    ],
+    "api": [
+      {
+        "surface": "`WebToolsBuild.JAVA_FLOOR`, `registerVerifyJavaFloor`, `VerifyJavaFloor`, `JavaFloorScan`",
+        "system": "gradle-build",
+        "change": "added",
+        "tier": "internal",
+        "summary": "Surface of the included `build-logic` build, internal to the repository and not published; the later units' build scripts read `JAVA_FLOOR`. No published library API changes.",
+        "link": "plan.md#fix"
+      }
+    ],
+    "conversion": [
+      {
+        "what": "On JDK 11 to 22, move to `webtools-udp` 2.0.0a or `webtools-scraping` / `webtools-browser` 1.0.0a once they are published.",
+        "link": "impact.md#3-adoption",
+        "compat": "notable"
+      },
+      {
+        "what": "Where the dependency graph also asks for the plain release, request the lettered version `strictly`.",
+        "link": "impact.md#3-adoption",
+        "compat": "notable"
+      }
+    ],
+    "changes": [],
+    "source": "impact.md (reconciled after landing) and final-implementation.md (no deviations)",
+    "link": "impact.md#1-published-artifacts"
+  }
+}
+);

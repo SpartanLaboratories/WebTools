@@ -1,8 +1,9 @@
-// WebTools is published as three independent, single-concern artifacts (webtools-udp,
-// webtools-scraping, webtools-browser). Everything they share - the Kotlin/JVM setup, the 5-level
-// test-task layout (see the README's "Build & test" section) and the Maven Central publishing
-// skeleton - lives in the included build-logic build as convention plugins
-// (webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.published-library).
+// WebTools is published as independent, single-concern artifacts (webtools-udp, webtools-scraping,
+// webtools-browser, webtools-http). Everything they share - the Kotlin/JVM or Kotlin Multiplatform
+// setup, the 5-level test-task layout (see the README's "Build & test" section) and the Maven Central
+// publishing skeleton - lives in the included build-logic build as convention plugins
+// (webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.published-library, and
+// webtools.kotlin-common-check for the unpublished check-only js modules).
 // Each module's own build.gradle.kts applies one of them and adds its dependencies, its coordinates,
 // its POM name and description, and any configuration that belongs to it alone (for example
 // webtools-udp's version and UDP-port lock); only the group and the default version every module

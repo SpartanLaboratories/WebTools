@@ -72,6 +72,18 @@ class SampleProject private constructor(val files: Map<String, String>) {
 
         /** The prefix of the line the composite's `printLevels` task prints, before the level ids. */
         const val LEVELS_LINE_PREFIX: String = "webtools-levels="
+
+        /** The directory of the common-check sample's check module, which applies `webtools.kotlin-common-check`. */
+        const val COMMON_CHECK_MODULE: String = "commoncheck"
+
+        /** The directory of the common-check sample's shared source, which is not a Gradle project. */
+        const val COMMON_CHECK_SHARED: String = "shared"
+
+        /** The path of the common-check sample's shared common code, a `commonMain` file with one `expect` function. */
+        const val COMMON_CHECK_COMMON_PATH: String = "$COMMON_CHECK_SHARED/src/commonMain/kotlin/sample/Platform.kt"
+
+        /** The path of the common-check sample's `jsMain` file, which holds the `actual` of that function. */
+        const val COMMON_CHECK_ACTUAL_PATH: String = "$COMMON_CHECK_MODULE/src/jsMain/kotlin/sample/PlatformJs.kt"
         //endregion
 
         //region factories
@@ -168,6 +180,34 @@ class SampleProject private constructor(val files: Map<String, String>) {
                     "$COMPOSITE_MULTIPLATFORM_MODULE/src/commonMain/kotlin/sample/Greeter.kt" to GREETER,
                     "$COMPOSITE_MULTIPLATFORM_MODULE/src/commonTest/kotlin/com/spartanlabs/testing/component/sample/KmpLibComponentTest.kt" to
                         COMPOSITE_MULTIPLATFORM_COMPONENT_TEST,
+                ),
+            )
+        }
+
+        /**
+         * A project with a check-only `js` module, shaped as the repository's check modules are:
+         * module [COMMON_CHECK_MODULE] applies only `id("webtools.kotlin-common-check")` and adds the
+         * sibling directory [COMMON_CHECK_SHARED]'s `commonMain` as a source directory of its own
+         * `commonMain`. [COMMON_CHECK_SHARED] is not a Gradle project: it holds only common code, free
+         * of JVM APIs, with one `expect` function whose `actual` is in the check module's `jsMain`.
+         *
+         * Its `settings.gradle.kts` declares no repositories, so the plugin's own `mavenCentral()` is
+         * the only way the check module resolves the Kotlin standard library. Its `gradle.properties`
+         * is the same as the other samples'. The root project applies no plugin and has no build file.
+         *
+         * @param rootProjectName the root project's name.
+         * @return the project description.
+         * @throws IllegalArgumentException if [rootProjectName] is blank.
+         */
+        fun commonCheck(rootProjectName: String): SampleProject {
+            require(rootProjectName.isNotBlank()) { "A sample project needs a non-blank root project name" }
+            return SampleProject(
+                mapOf(
+                    "settings.gradle.kts" to commonCheckSettings(rootProjectName),
+                    "gradle.properties" to GRADLE_PROPERTIES,
+                    "$COMMON_CHECK_MODULE/build.gradle.kts" to COMMON_CHECK_BUILD_SCRIPT,
+                    COMMON_CHECK_COMMON_PATH to COMMON_CHECK_COMMON,
+                    COMMON_CHECK_ACTUAL_PATH to COMMON_CHECK_ACTUAL,
                 ),
             )
         }
@@ -425,6 +465,46 @@ class SampleProject private constructor(val files: Map<String, String>) {
                     assertEquals("Hello, unleveled", Greeter().greet("unleveled"))
                 }
             }
+            """.trimIndent() + "\n"
+
+        // No dependencyResolutionManagement: the plugin under test declares its own repositories.
+        private fun commonCheckSettings(rootProjectName: String): String =
+            //language=kotlin
+            """
+            rootProject.name = "$rootProjectName"
+
+            include(":$COMMON_CHECK_MODULE")
+            """.trimIndent() + "\n"
+
+        //language=kotlin
+        private val COMMON_CHECK_BUILD_SCRIPT: String = """
+            plugins {
+                id("webtools.kotlin-common-check")
+            }
+
+            kotlin {
+                sourceSets {
+                    commonMain {
+                        kotlin.srcDir("../$COMMON_CHECK_SHARED/src/commonMain/kotlin")
+                    }
+                }
+            }
+            """.trimIndent() + "\n"
+
+        //language=kotlin
+        private val COMMON_CHECK_COMMON: String = """
+            package sample
+
+            expect fun platformName(): String
+
+            fun describe(): String = "common code on " + platformName()
+            """.trimIndent() + "\n"
+
+        //language=kotlin
+        private val COMMON_CHECK_ACTUAL: String = """
+            package sample
+
+            actual fun platformName(): String = "js"
             """.trimIndent() + "\n"
         //endregion
     }

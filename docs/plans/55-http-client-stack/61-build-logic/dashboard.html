@@ -6,6 +6,7 @@
 <meta name="dashboard" content="plan-board">
 <meta name="template" content="plan/template/dashboard.html">
 <title>Plan board</title>
+<script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 /* Plan board template (dashboards skill, plan set: plan/RULES.md; shared rules: GUIDANCE.md). One issue's planning and
    development record as a timeline: every row is a part of the change (on a tracking board, a unit), and its four cells are
@@ -42,6 +43,23 @@ h1,h2,h3{text-wrap:balance}
 
 /* header */
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
+/* The header's tools, right of the breadcrumb: the live indicator (plan/RULES.md §3, "Live updates") and the theme switch
+   (GUIDANCE.md §1, Themes). The live dot is ink, never a status or accent colour; it pulses while the run is live and changing, and
+   holds still after a quiet spell, while the run waits on the user, when the data cannot be read, and under reduced motion. */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:18px}
+.topbar .crumbs{padding-top:0;min-width:0}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.livechip{display:inline-flex;align-items:center;gap:6px;font:600 11px/1 var(--mono);letter-spacing:.03em;padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
+.livechip:empty{display:none}
+.livechip .ld{width:8px;height:8px;border-radius:50%;background:var(--ink);flex:none}
+.livechip.on{color:var(--ink);border-color:var(--ink-2)}
+.livechip.on.pulse .ld{animation:livepulse 1.6s ease-in-out infinite}
+.livechip.off .ld{background:none;border:1.5px solid var(--muted)}
+.livechip.na .ld{background:var(--muted)}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+.themebtn{appearance:none;font:600 11px/1 var(--mono);padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.themebtn:hover{color:var(--ink);border-color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.livechip .ld{animation:none!important}}
 .crumbs a{text-decoration:none}
 .crumbs a:hover{text-decoration:underline}
 h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono);overflow-wrap:anywhere}
@@ -50,7 +68,6 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
 .chip b{color:var(--ink);font-weight:600}
 .chip a{text-decoration:none;border-bottom:1px solid var(--line)}
-.chip.model{border-style:dashed}
 .chip.status{border-left:3px solid var(--line)}
 .chip.status.planned{border-style:dashed}
 .chip.status.built{border-left-color:var(--good)}
@@ -134,11 +151,50 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .run{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font:11px var(--mono);color:var(--muted)}
 .inspector .run{margin:0 0 4px}
 .inspector .steps{margin:6px 0 4px}
+/* An issue board's strip and its step panel (plan/RULES.md §3, "The step panel"): the strip on the left half, the panel breaking the
+   current step down on the right; one column below 940 px. The legend runs under both. A board that has landed or was cancelled
+   has no current step and keeps the strip across the row. */
+.wip.split{background:none;border:0;padding:0}
+.wiprow{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+@media (max-width:940px){.wiprow{grid-template-columns:minmax(0,1fr)}}
+.wipmain{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:10px 14px;min-width:0}
+.wipmain.halted{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
+.wipmain.escalated{border-left-color:var(--serious)}
+.wip.split>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:8px}
+.sp{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ink-2);border-radius:6px;padding:10px 14px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.sp.sp-held{border-left-color:var(--warning)}
+.sp .wb-t b{font-family:var(--mono);color:var(--ink)}
+.sp-ev{font:400 11px var(--mono);color:var(--muted);margin-left:auto;text-transform:none;letter-spacing:0}
+.sp-ev code{color:var(--ink-2)}
+.sp p{margin:4px 0;color:var(--ink-2)}
+.sp p.sp-sum{color:var(--ink);font-weight:600}
+.sp p.sp-wait{color:var(--ink);font-weight:600}
+.sp a{text-decoration:none;border-bottom:1px solid var(--line)}
+.sp .steps{margin:6px 0 4px}
+.sp-list{list-style:none;margin:6px 0 2px;padding:0;display:grid;gap:4px}
+.sp-list>li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--hair);min-width:0}
+.sp-list>li:first-child{border-top:0}
+.sp-list .q{color:var(--ink);overflow-wrap:anywhere;min-width:0}
+.sp-list small{display:block;font:11px var(--mono);color:var(--muted);margin-top:1px;overflow-wrap:anywhere}
+.sp-list .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--ink-2);border:2px solid var(--ink-2);vertical-align:-1px}
+.sp-list li.todo .dot{background:none;border:2px dashed var(--muted)}
+.sp-list li.todo .q{color:var(--muted)}
+.sp-list li.cur .dot{background:var(--accent);border-color:var(--accent);animation:glowdot 2s ease-in-out infinite}
+.sp-list li.cur .q{font-weight:600}
+.sp.sp-held .sp-list li.cur .dot{animation:none;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.sp-pass{border:1px solid var(--line);border-left:4px solid var(--sc,var(--line));border-radius:5px;padding:6px 10px;margin:6px 0 0}
+.sp-pass.good{--sc:var(--good)}.sp-pass.critical{--sc:var(--critical)}
+.sp-pass.run{border-style:dashed;border-left-style:dashed;--sc:var(--muted)}
+.sp-pass .ph{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font:700 11px var(--mono);color:var(--ink)}
+.sp-pass small{display:block;font:11px var(--mono);color:var(--ink-2);margin-top:3px}
+.sp p.sp-when{font:11px var(--mono);color:var(--muted);margin:0 0 4px}
+.sp-foot{font:11px var(--mono);color:var(--muted);margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
+@media (prefers-reduced-motion:reduce){.sp-list li.cur .dot{animation:none!important;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent),0 0 8px 3px color-mix(in srgb,var(--accent) 45%,transparent)}}
 
 /* The two accent marks (GUIDANCE.md §1).
    In progress (wip.current): a solid accent ring inside the edge, an interior glow that breathes (~2 s) and a faint accent wash.
    .glow-soft is the same, lighter, for a whole column at work. With reduced motion the interior glow holds still at its middle
-   strength; while the run is halted it stops (.held: the ring alone).
+   strength; while the run waits on the user, halted or escalated, it stops (.held: the ring alone).
    Up next (wip.next, tracking boards): the mild outer glow the in-progress mark used before, held still, never animated, with
    the static UP NEXT tag. It is not work in progress, so it neither breathes nor counts as a glowing cell. */
 @keyframes glow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 28%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 22px 6px color-mix(in srgb,var(--accent) 52%,transparent)}}
@@ -167,7 +223,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
 .kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
 .kpi .seg-bar i{display:block;height:100%;background:var(--ink-2)}
-.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--line)}
+.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--line)}.seg-bar i.left{background:var(--muted);opacity:.5}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -227,6 +283,8 @@ a.more:hover{text-decoration:underline}
 .key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
 .key i.sbar{border-color:var(--line);border-left:4px solid var(--c)}
 .key i.pln{border-style:dashed;background:none;border-color:var(--muted)}
+/* a cell's kind chip in the legend: the same neutral, solid chip the cell draws (a fact, not an outcome; dashed means only planned) */
+.key .kind{font:600 10px var(--mono);color:var(--ink-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;letter-spacing:.04em}
 .key i.node{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink-2)}
 .key i.node.hollow{background:none;border:2px dashed var(--muted)}
 .key i.node.acc{background:var(--accent)}
@@ -295,7 +353,24 @@ a.more:hover{text-decoration:underline}
 .cell.pending,.cell.deferred{border-style:dashed}
 .cell.pending::before{border-top-style:dashed;border-top-color:var(--muted)}
 .cell.pending::after,.cell.deferred::after{background:var(--surface);border:2px dashed var(--muted)}
-.cell.leave .kick .kind{border-style:dashed}
+/* Research state (plan/RULES.md §3, "Research: the questions and their states"): a ring, never a fill, on the Considered cell of a
+   row the research questions name, in the research scale: red planning, orange researching, orange with a check returned
+   (awaiting verification), yellow verifying, green complete (kept until the plan is accepted); a pill in the cell's head says it with
+   its glyph and word. The ring is the cell's border, so the in-progress glow (an inset shadow) sits inside it. */
+.cell.rs{border:2px solid var(--rc);padding:8px 9px 7px}
+.cell .kick .vp{max-width:100%;white-space:normal}
+.rs-planning{--rc:var(--critical)}.rs-researching,.rs-returned{--rc:var(--serious)}.rs-verifying{--rc:var(--warning)}.rs-complete{--rc:var(--good)}
+.key i.ring{background:var(--surface);border:2.5px solid var(--rc);border-radius:4px}
+/* The charging arrow (plan/RULES.md §3, "The charging arrow"): during the plan step, the connector into a Verdict cell whose verdict is
+   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on the user and under
+   reduced motion, and is the plain line again once the verdict is written. */
+.cell.verdict.charging::before{border-top:0;height:12px;top:calc(50% - 6px);left:calc(-1 * var(--cg) - 2px);width:calc(var(--cg) + 2px);clip-path:polygon(0 22%,68% 22%,68% 0,100% 50%,68% 100%,68% 78%,0 78%);
+  background:repeating-linear-gradient(90deg,var(--accent) 0 2px,transparent 2px 4px) 0 0/100% 100% no-repeat,repeating-linear-gradient(90deg,color-mix(in srgb,var(--accent) 32%,transparent) 0 2px,transparent 2px 4px);animation:charge 1.8s steps(6,end) infinite}
+.cell.verdict.charging::after{display:none}
+@keyframes charge{0%{background-size:0 100%,100% 100%}100%{background-size:100% 100%,100% 100%}}
+.cell.verdict.charging.still::before{animation:none}
+.key i.chg{width:20px;height:12px;border:0;border-radius:0;clip-path:polygon(0 22%,68% 22%,68% 0,100% 50%,68% 100%,68% 78%,0 78%);background:repeating-linear-gradient(90deg,var(--accent) 0 2px,transparent 2px 4px)}
+@media (prefers-reduced-motion:reduce){.cell.verdict.charging::before{animation:none!important}}
 .opts{list-style:none;margin:0;padding:0;display:grid;gap:3px}
 .opts li{min-width:0}
 .opt{--sc:var(--muted);appearance:none;border:1px solid transparent;border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 10%,transparent);color:var(--ink);font:inherit;font-size:12px;line-height:1.35;text-align:left;padding:3px 6px;border-radius:3px;cursor:pointer;display:grid;grid-template-columns:14px minmax(0,1fr);gap:5px;align-items:start;width:100%;min-width:0;max-width:100%}
@@ -411,6 +486,11 @@ pre.src .k{color:var(--link);font-weight:600} pre.src .s{color:var(--ink-2)}
    and never in the Impact tab's compatibility red or yellow; each links the Impact card it changed. */
 .bimp{margin-top:18px}
 .bimp h4{font-size:12px;margin:10px 0 6px;color:var(--ink-2)}
+/* the reconciliation chip (plan/RULES.md §2, Impact: derived, never stored) beside the line saying how far it has got; a landed unit
+   whose effect on the impact is not recorded yet is drawn dashed, as pending */
+.bimp .q.recon{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.isec .empty+.empty{margin-top:6px}
+.isec .empty.pend{border-style:dashed}
 .bcard.ichg{cursor:default}
 .bcard.ichg .bh .nm{font-weight:600}
 .bcard .meta a.goimp{white-space:normal;overflow-wrap:anywhere}
@@ -462,7 +542,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
 <body>
 <div class="page">
 <header>
-  <div class="crumbs" id="crumbs"></div>
+  <div class="topbar"><div class="crumbs" id="crumbs"></div><div class="tools"><span class="livechip" id="live"></span><button class="themebtn" id="theme" type="button"></button></div></div>
   <h1 id="h1"></h1>
   <p class="function" id="function"></p>
   <div class="chips" id="chips"></div>
@@ -693,7 +773,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "label": "Options weighed",
       "date": "2026-10-21",
       "ref": "../architecture.md",
-      "note": "#55's architecture §6.1 and §10 for the topology; this unit's research summary for publishing, the validator and the harness"
+      "note": "#55's architecture §6.1 and §10 for the topology and the ABI tooling; #55's research summary for the level selection; this unit's research summary for publishing, the validator and the harness"
     },
     {
       "column": "verdict",
@@ -919,6 +999,14 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "why": "It works over whatever test classes and classpath the caller passes, so both library plugins share it; the package already is each class's level, so on the three modules it selects exactly what the tags select, and a level with nothing to run still passes.",
           "source": "../architecture.md §6.1; plan.md §5.3",
           "link": "plan.md#53-level-tasks"
+        },
+        {
+          "id": "junit-tags",
+          "name": "Keep selecting the level tasks by JUnit tag (`includeTags`)",
+          "verdict": "declined",
+          "why": "A `commonTest` class cannot carry a JUnit tag, so a multiplatform module's common tests could not be selected by level; on the three existing modules the package filter selects exactly the classes the tags select.",
+          "source": "../research/README.md § Build, publishing and the Java 11 floor",
+          "link": "../research/README.md#build-publishing-and-the-java-11-floor"
         }
       ],
       "verdict": {
@@ -1181,6 +1269,14 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "why": "It picks the same today; `configure(KotlinMultiplatform(JavadocJar.Empty(), SourcesJar.Sources()))` pins it, so it stays the same if a Dokka plugin is ever applied.",
           "source": "plan.md §5.4",
           "link": "plan.md#54-publishing"
+        },
+        {
+          "id": "kgp-abi-validation",
+          "name": "KGP's built-in `abiValidation` instead of binary-compatibility-validator",
+          "verdict": "declined",
+          "why": "It is experimental on Kotlin 2.2.0, and its DSL changed by 2.4.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
         }
       ],
       "verdict": {
@@ -1801,11 +1897,16 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "what": "The function and the release row's accepted option named the sizing; they now say what the work is (a change inside one system), as a board never shows it. The decisions are unchanged.",
         "when": "re-templating, 2026-10-23"
+      },
+      {
+        "what": "Two options #55's documents weighed for this unit were missing from the Considered column and are added, declined as #55 declined them: selecting the level tasks by JUnit tag (#55 research summary) and KGP's built-in `abiValidation` (#55 architecture §10). The considered milestone's note names the sources. No verdict changed.",
+        "when": "the rule for a sub-issue of a signed-off tracking plan (Gap and Considered from the parent's documents), 2026-10-25"
       }
     ]
   },
   "issueBoards": {
-    "47": "../47-java-23-bytecode/dashboard.html"
+    "47": "../47-java-23-bytecode/dashboard.html",
+    "62": "../62-http-core/dashboard.html"
   },
   "impact": {
     "basis": "as-built",
@@ -1861,15 +1962,12 @@ function bubbleInspector(){ const b=$("#insp-body"), dl=b.querySelector(":scope>
   for(let k=i;k<secs.length;k+=3) h+=`<div class="ibcol">${secs.slice(k,k+3).map(card).join("")}</div>`;
   b.innerHTML=`<div class="ibubbles">${h}</div>`; }
 
-/* ---------- The plan (from the embedded file) ---------- */
-const PLAN=JSON.parse(document.getElementById("plan").textContent||"{}");
-const REPO="https://github.com/"+(PLAN.repo||"");
-const ROWS=PLAN.rows||[];
-const WIP=PLAN.wip||{};
-const TRACKING=PLAN.kind==="tracking";
-/* The board's folder from the repository root sets every relative link to the shared pages. */
-const FOLDER=PLAN.folder||("docs/plans/"+(PLAN.slug||""));
-const UP="../".repeat(FOLDER.split("/").filter(Boolean).length);
+/* ---------- The plan (from the embedded file) ----------
+   PLAN and everything derived from it are let, not const: derive() computes them from PLAN, once at load and again whenever a live
+   update replaces the plan (dashboardRedraw(), below), so the page redraws in place. The board's folder from the repository root
+   (FOLDER) sets every relative link to the shared pages. */
+let PLAN=JSON.parse(document.getElementById("plan").textContent||"{}");
+let REPO="", ROWS=[], WIP={}, TRACKING=false, FOLDER="", UP="";
 const ext=(href,text)=>`<a href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
 /* Links to an issue and its board (plan/RULES.md §1; GUIDANCE.md §5). Where an issue's number and its title appear together (a unit
    row, the WIP strip's unit lines, the inspector's unit entry, a roadmap item, a follow-up with a title, an impact unit card) they
@@ -1881,11 +1979,13 @@ const ext=(href,text)=>`<a href="${esc(href)}" target="_blank" rel="noopener">${
    path relative to this folder: a tracking board's units (unit.board), the parent tracking issue (parent.board) and every other
    issue the board names (issueBoards). */
 const relLink=b=>typeof b==="string"&&!!b.trim()&&!/^[a-z][a-z0-9+.-]*:/i.test(b)&&!/^[\\/]/.test(b);
-const ISSUE_BOARDS=new Map([
+/* one Map, refilled by derive(): its name is the marker of the widened link rule (lib.js linkRule()) */
+const ISSUE_BOARDS=new Map();
+const issueBoardsOf=()=>{ const m=new Map([
   ...Object.entries(PLAN.issueBoards&&typeof PLAN.issueBoards==="object"?PLAN.issueBoards:{}).filter(([,b])=>relLink(b)),
   ...(PLAN.parent&&PLAN.parent.issue&&relLink(PLAN.parent.board)?[[String(PLAN.parent.issue),PLAN.parent.board]]:[]),
   ...(TRACKING?ROWS.filter(r=>r.unit&&r.unit.issue&&relLink(r.unit.board)).map(r=>[String(r.unit.issue),r.unit.board]):[])]);
-ISSUE_BOARDS.delete(String(PLAN.issue));
+  m.delete(String(PLAN.issue)); return m; };
 const boardOf=(n,repo)=>!repo||repo===PLAN.repo?ISSUE_BOARDS.get(String(n))||null:null;
 const ghUrl=(n,repo)=>`https://github.com/${repo||PLAN.repo}/issues/${n}`;
 const ilabel=(n,repo)=>`${repo&&repo!==PLAN.repo?esc(repo.split("/")[1])+"#":"#"}${esc(n)}`;
@@ -1955,6 +2055,14 @@ const QA={approved:{g:"✓",label:"approved",cls:"good"},"changes-requested":{g:
 const STEP_ORDER=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","landing","landed"];
 const STEP_SPECIAL={halted:{g:"⏸",label:"Waiting on the user",cls:"halted"},escalated:{g:"⇧",label:"Escalated",cls:"escalated"},cancelled:{g:"✕",label:"Cancelled",cls:"cancelled"},landed:{g:"✓",label:"Landed",cls:"landed"}};
 const stateOf=r=>(r.asBuilt&&STATES[r.asBuilt.state])?r.asBuilt.state:"pending";
+/* A row's verdict kind once its verdict is written (a summary, as check.js reads it): "leave" or "build" (the default kind); null
+   while column 3 is not yet written, which is neither build nor leave and is counted, labelled and inspected as such */
+const verdictOf=r=>{ const v=r.verdict||{}; return typeof v.summary==="string"&&v.summary.trim()?(v.kind==="leave"?"leave":"build"):null; };
+/* Left for later (plan/RULES.md §2, the As built tile): a row whose written verdict leaves it as is and that is resolved as planned
+   (pending, as planned or amended: left alone, perhaps pinned harder) is not built, so the tile and the chain leave it out of both
+   figures and name it beside them. One that column 4 records built after all (deviated; a unit complete or landed) counts as built
+   again; a dropped or deferred one keeps its own state. plan/scripts/lib.js leftForLater() is the same rule for the scripts. */
+const leftForLater=r=>verdictOf(r)==="leave"&&!["deviated","dropped","deferred","complete","landed"].includes(stateOf(r));
 const pill=(def,extra,word)=>`<span class="vp ${def.cls}${def.dash?" dashed":""}${def.hollow?" hollow":""}"><i aria-hidden="true">${def.g}</i>${esc(word||def.label)}${extra||""}</span>`;
 const badge=(st,extra)=>pill(STATES[st]||STATES.pending,extra);
 /* An option's effective verdict: a deferred option settled by an as-built change takes the settlement's colour. */
@@ -1963,7 +2071,7 @@ function optDef(r,o){ const s=o.verdict==="deferred"?settlement(r,o):null; const
   const t=OPT[s.verdict]||OPT.accepted; return {def:{...t,dash:false},word:`deferred → ${t.label}`,settled:s}; }
 
 /* ---------- System colours: the registry slots, identical to the system pages' (plan.json systems[].slot) ---------- */
-const SYSTEMS=PLAN.systems||[];
+let SYSTEMS=[];
 const sysOf=slug=>SYSTEMS.find(s=>s.slug===slug);
 function sysColour(slug){ const s=sysOf(slug); return s&&s.slot>=1&&s.slot<=6?`var(--sys-${s.slot})`:"var(--muted)"; }
 const sysName=slug=>{ const s=sysOf(slug); return s?s.name:(slug||"—"); };
@@ -1972,10 +2080,10 @@ function paint(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=
 function sysKey(slugs,cls){ const seen=new Map(); slugs.forEach(sl=>{ const s=sysOf(sl)||{slug:sl,name:sl}; const k=s.slot>=1&&s.slot<=6?"s"+s.slot:"n"; const nm=s.slot>=1&&s.slot<=6?(s.top||s.name):`${s.name} (no system colour)`; if(!seen.has(k)) seen.set(k,{c:sysColour(sl),names:new Set()}); seen.get(k).names.add(nm); });
   return [...seen.values()].map(v=>`<span><i class="${cls||"sbar"}" style="--c:${v.c}"></i>${esc([...v.names].join(", "))}</span>`).join(""); }
 
-/* ---------- Work in progress: the glowing cells ---------- */
-const STEP=WIP.step||"";
-const HALTED=STEP==="halted", LANDED=STEP==="landed"||PLAN.status==="built", STOPPED=["cancelled"].includes(STEP)||PLAN.status==="abandoned";
-const CURRENT=(LANDED||STOPPED)?[]:(WIP.current||[]);
+/* ---------- Work in progress: the glowing cells ----------
+   PAUSED: the run waits on the user, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
+   the glow of the step it stopped in (plan/RULES.md §3, the glow follows the step). */
+let STEP="", HALTED=false, PAUSED=false, LANDED=false, STOPPED=false, CURRENT=[];
 const rowActive=r=>CURRENT.some(a=>a.split(".")[0]===r.id);
 /* ---------- The units' own runs (tracking boards, plan/RULES.md §3) ----------
    A unit in progress carries unit.live: its sub-issue board's run (step, since, updated, detail, steps, waitingOn, resume, qa,
@@ -1987,12 +2095,13 @@ const RUN={run:{g:"▶",label:"run",cls:"neutral"},halted:{g:"⏸",label:"waitin
 const runOf=r=>TRACKING&&r&&r.unit&&r.unit.live&&typeof r.unit.live==="object"&&rowActive(r)?r.unit.live:null;
 const runKind=L=>L.step==="halted"?"halted":L.step==="escalated"?"escalated":L.step==="cancelled"||L.status==="abandoned"?"cancelled":"run";
 const runHeld=r=>{ const L=runOf(r); return !!L&&runKind(L)==="halted"; };
-const rowHeld=id=>runHeld(ROWS.find(x=>x.id===id));
-const glowCls=(strong,held)=>HALTED||held?" held":strong?" glow":" glow-soft";
-function cellGlow(rowId,col){ if(CURRENT.includes(rowId+"."+col)) return glowCls(true,rowHeld(rowId)); if(CURRENT.includes(col)) return HALTED?" held":" glow-soft"; return ""; }
+const runPaused=r=>{ const L=runOf(r); return !!L&&["halted","escalated"].includes(runKind(L)); };
+const rowHeld=id=>runPaused(ROWS.find(x=>x.id===id));
+const glowCls=(strong,held)=>PAUSED||held?" held":strong?" glow":" glow-soft";
+function cellGlow(rowId,col){ if(CURRENT.includes(rowId+"."+col)) return glowCls(true,rowHeld(rowId)); if(CURRENT.includes(col)) return PAUSED?" held":" glow-soft"; return ""; }
 /* The next unit (wip.next, tracking boards): named, never in progress. Its tag lists each blocker that has not landed; a blocker
    that is not a unit on this board counts as not landed, since the board cannot show it landed. */
-const NEXT_ROW=TRACKING&&!LANDED&&!STOPPED&&WIP.next?ROWS.find(r=>r.id===WIP.next&&r.unit&&!rowActive(r)&&stateOf(r)==="pending")||null:null;
+let NEXT_ROW=null;
 const unitLanded=r=>LANDED_STATES.includes(stateOf(r));
 function openBlockers(r){ if(!r||!r.unit) return []; return (r.unit.blockedBy||[]).filter(n=>{ const b=ROWS.find(x=>x.unit&&x.unit.issue===n); return !(b&&unitLanded(b)); }); }
 const isNext=r=>!!NEXT_ROW&&r===NEXT_ROW;
@@ -2000,10 +2109,7 @@ const isNext=r=>!!NEXT_ROW&&r===NEXT_ROW;
    tracking board once its own plan has landed: its wip.step (or the step a halt resumes at) is past "landing", its status is
    building or built, wip.landing records the plan's merge, or a unit has started. A unit's branch shows while its run is live and
    stops once the unit has landed; the trail keeps every branch's history. */
-const ownStep=["halted","escalated"].includes(STEP)?(WIP.resume||WIP.last||""):STEP;
-const PLAN_LANDED=LANDED||(TRACKING&&(["building","built"].includes(PLAN.status)||["implementation","landed"].includes(ownStep)
-  ||!!(WIP.landing&&(WIP.landing.pr||WIP.landing.merge))||ROWS.some(r=>r.unit&&(stateOf(r)!=="pending"||(WIP.current||[]).some(a=>String(a).split(".")[0]===r.id)))));
-const SHOW_BRANCH=!!PLAN.branch&&!PLAN_LANDED;
+let ownStep="", PLAN_LANDED=false, SHOW_BRANCH=false;
 const TAG_NEXT=`<span class="tag-next">UP NEXT</span>`;
 const BLOCKED={g:"⊘",label:"blocked",cls:"warning"};
 const blockedPill=r=>{ const o=openBlockers(r); return o.length?pill(BLOCKED,` by ${o.map(n=>ilink(n)).join(", ")}`,"blocked"):""; };
@@ -2012,7 +2118,7 @@ const nextTags=r=>isNext(r)?`${TAG_NEXT} ${blockedPill(r)}`:"";
 const KEY_GLOW=`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`;
 const KEY_NEXT=r=>`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>${openBlockers(r).length?`<span>${pill(BLOCKED,"","blocked by #n")} a blocker has not landed</span>`:""}`;
 /* The in-progress marks of a set of wip.current addresses: breathing where the work goes on, the ring alone where it waits. */
-const heldAddr=a=>HALTED||rowHeld(String(a).split(".")[0]);
+const heldAddr=a=>PAUSED||rowHeld(String(a).split(".")[0]);
 const KEY_HELD=`<span><i class="hold"></i>ring alone: being worked on, paused while the run waits on the user</span>`;
 function markKeys(addrs){ if(!addrs.length) return ""; const held=addrs.filter(heldAddr).length; return (addrs.length>held?KEY_GLOW:"")+(held?KEY_HELD:""); }
 /* A unit's run: its pill, its last qa pass, the run line of its cell and card, its block on the strip, its legend entries. */
@@ -2027,7 +2133,7 @@ function runBlock(r,still){ const L=runOf(r); if(!L) return ""; const k=runKind(
   let h=`<div class="${still?"":"unitrun"}${held&&!still?" halted":""}">${still?"":`<div class="wip-head"><span>its run · step <b>${esc(L.step||"—")}</b>${L.since?` · since <span class="nw">${when(L.since)}</span>`:""}${L.branch?` · branch <code>${esc(L.branch)}</code>`:""}</span>${L.updated?`<span class="upd">updated ${when(L.updated)}</span>`:""}</div>`}`;
   if(held) h+=`<p class="wip-wait">Waiting on the user: ${rich(L.waitingOn||L.detail||"(not stated)")}</p>`;
   if(k==="escalated") h+=`<p class="wip-wait">Escalated: the run waits while the issue's scope is re-decided.</p>`;
-  if(k!=="cancelled") h+=stepsLine(steps,k==="halted"||k==="escalated"?(L.resume||""):L.step,{held,still,label:`#${r.unit.issue}: its pipeline steps`});
+  if(k!=="cancelled") h+=stepsLine(steps,k==="halted"||k==="escalated"?(L.resume||""):L.step,{held:held||k==="escalated",still,label:`#${r.unit.issue}: its pipeline steps`});
   if(L.detail&&!held) h+=`<p class="wip-detail">${rich(L.detail)}</p>`;
   if(qa.length&&!still) h+=`<div class="wip-facts"><span><span class="l">qa</span>${qa.map(qaPill).join(" ")}${L.qaMax?` <small>of at most ${esc(L.qaMax)}</small>`:""}</span></div>`;
   return h+`</div>`; }
@@ -2039,6 +2145,123 @@ function runKeys(rows){ const Ls=rows.map(runOf).filter(Boolean); if(!Ls.length)
     +(ks.has("cancelled")?`<span>${pill(RUN.cancelled)} the unit's run was abandoned</span>`:"")
     +[...qv].map(v=>`<span>${pill(QA[v],"",`qa n · ${QA[v].label}`)} the unit's latest qa pass</span>`).join(""); }
 
+/* ---------- Research: the questions and their states (plan/RULES.md §3) ----------
+   wip.questions, each { question, rows, findings, state }: planning, researching, returned (awaiting verification), verifying,
+   complete (kept until the plan is accepted). A question written before the states existed reads from its findings: none,
+   researching; a path, returned. A row the questions name takes the least advanced of their states, drawn as a ring on its Considered
+   cell in the research scale (red, orange, orange with a check, yellow, green) with a pill saying it. plan/scripts/lib.js qState()
+   and researchRows() are the same rule for the scripts. */
+const RS={planning:{g:"✎",label:"planning",cls:"critical",desc:"the question is being drafted"},
+  researching:{g:"↻",label:"researching",cls:"serious",desc:"a researcher is out on it"},
+  returned:{g:"✓",label:"returned",cls:"serious",desc:"its findings are back, awaiting verification"},
+  verifying:{g:"◇",label:"verifying",cls:"warning",desc:"its findings are being verified"},
+  complete:{g:"✔",label:"complete",cls:"good",desc:"verified; kept until the plan is accepted"}};
+const Q_ORDER=["planning","researching","returned","verifying","complete"];
+const qState=q=>q&&Q_ORDER.includes(q.state)?q.state:q&&q.findings!=null?"returned":"researching";
+const questionsOf=w=>(Array.isArray(w&&w.questions)?w.questions:[]).filter(q=>q&&typeof q==="object");
+function researchRowsOf(w,rows){ const m=new Map(), ids=new Set((rows||[]).map(r=>r.id));
+  questionsOf(w).forEach(q=>(Array.isArray(q.rows)?q.rows:[]).map(String).filter(id=>ids.has(id)).forEach(id=>{ const st=qState(q), h=m.get(id); if(h==null||Q_ORDER.indexOf(st)<Q_ORDER.indexOf(h)) m.set(id,st); }));
+  return m; }
+let RROWS=new Map();
+const rsPill=st=>pill(RS[st]);
+const RSP_DESC={planning:"a question being drafted",researching:"a question a researcher is out on",returned:"a question returned, awaiting verification",verifying:"a question being verified",complete:"a question verified"};
+const KEY_RSP=st=>`<span>${rsPill(st)} ${RSP_DESC[st]}</span>`;
+const KEY_RS=st=>`<span><i class="ring rs-${st}"></i>${rsPill(st)} research state: ${esc(RS[st].desc)}</span>`;
+/* The strip's research line (plan/RULES.md §3): the questions still open, and how many have returned. */
+function researchFact(w){ const qs=questionsOf(w), R=w&&w.research;
+  if(!qs.length) return R&&R.phase==="planning"?`<span><span class="l">research</span>planning${R.drafted!=null?` · ${esc(R.drafted)} question${R.drafted===1?"":"s"} drafted`:""}</span>`:"";
+  const back=qs.filter(q=>Q_ORDER.indexOf(qState(q))>=2).length, open=qs.filter(q=>Q_ORDER.indexOf(qState(q))<2);
+  return `<span><span class="l">research</span>${back} of ${qs.length} returned${open.length?` · open: ${open.map(q=>`<code>${esc(q.question)}</code>`).join(", ")}`:""}</span>`; }
+
+/* ---------- The step panel (plan/RULES.md §3, "The step panel") ----------
+   Beside the WIP strip, the current step broken down from the facts the board records (the events, the documents, the trail): the
+   interview's questions, answered or waiting; the research timeline (planning, research, verification) with each question's state and
+   the count returned; the plan's writing or re-pass and its verdicts written; the implementation stages, done, current and to come;
+   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on the user, what
+   it waits on, the panel held still. R is a run: an issue board's own wip (with its verdicts and deviations counted from its rows), or
+   a tracking board's unit mirror (unit.live), which carries the same facts (plan/scripts/lib.js panelFacts()). keys collects the legend
+   entries the panel drew. */
+const IV={answered:{g:"✓",label:"answered",cls:"neutral"},waiting:{g:"?",label:"waiting on the user",cls:"warning"}};
+const STAGE_DOT={done:"done",current:"cur",todo:"todo"};
+const NEXT_STEP={qa:"landing, or remediation if qa requests changes",remediation:"qa, the next pass",landing:"landed"};
+function nextStepOf(R,S){ if(NEXT_STEP[S]) return NEXT_STEP[S]; const st=R.steps&&R.steps.length?R.steps:STEP_ORDER, i=st.indexOf(S); return i>=0&&i<st.length-1?st[i+1]:""; }
+function spList(items){ return items.length?`<ol class="sp-list">${items.join("")}</ol>`:""; }
+const spItem=(cls,mark,body,sub)=>`<li class="${cls}">${mark}<span class="q">${body}${sub?`<small>${sub}</small>`:""}</span></li>`;
+const dotMark=`<span class="dot" aria-hidden="true"></span>`;
+function qaBlock(p,keys){ const d=QA[p.verdict]||QA.running, f=p.findings||{}, sv=p.severity||{};
+  const kinds=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" · "), sev=Object.entries(sv).map(([k,n])=>`${n} ${k}`).join(" · ");
+  keys.add(`<span>${pill(d)} qa pass verdict</span>`);
+  return `<div class="sp-pass ${p.verdict==="approved"?"good":p.verdict==="changes-requested"?"critical":"run pend"}"><div class="ph">Pass ${esc(p.pass)} ${pill(d)}${p.date?` <span class="nw">${when(p.date)}</span>`:""}</div>${kinds?`<small>findings by kind: ${esc(kinds)}</small>`:""}${sev?`<small>by severity: ${esc(sev)}</small>`:""}${p.note?`<small>${rich(p.note)}</small>`:""}</div>`; }
+const PANEL={
+  sizing:R=>`<p>The issue is being sized: its systems and how much planning it takes.</p>${R.detail?`<p>${rich(R.detail)}</p>`:""}`,
+  interview:(R,o,keys)=>{ const iv=Array.isArray(R.interview)?R.interview.filter(q=>q&&q.text):[];
+    if(!iv.length) return `<p>No interview question recorded yet.</p>`;
+    const done=iv.filter(q=>q.answer!=null&&String(q.answer).trim()).length;
+    keys.add(`<span>${pill(IV.answered)} ${pill(IV.waiting)} an interview question, answered or waiting</span>`);
+    return `<p class="sp-sum">${done} of ${iv.length} question${iv.length===1?"":"s"} answered${iv.length-done?` · ${iv.length-done} waiting`:""}</p>`+spList(iv.map(q=>{ const a=q.answer!=null&&String(q.answer).trim();
+      return spItem("",pill(a?IV.answered:IV.waiting),rich(q.text),a?`answer: ${rich(q.answer)}${q.answered?` · ${when(q.answered)}`:""}`:q.asked?`asked ${when(q.asked)}`:""); })); },
+  research:(R,o,keys)=>{ const qs=questionsOf(R), Rs=R.research||{}, st=qs.map(qState);
+    const phase=Rs.phase||(st.includes("verifying")?"verification":st.length&&st.every(x=>x==="complete")?"complete":st.some(x=>x!=="planning")?"research":st.length?"planning":"");
+    const line=["planning","research","verification"], at=phase==="complete"?3:line.indexOf(phase);
+    let h=`<ol class="steps" aria-label="The research timeline">${line.map((x,j)=>{ const c=j<at?"done":j===at?"cur":"todo"; return `<li class="${c}${c==="cur"?(o.held?" held":" glow"):""}"${c==="cur"?' aria-current="step"':""}><span class="dot" aria-hidden="true"></span>${x}</li>`; }).join("")}</ol>`;
+    const began=line.filter(x=>Rs.since&&Rs.since[x]).map(x=>`${x} from <span class="nw">${when(Rs.since[x])}</span>`); if(began.length) h+=`<p class="sp-when">${began.join(" · ")}</p>`;
+    if(at<0) h+=`<p>No research event recorded yet.</p>`;
+    if(phase==="planning") h+=`<p class="sp-sum">Planning the research questions${Rs.drafted!=null?`: ${esc(Rs.drafted)} drafted so far`:""}.</p>`;
+    if(qs.length){ const back=qs.filter(q=>Q_ORDER.indexOf(qState(q))>=2).length;
+      h+=`<p class="sp-sum">${back} of ${qs.length} question${qs.length===1?"":"s"} returned${st.includes("verifying")?` · ${st.filter(x=>x==="verifying").length} verifying`:""}${st.every(x=>x==="complete")?" · research complete":""}</p>`;
+      h+=spList(qs.map(q=>{ const x=qState(q); keys.add(KEY_RSP(x)); const rows=(Array.isArray(q.rows)?q.rows:[]).map(id=>esc(o.rowName(id)));
+        return spItem("",rsPill(x),`<code>${esc(q.question)}</code>`,[rows.length?`bears on ${rows.join(", ")}`:"bears on no row: the whole Considered column",q.returned?`returned ${when(q.returned)}`:q.started?`sent ${when(q.started)}`:"",q.findings?refHtml(q.findings,"findings"):""].filter(Boolean).join(" · ")); })); }
+    return h; },
+  architecture:(R,o)=>`<p>The architecture weighs the options and decomposes the work into its units; it is signed off by the user.</p>${o.options!=null?`<p class="sp-sum">${o.options} option${o.options===1?"":"s"} weighed so far</p>`:""}`,
+  plan:(R,o,keys)=>{ const P=R.plan||{}, V=R.verdicts, re=P.state==="re-pass";
+    const first=re?`re-pass ${P.from==="qa"?`after qa pass ${esc(P.pass||"?")}`:P.from==="parent"?(o.parent?`from #${esc(o.parent)}'s plan`:"from the parent's plan"):""}`:"plan writing";
+    let h=`<ol class="steps" aria-label="The plan's stages"><li class="cur${o.held?" held":" glow"}" aria-current="step"><span class="dot" aria-hidden="true"></span>${first}</li><li class="todo"><span class="dot" aria-hidden="true"></span>plan accepted</li></ol>`;
+    if(re) h+=`<p>${P.from==="qa"?`The planner re-passes the plan to answer qa pass ${esc(P.pass||"?")}'s findings.`:`The planner verifies the plan this unit takes from its parent's architecture, and writes its own.`}</p>`;
+    if(V&&V.total) { h+=`<p class="sp-sum">${V.written} of ${V.total} verdict${V.total===1?"":"s"} written</p>`; if(o.unwritten&&o.unwritten.length&&V.written<V.total) h+=`<p>Still to write: ${o.unwritten.slice(0,6).map(esc).join(", ")}${o.unwritten.length>6?`, and ${o.unwritten.length-6} more`:""}.</p>`; }
+    if(o.planDoc) h+=`<p>${refHtml(o.planDoc,"plan.md")}</p>`;
+    return h; },
+  branch:(R,o)=>`<p>The plan is accepted; the branch is cut next and the build starts.</p>${o.branch?`<p>branch <code>${esc(o.branch)}</code></p>`:""}`,
+  implementation:(R,o)=>{ const sg=Array.isArray(R.stages)?R.stages.filter(x=>x&&typeof x==="object"):[];
+    let h=""; if(!sg.length) h+=`<p>Its stages are in the plan; none recorded here yet.${o.planDoc?` ${refHtml(o.planDoc,"plan.md")}`:""}</p>`;
+    else { const cur=sg.findIndex(x=>x.state==="current"), done=sg.filter(x=>x.state==="done").length;
+      h+=`<p class="sp-sum">${cur>=0?`Stage ${esc(sg[cur].id||cur+1)} of ${sg.length}`:`${done} of ${sg.length} stages done`}${cur>=0?` · ${done} done`:""}</p>`;
+      h+=spList(sg.map((x,i)=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${x.id?`<b>${esc(x.id)}</b> `:""}${rich(x.name||"")}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,(Array.isArray(x.rows)&&x.rows.length?`touches ${x.rows.map(id=>esc(o.rowName(id))).join(", ")}`:"")))); }
+    if(R.deviations!=null) h+=`<p>${esc(R.deviations)} deviation${R.deviations===1?"":"s"} from the verdict recorded so far</p>`;
+    return h; },
+  qa:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], running=qa.length&&qa[qa.length-1].verdict==="running";
+    let h=`<p class="sp-sum">${running?`Pass ${esc(qa[qa.length-1].pass)}`:`Pass ${qa.length+1}`} running${R.qaMax?` · at most ${esc(R.qaMax)} passes`:""}</p>`;
+    h+=qa.map(p=>qaBlock(p,keys)).join("");
+    if(!running){ h+=qaBlock({pass:qa.length+1,verdict:"running"},keys); }
+    return h; },
+  remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null;
+    const steps=Array.isArray(M.steps)&&M.steps.length?M.steps:[{what:`Fixes for the findings of qa pass ${n||"n"}: the implementer, the planner first where the plan itself is wrong`,state:"current"},{what:`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`,state:"todo"}];
+    let h=`<p class="sp-sum">Answering qa pass ${esc(n||"?")}${last?` · ${(QA[last.verdict]||QA.running).label}`:""}</p>`;
+    if(last) h+=qaBlock(last,keys);
+    h+=spList(steps.map(x=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${rich(x.what)}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,"")));
+    if(!(Array.isArray(M.steps)&&M.steps.length)) h+=`<p>The pipeline's remediation loop; its sub-steps are recorded as they run.</p>`;
+    if(R.deviations!=null) h+=`<p>${esc(R.deviations)} deviation${R.deviations===1?"":"s"} from the verdict recorded so far</p>`;
+    return h; },
+  landing:R=>{ const qa=Array.isArray(R.qa)?R.qa:[], last=qa.length?qa[qa.length-1]:null; return `<p>qa has approved${last?` (pass ${esc(last.pass)})`:""}; the merge and the landing refresh are the admin team's.</p>`; },
+  _:R=>R.detail?`<p>${rich(R.detail)}</p>`:`<p>Nothing recorded for this step.</p>`};
+function stepPanel(R,o){ o=o||{}; const k=R.step||"", held=["halted","escalated"].includes(k), S=held?(R.resume||""):k, keys=o.keys||new Set();
+  const opts={...o,held};
+  let h=`<div class="sp${held?" sp-held":""}" data-step="${esc(S)}"><div class="wb-t"><span class="k">${o.title||"This step in detail"}</span><b>${esc(S||"—")}</b>${R.event&&R.event.name?`<span class="sp-ev">last event <code>${esc(R.event.name)}</code>${R.event.at?` · <span class="nw">${when(R.event.at)}</span>`:""}</span>`:""}</div>`;
+  if(k==="halted"){ h+=`<p class="sp-wait">⏸ Held still at ${esc(S||"its step")}: it waits on the user for ${rich(R.waitingOn||R.detail||"(not stated)")}</p>`; }
+  if(k==="escalated") h+=`<p class="sp-wait">⇧ Escalated from ${esc(S||"its step")}: held still while the issue's scope is re-decided.</p>`;
+  h+=(PANEL[S]||PANEL._)(R,opts,keys);
+  const next=nextStepOf(R,S), foot=[R.since?`${held?"waiting":"in this step"} since <span class="nw">${when(R.since)}</span>`:"",next?`next: ${esc(next)}`:""].filter(Boolean);
+  if(foot.length) h+=`<div class="sp-foot">${foot.join(" · ")}</div>`;
+  return h+`</div>`; }
+/* The panel's facts of this issue's own run: its wip, the verdicts written of its rows at the plan step, the deviations recorded during
+   the build, the rows still to write, the plan document. */
+function ownRun(){ const S=["halted","escalated"].includes(STEP)?WIP.resume:STEP, R={...WIP};
+  if(S==="plan"&&ROWS.length) R.verdicts={written:ROWS.filter(r=>verdictOf(r)).length,total:ROWS.length};
+  if(["implementation","remediation"].includes(S)&&ROWS.length) R.deviations=ROWS.reduce((n,r)=>n+((r.asBuilt||{}).changes||[]).length,0);
+  return R; }
+const planDocOf=()=>{ const d=(PLAN.documents||[]).find(x=>x&&typeof x.path==="string"&&/(^|\/)plan(-[\w-]+)?\.md(#.*)?$/.test(x.path)); return d?d.path:null; };
+const CHARGING=()=>!LANDED&&!STOPPED&&(STEP==="plan"||(PAUSED&&WIP.resume==="plan"));
+const KEY_CHG=()=>`<span><i class="chg"></i>charging arrow: its verdict being written${PAUSED?", held still while the run waits on the user":""}</span>`;
+
 /* ---------- Header, chips ---------- */
 /* The chain's progress (tracking boards, plan/RULES.md §3): in place of a status that reads "building" from the first unit's start to
    the last unit's landing, "1 of 11 landed · #47 in progress (plan) · #62 up next". Units dropped or deferred are counted apart,
@@ -2049,8 +2272,8 @@ function runKeys(rows){ const Ls=rows.map(runOf).filter(Boolean); if(!Ls.length)
 /* The chain's counts, shared by the header chip and the WIP strip's phase bubble: units landed of the units counted (dropped and
    deferred ones apart), the units in progress, and the percentage the bar fills. */
 function chainCounts(){ const units=ROWS.filter(r=>r.unit), out=k=>count(units,r=>stateOf(r)===k);
-  const counted=units.filter(r=>!["dropped","deferred"].includes(stateOf(r))), landed=count(counted,unitLanded), M=counted.length;
-  const extra=[out("dropped")?`${out("dropped")} dropped`:"",out("deferred")?`${out("deferred")} deferred`:""].filter(Boolean);
+  const counted=units.filter(r=>!["dropped","deferred"].includes(stateOf(r))&&!leftForLater(r)), landed=count(counted,unitLanded), M=counted.length, left=count(units,leftForLater);
+  const extra=[out("dropped")?`${out("dropped")} dropped`:"",out("deferred")?`${out("deferred")} deferred`:"",left?`${left} left for later`:""].filter(Boolean);
   return {units,landed,M,extra,complete:out("complete"),pct:M?Math.round(100*landed/M):0}; }
 function chainChip(){ const {units,landed,M,extra}=chainCounts();
   const cur=LANDED||STOPPED?[]:units.filter(rowActive);
@@ -2064,7 +2287,7 @@ function chainChip(){ const {units,landed,M,extra}=chainCounts();
   else txt=[`<b>${landed} of ${M} landed</b>`,...cur.map(r=>`${u(r)} ${runWord(r)}`),NEXT_ROW?`${u(NEXT_ROW)} up next${openBlockers(NEXT_ROW).length?`, blocked by ${openBlockers(NEXT_ROW).map(n=>ilink(n)).join(", ")}`:""}`:"",...extra];
   const pct=chainCounts().pct;
   return `<span class="chip status progress${done?" done":!started?" planned":""}">chain ${txt.filter(Boolean).join(" · ")}<span class="cbar" role="img" aria-label="${landed} of ${M} units landed"><i style="width:${pct}%"></i></span></span>`; }
-const OPTS=ROWS.flatMap(r=>(r.options||[]).map(o=>({row:r,opt:o})));
+let OPTS=[];
 const count=(arr,f)=>arr.filter(f).length;
 function renderHeader(){
   const repoName=(PLAN.repo||"").split("/")[1]||PLAN.repo||"";
@@ -2094,10 +2317,10 @@ function renderHeader(){
 
 /* ---------- The WIP strip (plan/RULES.md §3) ---------- */
 /* o (a unit's run): held (its run waits on the user), still (no mark: the inspector's copy), label (the list's name). */
-function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.held!=null?o.held:HALTED, done=o.held!=null?false:LANDED;
+function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.held!=null?o.held:PAUSED, done=o.held!=null?false:LANDED;
   return `<ol class="steps" aria-label="${esc(o.label||"Pipeline steps")}">${steps.map((s,j)=>{ const st=done||j<i?"done":j===i?"cur":"todo"; return `<li class="${st}${st==="cur"&&!done&&!o.still?(held?" held":" glow"):""}"${st==="cur"?' aria-current="step"':""}><span class="dot" aria-hidden="true"></span>${esc(s)}</li>`; }).join("")}</ol>`; }
 function renderWip(){
-  const w=$("#wip"), st=STEP||"—"; w.dataset.step=st;
+  const w=$("#wip"), st=STEP||"—"; w.className="wip"; w.dataset.step=st;
   const special=STEP_SPECIAL[LANDED?"landed":st];
   if(special) w.classList.add(special.cls);
   const steps=WIP.steps&&WIP.steps.length?WIP.steps:STEP_ORDER;
@@ -2115,7 +2338,10 @@ function renderWip(){
   if((bl.blocks||[]).length) facts.push(`<span><span class="l">blocks</span>${bl.blocks.map(iref).join(", ")}</span>`);
   const a=PLAN.asBuilt||{}, Ld=WIP.landing||{};
   if(LANDED) facts.push(`<span><span class="l">landed</span>${[Ld.pr||a.pr?prlink(Ld.pr||a.pr):"",Ld.merge||a.merge?`merge ${clink(Ld.merge||a.merge)}`:"",Ld.version||a.version?esc(Ld.version||a.version):"",Ld.date||a.date?when(Ld.date||a.date):""].filter(Boolean).join(" · ")}</span>`);
+  /* the open research questions, and how many have returned (plan/RULES.md §3) */
+  const rf=LANDED||STOPPED?"":researchFact(WIP); if(rf) facts.unshift(rf);
   const factsHtml=facts.length?`<div class="wip-facts">${facts.join("")}</div>`:"";
+  const pkeys=new Set();
   const own=(st!=="cancelled"?stepsLine(steps,LANDED?"landed":shownStep):"");
   const units=TRACKING?ROWS.filter(r=>r.unit):[];
   let h="", runs=[];
@@ -2132,7 +2358,7 @@ function renderWip(){
     if(st==="escalated") ph+=`<p class="wip-wait">Escalated: the run waits while the issue's scope is re-decided.</p>`;
     ph+=own+(WIP.detail&&(!HALTED||WIP.waitingOn)?`<p class="wip-detail">${rich(WIP.detail)}</p>`:"");
     ph+=`<div class="wip-sub">The chain · ${C.landed} of ${C.M} units landed${C.complete?` · ${C.complete} complete, not merged`:""}${C.extra.length?` · ${esc(C.extra.join(" · "))}`:""}</div><span class="chip-bar" role="img" aria-label="${C.landed} of ${C.M} units landed"><i style="width:${C.pct}%"></i></span>`;
-    ph+=`<ol class="chain">${units.map(r=>{ const s=stateOf(r), on=rowActive(r), href=r.unit.issue?boardOf(r.unit.issue)||ghUrl(r.unit.issue):""; const inner=`${esc(r.unit.n!=null?r.unit.n:"")}${r.unit.issue?` · #${esc(r.unit.issue)}`:""} ${esc(r.unit.slug||r.id)}${s!=="pending"?` ${STATES[s].g}`:""}${isNext(r)?` ${TAG_NEXT}`:""}`; const tag=href?`<a href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""} data-sys="${esc(r.system)}">${inner}</a>`:`<span class="u" data-sys="${esc(r.system)}">${inner}</span>`; return `<li class="${s==="pending"?"pending":"done"}${on&&!LANDED?(HALTED||runHeld(r)?" held":" glow"):isNext(r)?" upnext":""}">${tag}</li>`; }).join("")}</ol>`;
+    ph+=`<ol class="chain">${units.map(r=>{ const s=stateOf(r), on=rowActive(r), href=r.unit.issue?boardOf(r.unit.issue)||ghUrl(r.unit.issue):""; const inner=`${esc(r.unit.n!=null?r.unit.n:"")}${r.unit.issue?` · #${esc(r.unit.issue)}`:""} ${esc(r.unit.slug||r.id)}${s!=="pending"?` ${STATES[s].g}`:""}${isNext(r)?` ${TAG_NEXT}`:""}`; const tag=href?`<a href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""} data-sys="${esc(r.system)}">${inner}</a>`:`<span class="u" data-sys="${esc(r.system)}">${inner}</span>`; return `<li class="${s==="pending"?"pending":"done"}${on&&!LANDED?(PAUSED||runPaused(r)?" held":" glow"):isNext(r)?" upnext":""}">${tag}</li>`; }).join("")}</ol>`;
     h+=ph+factsHtml+`</div>`;
     legend.push(sysKey(units.map(r=>r.system)),units.some(r=>stateOf(r)==="pending")?`<span><i class="pln"></i>dashed: unit not built, or not started</span>`:"");
     [...new Set(units.map(stateOf))].filter(k=>k!=="pending").forEach(k=>legend.push(`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`));
@@ -2145,16 +2371,20 @@ function renderWip(){
         b+=`<div class="run">${runPill(L)}${runAt(L)}</div>`;
         if(held) b+=`<p class="note">What it waits on is under “Waiting on you”.</p>`;
         if(k==="escalated") b+=`<p class="wip-wait">Escalated: the run waits while the issue's scope is re-decided.</p>`;
-        if(k!=="cancelled") b+=stepsLine(L.steps&&L.steps.length?L.steps:STEP_ORDER,held||k==="escalated"?(L.resume||""):L.step,{held,label:`#${r.unit.issue}: its pipeline steps`});
+        if(k!=="cancelled") b+=stepsLine(L.steps&&L.steps.length?L.steps:STEP_ORDER,held||k==="escalated"?(L.resume||""):L.step,{held:held||k==="escalated",label:`#${r.unit.issue}: its pipeline steps`});
         if(L.detail) b+=`<p class="wip-detail">${rich(L.detail)}</p>`;
-        const f=[L.since?`<span><span class="l">since</span><span class="nw">${when(L.since)}</span></span>`:"",L.updated?`<span><span class="l">updated</span><span class="nw">${when(L.updated)}</span></span>`:"",
+        const f=[researchFact(L),L.since?`<span><span class="l">since</span><span class="nw">${when(L.since)}</span></span>`:"",L.updated?`<span><span class="l">updated</span><span class="nw">${when(L.updated)}</span></span>`:"",
           (L.qa||[]).length?`<span><span class="l">qa</span>${L.qa.map(qaPill).join(" ")}${L.qaMax?` <small>of at most ${esc(L.qaMax)}</small>`:""}</span>`:"",
           L.branch&&!unitLanded(r)?`<span><span class="l">branch</span><code>${esc(L.branch)}</code></span>`:""].filter(Boolean);
         if(f.length) b+=`<div class="wip-facts">${f.join("")}</div>`;
       }
       h+=b+`</div>`; });
-    /* the unit up next: named, not started, with each blocker that has not landed */
-    if(NEXT_ROW){ h+=`<div class="wb next upnext" data-sys="${esc(NEXT_ROW.system||"")}"><div class="wb-t"><span class="k">Up next · unit ${esc(NEXT_ROW.unit.n)}</span><span>${uref(NEXT_ROW)}</span> ${TAG_NEXT} ${blockedPill(NEXT_ROW)}</div><p class="note">Not started${openBlockers(NEXT_ROW).length?": it starts once its blockers have landed":""}.</p></div>`; legend.push(KEY_NEXT(NEXT_ROW)); }
+    /* the step panel of each unit in progress whose run is mirrored, in place of the up-next bubble (plan/RULES.md §3): up next stays on
+       the chain and the unit row; with no unit's run to show, the up-next bubble stays */
+    const panels=act.filter(runOf);
+    panels.forEach(r=>{ const L=runOf(r); h+=stepPanel(L,{title:`Unit ${esc(r.unit.n)} · #${esc(r.unit.issue)} · its step in detail`,keys:pkeys,rowName:id=>(L.rowNames&&L.rowNames[id])||id,parent:PLAN.issue,branch:L.branch}); });
+    if(NEXT_ROW&&!panels.length){ h+=`<div class="wb next upnext" data-sys="${esc(NEXT_ROW.system||"")}"><div class="wb-t"><span class="k">Up next · unit ${esc(NEXT_ROW.unit.n)}</span><span>${uref(NEXT_ROW)}</span> ${TAG_NEXT} ${blockedPill(NEXT_ROW)}</div><p class="note">Not started${openBlockers(NEXT_ROW).length?": it starts once its blockers have landed":""}.</p></div>`; }
+    if(NEXT_ROW) legend.push(KEY_NEXT(NEXT_ROW));
     /* waiting on you: only while the tracking issue or a unit's run is halted */
     const waits=[...(HALTED?[`<li><b>#${esc(PLAN.issue)}</b>, the tracking issue: ${rich(WIP.waitingOn||WIP.detail||"(not stated)")}${WIP.resume?`<small>resumes at ${esc(WIP.resume)}</small>`:""}</li>`]:[]),
       ...act.filter(runHeld).map(r=>{ const L=runOf(r); return `<li>${uref(r)}: ${rich(L.waitingOn||L.detail||"(not stated)")}${L.resume?`<small>its run resumes at ${esc(L.resume)}</small>`:""}</li>`; })];
@@ -2164,43 +2394,54 @@ function renderWip(){
     h=headLine;
     if(HALTED) h+=`<p class="wip-wait">Waiting on the user: ${rich(WIP.waitingOn||WIP.detail||"(not stated)")}</p>`;
     if(st==="escalated") h+=`<p class="wip-wait">Escalated: the run waits while the issue's scope is re-decided.</p>`;
-    h+=own+(WIP.detail&&!HALTED?`<p class="wip-detail">${rich(WIP.detail)}</p>`:"")+factsHtml;
+    /* while halted the wait line shows waitingOn, falling back to the detail: the detail is drawn too unless it is that fallback */
+    h+=own+(WIP.detail&&(!HALTED||WIP.waitingOn)?`<p class="wip-detail">${rich(WIP.detail)}</p>`:"")+factsHtml;
     if(HALTED) legend.push(`<span><i class="wait"></i>yellow strip: waiting on the user</span>`);
+    /* the strip on the left half, the step panel on the right (plan/RULES.md §3); a landed or cancelled board has no current step */
+    if(!LANDED&&!STOPPED){ w.classList.add("split");
+      const unwritten=ROWS.filter(r=>!verdictOf(r)).map(r=>r.name);
+      h=`<div class="wiprow"><div class="wipmain${special?" "+special.cls:""}">${h}</div>${stepPanel(ownRun(),{keys:pkeys,rowName:id=>(ROWS.find(r=>r.id===id)||{}).name||id,options:OPTS.length,planDoc:planDocOf(),branch:SHOW_BRANCH?PLAN.branch:null,parent:PLAN.parent&&PLAN.parent.issue,unwritten,charging:CHARGING()&&unwritten.length>0})}</div>`; }
   }
+  legend.push(...pkeys);
   /* the strip's legend: exactly what it drew */
   const runHeldAny=runs.some(runHeld);
-  if(st!=="cancelled") legend.push(`<span><i class="node"></i>step done</span>`,LANDED?"":HALTED?`<span><i class="hold"></i>current step, paused</span>`:`<span><i class="node acc"></i>ringed dot, breathing: the step at work now</span>`,LANDED?"":`<span><i class="node hollow"></i>dashed: step to come</span>`);
-  if(!HALTED&&!LANDED&&runHeldAny) legend.push(`<span><i class="hold"></i>a unit's current step, paused</span>`);
+  if(st!=="cancelled") legend.push(`<span><i class="node"></i>step done</span>`,LANDED?"":PAUSED?`<span><i class="hold"></i>current step, paused</span>`:`<span><i class="node acc"></i>ringed dot, breathing: the step at work now</span>`,LANDED?"":`<span><i class="node hollow"></i>dashed: step to come</span>`);
+  if(!PAUSED&&!LANDED&&runs.some(runPaused)) legend.push(`<span><i class="hold"></i>a unit's current step, paused</span>`);
   if(runs.length) legend.push(`<span><i class="runbar"></i>accent edge: a unit in progress, its own run mirrored from its board</span>`);
   if(runHeldAny) legend.push(`<span><i class="runbar halt"></i>yellow edge: that run waits on the user</span>`);
   if(runs.length) legend.push(runKeys(runs));
-  if(TRACKING&&!LANDED){ const act=ROWS.filter(r=>r.unit&&rowActive(r)); if(act.some(r=>!HALTED&&!runHeld(r))) legend.push(KEY_GLOW); if(act.some(r=>HALTED||runHeld(r))) legend.push(KEY_HELD); }
+  if(TRACKING&&!LANDED){ const act=ROWS.filter(r=>r.unit&&rowActive(r)); if(act.some(r=>!PAUSED&&!runPaused(r))) legend.push(KEY_GLOW); if(act.some(r=>PAUSED||runPaused(r))) legend.push(KEY_HELD); }
   if(LANDED) legend.push(`<span>${pill({g:"✓",cls:"good",label:"landed"})} merged; nothing glows</span>`);
   const qv=[...new Set(qa.map(p=>p.verdict))].filter(v=>QA[v]); qv.forEach(v=>legend.push(`<span>${pill(QA[v])} qa pass verdict</span>`));
   /* a unit bubble lists every qa pass of its run; runKeys() named the latest ones, so add the verdicts only earlier passes took */
   const latest=new Set(runs.map(r=>lastQa(runOf(r))).filter(Boolean).map(p=>p.verdict));
   [...new Set(runs.flatMap(r=>runOf(r).qa||[]).map(p=>p.verdict))].filter(v=>QA[v]&&!latest.has(v)).forEach(v=>legend.push(`<span>${pill(QA[v],"",`qa n · ${QA[v].label}`)} an earlier qa pass of the unit's run</span>`));
-  w.innerHTML=h+`<div class="key">${legend.filter(Boolean).join("")}</div>`;
+  w.innerHTML=h+`<div class="key">${[...new Set(legend.filter(Boolean))].join("")}</div>`;
   paint(w);
 }
 
 /* ---------- KPIs ---------- */
 function renderKpis(){
-  const states=Object.keys(STATES).map(k=>[k,count(ROWS,r=>stateOf(r)===k)]);
-  const built=TRACKING?count(ROWS,unitLanded):count(ROWS,r=>!["pending","deferred"].includes(stateOf(r)));
+  const states=Object.keys(STATES).map(k=>[k,count(ROWS,r=>!leftForLater(r)&&stateOf(r)===k)]), left=count(ROWS,leftForLater);
+  /* The As built tile (plan/RULES.md §2): rows built of the rows this issue builds. Built is as-planned, amended or deviated (a
+     tracking board's units: landed); a dropped or deferred row is built neither here nor counted in the total, as the chain's
+     progress counts them (§3), and the line under the figure names it with every other state. A row left for later (leftForLater)
+     is left out of both figures too, and named under them after the states. */
+  const counted=ROWS.filter(r=>!["dropped","deferred"].includes(stateOf(r))&&!leftForLater(r));
+  const built=TRACKING?count(counted,unitLanded):count(counted,r=>["as-planned","amended","deviated"].includes(stateOf(r)));
   const groups=[...new Set(ROWS.map(r=>r.group).filter(Boolean))];
   const by=v=>count(OPTS,x=>x.opt.verdict===v);
-  const leave=count(ROWS,r=>(r.verdict||{}).kind==="leave");
+  const vbuild=count(ROWS,r=>verdictOf(r)==="build"), leave=count(ROWS,r=>verdictOf(r)==="leave"), vopen=ROWS.length-vbuild-leave;
   const changes=ROWS.reduce((n,r)=>n+((r.asBuilt||{}).changes||[]).length,0);
   const b=PLAN.baseline||{}, a=PLAN.asBuilt;
   const days=(a&&a.date&&b.date)?Math.round((Date.parse(a.date)-Date.parse(b.date))/86400000):null;
-  const bar=`<div class="seg-bar" aria-hidden="true">${states.filter(([,n])=>n).map(([k,n])=>`<i class="${STATES[k].cls}" style="flex:${n}"></i>`).join("")}</div>`;
+  const bar=`<div class="seg-bar" aria-hidden="true">${states.filter(([,n])=>n).map(([k,n])=>`<i class="${STATES[k].cls}" style="flex:${n}"></i>`).join("")}${left?`<i class="left" style="flex:${left}"></i>`:""}</div>`;
   const qa=WIP.qa||[];
   $("#kpis").innerHTML=[
     `<div class="kpi"><div class="l">${TRACKING?"Units":"Rows"}</div><div class="v">${ROWS.length}</div><div class="s">${groups.length?`${groups.length} group${groups.length>1?"s":""}: ${groups.map(esc).join(", ")}`:"no rows yet"}</div></div>`,
     `<div class="kpi"><div class="l">Options weighed</div><div class="v">${OPTS.length}</div><div class="s">${["accepted","partial","deferred","declined"].filter(by).map(v=>`${by(v)} ${v}`).join(" · ")||"none yet"}</div></div>`,
-    `<div class="kpi"><div class="l">Verdicts</div><div class="v">${ROWS.length-leave} <small>build</small></div><div class="s">${leave} left for later</div></div>`,
-    `<div class="kpi"><div class="l">As built</div><div class="v">${built} <small>/ ${ROWS.length} ${TRACKING?"units landed":"rows"}</small></div><div class="s">${states.filter(([,n])=>n).map(([k,n])=>`${n} ${STATES[k].label}`).join(" · ")||"—"}${changes?` · ${changes} changes`:""}</div>${ROWS.length?bar:""}</div>`,
+    `<div class="kpi"><div class="l">Verdicts</div>${vbuild+leave?`<div class="v">${vbuild} <small>build</small></div><div class="s">${leave} left for later${vopen?` · ${vopen} not yet written`:""}</div>`:`<div class="v">0${ROWS.length?` <small>of ${ROWS.length}</small>`:""}</div><div class="s">none written yet</div>`}</div>`,
+    `<div class="kpi"><div class="l">As built</div><div class="v">${built} <small>/ ${counted.length} ${TRACKING?"units landed":"rows built"}</small></div><div class="s">${[...states.filter(([,n])=>n).map(([k,n])=>`${n} ${STATES[k].label}`),left?`${left} left for later`:""].filter(Boolean).join(" · ")||"—"}${changes?` · ${changes} changes`:""}</div>${ROWS.length?bar:""}</div>`,
     `<div class="kpi"><div class="l">${LANDED?"Timeline":"QA passes"}</div><div class="v">${LANDED?(days==null?"—":days===0?"same day":`${days} day${days===1?"":"s"}`):`${qa.length}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}`}</div><div class="s">${LANDED?`${b.date?`baseline ${when(b.date)}`:""}${a&&a.date?` → built ${when(a.date)}`:""}`:(qa.length?esc(qa.map(p=>`pass ${p.pass}: ${(QA[p.verdict]||QA.running).label}`).join(" · ")):"no qa pass yet")}</div></div>`].join("");
 }
 
@@ -2212,9 +2453,9 @@ function rowTitle(r){ const u=r.unit; if(!u) return esc(r.name);
   return `${u.n!=null?`${esc(u.n)}. `:""}${u.issue?pair(u.issue,r.name):esc(r.name)}`; }
 function cellGap(r){ const g=r.gap||{}; return `<div class="cell gap${cellGlow(r.id,"gap")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="gap" aria-label="Gap: ${esc(r.name)}"><div class="kick">1 · GAP${g.kind?` <span class="kind">${esc(g.kind)}</span>`:""}</div><div class="sum">${rich(g.summary||"Not yet written.")}</div><div class="meta"><span>${(g.evidence||[]).length} evidence</span>${moreLink(g.link,"research")}</div></div>`; }
 function optButton(r,o){ const {def,word}=optDef(r,o); return `<button class="opt ${def.cls}${def.dash?" dashed":""}" data-row="${esc(r.id)}" data-opt="${esc(o.id)}" aria-label="${esc(word)}: ${esc(o.name)}"><i aria-hidden="true">${def.g}</i><span><span class="vw">${esc(word)}</span><span>${codeOnly(o.name)}</span></span></button>`; }
-function cellConsidered(r){ const os=r.options||[]; const acc=os.find(o=>o.verdict==="accepted"||(o.verdict==="partial"&&o.chosen))||os[0]||{};
-  return `<div class="cell considered${cellGlow(r.id,"considered")}" role="group" data-row="${esc(r.id)}" data-col="considered" aria-label="Considered: ${esc(r.name)}"><div class="kick">2 · CONSIDERED <span class="kind">${os.length}</span></div>${os.length?`<ul class="opts">${os.map(o=>`<li>${optButton(r,o)}</li>`).join("")}</ul>`:`<div class="sum">Not yet written.</div>`}${acc.link?`<div class="meta">${moreLink(acc.link,"alternatives")}</div>`:""}</div>`; }
-function cellVerdict(r){ const v=r.verdict||{}, leave=v.kind==="leave"; return `<div class="cell verdict${leave?" leave":""}${cellGlow(r.id,"verdict")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="verdict" aria-label="Verdict: ${esc(r.name)}"><div class="kick">3 · VERDICT <span class="kind">${leave?"leave as is":"build"}</span></div><div class="sum">${rich(v.summary||"Not yet written.")}</div><div class="meta"><span>${(v.steps||[]).length} steps · ${(v.tests||[]).length} tests · ${(v.risks||[]).length} risks</span>${moreLink(v.link,"plan")}</div></div>`; }
+function cellConsidered(r){ const os=r.options||[]; const acc=os.find(o=>o.verdict==="accepted"||(o.verdict==="partial"&&o.chosen))||os[0]||{}, rs=RROWS.get(r.id);
+  return `<div class="cell considered${rs?` rs rs-${rs}`:""}${cellGlow(r.id,"considered")}" role="group" data-row="${esc(r.id)}" data-col="considered" aria-label="Considered: ${esc(r.name)}${rs?`, research ${esc(RS[rs].label)}`:""}"><div class="kick">2 · CONSIDERED <span class="kind">${os.length}</span>${rs?` ${rsPill(rs)}`:""}</div>${os.length?`<ul class="opts">${os.map(o=>`<li>${optButton(r,o)}</li>`).join("")}</ul>`:`<div class="sum">Not yet written.</div>`}${acc.link?`<div class="meta">${moreLink(acc.link,"alternatives")}</div>`:""}</div>`; }
+function cellVerdict(r){ const v=r.verdict||{}, w=verdictOf(r), leave=w==="leave", chg=!w&&CHARGING(); return `<div class="cell verdict${leave?" leave":""}${chg?` charging${PAUSED?" still":""}`:""}${cellGlow(r.id,"verdict")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="verdict" aria-label="Verdict: ${esc(r.name)}${w?"":", not yet written"}"><div class="kick">3 · VERDICT${w?` <span class="kind">${leave?"leave as is":"build"}</span>`:""}</div><div class="sum">${rich(v.summary||"Not yet written.")}</div><div class="meta"><span>${(v.steps||[]).length} steps · ${(v.tests||[]).length} tests · ${(v.risks||[]).length} risks</span>${moreLink(v.link,"plan")}</div></div>`; }
 function cellBuilt(r){ const st=stateOf(r), b=r.asBuilt||{}, S=STATES[st]; const extra=st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"";
   const link=b.link||(r.unit&&(r.unit.board||r.unit.folder))||"";
   return `<div class="cell built ${S.cls}${st==="pending"?" pending":""}${st==="deferred"?" deferred":""}${cellGlow(r.id,"built")||(isNext(r)?" upnext":"")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="built" aria-label="As built: ${esc(r.name)}, ${S.label}${isNext(r)?", up next":""}${runOf(r)?`, its run: ${esc(runShort(runOf(r)).slice(2))}`:""}"><div class="kick">4 · AS BUILT ${badge(st,extra)}${nextTags(r)}</div><div class="sum">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</div>${runLine(r)}<div class="meta"><span>${(b.changes||[]).length} changes · ${(b.commits||[]).length} commits</span>${moreLink(link,r.unit?(r.unit.board?"board":"folder"):"record")}</div></div>`; }
@@ -2244,11 +2485,19 @@ function renderBoard(){
     +["accepted","partial","deferred","declined"].filter(v=>used.includes(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")
     +(used.includes("settled")?`<span>${pill({...OPT.accepted},"","deferred → accepted")} settled in column 4</span>`:"")
     +Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")
+    +kindKeys()
     +`<span><i class="node"></i>a phase reached</span>`
     +(usedSt.some(k=>STATES[k].dash)?`<span><i class="node hollow"></i>dashed: not built yet</span>`:"")
     +markKeys(CURRENT)+runKeys(ROWS)
-    +(NEXT_ROW?KEY_NEXT(NEXT_ROW):"");
+    +(NEXT_ROW?KEY_NEXT(NEXT_ROW):"")
+    +Q_ORDER.filter(x=>[...RROWS.values()].includes(x)).map(KEY_RS).join("")
+    +(CHARGING()&&ROWS.some(r=>!verdictOf(r))?KEY_CHG():"");
 }
+/* The kind chips the Timeline draws, in its legend: the gap's kind (column 1) and the written verdict's (column 3), each a neutral,
+   solid chip (GUIDANCE.md §1: a kind is a fact, not an outcome, and dashed means only planned or pending), listed only when drawn. */
+function kindKeys(){ const chip=w=>`<b class="kind">${esc(w)}</b>`;
+  const gk=[...new Set(ROWS.map(r=>(r.gap||{}).kind).filter(Boolean))], vk=["build","leave"].filter(k=>ROWS.some(r=>verdictOf(r)===k));
+  return (gk.length?`<span>${gk.map(chip).join(" ")} the gap's kind</span>`:"")+(vk.length?`<span>${vk.map(k=>chip(k==="leave"?"leave as is":"build")).join(" ")} the verdict's kind${vk.length>1?": build it, or leave it as is":""}</span>`:""); }
 /* The column bands: one behind each phase column, the head's width and the board's full height, redrawn whenever the board's
    width changes (a resize, the tab shown); none while the narrow layout stacks the rows. */
 function layoutBands(){ const b=$("#board"); if(!b) return; b.querySelectorAll(".band").forEach(x=>x.remove());
@@ -2258,8 +2507,11 @@ function layoutBands(){ const b=$("#board"); if(!b) return; b.querySelectorAll("
     d.style.cssText=`left:${c.offsetLeft-pad}px;width:${c.offsetWidth+2*pad}px;top:0;bottom:0`; b.prepend(d); }); }
 if(window.ResizeObserver){ let w=-1, cw=-1; new ResizeObserver(()=>{ const b=$("#board"); if(b&&b.offsetWidth!==w){ w=b.offsetWidth; layoutBands(); }
   const f=$("#chain-frame"); if(f&&CUR_TAB==="landing-order"&&f.clientWidth!==cw){ cw=f.clientWidth; const sel=(document.querySelector(".chainsvg .unit.sel")||{}).dataset; renderChain(); if(sel&&sel.row){ const g=document.querySelector(`.chainsvg .unit[data-row="${CSS.escape(sel.row)}"]`); if(g) g.classList.add("sel"); } } }).observe(document.body); }
+/* What the inspector shows, so a live redraw shows it again (replayInspect()): a cell, an option, a card, a unit or an Impact entry. */
+let INSPECTED=null;
 function select(rowId,col,optId){
   const r=ROWS.find(x=>x.id===rowId); if(!r) return;
+  INSPECTED={k:"cell",row:rowId,col,opt:optId||null};
   document.querySelectorAll("#board .cell.sel, #board .opt.sel, .chainsvg .unit.sel").forEach(e=>e.classList.remove("sel"));
   const cell=document.querySelector(`#board .cell[data-row="${CSS.escape(rowId)}"][data-col="${col}"]`); if(cell) cell.classList.add("sel");
   if(optId){ const b=document.querySelector(`#board .opt[data-row="${CSS.escape(rowId)}"][data-opt="${CSS.escape(optId)}"]`); if(b) b.classList.add("sel"); }
@@ -2275,8 +2527,8 @@ function inspectOption(r,o){ if(!o){ inspect(`<div class="kicker">2 · CONSIDERE
   const others=(r.options||[]).filter(x=>x!==o), {def,word,settled}=optDef(r,o);
   const whyLabel={accepted:"Why it was taken",partial:"What was taken, and what wasn't",deferred:"Why it was left open",declined:"Why it was declined"}[o.verdict]||"Why";
   inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${codeOnly(o.name)}</div><div class="vis">${pill(def,"",word)} ${esc(r.name)}</div>${o.summary?`<p class="lead">${rich(o.summary)}</p>`:""}<dl>${o.why?`<dt>${whyLabel}</dt><dd>${rich(o.why)}</dd>`:""}${settled?`<dt>Settled in column 4</dt><dd>${rich(settled.change.what)}${settled.change.why?` — ${rich(settled.change.why)}`:""}${settled.change.ref?` · ${refHtml(settled.change.ref)}`:""}</dd>`:""}${o.wins?`<dt>Would have won if</dt><dd>${rich(o.wins)}</dd>`:""}${o.source?`<dt>Source</dt><dd>${refHtml(o.source)}</dd>`:""}${o.link?`<dt>Detail</dt><dd>${refHtml(o.link)}</dd>`:""}${others.length?`<dt>Weighed against</dt><dd><ul class="opts">${others.map(x=>`<li>${optButton(r,x)}</li>`).join("")}</ul></dd>`:""}</dl>`); }
-function inspectVerdict(r){ const v=r.verdict||{};
-  inspect(`<div class="kicker">3 · VERDICT · ${v.kind==="leave"?"LEAVE AS IS":"BUILD"}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${rich(v.summary||"")}</p>${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
+function inspectVerdict(r){ const v=r.verdict||{}, w=verdictOf(r);
+  inspect(`<div class="kicker">3 · VERDICT${w?` · ${w==="leave"?"LEAVE AS IS":"BUILD"}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${w?rich(v.summary):"Not yet written."}</p>${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
 function inspectBuilt(r){ const b=r.asBuilt||{}, st=stateOf(r), a=PLAN.asBuilt||{}, u=r.unit;
   inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")} ${esc(STATES[st].desc)}</div><p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p><dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||"")}${u.blockedBy&&u.blockedBy.length?` · blocked by ${u.blockedBy.map(n=>ilink(n)).join(", ")}`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch&&!unitLanded(r)?`<br>branch <code>${esc(u.branch)}</code>`:""}${u.board?"":`<br>${u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}`}</dd>`:""}${runOf(r)?inspectRun(r):""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
 /* the inspector's entry for a unit's run, from its mirror: the pill, its qa passes, the step, its steps (no mark) and its detail */
@@ -2292,7 +2544,7 @@ function renderDecisions(){
   const rows=OPTS.filter(x=>decFilter==="all"||x.opt.verdict===decFilter);
   $("#dec-table").innerHTML=`<thead><tr><th>Row</th><th>Option</th><th>Verdict</th><th>Why</th><th>Source</th></tr></thead><tbody>${rows.map(({row,opt})=>{ const {def,word}=optDef(row,opt); return `<tr data-sys="${esc(row.system||"")}" data-row="${esc(row.id)}" data-opt="${esc(opt.id)}" tabindex="0"><td>${esc(row.name)}</td><td><b>${rich(opt.name)}</b>${opt.summary?`<div class="sub">${rich(opt.summary)}</div>`:""}</td><td>${pill(def,"",word)}</td><td>${rich(opt.why||"")}${opt.wins?`<div class="sub">Would have won if: ${rich(opt.wins)}</div>`:""}</td><td>${opt.source?refHtml(opt.source):""}</td></tr>`; }).join("")}</tbody>`;
   paint($("#dec-table"));
-  document.querySelectorAll("#dec-table tbody tr").forEach(tr=>{ const go=()=>{ const r=ROWS.find(x=>x.id===tr.dataset.row); inspectOption(r,(r.options||[]).find(o=>o.id===tr.dataset.opt)); }; tr.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); tr.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); }); });
+  document.querySelectorAll("#dec-table tbody tr").forEach(tr=>{ const go=()=>{ const r=ROWS.find(x=>x.id===tr.dataset.row); INSPECTED={k:"opt",row:tr.dataset.row,opt:tr.dataset.opt}; inspectOption(r,(r.options||[]).find(o=>o.id===tr.dataset.opt)); }; tr.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); tr.addEventListener("keydown",e=>{ if(e.key==="Enter") go(); }); });
   const used=new Set(OPTS.map(x=>optDef(x.row,x.opt).word.startsWith("deferred →")?"settled":x.opt.verdict));
   $("#decisions-key").innerHTML=sysKey(ROWS.map(r=>r.system))+["accepted","partial","deferred","declined"].filter(v=>used.has(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")+(used.has("settled")?`<span>${pill(OPT.accepted,"","deferred → accepted")} settled in column 4</span>`:"")+(OPTS.length?"":`<span><i class="pln"></i>no options recorded yet</span>`);
 }
@@ -2307,12 +2559,12 @@ function renderBuilt(){
   $("#built-list").innerHTML=rows.length?rows.map(r=>{ const b=r.asBuilt||{}, st=stateOf(r);
     return `<div class="bcard st-${st}${cellGlow(r.id,"built")||(isNext(r)?" upnext":"")}" data-sys="${esc(r.system||"")}" data-row="${esc(r.id)}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${STATES[st].label}${isNext(r)?", up next":""}"><div class="bh"><span class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</span>${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")}${nextTags(r)}${r.where?`<span class="wh">${esc(r.where)}</span>`:""}</div><p>${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>${runLine(r)}${b.changes&&b.changes.length?`<ol class="changes">${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol>`:""}<div class="meta">${[b.commits&&b.commits.length?`commits ${b.commits.map(c=>refHtml(c)).join(" ")}`:"",b.files&&b.files.length?`${b.files.length} file${b.files.length>1?"s":""}`:"",b.verified?"verified":"",moreLink(b.link||(r.unit&&(r.unit.board||r.unit.folder)),r.unit?(r.unit.board?"board":"folder"):"record")].filter(Boolean).join(" · ")}</div></div>`; }).join(""):`<p class="lede">No row in this state.</p>`;
   paint($("#built-list"));
-  document.querySelectorAll("#built-list .bcard").forEach(c=>{ const go=()=>inspectBuilt(ROWS.find(x=>x.id===c.dataset.row)); c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  document.querySelectorAll("#built-list .bcard").forEach(c=>{ const go=()=>{ INSPECTED={k:"built",row:c.dataset.row}; inspectBuilt(ROWS.find(x=>x.id===c.dataset.row)); }; c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
   const IC=impactChanges();
   $("#built-impact").innerHTML=IC.html; paint($("#built-impact"));
   document.querySelectorAll("#built-impact a.goimp").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); goImpact(a.dataset.imp); }));
   const usedSt=[...new Set(ROWS.map(stateOf))];
-  $("#built-key").innerHTML=sysKey([...new Set([...ROWS.map(r=>r.system),...IC.slugs])])+(IC.muted?`<span><i class="sbar" style="--c:var(--muted)"></i>an impact change of no single system: the impact as a whole, or a party outside this repository's systems</span>`:"")+Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.some(k=>STATES[k].dash)||!ROWS.length?`<span><i class="pln"></i>dashed card: nothing built</span>`:"")+markKeys(CURRENT.filter(a=>a.endsWith(".built")||a==="built"))+runKeys(rows)+(NEXT_ROW&&(builtFilter==="all"||stateOf(NEXT_ROW)===builtFilter)?KEY_NEXT(NEXT_ROW):"");
+  $("#built-key").innerHTML=sysKey([...new Set([...ROWS.map(r=>r.system),...IC.slugs])])+(IC.muted?`<span><i class="sbar" style="--c:var(--muted)"></i>an impact change of no single system: the impact as a whole, or a party outside this repository's systems</span>`:"")+(IC.recon?`<span>${pill(RECON[IC.recon.state],"",reconWord(IC.recon))} ${esc(RECON[IC.recon.state].desc)}</span>`:"")+(IC.unrecorded?`<span><i class="pln"></i>dashed line: a landed unit whose effect on the impact is not recorded yet</span>`:"")+Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.some(k=>STATES[k].dash)||!ROWS.length?`<span><i class="pln"></i>dashed card: nothing built</span>`:"")+markKeys(CURRENT.filter(a=>a.endsWith(".built")||a==="built"))+runKeys(rows)+(NEXT_ROW&&(builtFilter==="all"||stateOf(NEXT_ROW)===builtFilter)?KEY_NEXT(NEXT_ROW):"");
 }
 
 /* ---------- Impact changes from the plan, on the As built tab (plan/RULES.md §2, "As built") ----------
@@ -2320,48 +2572,77 @@ function renderBuilt(){
    Impact-tab card it changed (its "entry", "<section>.<index>", where it names one), and on a tracking board each unit's own
    differences (impact.units[].changes), under the unit's number and title (pair(): the number opens GitHub, the title the unit's
    board) and linked to the unit's card on the Impact tab. Colour: the system's slot (from the change's "system", else its entry's;
-   muted for the impact as a whole or a party outside the repository's systems), one solid card style; no status colour (a change
-   from the planned impact is a record, not an outcome) and never the Impact tab's compatibility red or yellow, which belong to that
-   tab alone (GUIDANCE.md §1). "None" is said only once the impact is reconciled (basis as-built); before that, and with nothing to
-   show, the section is not drawn. */
+   muted for the impact as a whole or a party outside the repository's systems), one solid card style; no status colour on a change
+   (a change from the planned impact is a record, not an outcome) and never the Impact tab's compatibility red or yellow, which belong
+   to that tab alone (GUIDANCE.md §1). Over them, the reconciliation chip: the state reconciliationOf() derives (planned, dashed;
+   partly reconciled, yellow, with n of M units landed on a tracking board; as built, green), with a line saying how far it has got.
+   On a tracking board every landed unit records its effect on the initiative's impact at its landing: the changes it made (each with
+   "unit") or one "no change" entry (none: true). "None so far" is said only from those recorded "no change" entries, never inferred
+   from absence; a landed unit with neither is named as not recorded yet, dashed. "None" is said once the impact is reconciled with
+   no change. */
 function impEntry(ref){ const m=/^(downstream|adaptation|api|conversion)\.(\d+)$/.exec(String(ref==null?"":ref)); if(!m) return null; const x=impItems(m[1])[+m[2]]; return x?{key:m[1],i:+m[2],x}:null; }
 const impChanges=e=>e&&Array.isArray(e.changes)?e.changes.filter(c=>c&&typeof c==="object"):[];
+const isNoChange=c=>!!c&&typeof c==="object"&&c.none===true;
 function impChangeSys(c){ if(c.system&&sysOf(c.system)) return c.system; const e=impEntry(c.entry); return e&&e.key!=="conversion"?impSlug(e.x):""; }
 const goImpLink=(ref,label)=>`<a class="goimp" href="#impact.${esc(ref)}" data-imp="${esc(ref)}" title="Open it on the Impact tab">${label} ›</a>`;
+/* The impact's reconciliation state (plan/RULES.md §2, Impact), derived here and nowhere else on the page, by the rule the scripts
+   share (plan/scripts/lib.js reconciliation()): impact.basis stores "plan" or "as-built" and nothing more. "as-built" when the basis
+   is; "partial" (partly reconciled) when the basis is "plan" and an impact.changes entry is recorded or, on a tracking board, a unit
+   has landed; "planned" otherwise. null while the board records no impact. landed and total count the units as the chain's progress
+   does (dropped and deferred apart); unrecorded are the landed units no impact.changes entry names; noChange the units with a
+   recorded "no change" entry. */
+function reconciliationOf(){ const I=IMPACT; if(!I) return null;
+  const counted=TRACKING?ROWS.filter(r=>r.unit&&!["dropped","deferred"].includes(stateOf(r))&&!leftForLater(r)):[], landed=counted.filter(unitLanded), cs=impChanges(I);
+  const state=I.basis==="as-built"?"as-built":cs.length||landed.length?"partial":"planned";
+  return {state,landed:landed.length,total:counted.length,unrecorded:TRACKING?landed.filter(r=>!cs.some(c=>c.unit===r.id)):[],
+    noChange:TRACKING?counted.filter(r=>cs.some(c=>isNoChange(c)&&c.unit===r.id)):[]}; }
+const RECON={
+  planned:{g:"…",label:"planned",cls:"neutral",dash:true,desc:"impact planned: the plan's, nothing reconciled yet"},
+  partial:{g:"◐",label:"partly reconciled",cls:"warning",desc:"impact partly reconciled: changes recorded as the work lands"},
+  "as-built":{g:"✓",label:"as built",cls:"good",desc:"impact as built: reconciled with the build"}};
+const reconWord=R=>R.state==="partial"&&TRACKING?`${RECON.partial.label} · ${R.landed} of ${R.total} unit${R.total===1?"":"s"}`:RECON[R.state].label;
 function impactChanges(){
-  const I=IMPACT; if(!I) return {html:"",slugs:[],muted:false};
-  const own=impChanges(I), reconciled=I.basis==="as-built", slugs=[]; let muted=false, total=own.length;
+  const I=IMPACT, R=reconciliationOf(); if(!I||!R) return {html:"",slugs:[],muted:false,recon:null,unrecorded:false};
+  const own=impChanges(I).filter(c=>!isNoChange(c)), reconciled=R.state==="as-built", slugs=[]; let muted=false, total=own.length;
   const units=TRACKING?ROWS.filter(r=>r.unit):[], uEntries=new Map((Array.isArray(I.units)?I.units:[]).filter(e=>e&&typeof e==="object").map(e=>[e.unit,e]));
   const uChanged=units.filter(r=>impChanges(uEntries.get(r.id)).length), uNone=units.filter(r=>{ const e=uEntries.get(r.id); return e&&e.basis==="as-built"&&!impChanges(e).length; });
   uChanged.forEach(r=>{ total+=impChanges(uEntries.get(r.id)).length; if(sysOf(r.system)) slugs.push(r.system); else muted=true; });
-  if(!own.length&&!reconciled&&!uChanged.length&&!uNone.length) return {html:"",slugs:[],muted:false};
-  const card=c=>{ const slug=impChangeSys(c), e=impEntry(c.entry), S=e&&IMP_SECTIONS.find(s=>s.key===e.key); if(slug) slugs.push(slug); else muted=true;
-    const meta=[c.when?esc(c.when):"",c.ref?refHtml(c.ref):"",e?goImpLink(c.entry,`Impact card: ${esc(S.title)} · ${codeOnly(String(S.head(e.x,e.i)||""))}`):""].filter(Boolean);
+  const unitName=r=>`${esc(r.unit.n)}. ${r.unit.issue?pair(r.unit.issue,r.name):codeOnly(r.name)}`;
+  const card=c=>{ const slug=impChangeSys(c), e=impEntry(c.entry), S=e&&IMP_SECTIONS.find(s=>s.key===e.key), u=TRACKING&&c.unit!=null?units.find(r=>r.id===c.unit):null; if(slug) slugs.push(slug); else muted=true;
+    const meta=[u?unitName(u):"",c.when?esc(c.when):"",c.ref?refHtml(c.ref):"",e?goImpLink(c.entry,`Impact card: ${esc(S.title)} · ${codeOnly(String(S.head(e.x,e.i)||""))}`):""].filter(Boolean);
     return `<div class="bcard ichg" data-sys="${esc(slug)}"><div class="bh"><span class="nm">${rich(c.what||"")}</span></div>${c.why?`<p>${rich(c.why)}</p>`:""}${meta.length?`<div class="meta">${meta.join(" · ")}</div>`:""}</div>`; };
-  let h="";
-  const initiative=own.length?`<div class="icards">${own.map(card).join("")}</div>`:reconciled?`<p class="empty">None: the impact as built is the impact the plan recorded.${I.source?` Source ${refHtml(I.source)}.`:""}</p>`:"";
+  /* the chip, with the line saying how far the reconciliation has got */
+  const line=reconciled?"Reconciled with the build.":R.state==="planned"?"Nothing reconciled yet: changes are recorded here as the work lands.":TRACKING?`So far, with ${R.landed} of ${R.total} unit${R.total===1?"":"s"} landed; the rest is reconciled as the others land.`:"So far, as implementation recorded them; the landing reconciles the rest.";
+  let h=`<p class="q recon">${pill(RECON[R.state],"",reconWord(R))} ${esc(line)}</p>`;
+  /* the initiative's own changes (on an issue board, the impact's), then the units' recorded "no change" and the landed units with no record */
+  const noneLine=R.noChange.length?`${R.noChange.map(unitName).join("; ")} recorded no change to the initiative's impact`:"";
+  let initiative=own.length?`<div class="icards">${own.map(card).join("")}</div>`:reconciled?`<p class="empty">None: the impact as built is the impact the plan recorded.${I.source?` Source ${refHtml(I.source)}.`:""}</p>`:"";
+  if(!own.length&&!reconciled&&R.noChange.length&&!R.unrecorded.length) initiative+=`<p class="empty">None so far: ${noneLine}.</p>`;
+  else if(R.noChange.length) initiative+=`<p class="empty">No change: ${noneLine}.</p>`;
+  if(R.unrecorded.length) initiative+=`<p class="empty pend">Not recorded yet: ${R.unrecorded.map(unitName).join("; ")} ${R.unrecorded.length===1?"has":"have"} landed, and ${R.unrecorded.length===1?"its":"their"} effect on the initiative's impact is not recorded.</p>`;
   if(TRACKING&&initiative) h+=`<h4>The initiative</h4>`;
   h+=initiative;
   if(uChanged.length||uNone.length){ h+=TRACKING?`<h4>Units</h4>`:"";
-    if(uChanged.length) h+=`<div class="icards">${uChanged.map(r=>{ const u=r.unit, cs=impChanges(uEntries.get(r.id));
-      return `<div class="bcard ichg" data-sys="${esc(sysOf(r.system)?r.system:"")}" data-row="${esc(r.id)}"><div class="bh"><span class="nm">${esc(u.n)}. ${u.issue?pair(u.issue,r.name):codeOnly(r.name)}</span></div><ol class="changes">${cs.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?`${c.when?" · ":""}${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol><div class="meta">${goImpLink("unit."+r.id,"Impact card: its unit entry")}</div></div>`; }).join("")}</div>`;
-    if(uNone.length) h+=`<p class="empty">Reconciled with no change from the planned impact: ${uNone.map(r=>`${esc(r.unit.n)}. ${r.unit.issue?pair(r.unit.issue,r.name):codeOnly(r.name)}`).join("; ")}.</p>`; }
-  return {html:`<div class="isec bimp"><h3>Impact changes from the plan <small>${total}</small></h3><p class="q">How the impact differed from the plan; the Impact tab shows it as it now stands.</p>${h}</div>`,slugs,muted};
+    if(uChanged.length) h+=`<div class="icards">${uChanged.map(r=>{ const cs=impChanges(uEntries.get(r.id));
+      return `<div class="bcard ichg" data-sys="${esc(sysOf(r.system)?r.system:"")}" data-row="${esc(r.id)}"><div class="bh"><span class="nm">${unitName(r)}</span></div><ol class="changes">${cs.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?`${c.when?" · ":""}${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol><div class="meta">${goImpLink("unit."+r.id,"Impact card: its unit entry")}</div></div>`; }).join("")}</div>`;
+    if(uNone.length) h+=`<p class="empty">Reconciled with no change from the planned impact: ${uNone.map(unitName).join("; ")}.</p>`; }
+  return {html:`<div class="isec bimp"><h3>Impact changes from the plan <small>${total}</small></h3><p class="q">How the impact differed from the plan; the Impact tab shows it as it now stands.</p>${h}</div>`,slugs,muted,recon:R,unrecorded:R.unrecorded.length>0};
 }
 /* Opens an entry's card on the Impact tab, selected and in view, with its detail in the inspector; "#impact.<entry>" deep-links it. */
 function goImpact(ref){ if(!$("#t-impact")) return; show("t-impact"); try{ history.replaceState(null,"","#impact."+ref); }catch(e){}
   const c=[...document.querySelectorAll("#impact-body .icard")].find(x=>x.dataset.imp===ref); if(!c) return;
   document.querySelectorAll("#impact-body .icard.sel").forEach(x=>x.classList.remove("sel")); c.classList.add("sel");
-  c.scrollIntoView({block:"center"}); c.focus({preventScroll:true}); inspectImpact(ref); }
+  c.scrollIntoView({block:"center"}); c.focus({preventScroll:true}); INSPECTED={k:"imp",ref}; inspectImpact(ref); }
 
 /* ---------- Impact (plan/RULES.md §2, "Impact") ----------
-   From plan.json "impact": written at plan acceptance from impact.md (and plan.md where it states API or migration facts), and
-   reconciled at the landing from final-implementation.md and the reconciled impact.md. The tab shows the current best-known impact
+   From plan.json "impact": written at plan acceptance from impact.md (and plan.md where it states API or migration facts), kept up
+   as the work lands (an implementation stage's deviation, on a tracking board each unit's landing), and reconciled at the landing
+   (a tracking board's at its last unit's) from final-implementation.md and the reconciled impact.md. The tab shows the current best-known impact
    and no planning information (GUIDANCE.md §1, plan/RULES.md §2): impact.basis is not rendered, and impact.changes is rendered on
    the As built tab (impactChanges(), above), never here; every entry is one solid card, whatever the basis. Four sections: downstream effects, adaptation
    requirements, API changes, conversion steps; a tracking board adds one entry per unit (impact.units), linking the unit's board.
    No recorded impact is a plain statement with its source, never a hidden tab. */
-const IMPACT=PLAN.impact&&typeof PLAN.impact==="object"&&!Array.isArray(PLAN.impact)?PLAN.impact:null;
+let IMPACT=null;
 const IMP_KIND={consumer:"consumer",system:"system",repository:"repository",artifact:"published artifact",operator:"operator"};
 /* Compatibility first (GUIDANCE.md §1, the Impact tab's exception; plan/RULES.md §2, Impact): red for a breaking entry, yellow for
    a deprecation or other non-breaking change worth noting, the system's colour otherwise. Derived from the entry (a breaking effect
@@ -2425,7 +2706,7 @@ function renderImpact(){
     h+=`<div class="isec"><h3>${esc(s.title)} <small>${xs.length}</small></h3><p class="q">${esc(s.q)}</p>${xs.length?`<div class="icards">${xs.map((x,i)=>impCard(s.key,x,i)).join("")}</div>`:`<p class="empty">None recorded.</p>`}</div>`; });
   if(TRACKING) h+=`<div class="isec"><h3>Units <small>${count(units,r=>uEntries.has(r.id))} of ${units.length} recorded</small></h3><p class="q">Each unit's own impact in a sentence or two; its board holds the rest.</p>${units.length?`<div class="icards">${units.map(r=>impUnitCard(r,uEntries.get(r.id))).join("")}</div>`:`<p class="empty">No units yet: they appear when the architecture is signed off.</p>`}</div>`;
   $("#impact-body").innerHTML=h; paint($("#impact-body"));
-  document.querySelectorAll("#impact-body .icard").forEach(c=>{ const go=()=>{ document.querySelectorAll("#impact-body .icard.sel").forEach(x=>x.classList.remove("sel")); c.classList.add("sel"); inspectImpact(c.dataset.imp); }; c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  document.querySelectorAll("#impact-body .icard").forEach(c=>{ const go=()=>{ document.querySelectorAll("#impact-body .icard.sel").forEach(x=>x.classList.remove("sel")); c.classList.add("sel"); INSPECTED={k:"imp",ref:c.dataset.imp}; inspectImpact(c.dataset.imp); }; c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
   /* the legend: exactly what was drawn */
   const slugs=[...IMP_SECTIONS.flatMap(s=>impItems(s.key).map(impSlug)).filter(Boolean),...units.map(r=>r.system)];
   const outside=IMP_SECTIONS.some(s=>impItems(s.key).some(x=>!impSlug(x)));
@@ -2467,13 +2748,13 @@ function renderChain(){
   const pos=new Map(); cols.forEach((c,i)=>(c||[]).forEach((r,j)=>{ const off=(maxRows-c.length)*(H+GY)/2; pos.set(r.id,{x:PAD+i*(W+GX),y:PAD+off+j*(H+GY)}); }));
   let s=`<svg class="chainsvg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Units and what blocks them"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="arrow" d="M0,0 L8,4 L0,8 z"/></marker></defs>`;
   units.forEach(r=>(r.unit.blockedBy||[]).map(n=>byIssue.get(n)).filter(Boolean).forEach(b=>{ const p=pos.get(b.id), q=pos.get(r.id); const x1=p.x+W,y1=p.y+H/2,x2=q.x-2,y2=q.y+H/2,mx=(x1+x2)/2; s+=`<path class="edge${unitLanded(b)?"":" todo"}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" marker-end="url(#arr)"/>`; }));
-  units.forEach(r=>{ const p=pos.get(r.id), st=stateOf(r), S=STATES[st], act=rowActive(r)&&!LANDED&&!STOPPED?(HALTED||runHeld(r)?" held":" glow"):isNext(r)?" upnext":"", L=runOf(r);
+  units.forEach(r=>{ const p=pos.get(r.id), st=stateOf(r), S=STATES[st], act=rowActive(r)&&!LANDED&&!STOPPED?(PAUSED||runPaused(r)?" held":" glow"):isNext(r)?" upnext":"", L=runOf(r);
     s+=`<g class="unit ${S.cls}${st==="pending"?" pending":""}${act}" data-row="${esc(r.id)}" data-sys="${esc(r.system)}" tabindex="0" role="button" aria-label="Unit ${esc(r.unit.n)}: ${esc(r.name)}, ${S.label}${L?`, its run: ${esc(runShort(L).slice(2))}`:""}" transform="translate(${p.x},${p.y})"><rect class="box" width="${W}" height="${H}" rx="5"/><rect class="bar" width="5" height="${H}" rx="2"/>${st!=="pending"?`<rect class="st" x="${W-6}" width="6" height="${H}" rx="2"/>`:""}<text class="t" x="12" y="19">${esc(r.unit.n)} · ${esc((r.unit.slug||r.id).slice(0,chars))}</text><text class="s" x="12" y="37">${esc(fit(`#${r.unit.issue} · ${L?runShort(L):`${S.g} ${S.label}`}`,Math.floor((W-24)/6.2)))}</text>${isNext(r)?`<rect class="tagbox" x="${W-60}" y="-7" width="54" height="14" rx="3"/><text class="tagtx" x="${W-33}" y="3" text-anchor="middle">UP NEXT</text>`:""}</g>`; });
   s+=`</svg>`;
   $("#chain-frame").innerHTML=s; paint($("#chain-frame"));
-  document.querySelectorAll(".chainsvg .unit").forEach(g=>{ const go=()=>{ document.querySelectorAll(".chainsvg .unit.sel").forEach(e=>e.classList.remove("sel")); g.classList.add("sel"); inspectBuilt(ROWS.find(x=>x.id===g.dataset.row)); }; g.addEventListener("click",go); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
+  document.querySelectorAll(".chainsvg .unit").forEach(g=>{ const go=()=>{ document.querySelectorAll(".chainsvg .unit.sel").forEach(e=>e.classList.remove("sel")); g.classList.add("sel"); INSPECTED={k:"unit",row:g.dataset.row}; inspectBuilt(ROWS.find(x=>x.id===g.dataset.row)); }; g.addEventListener("click",go); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
   const usedSt=[...new Set(units.map(stateOf))];
-  $("#chain-key").innerHTML=sysKey(units.map(r=>r.system))+Object.keys(STATES).filter(k=>usedSt.includes(k)&&k!=="pending").map(k=>`<span>${badge(k)} ${["as-planned","amended","deviated"].includes(k)?"landed: ":""}${esc(STATES[k].desc)}</span>`).join("")+(usedSt.includes("pending")?`<span><i class="pln"></i>dashed: unit not built</span>`:"")+`<span><i class="ln"></i>arrow: blocks</span>`+(units.some(r=>(r.unit.blockedBy||[]).some(n=>byIssue.has(n)&&!unitLanded(byIssue.get(n))))?`<span><i class="ln dash"></i>dashed arrow: its blocker has not landed</span>`:"")+(!LANDED&&!STOPPED&&units.some(r=>rowActive(r)&&!HALTED&&!runHeld(r))?`<span><i class="gl"></i>accent fill, breathing: the unit being worked on now</span>`:"")+(!LANDED&&!STOPPED&&units.some(r=>rowActive(r)&&(HALTED||runHeld(r)))?`<span><i class="hold"></i>active unit, paused while its run waits on the user</span>`:"")+(units.some(runOf)?`<span>▶ step · ⏸ waiting on the user: a unit in progress, its own run from its board</span>`:"")+(NEXT_ROW?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"");
+  $("#chain-key").innerHTML=sysKey(units.map(r=>r.system))+Object.keys(STATES).filter(k=>usedSt.includes(k)&&k!=="pending").map(k=>`<span>${badge(k)} ${["as-planned","amended","deviated"].includes(k)?"landed: ":""}${esc(STATES[k].desc)}</span>`).join("")+(usedSt.includes("pending")?`<span><i class="pln"></i>dashed: unit not built</span>`:"")+`<span><i class="ln"></i>arrow: blocks</span>`+(units.some(r=>(r.unit.blockedBy||[]).some(n=>byIssue.has(n)&&!unitLanded(byIssue.get(n))))?`<span><i class="ln dash"></i>dashed arrow: its blocker has not landed</span>`:"")+(!LANDED&&!STOPPED&&units.some(r=>rowActive(r)&&!PAUSED&&!runPaused(r))?`<span><i class="gl"></i>accent fill, breathing: the unit being worked on now</span>`:"")+(!LANDED&&!STOPPED&&units.some(r=>rowActive(r)&&(PAUSED||runPaused(r)))?`<span><i class="hold"></i>active unit, paused while its run waits on the user</span>`:"")+(units.some(runOf)?`<span>▶ step · ⏸ waiting on the user: a unit in progress, its own run from its board</span>`:"")+(NEXT_ROW?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"");
 }
 
 /* ---------- Source ---------- */
@@ -2483,7 +2764,7 @@ function renderSource(){
      (GUIDANCE.md §4) */
   const j=esc(JSON.stringify(PLAN,(k,v)=>DATA_ONLY.includes(k)?undefined:v,2));
   $("#source-view").innerHTML=j.replace(/^(\s*)(&quot;[^&]*?&quot;)(:)/gm,'$1<span class="k">$2</span>$3').replace(/(:\s)(&quot;.*&quot;)(,?)$/gm,'$1<span class="s">$2</span>$3');
-  $("#source-key").innerHTML=`<span><b style="color:var(--link)">"key"</b> a field</span><span><b>"text"</b> a value</span><span><i class="pln"></i>this copy is replaced on every <code>embed.js</code> run</span>`;
+  $("#source-key").innerHTML=`<span><b style="color:var(--link)">"key"</b> a field</span><span><b>"text"</b> a value</span><span>this copy is replaced on every <code>embed.js</code> run</span>`;
 }
 
 /* ---------- Context: roadmap, unscheduled and follow-ups, trail, documents, notes ---------- */
@@ -2506,16 +2787,34 @@ function renderContext(){
   const notes=PLAN.notes||{}; const nk=Object.keys(notes).filter(k=>notes[k]&&(!Array.isArray(notes[k])||notes[k].length));
   if(nk.length) cards.push(`<div class="card notes"><h3>Notes</h3>${nk.map(k=>Array.isArray(notes[k])?`<p><b>${esc(k)}.</b></p><ul>${notes[k].map(x=>`<li>${typeof x==="string"?rich(x):`${rich(x.what||"")}${x.when?` <small>(${esc(x.when)})</small>`:""}`}</li>`).join("")}</ul>`:`<p><b>${esc(k)}.</b> ${rich(notes[k])}</p>`).join("")}</div>`);
   $("#context").innerHTML=cards.join(""); paint($("#context"));
-  const b=PLAN.baseline||{}, a=PLAN.asBuilt;
-  $("#footer").innerHTML=`Built from <code>${esc(FOLDER)}/plan.json</code>, embedded verbatim, against the baseline <code>${esc(b.ref||"")} ${esc(b.sha||"")}</code>${b.date?` (${when(b.date)})`:""}. ${a?`The as-built column reflects <code>${esc(a.ref||"")} ${esc(a.sha||"")}</code>${a.date?` (${when(a.date)})`:""}${a.pr?`, merged through ${prlink(a.pr)}`:""}.`:"Nothing has landed yet."} Code and the Markdown beside this page are authoritative on any conflict. Columns 1 to 3 are written once; column 4 records every difference. Maintained by the presenter agent at each event of the issue's <code>/resolve-issue</code> run.`;
+  /* the footer (GUIDANCE.md §3): what the page corresponds to, what is authoritative, and the columns' rule; nothing more */
+  $("#footer").innerHTML=`Corresponds to <code>${esc(FOLDER)}/plan.json</code>. Code and the Markdown beside this page are authoritative on any conflict. Columns 1 to 3 are written once; column 4 records every difference.`;
 }
+
+/* ---------- What the page derives from the plan (at load, and at every live update) ---------- */
+function derive(){
+  REPO="https://github.com/"+(PLAN.repo||""); ROWS=PLAN.rows||[]; WIP=PLAN.wip||{}; TRACKING=PLAN.kind==="tracking";
+  FOLDER=PLAN.folder||("docs/plans/"+(PLAN.slug||"")); UP="../".repeat(FOLDER.split("/").filter(Boolean).length);
+  ISSUE_BOARDS.clear(); issueBoardsOf().forEach((b,n)=>ISSUE_BOARDS.set(n,b)); SYSTEMS=PLAN.systems||[];
+  STEP=WIP.step||""; HALTED=STEP==="halted"; PAUSED=HALTED||STEP==="escalated"; LANDED=STEP==="landed"||PLAN.status==="built"; STOPPED=["cancelled"].includes(STEP)||PLAN.status==="abandoned";
+  CURRENT=(LANDED||STOPPED)?[]:(WIP.current||[]);
+  NEXT_ROW=TRACKING&&!LANDED&&!STOPPED&&WIP.next?ROWS.find(r=>r.id===WIP.next&&r.unit&&!rowActive(r)&&stateOf(r)==="pending")||null:null;
+  ownStep=["halted","escalated"].includes(STEP)?(WIP.resume||WIP.last||""):STEP;
+  PLAN_LANDED=LANDED||(TRACKING&&(["building","built"].includes(PLAN.status)||["implementation","landed"].includes(ownStep)
+    ||!!(WIP.landing&&(WIP.landing.pr||WIP.landing.merge))||ROWS.some(r=>r.unit&&(stateOf(r)!=="pending"||(WIP.current||[]).some(a=>String(a).split(".")[0]===r.id)))));
+  SHOW_BRANCH=!!PLAN.branch&&!PLAN_LANDED;
+  OPTS=ROWS.flatMap(r=>(r.options||[]).map(o=>({row:r,opt:o})));
+  IMPACT=PLAN.impact&&typeof PLAN.impact==="object"&&!Array.isArray(PLAN.impact)?PLAN.impact:null;
+  RROWS=LANDED||STOPPED?new Map():researchRowsOf(WIP,ROWS);
+}
+derive();
 
 /* ---------- Tabs and deep links ---------- */
 if(!TRACKING){ const t=$("#t-landing-order"), p=$("#p-landing-order"); if(t) t.remove(); if(p) p.remove(); }
 const tabs=[...document.querySelectorAll(".tab")];
 const DEFAULT_INSPECT={timeline:"<p>Click a cell for its detail: the gap's evidence, an option's reasons, the verdict's steps, tests and risks, or the as-built changes with their reasons. Each cell links the Markdown section that holds the rest.</p>",decisions:"<p>Click a row for the option's full reasons and the options it was weighed against.</p>",built:"<p>Click a card for the row's files, commits, verification and every change from the verdict. Each impact change opens the Impact card it changed.</p>",impact:"<p>Click a card for its detail: the party affected or the surface that moves, its system, its tier, and the Markdown section that holds the rest.</p>","landing-order":"<p>Click a unit for its as-built state, its issue and its board or folder, and its run in full.</p>",source:"<p>The committed <code>plan.json</code>. Edit the file, then run <code>plan/scripts/embed.js</code> on the folder.</p>"};
 let CUR_TAB="";
-function show(id){
+function show(id,keep){
   const name0=id.replace("t-",""); CUR_TAB=name0;
   /* the Landing Order tab gives its graph the whole width and puts the inspector under it, as bubbles */
   const stage=document.querySelector(".stage"); if(stage) stage.classList.toggle("below",name0==="landing-order");
@@ -2526,11 +2825,81 @@ function show(id){
   if(name==="impact") renderImpact();
   if(name==="landing-order") renderChain();
   if(name==="source") renderSource();
-  if(DEFAULT_INSPECT[name]) inspect(DEFAULT_INSPECT[name]);
+  if(!keep){ INSPECTED=null; if(DEFAULT_INSPECT[name]) inspect(DEFAULT_INSPECT[name]); }
 }
+/* Show again what the inspector showed, after a live redraw: by ids, so it is read from the new plan (the default when it is gone). */
+function replayInspect(I){ const r=I&&I.row?ROWS.find(x=>x.id===I.row):null, dflt=()=>{ INSPECTED=null; if(DEFAULT_INSPECT[CUR_TAB]) inspect(DEFAULT_INSPECT[CUR_TAB]); };
+  if(!I) return dflt();
+  if(I.k==="cell"){ if(!r) return dflt(); const h=location.hash; select(I.row,I.col,I.opt||undefined); try{ history.replaceState(null,"",h||location.pathname); }catch(e){} return; }
+  if(I.k==="opt"){ if(!r) return dflt(); INSPECTED=I; inspectOption(r,(r.options||[]).find(o=>o.id===I.opt)); return; }
+  if(I.k==="built"||I.k==="unit"){ if(!r) return dflt(); INSPECTED=I; if(I.k==="unit"){ const g=document.querySelector(`.chainsvg .unit[data-row="${CSS.escape(I.row)}"]`); if(g) g.classList.add("sel"); } inspectBuilt(r); return; }
+  if(I.k==="imp"){ const c=[...document.querySelectorAll("#impact-body .icard")].find(x=>x.dataset.imp===I.ref); if(!c&&CUR_TAB==="impact") return dflt(); if(c) c.classList.add("sel"); INSPECTED=I; inspectImpact(I.ref); return; }
+  dflt(); }
 tabs.forEach((t,i)=>{ t.addEventListener("click",()=>{ show(t.id); try{ history.replaceState(null,"","#"+t.id.replace("t-","")); }catch(e){} }); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
 
+/* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
+   A light/night toggle in the header. Until it is clicked the page follows the system setting; a click picks the other palette and
+   remembers it (localStorage "dashboards-theme", shared by every dashboard of the same origin) across pages and reloads. It only
+   selects one of the two palettes the page defines: :root[data-theme]. The same code runs on every dashboard type. */
+(function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, btn=document.getElementById("theme"), mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+  if(!btn) return;
+  const chosen=()=>{ try{ const t=localStorage.getItem(KEY); return t==="light"||t==="dark"?t:null; }catch(e){ return null; } };
+  const now=()=>root.dataset.theme==="dark"||root.dataset.theme==="light"?root.dataset.theme:(mq&&mq.matches?"dark":"light");
+  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.textContent=t==="dark"?"☾ night":"☀ light"; btn.setAttribute("aria-pressed",String(t==="dark"));
+    btn.title=`Theme: ${word}${chosen()?"":", as the system setting"}. Click for ${t==="dark"?"light":"night"}.`; btn.setAttribute("aria-label",`Night theme${chosen()?"":" (follows the system setting until clicked)"}`); };
+  btn.addEventListener("click",()=>{ const t=now()==="dark"?"light":"dark"; root.dataset.theme=t; try{ localStorage.setItem(KEY,t); }catch(e){} label(); });
+  if(mq&&mq.addEventListener) mq.addEventListener("change",label);
+  if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
+  label(); })();
+
+/* ---------- Live updates (plan/RULES.md §1, "plan.js"; §3, "Live updates") ----------
+   embed.js writes plan.js beside the page: plan.json as a script that hands the data to dashboardLive(). While the run is live (not
+   landed, not cancelled) and the page is a local copy (opened from disk, or served from this machine; a copy published elsewhere is
+   a committed copy and does not poll), the page re-loads that script every LIVE_POLL_MS and redraws in place when the data changed,
+   keeping the scroll position, the tab and what the inspector shows. dashboardRedraw(data) is the redraw itself, kept apart so a
+   server push can call it in place of the polling. The header's live indicator says where the view stands: "LIVE · updated n s
+   ago" (the dot pulses; the counter restarts at each change), "LIVE · no change for n min" after a quiet spell (the dot still),
+   "LIVE · data unavailable" when plan.js cannot be read, and "not live · as of <local time>" for a board whose run is not live. The
+   dot holds still while the run waits on the user. */
+const LIVE_POLL_MS=5000, LIVE_QUIET_MS=5*60000;
+const LIVE_LOCAL=location.protocol==="file:"||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const LIVE={json:JSON.stringify(PLAN),last:0,ok:true,got:false,timer:null,tick:null};
+const runLive=()=>!LANDED&&!STOPPED;
+/* the data's own last update: wip.updated (or since), or a later run a tracking board mirrors from a unit in progress */
+function dataStamp(){ const st=[WIP.updated,WIP.since,...ROWS.map(r=>r.unit&&r.unit.live&&r.unit.live.updated)].map(v=>Date.parse(String(v||""))).filter(n=>!isNaN(n)); return st.length?Math.max(...st):null; }
+const ago=ms=>{ const s=Math.max(0,Math.round(ms/1000)); return s<90?`${s} s`:s<5400?`${Math.round(s/60)} min`:`${Math.round(s/3600)} h`; };
+function liveChip(){ const c=$("#live"); if(!c) return;
+  const stamp=dataStamp(), live=runLive()&&LIVE_LOCAL;
+  if(!live){ const u=stamp!=null?new Date(stamp).toISOString().replace(/\.000Z$/,"Z"):null; c.className="livechip off"; c.innerHTML=`<span class="ld" aria-hidden="true"></span>not live${u?` · as of ${when(u)}`:""}`; c.title=runLive()?"A published copy: it shows the board as committed and does not follow the run.":"The run is not live: the board shows it as it ended."; return; }
+  if(!LIVE.ok){ c.className="livechip on na"; c.innerHTML=`<span class="ld" aria-hidden="true"></span>LIVE · data unavailable`; c.title="plan.js beside this page cannot be read: run embed.js on the folder."; return; }
+  const since=Date.now()-LIVE.last, quiet=since>LIVE_QUIET_MS;
+  c.className=`livechip on${quiet||PAUSED?"":" pulse"}`;
+  c.innerHTML=quiet?`<span class="ld" aria-hidden="true"></span>LIVE · no change for ${ago(since)}`:`<span class="ld" aria-hidden="true">●</span>LIVE · updated ${ago(since)} ago`;
+  c.title=`Re-read from plan.js every ${LIVE_POLL_MS/1000} s${PAUSED?"; the run waits on the user":""}.`; }
+/* Everything the page draws from the plan, in place. */
+function renderAll(){ renderHeader(); renderWip(); renderKpis(); renderBoard(); renderContext(); localizeTimes(); }
+function dashboardRedraw(data){
+  if(!data||typeof data!=="object") return false;
+  const j=JSON.stringify(data); if(j===LIVE.json){ liveChip(); return false; }
+  const keep={x:window.scrollX,y:window.scrollY,tab:CUR_TAB,insp:INSPECTED,is:($("#inspector")||{}).scrollTop||0,cf:($("#chain-frame")||{}).scrollLeft||0};
+  LIVE.json=j; PLAN=data; derive(); renderAll();
+  show("t-"+(document.getElementById("t-"+keep.tab)?keep.tab:"timeline"),true); replayInspect(keep.insp);
+  const ins=$("#inspector"); if(ins) ins.scrollTop=keep.is; const cf=$("#chain-frame"); if(cf) cf.scrollLeft=keep.cf;
+  window.scrollTo(keep.x,keep.y);
+  LIVE.last=Date.now(); liveChip(); if(!runLive()) stopLive();
+  return true; }
+window.dashboardRedraw=dashboardRedraw;
+window.dashboardLive=(id,data)=>{ if(id!=="plan") return; LIVE.got=true; dashboardRedraw(data); };
+function poll(){ const sc=document.createElement("script"); LIVE.got=false;
+  sc.src="plan.js?t="+Date.now(); sc.onload=()=>{ LIVE.ok=LIVE.got; sc.remove(); liveChip(); }; sc.onerror=()=>{ LIVE.ok=false; sc.remove(); liveChip(); };
+  document.head.appendChild(sc); }
+function stopLive(){ if(LIVE.timer) clearInterval(LIVE.timer); LIVE.timer=null; }
+function startLive(){ LIVE.last=dataStamp()!=null?Math.min(Date.now(),dataStamp()):Date.now(); liveChip();
+  if(LIVE.tick==null) LIVE.tick=setInterval(liveChip,1000);
+  if(runLive()&&LIVE_LOCAL&&!LIVE.timer) LIVE.timer=setInterval(poll,LIVE_POLL_MS); }
+
 renderHeader(); renderWip(); renderKpis(); renderBoard(); renderContext();
+startLive();
 const hash=decodeURIComponent(location.hash.replace("#",""));
 let start="t-timeline"; if(hash&&document.getElementById("t-"+hash)) start="t-"+hash; else if(hash==="chain"&&document.getElementById("t-landing-order")) start="t-landing-order"; /* the tab's old name */
 else if(/^impact\./.test(hash)&&document.getElementById("t-impact")) start="t-impact"; /* an Impact card, "#impact.<entry>" */

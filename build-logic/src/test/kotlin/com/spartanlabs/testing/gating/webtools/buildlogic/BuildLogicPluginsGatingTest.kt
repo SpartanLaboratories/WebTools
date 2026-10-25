@@ -8,7 +8,7 @@ import java.io.File
 import java.util.Properties
 
 /**
- * Level 1 - build-logic's pre-commit gate: the build compiled and exposes its three convention
+ * Level 1 - build-logic's pre-commit gate: the build compiled and exposes its four convention
  * plugins, and the plugin-under-test metadata that the TestKit checks inject carries the plugins
  * those convention plugins apply. It reads classpath resources only and starts no nested build.
  */
@@ -18,6 +18,7 @@ class BuildLogicPluginsGatingTest {
         "webtools.published-library",
         "webtools.kotlin-jvm-library",
         "webtools.kotlin-multiplatform-library",
+        "webtools.kotlin-common-check",
     )
 
     // The jar-name prefixes of the plugins the convention plugins apply by id.

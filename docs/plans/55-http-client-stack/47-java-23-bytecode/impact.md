@@ -71,8 +71,8 @@ modules the POM differs only in `<version>`, and the `.module` file also in the 
 - **`docs/webtools-udp-architecture.md` and `docs/webtools-udp-protocol.md`** are unchanged. Neither names
   the JDK.
 - **[`../impact.md`](../impact.md)** is reconciled with this unit (§1, §2, §5 to §8).
-  [`../architecture.md`](../architecture.md) §12 is left as written; §3 below says which of its sentences
-  does not hold.
+  [`../architecture.md`](../architecture.md) §12 carries a dated correction of 2026-10-25, made with #62's
+  landing; §3 below says which of its sentences does not hold.
 
 ## 3. Adoption
 
@@ -138,8 +138,8 @@ blocked by this unit. It inherits:
 - **`jdk11-test-launcher`:** run the level tasks on a JDK 11, after #58's foojay bump.
 - **The release of `2.0.0a`, `1.0.0a` and `1.0.0a`:** it moves the README's three install lines to the
   lettered versions and carries the `strictly` note into the release note.
-- **The wording of [`../architecture.md`](../architecture.md) §12 about `webtools-udp`:** a dated callout on
-  that document needs the maintainer's approval.
+- **The wording of [`../architecture.md`](../architecture.md) §12 about `webtools-udp`:** corrected by a dated
+  callout of 2026-10-25 under its "Lettered versions" bullet, made with #62's landing.
 
 ## 7. Known gaps
 
