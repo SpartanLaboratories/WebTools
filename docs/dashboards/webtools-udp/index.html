@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="template" content="system/template/system.html">
 <title>webtools-udp model</title>
+<script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 /* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → Guarantees bubbles → Context cards → provenance footer.
    System page template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
    Colour plan: --server / --client / --wire are the page's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
-   (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned. */
+   (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned, and nothing else: lifelines, returns and frames are solid. */
 :root{
   --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
   --line:#dfe4ec; --hair:rgba(14,20,32,.10);
@@ -28,44 +29,72 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .page{max-width:1280px;margin:0 auto}
 a{color:inherit}
-code{font-family:var(--mono);font-size:.92em}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
 h1,h2,h3{text-wrap:balance}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* header */
-.crumbs{font-size:12px;color:var(--muted);padding-top:18px}
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
 .crumbs a{text-decoration:none}
+/* The theme switch (GUIDANCE.md §1, Themes), right of the breadcrumb: the renderer adds it to the header. */
+.systools{float:right;display:flex;gap:6px;align-items:center;margin:14px 0 4px 12px}
+.themebtn{appearance:none;font:600 11px/1 var(--mono);padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.themebtn:hover{color:var(--ink);border-color:var(--ink-2)}
 .crumbs a:hover{text-decoration:underline}
-h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono);overflow-wrap:anywhere}
 .function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
-.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2)}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
 .chip b{color:var(--ink);font-weight:600}
-.chip.model{border-style:dashed}
+.chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+/* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
+   left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
+   long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
+   live indicator, the theme switch) runs across the top. The same rules on every dashboard type. */
+.issueline{font:12.5px/1.4 var(--mono);color:var(--ink-2);margin:0 0 8px;overflow-wrap:anywhere}
+.issueline a{text-decoration:none;border-bottom:1px solid var(--line)}
+.issueline a:hover{border-bottom-color:var(--ink)}
+.chip .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chip .sysl{display:inline-flex;align-items:center;margin-right:10px;white-space:nowrap}
+.chip .sysl:last-child{margin-right:0}
+@media (min-width:940px){
+  header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;column-gap:28px}
+  header>.topbar{grid-column:1/-1;grid-row:1}
+  header>.crumbs{grid-column:1;grid-row:1}
+  header>.systools{grid-column:2;grid-row:1;justify-self:end;align-self:start;float:none;margin:14px 0 4px}
+  header>h1{grid-column:1;grid-row:2}
+  header>.issueline{grid-column:1;grid-row:3}
+  header>.function{grid-column:1;grid-row:4;max-width:none}
+  header>.chips{grid-column:2;grid-row:2/-1;align-self:start;align-content:flex-start;gap:8px;margin:8px 0 6px}
+  header>.chips>.chip{display:block;flex:1 1 190px;padding:7px 10px 8px;font-size:12.5px;line-height:1.4;border-radius:6px}
+  header>.chips>.chip .ck{display:block;margin:0 0 2px}
+  header>.chips>.chip.wide{flex-basis:100%}
+}
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
 .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
 .kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
 .kpi .seg-bar i{display:block;height:100%}
 
 /* tabs + stage */
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
 .tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
 .tab:hover{color:var(--ink)}
 .tab.model::after{content:" DSL";font:10px var(--mono);color:var(--muted);vertical-align:super}
 .stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
-@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static}}
+@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static;max-height:none;overflow:visible}}
 .stage>div{min-width:0}
 .view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
 .view svg{display:block;width:100%;height:auto}
 .view h2{font-size:15px;margin:0 0 4px}
 .lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
-.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+/* the inspector stays in view beside the tab and scrolls inside itself when its entry is taller than the window */
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;max-height:calc(100vh - 24px);overflow:auto}
 .inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
 .inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
 .inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
@@ -76,7 +105,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .inspector dd{margin:2px 0 0}
 .inspector dd a{font-family:var(--mono);font-size:12px;text-decoration:none;border-bottom:1px solid var(--line)}
 .inspector dd a:hover{border-bottom-color:var(--ink)}
-.linkbtn{appearance:none;border:1px dashed var(--line);background:var(--surface-2);color:var(--ink);font:12px var(--mono);padding:5px 8px;border-radius:4px;cursor:pointer;text-align:left}
+.linkbtn{appearance:none;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:12px var(--mono);padding:5px 8px;border-radius:4px;cursor:pointer;text-align:left}
 .linkbtn:hover{border-color:var(--ink)}
 .tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
 .tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
@@ -91,7 +120,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .key i.con{border-color:var(--ink)}.key i.ext{border-color:var(--muted);background:var(--surface-2)}
 .key i.bs{border-left:4px solid var(--server)}.key i.bc{border-left:4px solid var(--client)}.key i.bw{border-left:4px solid var(--wire)}
 .key i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.key i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.key i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
-.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
+.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.ret{position:relative;border-top-width:1px;width:20px}.key i.ln.ret::after{content:"";position:absolute;right:0;top:-4px;width:6px;height:6px;border-top:1.2px solid var(--ink-2);border-right:1.2px solid var(--ink-2);transform:rotate(45deg)}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
 .key i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
 .key i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
 .key i.band{border:0;background:var(--surface-2)}
@@ -152,7 +181,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 
 /* sequence svg */
-.life{stroke:var(--line);stroke-dasharray:3 4}
+.life{stroke:var(--line);stroke-width:1.2}.life.planned{stroke-dasharray:6 4}
 .lh rect{fill:var(--surface-2);stroke:var(--line)}
 .lh.server rect{fill:var(--server-soft);stroke:var(--server)}.lh.client rect{fill:var(--client-soft);stroke:var(--client)}.lh.wire rect{fill:var(--wire-soft);stroke:var(--wire)}
 .lh.consumer rect{fill:var(--surface);stroke:var(--ink)}.lh.external rect{fill:var(--surface-2);stroke:var(--muted)}
@@ -162,7 +191,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .phase text{font-size:9.5px;fill:var(--muted);font-family:var(--mono);letter-spacing:.08em}
 .msg{cursor:pointer}
 .msg line,.msg path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
-.msg.ret line{stroke-dasharray:5 4}
+.msg.ret line{stroke-width:1}
 .msg text{font-size:10px;fill:var(--ink-2);font-family:var(--sans)}
 .msg .lbg{fill:var(--surface);stroke:none}
 .msg .num{font-family:var(--mono);font-size:9px;fill:var(--muted)}
@@ -201,7 +230,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
 .c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
 .c4key i.arrow.dashed{border-top-style:dashed}
-.c4key i.frame{background:var(--surface-2);border:1.5px dashed var(--muted);border-radius:4px}
+.c4key i.frame{background:var(--surface-2);border:1.5px solid var(--line);border-radius:4px}
 .c4el{cursor:pointer}
 .c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
 .c4el .hdr{stroke:none}
@@ -213,6 +242,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .c4el.sel .card{stroke:var(--on);stroke-width:2.5}
 .c4el.hl .card{stroke:var(--ink-2);stroke-width:2}
 .c4el.dim{opacity:.3}
+.c4el.planned>.card{stroke-dasharray:6 4}
 .c4rel path{stroke:var(--rel);stroke-width:1.4;fill:none;stroke-linejoin:round}
 .c4rel.dashed path{stroke-dasharray:6 4}
 .c4rel text{font-size:9.5px;fill:var(--ink-2);font-family:var(--sans)}
@@ -225,11 +255,11 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .c4rel.cur text{fill:var(--ink);font-weight:600}
 .c4rel .num circle{fill:var(--ink);stroke:none}
 .c4rel .num text{fill:var(--bg);font-weight:700;font-size:9.5px;font-family:var(--mono)}
-.c4bound{fill:var(--surface-2);fill-opacity:.45;stroke:var(--muted);stroke-dasharray:8 5}
-.c4boundl rect{fill:var(--surface);stroke:var(--muted);stroke-dasharray:8 5}
+.c4bound{fill:var(--surface-2);fill-opacity:.45;stroke:var(--line);stroke-width:1.5}
+.c4boundl rect{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
 .c4boundl text{font:700 10px var(--mono);fill:var(--ink-2)}
 .c4band{font-size:9.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.14em}
-.c4life{stroke:var(--line);stroke-dasharray:3 4}
+.c4life{stroke:var(--line);stroke-width:1.2}.c4life.planned{stroke-dasharray:6 4}.c4rel.planned path{stroke-dasharray:6 4}
 pre.dsl{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow-x:auto;color:var(--ink);max-height:70vh}
 pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} pre.dsl .s{color:var(--ink-2)}
 .steps-list{margin:8px 0 0;padding:0;list-style:none;font-size:12.5px}
@@ -300,6 +330,17 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .bubble .gap{color:var(--muted);font-style:italic}
 .bubble .badge{margin-left:2px}
 
+/* Wide desktop (16:9 screens, GUIDANCE.md §6): the page uses most of the window, so the C4 canvas, the thread columns, the
+   lifecycle cards, the Guarantees and the Context get room; a diagram drawn to a fixed aspect grows to at most 1280 px wide, so it
+   is never smaller than in the 1280 px layout and never outgrows the screen, and prose keeps its own measure. At 1500 px and below
+   the page keeps its 1280 px measure and the narrow layouts below 940 and 700 px apply. */
+@media (min-width:1500px){
+  .page{max-width:min(2400px,100%)}
+  .stage{grid-template-columns:minmax(0,1fr) 360px}
+  .view>svg{max-width:1280px}
+  .bubbles{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+}
+
 /* context */
 .context{margin-top:24px}
 .context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
@@ -324,6 +365,10 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .roadmap .ri a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
 .roadmap .issues{margin:4px 0 0 14px}
 .roadmap .more{margin:4px 0 0 14px;font-size:12px;color:var(--muted)}
+/* An issue's number and its title are two links (GUIDANCE.md §5): the number opens the GitHub issue, the title its plan board
+   (plain text while it has none, linkIssues() below) */
+.issues span a,.roadmap .ri span a{font-family:inherit;color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+.issues span a:hover,.roadmap .ri span a:hover{border-bottom-color:var(--ink)}
 /* one series (test classes), so one neutral fill: a hue here would read as a side */
 .bars{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;align-items:center;font-size:12px}
 .bars .lbl{color:var(--ink-2);font-family:var(--mono);font-size:11.5px}
@@ -346,13 +391,13 @@ footer code{color:var(--ink-2)}
   <h1>webtools-udp</h1>
   <p class="function">A multi-connection UDP transport for the JVM: many clients handshake onto one server port, then exchange framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probing and idle detection.</p>
   <div class="chips">
-    <span class="chip">version <b>2.0.0a</b></span>
-    <span class="chip">wire protocol <b>2</b></span>
-    <span class="chip">common port <b>9998</b></span>
-    <span class="chip">Kotlin/JVM · Java <b>11</b> bytecode</span>
-    <span class="chip">as-is at <b>master 3949b52</b> · <time datetime="2026-10-23T02:21:55Z">2026-10-23 02:21 UTC</time></span>
-    <span class="chip">last amended by <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener"><b>#47</b></a> java-floor · e249f52 (build only: the Java 11 floor; source unchanged) · last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> · ca57a57</span>
-    <span class="chip model">C4 model <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
+    <span class="chip"><span class="ck">version</span> <b>2.0.0a</b> · Central 2.0.0</span>
+    <span class="chip"><span class="ck">wire protocol</span> <b>2</b></span>
+    <span class="chip"><span class="ck">common port</span> <b>9998</b></span>
+    <span class="chip"><span class="ck">platform</span> <b>Kotlin/JVM</b> · Java 11 bytecode</span>
+    <span class="chip"><span class="ck">as-is at</span> <b>master 7de8207</b> · <time datetime="2026-10-25T11:51:40Z">2026-10-25 11:51 UTC</time></span>
+    <span class="chip wide"><span class="ck">last amended by</span> <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener"><b>#47</b></a> <a data-board="47">java-floor</a> · e249f52 (build only: the Java 11 floor) · last code change <a href="https://github.com/SpartanLaboratories/WebTools/issues/38" target="_blank" rel="noopener"><b>#38</b></a> <a data-board="38">handshake-empty-name</a> · ca57a57</span>
+    <span class="chip model"><span class="ck">C4 model</span> <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
   </div>
 </header>
 
@@ -378,14 +423,14 @@ footer code{color:var(--ink-2)}
 <div>
   <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
     <h2>Component map</h2>
-    <p class="lede">Nesting is ownership. Filled boxes are public types, outlined boxes internal. Click any box for its role, files and threads — and its place in the C4 model.</p>
+    <p class="lede">Nesting is ownership. Click a box for its role, files and threads, and its place in the C4 model.</p>
     <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of webtools-udp"></svg>
     <div class="key"><span><i class="pub srv"></i>public · server</span><span><i class="srv"></i>internal · server</span><span><i class="pub cli"></i>public · client</span><span><i class="cli"></i>internal · client</span><span><i class="pub wir"></i>public · shared</span><span><i class="wir"></i>internal · shared</span><span><i class="std"></i>standalone, outside the stack</span><span><i class="pln"></i>planned, not built</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
     <h2>C4 model <small style="font:11px var(--mono);color:var(--muted);font-weight:400">rendered from workspace.dsl at load</small></h2>
-    <p class="lede">The Structurizr DSL beside this page is the formal model: elements, their relationships, tags and styles. These views are parsed from it every time the page opens — nothing here is drawn by hand, so the model and the dashboard cannot disagree. Step down the ladder to zoom in; hover an element to see what it touches. Structurizr Lite or <code>structurizr-cli</code> render the same file.</p>
+    <p class="lede">Nothing here is drawn by hand. Step down the ladder to zoom in; hover an element to see what it touches.</p>
     <div class="c4wrap">
       <nav class="ladder" id="c4-ladder" aria-label="C4 levels"></nav>
       <div class="c4main">
@@ -399,7 +444,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
     <h2>Thread inventory</h2>
-    <p class="lede">Eleven threads, every one named, all daemon, coloured by the endpoint that owns them. Filled pills are created eagerly, outlined ones lazily on first use, dotted ones only under a condition. Click a thread for what runs on it.</p>
+    <p class="lede">Eleven threads, every one named, all daemon. Click a thread for what runs on it.</p>
     <div class="threads">
       <div class="tside"><h3>Server · mcups-*</h3>
         <div class="thread server" data-t="mcups-listener" tabindex="0" role="button"><span class="n">mcups-listener</span><span class="pill eager">eager</span><span class="r">receive · accept() liveness stamp · tag switch · handshake incl. admit / onClientConnect · inline 0x82 replies · reliable ack processing</span></div>
@@ -419,7 +464,7 @@ footer code{color:var(--ink-2)}
     </div>
     <div class="key"><span><i class="bs"></i>server endpoint · mcups-*</span><span><i class="bc"></i>client endpoint · mcupc-*</span><span><span class="pill eager">eager</span>created eagerly</span><span><span class="pill lazy">lazy</span>created on first use</span><span><span class="pill cond">if …</span>only under a condition</span><span><span class="pill planned">planned</span>planned, not built</span><span><i class="dot"></i>puts it on the wire (table below)</span></div>
     <h2 style="margin-top:16px">Outbound send paths</h2>
-    <p class="lede">Which thread puts each kind of datagram on the wire. A reliable message's first transmission runs on the caller's thread; retransmits and standalone acks on the side's own retransmit thread.</p>
+    <p class="lede">A reliable message's first send runs on the caller's thread; retransmits and acks on the side's retransmit thread.</p>
     <div class="scroll"><table class="matrix">
       <thead><tr><th>Traffic</th><th>Caller's thread</th><th>Listener</th><th>Keepalive</th><th>Probe</th><th>Retransmit</th></tr></thead>
       <tbody>
@@ -438,7 +483,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-datagrams" aria-labelledby="t-datagrams" hidden>
     <h2>Inbound datagram path</h2>
-    <p class="lede">Pick what arrives and from whom; the path the listener thread takes lights up. Hexagons are decisions; shaded boxes are where the datagram ends, their stripe coloured by the log level it ends at.</p>
+    <p class="lede">Pick what arrives and from whom; the path the listener thread takes lights up.</p>
     <div class="ctl" id="flow-ctl"></div>
     <p class="outcome" id="outcome"></p>
     <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Inbound dispatch flow"></svg>
@@ -447,7 +492,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
     <h2>The reliable sequence, server side</h2>
-    <p class="lede">A reliable-ordered send, its arrival at the peer's listener, and the 50 ms retransmit tick, each lifeline in the colour of who owns it. Step through it, or click any message. The client mirrors it on mcupc-* threads.</p>
+    <p class="lede">A reliable-ordered send, its arrival and the 50 ms retransmit tick; the client mirrors it on mcupc-* threads.</p>
     <div class="ctl">
       <button class="btn" id="seq-prev">‹ prev</button>
       <button class="btn" id="seq-next">next ›</button>
@@ -460,7 +505,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
     <h2>Lifecycles and concurrency</h2>
-    <p class="lede">Ordered shutdowns, the connection states, when a reliable engine comes and goes, and the locking rules — coloured by phase.</p>
+    <p class="lede">Ordered shutdowns, the connection states, when a reliable engine comes and goes, and the locking rules.</p>
     <div class="lgrid">
       <div class="card ph3"><h3>Server <code>stop()</code> <small>every step runs even if an earlier one fails</small></h3>
         <ol class="steps"><li>stopNotifying</li><li>terminateAll</li><li>listener join ≤ 1 s</li><li>close socket</li><li>liveness</li><li>keepalive</li><li>probe</li><li>retransmit</li><li>dispatch</li></ol>
@@ -564,16 +609,16 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-10-23</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-10-25</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a href="../../plans/55-http-client-stack/dashboard.html">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a href="../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>landed in 3949b52: this module compiles to the Java 11 floor; its 2.0.0a note names it; source unchanged</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>landed in 1e27071: this module's build file now applies <code>webtools.kotlin-jvm-library</code>; published output identical</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a data-board="47">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>landed in 3949b52: this module compiles to the Java 11 floor; its 2.0.0a note names it; source unchanged</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a data-board="61">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>landed in 1e27071: this module's build file now applies <code>webtools.kotlin-jvm-library</code>; published output identical</small></span><span class="tags"><span class="badge">closed</span></span></li>
           </ul>
-          <p class="more">Its nine other sub-issues, #62–#70, belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
+          <p class="more">Its nine other sub-issues, #62–#70 (#62 landed), belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>10 open · 2026-10-23</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>10 open · 2026-10-25</small></h3>
       <ul class="issues">
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="tags"><span class="badge bug">bug</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="tags"><span class="badge bug">bug</span></span></li>
@@ -593,21 +638,21 @@ footer code{color:var(--ink-2)}
         <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/14-reliable-ordered-channel/architecture.md" target="_blank" rel="noopener">#14 reliable-ordered channel</a> — the design that added the reliable plane, in four stages</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/34-probe-cadence/plan.md" target="_blank" rel="noopener">#34 probe cadence</a> · <a href="https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans/38-handshake-empty-name" target="_blank" rel="noopener">#38 handshake empty name</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/40-channel-byte-guard/plan.md" target="_blank" rel="noopener">#40 channel-byte guard</a></li>
-        <li>Plan boards that amended this module: <a href="../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html">#47 Java 11 floor</a> — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a href="../../plans/55-http-client-stack/61-build-logic/dashboard.html">#61 build-logic</a> — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>Plan boards that amended this module: <a data-issue="47">#47</a> Java 11 floor — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a data-issue="61">#61</a> build-logic — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
         <li>The <a href="../gradle-build/index.html">Gradle build</a> page — the convention plugin, the Java floor and its guard, level tasks and publishing this module is built with</li>
         <li>Earlier plans: #3 public client handshake · #5 prune stale registrations · #8 binary datagram path · #9 receive buffer · #10 connection liveness · #11 handshake refusal and credential · #12 scheduled keepalive · #13 link-quality probe · #15 split into three modules</li>
       </ul></div>
   </div>
 </section>
 
-<footer>Drawn from <code>docs/webtools-udp-architecture.md</code>, <code>workspace.dsl</code> and the code at master <code>3949b52</code> (the module's source is unchanged since <code>806ce8e</code>). Code is authoritative on any conflict. Maintained by the presenter agent, refreshed after each landing that changes this module: structure in the DSL (re-embedded below verbatim), behaviour in this file's <code>MODEL</code>.</footer>
-<!-- Divergences from the system-dashboard template (presenter, 2026-10-23; this page started from the skill's worked example, system/examples/webtools-udp, brought to 3949b52):
+<footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-dashboard template (presenter, 2026-10-25; this page started from the skill's worked example, system/examples/webtools-udp, brought to 3949b52):
      1. The core tabs are named for what they show: "Datagram path" (the decision path, two variants: server and client) and "Reliable sequence" (the sequence).
      2. The Threads tab carries an "Outbound send paths" matrix under the inventory; the KPI row names the module's wire facts (datagram tags) in place of "Contracts".
      3. The protocol core #50 proposes is drawn as a planned (dashed) component; it has no plan yet, so it is labelled proposed.
      Nothing is removed. All three live in what a page fills in (MODEL, hand-written panels, header); the page's CSS, tab set and
      renderer are the template's (brought back to it at 1e27071: its older renderer had drifted; at 3949b52 the times helpers in the
-     script before MODEL and the template marker in the head, and no work level in the Context badges), so no template-divergence is declared. -->
+     script before MODEL and the template marker in the head, and no work level in the Context badges; at 7de8207 the footer form, solid lifelines,
+     returns and frames, the header halves with labelled tags, the BOARDS links and one-line ledes), so no template-divergence is declared. --></footer>
 </div>
 
 <!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
@@ -615,7 +660,7 @@ footer code{color:var(--ink-2)}
 <script type="text/plain" id="dsl">
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools master 3949b52 (2026-10-23), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
+// As-is at WebTools master 7de8207 (2026-10-25), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -706,7 +751,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at master 3949b52; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at master 7de8207; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }
@@ -760,7 +805,22 @@ const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","te
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
-const ilink=n=>`<a href="${REPO}/issues/${n}" target="_blank" rel="noopener">#${n}</a>`;
+/* Links to an issue and its board (GUIDANCE.md §5; system/RULES.md §6). BOARDS maps an issue's number to its plan board, relative
+   to this page, for every issue the page names whose board is in the repository; the presenter fills it from the folders on disk
+   when the page is written, on its one line, and check-page.js fails an entry whose file is not there. Where an issue's number and
+   its title appear together they are two links: the number opens the GitHub issue (pair(), or a plain href in hand-written HTML)
+   and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
+   the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
+   the hand-written ones at load. */
+const BOARDS={"38":"../../plans/38-handshake-empty-name/dashboard.html","47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
+const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
+const ghIssue=n=>`${REPO}/issues/${n}`;
+const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
+const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${esc(title)}</a>`:esc(title)}`; };
+function linkIssues(root){ const r=root||document;
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; } else a.replaceWith(...a.childNodes); });
+  r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its plan board`; else { a.target="_blank"; a.rel="noopener"; } }); }
+window.addEventListener("DOMContentLoaded",()=>linkIssues());
 function inspect(html){ $("#insp-body").innerHTML=html; }
 function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker",{id,viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:color||"var(--ink-2)"},m); const mo=mk("marker",{id:id+"-open",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10",fill:"none",stroke:color||"var(--ink-2)","stroke-width":"1.5"},mo); const mon=mk("marker",{id:id+"-on",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--on)"},mon); }
 
@@ -1090,7 +1150,7 @@ function cardEvents(g,id){
   g.addEventListener("mouseleave",()=>document.querySelectorAll("#svg-c4 .c4rel.hl").forEach(x=>x.classList.remove("hl")));
 }
 function drawCard(svg,id,box){
-  const e=el(id), st=styleFor(e), [x,y,w,h]=box, g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
+  const e=el(id), st=styleFor(e), [x,y,w,h]=box, g=mk("g",{class:"c4el"+(e.tags.includes("Planned")?" planned":""),tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
   const dash=st.border==="dashed"?"6 4":st.border==="dotted"?"2 3":"none";
   mk("rect",{class:"card",x,y,width:w,height:h,rx:7,"stroke-dasharray":dash},g);
   mk("path",{class:"hdr",d:`M${x+7},${y} H${x+w-7} a7,7 0 0 1 7,7 V${y+30} H${x} V${y+7} a7,7 0 0 1 7,-7 Z`,fill:st.background},g);
@@ -1105,15 +1165,15 @@ function drawCard(svg,id,box){
 function renderDynamic(R,svg){
   const cols=R.els, X=i=>112+i*150, Y0=98, DY=44, H=Y0+R.rels.length*DY+14, W=112+(cols.length-1)*150+112;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  cols.forEach((id,i)=>{ const x=X(i); mk("line",{x1:x,y1:68,x2:x,y2:H-6,class:"c4life"},svg); });
+  cols.forEach((id,i)=>{ const x=X(i); mk("line",{x1:x,y1:68,x2:x,y2:H-6,class:"c4life"+(el(id).tags.includes("Planned")?" planned":"")},svg); });
   R.rels.forEach(r=>{
-    const i=cols.indexOf(r.a), j=cols.indexOf(r.b), y=Y0+(r.num-1)*DY, a=X(i), b=X(j), g=mk("g",{class:"c4rel","data-a":r.a,"data-b":r.b,"data-num":r.num},svg);
+    const i=cols.indexOf(r.a), j=cols.indexOf(r.b), y=Y0+(r.num-1)*DY, a=X(i), b=X(j), g=mk("g",{class:"c4rel"+(el(r.a).tags.includes("Planned")||el(r.b).tags.includes("Planned")?" planned":""),"data-a":r.a,"data-b":r.b,"data-num":r.num},svg);
     if(i===j){ mk("path",{d:`M${a},${y-10} L${a+34},${y-10} L${a+34},${y+8} L${a+2},${y+8}`,"marker-end":"url(#c4arr)"},g); txt(g,a+42,y+2,fit(r.desc,40),""); }
     else { const dir=b>a?1:-1; mk("path",{d:`M${a},${y} L${b-dir*3},${y}`,"marker-end":"url(#c4arr)"},g); const label=fit(r.desc.split(/[—;]/)[0].trim(),44), mx=(a+b)/2, lw=label.length*5.2+12; mk("rect",{class:"lbg",x:mx-lw/2,y:y-18,width:lw,height:14,rx:7},g); txt(g,mx,y-8,label,"","middle"); }
     const nb=mk("g",{class:"num"},g); mk("circle",{cx:Math.min(a,b)-13,cy:y,r:9},nb); txt(nb,Math.min(a,b)-13,y+3.5,String(r.num),"","middle");
     g.style.cursor="pointer"; g.addEventListener("click",()=>selectC4Step(r.num));
   });
-  cols.forEach((id,i)=>{ const e=el(id), st=styleFor(e), x=X(i), g=mk("g",{class:"c4el",tabindex:0,role:"button","data-id":id,"aria-label":e.name},svg);
+  cols.forEach((id,i)=>{ const e=el(id), st=styleFor(e), x=X(i), g=mk("g",{class:"c4el"+(e.tags.includes("Planned")?" planned":""),tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
     mk("rect",{class:"card",x:x-66,y:14,width:132,height:50,rx:6},g);
     mk("path",{class:"hdr",d:`M${x-60},14 H${x+60} a6,6 0 0 1 6,6 V40 H${x-66} V20 a6,6 0 0 1 6,-6 Z`,fill:st.background},g);
     glyph(g,e.type,x-60,20,st.color);
@@ -1126,6 +1186,11 @@ function renderDynamic(R,svg){
 let c4View=null, c4Sel=null, c4Zoom="fit";
 /* fit: the whole view scaled into the panel; 1:1: natural size, scrolling sideways inside the canvas. */
 function applyZoom(){ const svg=$("#svg-c4"); svg.style.width = c4Zoom==="fit" ? "100%" : (c4View&&c4View.width ? c4View.width+"px" : "100%"); document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.z===c4Zoom))); }
+/* The C4 legend, drawn with each view (GUIDANCE.md §2): one swatch per DSL element style this view draws (element kinds, External,
+   Internal, Standalone, Planned), then the line encodings it draws: the planned arrow and the boundary frame only where they are. */
+function c4Key(R){
+  $("#c4-key").innerHTML=C4.styles.filter(s=>s.props.background&&R.els.some(id=>el(id).tags.includes(s.tag))).map(s=>`<span><i${s.tag==="Planned"?' class="pln"':""} style="background:${esc(s.props.background)};border-style:${esc(s.props.border||"solid")};opacity:${(+s.props.opacity||100)/100}"></i>${esc(s.tag)}</span>`).join("")+`<span><i class="arrow"></i>relationship, labelled with its DSL description</span>`+(document.querySelector("#svg-c4 .c4rel.dashed, #svg-c4 .c4rel.planned")?`<span><i class="arrow dashed"></i>to or from a Planned element</span>`:"")+(document.querySelector("#svg-c4 .c4bound")?`<span><i class="frame"></i>boundary: the view's scope</span>`:"");
+}
 function renderC4(vi){
   const v=C4.views[vi], R=resolveView(v), svg=$("#svg-c4"); c4View={v,R}; c4Sel=null; svg.innerHTML="";
   const d=mk("defs",{},svg); const m=mk("marker",{id:"c4arr",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"8",markerHeight:"8",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--rel)"},m);
@@ -1136,7 +1201,7 @@ function renderC4(vi){
   else { const L=layoutC4(R,v.type); c4View.width=L.width; svg.setAttribute("viewBox",`0 0 ${L.width} ${L.height}`); drawFrame(svg,L); drawRoutes(svg,L); R.els.forEach(id=>drawCard(svg,id,L.pos[id])); }
   document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===String(vi))));
   $("#dsl-view").hidden=true; $("#c4-canvas").hidden=false; $("#c4-head").hidden=false; $("#c4-key").hidden=false;
-  applyZoom(); inspectC4();
+  c4Key(R); applyZoom(); inspectC4();
 }
 /* The inspector for what the C4 tab has on screen: the source, else the selected element or dynamic step, else the view itself. */
 function inspectC4(){
@@ -1184,8 +1249,6 @@ function showDsl(){
   const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
   C4.views.forEach((v,i)=>{ const b=document.createElement("button"); const isLevel=v.type!=="dynamic"; b.className="rung"+(isLevel?" lvl":" sep")+(isLevel&&levels[levels.length-1]===v?" last":""); b.dataset.v=String(i); b.setAttribute("aria-pressed","false"); const [lv,nm]=LEVEL[v.type]; b.innerHTML=`<span class="lv">${lv}</span><span class="nm">${nm}</span><span class="sc">${esc(v.type==="dynamic"?v.key:el(v.scope).name)}</span>`; b.addEventListener("click",()=>renderC4(i)); host.appendChild(b); });
   const d=document.createElement("button"); d.className="rung sep"; d.dataset.v="dsl"; d.setAttribute("aria-pressed","false"); d.innerHTML=`<span class="lv">{ }</span><span class="nm">Source</span><span class="sc">workspace.dsl</span>`; d.addEventListener("click",showDsl); host.appendChild(d);
-  // The legend: one swatch per DSL element style (element kinds, External, Internal, Standalone, Planned), then the line encodings.
-  $("#c4-key").innerHTML=C4.styles.filter(s=>s.props.background&&C4.order.some(id=>el(id).tags.includes(s.tag))).map(s=>`<span><i style="background:${esc(s.props.background)};border-style:${esc(s.props.border||"solid")};opacity:${(+s.props.opacity||100)/100}"></i>${esc(s.tag)}</span>`).join("")+`<span><i class="arrow"></i>relationship, labelled with its DSL description</span><span><i class="arrow dashed"></i>to or from a Planned element</span><span><i class="frame"></i>boundary: the view's scope</span>`;
 })();
 function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type==="component"&&isWithin(elementId,v.scope)); renderC4(vi>=0?vi:0); selectC4(elementId); }
 
@@ -1300,7 +1363,7 @@ function renderSeq(){
   svg.setAttribute("viewBox",`0 0 1000 ${H}`);
   arrowDefs(svg,"sarr2","var(--ink-2)");
   S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
-  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(l.planned?" planned":"")},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
   S.steps.forEach((s,i)=>{
     const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(s.planned?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
     if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
@@ -1313,7 +1376,7 @@ function renderSeq(){
 /* The legend for the sequence: the lifeline owners it shows (each in its side's hue), then the line encodings and planned. */
 function seqKey(S){
   const sw={server:"pub srv",client:"pub cli",wire:"pub wir",consumer:"con",external:"ext"}, sides=[...new Set(S.lifelines.map(lane).map(l=>l.side).filter(Boolean))];
-  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span><span><i class="ln dash"></i>return, open head</span>`+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`;
+  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(s=>s.planned)||S.lifelines.some(l=>l&&l.planned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
 }
 function gotoStep(i){
   const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
@@ -1349,6 +1412,24 @@ let start="t-structure";
 try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
 const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
 show(start);
+
+/* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
+   A light/night toggle in the header (the renderer adds it when the page's header has none). Until it is clicked the page follows the
+   system setting; a click picks the other palette and remembers it (localStorage "dashboards-theme", shared by every dashboard of the
+   same origin) across pages and reloads. It only selects one of the two palettes the page defines: :root[data-theme]. The same code
+   runs on every dashboard type. */
+(function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+  let btn=document.getElementById("theme");
+  if(!btn){ const hdr=document.querySelector("header"); if(!hdr) return; const tools=document.createElement("div"); tools.className="tools systools";
+    tools.innerHTML='<button class="themebtn" id="theme" type="button"></button>'; hdr.prepend(tools); btn=document.getElementById("theme"); }
+  const chosen=()=>{ try{ const t=localStorage.getItem(KEY); return t==="light"||t==="dark"?t:null; }catch(e){ return null; } };
+  const now=()=>root.dataset.theme==="dark"||root.dataset.theme==="light"?root.dataset.theme:(mq&&mq.matches?"dark":"light");
+  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.textContent=t==="dark"?"☾ night":"☀ light"; btn.setAttribute("aria-pressed",String(t==="dark"));
+    btn.title=`Theme: ${word}${chosen()?"":", as the system setting"}. Click for ${t==="dark"?"light":"night"}.`; btn.setAttribute("aria-label",`Night theme${chosen()?"":" (follows the system setting until clicked)"}`); };
+  btn.addEventListener("click",()=>{ const t=now()==="dark"?"light":"dark"; root.dataset.theme=t; try{ localStorage.setItem(KEY,t); }catch(e){} label(); });
+  if(mq&&mq.addEventListener) mq.addEventListener("change",label);
+  if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
+  label(); })();
 </script>
 </body>
 </html>

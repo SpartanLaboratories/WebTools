@@ -32,8 +32,8 @@
       "name": "webtools-http common core",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-test-fixtures",
@@ -103,8 +103,8 @@
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-25T07:21:21Z",
-    "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.2, §6.8, §6.9 and §11. Unit 4, #63 (`test-support`), is up next, blocked by #62. Units 5 to 11 follow in landing order.",
+    "updated": "2026-10-25T12:08:09Z",
+    "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
     "steps": [
       "sizing",
       "interview",
@@ -115,9 +115,9 @@
       "landed"
     ],
     "current": [
-      "http-core.built"
+      "test-support.built"
     ],
-    "next": "test-support",
+    "next": "url-policy",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -260,6 +260,18 @@
       "column": "built",
       "label": "Unit 3, #62, started: sized as one system; the planner re-passes unit 3 against architecture.md §6.2, §6.8, §6.9 and §11 and impact.md §7",
       "ref": "#62"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Unit 3, #62, landed: PR #82 merged as 7de8207; `webtools-http` 1.0.0 new and unreleased, no version moved; two changes to the initiative's impact: the check-only compiles take `js()` with no environment, and `HttpTransport` implementations must be main-safe",
+      "ref": "7de8207"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Unit 4, #63, started: sized as one system; the planner re-passes unit 4 against architecture.md §6.7, §6.1 and §11 and impact.md §7",
+      "ref": "#63"
     }
   ],
   "rows": [
@@ -319,7 +331,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Create the included build with `WebToolsBuild` (the level list and `registerLevelTasks`) and the plugins `webtools.published-library`, `webtools.kotlin-jvm-library` and `webtools.kotlin-multiplatform-library`; cut the root build to `group` and `version`; put the three modules on the JVM plugin with their own `api(slf4j-api)`; keep the UDP port lock verbatim; select the level tasks by package.",
         "defense": "One system, the build, and the change is additive build behaviour with no library API change. Measured: the three modules publish identical output.",
         "steps": [],
         "tests": [
@@ -335,7 +346,49 @@
           "Kotlin 2.2.0 on Gradle 9.7.1 is outside Kotlin's documented range; `build-logic` pins the version once, so the move is one line"
         ],
         "source": "architecture.md §11 unit 1",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Create the included build with `WebToolsBuild` (the level list and `registerLevelTasks`) and the plugins `webtools.published-library`, `webtools.kotlin-jvm-library` and `webtools.kotlin-multiplatform-library`.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Cut `settings.gradle.kts` and the root build to `group` and `version`.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Put the three existing modules on the JVM plugin with `api(slf4j-api)` in their own files, keeping the `webtools-udp` port lock verbatim.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Select the level tasks by package.",
+            "ref": "architecture.md#61-shared-build-logic--build-logic",
+            "excerpt": {
+              "ref": "architecture.md#61-shared-build-logic--build-logic",
+              "heading": "6.1 Shared build logic — `build-logic`",
+              "paragraph": "Responsibility: one place where every module's compile target, test layout and publishing shape are decided. · Placement: an included build at `build-logic/` (`pluginManagement { includeBuild(\"build-logic\") }` in `settings.gradle.kts`, first statement). The root `build.gradle.kts` keeps only `allprojects { group; version }`; its `plugins`, `subprojects {}`, level-task and publishing blocks (`:1-5`, `:17-92`) move here. Plugin versions (KGP 2.2.0, vanniktech 0.36.0) are pinned once in `build-logic/build.gradle.kts`. · Owns: · `WebToolsBuild` — an object holding `JAVA_FLOOR = 11`, the ordered …",
+              "hash": "1bb755fe6eb7"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "landed",
@@ -423,7 +476,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Add `JAVA_FLOOR = 11` and wire `jvmTarget`, `-Xjdk-release` and the Java compatibility settings (JVM plugin) and the `TargetJvmVersion` attribute (KMP plugin) from it; add `verifyJavaFloor` into `check`; set `1.0.0a` on `webtools-scraping` and `webtools-browser` and extend `webtools-udp`'s `2.0.0a` note; add the build-JDK note to the README.",
         "defense": "A bug fix to bytecode and metadata with no public API, state or wire change, local to the build.",
         "steps": [],
         "tests": [
@@ -437,7 +489,49 @@
           "`1.0.0a` orders below `1.0.0`: a consumer graph that also asks for `1.0.0` keeps the defect unless it pins with `strictly`; the README and the release note say so"
         ],
         "source": "architecture.md §11 unit 2",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Add `WebToolsBuild.JAVA_FLOOR = 11` and wire `jvmTarget`, `-Xjdk-release` and the Java compatibility settings of the JVM plugin, and the `TargetJvmVersion` attribute of the multiplatform plugin, from it.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Add the `verifyJavaFloor` task into `check`.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Set `1.0.0a` on `webtools-scraping` and `webtools-browser`, and extend `webtools-udp`'s `2.0.0a` note.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Add the build-JDK note to the README.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "landed",
@@ -496,171 +590,7 @@
         "versions": "webtools-http 1.0.0 (new, unreleased)",
         "branch": null,
         "folder": "62-http-core/",
-        "board": "62-http-core/dashboard.html",
-        "live": {
-          "step": "remediation",
-          "since": "2026-10-25T11:58:00Z",
-          "updated": "2026-10-25T12:20:00Z",
-          "detail": "Fixes: HttpFailure message-rule KDoc, addSensitive flag wording, HttpTransport main-safety point, Amendment 1 comment in HttpSyntax, OkHttp set names in UrlEncoding, DNS-limit and no-octal comments in UrlHost; Kelvin sign escaped in six test files; UrlInputGenerator and UrlCorpus tags and comments; corpus gains every isUrlSpace code point and four dot-segment folds; one new HttpHeaders test; behaviour-named tests; RegExp injection hints; e2e class KDoc notes the common-check plugin is covered at level 3. Re-run: :webtools-http:check :webtools-http-commoncheck:check (131 tests, apiCheck, dump unchanged); CommonCheckPluginIntegrationTest 7 + e2eTest 5. No behaviour, API or design change.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "landing",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-10-25",
-              "findings": {
-                "documentation": 18,
-                "test": 9,
-                "code": 2
-              },
-              "severity": {
-                "minor": 27,
-                "other": 2
-              },
-              "route": "on-the-spot",
-              "report": "build/reports/test-inspector/index.html",
-              "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-62-http-core",
-          "event": {
-            "name": "implementation-stage",
-            "at": "2026-10-25T12:20:00Z",
-            "note": "qa pass 1 fixes done (no behaviour, API or design change); the planner reconciles next"
-          },
-          "stages": [
-            {
-              "id": "S1",
-              "name": "common-check plugin and TestKit tests",
-              "state": "done",
-              "rows": [
-                "common-check-plugin"
-              ]
-            },
-            {
-              "id": "S2",
-              "name": "module skeleton, gated declarations, compile proof",
-              "state": "done",
-              "rows": [
-                "module-skeleton",
-                "opt-in-marker",
-                "failure-model",
-                "request-response",
-                "transport-port",
-                "wall-clock",
-                "logging-seam",
-                "commoncheck-module",
-                "compile-proof",
-                "release"
-              ]
-            },
-            {
-              "id": "S3",
-              "name": "Url, encoders, corpus, generator, commonTest",
-              "state": "done",
-              "rows": [
-                "request-response",
-                "common-tests"
-              ]
-            },
-            {
-              "id": "S4",
-              "name": "remaining level 2/4a/4c tests, jvmTest differentials, logback-test.xml",
-              "state": "done",
-              "rows": [
-                "logging-seam",
-                "common-tests"
-              ]
-            },
-            {
-              "id": "S5",
-              "name": "ABI dump and checks",
-              "state": "done",
-              "rows": [
-                "module-skeleton",
-                "commoncheck-module",
-                "compile-proof"
-              ]
-            },
-            {
-              "id": "S6",
-              "name": "README",
-              "state": "done",
-              "rows": [
-                "readme"
-              ]
-            },
-            {
-              "id": "S7",
-              "name": "level-5 pass and as-built record",
-              "state": "done",
-              "rows": []
-            }
-          ],
-          "remediation": {
-            "pass": 1,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "rookie-dev: KDoc wording (HttpFailure, HttpHeaders.addSensitive, HttpTransport main-safety), level-1 line comments, test-fixture tags, U+212A escapes, corpus rows, test renames, absent-name set test; touched tasks re-run",
-                "state": "done"
-              },
-              {
-                "name": "planner: record the two scope exclusions (L1 per-type gating, e2e composite) in plan.md §9 and reconcile final-implementation.md and impact.md",
-                "state": "current"
-              }
-            ]
-          },
-          "open": [
-            {
-              "text": "The S2 report raised one inconsistency in `plan.md` for the planner: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
-              "raised": "implementation-stage S2",
-              "ref": "plan.md",
-              "resolved": "Resolved by `plan.md`'s Amendment 1, which makes §9's media-type test row agree with the unchanged grammar of §6.4 and code of §7.5, applies in S4 and changes no verdict on this board."
-            },
-            {
-              "text": "Three items of the Level 5 pass need an IntelliJ session and were not performed; they are left to the maintainer: the IDE import of the check module and its `jsMain` actuals, the gate error and `@OptIn` quick fix on a scratch `WallClock` implementer, and Quick Documentation of `Url.parse`, `Url.toString`, `HttpTransport`, `HttpFailure` and the marker. The command-line items (the dump read, the tree hygiene) were done.",
-              "raised": "implementation-stage S7",
-              "ref": "final-implementation.md#6-level-5--the-manual-pass"
-            },
-            {
-              "text": "Two plan-sanctioned test-scope exclusions flagged by qa: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
-              "raised": "qa-pass 1",
-              "ref": "plan.md"
-            }
-          ],
-          "deviations": 1,
-          "rowNames": {
-            "module-skeleton": "The webtools-http module and its build",
-            "opt-in-marker": "The opt-in marker ExperimentalForInheritanceWebToolsApi",
-            "failure-model": "The failure model and its two reason vocabularies",
-            "request-response": "Request and response types",
-            "transport-port": "The transport port HttpTransport",
-            "wall-clock": "The wall-clock port WallClock",
-            "logging-seam": "The logging seam",
-            "commoncheck-module": "webtools-http-commoncheck, the check-only js compile",
-            "common-check-plugin": "The webtools.kotlin-common-check convention plugin",
-            "compile-proof": "The first compile proof of the opt-in gate",
-            "common-tests": "Parsing and validation tests, and the Url-against-HttpUrl differential",
-            "readme": "The README's artifact row and install line",
-            "release": "The module's version"
-          }
-        }
+        "board": "62-http-core/dashboard.html"
       },
       "gap": {
         "kind": "missing",
@@ -743,7 +673,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Create `webtools-http` (KMP plugin, `explicitApi()`, the ABI dump) and `webtools-http-commoncheck` with the `webtools.kotlin-common-check` plugin; deliver the marker, the failure model, the request and response types, `HttpTransport`, `WallClock`, the logging seam and the internal `flatMap`; add the README artifact row and install line.",
         "defense": "One system: one new module's additive API. Its plan starts with the compile proof of the marker, a gated interface, a default naming it and a consumer without opt-in.",
         "steps": [],
         "tests": [
@@ -757,11 +686,53 @@
           "The public surface has not been compiled; the opt-in behaviour comes from compiler test data and one JVM-only measurement"
         ],
         "source": "architecture.md §11 unit 3",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Create `webtools-http` (the multiplatform plugin, `explicitApi()`, the ABI dump) and `webtools-http-commoncheck` with the `webtools.kotlin-common-check` plugin.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Deliver the marker, the failure model with both reason vocabularies, the request and response types, `HttpTransport` and `WallClock`.",
+            "ref": "architecture.md#62-webtools-http-common-core",
+            "excerpt": {
+              "ref": "architecture.md#62-webtools-http-common-core",
+              "heading": "6.2 `webtools-http` common core",
+              "paragraph": "Responsibility: the vocabulary and the contracts every other system in the module speaks, with nothing platform-specific in a signature. · Placement: `common/`, one flat package `com.spartanlabs.webtools.http` (no `.internal` subpackage: `internal` does the hiding, and a flat package never needs a type to move). `explicitApi()`. Module build: `webtools.kotlin-multiplatform-library`, `jvm()` only, `jvmMain` dependencies `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13, all `implementation`. · The one `api` dependency. `kotlinx-coroutines-core` 1.10.2 is the only third-party library …",
+              "hash": "3b7998b63fc0"
+            }
+          },
+          {
+            "text": "Deliver the logging seam, the internal `flatMap` and the non-fatal helper.",
+            "ref": "architecture.md#62-webtools-http-common-core",
+            "excerpt": {
+              "ref": "architecture.md#62-webtools-http-common-core",
+              "heading": "6.2 `webtools-http` common core",
+              "paragraph": "Responsibility: the vocabulary and the contracts every other system in the module speaks, with nothing platform-specific in a signature. · Placement: `common/`, one flat package `com.spartanlabs.webtools.http` (no `.internal` subpackage: `internal` does the hiding, and a flat package never needs a type to move). `explicitApi()`. Module build: `webtools.kotlin-multiplatform-library`, `jvm()` only, `jvmMain` dependencies `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13, all `implementation`. · The one `api` dependency. `kotlinx-coroutines-core` 1.10.2 is the only third-party library …",
+              "hash": "3b7998b63fc0"
+            }
+          },
+          {
+            "text": "Add the README's artifact row and install line.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": "",
+        "state": "landed",
+        "summary": "Landed through PR #82 as 7de8207 (#62): `webtools-http` is the first module on the multiplatform convention, with `explicitApi()`, its ABI dump and `kotlinx-coroutines-core` as its one `api` dependency. It holds the opt-in marker, the failure model with both reason vocabularies, the request and response types with `Url`, and the gated ports `HttpTransport` and `WallClock` with `WallClock.System`. `webtools-http-commoncheck` compiles its `commonMain` for `js()` with no environment through the new `webtools.kotlin-common-check` plugin, so `build` downloads no Node.js and the root project gains no task. `webtools-http` 1.0.0 is new and unreleased; no version moved.",
         "changes": [
           {
             "what": "The check plugin `webtools.kotlin-common-check` calls `js()` with no environment, in place of the `js { nodejs { testTask { enabled = false } } }` of architecture §3, §6.1 and §6.8, so the root project gains no task and unit 4's open point on where the publication check attaches stands.",
@@ -769,7 +740,16 @@
             "when": "#62 plan",
             "ref": "62-http-core/plan.md#67-the-check-only-js-module"
           }
-        ]
+        ],
+        "commits": [
+          "e007cdd",
+          "123c875",
+          "b5257d3",
+          "40cb538",
+          "4d9c9f9"
+        ],
+        "verified": "qa pass 1 changes requested (18 documentation, 9 test, 2 code findings; 27 of them minor), fixed on the spot with no second pass; the 131 tests of `webtools-http` green and `apiCheck` passed; the compile proof of the gate held in `commonMain`, `jvmMain` and the check module's `jsMain`.",
+        "link": "62-http-core/final-implementation.md"
       }
     },
     {
@@ -836,7 +816,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Deliver the fixtures compilation and its publication, `VirtualClock`, `FakeHttpTransport`, `Fixture`/`FixtureLoader` with the `.http` codec, `FixtureRecorder` with `RecordingGate` and `Redaction`, the `.gitattributes` line, the fixtures-publication check in `build-logic` wired into `check`, and the README's `testFixtures(...)` line.",
         "defense": "One system, the fixtures variant; the build check is this unit's own test.",
         "steps": [],
         "tests": [
@@ -850,7 +829,39 @@
           "The fixtures rest on an experimental publishing API; only the publication check notices a change"
         ],
         "source": "architecture.md §11 unit 4",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Deliver the `testFixtures` compilation and its publication: two variants, the capability, `TargetJvmVersion` from the floor.",
+            "ref": "architecture.md#67-published-test-support",
+            "excerpt": {
+              "ref": "architecture.md#67-published-test-support",
+              "heading": "6.7 Published test support",
+              "paragraph": "Responsibility: make the production stack testable without bending it: a clock, a script engine, a fixture codec, a loopback factory, a recorder. · Placement: `fixtures/`, package `com.spartanlabs.webtools.http.testing`, a JVM-only `testFixtures` compilation associated with `main` (so it reaches `internal` declarations) and published as two variants (`testFixturesApiElements`, `testFixturesRuntimeElements`, capability `io.github.spartanlaboratories:webtools-http-test-fixtures:<v>`, `TargetJvmVersion` from `JAVA_FLOOR`, `mapToMavenScope` + `mapToOptional`) through …",
+              "hash": "548a2a3fa931"
+            }
+          },
+          {
+            "text": "Deliver `VirtualClock`, `FakeHttpTransport`, `Fixture` and `FixtureLoader` with the `.http` codec, and `FixtureRecorder` with `RecordingGate` and `Redaction`.",
+            "ref": "architecture.md#67-published-test-support",
+            "excerpt": {
+              "ref": "architecture.md#67-published-test-support",
+              "heading": "6.7 Published test support",
+              "paragraph": "Responsibility: make the production stack testable without bending it: a clock, a script engine, a fixture codec, a loopback factory, a recorder. · Placement: `fixtures/`, package `com.spartanlabs.webtools.http.testing`, a JVM-only `testFixtures` compilation associated with `main` (so it reaches `internal` declarations) and published as two variants (`testFixturesApiElements`, `testFixturesRuntimeElements`, capability `io.github.spartanlaboratories:webtools-http-test-fixtures:<v>`, `TargetJvmVersion` from `JAVA_FLOOR`, `mapToMavenScope` + `mapToOptional`) through …",
+              "hash": "548a2a3fa931"
+            }
+          },
+          {
+            "text": "Add the fixtures-publication check to `build-logic`, wired into `check`, the `.gitattributes` line and the README's `testFixtures(...)` line.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -914,7 +925,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Deliver `OutboundUrlPolicy` with `Trusted`/`Untrusted` builders, `TransportSettings` with both default sets, the `internal` classification core in `commonMain`, and the JVM enforcement types with stub-based Level 2 tests.",
         "defense": "One subsystem, additive.",
         "steps": [],
         "tests": [
@@ -928,7 +938,39 @@
           "Every `TransportSettings` number is a judgement default, not a measurement"
         ],
         "source": "architecture.md §11 unit 5",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Deliver `OutboundUrlPolicy` with `Trusted` and `Untrusted` builders, and `TransportSettings` with both default sets.",
+            "ref": "architecture.md#631-outbound-url-policy-common-plus-jvm-enforcement",
+            "excerpt": {
+              "ref": "architecture.md#631-outbound-url-policy-common-plus-jvm-enforcement",
+              "heading": "6.3.1 Outbound-URL policy (`common/`, plus `jvm/` enforcement)",
+              "paragraph": "Responsibility: decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten. · Owns: · `OutboundUrlPolicy`, a sealed pair (the closed set is the contract): `Trusted` (optional `pinnedHosts`; `allowCleartext = false`; no address filtering, no name or port rule) and `Untrusted` (`allowedPorts` default `{80, 443, 8080, 8443}`, `null` for any; `extraDeniedRanges`; `extraDeniedHostSuffixes`; `mixedAnswers` default `Reject`). Each is built by a factory with a builder (`OutboundUrlPolicy.trusted { }`, `untrusted { }`) and carries its …",
+              "hash": "e3a3769e81fe"
+            }
+          },
+          {
+            "text": "Put the `internal` classification core in `commonMain`.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Deliver the JVM enforcement types with stub-based Level 2 tests.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -998,7 +1040,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Deliver `OkHttpTransport` (factory and `internal` constructor), `ExchangeGuard`, the redirect loop, the capped in-callback body read, the failure mapping, `close()` and the transport's logging; add `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` to the fixtures.",
         "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
@@ -1012,7 +1053,39 @@
           "A consumer's newer OkHttp 5.x wins resolution; the fail-closed guard does not depend on which re-send paths exist"
         ],
         "source": "architecture.md §11 unit 6",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Deliver `OkHttpTransport` (factory and `internal` constructor) and `ExchangeGuard`.",
+            "ref": "architecture.md#632-okhttp-transport-jvm",
+            "excerpt": {
+              "ref": "architecture.md#632-okhttp-transport-jvm",
+              "heading": "6.3.2 OkHttp transport (`jvm/`)",
+              "paragraph": "Responsibility: deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model. · Owns: `OkHttpTransport : HttpTransport`, final, built by a factory taking `userAgent` (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`. Inside: · the client: a new `Dispatcher` (sized from the settings; the facade raises `maxConcurrentRequests` to the budget's `maxBurst` when it builds both, because OkHttp's …",
+              "hash": "122cd4382789"
+            }
+          },
+          {
+            "text": "Deliver the redirect loop, the capped in-callback body read, the failure mapping, `close()` and the transport's logging.",
+            "ref": "architecture.md#632-okhttp-transport-jvm",
+            "excerpt": {
+              "ref": "architecture.md#632-okhttp-transport-jvm",
+              "heading": "6.3.2 OkHttp transport (`jvm/`)",
+              "paragraph": "Responsibility: deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model. · Owns: `OkHttpTransport : HttpTransport`, final, built by a factory taking `userAgent` (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`. Inside: · the client: a new `Dispatcher` (sized from the settings; the facade raises `maxConcurrentRequests` to the budget's `maxBurst` when it builds both, because OkHttp's …",
+              "hash": "122cd4382789"
+            }
+          },
+          {
+            "text": "Add `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` to the fixtures.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -1076,7 +1149,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Deliver the `ResponseCache` port, `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats`, `ResponseCache.Disabled` and `CaffeineResponseCache` with the load-start, failure-as-value, `asDeferred` waiting, `maxAge` and `Closed` behaviours.",
         "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
@@ -1091,7 +1163,29 @@
           "A shared load carries the first caller's lane and wait cap"
         ],
         "source": "architecture.md §11 unit 7",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Deliver the `ResponseCache` port with `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats` and `ResponseCache.Disabled`.",
+            "ref": "architecture.md#64-response-cache",
+            "excerpt": {
+              "ref": "architecture.md#64-response-cache",
+              "heading": "6.4 Response cache",
+              "paragraph": "Responsibility: one decoded value per key, served to any number of concurrent callers from one load, for a bounded time, with failures never stored. · Owns (`common/`): `ResponseCache : AutoCloseable` (subclass-gated): one suspend `getOrLoad(key, policy, maxAge, loader): Result<Lookup<V>>` (no default on `maxAge`; an overload without it), `invalidate`, `invalidateAll`, `stats()`, `close()`; `CacheKey<V>(endpointId, params)` (phantom-typed; equality over the id and the parameters sorted by name with a stable sort; `toString` prints parameter names only; never a tenant, a header, a credential …",
+              "hash": "872bafe44717"
+            }
+          },
+          {
+            "text": "Deliver `CaffeineResponseCache` with the load-start, failure-as-value, `asDeferred` waiting, `maxAge` and `Closed` behaviours.",
+            "ref": "architecture.md#64-response-cache",
+            "excerpt": {
+              "ref": "architecture.md#64-response-cache",
+              "heading": "6.4 Response cache",
+              "paragraph": "Responsibility: one decoded value per key, served to any number of concurrent callers from one load, for a bounded time, with failures never stored. · Owns (`common/`): `ResponseCache : AutoCloseable` (subclass-gated): one suspend `getOrLoad(key, policy, maxAge, loader): Result<Lookup<V>>` (no default on `maxAge`; an overload without it), `invalidate`, `invalidateAll`, `stats()`, `close()`; `CacheKey<V>(endpointId, params)` (phantom-typed; equality over the id and the parameters sorted by name with a stable sort; `toString` prints parameter names only; never a tenant, a header, a credential …",
+              "hash": "872bafe44717"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -1162,7 +1256,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Deliver `CallBudget`, `Permit`, `withPermit`, `Lane`, `RateWindow`, `RateSignals` and their reader, `RetryAfter`, `BudgetStore` with `InMemoryBudgetStore`, `BudgetObserver`, `CallBudget.Unlimited` and `WindowedCallBudget` in `commonMain`, with the non-suspend `close()` plus `flush()`; add `RecordingBudgetObserver` and `FakeBudgetStore` to the fixtures.",
         "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
@@ -1176,7 +1269,49 @@
           "How a `Mutex`-based ledger closes without suspending is unit 8's plan to settle (architecture §13)"
         ],
         "source": "architecture.md §11 unit 8",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Deliver `CallBudget`, `Permit`, `withPermit`, `Lane`, `RateWindow`, `RateSignals` and their reader, and `RetryAfter`, in `commonMain`.",
+            "ref": "architecture.md#65-call-budget",
+            "excerpt": {
+              "ref": "architecture.md#65-call-budget",
+              "heading": "6.5 Call budget",
+              "paragraph": "Responsibility: grant permits under a provider's clock-aligned windows and lane shares, pause on server signals, and hold a hard daily stop that survives a restart when a store is supplied. · Owns (`common/`, all of it): · the port `CallBudget : AutoCloseable` (subclass-gated): `acquire(cost, lane, maxWait): Result<Permit>` (fails fast with `BudgetExhausted(wait, reason, window)` when the computed wait exceeds the cap; a cancelled wait is refunded), `utilisation(): BudgetUtilisation`, non-suspend `close()` (marks closed; waiters fail with `Closed`), `suspend flush(): Result<Unit>` (exact …",
+              "hash": "7516885e4071"
+            }
+          },
+          {
+            "text": "Deliver `BudgetStore` with `InMemoryBudgetStore`, `BudgetObserver`, `CallBudget.Unlimited` and `WindowedCallBudget`.",
+            "ref": "architecture.md#65-call-budget",
+            "excerpt": {
+              "ref": "architecture.md#65-call-budget",
+              "heading": "6.5 Call budget",
+              "paragraph": "Responsibility: grant permits under a provider's clock-aligned windows and lane shares, pause on server signals, and hold a hard daily stop that survives a restart when a store is supplied. · Owns (`common/`, all of it): · the port `CallBudget : AutoCloseable` (subclass-gated): `acquire(cost, lane, maxWait): Result<Permit>` (fails fast with `BudgetExhausted(wait, reason, window)` when the computed wait exceeds the cap; a cancelled wait is refunded), `utilisation(): BudgetUtilisation`, non-suspend `close()` (marks closed; waiters fail with `Closed`), `suspend flush(): Result<Unit>` (exact …",
+              "hash": "7516885e4071"
+            }
+          },
+          {
+            "text": "Close with a non-suspend `close()` plus `flush()`.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          },
+          {
+            "text": "Add `RecordingBudgetObserver` and `FakeBudgetStore` to the fixtures.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -1240,7 +1375,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Deliver `Endpoint`, `CallSpec`, `FetchSpec`, `UpstreamClient`, `UrlFetcher`, their configs, the common factories and the JVM owning factories with the `maxBurst` dispatcher sizing and the cache → budget → transport closing order; the README how-to.",
         "defense": "One system: an additive subsystem of `webtools-http`.",
         "steps": [],
         "tests": [
@@ -1254,7 +1388,39 @@
           "The generic `Endpoint<T>` factory-over-class resolution is argued from precedents and checked in this unit's plan"
         ],
         "source": "architecture.md §11 unit 9",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Deliver `Endpoint`, `CallSpec`, `FetchSpec`, `UpstreamClient`, `UrlFetcher` and their configs.",
+            "ref": "architecture.md#66-call-facades",
+            "excerpt": {
+              "ref": "architecture.md#66-call-facades",
+              "heading": "6.6 Call facades",
+              "paragraph": "Responsibility: compose cache, budget and transport in the one fixed order — cache, then budget inside the cache loader, then transport — so a hit costs nothing and N coalesced callers cost one permit; and own what they built. · Owns (`common/`): · `Endpoint<T>` (factory `Endpoint(id, decode, configure)` + builder: `name`, `ttl`, `missTtl`, `cost`, `lane`, `misses(statuses)`): the decode function travels with the endpoint because the cache key cannot see it. · `CallSpec` (per call: path segments, query pairs, headers, `method`, body, `lane`, `maxWait`, `maxAge`) and `FetchSpec` (`cost`, …",
+              "hash": "0d2a559001f7"
+            }
+          },
+          {
+            "text": "Deliver the common factories and the JVM owning factories, with the `maxBurst` dispatcher sizing and the cache → budget → transport closing order.",
+            "ref": "architecture.md#66-call-facades",
+            "excerpt": {
+              "ref": "architecture.md#66-call-facades",
+              "heading": "6.6 Call facades",
+              "paragraph": "Responsibility: compose cache, budget and transport in the one fixed order — cache, then budget inside the cache loader, then transport — so a hit costs nothing and N coalesced callers cost one permit; and own what they built. · Owns (`common/`): · `Endpoint<T>` (factory `Endpoint(id, decode, configure)` + builder: `name`, `ttl`, `missTtl`, `cost`, `lane`, `misses(statuses)`): the decode function travels with the endpoint because the cache key cannot see it. · `CallSpec` (per call: path segments, query pairs, headers, `method`, body, `lane`, `maxWait`, `maxAge`) and `FetchSpec` (`cost`, …",
+              "hash": "0d2a559001f7"
+            }
+          },
+          {
+            "text": "Add the README how-to.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -1339,7 +1505,6 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Create `webtools-feeds` and its check module; deliver the port, model, limits, validators, `FeedFetch`, `FeedFailure`, `FeedFetcher` and the prolog scan in `commonMain`, `RomeFeedParser` and `FeedFetcher.untrusted` in `jvmMain`; README artifact row, install line and how-to.",
         "defense": "One new module built on published seams; depending on a sibling module does not make it two systems.",
         "steps": [],
         "tests": [
@@ -1355,7 +1520,39 @@
           "Rome is dormant and its DOM amplification on a hostile 2 MiB document is unmeasured"
         ],
         "source": "architecture.md §11 unit 10",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Create `webtools-feeds` and its check module.",
+            "ref": "architecture.md#610-webtools-feeds",
+            "excerpt": {
+              "ref": "architecture.md#610-webtools-feeds",
+              "heading": "6.10 `webtools-feeds`",
+              "paragraph": "Responsibility: parse hostile RSS/Atom documents behind a hardened port and fetch feeds with a stateless conditional GET over `UrlFetcher`. · Placement: `webtools-feeds/`, package `com.spartanlabs.webtools.feeds`, `webtools.kotlin-multiplatform-library`, `explicitApi()`, coordinates `webtools-feeds` and `webtools-feeds-jvm`, version `1.0.0`. `commonMain`: `api(project(\":webtools-http\"))` (the public API names `UrlFetcher`, `Url`, `HttpFailure`, the marker, and `CoroutineDispatcher` through `parseDispatcher`; `kotlinx-coroutines-core` arrives through it as `api`, §6.2). `jvmMain`: `rome` 2.1.0 …",
+              "hash": "5836c304c170"
+            }
+          },
+          {
+            "text": "Deliver the port, model, limits, validators, `FeedFetch`, `FeedFailure`, `FeedFetcher` and the prolog scan in `commonMain`, and `RomeFeedParser` and `FeedFetcher.untrusted` in `jvmMain`.",
+            "ref": "architecture.md#610-webtools-feeds",
+            "excerpt": {
+              "ref": "architecture.md#610-webtools-feeds",
+              "heading": "6.10 `webtools-feeds`",
+              "paragraph": "Responsibility: parse hostile RSS/Atom documents behind a hardened port and fetch feeds with a stateless conditional GET over `UrlFetcher`. · Placement: `webtools-feeds/`, package `com.spartanlabs.webtools.feeds`, `webtools.kotlin-multiplatform-library`, `explicitApi()`, coordinates `webtools-feeds` and `webtools-feeds-jvm`, version `1.0.0`. `commonMain`: `api(project(\":webtools-http\"))` (the public API names `UrlFetcher`, `Url`, `HttpFailure`, the marker, and `CoroutineDispatcher` through `parseDispatcher`; `kotlinx-coroutines-core` arrives through it as `api`, §6.2). `jvmMain`: `rome` 2.1.0 …",
+              "hash": "5836c304c170"
+            }
+          },
+          {
+            "text": "Add the README's artifact row, install line and how-to.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -1403,14 +1600,35 @@
       ],
       "verdict": {
         "kind": "build",
-        "summary": "Write `docs/webtools-http-architecture.md` and make the final README pass: the \"HTTP client stack\" and \"Feeds\" sections, the stability notes and the test-layout paragraph.",
         "defense": "Docs only: Markdown, with no plan folder and no board of its own.",
         "steps": [],
         "tests": [],
         "leaves": [],
         "risks": [],
         "source": "architecture.md §11 unit 11",
-        "link": "architecture.md#11-decomposition"
+        "link": "architecture.md#11-decomposition",
+        "statements": [
+          {
+            "text": "Write `docs/webtools-http-architecture.md`.",
+            "ref": "architecture.md#611-documentation",
+            "excerpt": {
+              "ref": "architecture.md#611-documentation",
+              "heading": "6.11 Documentation",
+              "paragraph": "Responsibility: keep `README.md` and an evergreen `docs/webtools-http-architecture.md` true to what is on `master`. · README (each unit edits its own part in the same change, per the repository-README rule): `:3-4` five published artifacts (a check module is not published); the artifacts table gains `webtools-http` (runtime deps `okhttp-jvm`, `caffeine`, `kotlinx-coroutines-core`, `slf4j-api`) and `webtools-feeds` (`webtools-http` and its transitives, `rome`); `:12-13` adds that the new modules are `suspend`; the install snippet gains the two modules, the Maven note (`webtools-http-jvm`, …",
+              "hash": "5a9dcdb37963"
+            }
+          },
+          {
+            "text": "Make the final README pass: the \"HTTP client stack\" and \"Feeds\" sections, the stability notes and the test-layout paragraph.",
+            "ref": "architecture.md#11-decomposition",
+            "excerpt": {
+              "ref": "architecture.md#11-decomposition",
+              "heading": "11. Decomposition",
+              "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
+              "hash": "4440f63c01d9"
+            }
+          }
+        ]
       },
       "asBuilt": {
         "state": "pending",
@@ -1570,7 +1788,7 @@
         "kind": "operator",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, and the fixtures-publication check once unit 4 attaches it to a `check` that `build` reaches. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
+        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, which compile only: their `js` target has no environment, so no test task and no Node.js. The fixtures-publication check joins once unit 4 attaches it to a `check` that `build` reaches. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
         "link": "impact.md#build"
       }
     ],
@@ -1586,7 +1804,7 @@
         "who": "Implementers of the new seams",
         "system": null,
         "need": "optional",
-        "summary": "Implementing or subclassing a gated seam needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`; calling and passing it do not.",
+        "summary": "Implementing or subclassing a gated seam needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`; calling and passing it do not. An `HttpTransport` implementation must also be main-safe: it moves blocking I/O off the caller's thread and documents its dispatcher.",
         "link": "architecture.md#9-extension--stability"
       },
       {
@@ -1659,15 +1877,30 @@
       },
       {
         "unit": "http-core",
-        "basis": "plan",
-        "summary": "A new module, `webtools-http` 1.0.0, unreleased and not a release candidate at this landing: the marker, the failure model, the request and response types, the transport and wall-clock ports and the logging seam, with `kotlinx-coroutines-core` as its one `api` dependency. The three existing artifacts do not change. The build also compiles its common code for `js`, with no Node.js and no new root task.",
+        "basis": "as-built",
+        "summary": "Built as planned, with two additions: a new module, `webtools-http` 1.0.0, unreleased and not a release candidate at this landing, holding the marker, the failure model, the request and response types and the transport and wall-clock ports with `WallClock.System`; no port has another implementation yet. Its JVM artifact puts `kotlinx-coroutines-core` and `kotlin-stdlib` in the API and `okhttp-jvm`, `caffeine` and `slf4j-api` at runtime only, and `okhttp-jvm` lifts the standard library to 2.2.21 or newer. The three existing artifacts do not change, and the check-only `js` compile downloads nothing and adds no root task.",
         "release": {
           "bump": "none",
           "version": null,
-          "note": "webtools-http 1.0.0 is new and unreleased; no existing version moves"
+          "note": "`webtools-http` 1.0.0 is new and unreleased, published once #55's stack is complete; no existing version moves",
+          "unreleased": true
         },
         "source": "62-http-core/impact.md",
-        "link": "62-http-core/impact.md#1-published-artifacts"
+        "link": "62-http-core/impact.md#1-published-artifacts",
+        "changes": [
+          {
+            "what": "`HttpTransport`'s contract gained an eighth point: `execute` is main-safe, so the OkHttp transport and the fixtures' fake state where their work runs.",
+            "why": "Added in qa pass 1 (#62 deviation 2): a `suspend` function that blocks its caller's thread breaks the convention every coroutine caller relies on. KDoc only, no signature change.",
+            "when": "#62 qa pass 1",
+            "ref": "62-http-core/final-implementation.md#2-deviations-from-the-plan"
+          },
+          {
+            "what": "`addSensitive` promises only the mark; the cross-origin strip is the redirect policy's, which units 5 and 6 build.",
+            "why": "qa pass 1 narrowed a KDoc promise the unit does not keep (#62 `impact.md` §4).",
+            "when": "#62 qa pass 1",
+            "ref": "62-http-core/impact.md#4-sibling-units"
+          }
+        ]
       }
     ],
     "changes": [
@@ -1687,6 +1920,24 @@
         "ref": "3949b52",
         "entry": "adaptation.0",
         "unit": "java-floor"
+      },
+      {
+        "what": "The check-only `js` compiles take `js()` with no environment: they compile only, have no test task and download no Node.js or Yarn, and the root project gains no task.",
+        "why": "The architecture's `js { nodejs { testTask { enabled = false } } }` made `build` download Node.js and Yarn, write `kotlin-js-store/` and give the root project base-plugin tasks (#62 research, common-check-plugin F2, F5); #55's reconciled `impact.md` §2 and `architecture.md` §6.8 carry it as a dated correction.",
+        "when": "#62 landing",
+        "ref": "7de8207",
+        "entry": "downstream.4",
+        "system": "gradle-build",
+        "unit": "http-core"
+      },
+      {
+        "what": "An `HttpTransport` implementation must be main-safe: the port's contract gained an eighth point.",
+        "why": "Added in #62's qa pass 1 (deviation 2) and carried into #55's reconciled `impact.md` §8; KDoc only, no signature change.",
+        "when": "#62 landing",
+        "ref": "7de8207",
+        "entry": "adaptation.1",
+        "system": "webtools-http-core",
+        "unit": "http-core"
       }
     ],
     "source": "impact.md",
