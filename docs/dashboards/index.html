@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="template" content="system/template/supersystem.html">
 <meta name="template-divergence" content="Systems tab: the cards are grouped under headings (built; planned parts of a built system; planned at repository level; the planned rest of webtools-http) instead of one flat grid; renderSystems and a .sysgroup style. Adds structure, removes nothing (footer item 1).">
-<meta name="template-divergence" content="Systems tab: planned cards and the inspector show the planning units and their sub-issues (registry plannedBy.units), the planned placement, the Maven Central version (registry published) and a new, unreleased version (registry unreleased); the build's card shows its toolchain in place of a version it does not have (footer item 3).">
+<meta name="template-divergence" content="Systems tab: planned cards and the inspector name the planning units (registry plannedBy.units), each linking its plan board by its name and with no issue number, the planned placement, the Maven Central version (registry published) and a new, unreleased version (registry unreleased); a planned supersystem whose built parts have a page links that page from its card; the build's card shows its toolchain in place of a version it does not have (footer item 3).">
 <meta name="template-divergence" content="Guarantees: one row per top-level system; a part of a system is covered by its parent's row. Removal argued: every part without a row is planned, so its row would only repeat nothing built yet (footer item 4).">
 <meta name="template-divergence" content="Optional tab Dependencies: what each published artifact puts on a consumer's classpath, api vs implementation, from the build files and the Central POMs; its DEPS data, renderer and styles (footer item 5).">
 <meta name="template-divergence" content="Optional tab Environment: what the host must provide, one row per system, with its legend (footer item 5).">
@@ -54,6 +54,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
 .chip b{color:var(--ink);font-weight:600}
 .chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+/* a chip drawn from state.json (renderState()) stays hidden on every layout until it is drawn; one with nothing to say is removed */
+.chip[hidden]{display:none!important}
 /* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
    left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
    long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
@@ -84,8 +86,6 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
 .kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
-.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
-.kpi .seg-bar i{display:block;height:100%}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -357,8 +357,19 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
 .issues a:hover{color:var(--ink)}
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
-.badge.bug{border-color:var(--serious)}
-.badge.bug::before{content:"▲ ";color:var(--serious)}
+/* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
+.badge.bug::before{content:"▲ ";color:var(--ink-2)}
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+.chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
+.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
+.cbar i{display:block;height:100%;background:var(--good)}
+.key .cbar{width:40px}
+.key i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
+.key i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
+.key i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
+.key .badge{align-self:center}
+/* the Guarantees' and the Context's legends (GUIDANCE.md §2), generated from what each section draws */
+.guarantees>.key,.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .badge.planned{border-style:dashed}
 .badge.closed{color:var(--muted)}
 .tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
@@ -386,6 +397,10 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .docs li{padding:4px 0;border-top:1px solid var(--hair)}
 .docs a{text-decoration:none;border-bottom:1px solid var(--line)}
 .docs a:hover{border-bottom-color:var(--ink)}
+/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+.context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
+.context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
 footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 footer code{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -406,6 +421,7 @@ footer code{color:var(--ink-2)}
 .syscard .fn{font-size:13px;color:var(--ink-2);margin:4px 0 8px}
 .syscard .meta{display:flex;flex-wrap:wrap;gap:4px}
 .syscard .meta span{font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;color:var(--ink-2)}
+.syscard .meta .role,.key .role{font:700 10px/1.2 var(--mono);letter-spacing:.04em;color:var(--ink);padding:2px 5px;border:1px solid var(--ink-2);border-radius:3px}
 .syscard .st{font:700 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .key i.sys{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--surface))}
 .key i.sbar{border-color:var(--line);border-left:4px solid var(--c)}
@@ -470,11 +486,11 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs">SpartanLaboratories/WebTools</div>
   <h1>WebTools</h1>
-  <p class="function">Kotlin internet I/O helpers, published as independent single-concern artifacts — <code>webtools-udp</code> for multi-client UDP connections, <code>webtools-scraping</code> for reading URLs, <code>webtools-browser</code> for headless-Chrome screenshots, and <code>webtools-http</code>, the common core of a suspend HTTP stack, new and not released yet — built, tested and published by one Gradle build. The rest of Issue #55's HTTP stack and a feeds module are drawn dashed and are not built.</p>
+  <p class="function">Kotlin internet I/O helpers, published as independent single-concern artifacts — <code>webtools-udp</code> for multi-client UDP connections, <code>webtools-scraping</code> for reading URLs, <code>webtools-browser</code> for headless-Chrome screenshots, and <code>webtools-http</code>, the common core of a suspend HTTP stack, new and not released yet — built, tested and published by one Gradle build. The rest of the HTTP stack and a feeds module are planned, drawn dashed.</p>
   <div class="chips">
     <span class="chip"><span class="ck">systems</span> <b id="sys-count">…</b></span>
-    <span class="chip"><span class="ck">as-is at</span> <b>master 7de8207</b> · <time datetime="2026-10-25T11:51:40Z">2026-10-25 11:51 UTC</time></span>
-    <span class="chip wide"><span class="ck">last amended by</span> <a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener"><b>#62</b></a> <a data-board="62">http-core</a> · 123c875 (webtools-http's common core and its check-only js module; 1.0.0 unreleased)</span>
+    <span class="chip" id="chip-asis" hidden></span>
+    <span class="chip" id="chip-written" hidden></span>
     <span class="chip model"><span class="ck">C4 model</span> <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
   </div>
 </header>
@@ -508,7 +524,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure" hidden>
     <h2>How the systems compose and depend on each other</h2>
-    <p class="lede">The built modules share no code and no runtime calls; the Gradle build binds them. Click a system for its role and its dependencies.</p>
+    <p class="lede">The built modules share no code and no runtime calls; the Gradle build binds them. Click a system for its role.</p>
     <svg id="svg-structure" viewBox="0 0 1000 480" role="img" aria-label="How the systems compose and depend on each other"></svg>
     <!-- generated: the systems on the map, then composition, dependency and planned -->
     <div class="key" id="structure-key"></div>
@@ -530,7 +546,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
     <h2>Threads and processes across systems</h2>
-    <p class="lede">Everything else — every <code>Connector</code>, <code>WebViewer</code> and <code>webtools-http</code> call, the UDP sends — runs on the caller's thread. Click one for details.</p>
+    <p class="lede">Everything not listed runs on the caller's thread. Click a thread or process for details.</p>
     <div class="threads">
       <div class="tside"><h3><span class="sw" data-sys="webtools-udp"></span>webtools-udp · server</h3>
         <div class="thread" data-sys="webtools-udp" data-t="mcups-listener" tabindex="0" role="button"><span class="n">mcups-listener</span><span class="pill eager">eager</span><span class="r">receives on port 9998; the handshake, admit, onClientConnect; routes every datagram</span></div>
@@ -555,7 +571,7 @@ footer code{color:var(--ink-2)}
       </div>
       <div class="tside"><h3><span class="sw" data-sys="webtools-http"></span>webtools-http</h3>
         <div class="thread" data-sys="webtools-http" data-t="http-caller" tabindex="0" role="button"><span class="n">none of its own</span><span class="pill eager">the caller's</span><span class="r">parsing, the factories and the clock read run on the caller's thread or coroutine</span></div>
-        <div class="thread planned" data-sys="webtools-http" data-t="http-planned" tabindex="0" role="button"><span class="n">OkHttp dispatcher · cache load scope</span><span class="pill planned">planned</span><span class="r">what the later units will run (#65, #66)</span></div>
+        <div class="thread planned" data-sys="webtools-http" data-t="http-planned" tabindex="0" role="button"><span class="n">OkHttp dispatcher · cache load scope</span><span class="pill planned">planned</span><span class="r">what the later units will run</span></div>
       </div>
     </div>
     <!-- generated: the systems with a column, then the pill encodings, process and planned -->
@@ -574,7 +590,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
     <h2>Build and publish: the Gradle build and the three modules</h2>
-    <p class="lede">The modules never call one another; every build runs the Gradle build over them, and a release publishes each. Step through it, or click any message.</p>
+    <p class="lede">The modules never call one another; the build and a release span them. Step through it.</p>
     <div class="ctl">
       <button class="btn" id="seq-prev">‹ prev</button>
       <button class="btn" id="seq-next">next ›</button>
@@ -592,15 +608,15 @@ footer code{color:var(--ink-2)}
     <div class="lgrid">
       <div class="card"><h3>Source to release <small>the path every module takes</small></h3>
         <ol class="steps"><li class="ph1">./gradlew</li><li class="ph1">settings: 5 modules</li><li class="ph1">compile (Kotlin 2.2.0, Java 11 bytecode)</li><li class="ph2">test: every level</li><li class="ph2">check: verifyJavaFloor</li><li class="ph2">gatingTest … uatTest</li><li class="ph3">signAllPublications</li><li class="ph3">publishToMavenCentral</li><li class="ph3">Maven Central</li></ol>
-        <div class="callout ph3"><b>No CI and no release record in the repository.</b> The publishing path is the vanniktech plugin's <code>publishToMavenCentral</code> with <code>signAllPublications()</code>, configured by build-logic's <code>webtools.published-library</code>; who runs it and when is not recorded. CI, a CHANGELOG and release tags are open as <a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a>.</div></div>
+        <div class="callout ph3"><b>No CI and no release record in the repository.</b> The publishing path is the vanniktech plugin's <code>publishToMavenCentral</code> with <code>signAllPublications()</code>, configured by build-logic's <code>webtools.published-library</code>; who runs it and when is not recorded. There is no CI, CHANGELOG or release tag yet.</div></div>
       <div class="card ph3"><h3>Version lines <small>one per module</small></h3>
         <table class="tbl"><thead><tr><th>System</th><th>In the build</th><th>On Central</th><th>Moves by</th></tr></thead><tbody>
-          <tr><td><span class="sw" data-sys="webtools-udp"></span>webtools-udp</td><td><code>2.0.0a</code></td><td><code>2.0.0</code></td><td>a letter for a fix (2.0.0 → 2.0.0a, #38), the third number for an addition, the major for a break</td></tr>
-          <tr><td><span class="sw" data-sys="webtools-scraping"></span>webtools-scraping</td><td><code>1.0.0a</code></td><td><code>1.0.0</code></td><td>a letter for a fix (1.0.0 → 1.0.0a, the Java floor, #47), set in its own build file</td></tr>
-          <tr><td><span class="sw" data-sys="webtools-browser"></span>webtools-browser</td><td><code>1.0.0a</code></td><td><code>1.0.0</code></td><td>as webtools-scraping (1.0.0 → 1.0.0a, #47)</td></tr>
+          <tr><td><span class="sw" data-sys="webtools-udp"></span>webtools-udp</td><td><code>2.0.0a</code></td><td><code>2.0.0</code></td><td>a letter for a fix (2.0.0 → 2.0.0a), the third number for an addition, the major for a break</td></tr>
+          <tr><td><span class="sw" data-sys="webtools-scraping"></span>webtools-scraping</td><td><code>1.0.0a</code></td><td><code>1.0.0</code></td><td>a letter for a fix (1.0.0 → 1.0.0a, the Java floor), set in its own build file</td></tr>
+          <tr><td><span class="sw" data-sys="webtools-browser"></span>webtools-browser</td><td><code>1.0.0a</code></td><td><code>1.0.0</code></td><td>as webtools-scraping (1.0.0 → 1.0.0a)</td></tr>
           <tr><td><span class="sw" data-sys="gradle-build"></span>Gradle build</td><td colspan="2">publishes nothing; sets <code>version = "1.0.0"</code> for every project, which each module overrides</td><td>—</td></tr>
-          <tr><td><span class="sw" data-sys="webtools-http"></span>webtools-http</td><td><code>1.0.0</code>, from the root default</td><td>not released</td><td>its first release once #55's stack is complete; Experimental seams may change in a minor</td></tr>
-          <tr class="planned"><td><span class="sw" data-sys="webtools-feeds"></span>webtools-feeds</td><td colspan="3">planned: <code>1.0.0</code>, unreleased until the stack is complete (#69)</td></tr>
+          <tr><td><span class="sw" data-sys="webtools-http"></span>webtools-http</td><td><code>1.0.0</code>, from the root default</td><td>not released</td><td>its first release once the HTTP stack is complete; Experimental seams may change in a minor</td></tr>
+          <tr class="planned"><td><span class="sw" data-sys="webtools-feeds"></span>webtools-feeds</td><td colspan="3">planned: <code>1.0.0</code>, unreleased until the stack is complete</td></tr>
         </tbody></table>
         <div class="callout ph3"><b>Central lags the build for every module:</b> Maven Central holds webtools-udp 1.0.0, 1.1.0 and 2.0.0 and the other two at 1.0.0, all Java 23 bytecode. The lettered versions, which carry the Java 11 floor, are in the build only; the README's install block names Central's versions until they are released, and a consumer then requests them <code>strictly</code>, since a letter orders below the plain version.</div></div>
       <div class="card ph2"><h3>Test levels <small>one task per level, every module</small></h3>
@@ -618,7 +634,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-deps" aria-labelledby="t-deps" hidden>
     <h2>Dependencies: modules, artifacts and third-party libraries</h2>
-    <p class="lede">Read from the build files, the POMs on Maven Central and, for the unreleased webtools-http, its generated POM. Click a box for its coordinates.</p>
+    <p class="lede">From the build files, the Central POMs and webtools-http's generated POM. Click a box for its coordinates.</p>
     <div class="scroll"><svg id="svg-deps" viewBox="0 0 1000 400" role="img" aria-label="Module and library dependency graph" style="min-width:640px"></svg></div>
     <div class="key" id="deps-key"></div>
   </section>
@@ -627,28 +643,28 @@ footer code{color:var(--ink-2)}
     <h2>Environment: what the host must provide</h2>
     <p class="lede">Read from the code, the build and the published or generated Gradle module metadata.</p>
     <div class="scroll"><table class="tbl" style="min-width:640px"><thead><tr><th>System</th><th>JDK</th><th>Host software</th><th>Network &amp; ports</th></tr></thead><tbody>
-      <tr data-sys="webtools-udp"><td>webtools-udp</td><td>JDK 11+: 2.0.0a is Java 11 bytecode declaring <code>org.gradle.jvm.version</code> 11 (<a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a>); the published 2.0.0 declares 23</td><td>none</td><td>server binds UDP <code>9998</code> (<code>COMMON_LISTEN_PORT</code>, not configurable); client binds an ephemeral UDP port; peers must reach the server's 9998</td></tr>
-      <tr data-sys="webtools-scraping"><td>webtools-scraping</td><td>JDK 11+ for 1.0.0a (#47); the published 1.0.0 declares 23</td><td>none (ImageIO decodes images in-process)</td><td>outbound HTTP(S) to whatever URL the caller passes; no timeouts set — Unirest's are set to 0, <code>URLConnection</code>'s are left at the JDK default</td></tr>
-      <tr data-sys="webtools-browser"><td>webtools-browser</td><td>JDK 11+ for 1.0.0a (#47); the published 1.0.0 declares 23</td><td>a local Chrome or Chromium install; Selenium Manager resolves chromedriver at runtime</td><td>outbound access to the page; on first run for a driver version, to the driver download</td></tr>
+      <tr data-sys="webtools-udp"><td>webtools-udp</td><td>JDK 11+: 2.0.0a is Java 11 bytecode declaring <code>org.gradle.jvm.version</code> 11; the published 2.0.0 declares 23</td><td>none</td><td>server binds UDP <code>9998</code> (<code>COMMON_LISTEN_PORT</code>, not configurable); client binds an ephemeral UDP port; peers must reach the server's 9998</td></tr>
+      <tr data-sys="webtools-scraping"><td>webtools-scraping</td><td>JDK 11+ for 1.0.0a; the published 1.0.0 declares 23</td><td>none (ImageIO decodes images in-process)</td><td>outbound HTTP(S) to whatever URL the caller passes; no timeouts set — Unirest's are set to 0, <code>URLConnection</code>'s are left at the JDK default</td></tr>
+      <tr data-sys="webtools-browser"><td>webtools-browser</td><td>JDK 11+ for 1.0.0a; the published 1.0.0 declares 23</td><td>a local Chrome or Chromium install; Selenium Manager resolves chromedriver at runtime</td><td>outbound access to the page; on first run for a driver version, to the driver download</td></tr>
       <tr data-sys="gradle-build"><td>Gradle build</td><td>a JDK 17 to 26 runs the build (the README's range for Gradle 9.7.1); <code>WebToolsBuild.JAVA_FLOOR</code> makes the bytecode Java 11 on any of them, and the level tests run on that JDK, not on a JDK 11</td><td>none beyond the wrapper, which fetches Gradle 9.7.1</td><td>Maven Central for dependencies and publishing; the Gradle plugin portal for plugins; build-logic's nested-build tests download into <code>build-logic/build/testkit/home</code> on their first run</td></tr>
-      <tr data-sys="webtools-http"><td>webtools-http</td><td>JDK 11+: Java 11 bytecode declaring <code>org.gradle.jvm.version</code> 11; <code>okhttp-jvm</code> needs <code>kotlin-stdlib</code> 2.2.21 or newer</td><td>none; the <code>js</code> target is compiled only, with no Node.js</td><td>none in 1.0.0: no transport ships; the planned transport and policies (#64, #65) reach the network</td></tr>
-      <tr class="planned" data-sys="webtools-feeds"><td>webtools-feeds</td><td colspan="3">planned (#69): nothing built yet</td></tr>
+      <tr data-sys="webtools-http"><td>webtools-http</td><td>JDK 11+: Java 11 bytecode declaring <code>org.gradle.jvm.version</code> 11; <code>okhttp-jvm</code> needs <code>kotlin-stdlib</code> 2.2.21 or newer</td><td>none; the <code>js</code> target is compiled only, with no Node.js</td><td>none in 1.0.0: no transport ships; the planned transport and policies reach the network</td></tr>
+      <tr class="planned" data-sys="webtools-feeds"><td>webtools-feeds</td><td colspan="3">planned: nothing built yet</td></tr>
     </tbody></table></div>
     <div class="key" id="env-key"></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-trust" aria-labelledby="t-trust" hidden>
     <h2>Trust boundaries: where untrusted input enters, and what checks it</h2>
-    <p class="lede">Read from the code at 7de8207; open issues are linked where they name the gap.</p>
+    <p class="lede">Where untrusted input enters each system, how far the check goes and its known gaps.</p>
     <div class="scroll"><table class="tbl" style="min-width:640px"><thead><tr><th>Entry</th><th>Untrusted input</th><th>What checks it</th></tr></thead><tbody>
-      <tr data-sys="webtools-udp"><td>UDP 9998 · server</td><td>any datagram from any source address</td><td><span class="chk gapc">checked · gaps</span> data, probe and reliable frames from an unregistered origin are dropped; a malformed <code>Iam</code> gets <code>REFUSED malformed</code>; <code>admit()</code> may refuse a name or credential. Gaps: no rate limit on handshake replies (<a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a>), tabs and CR/LF accepted in names (<a href="https://github.com/SpartanLaboratories/WebTools/issues/53" target="_blank" rel="noopener">#53</a>), a registered origin naming a different client still gets <code>REGISTERED 2</code> (<a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a>)</td></tr>
-      <tr data-sys="webtools-udp"><td>UDP · client</td><td>datagrams arriving on the client's socket</td><td><span class="chk gapc">checked · gap</span> origin is checked only on the reliable-channel branch (<a href="https://github.com/SpartanLaboratories/WebTools/issues/39" target="_blank" rel="noopener">#39</a>)</td></tr>
+      <tr data-sys="webtools-udp"><td>UDP 9998 · server</td><td>any datagram from any source address</td><td><span class="chk gapc">checked · gaps</span> data, probe and reliable frames from an unregistered origin are dropped; a malformed <code>Iam</code> gets <code>REFUSED malformed</code>; <code>admit()</code> may refuse a name or credential. Gaps: no rate limit on handshake replies, tabs and CR/LF accepted in names, a registered origin naming a different client still gets <code>REGISTERED 2</code></td></tr>
+      <tr data-sys="webtools-udp"><td>UDP · client</td><td>datagrams arriving on the client's socket</td><td><span class="chk gapc">checked · gap</span> origin is checked only on the reliable-channel branch</td></tr>
       <tr data-sys="webtools-scraping"><td><code>Connector</code> URL</td><td>the URL string a caller passes to <code>open</code>, <code>get</code>, <code>skrape</code>, <code>download</code></td><td><span class="chk none">not checked</span> parsed with <code>URI(..).toURL()</code> only: any scheme the JDK can open (including <code>file:</code> for <code>open</code>), any host or address</td></tr>
       <tr data-sys="webtools-scraping"><td>response bodies</td><td>the remote server's bytes</td><td><span class="chk none">not checked</span> <code>open</code>/<code>next</code> and <code>get</code>: no timeout (<code>URLConnection</code>'s default 0 and Unirest's set to 0 are both infinite) and no cap on a line or a <code>get</code> body. <code>download</code> (jsoup, then <code>ImageIO</code>) and <code>skrape</code> run on those libraries' own defaults, not set here</td></tr>
       <tr data-sys="webtools-browser"><td><code>WebViewer</code> URL</td><td>the URL a caller passes to <code>getPage</code> or <code>screenshot</code></td><td><span class="chk none">not checked</span> only <code>isNotBlank()</code>; Chrome runs it with <code>--no-sandbox</code> and <code>--remote-allow-origins=*</code></td></tr>
       <tr data-sys="gradle-build"><td>dependencies and plugins</td><td>artifacts resolved from Maven Central and the plugin portal</td><td><span class="chk none">not checked</span> no dependency verification metadata or lock file in the repository</td></tr>
-      <tr data-sys="webtools-http"><td><code>Url.parse</code>, the headers</td><td>URL text and header names and values from outside the process</td><td><span class="chk gapc">checked · gap</span> <code>Url.parse</code> refuses a backslash, whitespace, controls, user-info, any scheme but <code>http</code>/<code>https</code> and malformed hosts and ports, only ever stricter than OkHttp's <code>HttpUrl</code>; header names must be tokens and sent values visible ASCII; messages never echo the input. Gap: which hosts and addresses may be fetched waits on the outbound-URL policies (<a href="https://github.com/SpartanLaboratories/WebTools/issues/64" target="_blank" rel="noopener">#64</a>, <a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a>)</td></tr>
-      <tr class="planned" data-sys="webtools-feeds"><td>webtools-feeds</td><td colspan="2">planned (#69): a hardened parser behind <code>FeedParser</code> — nothing built yet</td></tr>
+      <tr data-sys="webtools-http"><td><code>Url.parse</code>, the headers</td><td>URL text and header names and values from outside the process</td><td><span class="chk gapc">checked · gap</span> <code>Url.parse</code> refuses a backslash, whitespace, controls, user-info, any scheme but <code>http</code>/<code>https</code> and malformed hosts and ports, only ever stricter than OkHttp's <code>HttpUrl</code>; header names must be tokens and sent values visible ASCII; messages never echo the input. Gap: which hosts and addresses may be fetched waits on the outbound-URL policies</td></tr>
+      <tr class="planned" data-sys="webtools-feeds"><td>webtools-feeds</td><td colspan="2">planned: a hardened parser behind <code>FeedParser</code> — nothing built yet</td></tr>
     </tbody></table></div>
     <div class="key" id="trust-key"></div>
   </section>
@@ -667,12 +683,12 @@ footer code{color:var(--ink-2)}
   <div class="bubbles">
     <div class="bubble"><h3>Failure model</h3>
       <table class="gtbl"><tbody>
-        <tr><th><span class="sw" data-sys="webtools-udp"></span>udp</th><td><code>kotlin.Result</code>; typed: <code>HandshakeRefusedException</code>, <code>IncompatibleProtocolException</code>, <code>ReliableWindowFullException</code>, <code>ReliableMessageTooLargeException</code>. Retries a reliable message until acked; <code>handshake()</code> times out (4 s by default) and the caller retries. A throwing <code>onClientConnect</code> kills <code>mcups-listener</code> (<a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a>).</td></tr>
+        <tr><th><span class="sw" data-sys="webtools-udp"></span>udp</th><td><code>kotlin.Result</code>; typed: <code>HandshakeRefusedException</code>, <code>IncompatibleProtocolException</code>, <code>ReliableWindowFullException</code>, <code>ReliableMessageTooLargeException</code>. Retries a reliable message until acked; <code>handshake()</code> times out (4 s by default) and the caller retries. A throwing <code>onClientConnect</code> kills <code>mcups-listener</code>.</td></tr>
         <tr><th><span class="sw" data-sys="webtools-scraping"></span>scraping</th><td><code>kotlin.Result</code> from every call but <code>hasNext()</code> (a <code>Boolean</code>, <code>false</code> on failure): <code>MalformedURLException</code>, <code>IOException</code>, <code>EOFException</code>, <code>IllegalArgumentException</code> (nothing open), <code>InterruptedException</code>. Nothing retried.</td></tr>
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td><code>kotlin.Result</code>: a blank URL, a driver launch, a navigation or a decode failure all come back as a failure. Nothing retried.</td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>A failing compile or test fails <code>./gradlew build</code>. The seven level tasks are not wired into <code>check</code> and pass on an empty selection; build-logic's own test tasks fail on one. <code>verifyJavaFloor</code>, in every module's <code>check</code>, fails on a class above Java 11 bytecode or a variant declaring another JVM version.</td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td><code>kotlin.Result</code>: <code>Url.parse</code> and <code>HttpMethod.of</code> fail with an <code>IllegalArgumentException</code> of constant text; a port returns an <code>HttpFailure</code> (<code>TransportFailure</code>, <code>UpstreamFailure</code>, <code>Closed</code>). A broken developer-written value throws at construction; cancellation is thrown. Nothing retried: one request per hop.</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table></div>
     <div class="bubble"><h3>Extension points</h3>
       <table class="gtbl"><tbody>
@@ -681,7 +697,7 @@ footer code{color:var(--ink-2)}
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td>none: <code>WebViewer</code> is final; one knob, <code>pageSettleMillis</code> (default 2 000 ms)</td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>none for consumers: publishes no plugin. Inside the repository a module applies <code>webtools.kotlin-jvm-library</code>, <code>webtools.kotlin-multiplatform-library</code> or, for a check-only js module, <code>webtools.kotlin-common-check</code> by id, and its script may read <code>WebToolsBuild</code>, <code>JAVA_FLOOR</code> included.</td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td><code>HttpTransport</code> and <code>WallClock</code> (implement) and the failure groups (subclass) are <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; the reason classes may gain constants (keep an <code>else</code>); the rest is final <span class="badge">Stable Core</span></td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table>
       <p>No module carries <code>@SupportedExtension</code>; webtools-http's <code>ExperimentalForInheritanceWebToolsApi</code> is the repository's one <code>@RequiresOptIn</code> marker.</p></div>
     <div class="bubble"><h3>Test levels <small>151 classes</small></h3>
@@ -691,17 +707,17 @@ footer code{color:var(--ink-2)}
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td class="n">1</td><td class="n">4</td><td class="n">9</td><td class="n">2</td><td class="n">1</td><td class="n">3</td><td class="n">0</td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td class="n">2</td><td class="n">14</td><td class="n">0</td><td class="n">16</td><td class="n">0</td><td class="n">4</td><td class="n">0</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td colspan="7">planned (#69) — no tests yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td colspan="7">planned — no tests yet</td></tr>
       </tbody></table></div>
       <p>Counted from the <code>testing.&lt;level&gt;</code> packages; webtools-udp also has 4 untagged <code>testing/support</code> helpers, build-logic 8 harness classes and webtools-http 2 (its URL corpus and generator) there; webtools-http's run on the JVM only. webtools-browser's L5 class is <code>@Disabled</code> (needs Chrome). <span class="gap">No test-inspector report is committed.</span></p></div>
     <div class="bubble"><h3>Compatibility &amp; versioning</h3>
       <table class="gtbl"><tbody>
         <tr><th><span class="sw" data-sys="webtools-udp"></span>udp</th><td><code>2.0.0a</code> (Central <code>2.0.0</code>), Java 11 bytecode, wire protocol 2. A letter for a fix, the third number for an addition. Deprecate, don't break: eight members deprecated in 2.0.0 go at 3.0.0.</td></tr>
-        <tr><th><span class="sw" data-sys="webtools-scraping"></span>scraping</th><td><code>1.0.0a</code> (Central <code>1.0.0</code>), Java 11 bytecode. Legacy: may break its API where a repository-wide change forces it (#55 architecture, requirement 8); the floor broke none.</td></tr>
+        <tr><th><span class="sw" data-sys="webtools-scraping"></span>scraping</th><td><code>1.0.0a</code> (Central <code>1.0.0</code>), Java 11 bytecode. Legacy: may break its API where a repository-wide change forces it (the HTTP stack's architecture, requirement 8); the floor broke none.</td></tr>
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td><code>1.0.0a</code> (Central <code>1.0.0</code>), Java 11 bytecode. Legacy, as scraping.</td></tr>
-        <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>Gradle 9.7.1 · Kotlin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 · foojay 0.8.0, the plugins pinned once in <code>build-logic</code>. Since <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a> one constant, <code>JAVA_FLOOR = 11</code>, makes every module Java 11 bytecode declaring <code>org.gradle.jvm.version</code> 11, and <code>verifyJavaFloor</code> guards it in <code>check</code>. A lettered version orders below the plain one, so a consumer requests it <code>strictly</code>.</td></tr>
-        <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td><code>1.0.0</code>, new and unreleased until #55's stack is complete. The ABI dump <code>api/webtools-http.api</code> is checked by <code>apiCheck</code>; Experimental seams may change in a minor.</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>Gradle 9.7.1 · Kotlin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 · foojay 0.8.0, the plugins pinned once in <code>build-logic</code>. One constant, <code>JAVA_FLOOR = 11</code>, makes every module Java 11 bytecode declaring <code>org.gradle.jvm.version</code> 11, and <code>verifyJavaFloor</code> guards it in <code>check</code>. A lettered version orders below the plain one, so a consumer requests it <code>strictly</code>.</td></tr>
+        <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td><code>1.0.0</code>, new and unreleased until the HTTP stack is complete. The ABI dump <code>api/webtools-http.api</code> is checked by <code>apiCheck</code>; Experimental seams may change in a minor.</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table>
       <p><span class="gap">Only webtools-http keeps an ABI dump; the three JVM modules' APIs are not checked by the build.</span></p></div>
     <div class="bubble"><h3>Thread safety</h3>
@@ -711,7 +727,7 @@ footer code{color:var(--ink-2)}
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td>Holds one immutable setting; each call launches its own driver and Chrome. <span class="gap">The KDoc states no thread contract.</span></td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>webtools-udp's four socket-binding test tasks share one build service (<code>maxParallelUsages = 1</code>); build-logic's three nested-build tasks share another, for the TestKit home.</td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td>Values are immutable and safe to share; <code>HttpTransport.execute</code> may be called concurrently and must be main-safe; a builder lives inside its factory's lambda.</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table></div>
     <div class="bubble"><h3>Resources to close</h3>
       <table class="gtbl"><tbody>
@@ -720,7 +736,7 @@ footer code{color:var(--ink-2)}
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td>Nothing to close: each capture quits its driver in <code>finally</code>. The screenshot PNG is deleted at JVM exit; each capture's <code>webviewer-chromedriver*.log</code> temp file is never deleted.</td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>nothing a consumer holds; the TestKit home (about 910 MB) stays between runs until <code>clean</code></td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td><code>HttpTransport</code> is <code>AutoCloseable</code>: <code>close()</code> is idempotent and never throws. No transport ships in 1.0.0; no other type holds a resource.</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table></div>
     <div class="bubble"><h3>On your classpath <small>from the Central POMs</small></h3>
       <table class="gtbl"><tbody>
@@ -729,7 +745,7 @@ footer code{color:var(--ink-2)}
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td>compile: the same two; runtime: <code>selenium-java:4.48.0</code> and its tree</td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>nothing of its own: build-logic is never published; the Kotlin plugin it applies brings <code>kotlin-stdlib</code>, and each module declares its own <code>api(slf4j-api)</code>; <code>verifyJavaFloor</code> fails a module whose runtime classpath holds a class above Java 11</td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td>compile: <code>kotlinx-coroutines-core:1.10.2</code> (api), <code>kotlin-stdlib:2.2.0</code>; runtime: <code>okhttp-jvm:5.5.0</code> (it lifts the stdlib to 2.2.21), <code>caffeine:3.3.1</code>, <code>slf4j-api:2.0.13</code> — from the generated POM; not released</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table>
       <p>What the build makes at 7de8207 (2.0.0a, 1.0.0a and webtools-http 1.0.0, unpublished) is Java 11 bytecode whose variants declare <code>org.gradle.jvm.version</code> 11; the releases on Central are Java 23 bytecode declaring 23.</p></div>
     <div class="bubble"><h3>Process-wide effects</h3>
@@ -739,7 +755,7 @@ footer code{color:var(--ink-2)}
         <tr><th><span class="sw" data-sys="webtools-browser"></span>browser</th><td>Each capture starts chromedriver and Chrome, writes two temp files, and blocks the caller for <code>pageSettleMillis</code>.</td></tr>
         <tr><th><span class="sw" data-sys="gradle-build"></span>build</th><td>none at runtime</td></tr>
         <tr><th><span class="sw" data-sys="webtools-http"></span>http</th><td>none: no thread, socket or process-wide setting</td></tr>
-        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned (#69) — nothing built yet</td></tr>
+        <tr class="planned"><th><span class="sw" data-sys="webtools-feeds"></span>feeds</th><td>planned — nothing built yet</td></tr>
       </tbody></table></div>
   </div>
 </section>
@@ -798,7 +814,9 @@ footer code{color:var(--ink-2)}
 
 <footer>Corresponds to <code>docs/dashboards/systems.json</code> and <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-dashboard supersystem template (presenter, 2026-10-25 refresh after #62):
      1. Systems tab: cards grouped under headings (built; planned parts of a built system; planned at repository level; the planned rest of webtools-http) instead of one flat grid. Adds structure; removes nothing.
-     3. Planned cards and the inspector show the planning units and their sub-issues (registry plannedBy.units), the planned placement, the Maven Central version (registry field "published") and a new, unreleased version (registry field "unreleased"); the build's card shows its toolchain (registry field "toolchain") in place of a version it does not have.
+     3. Planned cards and the inspector name the planning units (registry plannedBy.units), each linking its plan board by its name, with no
+        issue number above Context; a planned supersystem whose built parts have a page (webtools-http, planned until its core units land)
+        links that page and says so; the planned placement, the Maven Central version (registry field "published") and a new, unreleased version (registry field "unreleased"); the build's card shows its toolchain (registry field "toolchain") in place of a version it does not have.
      4. Guarantees rows: one row per top-level system. A part of a system (webtools-http's common core and its six planned parts; the check-only js module, a part of the build) is covered by its parent's row rather than a row of its own. Argument for removing those rows: the built parts are what their parent's row states, and each planned one would only repeat "nothing built yet".
      5. An eighth Guarantees bubble, "Process-wide effects", and three optional tabs (Dependencies, Environment, Trust boundaries) add content; nothing is removed.
      Dropped because the templates now carry them: the solid "Internal" style and the stack() column-start fix in layoutC4 (earlier), and
@@ -809,9 +827,23 @@ footer code{color:var(--ink-2)}
      Test levels bubble, and no work level in the Context badges.
      Brought to the template at 7de8207: the footer form, solid lifelines, returns and frames, the header halves with labelled tags,
      the BOARDS links and one-line ledes.
+     Spliced onto the verified supersystem template on feat/issue-63-test-support at 5d98102 (2026-10-25): the
+     state block and its header chips, the work-board link, the core and optional subsystem marks, "its plan" in place of issue numbers;
+     items 1 and 3 merged into the template's Systems renderer; issue numbers taken out of the part above Context.
      Declared in the head (meta template-divergence), one each: items 1, 3 and 4, and the three optional tabs of item 5. The eighth
      bubble of item 5 is a hand-written panel, so it is not a template divergence. --></footer>
 </div>
+
+<!-- The page's state. A verbatim copy of state.json beside the page (scripts/embed.js state.json index.html state). -->
+<script type="application/json" id="state">
+{
+  "slug": "webtools",
+  "version": null,
+  "asIs": {"ref": "feat/issue-63-test-support", "sha": "5d98102", "date": "2026-10-25T18:54:34Z", "landed": false},
+  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "5d98102"},
+  "written": {"sha": "5d98102"}
+}
+</script>
 
 <!-- A verbatim copy of docs/dashboards/systems.json (scripts/embed.js … systems). -->
 <script type="application/json" id="systems">
@@ -822,8 +854,8 @@ footer code{color:var(--ink-2)}
     {"slug": "webtools", "name": "WebTools", "kind": "repo", "parent": null, "status": "built",
      "function": "Kotlin internet I/O helpers, published as independent single-concern artifacts (webtools-http new and unreleased) and built by one Gradle build.",
      "paths": ["."], "version": null,
-     "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
-     "lastAmended": {"issue": 62, "sha": "123c875", "note": "webtools-http's common core and its check-only js module, with the webtools.kotlin-common-check plugin; webtools-http 1.0.0 new and unreleased"},
+     "asIs": {"ref": "feat/issue-63-test-support", "sha": "5d98102", "date": "2026-10-25T18:54:34Z", "landed": false},
+     "lastAmended": {"issue": 63, "sha": "5d98102"},
      "page": "index.html", "dsl": "workspace.dsl"},
 
     {"slug": "webtools-udp", "name": "webtools-udp", "kind": "system", "parent": "webtools", "status": "built",
@@ -848,12 +880,12 @@ footer code{color:var(--ink-2)}
      "function": "Build, test and publish every module from one place: the wrapper, the settings, and the included build-logic build whose four convention plugins give each module its Kotlin setup at the Java 11 floor and the verifyJavaFloor guard, its seven package-selected level test tasks and the Maven Central publishing skeleton, and compile the multiplatform module's common code for js in a check-only module.",
      "paths": ["settings.gradle.kts", "build.gradle.kts", "gradle.properties", "gradle/", "gradlew", "gradlew.bat", "build-logic/"], "version": null,
      "toolchain": "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11 · vanniktech maven-publish 0.36.0 · binary-compatibility-validator 0.18.2 · foojay 0.8.0",
-     "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
-     "lastAmended": {"issue": 62, "sha": "e007cdd", "note": "the webtools.kotlin-common-check plugin and its TestKit checks"},
+     "asIs": {"ref": "feat/issue-63-test-support", "sha": "5d98102", "date": "2026-10-25T18:54:34Z", "landed": false},
+     "lastAmended": {"issue": 63, "sha": "5d98102"},
      "page": "gradle-build/index.html", "dsl": "gradle-build/workspace.dsl"},
 
     {"slug": "js-commoncheck", "name": "check-only js modules", "kind": "system", "parent": "gradle-build", "status": "built",
-     "function": "A part of the Gradle build: compile each multiplatform module's commonMain for js, with no environment, so a JVM API in common code is a compile error, without publishing anything. webtools-http-commoncheck is built; webtools-feeds-commoncheck is planned (#69).",
+     "function": "A part of the Gradle build: compile each multiplatform module's commonMain for js, with no environment, so a JVM API in common code is a compile error, without publishing anything. webtools-http-commoncheck is built; webtools-feeds-commoncheck is planned.",
      "paths": ["webtools-http-commoncheck/", "build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts"], "version": null,
      "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
      "lastAmended": {"issue": 62, "sha": "123c875"},
@@ -861,15 +893,15 @@ footer code{color:var(--ink-2)}
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.8", "placement": "webtools-http-commoncheck/, webtools-feeds-commoncheck/ (unpublished)",
                    "units": [{"unit": 3, "slug": "http-core", "subIssue": 62}, {"unit": 10, "slug": "feeds", "subIssue": 69}]}},
 
-    {"slug": "webtools-http", "name": "webtools-http", "kind": "supersystem", "parent": "webtools", "status": "built",
-     "function": "A Kotlin Multiplatform suspend HTTP stack. Built: its common core (#62), the request and response types, Url, the failure model and the transport and wall-clock ports. Planned: transport, outbound-URL policies, response cache, call budget, call facades and published test fixtures (#63 to #68).",
+    {"slug": "webtools-http", "name": "webtools-http", "kind": "supersystem", "parent": "webtools", "status": "planned",
+     "function": "A Kotlin Multiplatform suspend HTTP stack. Built: its common core, the request and response types, Url, the failure model and the transport and wall-clock ports. Planned: transport, outbound-URL policies, response cache, call budget, call facades and published test fixtures.",
      "paths": ["webtools-http/"], "version": "1.0.0", "published": null, "unreleased": true,
      "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
      "lastAmended": {"issue": 62, "sha": "123c875", "note": "the common core: new module, 1.0.0 unreleased"},
      "page": "webtools-http/index.html", "dsl": "webtools-http/workspace.dsl",
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "5, 6.2-6.7", "placement": "webtools-http/ (publishes webtools-http and webtools-http-jvm, 1.0.0)",
                    "units": [{"unit": 3, "slug": "http-core", "subIssue": 62}, {"unit": 4, "slug": "test-support", "subIssue": 63}, {"unit": 5, "slug": "url-policy", "subIssue": 64}, {"unit": 6, "slug": "okhttp-transport", "subIssue": 65}, {"unit": 7, "slug": "response-cache", "subIssue": 66}, {"unit": 8, "slug": "call-budget", "subIssue": 67}, {"unit": 9, "slug": "call-facades", "subIssue": 68}]}},
-    {"slug": "webtools-http-core", "name": "webtools-http common core", "kind": "system", "parent": "webtools-http", "status": "built",
+    {"slug": "webtools-http-core", "name": "webtools-http common core", "kind": "system", "parent": "webtools-http", "status": "built", "core": true,
      "function": "Own the vocabulary every other part of the stack speaks: the opt-in marker, the failure model, request and response types, the transport and wall-clock ports, the logging seam.",
      "paths": ["webtools-http/src/commonMain/", "webtools-http/src/jvmMain/"], "version": "1.0.0", "unreleased": true,
      "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
@@ -877,32 +909,32 @@ footer code{color:var(--ink-2)}
      "page": "webtools-http/index.html", "dsl": "webtools-http/workspace.dsl",
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.2", "placement": "webtools-http/src/commonMain, jvmMain",
                    "units": [{"unit": 3, "slug": "http-core", "subIssue": 62}]}},
-    {"slug": "webtools-http-test-fixtures", "name": "published test fixtures", "kind": "system", "parent": "webtools-http", "status": "planned",
+    {"slug": "webtools-http-test-fixtures", "name": "published test fixtures", "kind": "system", "parent": "webtools-http", "status": "planned", "core": false,
      "function": "Let a consumer test its providers with no network at Level 2 and over loopback at Level 3, through the webtools-http test-fixtures variant.",
-     "paths": [],
+     "paths": ["webtools-http/src/jvmTestFixtures/"],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.7", "placement": "webtools-http/src/jvmTestFixtures (capability webtools-http-test-fixtures)",
                    "units": [{"unit": 4, "slug": "test-support", "subIssue": 63}]}},
-    {"slug": "webtools-http-url-policy", "name": "outbound-URL policy", "kind": "system", "parent": "webtools-http", "status": "planned",
+    {"slug": "webtools-http-url-policy", "name": "outbound-URL policy", "kind": "system", "parent": "webtools-http", "status": "planned", "core": true,
      "function": "Decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten.",
      "paths": [],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.3.1", "placement": "webtools-http/src/commonMain (policy, classifier), jvmMain (enforcement)",
                    "units": [{"unit": 5, "slug": "url-policy", "subIssue": 64}]}},
-    {"slug": "webtools-http-transport", "name": "OkHttp transport", "kind": "system", "parent": "webtools-http", "status": "planned",
+    {"slug": "webtools-http-transport", "name": "OkHttp transport", "kind": "system", "parent": "webtools-http", "status": "planned", "core": true,
      "function": "Deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model.",
      "paths": [],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.3.2", "placement": "webtools-http/src/jvmMain",
                    "units": [{"unit": 6, "slug": "okhttp-transport", "subIssue": 65}]}},
-    {"slug": "webtools-http-cache", "name": "response cache", "kind": "system", "parent": "webtools-http", "status": "planned",
+    {"slug": "webtools-http-cache", "name": "response cache", "kind": "system", "parent": "webtools-http", "status": "planned", "core": false,
      "function": "Serve one decoded value per key to many concurrent callers from one load, for a bounded time, never caching a failure.",
      "paths": [],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.4", "placement": "webtools-http/src/commonMain (port), jvmMain (Caffeine)",
                    "units": [{"unit": 7, "slug": "response-cache", "subIssue": 66}]}},
-    {"slug": "webtools-http-budget", "name": "call budget", "kind": "system", "parent": "webtools-http", "status": "planned",
+    {"slug": "webtools-http-budget", "name": "call budget", "kind": "system", "parent": "webtools-http", "status": "planned", "core": false,
      "function": "Grant permits under a provider's clock-aligned windows and lane shares, pause on server signals, and hold a hard daily stop.",
      "paths": [],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.5", "placement": "webtools-http/src/commonMain",
                    "units": [{"unit": 8, "slug": "call-budget", "subIssue": 67}]}},
-    {"slug": "webtools-http-facades", "name": "call facades", "kind": "system", "parent": "webtools-http", "status": "planned",
+    {"slug": "webtools-http-facades", "name": "call facades", "kind": "system", "parent": "webtools-http", "status": "planned", "core": true,
      "function": "Compose cache, budget and transport into UpstreamClient (endpoints) and UrlFetcher (administrator-supplied URLs), and own what they built.",
      "paths": [],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.6", "placement": "webtools-http/src/commonMain, jvmMain (owning factories)",
@@ -920,7 +952,7 @@ footer code{color:var(--ink-2)}
 <!-- A verbatim copy of workspace.dsl (scripts/embed.js … dsl). -->
 <script type="text/plain" id="dsl">
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools master 7de8207 (2026-10-25): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47) and the common-check plugin (#62). Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-63-test-support 5d98102 (2026-10-25, not yet landed): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47) and the common-check plugin (#62). Code is authoritative on any conflict.
 // Every element tagged Planned comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11) and carries its sub-issue. None of it is built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
@@ -933,7 +965,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         web      = softwareSystem "Web servers" "Any HTTP or HTTPS site a caller names by URL." "External"
         chrome   = softwareSystem "Chrome / Chromium" "The host's local browser install, driven headless through Selenium; Selenium Manager resolves the driver at runtime." "External"
         central  = softwareSystem "Maven Central" "Hosts io.github.spartanlaboratories artifacts: webtools-udp 2.0.0, webtools-scraping 1.0.0, webtools-browser 1.0.0." "External"
-        bottools = softwareSystem "KotlinBottools" "SpartanLaboratories/KotlinBottools: named by Issue #55 as the first consumer of webtools-http and webtools-feeds, through an internal adapter." "External"
+        bottools = softwareSystem "KotlinBottools" "SpartanLaboratories/KotlinBottools: named by the HTTP stack's architecture as the first consumer of webtools-http and webtools-feeds, through an internal adapter." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
             // ---- built: the three published modules ----
@@ -946,25 +978,25 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 settings = component "settings.gradle.kts" "Includes build-logic through pluginManagement, applies foojay-resolver-convention 0.8.0, includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http, :webtools-http-commoncheck." "Gradle Kotlin DSL" "Internal"
                 root     = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 wrapper  = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
-                buildLogic = component "build-logic" "Included build (#61): webtools.published-library, webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.kotlin-common-check (#62), WebToolsBuild with the package-selected level tasks, and its own TestKit tests." "Gradle included build · unpublished" "Internal"
-                floor      = component "Java floor" "#47: WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins; verifyJavaFloor, in every module's check, fails on a class above Java 11 bytecode or a variant declaring another JVM version." "build-logic · Kotlin" "Internal"
-                httpCheck  = component "webtools-http-commoncheck" "#62: compiles webtools-http's commonMain for js() with no environment, so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Internal"
+                buildLogic = component "build-logic" "Included build: webtools.published-library, webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.kotlin-common-check, WebToolsBuild with the package-selected level tasks, and its own TestKit tests." "Gradle included build · unpublished" "Internal"
+                floor      = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins; verifyJavaFloor, in every module's check, fails on a class above Java 11 bytecode or a variant declaring another JVM version." "build-logic · Kotlin" "Internal"
+                httpCheck  = component "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js() with no environment, so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Internal"
                 // planned by Issue #55: not built
-                feedsCheck = component "webtools-feeds-commoncheck" "#69 (unit 10): compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
+                feedsCheck = component "webtools-feeds-commoncheck" "Unit 10: compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
             }
 
             // ---- webtools-http: its common core built (#62), its other parts planned by Issue #55 ----
-            http = container "webtools-http" "A suspend HTTP stack: its common core is built (#62); outbound-URL policies, the transport, the cache, the budget, the facades and the test fixtures are planned (#63 to #68)." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
-                core      = component "Common core" "#62: the opt-in marker, the HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain + jvmMain"
+            http = container "webtools-http" "A suspend HTTP stack: its common core is built; outbound-URL policies, the transport, the cache, the budget, the facades and the test fixtures are planned." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
+                core      = component "Common core" "The opt-in marker, the HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain + jvmMain"
                 // planned by Issue #55: not built
-                policy    = component "Outbound-URL policy" "#64: Trusted and Untrusted policies, TransportSettings, the common address classifier, GuardedDns and GuardedSocketFactory." "commonMain + jvmMain" "Planned"
-                transport = component "OkHttp transport" "#65: OkHttpTransport, one request per hop, manual redirects, capped body read, failure mapping." "jvmMain · okhttp-jvm 5.5.0" "Planned"
-                cache     = component "Response cache" "#66: ResponseCache port, ResponseCache.Disabled and the CaffeineResponseCache default; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Planned"
-                budget    = component "Call budget" "#67: CallBudget port and WindowedCallBudget, rate signals, BudgetStore and BudgetObserver seams." "commonMain" "Planned"
-                facades   = component "Call facades" "#68: UpstreamClient and UrlFetcher, composing cache, then budget inside the loader, then transport." "commonMain + jvmMain" "Planned"
-                fixtures  = component "Published test fixtures" "#63: test-fixtures variant with VirtualClock, FakeHttpTransport, .http fixtures, FixtureRecorder and LoopbackTransports." "jvmTestFixtures · capability webtools-http-test-fixtures" "Planned"
+                policy    = component "Outbound-URL policy" "Trusted and Untrusted policies, TransportSettings, the common address classifier, GuardedDns and GuardedSocketFactory." "commonMain + jvmMain" "Planned"
+                transport = component "OkHttp transport" "OkHttpTransport, one request per hop, manual redirects, capped body read, failure mapping." "jvmMain · okhttp-jvm 5.5.0" "Planned"
+                cache     = component "Response cache" "ResponseCache port, ResponseCache.Disabled and the CaffeineResponseCache default; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Planned"
+                budget    = component "Call budget" "CallBudget port and WindowedCallBudget, rate signals, BudgetStore and BudgetObserver seams." "commonMain" "Planned"
+                facades   = component "Call facades" "UpstreamClient and UrlFetcher, composing cache, then budget inside the loader, then transport." "commonMain + jvmMain" "Planned"
+                fixtures  = component "Published test fixtures" "Test-fixtures variant with VirtualClock, FakeHttpTransport, .http fixtures, FixtureRecorder and LoopbackTransports." "jvmTestFixtures · capability webtools-http-test-fixtures" "Planned"
             }
-            feeds = container "webtools-feeds" "#69 (unit 10): RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
+            feeds = container "webtools-feeds" "Unit 10: RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
         }
 
         // ---- as built ----
@@ -1019,15 +1051,15 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        container webtools "Containers" "The built modules, the Gradle build that configures them, and what Issue #55 still plans (dashed)." {
+        container webtools "Containers" "The built modules, the Gradle build that configures them, and the planned systems (dashed)." {
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 7de8207, with build-logic from #61, the Java floor from #47 and the common check from #62, and its planned part (dashed): webtools-feeds' check module (#69)." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 5d98102, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 7de8207: its common core built (#62), the parts Issue #55 plans dashed (#63 to #68)." {
+        component webtools.http "Http" "webtools-http at 5d98102: its common core built, its planned parts dashed." {
             include *
             autoLayout lr
         }
@@ -1084,13 +1116,37 @@ const REPO="https://github.com/"+REG.repo;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"38":"../plans/38-handshake-empty-name/dashboard.html","47":"../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../plans/55-http-client-stack/dashboard.html","61":"../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../plans/55-http-client-stack/62-http-core/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
+const BOARDS={"38":"../plans/38-handshake-empty-name/dashboard.html","47":"../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../plans/55-http-client-stack/dashboard.html","61":"../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../plans/55-http-client-stack/63-test-support/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
+/* The work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this page when that file exists
+   (else null: no link to a file that is not there; check-page.js fails a committed path that is missing), and "live" the live view's
+   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the work board opens the live view when
+   its marker loads (the board on this machine), else the committed one, else stays plain text: the hand-written
+   <a data-workboard>work board</a>, and the Plans card's line the renderer adds when the page has none. */
+const WORK_BOARD={"committed":"../plans/index.html","live":"../plans/.live/index.js"}; // presenter: the work board relative to this page, on this one line: {"committed": "../plans/index.html" or null, "live": "../plans/.live/index.js"}
+/* A live marker (plan/RULES.md §5): a script in the git-ignored docs/plans/.live/ that sets one key of window.DASHBOARDS_LIVE; cb gets
+   its value, or null when the marker is not there (a published copy, another clone, no live view on this machine). */
+function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
+  sc.onload=()=>{ const v=(window.DASHBOARDS_LIVE||{})[key]; sc.remove(); cb(v==null?null:v); }; sc.onerror=()=>{ sc.remove(); cb(null); }; document.head.appendChild(sc); }
+const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
+function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_BOARD:{};
+  const docs=[...document.querySelectorAll("section.context .docs")].pop();
+  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
+  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed work board, as of the last landing":href?"The live work board on this machine":"No work board in this checkout"; });
+  set(W.committed||null);
+  liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); }); }
+window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
 const ghIssue=n=>`${REPO}/issues/${n}`;
+/* The page's state (system/RULES.md §2): a verbatim copy of state.json, its stamp and last amendment, which apply-state.js restamps on a
+   feature branch and at the landing; renderState() draws the header's chips from it. */
+const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
 const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
 const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
-  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; } else a.replaceWith(...a.childNodes); });
+  /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
+     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-page.js (ISSUE TITLE NAMES
+     A WORK LEVEL: #n), never shown as the page's (GUIDANCE.md §5; dashboards-skill/28) */
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
   r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its plan board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
 const SYSTEMS=REG.systems.filter(s=>s.kind!=="repo");
@@ -1105,23 +1161,39 @@ const SLOTS=6, bySlug=slug=>SYSTEMS.find(s=>s.slug===slug);
 function sysTop(slug){ let s=bySlug(slug); while(s&&bySlug(s.parent)) s=bySlug(s.parent); return s; }
 const TOPS=SYSTEMS.filter(s=>!bySlug(s.parent));
 function sysColour(slug){ const i=TOPS.indexOf(sysTop(slug)); return i>=0&&i<SLOTS?`var(--sys-${i+1})`:"var(--muted)"; }
+/* Planned, from the data (system/RULES.md §2, "Planned parts"): an item tied to a system (sys:"slug" on a structure box, a thread, a flow's
+   end, a lifeline; data-part="sys:<slug>" on hand-written HTML) is planned while the registry says the system is, so apply-state.js
+   marks it built by editing systems.json alone; one tied to a DSL element (part:"<element id>", data-part="<element id>") while the
+   element carries the Planned tag. A literal planned:true still draws an untied item dashed. */
+const sysPlanned=slug=>{ const s=bySlug(slug); return !!s&&s.status==="planned"; };
+const partPlanned=ref=>typeof ref==="string"&&(ref.startsWith("sys:")?sysPlanned(ref.slice(4)):!!el(ref)&&el(ref).tags.includes("Planned"));
+const isPlanned=x=>!!x&&typeof x==="object"&&(x.planned===true||x.kind==="planned"||partPlanned(x.part)||(!!x.sys&&sysPlanned(x.sys)));
+function applyParts(root){ (root||document).querySelectorAll("[data-part]").forEach(e=>e.classList.toggle("planned",partPlanned(e.dataset.part)));
+  document.querySelectorAll(".thread[data-t]").forEach(e=>{ const t=MODEL.threads[e.dataset.t]; if(t) e.classList.toggle("planned",isPlanned(t)); }); }
 function paintSystems(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=>e.style.setProperty("--c",sysColour(e.dataset.sys))); }
 /* Legend entries for a set of systems: one per top-level system, in slot order, then "other" when any folded. */
 function sysKey(slugs,cls){ const tops=TOPS.filter(t=>slugs.some(s=>sysTop(s)===t)), more=slugs.some(s=>{ const i=TOPS.indexOf(sysTop(s)); return i<0||i>=SLOTS; });
   return tops.filter(t=>TOPS.indexOf(t)<SLOTS).map(t=>`<span><i class="${cls||"sys"}" style="--c:${sysColour(t.slug)}"></i>${esc(t.name)}</span>`).join("")+(more?`<span><i class="${cls||"sys"}" style="--c:var(--muted)"></i>other systems</span>`:""); }
 
-/* Divergences 1 and 3 (see the footer): cards grouped under headings; a built system without a page is a non-link card (as the template now does); planned
-   cards carry their planning units and sub-issues from plannedBy.units; the build shows its toolchain in place of a version. */
+/* Divergences 1 and 2 (see the footer): cards grouped under headings; planned cards and the inspector name the planning units (registry
+   plannedBy.units), each linking its plan board by its name, the planned placement and the Maven Central version (registry published); the
+   build shows its toolchain in place of a version. As the template does, no issue number above the Context section (system/RULES.md §2):
+   a planned system links "its plan", a unit its board by the unit's name, and the last amendment is said in the Context section. */
 const unitsOf=s=>((s.plannedBy||{}).units||[]);
-const unitLabel=u=>`unit ${u.unit} ${u.slug} · ${u.subIssue?"#"+u.subIssue:"sub-issue not filed"}`;
+const unitLink=u=>{ const b=u.subIssue&&boardOf(u.subIssue); return `unit ${esc(u.unit)} ${b?`<a href="${esc(b)}" title="its plan board">${esc(u.slug)}</a>`:esc(u.slug)}`; };
+/* a subsystem of a supersystem is core (the greater system cannot exist without it) or optional, as the architecture says (systems.json
+   "core"); a supersystem is built once every core subsystem is (system/RULES.md §7) */
+const roleOf=s=>{ const sup=bySlug(s.parent)&&bySlug(s.parent).kind==="supersystem"; return sup?(s.core===true?"core subsystem":s.core===false?"optional subsystem":"subsystem · not classified yet"):""; };
 function sysCard(s){
-  const planned=s.status==="planned", linked=!planned&&!!s.page;
+  const planned=s.status==="planned", linked=!planned&&!!s.page, role=roleOf(s), partsPage=planned&&s.kind==="supersystem"&&!!s.page;
   /* each entry is HTML: escaped text, and the as-is date or time through when(), as the template does */
+  const plan=planned&&(s.plannedBy||{}).issue&&boardOf(s.plannedBy.issue);
   const meta=(planned
-    ? [`planned by #${(s.plannedBy||{}).issue||"?"}`+((s.plannedBy||{}).section?` §${s.plannedBy.section}`:""), ...unitsOf(s).map(u=>u.subIssue?`#${u.subIssue} · unit ${u.unit}`:`unit ${u.unit}`)].map(esc)
-    : [esc(s.version?`v${s.version}`+(s.published&&s.published!==s.version?` (Central ${s.published})`:"")+(s.unreleased?" · unreleased":""):(s.toolchain||"")), s.asIs?`as-is ${esc(s.asIs.ref)} ${esc(s.asIs.sha)} · ${when(s.asIs.date)}`:"", s.lastAmended?esc(`amended by #${s.lastAmended.issue}`):""]).filter(Boolean);
+    ? [plan?`planned · <a href="${esc(plan)}">its plan</a>`:"planned", ...(partsPage?[`<a href="${esc(s.page)}">its built parts' page</a>`]:[]), ...unitsOf(s).map(unitLink)]
+    : [esc(s.version?`v${s.version}`+(s.published&&s.published!==s.version?` (Central ${s.published})`:"")+(s.unreleased?" · unreleased":""):(s.toolchain||"")), s.asIs?`as-is ${esc(s.asIs.ref)} @ ${esc(s.asIs.sha)} · ${s.asIs.landed===false?"not yet landed":when(s.asIs.date)}`:""]).concat(role?[`<b class="role">${esc(role)}</b>`]:[]).filter(Boolean);
+  // A built system the repository gives no page yet is a card, not a link (never a dead href="#").
   const tag=linked?"a":"span", href=linked?` href="${esc(s.page)}"`:"";
-  const st=planned?(s.kind==="supersystem"?"planned supersystem · no page":"planned · no page"):(linked?"built":"built · no page yet");
+  const st=planned?(s.kind==="supersystem"?(partsPage?"planned supersystem · built in part":"planned supersystem · no page yet"):"planned · no page yet"):(linked?"built":"built · no page yet");
   return `<${tag} class="syscard ${planned?"planned":"built"}"${href} data-slug="${esc(s.slug)}" style="--c:${sysColour(s.slug)}" tabindex="0"><div class="st">${st}</div><div class="nm">${esc(s.name)}</div><div class="fn">${esc(s.function||"")}</div><div class="meta">${meta.map(m=>`<span>${m}</span>`).join("")}</div></${tag}>`;
 }
 function renderSystems(){
@@ -1130,21 +1202,21 @@ function renderSystems(){
   const groups=[["Built",`${built.length} systems · as-is at the commit each card names`,built]];
   built.filter(b=>b.kind!=="supersystem").forEach(b=>{ const kids=SYSTEMS.filter(s=>s.parent===b.slug&&s.status==="planned"); if(kids.length) groups.push([`Planned · part of the ${b.name}`,`${kids.length} · not built`,kids]); });
   const plannedTop=SYSTEMS.filter(s=>s.status==="planned"&&top(s));
-  groups.push(["Planned · repository level",`${plannedTop.length} · Issue #55 · not built`,plannedTop]);
-  SYSTEMS.filter(s=>s.kind==="supersystem").forEach(sup=>{ const kids=SYSTEMS.filter(s=>s.parent===sup.slug&&(sup.status==="planned"||s.status==="planned")); if(kids.length) groups.push([`Planned · ${sup.status==="planned"?"":"the rest of "}${sup.name}`,`${kids.length} parts · not built`,kids]); });
+  groups.push(["Planned · repository level",`${plannedTop.length} · not built`,plannedTop]);
+  SYSTEMS.filter(s=>s.kind==="supersystem").forEach(sup=>{ const kids=SYSTEMS.filter(s=>s.parent===sup.slug&&s.status==="planned"), some=SYSTEMS.some(s=>s.parent===sup.slug&&s.status==="built"); if(kids.length) groups.push([`Planned · ${some?"the rest of":"inside"} ${sup.name}`,`${kids.length} parts · not built`,kids]); });
   $("#syscards").outerHTML=`<div id="syscards">${groups.filter(g=>g[2].length).map(([h,sub,list])=>`<div class="sysgroup">${esc(h)} <small>${esc(sub)}</small></div><div class="syscards">${list.map(sysCard).join("")}</div>`).join("")}</div>`;
-  document.querySelectorAll(".syscard").forEach(c=>{ const show=()=>{ const s=SYSTEMS.find(x=>x.slug===c.dataset.slug), pb=s.plannedBy;
+  document.querySelectorAll(".syscard").forEach(c=>{ const show=()=>{ const s=SYSTEMS.find(x=>x.slug===c.dataset.slug), pb=s.plannedBy, plan=pb&&pb.issue&&boardOf(pb.issue), role=roleOf(s);
     inspect(`<div class="kicker">${(s.kind==="supersystem"?"SUPERSYSTEM":"SYSTEM")} · ${s.status.toUpperCase()}</div><div class="name">${esc(s.name)}</div><div class="vis">${esc((s.paths||[]).join(" · ")||"no code paths yet")}</div><p>${esc(s.function||"")}</p><dl>`
       +(s.page?`<dt>Dashboard</dt><dd><a href="${esc(s.page)}">${esc(s.page)}</a></dd>`:(s.status==="built"?`<dt>Dashboard</dt><dd>none yet</dd>`:""))
       +(s.status==="built"&&s.version?`<dt>Version</dt><dd>${esc(s.version)} in the build${s.published?` · Maven Central latest ${esc(s.published)}`:""}${s.unreleased?" · new, not released":""}</dd>`:"")
       +(s.toolchain?`<dt>Toolchain</dt><dd>${esc(s.toolchain)}</dd>`:"")
-      +(s.lastAmended?`<dt>Last amended</dt><dd>${ilink(s.lastAmended.issue)} · <code>${esc(s.lastAmended.sha)}</code>${s.lastAmended.note?` · ${esc(s.lastAmended.note)}`:""}</dd>`:"")
-      +(s.parent&&bySlug(s.parent)?`<dt>Part of</dt><dd>${esc(bySlug(s.parent).name)}</dd>`:"")
-      +(pb?`<dt>Planned by</dt><dd>${ilink(pb.issue)}${pb.section?` · §${esc(pb.section)}`:""} · <a href="../../${esc(pb.architecture||"")}">${esc(pb.architecture||"")}</a></dd>`:"")
+      +(s.parent&&bySlug(s.parent)?`<dt>Part of</dt><dd>${esc(bySlug(s.parent).name)}${role?` · ${esc(role)}`:""}</dd>`:"")
+      +(pb?`<dt>Planned in</dt><dd>${plan?`<a href="${esc(plan)}">its plan board</a> · `:""}<a href="../../${esc(pb.architecture||"")}">${esc(pb.architecture||"")}</a>${pb.section?` §${esc(pb.section)}`:""}</dd>`:"")
       +(pb&&pb.placement?`<dt>Planned placement</dt><dd><code>${esc(pb.placement)}</code></dd>`:"")
-      +(unitsOf(s).length?`<dt>Units and sub-issues</dt><dd>${unitsOf(s).map(u=>u.subIssue?`unit ${u.unit} ${esc(u.slug)} · ${ilink(u.subIssue)}`:esc(unitLabel(u))).join("<br>")}</dd>`:"")
+      +(unitsOf(s).length?`<dt>Units</dt><dd>${unitsOf(s).map(unitLink).join("<br>")}</dd>`:"")
       +`</dl>`); }; c.addEventListener("mouseenter",show); c.addEventListener("focus",show); });
-  $("#systems-key").innerHTML=sysKey(SYSTEMS.map(s=>s.slug))+`<span><i></i>built: the card links to its page, or says no page yet</span><span><i class="pln"></i>planned: no page until built</span><span><span class="k">a part of a system takes its parent's colour</span></span>`;
+  const subs=SYSTEMS.filter(s=>bySlug(s.parent)&&bySlug(s.parent).kind==="supersystem");
+  $("#systems-key").innerHTML=sysKey(SYSTEMS.map(s=>s.slug))+`<span><i></i>built: the card links to its page, or says no page yet</span><span><i class="pln"></i>planned: no page until built</span><span><span class="k">a part of a system takes its parent's colour</span></span>`+(subs.some(s=>s.core===true)?`<span><b class="role">core subsystem</b> its supersystem cannot exist without it; built once every core one is</span>`:"")+(subs.some(s=>s.core===false)?`<span><b class="role">optional subsystem</b> additive: its supersystem exists without it</span>`:"")+(subs.some(s=>s.core!==true&&s.core!==false)?`<span><b class="role">subsystem · not classified yet</b> its architecture has not been read for it</span>`:"");
 }
 renderSystems();
 paintSystems();
@@ -1163,7 +1235,7 @@ const MODEL = {
       transport:"webtools.http.transport",cache:"webtools.http.cache",budget:"webtools.http.budget",facades:"webtools.http.facades",fixtures:"webtools.http.fixtures",feeds:"webtools.feeds"},
   structure:{
     height:500,
-    lanes:[["BUILT",40,40,"start"],["WEBTOOLS-HTTP · ISSUE #55",640,36,"start"]],
+    lanes:[["BUILT",40,40,"start"],["WEBTOOLS-HTTP",640,36,"start"]],
     notes:[{x:40,y:488,lines:["Each box is a system in its colour; a box inside another is part of it. webtools-http's common core is built; its other parts and webtools-feeds are dashed."]}],
     nodes:[
       {id:"udp",sys:"webtools-udp",x:40,y:56,w:175,h:60,t:"webtools-udp",s:"UDP connections · 2.0.0a",d:{role:"Multi-client UDP connection layer. Depends on nothing else in the repository; configured by the Gradle build.",issues:[39,41,48,49,50,52,53,54,56,57]}},
@@ -1171,18 +1243,18 @@ const MODEL = {
       {id:"browser",sys:"webtools-browser",x:424,y:56,w:175,h:60,t:"webtools-browser",s:"WebViewer · 1.0.0a",d:{role:"Headless-Chrome screenshots through Selenium. Depends on nothing else in the repository.",issues:[]}},
       {id:"build",sys:"gradle-build",container:true,x:40,y:352,w:580,h:120,t:"Gradle build",s:"Gradle 9.7.1 · Kotlin 2.2.0 · publishes nothing",d:{role:"Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins, which compile every module to the Java 11 floor. Its check-only js module for webtools-http is inside it.",issues:[58,63,69]}},
       {id:"rootBuild",sys:"gradle-build",x:52,y:398,w:130,h:60,t:"root scripts",s:["settings · includeBuild","allprojects only"],d:{role:"settings.gradle.kts includes build-logic through pluginManagement, applies the foojay resolver 0.8.0 and includes the five modules; build.gradle.kts keeps only allprojects { group; version 1.0.0 }.",issues:[]}},
-      {id:"jsCheck",sys:"js-commoncheck",x:488,y:398,w:124,h:60,t:"js check module",s:["http-commoncheck · #62","feeds' planned #69"],d:{role:"Built by #62: webtools-http-commoncheck, on webtools.kotlin-common-check, compiles webtools-http's commonMain for js() with no environment and two js actuals, unpublished, so a JVM API in common code fails check. webtools-feeds-commoncheck follows in #69.",issues:[69]}},
-      {id:"buildLogic",sys:"gradle-build",x:190,y:398,w:170,h:60,t:"build-logic",s:["4 convention plugins","level tasks by package"],d:{role:"Built by #61: an included build with webtools.published-library, webtools.kotlin-jvm-library (applied by the three JVM modules), webtools.kotlin-multiplatform-library (applied by webtools-http) and, from #62, webtools.kotlin-common-check (applied by its check-only js module), WebToolsBuild's level tasks selected by package, and its own TestKit tests. webtools-feeds will apply the multiplatform plugin (#69).",issues:[69]}},
-      {id:"floor",sys:"gradle-build",x:368,y:398,w:112,h:60,t:"Java floor",s:["JAVA_FLOOR = 11","verifyJavaFloor"],d:{role:"Built by #47: WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins, so every module is Java 11 bytecode declaring org.gradle.jvm.version 11; verifyJavaFloor, in every module's check, fails on anything above the floor in its jars, metadata or runtime classpath.",issues:[]}},
-      {id:"http",sys:"webtools-http",container:true,x:640,y:44,w:335,h:262,t:"webtools-http",s:"1.0.0 unreleased · core built · rest planned",d:{role:"A suspend HTTP stack, Kotlin Multiplatform with one jvm() target at the Java 11 floor. Its common core is built (#62); its six other parts are planned, each a sub-issue. Its own page shows the core as built.",issues:[63,64,65,66,67,68]}},
-      {id:"core",sys:"webtools-http-core",x:652,y:90,w:155,h:46,t:"common core",s:"built · #62",d:{role:"Built by #62: the opt-in marker, the failure model, the request and response types with Url, the HttpTransport and WallClock ports with WallClock.System, and the internal logging seam and helpers.",issues:[]}},
-      {id:"policy",sys:"webtools-http-url-policy",planned:true,x:815,y:90,w:150,h:46,t:"URL policy",s:"#64",d:{role:"Planned: Trusted and Untrusted outbound-URL policies and the address classifier.",issues:[64]}},
-      {id:"transport",sys:"webtools-http-transport",planned:true,x:652,y:144,w:155,h:46,t:"OkHttp transport",s:"#65",d:{role:"Planned: one request per hop, capped body read, failure mapping.",issues:[65]}},
-      {id:"cache",sys:"webtools-http-cache",planned:true,x:815,y:144,w:150,h:46,t:"response cache",s:"#66",d:{role:"Planned: the ResponseCache port and the Caffeine default.",issues:[66]}},
-      {id:"budget",sys:"webtools-http-budget",planned:true,x:652,y:198,w:155,h:46,t:"call budget",s:"#67",d:{role:"Planned: the CallBudget port and WindowedCallBudget.",issues:[67]}},
-      {id:"facades",sys:"webtools-http-facades",planned:true,x:815,y:198,w:150,h:46,t:"call facades",s:"#68",d:{role:"Planned: UpstreamClient and UrlFetcher.",issues:[68]}},
-      {id:"fixtures",sys:"webtools-http-test-fixtures",planned:true,x:652,y:252,w:155,h:46,t:"test fixtures",s:"#63",d:{role:"Planned: the published test-fixtures variant.",issues:[63]}},
-      {id:"feeds",sys:"webtools-feeds",planned:true,x:720,y:340,w:250,h:56,t:"webtools-feeds",s:"planned #69 · 1.0.0 · RSS / Atom",d:{role:"Planned: RSS and Atom parsing behind FeedParser with a Rome default, and a conditional-GET FeedFetcher over UrlFetcher. Would be configured by build-logic's multiplatform plugin.",issues:[69]}}
+      {id:"jsCheck",sys:"js-commoncheck",x:488,y:398,w:124,h:60,t:"js check module",s:["http-commoncheck built","feeds' check planned"],d:{role:"Built: webtools-http-commoncheck, on webtools.kotlin-common-check, compiles webtools-http's commonMain for js() with no environment and two js actuals, unpublished, so a JVM API in common code fails check. webtools-feeds-commoncheck is planned.",issues:[69]}},
+      {id:"buildLogic",sys:"gradle-build",x:190,y:398,w:170,h:60,t:"build-logic",s:["4 convention plugins","level tasks by package"],d:{role:"Built: an included build with webtools.published-library, webtools.kotlin-jvm-library (applied by the three JVM modules), webtools.kotlin-multiplatform-library (applied by webtools-http) and, webtools.kotlin-common-check (applied by its check-only js module), WebToolsBuild's level tasks selected by package, and its own TestKit tests. webtools-feeds will apply the multiplatform plugin.",issues:[69]}},
+      {id:"floor",sys:"gradle-build",x:368,y:398,w:112,h:60,t:"Java floor",s:["JAVA_FLOOR = 11","verifyJavaFloor"],d:{role:"Built: WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins, so every module is Java 11 bytecode declaring org.gradle.jvm.version 11; verifyJavaFloor, in every module's check, fails on anything above the floor in its jars, metadata or runtime classpath.",issues:[]}},
+      {id:"http",sys:"webtools-http",container:true,x:640,y:44,w:335,h:262,t:"webtools-http",s:"1.0.0 unreleased · core built · rest planned",d:{role:"A suspend HTTP stack, Kotlin Multiplatform with one jvm() target at the Java 11 floor. Its common core is built; its six other parts are planned, each a later unit. Its own page shows the core as built.",issues:[63,64,65,66,67,68]}},
+      {id:"core",sys:"webtools-http-core",x:652,y:90,w:155,h:46,t:"common core",s:"built",d:{role:"Built: the opt-in marker, the failure model, the request and response types with Url, the HttpTransport and WallClock ports with WallClock.System, and the internal logging seam and helpers.",issues:[]}},
+      {id:"policy",sys:"webtools-http-url-policy",planned:true,x:815,y:90,w:150,h:46,t:"URL policy",s:"planned",d:{role:"Planned: Trusted and Untrusted outbound-URL policies and the address classifier.",issues:[64]}},
+      {id:"transport",sys:"webtools-http-transport",planned:true,x:652,y:144,w:155,h:46,t:"OkHttp transport",s:"planned",d:{role:"Planned: one request per hop, capped body read, failure mapping.",issues:[65]}},
+      {id:"cache",sys:"webtools-http-cache",planned:true,x:815,y:144,w:150,h:46,t:"response cache",s:"planned",d:{role:"Planned: the ResponseCache port and the Caffeine default.",issues:[66]}},
+      {id:"budget",sys:"webtools-http-budget",planned:true,x:652,y:198,w:155,h:46,t:"call budget",s:"planned",d:{role:"Planned: the CallBudget port and WindowedCallBudget.",issues:[67]}},
+      {id:"facades",sys:"webtools-http-facades",planned:true,x:815,y:198,w:150,h:46,t:"call facades",s:"planned",d:{role:"Planned: UpstreamClient and UrlFetcher.",issues:[68]}},
+      {id:"fixtures",sys:"webtools-http-test-fixtures",planned:true,x:652,y:252,w:155,h:46,t:"test fixtures",s:"planned",d:{role:"Planned: the published test-fixtures variant.",issues:[63]}},
+      {id:"feeds",sys:"webtools-feeds",planned:true,x:720,y:340,w:250,h:56,t:"webtools-feeds",s:"planned · 1.0.0 · RSS / Atom",d:{role:"Planned: RSS and Atom parsing behind FeedParser with a Rome default, and a conditional-GET FeedFetcher over UrlFetcher. Would be configured by build-logic's multiplatform plugin.",issues:[69]}}
     ],
     deps:[
       ["udp","buildLogic","jvm plugin"],["scraping","buildLogic","jvm plugin"],["browser","buildLogic","jvm plugin"],
@@ -1191,19 +1263,19 @@ const MODEL = {
   },
   // Threads and processes, keyed by name: sys (owning system's slug), kind ("thread" | "process"), created, runs, note, issues.
   threads:{
-    "mcups-listener":{sys:"webtools-udp",kind:"thread",created:"eagerly, in the server's constructor",runs:"receives on UDP 9998; accept() and the tag switch; the handshake including admit and onClientConnect; inline probe replies; reliable ack processing.",note:"A throwing onClientConnect kills this thread (#54).",issues:[54,57]},
+    "mcups-listener":{sys:"webtools-udp",kind:"thread",created:"eagerly, in the server's constructor",runs:"receives on UDP 9998; accept() and the tag switch; the handshake including admit and onClientConnect; inline probe replies; reliable ack processing.",note:"A throwing onClientConnect kills this thread.",issues:[54,57]},
     "mcups-dispatch":{sys:"webtools-udp",kind:"thread",created:"its executor at construction; the JDK starts the thread on the first handler dispatched",runs:"every message handler, unreliable and reliable, and onClientDisconnect — one thread, so per-client order holds.",note:""},
     "mcups-liveness":{sys:"webtools-udp",kind:"thread",created:"at construction, only if idleTimeoutMillis > 0",runs:"the idle sweep; a failing sweep is logged and detection continues.",note:""},
     "mcups-schedulers":{sys:"webtools-udp",kind:"thread",created:"lazily: each PeriodicScheduler creates its executor on first use",runs:"mcups-keepalive: scheduled keepalives · mcups-probe: link-quality probes · mcups-retransmit: reliable resends and standalone acks.",note:"Three daemon threads, one per scheduler."},
-    "mcupc-listener":{sys:"webtools-udp",kind:"thread",created:"lazily, on the first start, startBytes or channel(...).actuate*",runs:"receives the session after the handshake; inline probe replies; reliable ack processing.",note:"Origin is checked only on the reliable branch (#39).",issues:[39]},
+    "mcupc-listener":{sys:"webtools-udp",kind:"thread",created:"lazily, on the first start, startBytes or channel(...).actuate*",runs:"receives the session after the handshake; inline probe replies; reliable ack processing.",note:"Origin is checked only on the reliable branch.",issues:[39]},
     "mcupc-dispatch":{sys:"webtools-udp",kind:"thread",created:"its executor at construction; the JDK starts the thread on the first handler dispatched",runs:"the session's handlers.",note:""},
     "mcupc-schedulers":{sys:"webtools-udp",kind:"thread",created:"lazily, on first use",runs:"mcupc-keepalive · mcupc-probe · mcupc-retransmit, as on the server.",note:""},
     "unirest-monitor":{sys:"webtools-scraping",kind:"thread",created:"in every Connector() constructor: Unirest.setTimeouts(0, 0) re-runs Unirest's Options.refresh(), which starts a new SyncIdleConnectionMonitorThread (daemon, default Thread-N name); Unirest's own class initialisation starts one more",runs:"every 5 s, closes expired and 30 s-idle connections of the HTTP client pool built with it.",note:"The previous monitor and client are never stopped, so each Connector() leaves one more daemon thread and pool behind. Read from unirest-java 1.4.9's sources."},
     "chromedriver":{sys:"webtools-browser",kind:"process",created:"per getPage or screenshot call, by ChromeDriverService.createDefaultService()",runs:"the WebDriver server Selenium talks to; its output goes to a webviewer-chromedriver*.log temp file.",note:"Ended by driver.quit() in a finally block. Selenium's own threads are not enumerated here."},
     "chrome":{sys:"webtools-browser",kind:"process",created:"per capture, by chromedriver",runs:"headless Chrome (--headless=new, --disable-gpu, --no-sandbox, --remote-allow-origins=*): navigates, settles for pageSettleMillis, screenshots.",note:"Ends with driver.quit()."},
     "gradle":{sys:"gradle-build",kind:"process",created:"when ./gradlew runs",runs:"the Gradle daemon configures build-logic and the three modules; test tasks run in forked test JVMs; build-logic's nested-build tests start a TestKit Gradle daemon.",note:"webtools-udp's test, integrationTest, e2eTest and nonfunctionalTest share one build service with maxParallelUsages = 1, so two never bind UDP 9998 at once; build-logic's integrationTest, e2eTest and nonfunctionalTest share another, for the TestKit home."},
-    "http-caller":{sys:"webtools-http",kind:"thread",created:"never: webtools-http 1.0.0 starts no thread, executor or dispatcher",runs:"Url.parse, HttpMethod.of, the factories and their builders, WallClock.System and catchNonFatal, on the caller's thread or coroutine; HttpTransport's contract asks every implementation to be main-safe and to allow concurrent calls.",note:"Built by #62.",issues:[]},
-    "http-planned":{sys:"webtools-http",kind:"thread",created:"planned — not built",runs:"OkHttpTransport would own its OkHttp Dispatcher and ConnectionPool (#65); CaffeineResponseCache would own its load scope on Dispatchers.Default (#66).",note:"Architecture §7.4.",planned:true,issues:[65,66]}
+    "http-caller":{sys:"webtools-http",kind:"thread",created:"never: webtools-http 1.0.0 starts no thread, executor or dispatcher",runs:"Url.parse, HttpMethod.of, the factories and their builders, WallClock.System and catchNonFatal, on the caller's thread or coroutine; HttpTransport's contract asks every implementation to be main-safe and to allow concurrent calls.",note:"Built.",issues:[]},
+    "http-planned":{sys:"webtools-http",kind:"thread",created:"planned — not built",runs:"OkHttpTransport would own its OkHttp Dispatcher and ConnectionPool; CaffeineResponseCache would own its load scope on Dispatchers.Default.",note:"Architecture §7.4.",planned:true,issues:[65,66]}
   },
   // The decision path: which artifact a consumer depends on. Ends with sys take that system's colour; NONE is grey.
   flows:[
@@ -1218,13 +1290,13 @@ const MODEL = {
             NOJS:{c:3,r:2,k:"t",lvl:"NONE",t:["nothing built","returns rendered HTML"]},
             CH:{c:3,r:3,k:"d",t:["Chrome on","the host?"]},BRW:{c:4,r:3,k:"t",sys:"webtools-browser",t:["webtools-browser","WebViewer"]},
             NOCH:{c:3,r:4,k:"t",lvl:"NONE",t:["no built","option"]},
-            HTTP:{c:3,r:5,k:"t",sys:"webtools-http",planned:true,t:["webtools-http","core only · #63–#68"]},
-            FEEDS:{c:3,r:6,k:"t",sys:"webtools-feeds",planned:true,t:["webtools-feeds","planned #69"]}},
+            HTTP:{c:3,r:5,k:"t",sys:"webtools-http",planned:true,t:["webtools-http","core built · rest planned"]},
+            FEEDS:{c:3,r:6,k:"t",sys:"webtools-feeds",planned:true,t:["webtools-feeds","planned"]}},
      edges:[["IN","Q"],["Q","UDP","udp"],["Q","JS","page"],["JS","SCR","no"],["JS","NOJS","yes"],["Q","CH","screenshot"],["CH","BRW","yes"],["CH","NOCH","no"],["Q","HTTP","http"],["Q","FEEDS","feeds"]],
      rules(s){ const p=["IN","Q"], R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
        if(s.need==="udp"){ p.push("UDP"); return R("webtools-udp: subclass MultiConnectionUDPServer on one side, drive MultiConnectionUDPClient on the other; both ends on 2.0.0+.",["js","chrome"]); }
-       if(s.need==="http"){ p.push("HTTP"); return R("Nothing to depend on yet: webtools-http 1.0.0's common core is built but not released, and its transport, URL policy, cache, budget and facades are planned (#63–#68). Today the only HTTP client is webtools-scraping's Connector.get, with no timeout and no URL policy.",["js","chrome"]); }
-       if(s.need==="feeds"){ p.push("FEEDS"); return R("Nothing to depend on yet: webtools-feeds is planned (#69).",["js","chrome"]); }
+       if(s.need==="http"){ p.push("HTTP"); return R("Nothing to depend on yet: webtools-http 1.0.0's common core is built but not released, and its transport, URL policy, cache, budget and facades are planned. Today the only HTTP client is webtools-scraping's Connector.get, with no timeout and no URL policy.",["js","chrome"]); }
+       if(s.need==="feeds"){ p.push("FEEDS"); return R("Nothing to depend on yet: webtools-feeds is planned.",["js","chrome"]); }
        if(s.need==="page"){ p.push("JS"); if(s.js==="no"){ p.push("SCR"); return R("webtools-scraping: Connector.open then next for line by line, or get for the whole body.",["chrome"]); } p.push("NOJS"); return R("No built module returns JavaScript-rendered HTML: WebViewer returns only a screenshot.",["chrome"]); }
        p.push("CH"); if(s.chrome==="yes"){ p.push("BRW"); return R("webtools-browser: WebViewer.screenshot for an image, getPage for a PNG file; Selenium Manager resolves the driver.",["js"]); }
        p.push("NOCH"); return R("No built option: WebViewer needs a local Chrome or Chromium install.",["js"]); }}
@@ -1235,12 +1307,12 @@ const MODEL = {
     lifelines:[{n:"maintainer",side:"consumer"},{n:"Gradle build",sys:"gradle-build"},{n:"webtools-udp",sys:"webtools-udp"},{n:"webtools-scraping",sys:"webtools-scraping"},{n:"webtools-browser",sys:"webtools-browser"},{n:"Maven Central",side:"external"}],
     phases:[["CONFIGURE",0,4],["BUILD & TEST",5,7],["RELEASE",8,9]],
     steps:[
-      {f:0,t:1,l:"./gradlew build",n:"The wrapper starts Gradle 9.7.1; settings.gradle.kts includes build-logic through pluginManagement, applies the foojay resolver 0.8.0 and includes the five modules: these three, webtools-http and its check-only js module, which are not released and not drawn here. There is no CI: a maintainer runs it (#58)."},
+      {f:0,t:1,l:"./gradlew build",n:"The wrapper starts Gradle 9.7.1; settings.gradle.kts includes build-logic through pluginManagement, applies the foojay resolver 0.8.0 and includes the five modules: these three, webtools-http and its check-only js module, which are not released and not drawn here. There is no CI: a maintainer runs it."},
       {f:1,t:2,l:"webtools.kotlin-jvm-library",n:"The module applies build-logic's plugin by id: Kotlin JVM 2.2.0 at the Java 11 floor with verifyJavaFloor in check, vanniktech maven-publish 0.36.0 with the publishing skeleton, the JUnit 5 test dependencies and gatingTest … uatTest selected by package. Its own file adds api slf4j-api 2.0.13, its coordinates, version 2.0.0a and the port lock."},
       {f:1,t:3,l:"webtools.kotlin-jvm-library",n:"The same plugin; webtools-scraping's own file adds api slf4j-api, skrapeit, jsoup and unirest-java as implementation, its version 1.0.0a and its coordinates."},
       {f:1,t:4,l:"webtools.kotlin-jvm-library",n:"The same plugin; webtools-browser's own file adds api slf4j-api, selenium-java as implementation, its version 1.0.0a and its coordinates."},
       {f:2,t:2,self:true,l:"2.0.0a · port lock",n:"webtools-udp overrides the root version 1.0.0 with 2.0.0a and puts test, integrationTest, e2eTest and nonfunctionalTest on one build service so two never bind UDP 9998 at once."},
-      {f:1,t:2,l:"compile · test",n:"Each module compiles to Java 11 bytecode against the Java 11 API, on whichever JDK runs the build (WebToolsBuild.JAVA_FLOOR, #47), and runs test, every level in one JVM per module."},
+      {f:1,t:2,l:"compile · test",n:"Each module compiles to Java 11 bytecode against the Java 11 API, on whichever JDK runs the build (WebToolsBuild.JAVA_FLOOR), and runs test, every level in one JVM per module."},
       {f:2,t:1,l:"jars · results",ret:true,n:"Jars and test results come back to the build; a failing test fails the build."},
       {f:1,t:1,self:true,l:"check: verifyJavaFloor",n:"Each module's check runs verifyJavaFloor: it fails on a class above Java 11 bytecode in the module's jar or runtime classpath, or a library variant whose org.gradle.jvm.version is not 11 (98, 4 and 2 classes pass)."},
       {f:0,t:1,l:"publishToMavenCentral",n:"The vanniktech plugin's task, configured by build-logic's webtools.published-library with signAllPublications(). Who runs it and when is not recorded in the repository."},
@@ -1258,9 +1330,9 @@ const DEPS={
     {id:"scraping",sys:"webtools-scraping",x:290,y:150,w:200,h:50,t:"webtools-scraping",s:"1.0.0a in the build · 1.0.0 on Central",d:"io.github.spartanlaboratories:webtools-scraping. Three implementation dependencies, runtime scope in the POM. 1.0.0a is Java 11 bytecode; Central's 1.0.0 is Java 23."},
     {id:"browser",sys:"webtools-browser",x:540,y:150,w:200,h:50,t:"webtools-browser",s:"1.0.0a in the build · 1.0.0 on Central",d:"io.github.spartanlaboratories:webtools-browser. One implementation dependency, runtime scope in the POM. 1.0.0a is Java 11 bytecode; Central's 1.0.0 is Java 23."},
     {id:"coro",lib:true,x:790,y:24,w:180,h:50,t:"kotlinx-coroutines-core",s:"org.jetbrains.kotlinx · 1.10.2 · api",d:"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2 — webtools-http's one api dependency (compile scope, beside kotlin-stdlib 2.2.0), the runtime of its suspend API."},
-    {id:"http",sys:"webtools-http",x:790,y:150,w:180,h:50,t:"webtools-http",s:"1.0.0 in the build · not released",d:"io.github.spartanlaboratories:webtools-http and webtools-http-jvm, 1.0.0, read from the generated POM and module metadata: coroutines and kotlin-stdlib in compile scope, the other three at runtime only; Java 11 bytecode. Not released until #55's stack is complete."},
+    {id:"http",sys:"webtools-http",x:790,y:150,w:180,h:50,t:"webtools-http",s:"1.0.0 in the build · not released",d:"io.github.spartanlaboratories:webtools-http and webtools-http-jvm, 1.0.0, read from the generated POM and module metadata: coroutines and kotlin-stdlib in compile scope, the other three at runtime only; Java 11 bytecode. Not released until the HTTP stack is complete."},
     {id:"httpRt",lib:true,x:790,y:236,w:180,h:50,t:"3 runtime libraries",s:"okhttp · caffeine · slf4j-api",d:"com.squareup.okhttp3:okhttp-jvm:5.5.0, com.github.ben-manes.caffeine:caffeine:3.3.1 and org.slf4j:slf4j-api:2.0.13 — implementation in jvmMain (runtime scope). okhttp-jvm lifts kotlin-stdlib to 2.2.21 or newer."},
-    {id:"feeds",sys:"webtools-feeds",planned:true,x:790,y:316,w:180,h:50,t:"webtools-feeds",s:"planned 1.0.0 · #69 · api on http",d:"Planned (#69): would depend on webtools-http as api for UrlFetcher, with a Rome 2.1.0 parser default."},
+    {id:"feeds",sys:"webtools-feeds",planned:true,x:790,y:316,w:180,h:50,t:"webtools-feeds",s:"planned 1.0.0 · api on http",d:"Planned: would depend on webtools-http as api for UrlFetcher, with a Rome 2.1.0 parser default."},
     {id:"skrape",lib:true,x:250,y:300,w:110,h:50,t:"skrapeit",s:"it.skrape · 1.1.5",d:"it.skrape:skrapeit:1.1.5 — implementation (runtime scope); its tree is not drawn."},
     {id:"jsoup",lib:true,x:372,y:300,w:100,h:50,t:"jsoup",s:"org.jsoup · 1.15.4",d:"org.jsoup:jsoup:1.15.4 — implementation (runtime scope)."},
     {id:"unirest",lib:true,x:484,y:300,w:116,h:50,t:"unirest-java",s:"com.mashape · 1.4.9",d:"com.mashape.unirest:unirest-java:1.4.9 — implementation (runtime scope); brings Apache HttpClient."},
@@ -1279,11 +1351,12 @@ function renderStructure(){
   arrowDefs(svg,"darr","var(--ink-2)");
   S.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
   S.nodes.forEach(n=>{
-    const g=mk("g",{class:`snode${n.container?" container":""}${n.planned?" planned":""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t,style:`--c:${sysColour(n.sys)}`},svg);
+    const g=mk("g",{class:`snode${n.container?" container":""}${isPlanned(n)?" planned":""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t,style:`--c:${sysColour(n.sys)}`},svg);
     mk("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:6},g); txt(g,n.x+10,n.y+19,n.t,"t"); txt(g,n.x+10,n.y+34,Array.isArray(n.s)?n.s:[n.s],"s");
     const go=()=>selectNode(n.id); g.addEventListener("click",go); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
   });
-  S.deps.forEach(([a,b,label,planned])=>{
+  S.deps.forEach(([a,b,label,lit])=>{
+    const planned=!!lit||isPlanned(S.nodes.find(x=>x.id===a))||isPlanned(S.nodes.find(x=>x.id===b));
     const A=box(a),B=box(b),[ax,ay]=edgePoint(A,B[0]+B[2]/2,B[1]+B[3]/2),[bx,by]=edgePoint(B,A[0]+A[2]/2,A[1]+A[3]/2), g=mk("g",{class:"sdep"+(planned?" planned":"")},svg);
     mk("path",{d:`M${ax},${ay} L${bx},${by}`,"marker-end":"url(#darr)"},g);
     if(label){ const mx=(ax+bx)/2,my=(ay+by)/2,w=label.length*5.4+12; mk("rect",{class:"lbg",x:mx-w/2,y:my-8,width:w,height:15,rx:7},g); txt(g,mx,my+3,label,"","middle"); }
@@ -1296,11 +1369,10 @@ function selectNode(id){
   document.querySelectorAll("#svg-structure .snode").forEach(g=>g.classList.toggle("sel",g.dataset.id===id));
   const s=bySlug(n.sys)||{}, d=n.d||{}, nm=k=>esc((S.nodes.find(x=>x.id===k)||{}).t||k);
   const uses=S.deps.filter(x=>x[0]===id), by=S.deps.filter(x=>x[1]===id);
-  let html=`<div class="kicker">${n.container?"SUPERSYSTEM":"SYSTEM"} · ${esc((s.status||(n.planned?"planned":"")).toUpperCase())}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc((s.paths||[]).join(" · "))}</div><p>${esc(d.role||s.function||"")}</p><dl>`;
+  let html=`<div class="kicker">${n.container?"SUPERSYSTEM":"SYSTEM"} · ${esc((s.status||(isPlanned(n)?"planned":"")).toUpperCase())}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc((s.paths||[]).join(" · "))}</div><p>${esc(d.role||s.function||"")}</p><dl>`;
   if(uses.length) html+=`<dt>Depends on</dt><dd>${uses.map(x=>`→ <b>${nm(x[1])}</b>${x[2]?" — "+esc(x[2]):""}`).join("<br>")}</dd>`;
   if(by.length) html+=`<dt>Used by</dt><dd>${by.map(x=>`← <b>${nm(x[0])}</b>${x[2]?" — "+esc(x[2]):""}`).join("<br>")}</dd>`;
   if(s.page) html+=`<dt>Dashboard</dt><dd><a href="${esc(s.page)}">${esc(s.page)}</a></dd>`;
-  if(d.issues&&d.issues.length) html+=`<dt>Open issues</dt><dd>${d.issues.map(ilink).join(" · ")}</dd>`;
   const c4id=MODEL.c4[id]; if(c4id&&el(c4id)) html+=`<dt>In the C4 model</dt><dd><button class="linkbtn" data-c4="${c4id}">${esc(el(c4id).name)} · ${el(c4id).tags.slice(2).map(esc).join(", ")||TYPE_LABEL[el(c4id).type].toLowerCase()} → open</button></dd>`;
   inspect(html+"</dl>");
   const b=$("#insp-body .linkbtn[data-c4]"); if(b) b.addEventListener("click",()=>openC4(b.dataset.c4));
@@ -1310,9 +1382,8 @@ function selectNode(id){
 function selectThread(id){
   const t=MODEL.threads[id]; if(!t) return;
   document.querySelectorAll(".thread").forEach(x=>x.classList.toggle("sel",x.dataset.t===id));
-  let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((bySlug(t.sys)||{}).name||t.sys||"").toUpperCase())}${t.planned?" · PLANNED":""}</div><div class="name">${esc(id)}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
+  let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((bySlug(t.sys)||{}).name||t.sys||"").toUpperCase())}${isPlanned(t)?" · PLANNED":""}</div><div class="name">${esc(id)}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
   if(t.note) html+=`<dt>Note</dt><dd>${esc(t.note)}</dd>`;
-  if(t.issues&&t.issues.length) html+=`<dt>Open issues</dt><dd>${t.issues.map(ilink).join(" · ")}</dd>`;
   inspect(html+"</dl>");
 }
 document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
@@ -1364,6 +1435,7 @@ const C4=parseDsl(document.getElementById("dsl").textContent);
 $("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
 
 const el=id=>C4.elements[id];
+applyParts();
 function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
 function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
 function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
@@ -1604,11 +1676,11 @@ function renderFlow(){
     if(A.r===B.r){ d=`M${fx(A)+NW},${fy(A)+NH/2} L${fx(B)},${fy(B)+NH/2}`; lx=(fx(A)+NW+fx(B))/2; ly=fy(A)+NH/2-5; anchor="middle"; }
     else if(A.c===B.c){ d=`M${fx(A)+NW/2},${fy(A)+NH} L${fx(B)+NW/2},${fy(B)}`; lx=fx(A)+NW/2+6; ly=(fy(A)+NH+fy(B))/2+3; }
     else { const tx=fx(A)+NW+10, ty=fy(B)+NH/2; d=`M${fx(A)+NW},${fy(A)+NH/2} L${tx},${fy(A)+NH/2} L${tx},${ty} L${fx(B)},${ty}`; lx=tx+4; ly=ty-5; }
-    mk("path",{d,class:"fedge"+(A.planned||B.planned?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
+    mk("path",{d,class:"fedge"+(isPlanned(A)||isPlanned(B)?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
     if(label){ const t=txt(svg,lx,ly,label,"flabel",anchor); t.dataset.e=a+">"+b; }
   });
   Object.entries(F.nodes).forEach(([id,n])=>{
-    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(n.planned?" planned":""),"data-id":id},svg);
+    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(isPlanned(n)?" planned":""),"data-id":id},svg);
     if(n.k==="d") mk("polygon",{points:`${x+12},${y} ${x+NW-12},${y} ${x+NW},${y+NH/2} ${x+NW-12},${y+NH} ${x+12},${y+NH} ${x},${y+NH/2}`},g);
     else mk("rect",{x,y,width:NW,height:NH,rx:n.k==="t"?3:6},g);
     // The stripe's colour goes in style, not the fill attribute: .fnode.t rect would otherwise repaint it surface-grey.
@@ -1646,9 +1718,9 @@ function renderSeq(){
   svg.setAttribute("viewBox",`0 0 1000 ${H}`);
   arrowDefs(svg,"sarr2","var(--ink-2)");
   S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
-  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(l.planned?" planned":"")},svg); const a={class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")}; if(l.sys){ a["data-sys"]=l.sys; a.style=`--c:${sysColour(l.sys)}`; } const g=mk("g",a,svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(isPlanned(l)?" planned":"")},svg); const a={class:"lh"+(l.side?" "+l.side:"")+(isPlanned(l)?" planned":"")}; if(l.sys){ a["data-sys"]=l.sys; a.style=`--c:${sysColour(l.sys)}`; } const g=mk("g",a,svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
   S.steps.forEach((s,i)=>{
-    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(s.planned?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
+    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(isPlanned(s)?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
     if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
     else { const a=LX(s.f), b=LX(s.t), dir=b>a?1:-1; mk("line",{x1:a,y1:y,x2:b-dir*2,y2:y,"marker-end":s.ret?"url(#sarr2-open)":"url(#sarr2)"},g); const mx=(a+b)/2, w=s.l.length*5.3+10; mk("rect",{class:"lbg",x:mx-w/2,y:y-17,width:w,height:14,rx:2},g); txt(g,mx,y-6,s.l,"","middle"); txt(g,Math.min(a,b)-8,y+3,`${i+1}`,"num","end"); }
     g.addEventListener("click",()=>gotoStep(i)); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); gotoStep(i); } });
@@ -1659,17 +1731,62 @@ function renderSeq(){
 /* The legend for the sequence: the systems on its lifelines, the consumer and outside parties, the line encodings, planned. */
 function seqKey(S){
   const L=S.lifelines.map(lane), sw={consumer:"con",external:"ext"}, sides=[...new Set(L.map(l=>l.side).filter(Boolean))];
-  $("#seq-key").innerHTML=sysKey(L.filter(l=>l.sys).map(l=>l.sys),"sys")+sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(s=>s.planned)||S.lifelines.some(l=>l&&l.planned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
+  $("#seq-key").innerHTML=sysKey(L.filter(l=>l.sys).map(l=>l.sys),"sys")+sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(isPlanned)||S.lifelines.map(lane).some(isPlanned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
 }
 function gotoStep(i){
   const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
   document.querySelectorAll("#svg-seq .msg").forEach(g=>{ const k=+g.dataset.i; g.classList.toggle("cur",k===seq.cur); g.classList.toggle("future",k>seq.cur); });
   $("#seq-pos").textContent=`step ${seq.cur+1} of ${S.steps.length}`;
-  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${s.planned?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
+  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${isPlanned(s)?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
 }
 $("#seq-prev").addEventListener("click",()=>gotoStep(seq.cur-1));
 $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
+
+/* ---------- The stamps (state.json) ----------
+   The header's chips: the version (a system page), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
+   the page shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the page
+   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the plan board
+   (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
+function renderState(){
+  const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
+  const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
+  set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
+  const old=document.getElementById("chip-amended"); if(old) old.remove();
+  const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
+  if(!p&&ctx){ p=document.createElement("p"); p.className="amended"; p.id="ctx-amended"; const h2=ctx.querySelector(":scope>h2"); if(h2) h2.after(p); else ctx.prepend(p); }
+  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title)}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
+}
+renderState();
+
+/* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
+   Generated from what each section draws, so a hand-written bubble or card needs no legend of its own: the system swatches present, a
+   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
+   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+function sectionKeys(){
+  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
+    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${m} units landed"><i style="width:${pct}%"></i></span>`; });
+  const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
+    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="key"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
+  const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
+  const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
+  put(G,"guarantees-key",[swatches(G,"swk"),
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
+    has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",
+    has(G,".badge")?`<span><span class="badge">tier</span>a fact: a stability tier, a marker, neutral</span>`:""]);
+  const states=C?[...new Set([...C.querySelectorAll(".tags .badge:not(.bug):not(.planned):not([data-sys])")].map(b=>b.textContent.trim()).filter(t=>/^(open|closed)$/.test(t)))]:[];
+  put(C,"context-key",[swatches(C,"sbar"),
+    states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
+    has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
+    has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
+    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+}
+sectionKeys();
 
 /* ---------- Optional tabs (WebTools): Dependencies, Environment, Trust boundaries; and the Lifecycles legend ----------
    Built from the Structure renderer's pieces: system colour from sysColour(), planned dashed, a legend naming every encoding. */
@@ -1705,7 +1822,7 @@ paintSystems();
 const tabs=[...document.querySelectorAll(".tab")];
 const DEFAULT_INSPECT={systems:"<p>Hover or focus a system card for its paths, parent and dashboard link.</p>",structure:"<p>Click a system for what it is for, what it depends on and what uses it, and its place in the C4 model.</p>",threads:"<p>Click a thread or process for the system that owns it, when it starts and what runs on it.</p>",lifecycles:"<p>The lifecycle facts are on the cards themselves, each with its source.</p>",deps:"<p>Click a module or a library for its coordinates and scope.</p>",env:"<p>One row per system; the facts are in the table.</p>",trust:"<p>One row per entry point; open issues are linked where they name the gap.</p>"};
 function show(id){
-  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
   const name=id.replace("t-","");
   if(name==="structure") renderStructure();
   if(name==="c4" && !c4View) renderC4(Math.max(0,C4.views.findIndex(v=>v.type==="container")));
@@ -1721,7 +1838,11 @@ function show(id){
   else if(name!=="datagrams") inspect(DEFAULT_INSPECT[name]||"<p>Select an item on this tab to see its details here.</p>");
   try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
 }
-tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); });
+/* The tablist's keys (WAI-ARIA tabs; GUIDANCE.md §6): Left and Right move to the previous and next tab, Home and End to the first and the
+   last, each shown at once; only the selected tab is in the Tab order (a roving tabindex), so Tab moves on to the panel. */
+function tabKeys(list,go){ list.forEach((t,i)=>{ t.tabIndex=t.getAttribute("aria-selected")==="true"?0:-1; t.addEventListener("keydown",e=>{ const n=list.length, j={ArrowRight:(i+1)%n,ArrowLeft:(i+n-1)%n,Home:0,End:n-1}[e.key]; if(j==null) return; e.preventDefault(); list[j].focus(); go(list[j].id); }); }); }
+tabKeys(tabs,id=>show(id));
 let start="t-systems"; try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
 const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
 show(start);

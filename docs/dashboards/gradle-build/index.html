@@ -48,6 +48,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
 .chip b{color:var(--ink);font-weight:600}
 .chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+/* a chip drawn from state.json (renderState()) stays hidden on every layout until it is drawn; one with nothing to say is removed */
+.chip[hidden]{display:none!important}
 /* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
    left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
    long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
@@ -78,8 +80,6 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
 .kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
-.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
-.kpi .seg-bar i{display:block;height:100%}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -351,8 +351,19 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
 .issues a:hover{color:var(--ink)}
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
-.badge.bug{border-color:var(--serious)}
-.badge.bug::before{content:"▲ ";color:var(--serious)}
+/* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
+.badge.bug::before{content:"▲ ";color:var(--ink-2)}
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+.chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
+.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
+.cbar i{display:block;height:100%;background:var(--good)}
+.key .cbar{width:40px}
+.key i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
+.key i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
+.key i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
+.key .badge{align-self:center}
+/* the Guarantees' and the Context's legends (GUIDANCE.md §2), generated from what each section draws */
+.guarantees>.key,.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .badge.planned{border-style:dashed}
 .badge.closed{color:var(--muted)}
 .tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
@@ -380,6 +391,10 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .docs li{padding:4px 0;border-top:1px solid var(--hair)}
 .docs a{text-decoration:none;border-bottom:1px solid var(--line)}
 .docs a:hover{border-bottom-color:var(--ink)}
+/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+.context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
+.context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
 footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 footer code{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -396,8 +411,8 @@ footer code{color:var(--ink-2)}
     <span class="chip"><span class="ck">Kotlin Gradle plugin</span> <b>2.2.0</b></span>
     <span class="chip"><span class="ck">Java floor</span> <b>11</b> · class-file major 55</span>
     <span class="chip"><span class="ck">publishes</span> <b>nothing</b> of its own</span>
-    <span class="chip"><span class="ck">as-is at</span> <b>master 7de8207</b> · <time datetime="2026-10-25T11:51:40Z">2026-10-25 11:51 UTC</time></span>
-    <span class="chip"><span class="ck">last amended by</span> <a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener"><b>#62</b></a> <a data-board="62">http-core</a> · e007cdd</span>
+    <span class="chip" id="chip-asis" hidden></span>
+    <span class="chip" id="chip-written" hidden></span>
     <span class="chip model"><span class="ck">C4 model</span> <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
   </div>
 </header>
@@ -424,7 +439,7 @@ footer code{color:var(--ink-2)}
 <div>
   <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
     <h2>Component map</h2>
-    <p class="lede">Nesting is ownership; the module build files on the left are drawn where they apply the plugins. Click a box for its role, files, process and C4 element.</p>
+    <p class="lede">Nesting is ownership; the module build files on the left apply the plugins. Click a box for its role and files.</p>
     <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of the Gradle build"></svg>
     <div class="key"><span><i class="pub cli"></i>used by a module · repository build scripts</span><span><i class="cli"></i>internal · repository build scripts</span><span><i class="pub srv"></i>used by a module · build-logic</span><span><i class="srv"></i>internal · build-logic</span><span><i class="pub wir"></i>used by a module · shared</span><span><i class="wir"></i>internal · build-logic's tests</span></div>
   </section>
@@ -445,7 +460,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
     <h2>Processes and locks</h2>
-    <p class="lede">The build starts no thread at a consumer's runtime: these are the processes a build run starts and its two one-at-a-time locks. Click one for details.</p>
+    <p class="lede">The build starts no thread at a consumer's runtime: these are a build run's processes and its two locks. Click one for details.</p>
     <div class="threads">
       <div class="tside"><h3>Repository build · ./gradlew</h3>
         <div class="thread client" data-t="Gradle daemon" tabindex="0" role="button"><span class="n">Gradle daemon</span><span class="pill eager">./gradlew</span><span class="r">configures the settings, build-logic and every module; runs the task graph</span></div>
@@ -506,7 +521,7 @@ footer code{color:var(--ink-2)}
         <div class="callout"><b>Versions live in one file.</b> Kotlin 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 are plugin markers at literal versions in <code>build-logic/build.gradle.kts</code>; the scripts apply plugins by id, and Gradle forbids versions there.</div></div>
       <div class="card"><h3>Source to release <small>the path every module takes</small></h3>
         <ol class="steps"><li class="ph2">compile to Java 11 bytecode on the build JDK</li><li class="ph2">test: every class</li><li class="ph2">check: verifyJavaFloor</li><li class="ph2">gatingTest … uatTest, on demand</li><li class="ph3">signAllPublications</li><li class="ph3">publishToMavenCentral</li></ol>
-        <div class="callout"><b>No CI and no release record.</b> Who runs <code>publishToMavenCentral</code>, and when, is not recorded in the repository; CI, a CHANGELOG and release tags are open as <a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a>. A release needs the Central credentials and a signing key as Gradle properties, never committed.</div></div>
+        <div class="callout"><b>No CI and no release record.</b> Who runs <code>publishToMavenCentral</code>, and when, is not recorded in the repository; there is no CI, CHANGELOG or release tag yet. A release needs the Central credentials and a signing key as Gradle properties, never committed.</div></div>
       <div class="card"><h3>The TestKit home and generated projects <small>build-logic's nested-build tasks</small></h3>
         <table class="tbl"><thead><tr><th></th><th>What happens</th></tr></thead><tbody>
           <tr class="ph1"><td style="white-space:nowrap">Created</td><td>on the first nested-build run: <code>build-logic/build/testkit/home</code>, the TestKit directory and the nested builds' Gradle user home; it downloads the Kotlin compiler, the test dependencies and the plugin markers, so that run needs the network (about 910 MB measured)</td></tr>
@@ -558,10 +573,10 @@ footer code{color:var(--ink-2)}
         <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:33%"></span></span><span class="val">3</span>
         <span class="lbl">L5 UAT</span><span class="trk"><span class="fil" style="width:0%"></span></span><span class="val">0</span>
       </div>
-      <p>101 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 8 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1 gating, L2 component, L4a deterministic: 47 tests) is the pre-commit gate; the three nested-build tasks (54 tests: integration 46, e2e 5, non-functional 3) run on demand; <code>./gradlew build</code> runs none of them. <span class="gap">No test-inspector report is committed, and no module test runs on a JDK 11: the level tests run on the build JDK until a JDK 11 launcher follows #58.</span></p></div>
+      <p>101 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 8 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1 gating, L2 component, L4a deterministic: 47 tests) is the pre-commit gate; the three nested-build tasks (54 tests: integration 46, e2e 5, non-functional 3) run on demand; <code>./gradlew build</code> runs none of them. <span class="gap">No test-inspector report is committed, and no module test runs on a JDK 11: the level tests run on the build JDK, with no JDK 11 launcher yet.</span></p></div>
     <div class="bubble"><h3>Compatibility &amp; versioning</h3>
       <ul>
-        <li>The build has no version; it publishes nothing. Since <a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a> every module's class files are Java 11 bytecode (major 55) compiled against the Java 11 API, and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, whichever JDK 17 to 26 runs the build.</li>
+        <li>The build has no version; it publishes nothing. Every module's class files are Java 11 bytecode (major 55) compiled against the Java 11 API, and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, whichever JDK 17 to 26 runs the build.</li>
         <li>The floor rides in versions set in the modules' own build files: <code>webtools-scraping</code> and <code>webtools-browser</code> <code>1.0.0a</code>, <code>webtools-udp</code> <code>2.0.0a</code>, none published; Maven Central's 1.0.0 and 2.0.0 are Java 23 bytecode. A lettered version orders below the plain one, so a consumer requests it <code>strictly</code>.</li>
         <li>Gradle 9.7.1 · Kotlin Gradle plugin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 on its own ASM (the pin went with the floor) · foojay 0.8.0.</li>
         <li>Kotlin 2.2.0 prints a Gradle-10 deprecation at <code>jvm()</code> and at <code>js()</code> (KT-78620), and "JS Environment Not Selected" at the check module, so no build runs with <code>--warning-mode=fail</code>. Configuration-cache compatible: a second identical run reuses the entry. <code>-Xjdk-release</code> is an experimental Kotlin flag; <code>verifyJavaFloor</code> is its backstop.</li>
@@ -636,16 +651,29 @@ footer code{color:var(--ink-2)}
      5. The structure map draws the module build files, which belong to the modules, because they are where the plugins are applied; the band in the middle holds what both plugins and module scripts share.
      Nothing is removed. Item 4 changes the renderer and is declared in the head (meta template-divergence); items 1, 2, 3 and 5
      live in what a page fills in (MODEL, hand-written panels, header), so the page's CSS and tab set are the template's.
+     Spliced onto the verified system template on feat/issue-63-test-support at 5d98102 (2026-10-25): the state
+     block and its header chips, the work-board link; item 4 merged three ways; issue numbers taken out of the part above Context.
      Brought to the template at 3949b52 (the times helpers, the template marker, test levels labelled) and at 7de8207: the
      footer form, solid lifelines, returns and frames, the header halves with labelled tags, the BOARDS links, one-line ledes. --></footer>
 </div>
 
 
+<!-- The page's state. A verbatim copy of state.json beside the page (scripts/embed.js state.json index.html state). -->
+<script type="application/json" id="state">
+{
+  "slug": "gradle-build",
+  "version": null,
+  "asIs": {"ref": "feat/issue-63-test-support", "sha": "5d98102", "date": "2026-10-25T18:54:34Z", "landed": false},
+  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "5d98102"},
+  "written": {"sha": "5d98102"}
+}
+</script>
+
 <!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools master 7de8207 (2026-10-25): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, and the webtools.kotlin-common-check plugin from #62. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-63-test-support 5d98102 (2026-10-25, not yet landed): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, and the webtools.kotlin-common-check plugin from #62. The build publishes nothing of its own. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -666,9 +694,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 published = component "webtools.published-library" "Applies vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM. Never calls configure(...)." "precompiled script plugin" "Public"
                 jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; compiles to the Java floor (jvmTarget, -Xjdk-release, Java compatibility) and puts verifyJavaFloor in check; test dependencies, JUnit Platform, the seven level tasks over the test source set." "precompiled script plugin" "Public"
                 kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. webtools-http applies it." "precompiled script plugin" "Public"
-                commonCheck = component "webtools.kotlin-common-check" "#62: the multiplatform plugin with js() and no environment, mavenCentral() of its own, check wired to compileKotlinJs; no publishing, no Java floor. No test task, no Node.js, no root task." "precompiled script plugin" "Public"
+                commonCheck = component "webtools.kotlin-common-check" "The multiplatform plugin with js() and no environment, mavenCentral() of its own, check wired to compileKotlinJs; no publishing, no Java floor. No test task, no Node.js, no root task." "precompiled script plugin" "Public"
                 levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks; JAVA_FLOOR = 11, classFileMajor and registerVerifyJavaFloor." "Kotlin object · default package" "Public"
-                floor     = component "Java floor" "#47: WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
+                floor     = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
 
                 // ---- internals ----
                 wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
@@ -676,7 +704,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, and the testKitHomeLock build service." "Gradle included build · unpublished" "Internal"
                 harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests." "test sources · Gradle TestKit" "Internal"
-                jsCheck    = component "check-only js modules" "#62: webtools-http-commoncheck compiles webtools-http's commonMain for js with two js actuals, publishing nothing, so a JVM API in common code is a compile error. webtools-feeds-commoncheck follows in #69." "unpublished module · Kotlin/JS klib" "Internal"
+                jsCheck    = component "check-only js modules" "webtools-http-commoncheck compiles webtools-http's commonMain for js with two js actuals, publishing nothing, so a JVM API in common code is a compile error. webtools-feeds-commoncheck is planned." "unpublished module · Kotlin/JS klib" "Internal"
             }
         }
 
@@ -727,7 +755,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at master 7de8207." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at feat/issue-63-test-support 5d98102." {
             include *
             autoLayout tb
         }
@@ -784,13 +812,37 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
+const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
 const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
+/* The work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this page when that file exists
+   (else null: no link to a file that is not there; check-page.js fails a committed path that is missing), and "live" the live view's
+   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the work board opens the live view when
+   its marker loads (the board on this machine), else the committed one, else stays plain text: the hand-written
+   <a data-workboard>work board</a>, and the Plans card's line the renderer adds when the page has none. */
+const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // presenter: the work board relative to this page, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
+/* A live marker (plan/RULES.md §5): a script in the git-ignored docs/plans/.live/ that sets one key of window.DASHBOARDS_LIVE; cb gets
+   its value, or null when the marker is not there (a published copy, another clone, no live view on this machine). */
+function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
+  sc.onload=()=>{ const v=(window.DASHBOARDS_LIVE||{})[key]; sc.remove(); cb(v==null?null:v); }; sc.onerror=()=>{ sc.remove(); cb(null); }; document.head.appendChild(sc); }
+const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
+function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_BOARD:{};
+  const docs=[...document.querySelectorAll("section.context .docs")].pop();
+  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
+  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed work board, as of the last landing":href?"The live work board on this machine":"No work board in this checkout"; });
+  set(W.committed||null);
+  liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); }); }
+window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
+/* The page's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
+   restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
+const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
 const ghIssue=n=>`${REPO}/issues/${n}`;
 const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
 const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
-  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; } else a.replaceWith(...a.childNodes); });
+  /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
+     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-page.js (ISSUE TITLE NAMES
+     A WORK LEVEL: #n), never shown as the page's (GUIDANCE.md §5; dashboards-skill/28) */
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
   r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its plan board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
 function inspect(html){ $("#insp-body").innerHTML=html; }
@@ -815,7 +867,7 @@ const MODEL = {
     notes:[],
     nodes:[
       {id:"wrapper",side:"client",vis:"int",x:40,y:56,w:180,h:56,t:"Gradle wrapper",s:["Gradle 9.7.1","gradlew · gradle.properties"],
-        d:{role:"gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1. gradle.properties sets only kotlin.code.style=official. The repository has no CI: a maintainer runs the wrapper (#58).",vis:"internal · build script",files:["gradle/wrapper/gradle-wrapper.properties","gradle.properties"],threads:["Gradle daemon"],issues:[58]}},
+        d:{role:"gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1. gradle.properties sets only kotlin.code.style=official. The repository has no CI: a maintainer runs the wrapper.",vis:"internal · build script",files:["gradle/wrapper/gradle-wrapper.properties","gradle.properties"],threads:["Gradle daemon"],issues:[58]}},
       {id:"settings",side:"client",vis:"int",x:236,y:56,w:180,h:56,t:"settings.gradle.kts",s:["includeBuild(build-logic) first","foojay 0.8.0 · 5 modules"],
         d:{role:"Its first statement is pluginManagement { includeBuild(\"build-logic\") }, so the convention plugins resolve by id. It applies foojay-resolver-convention 0.8.0, names the root project WebTools and includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http and :webtools-http-commoncheck.",vis:"internal · build script",files:["settings.gradle.kts"],threads:["Gradle daemon"],issues:[58]}},
       {id:"root",side:"client",vis:"int",x:40,y:128,w:376,h:50,t:"build.gradle.kts (root)",s:["allprojects { group; version 1.0.0 } · no plugins, no subprojects, no tasks"],
@@ -823,17 +875,17 @@ const MODEL = {
       {id:"modules",side:"client",vis:"int",container:true,x:40,y:196,w:376,h:186,t:"Module build files",s:"each module's own · applies a plugin by id",
         d:{role:"Each of the three JVM modules applies id(\"webtools.kotlin-jvm-library\") and declares its own api(\"org.slf4j:slf4j-api:2.0.13\"), its coordinates and its POM name and description. These files belong to the modules; they are drawn here because they are where the plugins are applied.",vis:"owned by each module",files:["webtools-udp/build.gradle.kts","webtools-scraping/build.gradle.kts","webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
       {id:"udpB",side:"client",vis:"int",x:56,y:240,w:344,h:40,t:"webtools-udp/build.gradle.kts",s:"jvm plugin · api slf4j · version 2.0.0a · UDP-port lock",
-        d:{role:"Overrides the root version with 2.0.0a and puts test, integrationTest, e2eTest and nonfunctionalTest on the commonUdpPortLock build service (one permit). #47 extended the 2.0.0a note with the Java floor: the unreleased 2.0.0a also carries it. The version line and the port lock are unchanged.",vis:"owned by webtools-udp",files:["webtools-udp/build.gradle.kts"],threads:["Gradle daemon","commonUdpPortLock"]}},
+        d:{role:"Overrides the root version with 2.0.0a and puts test, integrationTest, e2eTest and nonfunctionalTest on the commonUdpPortLock build service (one permit). The 2.0.0a note also names the Java floor: the unreleased 2.0.0a also carries it. The version line and the port lock are unchanged.",vis:"owned by webtools-udp",files:["webtools-udp/build.gradle.kts"],threads:["Gradle daemon","commonUdpPortLock"]}},
       {id:"scrB",side:"client",vis:"int",x:56,y:288,w:344,h:40,t:"webtools-scraping/build.gradle.kts",s:"jvm plugin · api slf4j · 1.0.0a · skrapeit, jsoup, unirest-java",
-        d:{role:"Adds skrapeit 1.1.5, jsoup 1.15.4 and unirest-java 1.4.9 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with a note: the bug fix after 1.0.0 that carries the Java floor (#47). Gradle orders 1.0.0a below 1.0.0, so a consumer that also asks for 1.0.0 requests 1.0.0a strictly.",vis:"owned by webtools-scraping",files:["webtools-scraping/build.gradle.kts"],threads:["Gradle daemon"]}},
+        d:{role:"Adds skrapeit 1.1.5, jsoup 1.15.4 and unirest-java 1.4.9 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with a note: the bug fix after 1.0.0 that carries the Java floor. Gradle orders 1.0.0a below 1.0.0, so a consumer that also asks for 1.0.0 requests 1.0.0a strictly.",vis:"owned by webtools-scraping",files:["webtools-scraping/build.gradle.kts"],threads:["Gradle daemon"]}},
       {id:"brB",side:"client",vis:"int",x:56,y:336,w:344,h:40,t:"webtools-browser/build.gradle.kts",s:"jvm plugin · api slf4j · 1.0.0a · selenium-java",
-        d:{role:"Adds selenium-java 4.48.0 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with the same note as webtools-scraping: the bug fix after 1.0.0 that carries the Java floor (#47).",vis:"owned by webtools-browser",files:["webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
-      {id:"jsCheck",side:"client",vis:"int",x:40,y:396,w:376,h:44,t:"webtools-http · webtools-http-commoncheck",s:"multiplatform library · its check-only js compile (#62)",
-        d:{role:"webtools-http applies id(\"webtools.kotlin-multiplatform-library\") with explicitApi(), coroutines as api and OkHttp, Caffeine and slf4j as jvmMain implementation, and its opt-in as a language setting of commonMain and jvmMain. webtools-http-commoncheck applies id(\"webtools.kotlin-common-check\"), adds ../webtools-http/src/commonMain/kotlin as a srcDir, opts in on commonMain and jsMain and holds the js actuals: an unpublished module that makes a JVM API in common code a compile error. webtools-feeds and its check module follow in #69.",vis:"owned by each module",files:["webtools-http/build.gradle.kts","webtools-http-commoncheck/build.gradle.kts"],threads:["Gradle daemon"],issues:[69]}},
+        d:{role:"Adds selenium-java 4.48.0 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with the same note as webtools-scraping: the bug fix after 1.0.0 that carries the Java floor.",vis:"owned by webtools-browser",files:["webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
+      {id:"jsCheck",side:"client",vis:"int",x:40,y:396,w:376,h:44,t:"webtools-http · webtools-http-commoncheck",s:"multiplatform library · its check-only js compile",
+        d:{role:"webtools-http applies id(\"webtools.kotlin-multiplatform-library\") with explicitApi(), coroutines as api and OkHttp, Caffeine and slf4j as jvmMain implementation, and its opt-in as a language setting of commonMain and jvmMain. webtools-http-commoncheck applies id(\"webtools.kotlin-common-check\"), adds ../webtools-http/src/commonMain/kotlin as a srcDir, opts in on commonMain and jsMain and holds the js actuals: an unpublished module that makes a JVM API in common code a compile error. webtools-feeds and its check module are planned.",vis:"owned by each module",files:["webtools-http/build.gradle.kts","webtools-http-commoncheck/build.gradle.kts"],threads:["Gradle daemon"],issues:[69]}},
       {id:"levels",side:"wire",vis:"pub",x:440,y:76,w:120,h:132,t:"WebToolsBuild",s:["LEVELS · 7 TestLevels","registerLevelTasks","JAVA_FLOOR = 11","classFileMajor","registerVerifyJavaFloor"],
         d:{role:"A public object in the default package, read by both library plugins and readable from any module script. LEVELS holds the seven levels in order; registerLevelTasks registers gatingTest … uatTest as plain Test tasks in the verification group, each on the JUnit Platform, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches; they are registered lazily and never added to check. JAVA_FLOOR = 11 is the Java release every published artifact targets; classFileMajor maps a release to its class-file major (11 → 55); registerVerifyJavaFloor registers the verifyJavaFloor task, which the plugins wire into check.",vis:"public · object · default package",files:["build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"]}},
       {id:"floor",side:"wire",vis:"pub",x:440,y:224,w:120,h:120,t:"Java floor",s:["VerifyJavaFloor","JavaFloorScan","major ≤ 55 · jvm 11","verifyJavaFloor","in check"],
-        d:{role:"Built by #47. The VerifyJavaFloor task type (verifyJavaFloor, in check of every module) reads what a consumer receives: each class in the module's jars outside META-INF/versions/, each library variant of the Gradle Module Metadata it generates, and each class on its resolved runtime classpath. It fails on a class above major 55, a variant whose org.gradle.jvm.version is not 11, an unreadable file, or nothing to check, listing up to 20 violations; on success it writes build/reports/java-floor/verifyJavaFloor.txt. JavaFloorScan holds the pure scans, returning kotlin.Result. Configuration-cache compatible and up to date when its inputs are unchanged.",vis:"public · task type · default package",files:["build-logic/src/main/kotlin/VerifyJavaFloor.kt","build-logic/src/main/kotlin/JavaFloorScan.kt","build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"],issues:[]}},
+        d:{role:"The VerifyJavaFloor task type (verifyJavaFloor, in check of every module) reads what a consumer receives: each class in the module's jars outside META-INF/versions/, each library variant of the Gradle Module Metadata it generates, and each class on its resolved runtime classpath. It fails on a class above major 55, a variant whose org.gradle.jvm.version is not 11, an unreadable file, or nothing to check, listing up to 20 violations; on success it writes build/reports/java-floor/verifyJavaFloor.txt. JavaFloorScan holds the pure scans, returning kotlin.Result. Configuration-cache compatible and up to date when its inputs are unchanged.",vis:"public · task type · default package",files:["build-logic/src/main/kotlin/VerifyJavaFloor.kt","build-logic/src/main/kotlin/JavaFloorScan.kt","build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"],issues:[]}},
       {id:"logic",side:"server",vis:"int",container:true,x:584,y:56,w:376,h:340,t:"build-logic",s:"included build · kotlin-dsl · never published",
         d:{role:"An included build reached through the settings' pluginManagement. Its precompiled script plugins and WebToolsBuild sit in the default package; it compiles when a module first requests a plugin and is cached afterwards. It is never published and never on a module's runtime classpath.",vis:"internal · included build",files:["build-logic/settings.gradle.kts","build-logic/build.gradle.kts"],threads:["Gradle daemon"],issues:[62]}},
       {id:"published",side:"server",vis:"pub",x:600,y:100,w:344,h:44,t:"webtools.published-library",s:"vanniktech 0.36.0 · mavenCentral() · signing · shared POM",
@@ -845,7 +897,7 @@ const MODEL = {
       {id:"logicBuild",side:"server",vis:"int",x:600,y:280,w:344,h:44,t:"build-logic/build.gradle.kts",s:"4 plugin markers · its own level tasks · testKitHomeLock",
         d:{role:"A kotlin-dsl build: the plugin markers for Kotlin JVM and Multiplatform 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 at literal versions; JUnit 5.11.4 for its tests; one test task per level that has tests, each failing on an empty run; test as the fast aggregate; the single-permit testKitHomeLock for the three nested-build tasks.",vis:"internal · build script",files:["build-logic/build.gradle.kts","build-logic/settings.gradle.kts"],threads:["Gradle daemon","testKitHomeLock"]}},
       {id:"commonCheck",side:"server",vis:"pub",x:600,y:336,w:344,h:44,t:"webtools.kotlin-common-check",s:"js() with no environment · check → compileKotlinJs",
-        d:{role:"Built by #62. Applies the multiplatform plugin and declares mavenCentral() itself, since it does not apply webtools.published-library: no publishing, signing, ABI dump, Java floor or verifyJavaFloor. It calls js() with no environment, so the target compiles to a klib with no test task and no Node.js, Yarn or kotlin-js-store/, and the root project gains no task; check depends on compileKotlinJs. Its header names the cost (one \"JS Environment Not Selected\" warning per configuration-cache miss) and the fallback. Covered at Level 3 by CommonCheckPluginIntegrationTest and at Level 4c by CommonCheckConfigurationCacheReuseNonFunctionalTest; not part of the end-to-end composite.",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts"],threads:["Gradle daemon"],issues:[69]}},
+        d:{role:"Applies the multiplatform plugin and declares mavenCentral() itself, since it does not apply webtools.published-library: no publishing, signing, ABI dump, Java floor or verifyJavaFloor. It calls js() with no environment, so the target compiles to a klib with no test task and no Node.js, Yarn or kotlin-js-store/, and the root project gains no task; check depends on compileKotlinJs. Its header names the cost (one \"JS Environment Not Selected\" warning per configuration-cache miss) and the fallback. Covered at Level 3 by CommonCheckPluginIntegrationTest and at Level 4c by CommonCheckConfigurationCacheReuseNonFunctionalTest; not part of the end-to-end composite.",vis:"public · plugin id",files:["build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts"],threads:["Gradle daemon"],issues:[69]}},
       {id:"harness",side:"wire",vis:"int",container:true,x:40,y:478,w:600,h:120,t:"TestKit harness",s:"testing.support · nested builds of generated projects",
         d:{role:"Generates small projects that apply one plugin each (or a composite that includes a copy of build-logic), runs nested Gradle builds on them through Gradle TestKit with one shared TestKit home, and reads the results from the files they write: test reports by <testcase classname>, module.json, POMs.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/NestedBuild.kt"],threads:["build-logic test JVM","TestKit daemon","testKitHomeLock"],issues:[63]}},
       {id:"hSample",side:"wire",vis:"int",x:56,y:522,w:135,h:30,t:"SampleProject",s:"",d:{role:"The generated projects: a Kotlin/JVM sample, a multiplatform sample and an included-build composite, with their gradle.properties (configuration cache on, in-process Kotlin compiler, -Xmx2g).",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/SampleProject.kt"]}},
@@ -855,7 +907,7 @@ const MODEL = {
       {id:"hMeta",side:"wire",vis:"int",x:56,y:560,w:135,h:30,t:"ModuleMetadata",s:"",d:{role:"Reads org.gradle.jvm.version from a published module.json.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/ModuleMetadata.kt"]}},
       {id:"hPom",side:"wire",vis:"int",x:199,y:560,w:135,h:30,t:"PomFile",s:"",d:{role:"Parses a published POM, with DOCTYPE declarations refused.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/PomFile.kt"]}},
       {id:"hSource",side:"wire",vis:"int",x:342,y:560,w:135,h:30,t:"BuildLogicSource",s:"",d:{role:"Copies build-logic's settings, build script and src/main into the end-to-end composite, which reaches the plugins through a real includeBuild.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/BuildLogicSource.kt"]}},
-      {id:"hJar",side:"wire",vis:"int",x:485,y:560,w:140,h:30,t:"JarClasses",s:"",d:{role:"Reads the class-file major version of every class in a built jar, for the Java-floor integration tests (#47).",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/JarClasses.kt"]}},
+      {id:"hJar",side:"wire",vis:"int",x:485,y:560,w:140,h:30,t:"JarClasses",s:"",d:{role:"Reads the class-file major version of every class in a built jar, for the Java-floor integration tests.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/support/webtools/buildlogic/JarClasses.kt"]}},
       {id:"tests",side:"wire",vis:"int",x:660,y:478,w:300,h:120,t:"20 test classes · 101 tests",s:["gating 1 · component 4 · integration 9","deterministic 2 · e2e 1 · non-functional 3","test = gating, component, deterministic: 47","nested-build tasks: 54 tests, on demand"],
         d:{role:"build-logic's own tests, one class per file under com.spartanlabs.testing.<level>.webtools.buildlogic. ./gradlew build runs none of them; :build-logic:test is the pre-commit gate; the nested-build tasks run on demand and their first run needs the network.",vis:"internal · test sources",files:["build-logic/src/test/kotlin/com/spartanlabs/testing/"],threads:["build-logic test JVM","TestKit daemon"]}}
     ]
@@ -919,7 +971,7 @@ const MODEL = {
     lifelines:[{n:"maintainer",side:"consumer"},{n:"Gradle",side:"client"},{n:"settings",side:"client"},{n:"root script",side:"client"},{n:"build-logic",side:"server"},{n:"webtools-udp",side:"external"},{n:"Maven Central",side:"external"}],
     phases:[["CONFIGURE",0,7],["BUILD & TEST",8,10],["RELEASE",11,12]],
     steps:[
-      {f:0,t:1,l:"./gradlew build",n:"The wrapper starts Gradle 9.7.1. There is no CI: a maintainer runs it (#58)."},
+      {f:0,t:1,l:"./gradlew build",n:"The wrapper starts Gradle 9.7.1. There is no CI: a maintainer runs it."},
       {f:1,t:2,l:"evaluate settings",n:"settings.gradle.kts: pluginManagement { includeBuild(\"build-logic\") } first, then the foojay-resolver-convention 0.8.0 plugin, the root project name and the three modules."},
       {f:2,t:4,l:"includeBuild",n:"build-logic is included for plugin resolution; it compiles when a module first requests one of its plugins and is cached afterwards."},
       {f:1,t:3,l:"allprojects",n:"The root script sets group io.github.spartanlaboratories and the default version 1.0.0 on every project. Nothing else."},
@@ -982,6 +1034,15 @@ const C4=parseDsl(document.getElementById("dsl").textContent);
 $("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
 
 const el=id=>C4.elements[id];
+/* Planned, from the data (system/RULES.md §2, "Planned parts"): a part tied to a DSL element — a structure node through MODEL.c4 or its
+   own `part`, a thread, a flow node, a lifeline or a sequence step through `part`, a hand-written element through data-part="<element
+   id>" — is planned while that element carries the Planned tag, so apply-state.js marks it built by editing workspace.dsl alone. A
+   literal kind "planned" or planned:true still draws an untied part dashed. */
+const dslPlanned=id=>!!(id&&el(id)&&el(id).tags.includes("Planned"));
+const isPlanned=x=>!!x&&typeof x==="object"&&(x.planned===true||x.kind==="planned"||dslPlanned(x.part));
+function applyParts(root){ (root||document).querySelectorAll("[data-part]").forEach(e=>e.classList.toggle("planned",dslPlanned(e.dataset.part)));
+  document.querySelectorAll(".thread[data-t]").forEach(e=>{ const t=MODEL.threads[e.dataset.t]; if(t&&t.part) e.classList.toggle("planned",isPlanned(t)); }); }
+applyParts();
 function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
 function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
 function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
@@ -1199,10 +1260,12 @@ function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type=
 /* ---------- Structure ---------- */
 function renderStructure(){
   const svg=$("#svg-structure"); if(svg.dataset.done) return; svg.dataset.done="1";
-  mk("rect",{x:430,y:48,width:140,height:400,rx:6,class:"band"},svg);
+  /* a neutral band behind a lane (the wire between two sides, say), only where MODEL.structure.band asks for one: [x, y, w, h] */
+  const band=MODEL.structure.band; if(Array.isArray(band)&&band.length===4) mk("rect",{x:band[0],y:band[1],width:band[2],height:band[3],rx:6,class:"band"},svg);
   MODEL.structure.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
   MODEL.structure.nodes.forEach(n=>{
-    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind?" "+n.kind:""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
+    const pl=isPlanned(n)||dslPlanned(MODEL.c4[n.id]);
+    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind&&n.kind!=="planned"?" "+n.kind:""}${pl?" planned":""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
     mk("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:n.chip?17:5},g);
     const subs=Array.isArray(n.s)?n.s:[n.s];
     if(n.chip){ txt(g,n.x+n.w/2,n.y+14,n.t,"t","middle"); txt(g,n.x+n.w/2,n.y+26,subs,"s","middle"); }
@@ -1221,7 +1284,6 @@ function selectNode(id){
   let html=`<div class="kicker">${n.chip?"DATAGRAM TAG":"COMPONENT"} · ${sideName.toUpperCase()}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc(d.vis||"")}</div><p>${esc(d.role||"")}</p><dl>`;
   if(d.files&&d.files.length) html+=`<dt>Source</dt><dd>${d.files.map(flink).join("<br>")}</dd>`;
   if(d.threads&&d.threads.length) html+=`<dt>Runs on</dt><dd>${d.threads.map(t=>`<span class="tchip ${MODEL.threads[t].side}">${t}</span>`).join("")}</dd>`;
-  if(d.issues&&d.issues.length) html+=`<dt>Open issues</dt><dd>${d.issues.map(ilink).join(" · ")}</dd>`;
   const c4id=MODEL.c4[id]; if(c4id&&el(c4id)){ const e=el(c4id); html+=`<dt>In the C4 model</dt><dd><button class="linkbtn" data-c4="${c4id}">${esc(e.name)} · ${e.tags.slice(2).map(esc).join(", ")||"component"} → open</button></dd>`; }
   inspect(html+"</dl>");
   const b=$("#insp-body .linkbtn[data-c4]"); if(b) b.addEventListener("click",()=>openC4(b.dataset.c4));
@@ -1234,7 +1296,6 @@ function selectThread(id){
   let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((MODEL.sides||{})[t.side]||t.side).toUpperCase())}${t.daemon===false?"":" · DAEMON"}</div><div class="name">${id}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
   if(t.sends.length) html+=`<dt>Puts on the wire</dt><dd>${t.sends.map(esc).join("<br>")}</dd>`;
   if(t.note) html+=`<dt>Note</dt><dd>${esc(t.note)}</dd>`;
-  if(t.issues&&t.issues.length) html+=`<dt>Open issues</dt><dd>${t.issues.map(ilink).join(" · ")}</dd>`;
   inspect(html+"</dl>");
 }
 document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
@@ -1268,11 +1329,11 @@ function renderFlow(){
     if(A.r===B.r){ d=`M${fx(A)+NW},${fy(A)+NH/2} L${fx(B)},${fy(B)+NH/2}`; lx=(fx(A)+NW+fx(B))/2; ly=fy(A)+NH/2-5; anchor="middle"; }
     else if(A.c===B.c){ d=`M${fx(A)+NW/2},${fy(A)+NH} L${fx(B)+NW/2},${fy(B)}`; lx=fx(A)+NW/2+6; ly=(fy(A)+NH+fy(B))/2+3; }
     else { const tx=fx(A)+NW+10, ty=fy(B)+NH/2; d=`M${fx(A)+NW},${fy(A)+NH/2} L${tx},${fy(A)+NH/2} L${tx},${ty} L${fx(B)},${ty}`; lx=tx+4; ly=ty-5; }
-    mk("path",{d,class:"fedge"+(A.planned||B.planned?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
+    mk("path",{d,class:"fedge"+(isPlanned(A)||isPlanned(B)?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
     if(label){ const t=txt(svg,lx,ly,label,"flabel",anchor); t.dataset.e=a+">"+b; }
   });
   Object.entries(F.nodes).forEach(([id,n])=>{
-    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(n.planned?" planned":""),"data-id":id},svg);
+    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(isPlanned(n)?" planned":""),"data-id":id},svg);
     if(n.k==="d") mk("polygon",{points:`${x+12},${y} ${x+NW-12},${y} ${x+NW},${y+NH/2} ${x+NW-12},${y+NH} ${x+12},${y+NH} ${x},${y+NH/2}`},g);
     else mk("rect",{x,y,width:NW,height:NH,rx:n.k==="t"?3:6},g);
     // The stripe's colour goes in style, not the fill attribute: .fnode.t rect would otherwise repaint it surface-grey.
@@ -1309,9 +1370,9 @@ function renderSeq(){
   svg.setAttribute("viewBox",`0 0 1000 ${H}`);
   arrowDefs(svg,"sarr2","var(--ink-2)");
   S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
-  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(l.planned?" planned":"")},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(l.planned?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(isPlanned(l)?" planned":"")},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(isPlanned(l)?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
   S.steps.forEach((s,i)=>{
-    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(s.planned?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
+    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(isPlanned(s)?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
     if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
     else { const a=LX(s.f), b=LX(s.t), dir=b>a?1:-1; mk("line",{x1:a,y1:y,x2:b-dir*2,y2:y,"marker-end":s.ret?"url(#sarr2-open)":"url(#sarr2)"},g); const mx=(a+b)/2, w=s.l.length*5.3+10; mk("rect",{class:"lbg",x:mx-w/2,y:y-17,width:w,height:14,rx:2},g); txt(g,mx,y-6,s.l,"","middle"); txt(g,Math.min(a,b)-8,y+3,`${i+1}`,"num","end"); }
     g.addEventListener("click",()=>gotoStep(i)); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); gotoStep(i); } });
@@ -1322,23 +1383,68 @@ function renderSeq(){
 /* The legend for the sequence: the lifeline owners it shows (each in its side's hue), then the line encodings and planned. */
 function seqKey(S){
   const sw={server:"pub srv",client:"pub cli",wire:"pub wir",consumer:"con",external:"ext"}, sides=[...new Set(S.lifelines.map(lane).map(l=>l.side).filter(Boolean))];
-  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(s=>s.planned)||S.lifelines.some(l=>l&&l.planned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
+  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(isPlanned)||S.lifelines.map(lane).some(isPlanned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
 }
 function gotoStep(i){
   const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
   document.querySelectorAll("#svg-seq .msg").forEach(g=>{ const k=+g.dataset.i; g.classList.toggle("cur",k===seq.cur); g.classList.toggle("future",k>seq.cur); });
   $("#seq-pos").textContent=`step ${seq.cur+1} of ${S.steps.length}`;
-  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${s.planned?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
+  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${isPlanned(s)?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
 }
 $("#seq-prev").addEventListener("click",()=>gotoStep(seq.cur-1));
 $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
+/* ---------- The stamps (state.json) ----------
+   The header's chips: the version (a system page), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
+   the page shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the page
+   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the plan board
+   (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
+function renderState(){
+  const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
+  const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
+  set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
+  const old=document.getElementById("chip-amended"); if(old) old.remove();
+  const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
+  if(!p&&ctx){ p=document.createElement("p"); p.className="amended"; p.id="ctx-amended"; const h2=ctx.querySelector(":scope>h2"); if(h2) h2.after(p); else ctx.prepend(p); }
+  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title)}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
+}
+renderState();
+
+/* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
+   Generated from what each section draws, so a hand-written bubble or card needs no legend of its own: the system swatches present, a
+   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
+   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+function sectionKeys(){
+  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
+    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${m} units landed"><i style="width:${pct}%"></i></span>`; });
+  const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
+    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="key"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
+  const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
+  const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
+  put(G,"guarantees-key",[swatches(G,"swk"),
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
+    has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",
+    has(G,".badge")?`<span><span class="badge">tier</span>a fact: a stability tier, a marker, neutral</span>`:""]);
+  const states=C?[...new Set([...C.querySelectorAll(".tags .badge:not(.bug):not(.planned):not([data-sys])")].map(b=>b.textContent.trim()).filter(t=>/^(open|closed)$/.test(t)))]:[];
+  put(C,"context-key",[swatches(C,"sbar"),
+    states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
+    has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
+    has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
+    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+}
+sectionKeys();
+
 /* ---------- Tabs ---------- */
 const tabs=[...document.querySelectorAll(".tab")];
 const DEFAULT_INSPECT={structure:"<p>Click a component for its role, source files, the processes it runs in, open issues and its place in the C4 model.</p>",threads:"<p>Click a process or a lock for when it starts and what runs on it.</p>",lifecycles:"<p>The lifecycle facts are on the cards themselves, each with its source.</p>"};
 function show(id){
-  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
   const name=id.replace("t-","");
   if(name==="structure") renderStructure();
   if(name==="c4" && !c4View) renderC4(C4.views.findIndex(v=>v.type==="component"));
@@ -1353,7 +1459,11 @@ function show(id){
   else if(name!=="datagrams") inspect(DEFAULT_INSPECT[name]||"<p>Select an item on this tab to see its details here.</p>");
   try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
 }
-tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); });
+/* The tablist's keys (WAI-ARIA tabs; GUIDANCE.md §6): Left and Right move to the previous and next tab, Home and End to the first and the
+   last, each shown at once; only the selected tab is in the Tab order (a roving tabindex), so Tab moves on to the panel. */
+function tabKeys(list,go){ list.forEach((t,i)=>{ t.tabIndex=t.getAttribute("aria-selected")==="true"?0:-1; t.addEventListener("keydown",e=>{ const n=list.length, j={ArrowRight:(i+1)%n,ArrowLeft:(i+n-1)%n,Home:0,End:n-1}[e.key]; if(j==null) return; e.preventDefault(); list[j].focus(); go(list[j].id); }); }); }
+tabKeys(tabs,id=>show(id));
 let start="t-structure";
 try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
 const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;

@@ -24,12 +24,12 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 log       = component "Log seam" "Log with debug, info and warn, through expect fun logger(name): slf4j in jvmMain. No production logging site yet." "internal interface · expect/actual" "Internal"
                 helpers   = component "Helpers" "Result.flatMap, catchNonFatal and expect fun epochMillisNow(): System.currentTimeMillis() in jvmMain." "internal functions · expect/actual" "Internal"
                 // ---- planned by Issue #55, not built ----
-                fixtures  = component "Test fixtures" "#63: VirtualClock, FakeHttpTransport, .http fixtures and the recorder, as a published test-fixtures variant." "planned" "Planned"
-                policy    = component "OutboundUrlPolicy" "#64: Trusted and Untrusted policies, TransportSettings and the address classifier." "planned" "Planned"
-                okhttp    = component "OkHttpTransport" "#65: the OkHttp transport with manual redirects and the resolver and socket guards." "planned" "Planned"
-                cache     = component "ResponseCache" "#66: the cache port and its Caffeine default." "planned" "Planned"
-                budget    = component "CallBudget" "#67: the budget port, WindowedCallBudget and the rate signals." "planned" "Planned"
-                facades   = component "UpstreamClient · UrlFetcher" "#68: the facades composing cache, budget and transport." "planned" "Planned"
+                fixtures  = component "Test fixtures" "VirtualClock, FakeHttpTransport, .http fixtures and the recorder, as a published test-fixtures variant." "planned" "Planned"
+                policy    = component "OutboundUrlPolicy" "Trusted and Untrusted policies, TransportSettings and the address classifier." "planned" "Planned"
+                okhttp    = component "OkHttpTransport" "The OkHttp transport with manual redirects and the resolver and socket guards." "planned" "Planned"
+                cache     = component "ResponseCache" "The cache port and its Caffeine default." "planned" "Planned"
+                budget    = component "CallBudget" "The budget port, WindowedCallBudget and the rate signals." "planned" "Planned"
+                facades   = component "UpstreamClient · UrlFetcher" "The facades composing cache, budget and transport." "planned" "Planned"
             }
             check = container "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js with a no-op Log and Date.now(), so a JVM API in common code is a compile error. Unpublished." "Kotlin/JS klib · check only" "Internal"
         }
@@ -71,7 +71,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at master 7de8207, with the later units of #55 dashed." {
+        component webtools.http "Components" "webtools-http as built at master 7de8207, with the stack's later units dashed." {
             include *
             autoLayout tb
         }
