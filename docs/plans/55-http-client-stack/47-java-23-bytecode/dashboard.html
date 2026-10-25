@@ -78,6 +78,29 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .chip.progress.done{border-left-color:var(--good)}
 .chip .cbar{display:block;height:4px;margin-top:4px;border-radius:2px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
 .chip .cbar i{display:block;height:100%;background:var(--good)}
+/* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
+   left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
+   long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
+   live indicator, the theme switch) runs across the top. The same rules on every dashboard type. */
+.issueline{font:12.5px/1.4 var(--mono);color:var(--ink-2);margin:0 0 8px;overflow-wrap:anywhere}
+.issueline a{text-decoration:none;border-bottom:1px solid var(--line)}
+.issueline a:hover{border-bottom-color:var(--ink)}
+.chip .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chip .sysl{display:inline-flex;align-items:center;margin-right:10px;white-space:nowrap}
+.chip .sysl:last-child{margin-right:0}
+@media (min-width:940px){
+  header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;column-gap:28px}
+  header>.topbar{grid-column:1/-1;grid-row:1}
+  header>.crumbs{grid-column:1;grid-row:1}
+  header>.systools{grid-column:2;grid-row:1;justify-self:end;align-self:start;float:none;margin:14px 0 4px}
+  header>h1{grid-column:1;grid-row:2}
+  header>.issueline{grid-column:1;grid-row:3}
+  header>.function{grid-column:1;grid-row:4;max-width:none}
+  header>.chips{grid-column:2;grid-row:2/-1;align-self:start;align-content:flex-start;gap:8px;margin:8px 0 6px}
+  header>.chips>.chip{display:block;flex:1 1 190px;padding:7px 10px 8px;font-size:12.5px;line-height:1.4;border-radius:6px}
+  header>.chips>.chip .ck{display:block;margin:0 0 2px}
+  header>.chips>.chip.wide{flex-basis:100%}
+}
 
 /* the WIP strip: where the run is right now */
 .wip{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:10px 14px 10px;margin:12px 0 0}
@@ -107,8 +130,10 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .chain li.done a{color:var(--ink)}
 .chain li.glow,.chain li.held,.chain li.upnext{border-radius:4px}
 .chain li.glow a,.chain li.glow span.u{background:transparent}
-.wip-facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0 0;font-size:12.5px;color:var(--ink-2)}
-.wip-facts>span{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.wip-facts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;font-size:12.5px;color:var(--ink-2)}
+/* Info groups (plan/RULES.md §3): each fact of the strip, a bubble or the step panel is a small bubble of its own, its label before its
+   value. */
+.wip-facts>span{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:center;padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:color-mix(in srgb,var(--ink) 3%,var(--surface));min-width:0;max-width:100%}
 .wip-facts .l{font:700 10.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
 .wip-facts a,.wip-sub a,.vp a{text-decoration:none;border-bottom:1px solid var(--line)}
 .wip-sub a:hover,.vp a:hover{border-bottom-color:var(--ink)}
@@ -119,14 +144,22 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .unitrun .wip-head{font-size:12.5px}
 .unitrun .wip-detail,.unitrun .wip-wait{margin:4px 0 2px}
 /* A tracking board's WIP strip is a set of bubbles (plan/RULES.md §3): the tracking issue's own phase with the chain's progress,
-   one bubble per unit in progress with its run, the unit up next, and "waiting on you" only while something is halted. One column
-   on a phone; the phase across the row and the rest beside each other up to 1500 px; on a wide desktop the phase takes two
-   columns and the others sit beside it. The legend runs under them all. */
+   one bubble per unit in progress with its run, that unit's step panel (or the unit up next while no unit's run is mirrored), and
+   "waiting on you" only while something is halted. From 940 px the row is split in fixed shares: the phase 35 %, the unit in
+   progress 25 %, its step panel 40 %; the phase runs down beside every unit's row, the up-next bubble and "waiting on you" take
+   the unit's and the panel's shares. Under 940 px they stack in that order. The legend runs under them all. */
 .wip.bubbles{background:none;border:0;padding:0}
-.wipgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));align-items:stretch}
+.wipgrid{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);align-items:stretch}
+@media (min-width:940px){
+  .wipgrid{grid-template-columns:minmax(0,35fr) minmax(0,25fr) minmax(0,40fr)}
+  .wipgrid>.wb.phase{grid-column:1;grid-row:1/span var(--rows,1)}
+  .wipgrid>.wb.phase.solo{grid-column:1/-1}
+  .wipgrid>.wb.unit{grid-column:2;grid-row:var(--r,1)}
+  .wipgrid>.sp{grid-column:3;grid-row:var(--r,1)}
+  .wipgrid>.wb.next,.wipgrid>.wb.wait{grid-column:2/-1;grid-row:var(--r,1)}
+  .wipgrid>.wb.next.beside{grid-column:3}
+}
 .wb{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:10px 14px;min-width:0}
-.wb.phase{grid-column:1/-1}
-@media (min-width:1500px){.wb.phase{grid-column:span 2}}
 .wb.phase.landed{border-left-color:var(--good)}
 .wb.phase.halted,.wb.wait{border-left-color:var(--warning);background:color-mix(in srgb,var(--warning) 12%,var(--surface))}
 .wb.phase.escalated{border-left-color:var(--serious)}
@@ -163,9 +196,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .wip.split>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:8px}
 .sp{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ink-2);border-radius:6px;padding:10px 14px;min-width:0;font-size:12.5px;color:var(--ink-2)}
 .sp.sp-held{border-left-color:var(--warning)}
-.sp .wb-t b{font-family:var(--mono);color:var(--ink)}
-.sp-ev{font:400 11px var(--mono);color:var(--muted);margin-left:auto;text-transform:none;letter-spacing:0}
-.sp-ev code{color:var(--ink-2)}
+/* the panel's heading: the step's title alone */
+.sp-t{font:700 14px/1.3 var(--sans);color:var(--ink);margin:0 0 6px;letter-spacing:0}
 .sp p{margin:4px 0;color:var(--ink-2)}
 .sp p.sp-sum{color:var(--ink);font-weight:600}
 .sp p.sp-wait{color:var(--ink);font-weight:600}
@@ -181,6 +213,9 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .sp-list li.todo .q{color:var(--muted)}
 .sp-list li.cur .dot{background:var(--accent);border-color:var(--accent);animation:glowdot 2s ease-in-out infinite}
 .sp-list li.cur .q{font-weight:600}
+/* an interview question's options, under its text */
+.sp-opts{margin:3px 0 0;padding-left:16px;font-weight:400;color:var(--ink-2)}
+.sp-opts li{margin:1px 0}
 .sp.sp-held .sp-list li.cur .dot{animation:none;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
 .sp-pass{border:1px solid var(--line);border-left:4px solid var(--sc,var(--line));border-radius:5px;padding:6px 10px;margin:6px 0 0}
 .sp-pass.good{--sc:var(--good)}.sp-pass.critical{--sc:var(--critical)}
@@ -188,7 +223,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .sp-pass .ph{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font:700 11px var(--mono);color:var(--ink)}
 .sp-pass small{display:block;font:11px var(--mono);color:var(--ink-2);margin-top:3px}
 .sp p.sp-when{font:11px var(--mono);color:var(--muted);margin:0 0 4px}
-.sp-foot{font:11px var(--mono);color:var(--muted);margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
+.sp-facts{margin-top:10px}
 @media (prefers-reduced-motion:reduce){.sp-list li.cur .dot{animation:none!important;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent),0 0 8px 3px color-mix(in srgb,var(--accent) 45%,transparent)}}
 
 /* The two accent marks (GUIDANCE.md §1).
@@ -223,7 +258,20 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
 .kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
 .kpi .seg-bar i{display:block;height:100%;background:var(--ink-2)}
-.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--line)}.seg-bar i.left{background:var(--muted);opacity:.5}
+.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--line)}.seg-bar i.left{background:var(--muted);opacity:.5}.seg-bar i.accent{background:var(--accent)}.seg-bar i.ink{background:var(--ink-2)}
+/* Every KPI tile carries a segmented bar (plan/RULES.md §2, "The KPI tiles"), each segment listed in the tiles' legend under them: a
+   system's colour (Rows, Units), a status colour (Options weighed, As built, QA passes), a neutral (Verdicts). Dashed is pending (an
+   option left open, a verdict not yet written); an empty slot is a qa pass not used, solid. */
+.seg-bar i.dash{background:none!important;border:1.5px dashed var(--sc,var(--muted));opacity:1}
+.seg-bar i.dash.warning{--sc:var(--warning)}
+.seg-bar i.slot{background:none!important;border:1px solid var(--line)}
+.kpis>.key.kpikey{grid-column:1/-1;margin:0;padding:6px 12px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.key .kk{font:700 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.key i.segk{width:16px;height:6px;border:0;border-radius:2px;background:var(--sc,var(--ink-2))}
+.key i.segk.good{--sc:var(--good)}.key i.segk.warning{--sc:var(--warning)}.key i.segk.critical{--sc:var(--critical)}.key i.segk.serious{--sc:var(--serious)}.key i.segk.accent{--sc:var(--accent)}.key i.segk.ink{--sc:var(--ink-2)}.key i.segk.neutral{--sc:var(--line)}
+.key i.segk.left{background:var(--muted);opacity:.5}
+.key i.segk.dash{background:none;border:1.5px dashed var(--sc,var(--muted));height:7px}
+.key i.segk.slot{background:none;border:1px solid var(--line);height:7px}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -304,6 +352,9 @@ a.more:hover{text-decoration:underline}
 .vp i,.key .vp i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none}
 .vp.good{--sc:var(--good)}.vp.warning{--sc:var(--warning)}.vp.serious{--sc:var(--serious)}.vp.critical{--sc:var(--critical)}
 .vp.neutral{--sc:var(--muted);background:var(--surface)}
+/* the two as-built states before the outcomes (plan/RULES.md §2): in progress takes the accent, the work in progress's colour
+   (GUIDANCE.md §1); partially built the strong neutral, an outcome not reached yet. Both solid: they are not pending. */
+.vp.accent{--sc:var(--accent)}.vp.ink{--sc:var(--ink-2);background:var(--surface)}
 .vp.hollow{background:var(--surface)}
 .vp.dashed{border-style:dashed;border-left-style:dashed;color:var(--ink-2)}
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}
@@ -323,6 +374,15 @@ a.more:hover{text-decoration:underline}
 .colhead.phase{background:var(--band);box-shadow:none;border-radius:6px 6px 0 0}
 .colhead:not(.phase){border-bottom-color:transparent}
 .colhead.glow{border-radius:4px}
+/* Column-level glow (plan/RULES.md §3; GUIDANCE.md §1): a column address in wip.current (a whole column at work: qa, a stage that
+   touches no row, research while its rows are unknown) is one glow on the column itself, its band, with an accent wash on its head,
+   never each row's cell lit; held still as the ring alone while the run waits on the user; static under reduced motion. The narrow
+   layout draws no columns, so there each of the column's cells carries it. On the As built tab the glow goes round the cards. */
+.board>.band.glow-soft{background:color-mix(in srgb,var(--accent) 5%,var(--band))}
+.board>.band.held{background:color-mix(in srgb,var(--accent) 3%,var(--band))}
+.colhead.phase.colon{background:color-mix(in srgb,var(--accent) 9%,var(--band));border-bottom-color:var(--accent)}
+.bcards.colbox{padding:8px;border-radius:8px}
+.key i.colk{width:10px;height:16px}
 .nw{white-space:nowrap}
 .colhead .ph{font:700 12px var(--mono);letter-spacing:.1em;color:var(--ink)}
 .colhead .ph b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:11px;letter-spacing:0;margin-right:6px;vertical-align:1px}
@@ -349,7 +409,7 @@ a.more:hover{text-decoration:underline}
 .cell::after{content:"";position:absolute;left:-6px;top:calc(50% - 5px);width:10px;height:10px;border-radius:50%;background:var(--ink-2)}
 .cell.gap::before{display:none}
 .cell.built{border-left:3px solid var(--sc,var(--line))}
-.cell.built.good{--sc:var(--good)}.cell.built.warning{--sc:var(--warning)}.cell.built.serious{--sc:var(--serious)}.cell.built.critical{--sc:var(--critical)}
+.cell.built.accent{--sc:var(--accent)}.cell.built.ink{--sc:var(--ink-2)}.cell.built.good{--sc:var(--good)}.cell.built.warning{--sc:var(--warning)}.cell.built.serious{--sc:var(--serious)}.cell.built.critical{--sc:var(--critical)}
 .cell.pending,.cell.deferred{border-style:dashed}
 .cell.pending::before{border-top-style:dashed;border-top-color:var(--muted)}
 .cell.pending::after,.cell.deferred::after{background:var(--surface);border:2px dashed var(--muted)}
@@ -371,6 +431,21 @@ a.more:hover{text-decoration:underline}
 .cell.verdict.charging.still::before{animation:none}
 .key i.chg{width:20px;height:12px;border:0;border-radius:0;clip-path:polygon(0 22%,68% 22%,68% 0,100% 50%,68% 100%,68% 78%,0 78%);background:repeating-linear-gradient(90deg,var(--accent) 0 2px,transparent 2px 4px)}
 @media (prefers-reduced-motion:reduce){.cell.verdict.charging::before{animation:none!important}}
+/* Statements (plan/RULES.md §2, "Statements"): a Verdict cell lists its statements, bullets or numbered, each ending with its "(§…)"
+   reference to the plan section it rests on (a link; a plain click shows that section's excerpt in the inspector); the As built cell
+   answers each with one statement marked with its adaptation, the as-built titles' glyph and word. */
+.stmts{margin:0;padding-left:17px;display:grid;gap:3px}
+.stmts>li{overflow-wrap:anywhere;padding-left:1px}
+.stmts.marked{list-style:none;padding-left:0}
+.stmts.marked>li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 6px;align-items:baseline}
+.stmts.marked>li>.vp{font-size:9.5px;padding:1px 5px}
+.stmts.marked.num>li{grid-template-columns:auto auto minmax(0,1fr)}
+.stmts .n{font:600 10.5px var(--mono);color:var(--muted)}
+a.sref{font:600 10.5px var(--mono);color:var(--link);text-decoration:none;white-space:normal;overflow-wrap:anywhere;border-bottom:0!important}
+a.sref:hover{text-decoration:underline}
+.inspector .stmts{margin:0 0 8px;font-size:13px;color:var(--ink)}
+blockquote.excerpt{margin:2px 0 0;padding:6px 10px;border-left:3px solid var(--ink-2);background:var(--surface-2);border-radius:0 4px 4px 0;color:var(--ink)}
+blockquote.excerpt p{margin:4px 0 0;color:var(--ink-2);font-size:12.5px}
 .opts{list-style:none;margin:0;padding:0;display:grid;gap:3px}
 .opts li{min-width:0}
 .opt{--sc:var(--muted);appearance:none;border:1px solid transparent;border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 10%,transparent);color:var(--ink);font:inherit;font-size:12px;line-height:1.35;text-align:left;padding:3px 6px;border-radius:3px;cursor:pointer;display:grid;grid-template-columns:14px minmax(0,1fr);gap:5px;align-items:start;width:100%;min-width:0;max-width:100%}
@@ -383,6 +458,8 @@ a.more:hover{text-decoration:underline}
 .opt:hover{border-color:var(--line)}
 .opt.sel{outline:2px solid var(--on)}
 @media (max-width:900px){
+  .board .cell.colglow{animation:glowsoft 2s ease-in-out infinite;background-color:color-mix(in srgb,var(--accent) 4%,var(--surface))}
+  .board .cell.colglow.colheld{animation:none;box-shadow:inset 0 0 0 2px var(--accent)}
   .board{display:block}
   .colhead{display:none}
   .grouphead{margin-top:18px}
@@ -435,7 +512,7 @@ pre.src .k{color:var(--link);font-weight:600} pre.src .s{color:var(--ink-2)}
 .chainsvg .unit.pending rect.box{stroke:var(--muted);stroke-dasharray:6 4}
 .chainsvg .unit rect.bar{fill:var(--c,var(--muted))}
 .chainsvg .unit rect.st{fill:var(--sc,var(--muted))}
-.chainsvg .unit.good{--sc:var(--good)}.chainsvg .unit.warning{--sc:var(--warning)}.chainsvg .unit.serious{--sc:var(--serious)}.chainsvg .unit.critical{--sc:var(--critical)}
+.chainsvg .unit.good{--sc:var(--good)}.chainsvg .unit.warning{--sc:var(--warning)}.chainsvg .unit.serious{--sc:var(--serious)}.chainsvg .unit.critical{--sc:var(--critical)}.chainsvg .unit.accent{--sc:var(--accent)}.chainsvg .unit.ink{--sc:var(--ink-2)}
 .chainsvg .unit text{fill:var(--ink);font:11px var(--mono)}
 .chainsvg .unit text.t{font:700 11.5px var(--sans)}
 .chainsvg .unit text.s{fill:var(--ink-2);font-size:10px}
@@ -544,6 +621,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
 <header>
   <div class="topbar"><div class="crumbs" id="crumbs"></div><div class="tools"><span class="livechip" id="live"></span><button class="themebtn" id="theme" type="button"></button></div></div>
   <h1 id="h1"></h1>
+  <p class="issueline" id="issueline"></p>
   <p class="function" id="function"></p>
   <div class="chips" id="chips"></div>
 </header>
@@ -1490,6 +1568,8 @@ const COLS=[
   {key:"built",label:"As built",q:"What exists now, and every change from the verdict"}];
 const STATES={
   "pending":   {g:"…",label:"pending",   cls:"neutral",dash:true, desc:"not built yet"},
+  "in-progress":{g:"▶",label:"in progress",cls:"accent",          desc:"being built: a current stage works on it (a unit: its run is under way)"},
+  "partially-built":{g:"◑",label:"partially built",cls:"ink",     desc:"a finished stage built part of it; a later stage builds the rest"},
   "as-planned":{g:"✓",label:"as planned",cls:"good",              desc:"built as the verdict says"},
   "amended":   {g:"+",label:"amended",   cls:"warning",           desc:"built as decided, plus changes added in implementation or review"},
   "deviated":  {g:"≠",label:"deviated",  cls:"serious",           desc:"the decision itself changed; each difference listed"},
@@ -1508,10 +1588,43 @@ const OPT={
 const QA={approved:{g:"✓",label:"approved",cls:"good"},"changes-requested":{g:"✕",label:"changes requested",cls:"critical"},running:{g:"…",label:"in progress",cls:"neutral",dash:true}};
 const STEP_ORDER=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","landing","landed"];
 const STEP_SPECIAL={halted:{g:"⏸",label:"Waiting on the user",cls:"halted"},escalated:{g:"⇧",label:"Escalated",cls:"escalated"},cancelled:{g:"✕",label:"Cancelled",cls:"cancelled"},landed:{g:"✓",label:"Landed",cls:"landed"}};
-const stateOf=r=>(r.asBuilt&&STATES[r.asBuilt.state])?r.asBuilt.state:"pending";
+/* A row's as-built state: the stored one, unless the build is under way (plan/RULES.md §2, "Before the outcome"). While the run is live
+   the implementation stages (wip.stages) decide it for every row they touch: a row a current stage touches is in progress; one a done
+   stage touched and a later stage still to come touches is partially built; one only stages to come touch is pending. Its outcome
+   (as planned, amended, deviated) applies once its last stage is done. A tracking board's unit in wip.current whose row is pending is
+   in progress (its run is under way); a unit lands whole, so it is never partially built. Dropped, deferred, complete and landed
+   rows keep their state. plan/scripts/lib.js builtState() is the same rule for the scripts. */
+/* Statements (plan/RULES.md §2, "Statements"): verdict.statements, each { text, ref, label, excerpt }, bullets or numbered (verdict.list);
+   asBuilt.statements, one per verdict statement in the same order, each { text, state, ref }, state its adaptation. The row's outcome is
+   derived from them: deviated if any deviated, else amended if any amended, else as planned (statementOutcome()); a unit row has none.
+   plan/scripts/lib.js statementOutcome(), recordedState() and refLabel() are the same rules for the scripts. */
+const STMT_STATES=["as-planned","amended","deviated"];
+const stmtsRaw=x=>x&&Array.isArray(x.statements)?x.statements:[];
+const stmtOk=s=>!!s&&typeof s==="object"&&typeof s.text==="string"&&!!s.text.trim();
+const stmtsOf=x=>stmtsRaw(x).filter(stmtOk);
+function statementOutcome(r){ if(!r||r.unit) return null; const ss=stmtsRaw(r.asBuilt).filter(s=>s&&typeof s==="object").map(s=>s.state);
+  if(!ss.length||ss.some(s=>!STMT_STATES.includes(s))) return null; return ss.includes("deviated")?"deviated":ss.includes("amended")?"amended":"as-planned"; }
+function stmtLabel(s){ if(s&&typeof s.label==="string"&&s.label.trim()) return s.label.trim();
+  const h=s&&s.excerpt&&s.excerpt.heading, m=h&&/^((?:\d+\.)*\d+|[A-Z][A-Za-z0-9]?-[A-Za-z0-9]+)\.?(?=\s|$)/.exec(h); if(m) return "§"+m[1];
+  if(h) return "§ "+(h.length>32?h.slice(0,31).replace(/\s+\S*$/,"")+"…":h).replace(/`/g,"");
+  const a=String((s&&s.ref)||"").split("#")[1]; return a?"§ "+a:"§"; }
+const stmtRef=(s,row,col,i)=>s&&typeof s.ref==="string"&&relLink(s.ref)?` <a class="sref" href="${esc(s.ref)}" data-row="${esc(row)}" data-col="${col}" data-i="${i}" title="${esc(s.excerpt&&s.excerpt.heading?s.excerpt.heading:s.ref)}: click for the section's excerpt">(${esc(stmtLabel(s))})</a>`:"";
+/* a cell's, a card's or the inspector's statements: the verdict's, or the as built ones with their marks; "" when the row has none */
+function stmtsHtml(r,col){ const x=col==="verdict"?r.verdict:r.asBuilt, all=stmtsRaw(x), num=((r.verdict||{}).list==="numbered");
+  if(!all.some(stmtOk)) return "";
+  const items=all.map((s,i)=>stmtOk(s)?`<li>${col==="built"&&STATES[s.state]?pill(STATES[s.state]):""}${col==="built"&&num?`<span class="n">${i+1}.</span>`:""}<span>${rich(s.text)}${stmtRef(s,r.id,col,i)}</span></li>`:"").join("");
+  return col==="built"?`<ol class="stmts marked${num?" num":""}">${items}</ol>`:num?`<ol class="stmts">${items}</ol>`:`<ul class="stmts">${items}</ul>`; }
+const storedState=r=>{ const st=(r.asBuilt&&STATES[r.asBuilt.state])?r.asBuilt.state:"pending"; return ["dropped","deferred","complete","landed"].includes(st)?st:statementOutcome(r)||st; };
+function stagedState(r){ if(LANDED||STOPPED) return null; const st=storedState(r); if(["dropped","deferred","complete","landed"].includes(st)) return null;
+  if(TRACKING) return r.unit&&st==="pending"&&rowActive(r)?"in-progress":null;
+  const sg=(Array.isArray(WIP.stages)?WIP.stages:[]).filter(x=>x&&Array.isArray(x.rows)&&x.rows.includes(r.id)); if(!sg.length) return null;
+  if(sg.some(x=>x.state==="current")) return "in-progress";
+  const done=sg.some(x=>x.state==="done"), todo=sg.some(x=>x.state!=="done");
+  return done&&todo?"partially-built":!done?"pending":null; }
+const stateOf=r=>stagedState(r)||storedState(r);
 /* A row's verdict kind once its verdict is written (a summary, as check.js reads it): "leave" or "build" (the default kind); null
    while column 3 is not yet written, which is neither build nor leave and is counted, labelled and inspected as such */
-const verdictOf=r=>{ const v=r.verdict||{}; return typeof v.summary==="string"&&v.summary.trim()?(v.kind==="leave"?"leave":"build"):null; };
+const verdictOf=r=>{ const v=r.verdict||{}; return stmtsOf(v).length||(typeof v.summary==="string"&&v.summary.trim())?(v.kind==="leave"?"leave":"build"):null; };
 /* Left for later (plan/RULES.md §2, the As built tile): a row whose written verdict leaves it as is and that is resolved as planned
    (pending, as planned or amended: left alone, perhaps pinned harder) is not built, so the tile and the chain leave it out of both
    figures and name it beside them. One that column 4 records built after all (deviated; a unit complete or landed) counts as built
@@ -1552,8 +1665,11 @@ const runHeld=r=>{ const L=runOf(r); return !!L&&runKind(L)==="halted"; };
 const runPaused=r=>{ const L=runOf(r); return !!L&&["halted","escalated"].includes(runKind(L)); };
 const rowHeld=id=>runPaused(ROWS.find(x=>x.id===id));
 const glowCls=(strong,held)=>PAUSED||held?" held":strong?" glow":" glow-soft";
-function cellGlow(rowId,col){ if(CURRENT.includes(rowId+"."+col)) return glowCls(true,rowHeld(rowId)); if(CURRENT.includes(col)) return PAUSED?" held":" glow-soft"; return ""; }
-/* The next unit (wip.next, tracking boards): named, never in progress. Its tag lists each blocker that has not landed; a blocker
+/* A cell's in-progress mark: its own address glows; a column address glows the column itself (its band and head, layoutBands()), so the
+   cell only carries colglow, which the narrow layout, with no columns to draw, turns into the mark (plan/RULES.md §3). */
+function cellGlow(rowId,col){ if(CURRENT.includes(rowId+"."+col)) return glowCls(true,rowHeld(rowId)); if(CURRENT.includes(col)) return PAUSED?" colglow colheld":" colglow"; return ""; }
+const colGlowCls=col=>CURRENT.includes(col)?(PAUSED?" held":" glow-soft"):"";
+/* The next unit (wip.next, tracking boards): named, never in progress, never a unit left for later (lib.js nextUnit()). Its tag lists each blocker that has not landed; a blocker
    that is not a unit on this board counts as not landed, since the board cannot show it landed. */
 let NEXT_ROW=null;
 const unitLanded=r=>LANDED_STATES.includes(stateOf(r));
@@ -1574,7 +1690,10 @@ const KEY_NEXT=r=>`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the nex
 /* The in-progress marks of a set of wip.current addresses: breathing where the work goes on, the ring alone where it waits. */
 const heldAddr=a=>PAUSED||rowHeld(String(a).split(".")[0]);
 const KEY_HELD=`<span><i class="hold"></i>ring alone: being worked on, paused while the run waits on the user</span>`;
-function markKeys(addrs){ if(!addrs.length) return ""; const held=addrs.filter(heldAddr).length; return (addrs.length>held?KEY_GLOW:"")+(held?KEY_HELD:""); }
+const KEY_COLGLOW=`<span><i class="gl colk"></i>glow around a whole column (on the As built tab, around its cards; on a phone, on each of its cells): that column at work, no single row named</span>`;
+const KEY_COLHELD=`<span><i class="hold colk"></i>ring around a whole column: at work, paused while the run waits on the user</span>`;
+function markKeys(addrs){ if(!addrs.length) return ""; const cells=addrs.filter(a=>String(a).includes(".")), cols=addrs.length-cells.length, held=cells.filter(heldAddr).length;
+  return (cells.length>held?KEY_GLOW:"")+(held?KEY_HELD:"")+(cols?(PAUSED?KEY_COLHELD:KEY_COLGLOW):""); }
 /* A unit's run: its pill, its last qa pass, the run line of its cell and card, its block on the strip, its legend entries. */
 function runPill(L){ const k=runKind(L), d=RUN[k]; return k==="run"?pill(d,"",`run at ${L.step||"?"}`):k==="escalated"?pill(d,"","escalated"):pill(d); }
 const runAt=L=>{ const k=runKind(L); return k==="halted"||k==="escalated"?(L.resume?`<span>at ${esc(L.resume)}</span>`:""):""; };
@@ -1635,17 +1754,27 @@ function researchFact(w){ const qs=questionsOf(w), R=w&&w.research;
    it waits on, the panel held still. R is a run: an issue board's own wip (with its verdicts and deviations counted from its rows), or
    a tracking board's unit mirror (unit.live), which carries the same facts (plan/scripts/lib.js panelFacts()). keys collects the legend
    entries the panel drew. */
+const OPEN_PT={g:"!",label:"open",cls:"warning"};
+const KEY_OPEN=`<span>${pill(OPEN_PT)} an open point raised during the run, not resolved yet</span>`;
 const IV={answered:{g:"✓",label:"answered",cls:"neutral"},waiting:{g:"?",label:"waiting on the user",cls:"warning"}};
 const STAGE_DOT={done:"done",current:"cur",todo:"todo"};
 const NEXT_STEP={qa:"landing, or remediation if qa requests changes",remediation:"qa, the next pass",landing:"landed"};
-function nextStepOf(R,S){ if(NEXT_STEP[S]) return NEXT_STEP[S]; const st=R.steps&&R.steps.length?R.steps:STEP_ORDER, i=st.indexOf(S); return i>=0&&i<st.length-1?st[i+1]:""; }
+/* The route /resolve-issue step 5 takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
+   no fallout), fixed on the spot with no new qa pass; otherwise a remediation pass by rookie-dev, or a planner re-pass then rookie-dev,
+   and the next qa pass (at most three in all). */
+const ROUTE={"on-the-spot":{label:"fixed on the spot, no new qa pass",next:"landing (no new qa pass)"},"rookie-dev":{label:"a remediation pass: rookie-dev, then the next qa pass",next:"qa, the next pass"},"planner-then-rookie-dev":{label:"a remediation pass: a planner re-pass, then rookie-dev, then the next qa pass",next:"qa, the next pass"}};
+const stepName=x=>x&&(x.name||x.what)||"";
+function nextStepOf(R,S){ if(S==="remediation"&&R.remediation&&ROUTE[R.remediation.route]) return ROUTE[R.remediation.route].next; if(NEXT_STEP[S]) return NEXT_STEP[S]; const st=R.steps&&R.steps.length?R.steps:STEP_ORDER, i=st.indexOf(S); return i>=0&&i<st.length-1?st[i+1]:""; }
+/* a step's title, as the step panel's heading shows it */
+const stepTitle=s=>!s?"—":s==="qa"?"QA":s.charAt(0).toUpperCase()+s.slice(1);
 function spList(items){ return items.length?`<ol class="sp-list">${items.join("")}</ol>`:""; }
 const spItem=(cls,mark,body,sub)=>`<li class="${cls}">${mark}<span class="q">${body}${sub?`<small>${sub}</small>`:""}</span></li>`;
 const dotMark=`<span class="dot" aria-hidden="true"></span>`;
 function qaBlock(p,keys){ const d=QA[p.verdict]||QA.running, f=p.findings||{}, sv=p.severity||{};
   const kinds=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" · "), sev=Object.entries(sv).map(([k,n])=>`${n} ${k}`).join(" · ");
   keys.add(`<span>${pill(d)} qa pass verdict</span>`);
-  return `<div class="sp-pass ${p.verdict==="approved"?"good":p.verdict==="changes-requested"?"critical":"run pend"}"><div class="ph">Pass ${esc(p.pass)} ${pill(d)}${p.date?` <span class="nw">${when(p.date)}</span>`:""}</div>${kinds?`<small>findings by kind: ${esc(kinds)}</small>`:""}${sev?`<small>by severity: ${esc(sev)}</small>`:""}${p.note?`<small>${rich(p.note)}</small>`:""}</div>`; }
+  const rt=ROUTE[p.route];
+  return `<div class="sp-pass ${p.verdict==="approved"?"good":p.verdict==="changes-requested"?"critical":"run pend"}"><div class="ph">Pass ${esc(p.pass)} ${pill(d)}${p.date?` <span class="nw">${when(p.date)}</span>`:""}</div>${kinds?`<small>findings by kind: ${esc(kinds)}</small>`:""}${sev?`<small>by severity: ${esc(sev)}</small>`:""}${rt?`<small>route: ${esc(rt.label)}</small>`:""}${p.note?`<small>${rich(p.note)}</small>`:""}</div>`; }
 const PANEL={
   sizing:R=>`<p>The issue is being sized: its systems and how much planning it takes.</p>${R.detail?`<p>${rich(R.detail)}</p>`:""}`,
   interview:(R,o,keys)=>{ const iv=Array.isArray(R.interview)?R.interview.filter(q=>q&&q.text):[];
@@ -1653,7 +1782,8 @@ const PANEL={
     const done=iv.filter(q=>q.answer!=null&&String(q.answer).trim()).length;
     keys.add(`<span>${pill(IV.answered)} ${pill(IV.waiting)} an interview question, answered or waiting</span>`);
     return `<p class="sp-sum">${done} of ${iv.length} question${iv.length===1?"":"s"} answered${iv.length-done?` · ${iv.length-done} waiting`:""}</p>`+spList(iv.map(q=>{ const a=q.answer!=null&&String(q.answer).trim();
-      return spItem("",pill(a?IV.answered:IV.waiting),rich(q.text),a?`answer: ${rich(q.answer)}${q.answered?` · ${when(q.answered)}`:""}`:q.asked?`asked ${when(q.asked)}`:""); })); },
+      const ops=Array.isArray(q.options)?q.options.filter(x=>typeof x==="string"&&x.trim()):[];
+      return spItem("",pill(a?IV.answered:IV.waiting),`${rich(q.text)}${ops.length?`<ul class="sp-opts">${ops.map(x=>`<li>${rich(x)}</li>`).join("")}</ul>`:""}`,a?`answer: ${rich(q.answer)}${q.answered?` · ${when(q.answered)}`:""}`:q.asked?`asked ${when(q.asked)}`:""); })); },
   research:(R,o,keys)=>{ const qs=questionsOf(R), Rs=R.research||{}, st=qs.map(qState);
     const phase=Rs.phase||(st.includes("verifying")?"verification":st.length&&st.every(x=>x==="complete")?"complete":st.some(x=>x!=="planning")?"research":st.length?"planning":"");
     const line=["planning","research","verification"], at=phase==="complete"?3:line.indexOf(phase);
@@ -1668,43 +1798,59 @@ const PANEL={
     return h; },
   architecture:(R,o)=>`<p>The architecture weighs the options and decomposes the work into its units; it is signed off by the user.</p>${o.options!=null?`<p class="sp-sum">${o.options} option${o.options===1?"":"s"} weighed so far</p>`:""}`,
   plan:(R,o,keys)=>{ const P=R.plan||{}, V=R.verdicts, re=P.state==="re-pass";
-    const first=re?`re-pass ${P.from==="qa"?`after qa pass ${esc(P.pass||"?")}`:P.from==="parent"?(o.parent?`from #${esc(o.parent)}'s plan`:"from the parent's plan"):""}`:"plan writing";
+    const first=re?`re-pass ${P.from==="qa"?`after qa pass ${esc(P.pass||"?")}`:P.from==="parent"?(o.parent?`from #${esc(o.parent)}'s plan`:"from the parent's plan"):P.from==="existing"?`verifying the existing plan${P.against?` against ${esc(P.against)}`:""}`:""}`:"plan writing";
     let h=`<ol class="steps" aria-label="The plan's stages"><li class="cur${o.held?" held":" glow"}" aria-current="step"><span class="dot" aria-hidden="true"></span>${first}</li><li class="todo"><span class="dot" aria-hidden="true"></span>plan accepted</li></ol>`;
-    if(re) h+=`<p>${P.from==="qa"?`The planner re-passes the plan to answer qa pass ${esc(P.pass||"?")}'s findings.`:`The planner verifies the plan this unit takes from its parent's architecture, and writes its own.`}</p>`;
+    if(re) h+=`<p>${P.from==="qa"?`The planner re-passes the plan to answer qa pass ${esc(P.pass||"?")}'s findings${R.remediation&&R.remediation.route==="planner-then-rookie-dev"?"; rookie-dev's fixes and the next qa pass follow":""}.`:P.from==="existing"?`The planner verifies the plan already written${P.against?` against <code>${esc(P.against)}</code> as it stands now`:" against the code as it stands now"}, and records each delta.`:`The planner verifies the plan this unit takes from its parent's architecture, and writes its own.`}</p>`;
     if(V&&V.total) { h+=`<p class="sp-sum">${V.written} of ${V.total} verdict${V.total===1?"":"s"} written</p>`; if(o.unwritten&&o.unwritten.length&&V.written<V.total) h+=`<p>Still to write: ${o.unwritten.slice(0,6).map(esc).join(", ")}${o.unwritten.length>6?`, and ${o.unwritten.length-6} more`:""}.</p>`; }
-    if(o.planDoc) h+=`<p>${refHtml(o.planDoc,"plan.md")}</p>`;
     return h; },
-  branch:(R,o)=>`<p>The plan is accepted; the branch is cut next and the build starts.</p>${o.branch?`<p>branch <code>${esc(o.branch)}</code></p>`:""}`,
+  branch:()=>`<p>The plan is accepted; the branch is cut next and the build starts.</p>`,
   implementation:(R,o)=>{ const sg=Array.isArray(R.stages)?R.stages.filter(x=>x&&typeof x==="object"):[];
-    let h=""; if(!sg.length) h+=`<p>Its stages are in the plan; none recorded here yet.${o.planDoc?` ${refHtml(o.planDoc,"plan.md")}`:""}</p>`;
+    let h=""; if(!sg.length) h+=`<p>Its stages are in the plan; none recorded here yet.</p>`;
     else { const cur=sg.findIndex(x=>x.state==="current"), done=sg.filter(x=>x.state==="done").length;
       h+=`<p class="sp-sum">${cur>=0?`Stage ${esc(sg[cur].id||cur+1)} of ${sg.length}`:`${done} of ${sg.length} stages done`}${cur>=0?` · ${done} done`:""}</p>`;
       h+=spList(sg.map((x,i)=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${x.id?`<b>${esc(x.id)}</b> `:""}${rich(x.name||"")}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,(Array.isArray(x.rows)&&x.rows.length?`touches ${x.rows.map(id=>esc(o.rowName(id))).join(", ")}`:"")))); }
-    if(R.deviations!=null) h+=`<p>${esc(R.deviations)} deviation${R.deviations===1?"":"s"} from the verdict recorded so far</p>`;
     return h; },
   qa:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], running=qa.length&&qa[qa.length-1].verdict==="running";
     let h=`<p class="sp-sum">${running?`Pass ${esc(qa[qa.length-1].pass)}`:`Pass ${qa.length+1}`} running${R.qaMax?` · at most ${esc(R.qaMax)} passes`:""}</p>`;
     h+=qa.map(p=>qaBlock(p,keys)).join("");
     if(!running){ h+=qaBlock({pass:qa.length+1,verdict:"running"},keys); }
     return h; },
-  remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null;
-    const steps=Array.isArray(M.steps)&&M.steps.length?M.steps:[{what:`Fixes for the findings of qa pass ${n||"n"}: the implementer, the planner first where the plan itself is wrong`,state:"current"},{what:`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`,state:"todo"}];
+  remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null, route=M.route||(last&&last.route)||null, nx=`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`;
+    /* while no sub-step is recorded, the loop the route takes (the pipeline's, when no route is recorded either) */
+    const dflt=route==="on-the-spot"?[{what:`Minor fixes for qa pass ${n||"n"}, made on the spot`,state:"current"},{what:"Landing, with no new qa pass",state:"todo"}]
+      :route==="planner-then-rookie-dev"?[{what:`Planner re-pass for qa pass ${n||"n"}'s findings`,state:"current"},{what:"rookie-dev fixes",state:"todo"},{what:nx,state:"todo"}]
+      :route==="rookie-dev"?[{what:`rookie-dev fixes for qa pass ${n||"n"}'s findings`,state:"current"},{what:nx,state:"todo"}]
+      :[{what:`Fixes for the findings of qa pass ${n||"n"}: the implementer, the planner first where the plan itself is wrong`,state:"current"},{what:nx,state:"todo"}];
+    const steps=Array.isArray(M.steps)&&M.steps.length?M.steps:dflt;
     let h=`<p class="sp-sum">Answering qa pass ${esc(n||"?")}${last?` · ${(QA[last.verdict]||QA.running).label}`:""}</p>`;
+    if(ROUTE[route]) h+=`<p>Route: ${esc(ROUTE[route].label)}.</p>`;
     if(last) h+=qaBlock(last,keys);
-    h+=spList(steps.map(x=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${rich(x.what)}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,"")));
-    if(!(Array.isArray(M.steps)&&M.steps.length)) h+=`<p>The pipeline's remediation loop; its sub-steps are recorded as they run.</p>`;
-    if(R.deviations!=null) h+=`<p>${esc(R.deviations)} deviation${R.deviations===1?"":"s"} from the verdict recorded so far</p>`;
+    h+=spList(steps.map(x=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${rich(stepName(x))}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,"")));
+    if(!(Array.isArray(M.steps)&&M.steps.length)) h+=`<p>${ROUTE[route]?"The route's loop":"The pipeline's remediation loop"}; its sub-steps are recorded as they run.</p>`;
     return h; },
   landing:R=>{ const qa=Array.isArray(R.qa)?R.qa:[], last=qa.length?qa[qa.length-1]:null; return `<p>qa has approved${last?` (pass ${esc(last.pass)})`:""}; the merge and the landing refresh are the admin team's.</p>`; },
   _:R=>R.detail?`<p>${rich(R.detail)}</p>`:`<p>Nothing recorded for this step.</p>`};
 function stepPanel(R,o){ o=o||{}; const k=R.step||"", held=["halted","escalated"].includes(k), S=held?(R.resume||""):k, keys=o.keys||new Set();
   const opts={...o,held};
-  let h=`<div class="sp${held?" sp-held":""}" data-step="${esc(S)}"><div class="wb-t"><span class="k">${o.title||"This step in detail"}</span><b>${esc(S||"—")}</b>${R.event&&R.event.name?`<span class="sp-ev">last event <code>${esc(R.event.name)}</code>${R.event.at?` · <span class="nw">${when(R.event.at)}</span>`:""}</span>`:""}</div>`;
+  /* the heading is the step's title alone (plan/RULES.md §3, "The step panel"); a unit's panel names its unit to assistive technology */
+  let h=`<div class="sp${held?" sp-held":""}" data-step="${esc(S)}"${o.row?` style="--r:${o.row}"`:""} role="group" aria-label="${esc(o.label||"The current step")}: ${esc(S||"—")}"><h3 class="sp-t">${esc(stepTitle(S))}</h3>`;
   if(k==="halted"){ h+=`<p class="sp-wait">⏸ Held still at ${esc(S||"its step")}: it waits on the user for ${rich(R.waitingOn||R.detail||"(not stated)")}</p>`; }
   if(k==="escalated") h+=`<p class="sp-wait">⇧ Escalated from ${esc(S||"its step")}: held still while the issue's scope is re-decided.</p>`;
   h+=(PANEL[S]||PANEL._)(R,opts,keys);
-  const next=nextStepOf(R,S), foot=[R.since?`${held?"waiting":"in this step"} since <span class="nw">${when(R.since)}</span>`:"",next?`next: ${esc(next)}`:""].filter(Boolean);
-  if(foot.length) h+=`<div class="sp-foot">${foot.join(" · ")}</div>`;
+  /* the open points (wip.open, plan/RULES.md §3): raised during the run, shown at every step until resolved; the trail keeps them after */
+  const op=(Array.isArray(R.open)?R.open:[]).filter(x=>x&&typeof x==="object"&&typeof x.text==="string"&&x.text.trim()&&!x.resolved);
+  if(op.length){ keys.add(KEY_OPEN); h+=`<div class="sp-open"><p class="sp-sum">${op.length} open point${op.length===1?"":"s"}</p>${spList(op.map(x=>spItem("",pill(OPEN_PT),rich(x.text),[x.raised?`raised at ${esc(x.raised)}`:"",x.ref?refHtml(x.ref):""].filter(Boolean).join(" · "))))}</div>`; }
+  /* the panel's facts as info groups at its bottom, each a small bubble, as the unit bubble's (plan/RULES.md §3): the last event and
+     its time, since when the run is at this step (or waits), the step that follows, and where the step has them its branch, its plan
+     and the deviations recorded */
+  const next=nextStepOf(R,S), grp=(l,v)=>`<span><span class="l">${l}</span>${v}</span>`;
+  const info=[R.event&&R.event.name?grp("last event",`<code>${esc(R.event.name)}</code>${R.event.at?` · <span class="nw">${when(R.event.at)}</span>`:""}`):"",
+    R.since?grp(held?"waiting since":"since",`<span class="nw">${when(R.since)}</span>`):"",
+    next?grp("next",esc(next)):"",
+    S==="branch"&&o.branch?grp("branch",`<code>${esc(o.branch)}</code>`):"",
+    ["plan","implementation"].includes(S)&&o.planDoc?grp("plan",refHtml(o.planDoc,"plan.md")):"",
+    R.deviations!=null&&["implementation","remediation"].includes(S)?grp("deviations",`${esc(R.deviations)} recorded`):""].filter(Boolean);
+  if(info.length) h+=`<div class="wip-facts sp-facts">${info.join("")}</div>`;
   return h+`</div>`; }
 /* The panel's facts of this issue's own run: its wip, the verdicts written of its rows at the plan step, the deviations recorded during
    the build, the rows still to write, the plan document. */
@@ -1740,7 +1886,7 @@ function chainChip(){ const {units,landed,M,extra}=chainCounts();
   else if(!started) txt=[`<b>planned</b> · ${M?`${M} unit${M===1?"":"s"}`:"no units yet"}`,...extra];
   else txt=[`<b>${landed} of ${M} landed</b>`,...cur.map(r=>`${u(r)} ${runWord(r)}`),NEXT_ROW?`${u(NEXT_ROW)} up next${openBlockers(NEXT_ROW).length?`, blocked by ${openBlockers(NEXT_ROW).map(n=>ilink(n)).join(", ")}`:""}`:"",...extra];
   const pct=chainCounts().pct;
-  return `<span class="chip status progress${done?" done":!started?" planned":""}">chain ${txt.filter(Boolean).join(" · ")}<span class="cbar" role="img" aria-label="${landed} of ${M} units landed"><i style="width:${pct}%"></i></span></span>`; }
+  return `<span class="chip status progress wide${done?" done":!started?" planned":""}"><span class="ck">tracking issue · chain</span> ${txt.filter(Boolean).join(" · ")}<span class="cbar" role="img" aria-label="${landed} of ${M} units landed"><i style="width:${pct}%"></i></span></span>`; }
 let OPTS=[];
 const count=(arr,f)=>arr.filter(f).length;
 function renderHeader(){
@@ -1751,21 +1897,24 @@ function renderHeader(){
   $("#crumbs").innerHTML=`<a href="${UP}docs/dashboards/index.html">${esc(PLAN.repo)}</a> › <a href="${UP}docs/plans/index.html">work board</a>`+segs.map((s,i)=>i<segs.length-1&&segBoard(s)?` › <a href="${esc(segBoard(s))}">${esc(s)}</a>`:` › ${esc(s)}`).join("");
   $("#h1").textContent=`#${PLAN.issue} · ${PLAN.title||""}`;
   $("#function").innerHTML=rich(PLAN.function);
+  /* the intro's issue line: the board's own #n opens its GitHub issue (plan/RULES.md §1), beside the issue's title on GitHub */
+  $("#issueline").innerHTML=`GitHub issue ${ext(ghUrl(PLAN.issue),"#"+esc(PLAN.issue))}${PLAN.issueTitle?` · ${rich(PLAN.issueTitle)}`:""}`;
   const b=PLAN.baseline||{}, a=PLAN.asBuilt;
   const statusText={planned:"planned · nothing built",building:"building",built:"built",abandoned:"abandoned"}[PLAN.status]||PLAN.status;
+  /* the tags (GUIDANCE.md §6, "The header"): each its label (.ck) and its value; one tag for the systems, each with its swatch */
+  const tag=(ck,v,cls)=>`<span class="chip${cls?" "+cls:""}"><span class="ck">${ck}</span> ${v}</span>`;
+  const sysGroups=[...SYSTEMS.reduce((m,s)=>{ const k=s.top||s.name; if(!m.has(k)) m.set(k,[]); m.get(k).push(s); return m; },new Map())];
   const chips=[
-    TRACKING?chainChip():`<span class="chip status ${esc(PLAN.status)}">status <b>${esc(statusText)}</b></span>`,
-    `<span class="chip">issue ${ilink(PLAN.issue)}${PLAN.issueTitle?` <b>${rich(PLAN.issueTitle)}</b>`:""}</span>`,
-    TRACKING?`<span class="chip"><b>tracking issue</b></span>`:"",
-    PLAN.parent&&PLAN.parent.issue?`<span class="chip">part of ${ilink(PLAN.parent.issue)}${boardOf(PLAN.parent.issue)?` ${ghlink(PLAN.parent.issue)}`:""}</span>`:"",
-    SHOW_BRANCH?`<span class="chip">branch <b>${esc(PLAN.branch)}</b></span>`:"",
-    `<span class="chip">baseline <b>${esc(b.ref||"")} ${esc(b.sha||"")}</b>${b.date?` · ${when(b.date)}`:""}</span>`,
-    a?`<span class="chip">as built <b>${esc(a.ref||"")} ${esc(a.sha||"")}</b>${a.date?` · ${when(a.date)}`:""}${a.pr?` · ${prlink(a.pr)}`:""}</span>`:`<span class="chip status planned">as built <b>—</b> · not landed</span>`,
-    a&&a.version?`<span class="chip">ships as <b>${esc(a.version)}</b></span>`:"",
-    /* one chip per system, or per top-level system when several of its parts are on the board */
-    ...[...SYSTEMS.reduce((m,s)=>{ const k=s.top||s.name; if(!m.has(k)) m.set(k,[]); m.get(k).push(s); return m; },new Map())].map(([top,ps])=>{ const s=ps[0], one=ps.length===1, nm=one?s.name:top;
-      return `<span class="chip" data-sys="${esc(s.slug)}">${one&&s.page?`<a href="${UP}${esc(s.page)}">${esc(nm)}</a>`:esc(nm)}${one?"":` · ${ps.length} parts`}${ps.every(x=>x.status==="planned")?" · planned":""}</span>`; }),
-    `<span class="chip model">board <b>plan.json</b> · ${ROWS.length} ${TRACKING?"units":"rows"} · ${OPTS.length} options</span>`].filter(Boolean);
+    TRACKING?chainChip():tag("status",`<b>${esc(statusText)}</b>`,`status ${esc(PLAN.status)}`),
+    PLAN.parent&&PLAN.parent.issue?tag("part of",`${ilink(PLAN.parent.issue)}${boardOf(PLAN.parent.issue)?` ${ghlink(PLAN.parent.issue)}`:""}`):"",
+    SHOW_BRANCH?tag("branch",`<b>${esc(PLAN.branch)}</b>`):"",
+    tag("baseline",`<b>${esc(b.ref||"")} ${esc(b.sha||"")}</b>${b.date?` · ${when(b.date)}`:""}`),
+    a?tag("as built",`<b>${esc(a.ref||"")} ${esc(a.sha||"")}</b>${a.date?` · ${when(a.date)}`:""}${a.pr?` · ${prlink(a.pr)}`:""}`):tag("as built","<b>—</b> · not landed","status planned"),
+    a&&a.version?tag("ships as",`<b>${esc(a.version)}</b>`):"",
+    /* one entry per system, or per top-level system when several of its parts are on the board */
+    sysGroups.length?tag(sysGroups.length===1?"system":"systems",sysGroups.map(([top,ps])=>{ const s=ps[0], one=ps.length===1, nm=one?s.name:top;
+      return `<span class="sysl"><span class="sw" data-sys="${esc(s.slug)}"></span>${one&&s.page?`<a href="${UP}${esc(s.page)}">${esc(nm)}</a>`:esc(nm)}${one?"":` · ${ps.length} parts`}${ps.every(x=>x.status==="planned")?" · planned":""}</span>`; }).join(""),sysGroups.length>2?"wide":""):"",
+    tag("board",`<b>plan.json</b> · ${ROWS.length} ${TRACKING?"units":"rows"} · ${OPTS.length} options`,"model")].filter(Boolean);
   $("#chips").innerHTML=chips.join(""); paint($("#chips"));
 }
 
@@ -1786,7 +1935,7 @@ function renderWip(){
   /* the board's own facts: its qa passes, its blockers, its landing */
   const facts=[];
   const qa=WIP.qa||[];
-  if(qa.length) facts.push(`<span><span class="l">qa</span>${qa.map(p=>{ const d=QA[p.verdict]||QA.running, f=p.findings||{}; const n=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" / "); return `${pill(d,"",`pass ${p.pass} · ${d.label}`)}${n?` <small>${esc(n)}</small>`:""}`; }).join(" ")}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}</span>`);
+  if(qa.length) facts.push(`<span><span class="l">qa</span>${qa.map(p=>{ const d=QA[p.verdict]||QA.running, f=p.findings||{}; const n=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" / "), sv=Object.entries(p.severity||{}).map(([k,c])=>`${c} ${k}`).join(" / "); return `${pill(d,"",`pass ${p.pass} · ${d.label}`)}${n?` <small>${esc(n)}</small>`:""}${sv?` <small>${esc(sv)}</small>`:""}`; }).join(" ")}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}</span>`);
   const bl=WIP.blockers||{}, iref=x=>x.repo&&x.repo!==PLAN.repo?ilink(x.issue,x.repo):ilink(x.issue);
   if((bl.waitsOn||[]).length) facts.push(`<span><span class="l">waits on</span>${bl.waitsOn.map(iref).join(", ")}</span>`);
   if((bl.blocks||[]).length) facts.push(`<span><span class="l">blocks</span>${bl.blocks.map(iref).join(", ")}</span>`);
@@ -1801,8 +1950,9 @@ function renderWip(){
   let h="", runs=[];
   if(units.length){
     /* A tracking board with units shows its strip as bubbles (plan/RULES.md §3): the tracking issue's own phase with the chain's
-       progress; one bubble per unit in progress with its own run; the unit up next; and "waiting on you" only while the tracking
-       issue or a unit's run is halted. An issue's number beside its title is a pair (the number to GitHub, the title to its board);
+       progress; one bubble per unit in progress with its own run, and its step panel beside it; the unit up next while no unit's run
+       is mirrored; and "waiting on you" only while the tracking issue or a unit's run is halted. From 940 px each takes its fixed
+       share of a row (--r, its row; --rows, the rows the phase runs down beside). An issue's number beside its title is a pair (the number to GitHub, the title to its board);
        a lone #n opens the board. */
     w.classList.add("bubbles");
     const uref=r=>r.unit.issue?pair(r.unit.issue,r.unit.slug||r.id):esc(r.unit.slug||r.id);
@@ -1813,13 +1963,13 @@ function renderWip(){
     ph+=own+(WIP.detail&&(!HALTED||WIP.waitingOn)?`<p class="wip-detail">${rich(WIP.detail)}</p>`:"");
     ph+=`<div class="wip-sub">The chain · ${C.landed} of ${C.M} units landed${C.complete?` · ${C.complete} complete, not merged`:""}${C.extra.length?` · ${esc(C.extra.join(" · "))}`:""}</div><span class="chip-bar" role="img" aria-label="${C.landed} of ${C.M} units landed"><i style="width:${C.pct}%"></i></span>`;
     ph+=`<ol class="chain">${units.map(r=>{ const s=stateOf(r), on=rowActive(r), href=r.unit.issue?boardOf(r.unit.issue)||ghUrl(r.unit.issue):""; const inner=`${esc(r.unit.n!=null?r.unit.n:"")}${r.unit.issue?` · #${esc(r.unit.issue)}`:""} ${esc(r.unit.slug||r.id)}${s!=="pending"?` ${STATES[s].g}`:""}${isNext(r)?` ${TAG_NEXT}`:""}`; const tag=href?`<a href="${esc(href)}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':""} data-sys="${esc(r.system)}">${inner}</a>`:`<span class="u" data-sys="${esc(r.system)}">${inner}</span>`; return `<li class="${s==="pending"?"pending":"done"}${on&&!LANDED?(PAUSED||runPaused(r)?" held":" glow"):isNext(r)?" upnext":""}">${tag}</li>`; }).join("")}</ol>`;
-    h+=ph+factsHtml+`</div>`;
+    const phase=ph+factsHtml+`</div>`; let rowN=0;
     legend.push(sysKey(units.map(r=>r.system)),units.some(r=>stateOf(r)==="pending")?`<span><i class="pln"></i>dashed: unit not built, or not started</span>`:"");
     [...new Set(units.map(stateOf))].filter(k=>k!=="pending").forEach(k=>legend.push(`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`));
     if(C.M) legend.push(`<span><i class="bar"></i>green bar: units landed of all units</span>`);
     /* one bubble per unit in progress, with its own run as its board last showed it */
-    act.forEach(r=>{ const L=runOf(r), k=L?runKind(L):null, held=k==="halted";
-      let b=`<div class="wb unit${held?" halted":k==="escalated"?" escalated":""}" data-row="${esc(r.id)}"><div class="wb-t"><span class="k">In progress · unit ${esc(r.unit.n)}</span><span>${uref(r)}</span></div>`;
+    act.forEach(r=>{ const L=runOf(r), k=L?runKind(L):null, held=k==="halted"; rowN++;
+      let b=`<div class="wb unit${held?" halted":k==="escalated"?" escalated":""}" data-row="${esc(r.id)}" style="--r:${rowN}"><div class="wb-t"><span class="k">In progress · unit ${esc(r.unit.n)}</span><span>${uref(r)}</span></div>`;
       if(!L) b+=`<p class="note">Its run is not mirrored here: its board is not in this tree yet.</p>`;
       else {
         b+=`<div class="run">${runPill(L)}${runAt(L)}</div>`;
@@ -1832,18 +1982,21 @@ function renderWip(){
           L.branch&&!unitLanded(r)?`<span><span class="l">branch</span><code>${esc(L.branch)}</code></span>`:""].filter(Boolean);
         if(f.length) b+=`<div class="wip-facts">${f.join("")}</div>`;
       }
-      h+=b+`</div>`; });
-    /* the step panel of each unit in progress whose run is mirrored, in place of the up-next bubble (plan/RULES.md §3): up next stays on
-       the chain and the unit row; with no unit's run to show, the up-next bubble stays */
+      h+=b+`</div>`;
+      /* the unit's step panel beside it, from its mirror (plan/RULES.md §3), in place of the up-next bubble */
+      if(L) h+=stepPanel(L,{label:`Unit ${r.unit.n} · #${r.unit.issue}: its step`,keys:pkeys,rowName:id=>(L.rowNames&&L.rowNames[id])||id,parent:PLAN.issue,branch:L.branch,row:rowN}); });
+    /* up next stays on the chain and the unit row while a unit's step panel is drawn (plan/RULES.md §3); with no unit's run to show, the
+       up-next bubble stays */
     const panels=act.filter(runOf);
-    panels.forEach(r=>{ const L=runOf(r); h+=stepPanel(L,{title:`Unit ${esc(r.unit.n)} · #${esc(r.unit.issue)} · its step in detail`,keys:pkeys,rowName:id=>(L.rowNames&&L.rowNames[id])||id,parent:PLAN.issue,branch:L.branch}); });
-    if(NEXT_ROW&&!panels.length){ h+=`<div class="wb next upnext" data-sys="${esc(NEXT_ROW.system||"")}"><div class="wb-t"><span class="k">Up next · unit ${esc(NEXT_ROW.unit.n)}</span><span>${uref(NEXT_ROW)}</span> ${TAG_NEXT} ${blockedPill(NEXT_ROW)}</div><p class="note">Not started${openBlockers(NEXT_ROW).length?": it starts once its blockers have landed":""}.</p></div>`; }
+    /* up next takes the panel's share beside a unit whose run is not mirrored, else the unit's and the panel's */
+    if(NEXT_ROW&&!panels.length){ const beside=act.length>0; if(!beside) rowN++; h+=`<div class="wb next upnext${beside?" beside":""}" data-sys="${esc(NEXT_ROW.system||"")}" style="--r:${beside?1:rowN}"><div class="wb-t"><span class="k">Up next · unit ${esc(NEXT_ROW.unit.n)}</span><span>${uref(NEXT_ROW)}</span> ${TAG_NEXT} ${blockedPill(NEXT_ROW)}</div><p class="note">Not started${openBlockers(NEXT_ROW).length?": it starts once its blockers have landed":""}.</p></div>`; }
     if(NEXT_ROW) legend.push(KEY_NEXT(NEXT_ROW));
     /* waiting on you: only while the tracking issue or a unit's run is halted */
     const waits=[...(HALTED?[`<li><b>#${esc(PLAN.issue)}</b>, the tracking issue: ${rich(WIP.waitingOn||WIP.detail||"(not stated)")}${WIP.resume?`<small>resumes at ${esc(WIP.resume)}</small>`:""}</li>`]:[]),
       ...act.filter(runHeld).map(r=>{ const L=runOf(r); return `<li>${uref(r)}: ${rich(L.waitingOn||L.detail||"(not stated)")}${L.resume?`<small>its run resumes at ${esc(L.resume)}</small>`:""}</li>`; })];
-    if(waits.length){ h+=`<div class="wb wait"><div class="wb-t"><span class="k">⏸ Waiting on you</span></div><ul>${waits.join("")}</ul></div>`; legend.push(`<span><i class="wait"></i>yellow bubble: waiting on you, and for what</span>`); }
-    h=`<div class="wipgrid">${h}</div>`;
+    if(waits.length){ rowN++; h+=`<div class="wb wait" style="--r:${rowN}"><div class="wb-t"><span class="k">⏸ Waiting on you</span></div><ul>${waits.join("")}</ul></div>`; legend.push(`<span><i class="wait"></i>yellow bubble: waiting on you, and for what</span>`); }
+    /* the phase runs down beside every row the others take; alone, it takes the whole row */
+    h=`<div class="wipgrid">${phase.replace(/^<div class="wb phase([^"]*)"/,(m,c)=>`<div class="wb phase${c}${rowN?"":" solo"}" style="--rows:${Math.max(rowN,1)}"`)}${h}</div>`;
   } else {
     h=headLine;
     if(HALTED) h+=`<p class="wip-wait">Waiting on the user: ${rich(WIP.waitingOn||WIP.detail||"(not stated)")}</p>`;
@@ -1889,15 +2042,45 @@ function renderKpis(){
   const changes=ROWS.reduce((n,r)=>n+((r.asBuilt||{}).changes||[]).length,0);
   const b=PLAN.baseline||{}, a=PLAN.asBuilt;
   const days=(a&&a.date&&b.date)?Math.round((Date.parse(a.date)-Date.parse(b.date))/86400000):null;
-  const bar=`<div class="seg-bar" aria-hidden="true">${states.filter(([,n])=>n).map(([k,n])=>`<i class="${STATES[k].cls}" style="flex:${n}"></i>`).join("")}${left?`<i class="left" style="flex:${left}"></i>`:""}</div>`;
-  const qa=WIP.qa||[];
+  /* The segmented bars (plan/RULES.md §2, "The KPI tiles"), one per tile, each segment named in the tiles' legend (GUIDANCE.md §2):
+     Rows / Units one segment per row group, sized by its rows, in its system's colour (a group whose rows span several systems is cut
+     by system); Options weighed by verdict, as the Considered column colours them (a deferred option still open dashed, one settled in
+     column 4 its settled colour); Verdicts build, left for later, not yet written (dashed); As built every state with its count; QA
+     passes one slot per pass allowed, filled in order by each pass's result. */
+  const segBar=(parts,label)=>`<div class="seg-bar" role="img" aria-label="${esc(label)}">${parts.filter(p=>p.n>0).map(p=>`<i class="${p.cls||""}" style="flex:${p.n}${p.c?`;background:${p.c}`:""}"${p.t?` title="${esc(p.t)}"`:""}></i>`).join("")}</div>`;
+  const bar=segBar([...states.filter(([,n])=>n).map(([k,n])=>({n,cls:STATES[k].cls+(STATES[k].dash?" dash":""),t:`${n} ${STATES[k].label}`})),{n:left,cls:"left",t:`${left} left for later`}],`As built: ${[...states.filter(([,n])=>n).map(([k,n])=>`${n} ${STATES[k].label}`),left?`${left} left for later`:""].filter(Boolean).join(", ")}`);
+  const gparts=[]; grouped().forEach(G=>{ const by2=new Map(); G.rows.forEach(r=>{ const c=sysColour(r.system); if(!by2.has(c)) by2.set(c,{n:0,names:new Set()}); by2.get(c).n++; const so=sysOf(r.system); by2.get(c).names.add(so&&so.slot>=1&&so.slot<=6?(so.top||so.name):`${sysName(r.system)} (no system colour)`); });
+    by2.forEach((v,c)=>gparts.push({n:v.n,c,names:[...v.names],t:`${G.name||"rows"}: ${v.n} · ${[...v.names].join(", ")}`})); });
+  const optParts=["accepted","partial","deferred","declined","settled-accepted","settled-partial","settled-declined"].map(k=>({k,n:0}));
+  OPTS.forEach(x=>{ const {def,settled}=optDef(x.row,x.opt), k=settled?"settled-"+(settled.verdict||"accepted"):x.opt.verdict, p=optParts.find(q=>q.k===k)||optParts.find(q=>q.k==="declined"); p.n++; p.cls=def.cls+(def.dash?" dash":""); });
+  const qa=WIP.qa||[], qmax=Math.max(qa.length,Number.isInteger(WIP.qaMax)&&WIP.qaMax>0?WIP.qaMax:3);
+  const qaParts=[...qa.map(p=>({n:1,cls:QA_RES[qaResult(p)].cls,t:`pass ${p.pass}: ${QA_RES[qaResult(p)].label}`})),...Array.from({length:qmax-qa.length},()=>({n:1,cls:"slot",t:"a pass not used"}))];
+  KPI_DRAWN={rows:gparts,opts:optParts.filter(p=>p.n),verdicts:[vbuild,leave,vopen],states:states.filter(([,n])=>n).map(([k])=>k),left,qa:LANDED?[]:[...new Set(qa.map(qaResult))],slots:!LANDED&&qmax>qa.length};
   $("#kpis").innerHTML=[
-    `<div class="kpi"><div class="l">${TRACKING?"Units":"Rows"}</div><div class="v">${ROWS.length}</div><div class="s">${groups.length?`${groups.length} group${groups.length>1?"s":""}: ${groups.map(esc).join(", ")}`:"no rows yet"}</div></div>`,
-    `<div class="kpi"><div class="l">Options weighed</div><div class="v">${OPTS.length}</div><div class="s">${["accepted","partial","deferred","declined"].filter(by).map(v=>`${by(v)} ${v}`).join(" · ")||"none yet"}</div></div>`,
-    `<div class="kpi"><div class="l">Verdicts</div>${vbuild+leave?`<div class="v">${vbuild} <small>build</small></div><div class="s">${leave} left for later${vopen?` · ${vopen} not yet written`:""}</div>`:`<div class="v">0${ROWS.length?` <small>of ${ROWS.length}</small>`:""}</div><div class="s">none written yet</div>`}</div>`,
+    `<div class="kpi"><div class="l">${TRACKING?"Units":"Rows"}</div><div class="v">${ROWS.length}</div><div class="s">${groups.length?`${groups.length} group${groups.length>1?"s":""}: ${groups.map(esc).join(", ")}`:"no rows yet"}</div>${ROWS.length?segBar(gparts,`${TRACKING?"Units":"Rows"} by group: ${gparts.map(p=>p.t).join("; ")}`):""}</div>`,
+    `<div class="kpi"><div class="l">Options weighed</div><div class="v">${OPTS.length}</div><div class="s">${["accepted","partial","deferred","declined"].filter(by).map(v=>`${by(v)} ${v}`).join(" · ")||"none yet"}</div>${OPTS.length?segBar(optParts,`Options weighed: ${optParts.filter(p=>p.n).map(p=>`${p.n} ${p.k.replace("settled-","deferred, settled ")}`).join(", ")}`):""}</div>`,
+    `<div class="kpi"><div class="l">Verdicts</div>${vbuild+leave?`<div class="v">${vbuild} <small>build</small></div><div class="s">${leave} left for later${vopen?` · ${vopen} not yet written`:""}</div>`:`<div class="v">0${ROWS.length?` <small>of ${ROWS.length}</small>`:""}</div><div class="s">none written yet</div>`}${ROWS.length?segBar([{n:vbuild,cls:"ink",t:`${vbuild} build`},{n:leave,cls:"left",t:`${leave} left for later`},{n:vopen,cls:"dash",t:`${vopen} not yet written`}],`Verdicts: ${vbuild} build, ${leave} left for later, ${vopen} not yet written`):""}</div>`,
     `<div class="kpi"><div class="l">As built</div><div class="v">${built} <small>/ ${counted.length} ${TRACKING?"units landed":"rows built"}</small></div><div class="s">${[...states.filter(([,n])=>n).map(([k,n])=>`${n} ${STATES[k].label}`),left?`${left} left for later`:""].filter(Boolean).join(" · ")||"—"}${changes?` · ${changes} changes`:""}</div>${ROWS.length?bar:""}</div>`,
-    `<div class="kpi"><div class="l">${LANDED?"Timeline":"QA passes"}</div><div class="v">${LANDED?(days==null?"—":days===0?"same day":`${days} day${days===1?"":"s"}`):`${qa.length}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}`}</div><div class="s">${LANDED?`${b.date?`baseline ${when(b.date)}`:""}${a&&a.date?` → built ${when(a.date)}`:""}`:(qa.length?esc(qa.map(p=>`pass ${p.pass}: ${(QA[p.verdict]||QA.running).label}`).join(" · ")):"no qa pass yet")}</div></div>`].join("");
+    `<div class="kpi"><div class="l">${LANDED?"Timeline":"QA passes"}</div><div class="v">${LANDED?(days==null?"—":days===0?"same day":`${days} day${days===1?"":"s"}`):`${qa.length}${WIP.qaMax?` <small>of at most ${esc(WIP.qaMax)}</small>`:""}`}</div><div class="s">${LANDED?`${b.date?`baseline ${when(b.date)}`:""}${a&&a.date?` → built ${when(a.date)}`:""}`:(qa.length?esc(qa.map(p=>`pass ${p.pass}: ${(QA[p.verdict]||QA.running).label}`).join(" · ")):"no qa pass yet")}</div>${LANDED?"":segBar(qaParts,`QA passes: ${qa.length} of ${qmax} slots used`)}</div>`,
+    kpiKey()].join("");
 }
+/* A qa pass's result on its slot: running (accent), passed (green), changes requested with minor findings only (yellow: every
+   finding minor by severity, or fixed on the spot), changes requested with other findings (red). */
+const QA_RES={pass:{cls:"good",g:"✓",label:"passed"},minor:{cls:"warning",g:"~",label:"minor findings only"},other:{cls:"critical",g:"✕",label:"other findings"},running:{cls:"accent",g:"…",label:"running"}};
+function qaResult(p){ if(!p||p.verdict==="running"||!QA[p.verdict]) return "running"; if(p.verdict==="approved") return "pass";
+  const sv=p.severity&&typeof p.severity==="object"?p.severity:{}, other=Object.entries(sv).filter(([k])=>k!=="minor").reduce((n,[,c])=>n+(+c||0),0);
+  return (sv.minor>0&&!other)||p.route==="on-the-spot"?"minor":"other"; }
+let KPI_DRAWN=null;
+/* The tiles' legend: exactly the segments their bars drew. */
+function kpiKey(){ const D=KPI_DRAWN; if(!D||!ROWS.length&&!OPTS.length&&!D.qa.length&&!D.slots) return "";
+  const k=(cls,word,st)=>`<span><i class="segk ${cls}"${st?` style="background:${st}"`:""}></i>${word}</span>`, out=[];
+  if(D.rows.length){ const seen=new Map(); D.rows.forEach(p=>{ if(!seen.has(p.c)) seen.set(p.c,new Set()); p.names.forEach(x=>seen.get(p.c).add(x)); });
+    out.push(`<span class="kk">${TRACKING?"Units":"Rows"}</span><span>a segment per group, sized by its ${TRACKING?"units":"rows"}, in its system's colour:</span>`,...[...seen].map(([c,ns])=>k("",esc([...ns].join(", ")),c))); }
+  if(D.opts.length){ out.push(`<span class="kk">Options</span>`); D.opts.forEach(p=>{ const v=p.k.replace("settled-",""), d=OPT[v]||OPT.declined; out.push(k(p.cls,`${esc(d.g)} ${p.k.startsWith("settled-")?`deferred → ${esc(d.label)}`:esc(d.label)}${v==="deferred"?" (dashed: open)":""}`)); }); }
+  if(D.verdicts.some(n=>n)){ out.push(`<span class="kk">Verdicts</span>`); if(D.verdicts[0]) out.push(k("ink","build")); if(D.verdicts[1]) out.push(k("left","left for later")); if(D.verdicts[2]) out.push(k("dash","not yet written (dashed: pending)")); }
+  if(D.states.length||D.left){ out.push(`<span class="kk">As built</span>`); D.states.forEach(s=>out.push(k(STATES[s].cls+(STATES[s].dash?" dash":""),`${esc(STATES[s].g)} ${esc(STATES[s].label)}`))); if(D.left) out.push(k("left","left for later")); }
+  if(D.qa.length||D.slots){ out.push(`<span class="kk">QA passes</span>`); D.qa.forEach(x=>out.push(k(QA_RES[x].cls,`${esc(QA_RES[x].g)} ${esc(QA_RES[x].label)}`))); if(D.slots) out.push(k("slot","a pass not used")); }
+  return `<div class="key kpikey" id="kpi-key">${out.join("")}</div>`; }
 
 /* ---------- Timeline board ---------- */
 /* A unit row's title (plan/RULES.md §1, "The unit row"): "1. #61 Shared build logic", where #61 opens the GitHub issue and the
@@ -1909,10 +2092,16 @@ function cellGap(r){ const g=r.gap||{}; return `<div class="cell gap${cellGlow(r
 function optButton(r,o){ const {def,word}=optDef(r,o); return `<button class="opt ${def.cls}${def.dash?" dashed":""}" data-row="${esc(r.id)}" data-opt="${esc(o.id)}" aria-label="${esc(word)}: ${esc(o.name)}"><i aria-hidden="true">${def.g}</i><span><span class="vw">${esc(word)}</span><span>${codeOnly(o.name)}</span></span></button>`; }
 function cellConsidered(r){ const os=r.options||[]; const acc=os.find(o=>o.verdict==="accepted"||(o.verdict==="partial"&&o.chosen))||os[0]||{}, rs=RROWS.get(r.id);
   return `<div class="cell considered${rs?` rs rs-${rs}`:""}${cellGlow(r.id,"considered")}" role="group" data-row="${esc(r.id)}" data-col="considered" aria-label="Considered: ${esc(r.name)}${rs?`, research ${esc(RS[rs].label)}`:""}"><div class="kick">2 · CONSIDERED <span class="kind">${os.length}</span>${rs?` ${rsPill(rs)}`:""}</div>${os.length?`<ul class="opts">${os.map(o=>`<li>${optButton(r,o)}</li>`).join("")}</ul>`:`<div class="sum">Not yet written.</div>`}${acc.link?`<div class="meta">${moreLink(acc.link,"alternatives")}</div>`:""}</div>`; }
-function cellVerdict(r){ const v=r.verdict||{}, w=verdictOf(r), leave=w==="leave", chg=!w&&CHARGING(); return `<div class="cell verdict${leave?" leave":""}${chg?` charging${PAUSED?" still":""}`:""}${cellGlow(r.id,"verdict")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="verdict" aria-label="Verdict: ${esc(r.name)}${w?"":", not yet written"}"><div class="kick">3 · VERDICT${w?` <span class="kind">${leave?"leave as is":"build"}</span>`:""}</div><div class="sum">${rich(v.summary||"Not yet written.")}</div><div class="meta"><span>${(v.steps||[]).length} steps · ${(v.tests||[]).length} tests · ${(v.risks||[]).length} risks</span>${moreLink(v.link,"plan")}</div></div>`; }
+/* the Verdict cell: its statements (a list, each with its plan reference), or the paragraph a verdict written before them keeps */
+const verdictBody=r=>{ const v=r.verdict||{}; return stmtsHtml(r,"verdict")||rich(v.summary||"Not yet written."); };
+/* the As built cell: one statement per verdict statement, marked with its adaptation; else the summary */
+const builtBody=(r,st)=>{ const b=r.asBuilt||{}; return stmtsHtml(r,"built")||rich(b.summary||(st==="pending"?"Not built yet.":"")); };
+/* the as-built cell's or card's marks: its own glow, the column's (colglow), or the up-next glow of the next unit */
+const builtMark=r=>{ const g=cellGlow(r.id,"built"); return g+(/ glow| held/.test(g)||!isNext(r)?"":" upnext"); };
+function cellVerdict(r){ const v=r.verdict||{}, w=verdictOf(r), leave=w==="leave", chg=!w&&CHARGING(); return `<div class="cell verdict${leave?" leave":""}${chg?` charging${PAUSED?" still":""}`:""}${cellGlow(r.id,"verdict")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="verdict" aria-label="Verdict: ${esc(r.name)}${w?"":", not yet written"}"><div class="kick">3 · VERDICT${w?` <span class="kind">${leave?"leave as is":"build"}</span>`:""}</div><div class="sum">${verdictBody(r)}</div><div class="meta"><span>${(v.steps||[]).length} steps · ${(v.tests||[]).length} tests · ${(v.risks||[]).length} risks</span>${moreLink(v.link,"plan")}</div></div>`; }
 function cellBuilt(r){ const st=stateOf(r), b=r.asBuilt||{}, S=STATES[st]; const extra=st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"";
   const link=b.link||(r.unit&&(r.unit.board||r.unit.folder))||"";
-  return `<div class="cell built ${S.cls}${st==="pending"?" pending":""}${st==="deferred"?" deferred":""}${cellGlow(r.id,"built")||(isNext(r)?" upnext":"")}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="built" aria-label="As built: ${esc(r.name)}, ${S.label}${isNext(r)?", up next":""}${runOf(r)?`, its run: ${esc(runShort(runOf(r)).slice(2))}`:""}"><div class="kick">4 · AS BUILT ${badge(st,extra)}${nextTags(r)}</div><div class="sum">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</div>${runLine(r)}<div class="meta"><span>${(b.changes||[]).length} changes · ${(b.commits||[]).length} commits</span>${moreLink(link,r.unit?(r.unit.board?"board":"folder"):"record")}</div></div>`; }
+  return `<div class="cell built ${S.cls}${st==="pending"?" pending":""}${st==="deferred"?" deferred":""}${builtMark(r)}" role="button" tabindex="0" data-row="${esc(r.id)}" data-col="built" aria-label="As built: ${esc(r.name)}, ${S.label}${isNext(r)?", up next":""}${runOf(r)?`, its run: ${esc(runShort(runOf(r)).slice(2))}`:""}"><div class="kick">4 · AS BUILT ${badge(st,extra)}${nextTags(r)}</div><div class="sum">${builtBody(r,st)}</div>${runLine(r)}<div class="meta"><span>${(b.changes||[]).length} changes · ${(b.commits||[]).length} commits</span>${moreLink(link,r.unit?(r.unit.board?"board":"folder"):"record")}</div></div>`; }
 const GROUP_ORDER=["Code","Tests","Documents","Release","Left for later"];
 function grouped(){ const groups=[]; ROWS.forEach(r=>{ const g=r.group||""; let G=groups.find(x=>x.name===g); if(!G){ G={name:g,rows:[]}; groups.push(G); } G.rows.push(r); });
   /* an issue board orders its groups Code, Tests, Documents, Release, Left for later; a tracking board keeps landing order */
@@ -1922,19 +2111,21 @@ function renderBoard(){
   /* one line, for what the board does not draw (the columns, the colours and the marks are in the heads and the legend) */
   $("#timeline-lede").textContent=TRACKING
     ?"One row per unit, in landing order; each unit is planned and built on its own board. Click a cell for its detail."
-    :"Click a cell or an option for its detail and the Markdown section that holds the rest.";
+    :"Click a cell, an option or a statement's (§) reference for its detail and the Markdown section that holds the rest.";
   const ms=c=>(PLAN.milestones||[]).find(m=>m.column===c);
   let h=`<div class="colhead" aria-hidden="true"></div>`+COLS.map((c,i)=>{ const m=ms(c.key);
     const dt=m?`${esc(m.label)}${m.date?` · <span class="nw">${when(m.date)}</span>`:""}${m.ref?` · ${refHtml(m.ref)}`:""}`:(c.key==="built"&&!LANDED?"not landed":"");
-    return `<div class="colhead phase${CURRENT.includes(c.key)?glowCls(true):""}" data-col="${c.key}"><div class="ph"><b>${i+1}</b>${esc(c.label).toUpperCase()}</div><div class="q">${esc(c.q)}</div>${dt?`<div class="dt">${dt}</div>`:""}</div>`; }).join("");
+    return `<div class="colhead phase${CURRENT.includes(c.key)?" colon":""}" data-col="${c.key}"><div class="ph"><b>${i+1}</b>${esc(c.label).toUpperCase()}</div><div class="q">${esc(c.q)}</div>${dt?`<div class="dt">${dt}</div>`:""}</div>`; }).join("");
   if(!ROWS.length) h+=`<p class="lede" style="grid-column:1/-1;margin-top:12px">No rows yet: the Gap column is written when the research is verified, the rows with it.</p>`;
   grouped().forEach(G=>{ if(G.name) h+=`<div class="grouphead">${esc(G.name)} <small>${G.rows.length} ${TRACKING?"unit":"row"}${G.rows.length>1?"s":""}</small></div>`;
     G.rows.forEach(r=>{ h+=`<div class="rowlab" data-sys="${esc(r.system||"")}" id="row-${esc(r.id)}"><div class="nm">${rowTitle(r)}</div>${r.where?`<div class="wh">${esc(r.where)}</div>`:""}<div class="sy"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(sysName(r.system))}</div></div>`+cellGap(r)+cellConsidered(r)+cellVerdict(r)+cellBuilt(r); }); });
   $("#board").innerHTML=h; paint($("#board")); layoutBands();
   document.querySelectorAll("#board .cell[role=button]").forEach(c=>{ const go=()=>select(c.dataset.row,c.dataset.col); c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
   document.querySelectorAll("#board .opt").forEach(o=>o.addEventListener("click",()=>select(o.dataset.row,"considered",o.dataset.opt)));
+  bindRefs($("#board"));
   const used=[...new Set(OPTS.map(x=>optDef(x.row,x.opt).word.startsWith("deferred →")?"settled":x.opt.verdict))];
-  const usedSt=[...new Set(ROWS.map(stateOf))];
+  /* the states drawn: each row's, and each as-built statement's mark */
+  const usedSt=[...new Set([...ROWS.map(stateOf),...ROWS.flatMap(r=>stmtsOf(r.asBuilt).map(s=>s.state)).filter(k=>STMT_STATES.includes(k))])];
   $("#timeline-key").innerHTML=sysKey(ROWS.map(r=>r.system))
     +["accepted","partial","deferred","declined"].filter(v=>used.includes(v)).map(v=>`<span>${pill(OPT[v])} ${esc(OPT[v].desc)}</span>`).join("")
     +(used.includes("settled")?`<span>${pill({...OPT.accepted},"","deferred → accepted")} settled in column 4</span>`:"")
@@ -1957,7 +2148,7 @@ function kindKeys(){ const chip=w=>`<b class="kind">${esc(w)}</b>`;
 function layoutBands(){ const b=$("#board"); if(!b) return; b.querySelectorAll(".band").forEach(x=>x.remove());
   if(getComputedStyle(b).display!=="grid"||!b.offsetWidth) return;
   const pad=Math.max(4,Math.floor((parseFloat(getComputedStyle(b).columnGap)||14)/2)-3);
-  b.querySelectorAll(".colhead.phase").forEach(c=>{ const d=document.createElement("div"); d.className="band"; d.setAttribute("aria-hidden","true");
+  b.querySelectorAll(".colhead.phase").forEach(c=>{ const d=document.createElement("div"); d.className="band"+colGlowCls(c.dataset.col); d.setAttribute("aria-hidden","true");
     d.style.cssText=`left:${c.offsetLeft-pad}px;width:${c.offsetWidth+2*pad}px;top:0;bottom:0`; b.prepend(d); }); }
 if(window.ResizeObserver){ let w=-1, cw=-1; new ResizeObserver(()=>{ const b=$("#board"); if(b&&b.offsetWidth!==w){ w=b.offsetWidth; layoutBands(); }
   const f=$("#chain-frame"); if(f&&CUR_TAB==="landing-order"&&f.clientWidth!==cw){ cw=f.clientWidth; const sel=(document.querySelector(".chainsvg .unit.sel")||{}).dataset; renderChain(); if(sel&&sel.row){ const g=document.querySelector(`.chainsvg .unit[data-row="${CSS.escape(sel.row)}"]`); if(g) g.classList.add("sel"); } } }).observe(document.body); }
@@ -1972,9 +2163,19 @@ function select(rowId,col,optId){
   if(col==="gap") inspectGap(r); else if(col==="considered") inspectOption(r,(r.options||[]).find(o=>o.id===optId)||(r.options||[])[0]); else if(col==="verdict") inspectVerdict(r); else inspectBuilt(r);
   try{ history.replaceState(null,"","#"+rowId+"."+col+(optId?"."+optId:"")); }catch(e){}
 }
+/* A statement's reference (plan/RULES.md §2, "Statements"): a plain click shows, in the inspector, the excerpt embed.js copied from the
+   plan section it rests on, beside the link that opens the section; a modified click (a new tab, a new window) follows the link. */
+function bindRefs(root){ (root||document).querySelectorAll("a.sref").forEach(a=>a.addEventListener("click",e=>{ if(e.button!==0||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey) return;
+  e.preventDefault(); e.stopPropagation(); const cell=document.querySelector(`#board .cell[data-row="${CSS.escape(a.dataset.row)}"][data-col="${a.dataset.col}"]`);
+  if(a.closest("#board")){ document.querySelectorAll("#board .cell.sel, #board .opt.sel").forEach(x=>x.classList.remove("sel")); if(cell) cell.classList.add("sel"); }
+  inspectRef(a.dataset.row,a.dataset.col,+a.dataset.i); try{ history.replaceState(null,"","#"+a.dataset.row+"."+a.dataset.col+".s"+a.dataset.i); }catch(x){} })); }
+function inspectRef(rowId,col,i){ const r=ROWS.find(x=>x.id===rowId); if(!r) return; const s=stmtsRaw(col==="verdict"?r.verdict:r.asBuilt)[i]; if(!stmtOk(s)) return;
+  INSPECTED={k:"ref",row:rowId,col,i};
+  const e=s.excerpt&&typeof s.excerpt==="object"&&s.excerpt.heading?s.excerpt:null, file=String(s.ref||"").split("#")[0], what=/(^|\/)plan(-[\w-]+)?\.md$/.test(file)?"plan":/(^|\/)architecture\.md$/.test(file)?"architecture":/(^|\/)final-implementation\.md$/.test(file)?"as-built record":"document";
+  inspect(`<div class="kicker">${col==="verdict"?"3 · VERDICT":"4 · AS BUILT"} · STATEMENT ${i+1} · ${esc(stmtLabel(s))}</div><div class="name">${esc(r.name)}</div><div class="vis">${col==="built"&&STATES[s.state]?pill(STATES[s.state]):""}${whereOf(r)}</div><p class="lead">${rich(s.text)}</p><dl><dt>The ${what} section it rests on</dt><dd>${e?`<blockquote class="excerpt"><b>${rich(e.heading)}</b>${e.paragraph?`<p>${rich(e.paragraph)}</p>`:"<p>No paragraph under the heading.</p>"}</blockquote>`:`<p>Not copied yet: embed.js copies the section's heading and first paragraph.</p>`}</dd><dt>Open the section</dt><dd>${refHtml(s.ref,`${file} › ${e?e.heading.replace(/`/g,""):String(s.ref).split("#")[1]||""}`)}</dd></dl>`); }
 const whereOf=r=>`<span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(sysName(r.system))}${r.where?` · <code>${esc(r.where)}</code>`:""}`;
 const list=(items,f)=>items&&items.length?`<ul>${items.map(x=>`<li>${f?f(x):rich(x)}</li>`).join("")}</ul>`:"";
-function bindInspector(){ document.querySelectorAll("#insp-body .opt").forEach(b=>b.addEventListener("click",()=>select(b.dataset.row,"considered",b.dataset.opt))); paint($("#insp-body")); }
+function bindInspector(){ document.querySelectorAll("#insp-body .opt").forEach(b=>b.addEventListener("click",()=>select(b.dataset.row,"considered",b.dataset.opt))); bindRefs($("#insp-body")); paint($("#insp-body")); }
 function inspectGap(r){ const g=r.gap||{}, b=PLAN.baseline||{};
   inspect(`<div class="kicker">1 · GAP${g.kind?` · ${esc(g.kind).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${rich(g.summary||"")}</p>${g.detail?`<p>${rich(g.detail)}</p>`:""}<dl>${g.evidence&&g.evidence.length?`<dt>Evidence at ${esc(b.sha||"the baseline")}</dt><dd>${list(g.evidence)}</dd>`:""}${g.source?`<dt>Source</dt><dd>${refHtml(g.source)}</dd>`:""}${g.link?`<dt>Detail</dt><dd>${refHtml(g.link)}</dd>`:""}</dl>`); }
 function inspectOption(r,o){ if(!o){ inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${esc(r.name)}</div><p>No options recorded yet.</p>`); return; }
@@ -1982,9 +2183,9 @@ function inspectOption(r,o){ if(!o){ inspect(`<div class="kicker">2 · CONSIDERE
   const whyLabel={accepted:"Why it was taken",partial:"What was taken, and what wasn't",deferred:"Why it was left open",declined:"Why it was declined"}[o.verdict]||"Why";
   inspect(`<div class="kicker">2 · CONSIDERED</div><div class="name">${codeOnly(o.name)}</div><div class="vis">${pill(def,"",word)} ${esc(r.name)}</div>${o.summary?`<p class="lead">${rich(o.summary)}</p>`:""}<dl>${o.why?`<dt>${whyLabel}</dt><dd>${rich(o.why)}</dd>`:""}${settled?`<dt>Settled in column 4</dt><dd>${rich(settled.change.what)}${settled.change.why?` — ${rich(settled.change.why)}`:""}${settled.change.ref?` · ${refHtml(settled.change.ref)}`:""}</dd>`:""}${o.wins?`<dt>Would have won if</dt><dd>${rich(o.wins)}</dd>`:""}${o.source?`<dt>Source</dt><dd>${refHtml(o.source)}</dd>`:""}${o.link?`<dt>Detail</dt><dd>${refHtml(o.link)}</dd>`:""}${others.length?`<dt>Weighed against</dt><dd><ul class="opts">${others.map(x=>`<li>${optButton(r,x)}</li>`).join("")}</ul></dd>`:""}</dl>`); }
 function inspectVerdict(r){ const v=r.verdict||{}, w=verdictOf(r);
-  inspect(`<div class="kicker">3 · VERDICT${w?` · ${w==="leave"?"LEAVE AS IS":"BUILD"}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${w?rich(v.summary):"Not yet written."}</p>${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
+  inspect(`<div class="kicker">3 · VERDICT${w?` · ${w==="leave"?"LEAVE AS IS":"BUILD"}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div>${w&&stmtsOf(v).length?stmtsHtml(r,"verdict"):`<p class="lead">${w?rich(v.summary):"Not yet written."}</p>`}${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
 function inspectBuilt(r){ const b=r.asBuilt||{}, st=stateOf(r), a=PLAN.asBuilt||{}, u=r.unit;
-  inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")} ${esc(STATES[st].desc)}</div><p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p><dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||"")}${u.blockedBy&&u.blockedBy.length?` · blocked by ${u.blockedBy.map(n=>ilink(n)).join(", ")}`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch&&!unitLanded(r)?`<br>branch <code>${esc(u.branch)}</code>`:""}${u.board?"":`<br>${u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}`}</dd>`:""}${runOf(r)?inspectRun(r):""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
+  inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")} ${esc(STATES[st].desc)}</div>${stmtsOf(b).length?stmtsHtml(r,"built"):`<p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>`}<dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||"")}${u.blockedBy&&u.blockedBy.length?` · blocked by ${u.blockedBy.map(n=>ilink(n)).join(", ")}`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch&&!unitLanded(r)?`<br>branch <code>${esc(u.branch)}</code>`:""}${u.board?"":`<br>${u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}`}</dd>`:""}${runOf(r)?inspectRun(r):""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
 /* the inspector's entry for a unit's run, from its mirror: the pill, its qa passes, the step, its steps (no mark) and its detail */
 function inspectRun(r){ const L=runOf(r);
   return `<dt>Its run now · from its board</dt><dd><div class="run">${runPill(L)}${runAt(L)}${(L.qa||[]).map(qaPill).join("")}</div>step <b>${esc(L.step||"—")}</b>${L.since?` since ${when(L.since)}`:""}${L.updated?` · updated ${when(L.updated)}`:""}${L.branch?` · branch <code>${esc(L.branch)}</code>`:""}${runBlock(r,true)}</dd>`; }
@@ -2010,14 +2211,16 @@ function renderBuilt(){
   $("#built-ctl").innerHTML=`<label>show <span class="seg">${keys.filter(k=>k==="all"||counts[k]).map(k=>`<button data-f="${k}" aria-pressed="${builtFilter===k}">${k==="all"?"all":STATES[k].label} ${counts[k]}</button>`).join("")}</span></label>`;
   document.querySelectorAll("#built-ctl button").forEach(b=>b.addEventListener("click",()=>{ builtFilter=b.dataset.f; renderBuilt(); }));
   const rows=ROWS.filter(r=>builtFilter==="all"||stateOf(r)===builtFilter);
+  /* a column address glows round the cards as a whole (plan/RULES.md §3), never each card */
+  $("#built-list").className="bcards"+(CURRENT.includes("built")?" colbox"+colGlowCls("built"):"");
   $("#built-list").innerHTML=rows.length?rows.map(r=>{ const b=r.asBuilt||{}, st=stateOf(r);
-    return `<div class="bcard st-${st}${cellGlow(r.id,"built")||(isNext(r)?" upnext":"")}" data-sys="${esc(r.system||"")}" data-row="${esc(r.id)}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${STATES[st].label}${isNext(r)?", up next":""}"><div class="bh"><span class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</span>${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")}${nextTags(r)}${r.where?`<span class="wh">${esc(r.where)}</span>`:""}</div><p>${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>${runLine(r)}${b.changes&&b.changes.length?`<ol class="changes">${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol>`:""}<div class="meta">${[b.commits&&b.commits.length?`commits ${b.commits.map(c=>refHtml(c)).join(" ")}`:"",b.files&&b.files.length?`${b.files.length} file${b.files.length>1?"s":""}`:"",b.verified?"verified":"",moreLink(b.link||(r.unit&&(r.unit.board||r.unit.folder)),r.unit?(r.unit.board?"board":"folder"):"record")].filter(Boolean).join(" · ")}</div></div>`; }).join(""):`<p class="lede">No row in this state.</p>`;
-  paint($("#built-list"));
+    return `<div class="bcard st-${st}${builtMark(r).replace(/ colglow( colheld)?/,"")}" data-sys="${esc(r.system||"")}" data-row="${esc(r.id)}" tabindex="0" role="button" aria-label="${esc(r.name)}: ${STATES[st].label}${isNext(r)?", up next":""}"><div class="bh"><span class="nm">${r.unit&&r.unit.n!=null?`${esc(r.unit.n)} · `:""}${esc(r.name)}</span>${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")}${nextTags(r)}${r.where?`<span class="wh">${esc(r.where)}</span>`:""}</div>${stmtsOf(b).length?stmtsHtml(r,"built"):`<p>${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>`}${runLine(r)}${b.changes&&b.changes.length?`<ol class="changes">${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol>`:""}<div class="meta">${[b.commits&&b.commits.length?`commits ${b.commits.map(c=>refHtml(c)).join(" ")}`:"",b.files&&b.files.length?`${b.files.length} file${b.files.length>1?"s":""}`:"",b.verified?"verified":"",moreLink(b.link||(r.unit&&(r.unit.board||r.unit.folder)),r.unit?(r.unit.board?"board":"folder"):"record")].filter(Boolean).join(" · ")}</div></div>`; }).join(""):`<p class="lede">No row in this state.</p>`;
+  paint($("#built-list")); bindRefs($("#built-list"));
   document.querySelectorAll("#built-list .bcard").forEach(c=>{ const go=()=>{ INSPECTED={k:"built",row:c.dataset.row}; inspectBuilt(ROWS.find(x=>x.id===c.dataset.row)); }; c.addEventListener("click",e=>{ if(e.target.closest("a")) return; go(); }); c.addEventListener("keydown",e=>{ if(e.target!==c) return; if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }); });
   const IC=impactChanges();
   $("#built-impact").innerHTML=IC.html; paint($("#built-impact"));
   document.querySelectorAll("#built-impact a.goimp").forEach(a=>a.addEventListener("click",e=>{ e.preventDefault(); goImpact(a.dataset.imp); }));
-  const usedSt=[...new Set(ROWS.map(stateOf))];
+  const usedSt=[...new Set([...rows.map(stateOf),...rows.flatMap(r=>stmtsOf(r.asBuilt).map(s=>s.state)).filter(k=>STMT_STATES.includes(k))])];
   $("#built-key").innerHTML=sysKey([...new Set([...ROWS.map(r=>r.system),...IC.slugs])])+(IC.muted?`<span><i class="sbar" style="--c:var(--muted)"></i>an impact change of no single system: the impact as a whole, or a party outside this repository's systems</span>`:"")+(IC.recon?`<span>${pill(RECON[IC.recon.state],"",reconWord(IC.recon))} ${esc(RECON[IC.recon.state].desc)}</span>`:"")+(IC.unrecorded?`<span><i class="pln"></i>dashed line: a landed unit whose effect on the impact is not recorded yet</span>`:"")+Object.keys(STATES).filter(k=>usedSt.includes(k)).map(k=>`<span>${badge(k)} ${esc(STATES[k].desc)}</span>`).join("")+(usedSt.some(k=>STATES[k].dash)||!ROWS.length?`<span><i class="pln"></i>dashed card: nothing built</span>`:"")+markKeys(CURRENT.filter(a=>a.endsWith(".built")||a==="built"))+runKeys(rows)+(NEXT_ROW&&(builtFilter==="all"||stateOf(NEXT_ROW)===builtFilter)?KEY_NEXT(NEXT_ROW):"");
 }
 
@@ -2117,6 +2320,8 @@ const IMP_EFFECT={none:{g:"○",label:"no change"},additive:{g:"+",label:"additi
 const IMP_NEED={none:{g:"○",label:"nothing to change"},optional:{g:"◇",label:"optional"},required:{g:"!",label:"required"}};
 const IMP_CHANGE={added:{g:"+",label:"added"},changed:{g:"~",label:"changed",cls:"warning"},deprecated:{g:"⚠",label:"deprecated",cls:"warning"},removed:{g:"✕",label:"removed",cls:"critical"}};
 const IMP_TIER={"stable-core":"Stable Core","supported-extension":"Supported Extension",experimental:"Experimental",internal:"internal"};
+/* release.unreleased: the artifact is new and has never been released, so no existing version moves; its first release is its own */
+const UNRELEASED="new, unreleased: its first release is its own";
 const IMP_BUMP={none:"no version moves",fix:"fix · a bugfix release",feat:"feat · a feature release",major:"major · a breaking release"};
 const ibadge=(d,word,cls)=>{ const c=cls!==undefined?cls:d.cls||""; return `<span class="badge${c?" "+c:""}"><b aria-hidden="true">${esc(d.g)}</b>${esc(word||d.label)}</span>`; };
 /* a required adaptation's badge takes its entry's colour: red where not adapting breaks, yellow otherwise */
@@ -2138,14 +2343,14 @@ function compatParts(c,tags,slug){ if(c==="compatible") return {cls:"",pre:"",sy
 function impCard(key,x,i){ const S=IMP_SECTIONS.find(s=>s.key===key), tags=S.tags(x).filter(Boolean), slug=impSlug(x), c=compatOf(key,x), P=compatParts(c,tags,key==="conversion"?null:slug);
   return `<div class="bcard icard${P.cls}" data-sys="${esc(slug)}" data-imp="${key}.${i}" data-compat="${c}" tabindex="0" role="button" aria-label="${esc(S.title)}: ${esc(String(S.head(x,i)||"").replace(/`/g,""))}${c==="compatible"?"":`, ${COMPAT[c].label}`}"><div class="bh"><span class="nm">${rich(S.head(x,i)||"")}</span>${P.pre}${tags.join("")}${P.sys}</div><p>${rich(key==="conversion"?x.what:x.summary)}</p>${x.link?`<div class="meta">${moreLink(x.link,"detail")}</div>`:""}</div>`; }
 function impUnitCard(r,e){ const u=r.unit, c=compatOf("unit",e), P=compatParts(c,[],r.system||"");
-  return `<div class="bcard icard${P.cls}" data-sys="${esc(r.system||"")}" data-imp="unit.${esc(r.id)}" data-compat="${c}" tabindex="0" role="button" aria-label="Unit ${esc(u.n)}: ${esc(r.name)}${e?"":", not recorded yet"}${c==="compatible"?"":`, ${COMPAT[c].label}`}"><div class="bh"><span class="nm">${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||r.id)}</span>${P.pre}${e&&e.release&&IMP_BUMP[e.release.bump]?`<span class="badge">${esc(IMP_BUMP[e.release.bump])}${e.release.version?` · ${esc(e.release.version)}`:""}</span>`:""}${P.sys}</div><p>${e?rich(e.summary||""):"Not recorded yet: summarised from the unit's own impact once its plan is accepted."}</p>${u.versions?`<div class="versions">versions: ${rich(u.versions)}</div>`:""}${e&&e.link?`<div class="meta">${moreLink(e.link,"detail")}</div>`:""}</div>`; }
+  return `<div class="bcard icard${P.cls}" data-sys="${esc(r.system||"")}" data-imp="unit.${esc(r.id)}" data-compat="${c}" tabindex="0" role="button" aria-label="Unit ${esc(u.n)}: ${esc(r.name)}${e?"":", not recorded yet"}${c==="compatible"?"":`, ${COMPAT[c].label}`}"><div class="bh"><span class="nm">${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||r.id)}</span>${P.pre}${e&&e.release&&IMP_BUMP[e.release.bump]?`<span class="badge">${esc(IMP_BUMP[e.release.bump])}${e.release.unreleased===true?" · new, unreleased":""}${e.release.version?` · ${esc(e.release.version)}`:""}</span>`:""}${P.sys}</div><p>${e?rich(e.summary||""):"Not recorded yet: summarised from the unit's own impact once its plan is accepted."}</p>${u.versions?`<div class="versions">versions: ${rich(u.versions)}</div>`:""}${e&&e.link?`<div class="meta">${moreLink(e.link,"detail")}</div>`:""}</div>`; }
 function renderImpact(){
   const I=IMPACT, units=TRACKING?ROWS.filter(r=>r.unit):[];
   const uEntries=new Map((I&&Array.isArray(I.units)?I.units:[]).map(e=>[e.unit,e]));
   $("#impact-lede").textContent="The change's impact as best known now. How it differed from the plan is on the As built tab.";
   let h="";
   const rel=I&&I.release&&IMP_BUMP[I.release.bump]?I.release:null;
-  const head=[rel?`<span class="badge">version · ${esc(IMP_BUMP[rel.bump])}${rel.version?` · ${esc(rel.version)}`:""}</span>`:"",rel&&rel.note?`<span>${rich(rel.note)}</span>`:"",
+  const head=[rel?`<span class="badge">version · ${esc(IMP_BUMP[rel.bump])}${rel.unreleased===true?` · ${esc(UNRELEASED)}`:""}${rel.version?` · ${esc(rel.version)}`:""}</span>`:"",rel&&rel.note?`<span>${rich(rel.note)}</span>`:"",
     I&&I.source?`<span>source ${refHtml(I.source)}</span>`:"",I&&I.link?moreLink(I.link,"detail"):""].filter(Boolean);
   h+=`<div class="ihead">${head.join("")}</div>`;
   if(I&&I.summary) h+=`<p class="isum">${rich(I.summary)}</p>`;
@@ -2176,13 +2381,13 @@ function renderImpact(){
     +used("adaptation",x=>IMP_NEED[x.need]?x.need+"|"+needCls(x):null).map(kc=>{ const [k,c]=kc.split("|"); return `<span>${ibadge(IMP_NEED[k],k==="none"?"":`${IMP_NEED[k].label} change`,c)} what a consumer must change${c==="critical"?": not adapting breaks it":c==="warning"?": it does not break":""}</span>`; }).join("")
     +used("api",x=>IMP_CHANGE[x.change]?x.change:null).map(k=>`<span>${ibadge(IMP_CHANGE[k])} API change</span>`).join("")
     +(impItems("api").length?`<span><span class="badge">Stable Core</span> stability tier</span>`:"")
-    +(rel?`<span><span class="badge">version · …</span> the release this change takes</span>`:"");
+    +(rel?`<span><span class="badge">version · …</span> the release this change takes${rel.unreleased===true?"; new, unreleased: the artifact has no release yet, so no existing version moves":""}</span>`:"");
   if(noneBox) key+=`<span><i class="inb"></i>box: no downstream impact recorded${I?"":" yet"}</span>`;
   $("#impact-key").innerHTML=key; paint($("#impact-key"));
 }
 function inspectImpact(ref){ const [k,...rest]=String(ref).split("."), id=rest.join(".");
   if(k==="unit"){ const r=ROWS.find(x=>x.id===id); if(!r) return; const e=((IMPACT||{}).units||[]).find(x=>x.unit===id), u=r.unit;
-    inspect(`<div class="kicker">IMPACT · UNIT ${esc(u.n)}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${e?rich(e.summary||""):"Not recorded yet."}</p><dl>${e&&e.release&&IMP_BUMP[e.release.bump]?`<dt>Version</dt><dd>${esc(IMP_BUMP[e.release.bump])}${e.release.version?` · ${esc(e.release.version)}`:""}</dd>`:""}${u.versions?`<dt>Versions in the architecture</dt><dd>${rich(u.versions)}</dd>`:""}<dt>Its issue</dt><dd>${u.issue?pair(u.issue,u.slug||r.id):"—"}</dd>${e&&e.source?`<dt>Source</dt><dd>${refHtml(e.source)}</dd>`:""}${e&&e.link?`<dt>Detail</dt><dd>${refHtml(e.link)}</dd>`:""}</dl>`); return; }
+    inspect(`<div class="kicker">IMPACT · UNIT ${esc(u.n)}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div><p class="lead">${e?rich(e.summary||""):"Not recorded yet."}</p><dl>${e&&e.release&&IMP_BUMP[e.release.bump]?`<dt>Version</dt><dd>${esc(IMP_BUMP[e.release.bump])}${e.release.unreleased===true?` · ${esc(UNRELEASED)}`:""}${e.release.version?` · ${esc(e.release.version)}`:""}</dd>`:""}${u.versions?`<dt>Versions in the architecture</dt><dd>${rich(u.versions)}</dd>`:""}<dt>Its issue</dt><dd>${u.issue?pair(u.issue,u.slug||r.id):"—"}</dd>${e&&e.source?`<dt>Source</dt><dd>${refHtml(e.source)}</dd>`:""}${e&&e.link?`<dt>Detail</dt><dd>${refHtml(e.link)}</dd>`:""}</dl>`); return; }
   const S=IMP_SECTIONS.find(s=>s.key===k), i=parseInt(id,10), x=impItems(k)[i]; if(!S||!x) return;
   inspect(`<div class="kicker">IMPACT · ${esc(S.title).toUpperCase()}</div><div class="name">${rich(S.head(x,i)||"")}</div><div class="vis">${compatOf(k,x)!=="compatible"?pill(COMPAT[compatOf(k,x)]):""}${S.tags(x).filter(Boolean).join("")}</div><p class="lead">${rich(k==="conversion"?x.what:x.summary)}</p><dl><dt>System</dt><dd>${impSlug(x)?`<span class="sw" data-sys="${esc(x.system)}"></span>${esc(sysName(x.system))}`:"outside this repository's systems"}</dd>${x.tier!==undefined&&k==="api"?`<dt>Stability tier</dt><dd>${x.tier&&IMP_TIER[x.tier]?esc(IMP_TIER[x.tier]):"not stated"}</dd>`:""}${IMPACT.source?`<dt>Source</dt><dd>${refHtml(IMPACT.source)}</dd>`:""}${x.link?`<dt>Detail</dt><dd>${refHtml(x.link)}</dd>`:""}</dl>`); }
 
@@ -2228,7 +2433,7 @@ function renderContext(){
   const rm=PLAN.roadmap||null;
   if(TRACKING){ const units=ROWS.filter(r=>r.unit);
     cards.push(`<div class="card"><h3>Roadmap <small>#${esc(PLAN.issue)} · ${units.length} units${WIP.updated?` · ${day(WIP.updated)}`:""}</small></h3><ul class="issues">${units.map(r=>`<li><span class="nm">${esc(r.unit.n)}. ${r.unit.issue?pair(r.unit.issue,r.name):esc(r.name)} · ${badge(stateOf(r))}${runOf(r)?` ${runPill(runOf(r))}`:""}${isNext(r)?` ${TAG_NEXT}`:""}</span></li>`).join("")}</ul></div>`); }
-  else if(rm&&rm.issue) cards.push(`<div class="card"><h3>Roadmap <small>${day(rm.asOf||"")}</small></h3><ul class="issues"><li><span class="nm">${pair(rm.issue,rm.title||"")}</span></li>${(rm.items||[]).map(i=>`<li><span class="nm">${pair(i.issue,i.title||"")}${i.state?` · ${esc(i.state)}`:""}${i.issue===PLAN.issue?" · this board":""}</span></li>`).join("")}</ul></div>`);
+  else if(rm&&rm.issue) cards.push(`<div class="card"><h3>Roadmap <small>${day(rm.asOf||"")}</small></h3><ul class="issues"><li><span class="nm">${pair(rm.issue,rm.title||"")}</span></li>${(rm.items||[]).map(i=>`<li><span class="nm">${pair(i.issue,i.title||"")}${i.state?` · ${esc(String(i.state).toUpperCase()==="CLOSED"&&i.stateReason==="NOT_PLANNED"?"closed · not planned":String(i.state).toUpperCase()==="CLOSED"&&i.stateReason==="DUPLICATE"?"closed · duplicate":i.state)}`:""}${i.issue===PLAN.issue?" · this board":""}</span></li>`).join("")}</ul></div>`);
   else cards.push(`<div class="card"><h3>Roadmap</h3><p class="lede">No roadmap item claims #${esc(PLAN.issue)}: it has no tracking parent. The <a href="${UP}docs/plans/index.html">work board</a> and the <a href="${UP}docs/dashboards/index.html">repository page</a> show the roadmap.</p></div>`);
   const fu=PLAN.followUps||[];
   cards.push(`<div class="card"><h3>Follow-ups and related issues <small>${fu.length}</small></h3>${fu.length?`<ul class="issues">${fu.map(f=>(f.issue?`<li><span class="nm">${f.title?`${pair(f.issue,f.title,f.repo)}${f.note?` — ${rich(f.note)}`:""}`:`${ilink(f.issue,f.repo)}${boardOf(f.issue,f.repo)?` ${ghlink(f.issue,f.repo)}`:""}${f.note?` — ${rich(f.note)}`:""}`}</span></li>`:`<li><span class="nm"><code>${esc(f.name||"")}</code> <small>not filed</small> — ${rich(f.note||"")}</span></li>`)).join("")}</ul>`:`<p class="lede">None recorded.</p>`}</div>`);
@@ -2252,7 +2457,7 @@ function derive(){
   ISSUE_BOARDS.clear(); issueBoardsOf().forEach((b,n)=>ISSUE_BOARDS.set(n,b)); SYSTEMS=PLAN.systems||[];
   STEP=WIP.step||""; HALTED=STEP==="halted"; PAUSED=HALTED||STEP==="escalated"; LANDED=STEP==="landed"||PLAN.status==="built"; STOPPED=["cancelled"].includes(STEP)||PLAN.status==="abandoned";
   CURRENT=(LANDED||STOPPED)?[]:(WIP.current||[]);
-  NEXT_ROW=TRACKING&&!LANDED&&!STOPPED&&WIP.next?ROWS.find(r=>r.id===WIP.next&&r.unit&&!rowActive(r)&&stateOf(r)==="pending")||null:null;
+  NEXT_ROW=TRACKING&&!LANDED&&!STOPPED&&WIP.next?ROWS.find(r=>r.id===WIP.next&&r.unit&&!rowActive(r)&&stateOf(r)==="pending"&&!leftForLater(r))||null:null;
   ownStep=["halted","escalated"].includes(STEP)?(WIP.resume||WIP.last||""):STEP;
   PLAN_LANDED=LANDED||(TRACKING&&(["building","built"].includes(PLAN.status)||["implementation","landed"].includes(ownStep)
     ||!!(WIP.landing&&(WIP.landing.pr||WIP.landing.merge))||ROWS.some(r=>r.unit&&(stateOf(r)!=="pending"||(WIP.current||[]).some(a=>String(a).split(".")[0]===r.id)))));
@@ -2286,6 +2491,7 @@ function replayInspect(I){ const r=I&&I.row?ROWS.find(x=>x.id===I.row):null, dfl
   if(!I) return dflt();
   if(I.k==="cell"){ if(!r) return dflt(); const h=location.hash; select(I.row,I.col,I.opt||undefined); try{ history.replaceState(null,"",h||location.pathname); }catch(e){} return; }
   if(I.k==="opt"){ if(!r) return dflt(); INSPECTED=I; inspectOption(r,(r.options||[]).find(o=>o.id===I.opt)); return; }
+  if(I.k==="ref"){ if(!r) return dflt(); inspectRef(I.row,I.col,I.i); if(INSPECTED&&INSPECTED.k==="ref") return; return dflt(); }
   if(I.k==="built"||I.k==="unit"){ if(!r) return dflt(); INSPECTED=I; if(I.k==="unit"){ const g=document.querySelector(`.chainsvg .unit[data-row="${CSS.escape(I.row)}"]`); if(g) g.classList.add("sel"); } inspectBuilt(r); return; }
   if(I.k==="imp"){ const c=[...document.querySelectorAll("#impact-body .icard")].find(x=>x.dataset.imp===I.ref); if(!c&&CUR_TAB==="impact") return dflt(); if(c) c.classList.add("sel"); INSPECTED=I; inspectImpact(I.ref); return; }
   dflt(); }
@@ -2359,7 +2565,10 @@ let start="t-timeline"; if(hash&&document.getElementById("t-"+hash)) start="t-"+
 else if(/^impact\./.test(hash)&&document.getElementById("t-impact")) start="t-impact"; /* an Impact card, "#impact.<entry>" */
 show(start);
 if(/^impact\./.test(hash)) goImpact(hash.slice("impact.".length));
-else if(hash&&hash!=="chain"&&!document.getElementById("t-"+hash)){ const [rowId,col,optId]=hash.split("."); if(ROWS.some(r=>r.id===rowId)){ select(rowId,COLS.some(c=>c.key===col)?col:"gap",optId); const el=document.getElementById("row-"+rowId); if(el) el.scrollIntoView({block:"center"}); } }
+else if(hash&&hash!=="chain"&&!document.getElementById("t-"+hash)){ const [rowId,col,optId]=hash.split("."); if(ROWS.some(r=>r.id===rowId)){
+  /* "#<row>.<verdict|built>.s<n>" opens statement n's reference, its excerpt in the inspector */
+  if(/^s\d+$/.test(optId||"")&&["verdict","built"].includes(col)){ select(rowId,col); inspectRef(rowId,col,+optId.slice(1)); }
+  else select(rowId,COLS.some(c=>c.key===col)?col:"gap",optId); const el=document.getElementById("row-"+rowId); if(el) el.scrollIntoView({block:"center"}); } }
 </script>
 </body>
 </html>

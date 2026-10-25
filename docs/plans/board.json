@@ -1,11 +1,11 @@
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-23T20:10:10Z",
-  "asOf": "2026-10-23",
+  "generated": "2026-10-25T12:31:13Z",
+  "asOf": "2026-10-25",
   "tree": {
     "ref": "master",
-    "sha": "77a69bc"
+    "sha": "7de8207"
   },
   "systems": [
     {
@@ -21,8 +21,8 @@
       "name": "webtools-http common core",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-test-fixtures",
@@ -136,25 +136,37 @@
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is up next and no longer blocked: both its blockers have landed. Units 4 to 11 follow in landing order.",
+      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-23T20:07:49Z",
+      "updated": "2026-10-25T12:08:09Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
       "landed": null,
+      "reconciliation": {
+        "state": "partial",
+        "landed": 3,
+        "total": 11
+      },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 2,
+        "landed": 3,
         "dropped": 0,
         "deferred": 0,
+        "left": 0,
         "planned": false,
         "done": false,
-        "current": [],
+        "current": [
+          {
+            "issue": 63,
+            "slug": "test-support",
+            "step": null
+          }
+        ],
         "next": {
-          "issue": 62,
-          "slug": "http-core",
+          "issue": 64,
+          "slug": "url-policy",
           "blockedBy": []
         }
       },
@@ -166,17 +178,20 @@
       "issue": 61,
       "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
       "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [],
       "blocks": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 47,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "board": "55-http-client-stack/61-build-logic/dashboard.html",
@@ -219,6 +234,11 @@
         "version": "none: published output identical to 834ce4a",
         "date": "2026-10-22"
       },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
       "systemName": "Gradle build",
       "group": "55",
@@ -228,18 +248,21 @@
       "issue": 47,
       "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
       "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-09-28",
       "parent": 55,
       "waitsOn": [
         {
           "issue": 61,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
@@ -271,6 +294,11 @@
         "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
         "date": "2026-10-23"
       },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
       "systemName": "Gradle build",
       "group": "55",
@@ -279,17 +307,20 @@
     {
       "issue": 62,
       "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
         {
           "issue": 47,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 61,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -310,19 +341,47 @@
           "state": "OPEN"
         }
       ],
-      "board": null,
-      "folder": null,
+      "board": "55-http-client-stack/62-http-core/dashboard.html",
+      "folder": "55-http-client-stack/62-http-core/",
       "branch": null,
       "system": "webtools-http-core",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
+      "step": "landed",
+      "detail": "Merged through PR #82 as 7de8207: `webtools-http` and its check-only `js` module, the `webtools.kotlin-common-check` plugin and the README; three deviations, all additions; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-10-25T11:51:40Z",
+      "updated": "2026-10-25T12:08:09Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "findings": {
+            "documentation": 18,
+            "test": 9,
+            "code": 2
+          },
+          "severity": {
+            "minor": 27,
+            "other": 2
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/test-inspector/index.html",
+          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+        }
+      ],
+      "qaMax": 3,
+      "status": "landed",
+      "landed": {
+        "pr": 82,
+        "merge": "7de8207",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-10-25"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
-      "next": true,
-      "blockedBy": [],
       "systemName": "webtools-http common core",
       "group": "55",
       "order": 3
@@ -336,7 +395,8 @@
       "waitsOn": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -361,13 +421,14 @@
       "folder": null,
       "branch": null,
       "system": "webtools-http-test-fixtures",
-      "step": null,
-      "detail": "",
+      "step": "implementation",
+      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
       "qa": [],
-      "qaMax": null,
-      "status": "not-started",
+      "qaMax": 3,
+      "status": "building",
       "landed": null,
-      "active": false,
+      "reconciliation": null,
+      "active": true,
       "systemName": "published test fixtures",
       "group": "55",
       "order": 4
@@ -381,7 +442,8 @@
       "waitsOn": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -398,9 +460,12 @@
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
+      "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [],
       "systemName": "outbound-URL policy",
       "group": "55",
       "order": 5
@@ -437,6 +502,7 @@
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "OkHttp transport",
       "group": "55",
@@ -455,7 +521,8 @@
         },
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -474,6 +541,7 @@
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "response cache",
       "group": "55",
@@ -492,7 +560,8 @@
         },
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -511,6 +580,7 @@
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "call budget",
       "group": "55",
@@ -552,6 +622,7 @@
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "call facades",
       "group": "55",
@@ -589,6 +660,7 @@
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "webtools-feeds",
       "group": "55",
@@ -617,6 +689,7 @@
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "WebTools",
       "group": "55",
@@ -626,6 +699,7 @@
       "issue": 38,
       "title": "Handshake parsing accepts an empty peer name on extra whitespace",
       "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-09-24",
       "parent": null,
       "waitsOn": [],
@@ -666,10 +740,77 @@
         "version": "webtools-udp 2.0.0a",
         "date": "2026-10-20"
       },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
       "systemName": "webtools-udp",
       "group": "other",
       "order": 0
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "state": "OPEN",
+      "created": "2026-10-23",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 1
+    },
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "state": "OPEN",
+      "created": "2026-10-25",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 1,
+          "repo": "SpartanLaboratories/.github",
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 2
     }
   ],
   "roadmap": [
@@ -682,17 +823,20 @@
         {
           "issue": 61,
           "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 47,
           "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 62,
           "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 63,
@@ -738,6 +882,24 @@
     }
   ],
   "unscheduled": [
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "labels": [
+        "type: feature"
+      ],
+      "created": "2026-10-25",
+      "system": null,
+      "unassigned": true
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "labels": [],
+      "created": "2026-10-23",
+      "system": null,
+      "unassigned": true
+    },
     {
       "issue": 58,
       "title": "Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9",

@@ -1,6 +1,6 @@
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools master 3949b52 (2026-10-23), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
+// As-is at WebTools master 7de8207 (2026-10-25), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -91,7 +91,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at master 3949b52; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at master 7de8207; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }
