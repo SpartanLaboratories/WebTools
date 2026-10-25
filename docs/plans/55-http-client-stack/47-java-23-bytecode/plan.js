@@ -68,6 +68,7 @@ window.dashboardLive&&window.dashboardLive("plan",
           "test": 2,
           "code": 0
         },
+        "route": "on-the-spot",
         "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
       }
     ],
@@ -763,6 +764,13 @@ window.dashboardLive&&window.dashboardLive("plan",
     "changes": [],
     "source": "impact.md (reconciled after landing) and final-implementation.md (no deviations)",
     "link": "impact.md#1-published-artifacts"
+  },
+  "links": {
+    "workBoard": "../../index.html",
+    "repoPage": "../../../dashboards/index.html",
+    "pages": {
+      "gradle-build": "../../../dashboards/gradle-build/index.html"
+    }
   }
 }
 );

@@ -1,5 +1,5 @@
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools master 7de8207 (2026-10-25): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47) and the common-check plugin (#62). Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-63-test-support 5d98102 (2026-10-25, not yet landed): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47) and the common-check plugin (#62). Code is authoritative on any conflict.
 // Every element tagged Planned comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11) and carries its sub-issue. None of it is built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
@@ -12,7 +12,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         web      = softwareSystem "Web servers" "Any HTTP or HTTPS site a caller names by URL." "External"
         chrome   = softwareSystem "Chrome / Chromium" "The host's local browser install, driven headless through Selenium; Selenium Manager resolves the driver at runtime." "External"
         central  = softwareSystem "Maven Central" "Hosts io.github.spartanlaboratories artifacts: webtools-udp 2.0.0, webtools-scraping 1.0.0, webtools-browser 1.0.0." "External"
-        bottools = softwareSystem "KotlinBottools" "SpartanLaboratories/KotlinBottools: named by Issue #55 as the first consumer of webtools-http and webtools-feeds, through an internal adapter." "External"
+        bottools = softwareSystem "KotlinBottools" "SpartanLaboratories/KotlinBottools: named by the HTTP stack's architecture as the first consumer of webtools-http and webtools-feeds, through an internal adapter." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
             // ---- built: the three published modules ----
@@ -25,25 +25,25 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 settings = component "settings.gradle.kts" "Includes build-logic through pluginManagement, applies foojay-resolver-convention 0.8.0, includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http, :webtools-http-commoncheck." "Gradle Kotlin DSL" "Internal"
                 root     = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 wrapper  = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
-                buildLogic = component "build-logic" "Included build (#61): webtools.published-library, webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.kotlin-common-check (#62), WebToolsBuild with the package-selected level tasks, and its own TestKit tests." "Gradle included build · unpublished" "Internal"
-                floor      = component "Java floor" "#47: WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins; verifyJavaFloor, in every module's check, fails on a class above Java 11 bytecode or a variant declaring another JVM version." "build-logic · Kotlin" "Internal"
-                httpCheck  = component "webtools-http-commoncheck" "#62: compiles webtools-http's commonMain for js() with no environment, so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Internal"
+                buildLogic = component "build-logic" "Included build: webtools.published-library, webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.kotlin-common-check, WebToolsBuild with the package-selected level tasks, and its own TestKit tests." "Gradle included build · unpublished" "Internal"
+                floor      = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins; verifyJavaFloor, in every module's check, fails on a class above Java 11 bytecode or a variant declaring another JVM version." "build-logic · Kotlin" "Internal"
+                httpCheck  = component "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js() with no environment, so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Internal"
                 // planned by Issue #55: not built
-                feedsCheck = component "webtools-feeds-commoncheck" "#69 (unit 10): compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
+                feedsCheck = component "webtools-feeds-commoncheck" "Unit 10: compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
             }
 
             // ---- webtools-http: its common core built (#62), its other parts planned by Issue #55 ----
-            http = container "webtools-http" "A suspend HTTP stack: its common core is built (#62); outbound-URL policies, the transport, the cache, the budget, the facades and the test fixtures are planned (#63 to #68)." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
-                core      = component "Common core" "#62: the opt-in marker, the HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain + jvmMain"
+            http = container "webtools-http" "A suspend HTTP stack: its common core is built; outbound-URL policies, the transport, the cache, the budget, the facades and the test fixtures are planned." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
+                core      = component "Common core" "The opt-in marker, the HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain + jvmMain"
                 // planned by Issue #55: not built
-                policy    = component "Outbound-URL policy" "#64: Trusted and Untrusted policies, TransportSettings, the common address classifier, GuardedDns and GuardedSocketFactory." "commonMain + jvmMain" "Planned"
-                transport = component "OkHttp transport" "#65: OkHttpTransport, one request per hop, manual redirects, capped body read, failure mapping." "jvmMain · okhttp-jvm 5.5.0" "Planned"
-                cache     = component "Response cache" "#66: ResponseCache port, ResponseCache.Disabled and the CaffeineResponseCache default; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Planned"
-                budget    = component "Call budget" "#67: CallBudget port and WindowedCallBudget, rate signals, BudgetStore and BudgetObserver seams." "commonMain" "Planned"
-                facades   = component "Call facades" "#68: UpstreamClient and UrlFetcher, composing cache, then budget inside the loader, then transport." "commonMain + jvmMain" "Planned"
-                fixtures  = component "Published test fixtures" "#63: test-fixtures variant with VirtualClock, FakeHttpTransport, .http fixtures, FixtureRecorder and LoopbackTransports." "jvmTestFixtures · capability webtools-http-test-fixtures" "Planned"
+                policy    = component "Outbound-URL policy" "Trusted and Untrusted policies, TransportSettings, the common address classifier, GuardedDns and GuardedSocketFactory." "commonMain + jvmMain" "Planned"
+                transport = component "OkHttp transport" "OkHttpTransport, one request per hop, manual redirects, capped body read, failure mapping." "jvmMain · okhttp-jvm 5.5.0" "Planned"
+                cache     = component "Response cache" "ResponseCache port, ResponseCache.Disabled and the CaffeineResponseCache default; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Planned"
+                budget    = component "Call budget" "CallBudget port and WindowedCallBudget, rate signals, BudgetStore and BudgetObserver seams." "commonMain" "Planned"
+                facades   = component "Call facades" "UpstreamClient and UrlFetcher, composing cache, then budget inside the loader, then transport." "commonMain + jvmMain" "Planned"
+                fixtures  = component "Published test fixtures" "Test-fixtures variant with VirtualClock, FakeHttpTransport, .http fixtures, FixtureRecorder and LoopbackTransports." "jvmTestFixtures · capability webtools-http-test-fixtures" "Planned"
             }
-            feeds = container "webtools-feeds" "#69 (unit 10): RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
+            feeds = container "webtools-feeds" "Unit 10: RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
         }
 
         // ---- as built ----
@@ -98,15 +98,15 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        container webtools "Containers" "The built modules, the Gradle build that configures them, and what Issue #55 still plans (dashed)." {
+        container webtools "Containers" "The built modules, the Gradle build that configures them, and the planned systems (dashed)." {
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 7de8207, with build-logic from #61, the Java floor from #47 and the common check from #62, and its planned part (dashed): webtools-feeds' check module (#69)." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 5d98102, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 7de8207: its common core built (#62), the parts Issue #55 plans dashed (#63 to #68)." {
+        component webtools.http "Http" "webtools-http at 5d98102: its common core built, its planned parts dashed." {
             include *
             autoLayout lr
         }

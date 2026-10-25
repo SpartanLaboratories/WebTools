@@ -1,0 +1,7 @@
+{
+  "slug": "webtools",
+  "version": null,
+  "asIs": {"ref": "feat/issue-63-test-support", "sha": "5d98102", "date": "2026-10-25T18:54:34Z", "landed": false},
+  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "5d98102"},
+  "written": {"sha": "5d98102"}
+}

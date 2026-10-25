@@ -1,5 +1,5 @@
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools master 7de8207 (2026-10-25): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, and the webtools.kotlin-common-check plugin from #62. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-63-test-support 5d98102 (2026-10-25, not yet landed): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, and the webtools.kotlin-common-check plugin from #62. The build publishes nothing of its own. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -20,9 +20,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 published = component "webtools.published-library" "Applies vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM. Never calls configure(...)." "precompiled script plugin" "Public"
                 jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; compiles to the Java floor (jvmTarget, -Xjdk-release, Java compatibility) and puts verifyJavaFloor in check; test dependencies, JUnit Platform, the seven level tasks over the test source set." "precompiled script plugin" "Public"
                 kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. webtools-http applies it." "precompiled script plugin" "Public"
-                commonCheck = component "webtools.kotlin-common-check" "#62: the multiplatform plugin with js() and no environment, mavenCentral() of its own, check wired to compileKotlinJs; no publishing, no Java floor. No test task, no Node.js, no root task." "precompiled script plugin" "Public"
+                commonCheck = component "webtools.kotlin-common-check" "The multiplatform plugin with js() and no environment, mavenCentral() of its own, check wired to compileKotlinJs; no publishing, no Java floor. No test task, no Node.js, no root task." "precompiled script plugin" "Public"
                 levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks; JAVA_FLOOR = 11, classFileMajor and registerVerifyJavaFloor." "Kotlin object · default package" "Public"
-                floor     = component "Java floor" "#47: WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
+                floor     = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
 
                 // ---- internals ----
                 wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
@@ -30,7 +30,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, and the testKitHomeLock build service." "Gradle included build · unpublished" "Internal"
                 harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests." "test sources · Gradle TestKit" "Internal"
-                jsCheck    = component "check-only js modules" "#62: webtools-http-commoncheck compiles webtools-http's commonMain for js with two js actuals, publishing nothing, so a JVM API in common code is a compile error. webtools-feeds-commoncheck follows in #69." "unpublished module · Kotlin/JS klib" "Internal"
+                jsCheck    = component "check-only js modules" "webtools-http-commoncheck compiles webtools-http's commonMain for js with two js actuals, publishing nothing, so a JVM API in common code is a compile error. webtools-feeds-commoncheck is planned." "unpublished module · Kotlin/JS klib" "Internal"
             }
         }
 
@@ -81,7 +81,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at master 7de8207." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at feat/issue-63-test-support 5d98102." {
             include *
             autoLayout tb
         }

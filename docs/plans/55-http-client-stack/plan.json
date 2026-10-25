@@ -385,7 +385,7 @@
               "ref": "architecture.md#61-shared-build-logic--build-logic",
               "heading": "6.1 Shared build logic — `build-logic`",
               "paragraph": "Responsibility: one place where every module's compile target, test layout and publishing shape are decided. · Placement: an included build at `build-logic/` (`pluginManagement { includeBuild(\"build-logic\") }` in `settings.gradle.kts`, first statement). The root `build.gradle.kts` keeps only `allprojects { group; version }`; its `plugins`, `subprojects {}`, level-task and publishing blocks (`:1-5`, `:17-92`) move here. Plugin versions (KGP 2.2.0, vanniktech 0.36.0) are pinned once in `build-logic/build.gradle.kts`. · Owns: · `WebToolsBuild` — an object holding `JAVA_FLOOR = 11`, the ordered …",
-              "hash": "1bb755fe6eb7"
+              "hash": "b27a1f1ca861"
             }
           }
         ]
@@ -768,8 +768,1031 @@
         ],
         "versions": "none",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "63-test-support/",
+        "board": "63-test-support/dashboard.html",
+        "live": {
+          "step": "landing",
+          "since": "2026-10-25T21:38:04Z",
+          "updated": "2026-10-25T21:38:04Z",
+          "detail": "Landing accepted by the admin team: sync, commits, PR and merge.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "landing",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-10-25",
+              "at": "2026-10-25T19:38:32Z",
+              "findings": {
+                "documentation": 19,
+                "test": 15,
+                "code": 2
+              },
+              "severity": {
+                "minor": 27,
+                "other": 9
+              },
+              "route": "planner-then-rookie-dev",
+              "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
+            },
+            {
+              "pass": 2,
+              "verdict": "changes-requested",
+              "date": "2026-10-25",
+              "at": "2026-10-25T20:44:31Z",
+              "findings": {
+                "documentation": 15,
+                "test": 8,
+                "code": 3
+              },
+              "severity": {
+                "minor": 25,
+                "other": 1
+              },
+              "route": "on-the-spot",
+              "note": "The suite is 384 of 384 green. The one other finding is a Level 3 test JUnit never ran, its expression body returning a value, so the recorded counts were one short; the 25 minor findings are KDoc and comment wording, test asserts and a hang bound, and the plan documents' risk and Level 5 fields."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-63-test-support",
+          "event": {
+            "name": "landing",
+            "at": "2026-10-25T21:38:04Z",
+            "note": "accepted by the admin team"
+          },
+          "plan": {
+            "state": "re-pass",
+            "from": "qa",
+            "pass": 1,
+            "since": "2026-10-25T19:38:32Z"
+          },
+          "stages": [
+            {
+              "id": "S1",
+              "name": "recipe-B fixtures block, .gitattributes, canaries",
+              "state": "done",
+              "rows": [
+                "fixtures-variant",
+                "fixtures-surface",
+                "virtual-clock",
+                "gitattributes"
+              ]
+            },
+            {
+              "id": "S2",
+              "name": "VirtualClock",
+              "state": "done",
+              "rows": [
+                "virtual-clock",
+                "fixtures-tests"
+              ]
+            },
+            {
+              "id": "S3",
+              "name": ".http codec, Fixture, FixtureLoader",
+              "state": "done",
+              "rows": [
+                "fixture-codec",
+                "fixtures-tests"
+              ]
+            },
+            {
+              "id": "S4",
+              "name": "query matching and FakeHttpTransport",
+              "state": "done",
+              "rows": [
+                "fake-transport",
+                "fixtures-tests"
+              ]
+            },
+            {
+              "id": "S5",
+              "name": "FixtureRecorder, RecordingGate, Redaction",
+              "state": "done",
+              "rows": [
+                "recorder",
+                "fixtures-tests",
+                "fixtures-surface",
+                "fake-transport",
+                "fixture-codec"
+              ]
+            },
+            {
+              "id": "S6",
+              "name": "floor guard, publication read, apiCheck",
+              "state": "done",
+              "rows": [
+                "fixtures-variant"
+              ]
+            },
+            {
+              "id": "S7",
+              "name": "harness, fixturesPublicationCheck task, check class, root-build edge",
+              "state": "done",
+              "rows": [
+                "publication-check"
+              ]
+            },
+            {
+              "id": "S8",
+              "name": "unaffected-module proofs, README, manual IDE pass",
+              "state": "done",
+              "rows": [
+                "fixtures-surface",
+                "fixtures-tests",
+                "gitattributes",
+                "readme",
+                "release"
+              ]
+            }
+          ],
+          "remediation": {
+            "pass": 2,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "rookie-dev: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
+                "state": "done"
+              },
+              {
+                "name": "planner: reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
+                "state": "current"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+              "raised": "plan-accepted",
+              "ref": "plan.md#13-sequencing-and-follow-ups"
+            },
+            {
+              "text": "Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. The planner rules whether §9's row or §6.8's list is amended.",
+              "raised": "implementation-stage S5",
+              "ref": "plan.md",
+              "resolved": "Plan amendment 1 (2026-10-25) brings §9's Level 2 and Level 3 rows to §6.8's detection list, which is unchanged: a secret escaped only in part is neither replaced nor detected, the same boundary as a base64, hashed or truncated echo."
+            },
+            {
+              "text": "S6 paused on a plan gap: verifyJavaFloor failed on two output directories the module never creates (main's allOutputs on the fixtures' runtime classpath). Planner ruled: filter the classpath to existing entries in the module script (Amendment 2); build-logic untouched.",
+              "raised": "implementation-stage S6",
+              "ref": "plan.md",
+              "resolved": "2026-10-25T18:40:00Z"
+            },
+            {
+              "text": "Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
+              "raised": "qa pass 1",
+              "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)",
+              "resolved": "2026-10-25T19:58:08Z"
+            },
+            {
+              "text": "FixtureRecorderIntegrationTest's test for nameFor and the bad-group refusal compiled to a non-void method (runBlocking body ending in assertFailsWith), so JUnit never ran it and the recorded count of 15 masked it; fixed on the spot with runBlocking<Unit> and the counts corrected to 16.",
+              "raised": "qa pass 2",
+              "ref": "final-implementation.md",
+              "resolved": "2026-10-25T20:54:23Z"
+            }
+          ],
+          "history": {
+            "implementation": [
+              {
+                "since": "2026-10-25T14:21:18Z",
+                "ended": "2026-10-25T19:00:34Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-25T18:51:18Z",
+                  "note": "S7 reported done; S8 current"
+                },
+                "detail": "S6 after the ruling: verifyJavaFloor passes with two jars; publication reads as planned (fixtures variants with the one capability, jvm version 11, optional test deps in the root POM, none in the -jvm POM); apiCheck green, dump unchanged. S7: build-logic gains the fixturesPublicationCheck task (BouncyCastle throwaway key, nested builds with ORG_GRADLE_PROJECT_* scrubbed), harness types ModuleSource, ThrowawayPgpKey, ResolutionReport and extended ModuleMetadata/PomFile/SampleProject; FixturesPublicationEndToEndTest's ten assertions pass (52 s cold, up-to-date and configuration cache reused on repeat); the edge in webtools-http's check runs it; root tasks unchanged; the guard composite does not run it; signing scrub holds against an invalid injected key; three mutants each caught (1, 5 and 5 failures).",
+                "open": [
+                  {
+                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md#13-sequencing-and-follow-ups"
+                  }
+                ],
+                "stages": [
+                  {
+                    "id": "S1",
+                    "name": "recipe-B fixtures block, .gitattributes, canaries",
+                    "state": "done",
+                    "rows": [
+                      "fixtures-variant",
+                      "fixtures-surface",
+                      "virtual-clock",
+                      "gitattributes"
+                    ]
+                  },
+                  {
+                    "id": "S2",
+                    "name": "VirtualClock",
+                    "state": "done",
+                    "rows": [
+                      "virtual-clock",
+                      "fixtures-tests"
+                    ]
+                  },
+                  {
+                    "id": "S3",
+                    "name": ".http codec, Fixture, FixtureLoader",
+                    "state": "done",
+                    "rows": [
+                      "fixture-codec",
+                      "fixtures-tests"
+                    ]
+                  },
+                  {
+                    "id": "S4",
+                    "name": "query matching and FakeHttpTransport",
+                    "state": "done",
+                    "rows": [
+                      "fake-transport",
+                      "fixtures-tests"
+                    ]
+                  },
+                  {
+                    "id": "S5",
+                    "name": "FixtureRecorder, RecordingGate, Redaction",
+                    "state": "done",
+                    "rows": [
+                      "recorder",
+                      "fixtures-tests",
+                      "fixtures-surface",
+                      "fake-transport",
+                      "fixture-codec"
+                    ]
+                  },
+                  {
+                    "id": "S6",
+                    "name": "floor guard, publication read, apiCheck",
+                    "state": "done",
+                    "rows": [
+                      "fixtures-variant"
+                    ]
+                  },
+                  {
+                    "id": "S7",
+                    "name": "harness, fixturesPublicationCheck task, check class, root-build edge",
+                    "state": "done",
+                    "rows": [
+                      "publication-check"
+                    ]
+                  },
+                  {
+                    "id": "S8",
+                    "name": "unaffected-module proofs, README, manual IDE pass",
+                    "state": "done",
+                    "rows": [
+                      "fixtures-surface",
+                      "fixtures-tests",
+                      "gitattributes",
+                      "readme",
+                      "release"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "qa": [
+              {
+                "since": "2026-10-25T19:00:34Z",
+                "ended": "2026-10-25T19:38:32Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-25T19:00:34Z",
+                  "note": "S8 reported done; qa next"
+                },
+                "detail": "S8: legacy modules, webtools-http main sources, the ABI dump, the check module, build-logic/src/main and the root build files untouched (diffs empty; the three legacy modules compile); every mechanical rule holds (three @OptIn lines in the fixtures, none in tests; no TODO; KDoc coverage; no credential or local path; .http fixtures carry -text); README gains the six planned edits (CRLF kept). Level 5: the published .module, POMs and the fixtures jar's signature read from a kept check workspace and recorded; four IDE-only items recorded as not performed. Final state: webtools-http check green incl. verifyJavaFloor (2 jars) and fixturesPublicationCheck (10/10); all build-logic suites green. 61 files in the change set.",
+                "open": [
+                  {
+                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md#13-sequencing-and-follow-ups"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-25",
+                    "at": "2026-10-25T19:38:32Z",
+                    "findings": {
+                      "documentation": 19,
+                      "test": 15,
+                      "code": 2
+                    },
+                    "severity": {
+                      "minor": 27,
+                      "other": 9
+                    },
+                    "route": "planner-then-rookie-dev"
+                  }
+                ]
+              },
+              {
+                "since": "2026-10-25T19:58:08Z",
+                "ended": "2026-10-25T20:44:31Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-25T19:58:08Z",
+                  "note": "remediation of qa pass 1 done; qa pass 2 current"
+                },
+                "detail": "Remediation: 21 files took the 27 minor fixes (KDoc wording incl. the Amendment 1 boundary in FixtureRecorder and Redaction, comments, test renames, two 200 asserts, snapshot asserts, the gating test no longer does file I/O, JAVA_FLOOR constant instead of a literal, a mangled path in the record). Amendment 3: RedactionComponentTest +4, FixtureRecorderIntegrationTest +1 (eight concurrent recordings to one name), new FixturesCheckWiringEndToEndTest (2: the module's check schedules the publication check as root build; an including build never does), JarClasses.entries with the classes-only jar assertion, codec size-linearity test, start barrier in the concurrency test, an encodable second canary in the secrecy test, NestedBuild KDoc records the scrub's scope. webtools-http check: 271 jvm tests, 54 classes, 0 failures; build-logic e2eTest 17 and fixturesPublicationCheck 10 green.",
+                "open": [
+                  {
+                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md#13-sequencing-and-follow-ups"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-25",
+                    "at": "2026-10-25T20:44:31Z",
+                    "findings": {
+                      "documentation": 15,
+                      "test": 8,
+                      "code": 3
+                    },
+                    "severity": {
+                      "minor": 25,
+                      "other": 1
+                    },
+                    "route": "on-the-spot"
+                  }
+                ]
+              }
+            ],
+            "remediation": [
+              {
+                "since": "2026-10-25T19:38:32Z",
+                "ended": "2026-10-25T19:58:08Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-10-25T19:38:32Z",
+                  "note": "pass 1: changes-requested"
+                },
+                "detail": "Code review: no logic defect, every plan item done, no unplanned change, inside the unit, the single recorded deviation is the only one, hygiene clean (no key material, paths or attribution). Doc: KDoc complete and tier-named; residuals are the Amendment 1 partial-escape boundary missing from two consumer-facing KDocs, header and crypto-constant comments, and ten collapsed wording items. Tests: all plan rows present; the nine non-minor items are edges or guarantees the plan states but no test pins.",
+                "open": [
+                  {
+                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md#13-sequencing-and-follow-ups"
+                  },
+                  {
+                    "text": "Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
+                    "raised": "qa pass 1",
+                    "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)"
+                  }
+                ],
+                "remediation": {
+                  "pass": 1,
+                  "route": "planner-then-rookie-dev",
+                  "steps": [
+                    {
+                      "name": "rookie-dev: the 27 minor fixes (KDoc and comment wording, test renames and asserts, two mechanical code fixes); re-run webtools-http check and build-logic e2eTest",
+                      "state": "done"
+                    },
+                    {
+                      "name": "planner: rule add-or-record on the nine test gaps (Amendment 3 to plan §9)",
+                      "state": "done"
+                    },
+                    {
+                      "name": "rookie-dev: write the tests the planner adds",
+                      "state": "done"
+                    },
+                    {
+                      "name": "qa pass 2",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-25",
+                    "at": "2026-10-25T19:38:32Z",
+                    "findings": {
+                      "documentation": 19,
+                      "test": 15,
+                      "code": 2
+                    },
+                    "severity": {
+                      "minor": 27,
+                      "other": 9
+                    },
+                    "route": "planner-then-rookie-dev",
+                    "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
+                  }
+                ]
+              },
+              {
+                "since": "2026-10-25T20:44:31Z",
+                "ended": "2026-10-25T21:38:04Z",
+                "endedBy": "landing",
+                "to": "landing",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-25T20:54:23Z",
+                  "note": "qa pass 2 fixes done; reconciliation current"
+                },
+                "detail": "qa pass 2 fixes: the integration test runs (16 cases, the nameFor case present and passing; no other expression-bodied test has the non-Unit shape); FixtureRecorder KDoc states the atomic-move fallback and the attached-throwable rule as plan §6.12 has them; 14 wording and KDoc items; the gating consumer no longer touches the file system; the publication check asserts no nested build's output holds the passphrase or any line of the armoured key; the concurrency test's awaits carry a two-minute hang bound; guard mutation recorded (removing the root-build condition fails the wiring test's consumer case, so the condition is load-bearing). webtools-http check: 272 jvm tests, 54 classes, 0 failures; build-logic e2eTest 17 green.",
+                "open": [
+                  {
+                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md#13-sequencing-and-follow-ups"
+                  }
+                ],
+                "remediation": {
+                  "pass": 2,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "rookie-dev: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
+                      "state": "done"
+                    },
+                    {
+                      "name": "planner: reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-25",
+                    "at": "2026-10-25T20:44:31Z",
+                    "findings": {
+                      "documentation": 15,
+                      "test": 8,
+                      "code": 3
+                    },
+                    "severity": {
+                      "minor": 25,
+                      "other": 1
+                    },
+                    "route": "on-the-spot",
+                    "note": "The suite is 384 of 384 green. The one other finding is a Level 3 test JUnit never ran, its expression body returning a value, so the recorded counts were one short; the 25 minor findings are KDoc and comment wording, test asserts and a hang bound, and the plan documents' risk and Level 5 fields."
+                  }
+                ]
+              }
+            ]
+          },
+          "rowNames": {
+            "fixtures-variant": "The test-fixtures compilation and its publication",
+            "fixtures-surface": "The fixtures' tier, opt-in and API checks",
+            "virtual-clock": "VirtualClock, one time source for the whole stack",
+            "fake-transport": "FakeHttpTransport, a scripted transport",
+            "fixture-codec": "Fixture and FixtureLoader, the .http codec",
+            "recorder": "FixtureRecorder with RecordingGate and Redaction",
+            "gitattributes": "The .gitattributes line for .http fixtures",
+            "publication-check": "The fixtures-publication check in build-logic",
+            "fixtures-tests": "The fixtures' own tests",
+            "readme": "The README's testFixtures(...) line",
+            "release": "The variant's version and its first release"
+          },
+          "recon": {
+            "sizing": {
+              "reconstructed": true,
+              "ended": "2026-10-25",
+              "trail": [
+                {
+                  "date": "2026-10-25",
+                  "label": "Run started: sized as one system, the fixtures variant; the planner re-passes unit 4 against #55's architecture §6.7, §6.1 and §11 and impact §7",
+                  "ref": "../architecture.md"
+                }
+              ],
+              "milestones": []
+            },
+            "interview": {
+              "reconstructed": true,
+              "ended": null,
+              "trail": [],
+              "milestones": []
+            },
+            "research": {
+              "reconstructed": true,
+              "ended": "2026-10-25",
+              "trail": [
+                {
+                  "date": "2026-10-25",
+                  "label": "Research planning: 0 questions drafted"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Research started: `publication-check-wiring`, `publication-check-mechanics`"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Research returned: `publication-check-wiring`",
+                  "ref": "research/publication-check-wiring.md"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Research returned: `publication-check-mechanics`",
+                  "ref": "research/publication-check-mechanics.md"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Verification started: 2 findings"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Research verified; the plan next",
+                  "ref": "research/README.md"
+                }
+              ],
+              "milestones": [
+                {
+                  "date": "2026-10-21",
+                  "label": "Research verified, in #55's run",
+                  "ref": "../research/README.md",
+                  "note": "#55's ten questions and findings; 231 outside-world claims re-opened at source, 227 hold, none fails. Written on this board at sized from the research README, architecture §2 and this unit's row in §11"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Research verified",
+                  "ref": "research/README.md",
+                  "note": "this unit's two questions, publication-check wiring and publication-check mechanics: 45 items, 23 re-checked and holding, none failed or unclear, 22 probe measurements left as measured"
+                }
+              ],
+              "questions": [
+                {
+                  "question": "publication-check-wiring",
+                  "findings": "research/publication-check-wiring.md"
+                },
+                {
+                  "question": "publication-check-mechanics",
+                  "findings": "research/publication-check-mechanics.md"
+                }
+              ]
+            },
+            "plan": {
+              "reconstructed": true,
+              "ended": "2026-10-25",
+              "trail": [
+                {
+                  "date": "2026-10-25",
+                  "label": "Plan accepted",
+                  "ref": "plan.md"
+                }
+              ],
+              "milestones": [
+                {
+                  "date": "2026-10-25",
+                  "label": "The unit's own plan adds to the options",
+                  "ref": "plan.md",
+                  "note": "the options plan.md weighs beside the architecture's: where the publication check attaches, how its copy is signed, the producer's plugins and version, extra variant attributes, recipe B in `build-logic`, a source-set-wide opt-in"
+                },
+                {
+                  "date": "2026-10-25",
+                  "label": "Plan accepted",
+                  "ref": "plan.md",
+                  "note": "eight stages, S1 to S8, on `feat/issue-63-test-support`; three departures from #55's architecture: the check hangs off `webtools-http`'s `check`, the adhoc variant is signed on every check run, and the `MockWebServer` helpers go to unit 6. No version moves"
+                }
+              ]
+            },
+            "branch": {
+              "reconstructed": true,
+              "ended": "2026-10-25",
+              "trail": [
+                {
+                  "date": "2026-10-25",
+                  "label": "Branch `feat/issue-63-test-support` cut; implementation starts at S1"
+                }
+              ],
+              "milestones": [],
+              "branch": "feat/issue-63-test-support"
+            }
+          }
+        },
+        "tests": {
+          "base": "5d98102",
+          "updated": "2026-10-25T20:54:23Z",
+          "added": [
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.VirtualClockComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/VirtualClockComponentTest.kt",
+              "tests": 11,
+              "rows": [
+                "virtual-clock",
+                "fixtures-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.VirtualClockThreeClocksComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/VirtualClockThreeClocksComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "virtual-clock",
+                "fixtures-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.FixtureComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FixtureComponentTest.kt",
+              "tests": 10,
+              "rows": [
+                "fixture-codec",
+                "fixtures-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.FixtureLoaderComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FixtureLoaderComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "fixture-codec",
+                "fixtures-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.deterministic.webtools.http.testing.HttpMessageCodecDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/HttpMessageCodecDeterministicTest.kt",
+              "tests": 8,
+              "rows": [
+                "fixture-codec",
+                "fixtures-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.FakeHttpTransportComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FakeHttpTransportComponentTest.kt",
+              "tests": 21,
+              "rows": [
+                "fake-transport",
+                "fixtures-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 21,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.RequestMatchComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/RequestMatchComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "fake-transport",
+                "fixtures-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.StepComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/StepComponentTest.kt",
+              "tests": 7,
+              "rows": [
+                "fake-transport",
+                "fixtures-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.deterministic.webtools.http.testing.QueryPairsDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/QueryPairsDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "fake-transport",
+                "fixtures-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.gating.webtools.http.testing.FixturesConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/testing/FixturesConsumerGatingTest.kt",
+              "tests": 4,
+              "rows": [
+                "fixtures-surface",
+                "fixtures-tests"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.component.webtools.http.testing.RedactionComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/RedactionComponentTest.kt",
+              "tests": 13,
+              "rows": [
+                "recorder"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 13,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.integration.webtools.http.testing.FixtureRecorderIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/testing/FixtureRecorderIntegrationTest.kt",
+              "tests": 16,
+              "rows": [
+                "recorder"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 16,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T20:54:23Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.deterministic.webtools.http.testing.SensitiveNamesDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/SensitiveNamesDeterministicTest.kt",
+              "tests": 7,
+              "rows": [
+                "recorder"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.deterministic.webtools.http.testing.RecordingGateDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/RecordingGateDeterministicTest.kt",
+              "tests": 7,
+              "rows": [
+                "recorder"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.deterministic.webtools.http.testing.FixtureFileNamesDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/FixtureFileNamesDeterministicTest.kt",
+              "tests": 8,
+              "rows": [
+                "recorder"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.nonfunctional.webtools.http.testing.FixturesSecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/testing/FixturesSecrecyNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [
+                "recorder",
+                "fixtures-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.nonfunctional.webtools.http.testing.FakeHttpTransportConcurrencyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/testing/FakeHttpTransportConcurrencyNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [
+                "fake-transport"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "com.spartanlabs.testing.nonfunctional.webtools.http.testing.HttpMessageCodecGarbageNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/testing/HttpMessageCodecGarbageNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [
+                "fixture-codec"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T19:58:08Z"
+              }
+            },
+            {
+              "class": "FixturesPublicationEndToEndTest",
+              "module": "build-logic",
+              "testLevel": "4b",
+              "path": "build-logic/src/test/kotlin/com/spartanlabs/testing/e2e/webtools/buildlogic/FixturesPublicationEndToEndTest.kt",
+              "tests": 10,
+              "rows": [
+                "publication-check",
+                "fixtures-variant"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T20:54:23Z"
+              }
+            },
+            {
+              "class": "FixturesCheckWiringEndToEndTest",
+              "module": "build-logic",
+              "testLevel": "4b",
+              "path": "build-logic/src/test/kotlin/com/spartanlabs/testing/e2e/webtools/buildlogic/FixturesCheckWiringEndToEndTest.kt",
+              "tests": 2,
+              "rows": [
+                "publication-check"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T20:54:23Z"
+              }
+            }
+          ],
+          "amended": [],
+          "relevant": [
+            {
+              "class": "IncludedBuildEndToEndTest",
+              "module": "build-logic",
+              "tests": 5,
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-10-25T20:54:23Z"
+              }
+            }
+          ],
+          "rowNames": {
+            "fixtures-variant": "The test-fixtures compilation and its publication",
+            "fixtures-surface": "The fixtures' tier, opt-in and API checks",
+            "virtual-clock": "VirtualClock, one time source for the whole stack",
+            "fake-transport": "FakeHttpTransport, a scripted transport",
+            "fixture-codec": "Fixture and FixtureLoader, the .http codec",
+            "recorder": "FixtureRecorder with RecordingGate and Redaction",
+            "publication-check": "The fixtures-publication check in build-logic",
+            "fixtures-tests": "The fixtures' own tests"
+          }
+        }
       },
       "gap": {
         "kind": "missing",
@@ -838,7 +1861,7 @@
               "ref": "architecture.md#67-published-test-support",
               "heading": "6.7 Published test support",
               "paragraph": "Responsibility: make the production stack testable without bending it: a clock, a script engine, a fixture codec, a loopback factory, a recorder. · Placement: `fixtures/`, package `com.spartanlabs.webtools.http.testing`, a JVM-only `testFixtures` compilation associated with `main` (so it reaches `internal` declarations) and published as two variants (`testFixturesApiElements`, `testFixturesRuntimeElements`, capability `io.github.spartanlaboratories:webtools-http-test-fixtures:<v>`, `TargetJvmVersion` from `JAVA_FLOOR`, `mapToMavenScope` + `mapToOptional`) through …",
-              "hash": "548a2a3fa931"
+              "hash": "ebae2799fbaa"
             }
           },
           {
@@ -848,7 +1871,7 @@
               "ref": "architecture.md#67-published-test-support",
               "heading": "6.7 Published test support",
               "paragraph": "Responsibility: make the production stack testable without bending it: a clock, a script engine, a fixture codec, a loopback factory, a recorder. · Placement: `fixtures/`, package `com.spartanlabs.webtools.http.testing`, a JVM-only `testFixtures` compilation associated with `main` (so it reaches `internal` declarations) and published as two variants (`testFixturesApiElements`, `testFixturesRuntimeElements`, capability `io.github.spartanlaboratories:webtools-http-test-fixtures:<v>`, `TargetJvmVersion` from `JAVA_FLOOR`, `mapToMavenScope` + `mapToOptional`) through …",
-              "hash": "548a2a3fa931"
+              "hash": "ebae2799fbaa"
             }
           },
           {
@@ -865,7 +1888,27 @@
       },
       "asBuilt": {
         "state": "pending",
-        "summary": ""
+        "summary": "",
+        "changes": [
+          {
+            "what": "The fixtures-publication check hangs off `webtools-http`'s own `check`, declared only when WebTools is the root build and includes `build-logic`, in place of the root `check` of architecture §6.1, §6.7 and §11.",
+            "why": "The root project has no `check`; a root lifecycle `check` is reached by `./gradlew check` only, not by `build` or `:webtools-http:check`, and gives a consumer's composite a root task to address (#63 research, publication-check-wiring F6). This settles the open point of `impact.md` §7 and §8.",
+            "when": "#63 plan",
+            "ref": "63-test-support/plan.md#610-wiring-the-check-into-build-and-check"
+          },
+          {
+            "what": "The signing of the multiplatform publication with its adhoc variant is exercised on every run of the check with a throwaway key; only Central's validator is left for the first release, where architecture §12 placed both.",
+            "why": "The check publishes a signed copy and asserts an `.asc` beside every file, the fixtures jar's included (#63 research, publication-check-mechanics F3, F4); an unsigned copy could not show the fixtures jar signed.",
+            "when": "#63 plan",
+            "ref": "63-test-support/plan.md#69-the-publication-check"
+          },
+          {
+            "what": "`Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)` land with unit 6, #65, as §11 gives them, although §6.7 lists them among this unit's types.",
+            "why": "They belong with the transport unit's `LoopbackTransports`; `Fixture` exposes the status, headers and body they need, and `mockwebserver3` is already on the fixtures' API.",
+            "when": "#63 plan",
+            "ref": "63-test-support/plan.md#4-non-goals"
+          }
+        ]
       }
     },
     {
@@ -1901,6 +2944,19 @@
             "ref": "62-http-core/impact.md#4-sibling-units"
           }
         ]
+      },
+      {
+        "unit": "test-support",
+        "basis": "plan",
+        "summary": "The root module of `webtools-http`, new and unreleased, gains a test-fixtures variant with the capability `webtools-http-test-fixtures` and a `-test-fixtures.jar`, whose test libraries reach a consumer's test classpath only; the main variants, the ABI dump and the three existing artifacts do not change. Inside the repository, `build`, `check` and `:webtools-http:check` also run the fixtures-publication check.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
+          "unreleased": true
+        },
+        "source": "63-test-support/impact.md",
+        "link": "63-test-support/impact.md#1-published-artifacts"
       }
     ],
     "changes": [
@@ -1942,5 +2998,14 @@
     ],
     "source": "impact.md",
     "link": "impact.md#1-published-artifacts"
+  },
+  "links": {
+    "workBoard": "../index.html",
+    "repoPage": "../../dashboards/index.html",
+    "pages": {
+      "gradle-build": "../../dashboards/gradle-build/index.html",
+      "webtools-http-core": "../../dashboards/webtools-http/index.html",
+      "webtools": "../../dashboards/index.html"
+    }
   }
 }

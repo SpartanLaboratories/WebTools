@@ -325,6 +325,13 @@ none fails — [`research/README.md` § Verification](research/README.md)):
     lists `kotlinx-coroutines-test` or `mockwebserver3`. It is the only thing that notices a
     KGP or Gradle upgrade changing the experimental publishing behaviour. Wired into the root
     `check` through the included build's task.
+    > **Corrected 2026-10-25 (#63 as built):** the check is the task
+    > `:build-logic:fixturesPublicationCheck`, and `webtools-http`'s own `check` depends on it, declared
+    > only when WebTools is the root build and includes `build-logic`. The root project has no `check`,
+    > and a root `check` would not be reached by `./gradlew build` or `:webtools-http:check`; this way
+    > `build`, `check` and `:webtools-http:check` all run it, and a build that includes WebTools never
+    > does. It also resolves the fixtures from an in-build Kotlin Multiplatform module, and it signs the
+    > published copy with a throwaway key (see §12). See `63-test-support/impact.md` §5.
 - **Does not own:** module coordinates, dependencies, `explicitApi()` (set per module: it must
   apply to the new modules and not to the legacy ones, so it cannot hang off the kind of
   plugin), `api(slf4j-api)` (declared in each of the three existing modules' build files so
@@ -697,6 +704,9 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     about forty lines of hand-written parsing; fixtures load from the consumer's own
     classpath, the jar ships none. `Fixture.toMockResponse()` and
     `MockWebServer.enqueue(fixture)` let one file serve Level 2 and Level 3.
+    > **Corrected 2026-10-25 (#63 as built):** these two helpers land with unit 6 (`okhttp-transport`),
+    > as "Contributions from other units" below and §11 say; unit 4's `Fixture` exposes `status`,
+    > `headers` and `body()` for them.
   - `FixtureRecorder` — a decorating `HttpTransport` constructible only from a
     `RecordingGate.Enabled`; `RecordingGate.evaluate(env)` is `Disabled` unless
     `WEBTOOLS_HTTP_RECORD` is set, and `Disabled` whenever any of the twelve CI variables is
@@ -1336,6 +1346,10 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
 - **Central validation of the fixtures jar** (no sources or javadoc of its own) and signing of
   a KMP publication with an adhoc variant were not run against the real validator; the first
   release is where it is settled.
+  > **Corrected 2026-10-25 (#63 as built):** the signing half runs on every run of the
+  > fixtures-publication check, which signs the multiplatform publication with its adhoc variant using a
+  > throwaway key and asserts a signature beside every published file. Only Maven Central's upload and
+  > validator meet the fixtures jar first at the first release. See `63-test-support/impact.md` §1.
 - **Rome is dormant** (last release 2023-03-12; an open date-parsing bug) and builds a DOM
   whose memory amplification on a hostile 2 MiB document is unmeasured. The port, the prolog
   scan and the Level 4c suite under a fixed heap bound the exposure; a streaming parser behind

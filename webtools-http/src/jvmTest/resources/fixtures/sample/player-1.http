@@ -1,0 +1,8 @@
+# request: GET https://api.example.test/api/players/1?api_key=REDACTED
+HTTP/1.1 200 OK
+Content-Type: application/json
+ETag: "v1"
+X-Note: café
+X-RateLimit-Remaining-Minute: 59
+
+{"account_id":1,"name":"Ünïcode"}

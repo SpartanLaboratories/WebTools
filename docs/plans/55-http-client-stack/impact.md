@@ -16,7 +16,7 @@
 | `webtools-udp` | Java 11 floor (landed, #76): class files major 55, `org.gradle.jvm.version` 11 in the module metadata (23 on Central). Public API unchanged (`javap -protected` identical, measured); the UDP port lock unchanged. | rides in the unreleased `2.0.0a` (`webtools-udp/build.gradle.kts:116`); Central holds 1.0.0, 1.1.0 and 2.0.0, all Java 23 | JDK 11–22 can load it once it is published. POM identical; metadata identical except the JVM version. `2.0.0a` orders below `2.0.0`, so a graph that also asks for `2.0.0` keeps the Java 23 build unless it pins with `strictly`, as for the other two. This corrects the architecture's §12, which calls `webtools-udp` unaffected. |
 | `webtools-scraping` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As above. `1.0.0a` orders below `1.0.0`, so a graph that also asks for `1.0.0` keeps the Java 23 build unless it pins with `strictly`. The README and the release note say so. |
 | `webtools-browser` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As for `webtools-scraping`. |
-| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. |
+| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. Its test-fixtures variant is built (#63): `VirtualClock`, `FakeHttpTransport`, the `.http` fixtures and the recorder, with the fixtures-publication check that guards their publication. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. The fixtures variant as built (#63) matches too: the root module's metadata holds `testFixturesApiElements` and `testFixturesRuntimeElements`, each with the capability `io.github.spartanlaboratories:webtools-http-test-fixtures`, `org.gradle.jvm.version` 11 and the one `-test-fixtures.jar` (classes only, major 55); the root POM lists the two test libraries as `compile` and `optional`, and neither the main variants nor the `-jvm` POM lists them. A consumer takes it with `testFixtures(...)`, in Gradle only. |
 | `webtools-feeds` (new) | RSS/Atom parser port with the Rome default and a conditional-GET fetcher. Kotlin Multiplatform; publishes `webtools-feeds` and `webtools-feeds-jvm`; no fixtures variant. | `1.0.0` | `webtools-http` and its `api` dependency on the compile classpath; `rome` 2.1.0 and `slf4j-api` at runtime. |
 
 **Not published:** the included `build-logic` build and the check-only modules
@@ -59,13 +59,14 @@ install lines to them. Every release follows the organisation's steps once #58's
 - **`./gradlew build` does more work.** It adds:
   - `verifyJavaFloor` on every published module;
   - `apiCheck` on the two new modules;
-  - the fixtures-publication TestKit check (a publish and two resolutions), once unit 4 attaches it
-    to a `check` that `build` reaches (§8);
+  - the fixtures-publication TestKit check (a publish, and resolutions from three build shapes), which
+    unit 4 attached to `webtools-http`'s `check`: 44 to 52 s when one of its inputs changed, and
+    `UP-TO-DATE` otherwise (§8);
   - one Kotlin/JS compile per check module (compile only: its `js` target has no environment, so it
     has no test task and needs no Node.js).
 
-  `build-logic`'s own tests are not part of it. Until #58 brings CI, these guards run only on a
-  developer's build.
+  `build-logic`'s own tests are not part of it, apart from that check. Until #58 brings CI, these
+  guards run only on a developer's build.
 - **Build host.** The bytecode floor no longer depends on the JDK that runs the build (exercised
   on JDK 17 and 23); Gradle 9.7.1 itself needs JDK 17 to 26. Kotlin 2.2.0 on Gradle 9.7.1 sits
   outside Kotlin's documented range: it works, but Gradle 10 forces a KGP move (architecture §12).
@@ -176,15 +177,15 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 |---|---|
 | 2 `java-floor` | Settled (#76). The floor's effect on dependency resolution is exercised: KGP copies the `jvm` target's attributes onto the four `jvm` classpaths, and `MultiplatformJavaFloorIntegrationTest` asserts that each requests 11 (§8). |
 | 3 `http-core` | Settled (#62). The compile proof held in `commonMain`, `jvmMain` and the check module's `jsMain`: a top-level implementer of a gated port compiles with the module's opt-in and fails to compile without it, with the marker's message in the error; a consumer without the opt-in names the gated types, takes `WallClock.System` as a default and constructs every public leaf; eight subclassing declarations give exactly eight errors in `commonTest` and in `jvmTest`, and none with `@OptIn` ([`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3). The check module compiles `commonMain` for `js()` with no environment, so the root project gains no task (§8). |
-| 4 `test-support` | The fixtures-publication check is the only guard on the experimental publishing API. Central's validation of the fixtures jar, and signing a multiplatform publication with an adhoc variant, are first exercised at the first release. Where the check attaches: the root project has no `check` task (§8). |
+| 4 `test-support` | Settled (#63). The fixtures-publication check, `:build-logic:fixturesPublicationCheck`, is a dependency of `webtools-http`'s own `check`, declared only when WebTools is the root build: `./gradlew build`, `check` and `:webtools-http:check` run it, and a build that includes WebTools never does. It stays the only guard on the experimental publishing API, and it now signs the multiplatform publication, adhoc variant included, with a throwaway key on every run and asserts a signature beside every published file. Only Maven Central's upload and validator meet the fixtures jar first at the first release ([`63-test-support/impact.md`](63-test-support/impact.md) §1 and §5). |
 | 8 `call-budget` | How a `Mutex`-based ledger closes without suspending (the port's non-suspend `close()`). |
 | 9 `call-facades` | The generic `Endpoint<T>` factory-over-class resolution; whether `RateLimited.retryAfter` still needs the `max` with the budget's `pausedFor` once `complete` has applied the signals. |
 | 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 to 3 as built
+## 8. What the later units build on: units 1 to 4 as built
 
-Units 1 to 3 are built.
+Units 1 to 4 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -197,6 +198,10 @@ Units 1 to 3 are built.
   [`62-http-core/final-implementation.md`](62-http-core/final-implementation.md). Its contracts for
   the later units are pinned in [`62-http-core/plan.md`](62-http-core/plan.md) §12 and summarised in
   [`62-http-core/impact.md`](62-http-core/impact.md) §4.
+- **Unit 4, `test-support` (#63).** Its as-built record is
+  [`63-test-support/final-implementation.md`](63-test-support/final-implementation.md). Its contracts
+  for the later units are pinned in [`63-test-support/plan.md`](63-test-support/plan.md) §12 and
+  summarised in [`63-test-support/impact.md`](63-test-support/impact.md) §4.
 
 What they settle for the units still to come:
 
@@ -281,8 +286,8 @@ What they settle for the units still to come:
 - **The check-module pattern.** `webtools.kotlin-common-check` applies the multiplatform plugin,
   declares `mavenCentral()`, calls `js()` with no environment, and wires `check` to `compileKotlinJs`.
   - With no environment the `js` target has no test task. `build` downloads no Node.js or Yarn and
-    writes no `kotlin-js-store/`, and the root project gains no plugin and no task, so unit 4's open
-    point below stands.
+    writes no `kotlin-js-store/`, and the root project gains no plugin and no task. Unit 4 therefore
+    attached its publication check to `webtools-http`'s `check` (below).
   - The cost is the Kotlin Gradle plugin's "JS Environment Not Selected" warning, once per
     configuration-cache miss. If a release makes it an error, the plugin's TestKit `build` test fails,
     and the fallback in the plugin's header applies,
@@ -325,7 +330,8 @@ What they settle for the units still to come:
     texts from [`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3. The
     evergreen architecture document describes the check module as `js()` with no environment.
 - **The IDE checks unit 3 leaves** (IntelliJ's import of the check module, the gate's error and its
-  `@OptIn` quick fix, Quick Documentation) are the maintainer's, at the latest before unit 4 starts
+  `@OptIn` quick fix, Quick Documentation) are the maintainer's and still open. They share unit 4's
+  trigger: the next IntelliJ import after #63 lands, at the latest before unit 5 (#64) starts
   ([`62-http-core/impact.md`](62-http-core/impact.md) §7).
 
 **Units 3 `http-core` and 10 `feeds`.**
@@ -353,29 +359,68 @@ What they settle for the units still to come:
   rule, the `commonTest`/`jvmTest` layout and the `js` compile of the check modules. Units 10 and 11
   extend it to five modules.
 
-**Unit 4, `test-support` (#63).**
-- **What it can reuse.** The TestKit harness is there: `SampleProject`, `ProjectWorkspace`,
-  `NestedBuild`, `TestReports`, `ModuleMetadata`, `PomFile`, `BuildLogicSource` and, from unit 2,
-  `JarClasses`, which reads the class-file majors of a built jar. So is the shared TestKit home.
-- **The Java floor.**
-  - The target's `TargetJvmVersion` does not reach hand-declared variants, so the fixtures variants
-    set it from `WebToolsBuild.JAVA_FLOOR`.
-  - The fixtures jar joins the guard with
-    `tasks.named<VerifyJavaFloor>("verifyJavaFloor") { jars.from(<the jar's archiveFile>) }`. The
-    fixtures publication's `.module` file is picked up without a change, because the guard reads every
-    `GenerateModuleMetadata` output of the project.
-  - The publication check expects 11 on both fixtures variants.
-- **A new task that starts nested builds** lives in `build-logic/build.gradle.kts`. It sets the
-  same system properties and takes `usesService(testKitHomeLock)`, so it never uses the home
-  alongside the other nested-build tasks.
-- **No module script may reassign `runtimeDependencyFiles`.**
-  - The multiplatform plugin's level tasks read the test compilation's `runtimeDependencyFiles`
-    once.
-  - `associateWith` adds to the configuration behind it, so the fixtures compilation reaches them.
-  - That holds only while no module script reassigns the property.
-- **Where the publication check attaches is open.**
-  - Architecture §6.1 wires it into the root `check`. But the root project has no `check` task: the
-    root build keeps only `group` and `version`.
-  - Unit 4's plan chooses between two places:
-    - a root lifecycle `check`, which changes the root build's shape;
-    - the `check` of `webtools-http`, the module whose publication the check covers.
+**Unit 4, `test-support` (#63), as built.**
+- **The variant.** `webtools-http` has a JVM-only `testFixtures` compilation, associated with `main`,
+  with `test` associated with it. It is published as the variants `testFixturesApiElements` and
+  `testFixturesRuntimeElements` beside a `-test-fixtures.jar` (recipe B, in the module's own build file).
+  - Its package is `com.spartanlabs.webtools.http.testing`, its tier Stable Core with source
+    compatibility only, and `-Xexplicit-api=strict` applies to it.
+  - It depends on exactly `webtools-http`, `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0;
+    `mockwebserver3` is there for unit 6.
+  - It has no source-set opt-in: each implementer of a gated port carries its own `@OptIn`.
+  - `verifyJavaFloor` reads the fixtures jar and the entries of the fixtures' runtime classpath that
+    exist.
+- **The check.** `:build-logic:fixturesPublicationCheck` publishes a copy of the module, signed with a
+  throwaway key, to a file repository in its workspace. It resolves `testFixtures(...)` from that
+  repository, through a composite and from an in-build Kotlin Multiplatform module, in ten tests.
+  - `webtools-http`'s `check` depends on it when WebTools is the root build, so `./gradlew build`,
+    `check` and `:webtools-http:check` run it, and a build that includes WebTools never does.
+  - Its inputs are the module's build file, its `commonMain`, `jvmMain` and `jvmTestFixtures` trees and
+    the root build file, so a later unit's new fixtures run it again.
+- **Rules for the later units.**
+  - Fixtures go in `webtools-http/src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/`:
+    each implementer of a gated port with its own `@OptIn`, every public declaration with explicit
+    visibility and KDoc.
+  - No new fixtures dependency: the check asserts the list.
+  - No module script reassigns `runtimeDependencyFiles`: the level tasks read the test compilation's
+    once, and the fixtures reach them through the association.
+  - A new task in `build-logic` that starts nested builds calls `configureNestedBuilds()`, which carries
+    the TestKit properties, `testKitHomeLock` and the timeout.
+  - The names [`63-test-support/plan.md`](63-test-support/plan.md) §12 lists are taken.
+    `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` are reserved for unit 6,
+    and `RecordingBudgetObserver` and `FakeBudgetStore` for unit 8.
+- **What each later unit takes.** [`63-test-support/plan.md`](63-test-support/plan.md) §12 has the
+  signatures.
+  - **Unit 5 (#64).** Nothing in the fixtures.
+  - **Unit 6 (#65).** It adds `LoopbackTransports`, `webtoolsUrl`, `Fixture.toMockResponse()` and
+    `MockWebServer.enqueue(fixture)` to the fixtures compilation, built on `Fixture.status`, `headers`
+    and `body()`, with no new dependency.
+  - **Unit 7 (#66).** `CaffeineResponseCache` takes `VirtualClock.timeSource`
+    (`TimeSource.WithComparableMarks`), `dispatcher` (`CoroutineDispatcher`) and `maintenanceExecutor`
+    (`java.util.concurrent.Executor`), so its default dispatcher is a constructor parameter. The unit
+    re-runs the three-clocks proof with the real cache. `UnmatchedRequestError` is an `Error` and passes
+    through a cache loader as one.
+  - **Unit 8 (#67).** It adds `RecordingBudgetObserver` and `FakeBudgetStore`, each with its own
+    `@OptIn`. `WindowedCallBudget` takes `VirtualClock.timeSource` and `wallClock`, and the unit re-runs
+    the three-clocks proof with the real budget.
+  - **Unit 9 (#68).** It scripts `FakeHttpTransport`, for example
+    `Step.respond(429, HttpHeaders { add("Retry-After", "30") })` or
+    `Step.fail(TransportFailure.RefusedByPolicy(...))`. It passes `VirtualClock.dispatcher` as the
+    client's dispatcher, asserts with `calls.size` that a refusal costs nothing, and catches a stray
+    request with `unmatchedCalls`.
+  - **Unit 10 (#69).** `jvmTestImplementation(testFixtures(project(":webtools-http")))` resolves the
+    variants, measured. `Step.respond { … }` carries a `redirectChain` for `permanentlyMovedTo`, and
+    `RequestMatch.header` checks the conditional headers. Its body-only `.rss` and `.atom` fixtures live
+    in its own resources. The `.gitattributes` line covers `*.http` files only: a body-only file of more
+    than one line changes its line endings on a checkout with `core.autocrlf=true` unless a line of its
+    own covers it.
+  - **Unit 11 (#70).** It documents the fixtures (the tier, the `.http` format, the recorder workflow,
+    the `testFixtures(...)` line, the Gradle-only note) and the check, from unit 4's KDoc and README text.
+- **The IDE checks of units 3 and 4** are the maintainer's: at the next IntelliJ import after #63 lands,
+  and at the latest before unit 5 (#64) starts
+  ([`63-test-support/impact.md`](63-test-support/impact.md) §7).
+- **The first release.** The check signs the multiplatform publication, adhoc variant included, on every
+  run. Only Maven Central's upload and validator meet the fixtures jar first, at `webtools-http`'s first
+  release (§7).
+- **`architecture.md`** carries dated corrections (2026-10-25) at §6.1 (where the check attaches), §12
+  (the signing on every run of the check) and §6.7 (the two `MockWebServer` helpers land with unit 6).

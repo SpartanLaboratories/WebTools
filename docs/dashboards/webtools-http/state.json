@@ -1,0 +1,7 @@
+{
+  "slug": "webtools-http",
+  "version": "1.0.0",
+  "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
+  "lastAmended": {"issue": 62, "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile", "sha": "123c875"},
+  "written": {"sha": "7de8207"}
+}
