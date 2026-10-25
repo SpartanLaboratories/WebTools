@@ -17,8 +17,12 @@
    dashed = not started or no board yet. A row with no board takes its state from the tracker (plan/RULES.md §5, "Boardless rows"):
    not started (dashed), in progress (a branch or an open pull request; solid, never glowing), merged · awaiting close, landed, and
    closed · not planned (closed on the tracker as not planned: solid, neutral, never landed) and closed · duplicate (closed as a
-   duplicate of another issue: solid, neutral, never landed). The same words mark a roadmap item and a waits-on or blocks entry closed
-   as not planned (stateReason NOT_PLANNED) or as a duplicate (stateReason DUPLICATE). */
+   duplicate of another issue: solid, neutral, never landed). The same words mark a roadmap item and a depends-on or blocks entry closed
+   as not planned (stateReason NOT_PLANNED) or as a duplicate (stateReason DUPLICATE). The columns (admin-team/dashboards-skill/30): the
+   issue (its title the link to its board), its state (with its branch while it has one), now, its qa passes (every pass recorded and the
+   one running, as ordinals), what it depends on (each dependency with its build state, blocking, clear or pre-built, in the status
+   colours, and its locality, this repository, this organization, the parent organization or external, on a neutral ramp from near to far)
+   and what it holds up (blocks while it is open, enables once it is done). */
 :root{
   --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
   --line:#dfe4ec; --hair:rgba(14,20,32,.10);
@@ -90,6 +94,20 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
 .kpi .v{font-size:22px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
 .kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+/* A tile that counts states carries a segmented bar of them, its legend inside the tile (GUIDANCE.md §2, "Figures"): the Runs and the Landed
+   tiles. A tile that counts one state (active, waiting, up next, not started) has nothing to segment and carries none. */
+.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
+.kpi .seg-bar i{display:block;height:100%;background:var(--ink-2)}
+.seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--muted)}.seg-bar i.accent{background:var(--accent)}
+.seg-bar i.hollow{background:none!important;border:1.5px solid var(--good)}
+.seg-bar i.pln{background:none!important;border:1.5px dashed var(--muted)}
+.kpi .key{margin-top:6px;gap:4px 10px;font-size:11px}
+.key i.segk{width:14px;height:6px;border:0;border-radius:2px;background:var(--sc,var(--ink-2))}
+.key i.segk.good{--sc:var(--good)}.key i.segk.warning{--sc:var(--warning)}.key i.segk.serious{--sc:var(--serious)}.key i.segk.critical{--sc:var(--critical)}.key i.segk.neutral{--sc:var(--muted)}.key i.segk.accent{--sc:var(--accent)}
+.key i.segk.hollow{background:none;border:1.5px solid var(--good);height:7px}
+.key i.segk.pln{background:none;border:1.5px dashed var(--muted);height:7px}
+/* the Context's legend (GUIDANCE.md §2): the encodings its cards draw */
+.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
 .tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
@@ -115,6 +133,18 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .key .cbar{display:inline-block;width:40px;margin:0}
 .vp.good{--sc:var(--good)}.vp.warning{--sc:var(--warning)}.vp.serious{--sc:var(--serious)}.vp.critical{--sc:var(--critical)}
 .vp.neutral,.vp.hollow{background:var(--surface)}
+/* Depends on, and Blocks · enables (plan/RULES.md §5; dashboards-skill/30): each issue with a small bubble of its state, glyph and word */
+.deps{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.dep{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 5px;min-width:0}
+.dep .vp{font-size:9.5px;padding:1px 5px}
+/* one bubble per dependency, two parts: its build state (a status pill) and its locality (a neutral ramp, faintest near, full ink far) */
+.dbub{display:inline-flex;align-items:stretch;border-radius:3px;white-space:nowrap}
+.dbub>.vp{border-top-right-radius:0;border-bottom-right-radius:0}
+.loc{--lc:var(--muted);display:inline-flex;align-items:center;gap:4px;font:600 9.5px/1.2 var(--mono);padding:1px 5px;border:1px solid var(--line);border-left:3px solid var(--lc);border-radius:3px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
+.dbub>.vp+.loc{border-left-width:3px;border-top-left-radius:0;border-bottom-left-radius:0;margin-left:-1px}
+.loc i{font-style:normal;font-weight:700}
+.loc.l1{--lc:color-mix(in srgb,var(--ink) 22%,var(--surface))}.loc.l2{--lc:color-mix(in srgb,var(--ink) 45%,var(--surface))}.loc.l3{--lc:color-mix(in srgb,var(--ink) 70%,var(--surface))}.loc.l4{--lc:var(--ink)}
+.key .loc i,.key .dbub i{display:inline;width:auto;height:auto;border:0;background:none;box-shadow:none}
 .vp.dashed{border-style:dashed;color:var(--ink-2)}
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c,var(--muted));flex:none;vertical-align:-1px;margin-right:5px}
@@ -135,6 +165,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .tbl td{overflow-wrap:anywhere}
 .tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-top:0}
 .tbl tr.run>:first-child{border-left:4px solid var(--c,var(--muted))}
+/* the columns' shares (dashboards-skill/30: no branch or board column; the issue's title is its board's link, the branch is in the state) */
+.tbl thead th:nth-child(1){width:20%}.tbl thead th:nth-child(2){width:14%}.tbl thead th:nth-child(4){width:14%}.tbl thead th:nth-child(5){width:15%}.tbl thead th:nth-child(6){width:12%}
 .tbl tr.run.nob>:first-child{border-left-style:dashed}
 .tbl tr.grp th{padding-top:16px;font:700 11px var(--sans);color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
 .tbl tr.grp th a{text-decoration:none;border-bottom:1px solid var(--line);text-transform:none;letter-spacing:0;font-family:var(--mono);font-weight:400}
@@ -143,6 +175,52 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .tbl .sub{font-size:11.5px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
 .tbl a{text-decoration:none;border-bottom:1px solid var(--line)}
 .tbl small{color:var(--ink-2)}
+/* The Runs tab's content, larger (admin-team/dashboards-skill/31): every column but Now (the issue, the state with its branch, the qa
+   passes, Depends on, Blocks · enables), with their bubbles and pills, scaled up to read comfortably and fill the room; Now keeps its size.
+   Under 880 px each run is a card of its cells, each labelled, so the page never scrolls sideways and nothing scrolls inside the table. */
+.tbl{font-size:14.5px;min-width:1000px}
+.tbl th,.tbl td{padding:9px 8px}
+.tbl th{font-size:11.5px}
+.tbl .t{font-size:15px;line-height:1.4}
+.tbl .sub{font-size:12.5px;margin-top:3px}
+.tbl small{font-size:12px}
+.tbl .vp{font-size:12px;padding:3px 8px;gap:6px}
+.tbl .dep .vp,.tbl .loc{font-size:11.5px;padding:2px 7px}
+.tbl .dep{gap:3px 6px}
+.tbl .deps{gap:6px}
+.tbl .tags{gap:5px 7px;margin-top:6px}
+.tbl .tag-next{font-size:11px;padding:4px 6px}
+.tbl .chainsum{font-size:13.5px}
+.tbl .cbar{height:5px;max-width:240px}
+.tbl td:nth-child(3){font-size:12.5px}
+.tbl td:nth-child(3) .sub{font-size:11.5px}
+.tbl td:nth-child(3) small{font-size:inherit}
+@media (min-width:1500px){.tbl{font-size:15px}.tbl .t{font-size:15.5px}.tbl .vp{font-size:12.5px}.tbl .dep .vp,.tbl .loc{font-size:12px}.tbl .qamark{font-size:12px}.tbl .chainsum{font-size:14px}}
+@media (max-width:879.98px){
+  .tbl{min-width:0}
+  .tbl,.tbl tbody,.tbl tr.grp,.tbl tr.grp th{display:block}
+  .tbl thead{display:none}
+  .tbl tr.grp th{padding:16px 6px 6px}
+  .tbl tr.run{display:grid;grid-template-columns:minmax(0,1fr);border-top:1px solid var(--line);border-left:4px solid var(--c,var(--muted));padding:4px 0 6px}
+  .tbl tr.run.nob{border-left-style:dashed}
+  .tbl tr.run>:first-child{border-left:0}
+  .tbl tr.run>td{display:block;border-top:0;padding:5px 10px;min-width:0}
+  .tbl tr.run>td:empty{display:none}
+  .tbl tr.run>td:nth-child(2){order:1}.tbl tr.run>td:nth-child(4){order:2}.tbl tr.run>td:nth-child(3){order:3}.tbl tr.run>td:nth-child(5){order:4}.tbl tr.run>td:nth-child(6){order:5}
+  .tbl tr.run>td:nth-child(n+2)::before{display:block;font:600 10.5px/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .tbl tr.run>td:nth-child(2)::before{content:"State"}.tbl tr.run>td:nth-child(3)::before{content:"Now"}.tbl tr.run>td:nth-child(4)::before{content:"QA"}.tbl tr.run>td:nth-child(5)::before{content:"Depends on"}.tbl tr.run>td:nth-child(6)::before{content:"Blocks · enables"}
+  .tbl .vp,.tbl .qamark,.tbl .dbub{white-space:normal;max-width:100%}
+}
+@media (min-width:600px) and (max-width:879.98px){
+  .tbl tr.run{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .tbl tr.run>td:nth-child(1),.tbl tr.run>td:nth-child(3){grid-column:1/-1}
+}
+/* the decision not to run another qa pass (dashboards-skill/31): a small neutral mark beside the pass, its glyph and words */
+.qas{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.qa1{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px 6px;max-width:100%}
+.qamark{display:inline-flex;align-items:center;gap:4px;font:600 10.5px/1.2 var(--mono);padding:2px 6px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
+.tbl .qamark{font-size:11.5px;padding:2px 7px}
+.qamark i,.key .qamark i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;background:none;box-shadow:none}
 /* An issue's #n opens its board when it has one (plan/RULES.md §1, §5); the small GitHub link beside it opens the issue. */
 a.gh{font:10.5px var(--mono);color:var(--muted);text-decoration:none;border-bottom:0!important;white-space:nowrap;text-transform:none;letter-spacing:0;font-weight:400}
 .vp a,.kpi .s a{text-decoration:none;border-bottom:1px solid var(--line)}
@@ -203,11 +281,15 @@ footer code{color:var(--ink-2)}
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-25T12:31:13Z",
+  "generated": "2026-10-25T22:06:00Z",
   "asOf": "2026-10-25",
   "tree": {
     "ref": "master",
-    "sha": "7de8207"
+    "sha": "4fcc6e0"
+  },
+  "links": {
+    "repoPage": "../dashboards/index.html",
+    "readme": "README.md"
   },
   "systems": [
     {
@@ -231,8 +313,8 @@ footer code{color:var(--ink-2)}
       "name": "published test fixtures",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-url-policy",
@@ -325,12 +407,14 @@ footer code{color:var(--ink-2)}
         {
           "issue": 16,
           "repo": "SpartanLaboratories/KotlinBottools",
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         },
         {
           "issue": 9,
           "repo": "SpartanLaboratories/KotlinBottools",
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": "55-http-client-stack/dashboard.html",
@@ -338,34 +422,28 @@ footer code{color:var(--ink-2)}
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
+      "detail": "4 of 11 units landed; #64 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-25T12:08:09Z",
+      "updated": "2026-10-25T22:03:35Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 3,
+        "landed": 4,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 3,
+        "landed": 4,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
         "planned": false,
         "done": false,
-        "current": [
-          {
-            "issue": 63,
-            "slug": "test-support",
-            "step": null
-          }
-        ],
+        "current": [],
         "next": {
           "issue": 64,
           "slug": "url-policy",
@@ -388,12 +466,16 @@ footer code{color:var(--ink-2)}
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "hold": "enables"
         },
         {
           "issue": 47,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-23T02:21:57Z",
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/61-build-logic/dashboard.html",
@@ -457,14 +539,19 @@ footer code{color:var(--ink-2)}
         {
           "issue": 61,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-22T21:58:58Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
@@ -485,7 +572,9 @@ footer code{color:var(--ink-2)}
             "test": 2,
             "code": 0
           },
-          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
+          "route": "on-the-spot",
+          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass",
+          "inPlace": "fixed"
         }
       ],
       "qaMax": 3,
@@ -517,30 +606,42 @@ footer code{color:var(--ink-2)}
         {
           "issue": 47,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-23T02:21:57Z",
+          "build": "clear",
+          "locality": "local-repository"
         },
         {
           "issue": 61,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-22T21:58:58Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 67,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 66,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 64,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/62-http-core/dashboard.html",
@@ -567,7 +668,8 @@ footer code{color:var(--ink-2)}
           },
           "route": "on-the-spot",
           "report": "build/reports/test-inspector/index.html",
-          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot.",
+          "inPlace": "fixed"
         }
       ],
       "qaMax": 3,
@@ -591,46 +693,101 @@ footer code{color:var(--ink-2)}
     {
       "issue": 63,
       "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 69,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 67,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 66,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 65,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         }
       ],
-      "board": null,
-      "folder": null,
+      "board": "55-http-client-stack/63-test-support/dashboard.html",
+      "folder": "55-http-client-stack/63-test-support/",
       "branch": null,
       "system": "webtools-http-test-fixtures",
-      "step": "implementation",
-      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
-      "qa": [],
+      "step": "landed",
+      "detail": "Merged through PR #84 as 4fcc6e0: the test-fixtures variant of `webtools-http` with its fixtures and tests, the fixtures-publication check in `build-logic`, the `.gitattributes` line and the README; one staging deviation; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-10-25T22:03:35Z",
+      "updated": "2026-10-25T22:03:35Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "at": "2026-10-25T19:38:32Z",
+          "findings": {
+            "documentation": 19,
+            "test": 15,
+            "code": 2
+          },
+          "severity": {
+            "minor": 27,
+            "other": 9
+          },
+          "route": "planner-then-rookie-dev",
+          "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "at": "2026-10-25T20:44:31Z",
+          "findings": {
+            "documentation": 15,
+            "test": 8,
+            "code": 3
+          },
+          "severity": {
+            "minor": 25,
+            "other": 1
+          },
+          "route": "on-the-spot",
+          "note": "The suite is 384 of 384 green. The one other finding is a Level 3 test JUnit never ran, its expression body returning a value, so the recorded counts were one short; the 25 minor findings are KDoc and comment wording, test asserts and a hang bound, and the plan documents' risk and Level 5 fields.",
+          "inPlace": "fixed"
+        }
+      ],
       "qaMax": 3,
-      "status": "building",
-      "landed": null,
-      "reconciliation": null,
-      "active": true,
+      "status": "landed",
+      "landed": {
+        "pr": 84,
+        "merge": "4fcc6e0",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-10-25"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
       "systemName": "published test fixtures",
       "group": "55",
       "order": 4
@@ -645,13 +802,17 @@ footer code{color:var(--ink-2)}
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 65,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -681,17 +842,24 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 64,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -719,18 +887,26 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         },
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -758,18 +934,26 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         },
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -797,21 +981,28 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 67,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 66,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 65,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 69,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -839,17 +1030,24 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 70,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -877,7 +1075,9 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 69,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         }
       ],
       "blocks": [],
@@ -951,68 +1151,6 @@ footer code{color:var(--ink-2)}
       "systemName": "webtools-udp",
       "group": "other",
       "order": 0
-    },
-    {
-      "issue": 80,
-      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
-      "state": "OPEN",
-      "created": "2026-10-23",
-      "parent": null,
-      "waitsOn": [],
-      "blocks": [],
-      "board": null,
-      "folder": null,
-      "branch": null,
-      "system": null,
-      "unassigned": true,
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "status": "not-started",
-      "tracker": {
-        "branch": null,
-        "pr": null
-      },
-      "active": false,
-      "landed": null,
-      "reconciliation": null,
-      "systemName": "no system",
-      "group": "other",
-      "order": 1
-    },
-    {
-      "issue": 81,
-      "title": "webtools-localhook: local authenticated callback server",
-      "state": "OPEN",
-      "created": "2026-10-25",
-      "parent": null,
-      "waitsOn": [],
-      "blocks": [
-        {
-          "issue": 1,
-          "repo": "SpartanLaboratories/.github",
-          "state": "OPEN"
-        }
-      ],
-      "board": null,
-      "folder": null,
-      "branch": null,
-      "system": null,
-      "unassigned": true,
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "status": "not-started",
-      "tracker": {
-        "branch": null,
-        "pr": null
-      },
-      "active": false,
-      "landed": null,
-      "reconciliation": null,
-      "systemName": "no system",
-      "group": "other",
-      "order": 2
     }
   ],
   "roadmap": [
@@ -1043,7 +1181,8 @@ footer code{color:var(--ink-2)}
         {
           "issue": 63,
           "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 64,
@@ -1236,7 +1375,9 @@ const ghUrl=(n,repo)=>`https://github.com/${repo||B.repo}/issues/${n}`;
 const ilabel=(n,repo)=>`${repo&&repo!==B.repo?esc(repo.split("/")[1])+"#":"#"}${esc(n)}`;
 const ilink=(n,repo)=>{ const b=boardOf(n,repo); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${ilabel(n,repo)}</a>`:ext(ghUrl(n,repo),ilabel(n,repo)); };
 const codeOnly=s=>String(s==null?"":s).split("`").map((p,i)=>i%2?`<code>${esc(p)}</code>`:esc(p)).join("");
-const pair=(n,title,repo)=>{ const b=boardOf(n,repo), t=codeOnly(title); return `${ext(ghUrl(n,repo),ilabel(n,repo))} ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${t}</a>`:t}`; };
+/* every title pair() shows is the issue's own, quoted verbatim and marked data-issue-title (GUIDANCE.md §5; dashboards-skill/28): a work
+   level in it is a defect in the issue, which the checks flag (ISSUE TITLE NAMES A WORK LEVEL: #n) rather than fail the board */
+const pair=(n,title,repo)=>{ const b=boardOf(n,repo), t=codeOnly(title), m=` data-issue-title="${esc(n)}"`; return `${ext(ghUrl(n,repo),ilabel(n,repo))} ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board"${m}>${t}</a>`:`<span${m}>${t}</span>`}`; };
 /* #n and owner/repo#n are linked in one pass; "PR #n" is a pull request, never an issue's board */
 const rich=s=>String(s==null?"":s).split("`").map((p,i)=>i%2?`<code>${esc(p)}</code>`:esc(p).replace(/(^|[\s(>;,])(?:PR #(\d+)|([\w.-]+\/[\w.-]+)#(\d+)|#(\d+))\b/g,(m,a,pr,r,rn,n)=>a+(pr?ext(`https://github.com/${B.repo}/pull/${pr}`,`PR #${esc(pr)}`):r?ilink(rn,r):ilink(n)))).join("");
 const sysOf=sl=>SYS.find(s=>s.slug===sl);
@@ -1256,6 +1397,33 @@ const closedWord=x=>x&&x.state==="CLOSED"?(x.stateReason==="NOT_PLANNED"?"closed
 const BLOCKED={g:"⊘",l:"blocked",c:"warning"};
 const TAG_NEXT=`<span class="tag-next">UP NEXT</span>`;
 const QA={approved:{g:"✓",l:"approved",c:"good"},"changes-requested":{g:"✕",l:"changes requested",c:"critical"},running:{g:"…",l:"in progress",c:"neutral",d:1}};
+/* A qa pass's number as an ordinal (1st, 2nd, 3rd, 4th, 11th, 21st), and the passes a row shows: every pass its board records and the one
+   running (plan/scripts/lib.js qaShown(), which board.js writes into the row; the same rule here for a board.json written before it, from
+   the row's step: at qa, the pass after the last recorded one). */
+const ordinal=n=>{ const k=Math.abs(parseInt(n,10)); if(!Number.isFinite(k)) return String(n); const t=k%100,u=k%10; return `${n}${t>=11&&t<=13?"th":u===1?"st":u===2?"nd":u===3?"rd":"th"}`; };
+function qaShown(r){ const qa=(Array.isArray(r.qa)?r.qa:[]).filter(p=>p&&typeof p==="object"); if(qa.some(p=>p.verdict==="running")) return qa; const last=qa[qa.length-1];
+  if(last&&last.verdict==="approved") return qa; if(r.step==="qa"){ const n=last&&Number.isInteger(last.pass)?last.pass+1:1; if(!(r.qaMax&&n>r.qaMax)) return [...qa,{pass:n,verdict:"running"}]; }
+  return last&&!last.inPlace&&last.verdict==="changes-requested"&&last.route==="on-the-spot"?[...qa.slice(0,-1),{...last,inPlace:r.step==="remediation"?"fixing":"fixed"}]:qa; }
+/* The decision not to run another qa pass (admin-team/dashboards-skill/31; lib.js qaInPlace()): the last pass requested changes and its
+   route was on-the-spot, its findings fixed in place with no further pass. A small neutral mark beside the pass, with its glyph and words:
+   "✎ fixed in place · no 2nd pass" ("fixing" while the run is at remediation). Read from the pass's recorded route, never from prose. */
+const INPLACE={g:"✎",desc:{fixed:"the findings were fixed on the spot, and no further qa pass ran",fixing:"the findings are being fixed on the spot; no further qa pass will run"}};
+const inPlaceWords=p=>p&&p.inPlace?`${p.inPlace==="fixing"?"fixing":"fixed"} in place · no ${ordinal((parseInt(p.pass,10)||0)+1)} pass`:"";
+const inPlaceMark=p=>p&&p.inPlace?`<span class="qamark" title="${esc(INPLACE.desc[p.inPlace==="fixing"?"fixing":"fixed"])}"><i aria-hidden="true">${INPLACE.g}</i>${esc(inPlaceWords(p))}</span>`:"";
+/* A dependency's two states (board.json waitsOn[]: build and locality, derived by board.js, lib.js depBuild() and depLocality(); a
+   board.json written before them carries neither, and the locality is then read from the entry's repository): its build state, in the
+   status colours with a glyph and a word (blocking, part of the plan and open; clear, part of the plan and landed or closed; pre-built, not
+   part of the tracking issue and built before its plan started: neutral, the plan's outcome does not apply to it); and its locality, a
+   neutral ramp from near to far (this repository, this organization, the parent organization, external and its name). A dependency no
+   rule fits has no build state (or no locality): none is drawn, and board.js reports it. And what this issue does to the issues it holds
+   up (blocks[].hold, lib.js holdState(); before it, a closed or landed row enables, an open one blocks). */
+const DEP={blocking:{g:"⊘",l:"blocking",c:"warning",desc:"part of the plan, still open"},clear:{g:"✓",l:"clear",c:"good",desc:"part of the plan, landed or closed"},"pre-built":{g:"◼",l:"pre-built",c:"neutral",desc:"not part of the tracking issue: built before its plan started, relied on without a unit of its own"}};
+const LOC={"local-repository":{g:"⌂",l:"repo",s:1,desc:"this repository"},"local-organization":{g:"◇",l:"org",s:2,desc:"another repository of this organization"},"local-parent-org":{g:"△",l:"parent org",s:3,desc:"a repository of the parent organization"},external:{g:"↗",l:"external",s:4,desc:"outside both organizations, named by its owner"}};
+const locOf=x=>{ const l=x.locality!==undefined?x.locality:(!x.repo||x.repo===B.repo?"local-repository":(x.repo.split("/")[0]===String(B.repo||"").split("/")[0]?"local-organization":null)); return !l?null:String(l).startsWith("external-")?{k:"external",name:String(l).slice(9)}:LOC[l]?{k:l}:null; };
+const locChip=(L,word)=>`<span class="loc l${LOC[L.k].s}"><i aria-hidden="true">${LOC[L.k].g}</i>${esc(word||(L.k==="external"&&L.name?`external · ${L.name}`:LOC[L.k].l))}</span>`;
+const depBubble=x=>{ const d=DEP[x.build], L=locOf(x); return d||L?`<span class="dbub"${x.why?` title="${esc(x.why)}"`:""}>${d?pill(d):""}${L?locChip(L):""}</span>`:""; };
+const HOLD={blocks:{g:"⊘",l:"blocks",c:"warning",desc:"this issue is still open: it holds these issues up"},enables:{g:"→",l:"enables",c:"good",desc:"this issue is done: these issues can go ahead"}};
+const holdOf=(x,r)=>HOLD[x.hold]?x.hold:r.state==="CLOSED"||stOf(r)==="landed"?"enables":"blocks";
 const pill=(d,word,extra)=>`<span class="vp ${d.c}${d.d?" dashed":""}${d.h?" hollow":""}${extra||""}"><i aria-hidden="true">${d.g}</i>${esc(word||d.l)}</span>`;
 const stOf=r=>STATUS[r.status]?r.status:"no-board";
 /* A tracking issue's state cell shows its chain's progress instead of a bare "building" (plan/RULES.md §3, "The chain's progress"):
@@ -1282,34 +1450,60 @@ const reconTag=r=>{ const x=reconOf(r); if(!x) return ""; const d=RECON[x.state]
 /* the "blocked by" tag of the unit up next: each blocker linked like any #n */
 const blockedTag=r=>(r.blockedBy||[]).length?`<span class="vp ${BLOCKED.c}"><i aria-hidden="true">${BLOCKED.g}</i>blocked by ${r.blockedBy.map(x=>ilink(x.issue,x.repo)).join(", ")}</span>`:"";
 
+/* Links to the shared pages (GUIDANCE.md §5; plan/RULES.md §5): board.json "links", set by board.js from the files on disk, each relative
+   to this page, absent while its file is not there (check.js fails one that is dead): the repository page (repoPage) and
+   docs/plans/README.md (readme). A board.json written before the rule carries none: the old paths are used. On this machine, the live
+   view (docs/plans/.live/index.js, board.js --live's marker) and the rendered copy of a Markdown document (docs/plans/.live/docs/index.js)
+   are linked first. */
+let LIVE_WB=null, LIVE_DOCS=null;
+function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
+  sc.onload=()=>{ const v=(window.DASHBOARDS_LIVE||{})[key]; sc.remove(); cb(v==null?null:v); }; sc.onerror=()=>{ sc.remove(); cb(null); }; document.head.appendChild(sc); }
+const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
+const relLink=b=>typeof b==="string"&&!!b.trim()&&!/^[a-z][a-z0-9+.-]*:/i.test(b)&&!/^[\\/]/.test(b);
+const hasLinks=()=>!!B.links&&typeof B.links==="object"&&!Array.isArray(B.links);
+const sharedLink=k=>hasLinks()?(relLink(B.links[k])?B.links[k]:null):({repoPage:`${BASE}../dashboards/index.html`,readme:`${BASE}README.md`})[k]||null;
+const linkOr=(href,text)=>href?`<a href="${esc(href)}">${text}</a>`:text;
+const docHref=href=>{ if(!href||!LIVE_DOCS||!relLink(href)) return href; const m=/^([^#?]+\.md)(#.*)?$/i.exec(href); if(!m) return href; const rel=B.live?m[1].replace(/^\.\.\//,""):m[1];
+  return LIVE_DOCS.has("docs/plans/"+rel)?`${B.live?"":".live/"}docs/${rel.replace(/\.md$/i,".html")}${m[2]||""}`:href; };
 function render(){
-  $("#crumbs").innerHTML=`<a href="${esc(BASE)}../dashboards/index.html">${esc(B.repo||"")}</a> › docs/plans › work board${B.live?" (live)":""}`;
-  $("#function").textContent=`Every planning and development run in ${B.repo||"the repository"}: where each is, what it waits on, what it blocks.`;
+  $("#crumbs").innerHTML=`${linkOr(sharedLink("repoPage"),esc(B.repo||""))} › docs/plans › work board${B.live?" (live)":""}`;
+  $("#function").textContent=`Every planning and development run in ${B.repo||"the repository"}: where each is, what it depends on, what it blocks or enables.`;
   if(B.live) $("#runs-lede").textContent="Each run read from its freshest board across the worktrees; regenerated at every event, never committed.";
   document.title=`${(B.repo||"").split("/")[1]||""} · work board`;
   const t=B.tree||{};
   /* the tags (GUIDANCE.md §6, "The header"): each its label (.ck) and its value; when and from which commit it was generated are one tag */
   const tag=(ck,v,cls)=>`<span class="chip${cls?" "+cls:""}"><span class="ck">${ck}</span> ${v}</span>`;
-  $("#chips").innerHTML=[tag("generated",`<b>${when(B.generated||"")}</b>${t.sha?` · from <b>${esc(t.ref||"")} ${esc(t.sha)}</b>`:""}`),B.live?tag("live view",`from <b>${esc(B.live.worktrees)}</b> worktree${B.live.worktrees===1?"":"s"}, each issue's freshest board`):"",tag("tracker as of",`<b>${day(B.asOf||"")}</b>`),tag("board",`<b>board.json</b> · ${ROWS.length} runs`,"model")].filter(Boolean).join("");
+  $("#chips").innerHTML=[tag("generated",`<b>${when(B.generated||"")}</b>${t.sha?` · from <b>${esc(t.ref||"")} ${esc(t.sha)}</b>`:""}`),B.live?tag("live view",`from <b>${esc(B.live.worktrees)}</b> worktree${B.live.worktrees===1?"":"s"}, each issue's freshest board`):"",tag("tracker as of",`<b>${day(B.asOf||"")}</b>`)].filter(Boolean).join("");
   const n=k=>ROWS.filter(r=>stOf(r)===k).length;
   const nexts=ROWS.filter(r=>stOf(r)==="next");
-  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on the user",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div></div>`).join("");
-  let h=`<thead><tr><th>Issue</th><th>State</th><th>Now</th><th>QA</th><th>Waits on · blocks</th><th>Branch</th><th>Board</th></tr></thead><tbody>`;
+  /* the Runs tile's bar: every run by its state; the Landed tile's: landed, complete, merged, and the closed ones not counted */
+  const RUNSEG=[["landed","good","landed"],["merged","good","merged · awaiting close"],["complete","hollow","complete · not merged"],["building","accent","building"],["planning","accent","planning"],["in-progress","accent","in progress, no board"],["halted","warning","waiting on the user"],["escalated","serious","escalated"],["next","pln","next · not started"],["not-started","pln","not started"],["no-board","pln","no board"],["abandoned","critical","cancelled"],["not-planned","neutral","closed · not planned"],["duplicate","neutral","closed · duplicate"]];
+  const segOf=keys=>{ const parts=RUNSEG.filter(([k])=>keys.includes(k)).map(([k,c,l])=>({n:n(k),c,l:`${STATUS[k].g} ${l}`})).filter(p=>p.n);
+    return parts.length?`<div class="seg-bar" role="img" aria-label="${esc(parts.map(p=>`${p.n} ${p.l}`).join(", "))}">${parts.map(p=>`<i class="${p.c}" style="flex:${p.n}" title="${esc(`${p.n} ${p.l}`)}"></i>`).join("")}</div><div class="key">${[...new Map(parts.map(p=>[p.c+p.l,p])).values()].map(p=>`<span><i class="segk ${p.c}"></i>${esc(p.l)}</span>`).join("")}</div>`:""; };
+  const bars={Runs:segOf(RUNSEG.map(x=>x[0])),Landed:segOf(["landed","complete","merged","not-planned","duplicate"])};
+  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on the user",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div>${bars[l]||""}</div>`).join("");
+  let h=`<thead><tr><th>Issue</th><th>State</th><th>Now</th><th>QA</th><th>Depends on</th><th>Blocks · enables</th></tr></thead><tbody>`;
   (B.groups||[]).forEach(g=>{ const rs=ROWS.filter(r=>r.group===g.key).sort((a,b)=>a.order-b.order); if(!rs.length) return;
-    h+=`<tr class="grp"><th colspan="7">${g.issue?pair(g.issue,g.title):esc(g.title)}</th></tr>`;
-    rs.forEach(r=>{ const st=stOf(r), qa=r.qa||[];
-      const iss=x=>`${ilink(x.issue,x.repo)}${closedWord(x)?`<small> ${esc(closedWord(x))}</small>`:""}`;
-      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}${r.parent?` · part of ${ilink(r.parent)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return pill(d,`${p.pass} ${d.l}`); }).join(" ")}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`waits on ${r.waitsOn.map(iss).join(", ")}`:""}${(r.blocks||[]).length?`<div>blocks ${r.blocks.map(iss).join(", ")}</div>`:""}</td><td>${r.branch?`<code>${esc(r.branch)}</code>`:""}</td><td>${r.board?`<a href="${esc(r.board)}">board</a>`:r.folder?`<a href="${esc(r.folder)}">folder</a>`:"—"}</td></tr>`; }); });
+    h+=`<tr class="grp"><th colspan="6">${g.issue?pair(g.issue,g.title):esc(g.title)}</th></tr>`;
+    rs.forEach(r=>{ const st=stOf(r), qa=qaShown(r);
+      /* "closed" beside a clear dependency says nothing its bubble does not: only a closing reason is kept there */
+      const iss=(x,bub,dep)=>{ const cw=closedWord(x), say=cw&&!(dep&&x.build==="clear"&&cw==="closed"); return `<span class="dep">${ilink(x.issue,x.repo)} ${bub}${say?`<small>${esc(cw)}</small>`:""}</span>`; };
+      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}${r.parent?` · part of ${ilink(r.parent)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}${r.branch?`<div class="sub">branch <code>${esc(r.branch)}</code></div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.length?`<div class="qas">${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return `<span class="qa1">${pill(d,`${ordinal(p.pass)} · ${d.l}`)}${inPlaceMark(p)}</span>`; }).join("")}</div>`:""}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`<div class="deps">${r.waitsOn.map(x=>iss(x,depBubble(x),1)).join("")}</div>`:""}</td><td>${(r.blocks||[]).length?`<div class="deps">${r.blocks.map(x=>iss(x,pill(HOLD[holdOf(x,r)]))).join("")}</div>`:""}</td></tr>`; }); });
   $("#runs").innerHTML=h+"</tbody>"; paint($("#runs"));
   const tops=new Map(); ROWS.forEach(r=>{ const s=sysOf(r.system), k=s&&s.slot>=1&&s.slot<=6?s.slot:0; if(!tops.has(k)) tops.set(k,{c:sysColour(r.system),n:new Set()}); tops.get(k).n.add(k?(s.top||s.name):"no system colour"); });
-  const used=new Set(ROWS.filter(r=>!r.chain||["halted","escalated","abandoned"].includes(stOf(r))).map(stOf)), qv=new Set(ROWS.flatMap(r=>(r.qa||[]).map(p=>p.verdict)));
-  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} qa pass</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on the user</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
+  const used=new Set(ROWS.filter(r=>!r.chain||["halted","escalated","abandoned"].includes(stOf(r))).map(stOf)), qv=new Set(ROWS.flatMap(r=>qaShown(r).map(p=>p.verdict))), dv=new Set(ROWS.flatMap(r=>(r.waitsOn||[]).map(x=>x.build).filter(k=>DEP[k]))), lv=new Set(ROWS.flatMap(r=>(r.waitsOn||[]).map(locOf).filter(Boolean).map(L=>L.k))), dn=ROWS.some(r=>(r.waitsOn||[]).some(x=>x.why)), hv=new Set(ROWS.flatMap(r=>(r.blocks||[]).map(x=>holdOf(x,r))));
+  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} ${v==="running"?"the qa pass running now":"a qa pass's verdict"}, by its number: 1st, 2nd, 3rd</span>`).join("")+["fixed","fixing"].map(k=>ROWS.flatMap(r=>qaShown(r)).find(p=>p.inPlace===k)).filter(Boolean).map(p=>`<span>${inPlaceMark(p)} ${esc(INPLACE.desc[p.inPlace])}</span>`).join("")+Object.keys(DEP).filter(k=>dv.has(k)).map(k=>`<span>${pill(DEP[k])} a dependency's build state: ${esc(DEP[k].desc)}</span>`).join("")+Object.keys(LOC).filter(k=>lv.has(k)).map(k=>`<span>${locChip({k},k==="external"?"external · name":"")} a dependency's locality: ${esc(LOC[k].desc)}</span>`).join("")+(dn?`<span>a dependency with no build state or locality drawn: no rule fits (its reason on hover)</span>`:"")+Object.keys(HOLD).filter(k=>hv.has(k)).map(k=>`<span>${pill(HOLD[k])} ${esc(HOLD[k].desc)}</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on the user</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
   const cards=[];
   cards.push(`<div class="card"><h3>Roadmap <small>${(B.roadmap||[]).length} item${(B.roadmap||[]).length===1?"":"s"} · ${day(B.asOf||"")}</small></h3>${(B.roadmap||[]).length?`<ul class="issues">${B.roadmap.map(m=>`<li><span class="nm">${pair(m.issue,m.title)}</span><ul class="issues">${(m.items||[]).map(i=>`<li><span class="nm">${pair(i.issue,i.title)} <small>${esc(closedWord(i)||(i.state||"").toLowerCase())}</small></span></li>`).join("")}</ul></li>`).join("")}</ul>`:`<p class="lede">No tracking issue is open.</p>`}</div>`);
   const un=B.unscheduled||[];
   cards.push(`<div class="card"><h3>Unscheduled issues <small>${un.length} open · ${day(B.asOf||"")}</small></h3>${un.length?`<ul class="issues">${un.map(i=>`<li><span class="nm"><span class="sw" data-sys="${esc(i.system||"")}"></span>${pair(i.issue,i.title)}${i.labels&&i.labels.length?` <small>${esc(i.labels.join(" · "))}</small>`:""}</span></li>`).join("")}</ul>`:`<p class="lede">Every open issue sits on a roadmap item.</p>`}</div>`);
-  cards.push(`<div class="card"><h3>Plans and documents</h3><ul class="docs"><li><a href="${esc(BASE)}../dashboards/index.html">System dashboards</a> — the repository as built</li><li><a href="${esc(BASE)}README.md">docs/plans/README.md</a> — how to read a plan board</li>${ROWS.filter(r=>r.board).map(r=>`<li>${pair(r.issue,r.title)} — plan board</li>`).join("")}</ul></div>`);
+  cards.push(`<div class="card"><h3>Plans and documents</h3><ul class="docs">${!B.live&&LIVE_WB?`<li><a href="${esc(LIVE_WB)}">The live work board</a> — every run as it is now, on this machine</li>`:""}<li>${linkOr(sharedLink("repoPage"),"System dashboards")} — the repository as built</li><li>${linkOr(docHref(sharedLink("readme")),"docs/plans/README.md")} — how to read a plan board</li>${ROWS.filter(r=>r.board).map(r=>`<li>${pair(r.issue,r.title)} — plan board</li>`).join("")}</ul></div>`);
   $("#context").innerHTML=cards.join(""); paint($("#context"));
+  /* the Context's legend (GUIDANCE.md §2): the system swatches its cards drew, and the muted one of an issue with no system */
+  const sws=[...$("#context").querySelectorAll(".sw[data-sys]")].map(e=>e.dataset.sys), ctops=new Map();
+  sws.forEach(sl=>{ const s=sysOf(sl), k=s&&s.slot>=1&&s.slot<=6?s.slot:0; if(!ctops.has(k)) ctops.set(k,{c:sysColour(sl),n:new Set()}); ctops.get(k).n.add(k?(s.top||s.name):"no system recorded"); });
+  let ck=document.getElementById("context-key"); const kh=[...ctops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("");
+  if(!kh){ if(ck) ck.remove(); } else { if(!ck){ ck=document.createElement("div"); ck.className="key"; ck.id="context-key"; $("#context").parentElement.appendChild(ck); } ck.innerHTML=kh; }
   /* the footer (GUIDANCE.md §3): what the page corresponds to and what is authoritative; nothing more */
   $("#footer").innerHTML=`Corresponds to <code>docs/plans/${B.live?".live/":""}board.json</code>. Code and the Markdown beside this page are authoritative on any conflict.`;
   $("#source-view").textContent=JSON.stringify(B,(k,v)=>k==="level"?undefined:v,2); /* a work level is never shown (GUIDANCE.md §4) */
@@ -1366,9 +1560,16 @@ function startLive(){ const g=Date.parse(String(B.generated||"")); LIVE.last=isN
 
 const tabs=[...document.querySelectorAll(".tab")];
 function show(id){ tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; }); }
-tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); });
+/* The tablist's keys (WAI-ARIA tabs; GUIDANCE.md §6): Left and Right move to the previous and next tab, Home and End to the first and the
+   last, each shown at once; only the selected tab is in the Tab order (a roving tabindex), so Tab moves on to the panel. */
+function tabKeys(list,go){ list.forEach((t,i)=>{ t.tabIndex=t.getAttribute("aria-selected")==="true"?0:-1; t.addEventListener("keydown",e=>{ const n=list.length, j={ArrowRight:(i+1)%n,ArrowLeft:(i+n-1)%n,Home:0,End:n-1}[e.key]; if(j==null) return; e.preventDefault(); list[j].focus(); go(list[j].id); }); }); }
+tabKeys(tabs,id=>show(id));
 render(); show(location.hash==="#source"?"t-source":"t-runs");
 startLive();
+/* the live views on this machine (above): the committed board names the live one; a Markdown link opens its rendered copy */
+liveMark(`${BASE}.live/index.js`,"board",b=>{ if(b&&!B.live){ LIVE_WB=relTo(`${BASE}.live/index.js`,String(b)); render(); } });
+liveMark(`${BASE}.live/docs/index.js`,"docs",d=>{ if(Array.isArray(d)){ LIVE_DOCS=new Set(d.map(String)); render(); } });
 </script>
 </body>
 </html>

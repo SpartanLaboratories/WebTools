@@ -925,8 +925,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-25T12:08:09Z",
-    "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
+    "updated": "2026-10-25T22:03:35Z",
+    "detail": "4 of 11 units landed; #64 up next.",
     "steps": [
       "sizing",
       "interview",
@@ -936,9 +936,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "implementation",
       "landed"
     ],
-    "current": [
-      "test-support.built"
-    ],
+    "current": [],
     "next": "url-policy",
     "qa": [],
     "qaMax": 3,
@@ -1094,6 +1092,11 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "column": "built",
       "label": "Unit 4, #63, started: sized as one system; the planner re-passes unit 4 against architecture.md §6.7, §6.1 and §11 and impact.md §7",
       "ref": "#63"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "#63 landed"
     }
   ],
   "rows": [
@@ -1592,626 +1595,6 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "branch": null,
         "folder": "63-test-support/",
         "board": "63-test-support/dashboard.html",
-        "live": {
-          "step": "landing",
-          "since": "2026-10-25T21:38:04Z",
-          "updated": "2026-10-25T21:38:04Z",
-          "detail": "Landing accepted by the admin team: sync, commits, PR and merge.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "landing",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-10-25",
-              "at": "2026-10-25T19:38:32Z",
-              "findings": {
-                "documentation": 19,
-                "test": 15,
-                "code": 2
-              },
-              "severity": {
-                "minor": 27,
-                "other": 9
-              },
-              "route": "planner-then-rookie-dev",
-              "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
-            },
-            {
-              "pass": 2,
-              "verdict": "changes-requested",
-              "date": "2026-10-25",
-              "at": "2026-10-25T20:44:31Z",
-              "findings": {
-                "documentation": 15,
-                "test": 8,
-                "code": 3
-              },
-              "severity": {
-                "minor": 25,
-                "other": 1
-              },
-              "route": "on-the-spot",
-              "note": "The suite is 384 of 384 green. The one other finding is a Level 3 test JUnit never ran, its expression body returning a value, so the recorded counts were one short; the 25 minor findings are KDoc and comment wording, test asserts and a hang bound, and the plan documents' risk and Level 5 fields."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-63-test-support",
-          "event": {
-            "name": "landing",
-            "at": "2026-10-25T21:38:04Z",
-            "note": "accepted by the admin team"
-          },
-          "plan": {
-            "state": "re-pass",
-            "from": "qa",
-            "pass": 1,
-            "since": "2026-10-25T19:38:32Z"
-          },
-          "stages": [
-            {
-              "id": "S1",
-              "name": "recipe-B fixtures block, .gitattributes, canaries",
-              "state": "done",
-              "rows": [
-                "fixtures-variant",
-                "fixtures-surface",
-                "virtual-clock",
-                "gitattributes"
-              ]
-            },
-            {
-              "id": "S2",
-              "name": "VirtualClock",
-              "state": "done",
-              "rows": [
-                "virtual-clock",
-                "fixtures-tests"
-              ]
-            },
-            {
-              "id": "S3",
-              "name": ".http codec, Fixture, FixtureLoader",
-              "state": "done",
-              "rows": [
-                "fixture-codec",
-                "fixtures-tests"
-              ]
-            },
-            {
-              "id": "S4",
-              "name": "query matching and FakeHttpTransport",
-              "state": "done",
-              "rows": [
-                "fake-transport",
-                "fixtures-tests"
-              ]
-            },
-            {
-              "id": "S5",
-              "name": "FixtureRecorder, RecordingGate, Redaction",
-              "state": "done",
-              "rows": [
-                "recorder",
-                "fixtures-tests",
-                "fixtures-surface",
-                "fake-transport",
-                "fixture-codec"
-              ]
-            },
-            {
-              "id": "S6",
-              "name": "floor guard, publication read, apiCheck",
-              "state": "done",
-              "rows": [
-                "fixtures-variant"
-              ]
-            },
-            {
-              "id": "S7",
-              "name": "harness, fixturesPublicationCheck task, check class, root-build edge",
-              "state": "done",
-              "rows": [
-                "publication-check"
-              ]
-            },
-            {
-              "id": "S8",
-              "name": "unaffected-module proofs, README, manual IDE pass",
-              "state": "done",
-              "rows": [
-                "fixtures-surface",
-                "fixtures-tests",
-                "gitattributes",
-                "readme",
-                "release"
-              ]
-            }
-          ],
-          "remediation": {
-            "pass": 2,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "rookie-dev: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
-                "state": "done"
-              },
-              {
-                "name": "planner: reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
-                "state": "current"
-              }
-            ]
-          },
-          "open": [
-            {
-              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
-              "raised": "plan-accepted",
-              "ref": "plan.md#13-sequencing-and-follow-ups"
-            },
-            {
-              "text": "Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. The planner rules whether §9's row or §6.8's list is amended.",
-              "raised": "implementation-stage S5",
-              "ref": "plan.md",
-              "resolved": "Plan amendment 1 (2026-10-25) brings §9's Level 2 and Level 3 rows to §6.8's detection list, which is unchanged: a secret escaped only in part is neither replaced nor detected, the same boundary as a base64, hashed or truncated echo."
-            },
-            {
-              "text": "S6 paused on a plan gap: verifyJavaFloor failed on two output directories the module never creates (main's allOutputs on the fixtures' runtime classpath). Planner ruled: filter the classpath to existing entries in the module script (Amendment 2); build-logic untouched.",
-              "raised": "implementation-stage S6",
-              "ref": "plan.md",
-              "resolved": "2026-10-25T18:40:00Z"
-            },
-            {
-              "text": "Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
-              "raised": "qa pass 1",
-              "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)",
-              "resolved": "2026-10-25T19:58:08Z"
-            },
-            {
-              "text": "FixtureRecorderIntegrationTest's test for nameFor and the bad-group refusal compiled to a non-void method (runBlocking body ending in assertFailsWith), so JUnit never ran it and the recorded count of 15 masked it; fixed on the spot with runBlocking<Unit> and the counts corrected to 16.",
-              "raised": "qa pass 2",
-              "ref": "final-implementation.md",
-              "resolved": "2026-10-25T20:54:23Z"
-            }
-          ],
-          "history": {
-            "implementation": [
-              {
-                "since": "2026-10-25T14:21:18Z",
-                "ended": "2026-10-25T19:00:34Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-25T18:51:18Z",
-                  "note": "S7 reported done; S8 current"
-                },
-                "detail": "S6 after the ruling: verifyJavaFloor passes with two jars; publication reads as planned (fixtures variants with the one capability, jvm version 11, optional test deps in the root POM, none in the -jvm POM); apiCheck green, dump unchanged. S7: build-logic gains the fixturesPublicationCheck task (BouncyCastle throwaway key, nested builds with ORG_GRADLE_PROJECT_* scrubbed), harness types ModuleSource, ThrowawayPgpKey, ResolutionReport and extended ModuleMetadata/PomFile/SampleProject; FixturesPublicationEndToEndTest's ten assertions pass (52 s cold, up-to-date and configuration cache reused on repeat); the edge in webtools-http's check runs it; root tasks unchanged; the guard composite does not run it; signing scrub holds against an invalid injected key; three mutants each caught (1, 5 and 5 failures).",
-                "open": [
-                  {
-                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md#13-sequencing-and-follow-ups"
-                  }
-                ],
-                "stages": [
-                  {
-                    "id": "S1",
-                    "name": "recipe-B fixtures block, .gitattributes, canaries",
-                    "state": "done",
-                    "rows": [
-                      "fixtures-variant",
-                      "fixtures-surface",
-                      "virtual-clock",
-                      "gitattributes"
-                    ]
-                  },
-                  {
-                    "id": "S2",
-                    "name": "VirtualClock",
-                    "state": "done",
-                    "rows": [
-                      "virtual-clock",
-                      "fixtures-tests"
-                    ]
-                  },
-                  {
-                    "id": "S3",
-                    "name": ".http codec, Fixture, FixtureLoader",
-                    "state": "done",
-                    "rows": [
-                      "fixture-codec",
-                      "fixtures-tests"
-                    ]
-                  },
-                  {
-                    "id": "S4",
-                    "name": "query matching and FakeHttpTransport",
-                    "state": "done",
-                    "rows": [
-                      "fake-transport",
-                      "fixtures-tests"
-                    ]
-                  },
-                  {
-                    "id": "S5",
-                    "name": "FixtureRecorder, RecordingGate, Redaction",
-                    "state": "done",
-                    "rows": [
-                      "recorder",
-                      "fixtures-tests",
-                      "fixtures-surface",
-                      "fake-transport",
-                      "fixture-codec"
-                    ]
-                  },
-                  {
-                    "id": "S6",
-                    "name": "floor guard, publication read, apiCheck",
-                    "state": "done",
-                    "rows": [
-                      "fixtures-variant"
-                    ]
-                  },
-                  {
-                    "id": "S7",
-                    "name": "harness, fixturesPublicationCheck task, check class, root-build edge",
-                    "state": "done",
-                    "rows": [
-                      "publication-check"
-                    ]
-                  },
-                  {
-                    "id": "S8",
-                    "name": "unaffected-module proofs, README, manual IDE pass",
-                    "state": "done",
-                    "rows": [
-                      "fixtures-surface",
-                      "fixtures-tests",
-                      "gitattributes",
-                      "readme",
-                      "release"
-                    ]
-                  }
-                ]
-              }
-            ],
-            "qa": [
-              {
-                "since": "2026-10-25T19:00:34Z",
-                "ended": "2026-10-25T19:38:32Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-25T19:00:34Z",
-                  "note": "S8 reported done; qa next"
-                },
-                "detail": "S8: legacy modules, webtools-http main sources, the ABI dump, the check module, build-logic/src/main and the root build files untouched (diffs empty; the three legacy modules compile); every mechanical rule holds (three @OptIn lines in the fixtures, none in tests; no TODO; KDoc coverage; no credential or local path; .http fixtures carry -text); README gains the six planned edits (CRLF kept). Level 5: the published .module, POMs and the fixtures jar's signature read from a kept check workspace and recorded; four IDE-only items recorded as not performed. Final state: webtools-http check green incl. verifyJavaFloor (2 jars) and fixturesPublicationCheck (10/10); all build-logic suites green. 61 files in the change set.",
-                "open": [
-                  {
-                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md#13-sequencing-and-follow-ups"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-25",
-                    "at": "2026-10-25T19:38:32Z",
-                    "findings": {
-                      "documentation": 19,
-                      "test": 15,
-                      "code": 2
-                    },
-                    "severity": {
-                      "minor": 27,
-                      "other": 9
-                    },
-                    "route": "planner-then-rookie-dev"
-                  }
-                ]
-              },
-              {
-                "since": "2026-10-25T19:58:08Z",
-                "ended": "2026-10-25T20:44:31Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-25T19:58:08Z",
-                  "note": "remediation of qa pass 1 done; qa pass 2 current"
-                },
-                "detail": "Remediation: 21 files took the 27 minor fixes (KDoc wording incl. the Amendment 1 boundary in FixtureRecorder and Redaction, comments, test renames, two 200 asserts, snapshot asserts, the gating test no longer does file I/O, JAVA_FLOOR constant instead of a literal, a mangled path in the record). Amendment 3: RedactionComponentTest +4, FixtureRecorderIntegrationTest +1 (eight concurrent recordings to one name), new FixturesCheckWiringEndToEndTest (2: the module's check schedules the publication check as root build; an including build never does), JarClasses.entries with the classes-only jar assertion, codec size-linearity test, start barrier in the concurrency test, an encodable second canary in the secrecy test, NestedBuild KDoc records the scrub's scope. webtools-http check: 271 jvm tests, 54 classes, 0 failures; build-logic e2eTest 17 and fixturesPublicationCheck 10 green.",
-                "open": [
-                  {
-                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md#13-sequencing-and-follow-ups"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-25",
-                    "at": "2026-10-25T20:44:31Z",
-                    "findings": {
-                      "documentation": 15,
-                      "test": 8,
-                      "code": 3
-                    },
-                    "severity": {
-                      "minor": 25,
-                      "other": 1
-                    },
-                    "route": "on-the-spot"
-                  }
-                ]
-              }
-            ],
-            "remediation": [
-              {
-                "since": "2026-10-25T19:38:32Z",
-                "ended": "2026-10-25T19:58:08Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-10-25T19:38:32Z",
-                  "note": "pass 1: changes-requested"
-                },
-                "detail": "Code review: no logic defect, every plan item done, no unplanned change, inside the unit, the single recorded deviation is the only one, hygiene clean (no key material, paths or attribution). Doc: KDoc complete and tier-named; residuals are the Amendment 1 partial-escape boundary missing from two consumer-facing KDocs, header and crypto-constant comments, and ten collapsed wording items. Tests: all plan rows present; the nine non-minor items are edges or guarantees the plan states but no test pins.",
-                "open": [
-                  {
-                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md#13-sequencing-and-follow-ups"
-                  },
-                  {
-                    "text": "Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
-                    "raised": "qa pass 1",
-                    "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)"
-                  }
-                ],
-                "remediation": {
-                  "pass": 1,
-                  "route": "planner-then-rookie-dev",
-                  "steps": [
-                    {
-                      "name": "rookie-dev: the 27 minor fixes (KDoc and comment wording, test renames and asserts, two mechanical code fixes); re-run webtools-http check and build-logic e2eTest",
-                      "state": "done"
-                    },
-                    {
-                      "name": "planner: rule add-or-record on the nine test gaps (Amendment 3 to plan §9)",
-                      "state": "done"
-                    },
-                    {
-                      "name": "rookie-dev: write the tests the planner adds",
-                      "state": "done"
-                    },
-                    {
-                      "name": "qa pass 2",
-                      "state": "current"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-25",
-                    "at": "2026-10-25T19:38:32Z",
-                    "findings": {
-                      "documentation": 19,
-                      "test": 15,
-                      "code": 2
-                    },
-                    "severity": {
-                      "minor": 27,
-                      "other": 9
-                    },
-                    "route": "planner-then-rookie-dev",
-                    "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
-                  }
-                ]
-              },
-              {
-                "since": "2026-10-25T20:44:31Z",
-                "ended": "2026-10-25T21:38:04Z",
-                "endedBy": "landing",
-                "to": "landing",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-25T20:54:23Z",
-                  "note": "qa pass 2 fixes done; reconciliation current"
-                },
-                "detail": "qa pass 2 fixes: the integration test runs (16 cases, the nameFor case present and passing; no other expression-bodied test has the non-Unit shape); FixtureRecorder KDoc states the atomic-move fallback and the attached-throwable rule as plan §6.12 has them; 14 wording and KDoc items; the gating consumer no longer touches the file system; the publication check asserts no nested build's output holds the passphrase or any line of the armoured key; the concurrency test's awaits carry a two-minute hang bound; guard mutation recorded (removing the root-build condition fails the wiring test's consumer case, so the condition is load-bearing). webtools-http check: 272 jvm tests, 54 classes, 0 failures; build-logic e2eTest 17 green.",
-                "open": [
-                  {
-                    "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md#13-sequencing-and-follow-ups"
-                  }
-                ],
-                "remediation": {
-                  "pass": 2,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "rookie-dev: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
-                      "state": "done"
-                    },
-                    {
-                      "name": "planner: reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
-                      "state": "current"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-25",
-                    "at": "2026-10-25T20:44:31Z",
-                    "findings": {
-                      "documentation": 15,
-                      "test": 8,
-                      "code": 3
-                    },
-                    "severity": {
-                      "minor": 25,
-                      "other": 1
-                    },
-                    "route": "on-the-spot",
-                    "note": "The suite is 384 of 384 green. The one other finding is a Level 3 test JUnit never ran, its expression body returning a value, so the recorded counts were one short; the 25 minor findings are KDoc and comment wording, test asserts and a hang bound, and the plan documents' risk and Level 5 fields."
-                  }
-                ]
-              }
-            ]
-          },
-          "rowNames": {
-            "fixtures-variant": "The test-fixtures compilation and its publication",
-            "fixtures-surface": "The fixtures' tier, opt-in and API checks",
-            "virtual-clock": "VirtualClock, one time source for the whole stack",
-            "fake-transport": "FakeHttpTransport, a scripted transport",
-            "fixture-codec": "Fixture and FixtureLoader, the .http codec",
-            "recorder": "FixtureRecorder with RecordingGate and Redaction",
-            "gitattributes": "The .gitattributes line for .http fixtures",
-            "publication-check": "The fixtures-publication check in build-logic",
-            "fixtures-tests": "The fixtures' own tests",
-            "readme": "The README's testFixtures(...) line",
-            "release": "The variant's version and its first release"
-          },
-          "recon": {
-            "sizing": {
-              "reconstructed": true,
-              "ended": "2026-10-25",
-              "trail": [
-                {
-                  "date": "2026-10-25",
-                  "label": "Run started: sized as one system, the fixtures variant; the planner re-passes unit 4 against #55's architecture §6.7, §6.1 and §11 and impact §7",
-                  "ref": "../architecture.md"
-                }
-              ],
-              "milestones": []
-            },
-            "interview": {
-              "reconstructed": true,
-              "ended": null,
-              "trail": [],
-              "milestones": []
-            },
-            "research": {
-              "reconstructed": true,
-              "ended": "2026-10-25",
-              "trail": [
-                {
-                  "date": "2026-10-25",
-                  "label": "Research planning: 0 questions drafted"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Research started: `publication-check-wiring`, `publication-check-mechanics`"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Research returned: `publication-check-wiring`",
-                  "ref": "research/publication-check-wiring.md"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Research returned: `publication-check-mechanics`",
-                  "ref": "research/publication-check-mechanics.md"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Verification started: 2 findings"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Research verified; the plan next",
-                  "ref": "research/README.md"
-                }
-              ],
-              "milestones": [
-                {
-                  "date": "2026-10-21",
-                  "label": "Research verified, in #55's run",
-                  "ref": "../research/README.md",
-                  "note": "#55's ten questions and findings; 231 outside-world claims re-opened at source, 227 hold, none fails. Written on this board at sized from the research README, architecture §2 and this unit's row in §11"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Research verified",
-                  "ref": "research/README.md",
-                  "note": "this unit's two questions, publication-check wiring and publication-check mechanics: 45 items, 23 re-checked and holding, none failed or unclear, 22 probe measurements left as measured"
-                }
-              ],
-              "questions": [
-                {
-                  "question": "publication-check-wiring",
-                  "findings": "research/publication-check-wiring.md"
-                },
-                {
-                  "question": "publication-check-mechanics",
-                  "findings": "research/publication-check-mechanics.md"
-                }
-              ]
-            },
-            "plan": {
-              "reconstructed": true,
-              "ended": "2026-10-25",
-              "trail": [
-                {
-                  "date": "2026-10-25",
-                  "label": "Plan accepted",
-                  "ref": "plan.md"
-                }
-              ],
-              "milestones": [
-                {
-                  "date": "2026-10-25",
-                  "label": "The unit's own plan adds to the options",
-                  "ref": "plan.md",
-                  "note": "the options plan.md weighs beside the architecture's: where the publication check attaches, how its copy is signed, the producer's plugins and version, extra variant attributes, recipe B in `build-logic`, a source-set-wide opt-in"
-                },
-                {
-                  "date": "2026-10-25",
-                  "label": "Plan accepted",
-                  "ref": "plan.md",
-                  "note": "eight stages, S1 to S8, on `feat/issue-63-test-support`; three departures from #55's architecture: the check hangs off `webtools-http`'s `check`, the adhoc variant is signed on every check run, and the `MockWebServer` helpers go to unit 6. No version moves"
-                }
-              ]
-            },
-            "branch": {
-              "reconstructed": true,
-              "ended": "2026-10-25",
-              "trail": [
-                {
-                  "date": "2026-10-25",
-                  "label": "Branch `feat/issue-63-test-support` cut; implementation starts at S1"
-                }
-              ],
-              "milestones": [],
-              "branch": "feat/issue-63-test-support"
-            }
-          }
-        },
         "tests": {
           "base": "5d98102",
           "updated": "2026-10-25T20:54:23Z",
@@ -2709,8 +2092,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": "",
+        "state": "landed",
+        "summary": "Landed through PR #84 as 4fcc6e0 (#63): `webtools-http` publishes a test-fixtures variant, capability `webtools-http-test-fixtures`, with `VirtualClock`, the scripted `FakeHttpTransport`, `Fixture` and `FixtureLoader` for `.http` files and the gated, redacting `FixtureRecorder`, on a consumer's test classpath only. `build-logic`'s `fixturesPublicationCheck` publishes a signed copy and resolves it from three build shapes; `webtools-http`'s `check` runs it when WebTools is the root build. One staging deviation; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
         "changes": [
           {
             "what": "The fixtures-publication check hangs off `webtools-http`'s own `check`, declared only when WebTools is the root build and includes `build-logic`, in place of the root `check` of architecture §6.1, §6.7 and §11.",
@@ -2730,7 +2113,15 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "when": "#63 plan",
             "ref": "63-test-support/plan.md#4-non-goals"
           }
-        ]
+        ],
+        "commits": [
+          "025b245",
+          "5048b68",
+          "a95f5cb",
+          "f325b20"
+        ],
+        "verified": "qa pass 1 changes requested (19 documentation, 15 test, 2 code findings; 27 of them minor), answered by a planner ruling and the fixes; qa pass 2 changes requested (15 documentation, 8 test, 3 code; 25 minor), fixed in place with no third pass; 384 tests green, among them the fixtures' 141 and the check's 10.",
+        "link": "63-test-support/final-implementation.md"
       }
     },
     {
@@ -3653,7 +3044,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "kind": "operator",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, which compile only: their `js` target has no environment, so no test task and no Node.js. The fixtures-publication check joins once unit 4 attaches it to a `check` that `build` reaches. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
+        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, which compile only: their `js` target has no environment, so no test task and no Node.js. It also runs the fixtures-publication check, which unit 4 attached to `webtools-http`'s `check`: 44 to 52 s when one of its inputs changed, `UP-TO-DATE` otherwise; a build that includes WebTools never runs it. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
         "link": "impact.md#build"
       }
     ],
@@ -3769,7 +3160,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       },
       {
         "unit": "test-support",
-        "basis": "plan",
+        "basis": "as-built",
         "summary": "The root module of `webtools-http`, new and unreleased, gains a test-fixtures variant with the capability `webtools-http-test-fixtures` and a `-test-fixtures.jar`, whose test libraries reach a consumer's test classpath only; the main variants, the ABI dump and the three existing artifacts do not change. Inside the repository, `build`, `check` and `:webtools-http:check` also run the fixtures-publication check.",
         "release": {
           "bump": "none",
@@ -3777,7 +3168,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
           "unreleased": true
         },
-        "source": "63-test-support/impact.md",
+        "source": "63-test-support/impact.md, reconciled with 63-test-support/final-implementation.md",
         "link": "63-test-support/impact.md#1-published-artifacts"
       }
     ],
@@ -3816,6 +3207,23 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "entry": "adaptation.1",
         "system": "webtools-http-core",
         "unit": "http-core"
+      },
+      {
+        "what": "`./gradlew build`, `check` and `:webtools-http:check` run the fixtures-publication check: unit 4 attached it to `webtools-http`'s own `check`, only when WebTools is the root build, in place of the root `check` architecture §6.1 names.",
+        "why": "The root project has no `check`, and a root lifecycle task is reached by neither `build` nor `:webtools-http:check` (#63 research, publication-check-wiring F6). #55's reconciled `impact.md` §2 and §8 state it, and `architecture.md` §6.1 carries a dated correction.",
+        "when": "#63 landing",
+        "ref": "4fcc6e0",
+        "entry": "downstream.4",
+        "system": "gradle-build",
+        "unit": "test-support"
+      },
+      {
+        "what": "The signing of the multiplatform publication, its adhoc test-fixtures variant included, is exercised on every run of the check with a throwaway key; only Maven Central's upload and validator are left for `webtools-http`'s first release, where architecture §12 placed both.",
+        "why": "The check publishes a signed copy and asserts a signature beside every published file (#63 research, publication-check-mechanics F3, F4); #55's reconciled `impact.md` §8 states it, and `architecture.md` §12 carries a dated correction.",
+        "when": "#63 landing",
+        "ref": "4fcc6e0",
+        "system": "webtools-http-test-fixtures",
+        "unit": "test-support"
       }
     ],
     "source": "impact.md",

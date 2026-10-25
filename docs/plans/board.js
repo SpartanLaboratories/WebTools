@@ -3,11 +3,15 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-25T12:31:13Z",
+  "generated": "2026-10-25T22:06:00Z",
   "asOf": "2026-10-25",
   "tree": {
     "ref": "master",
-    "sha": "7de8207"
+    "sha": "4fcc6e0"
+  },
+  "links": {
+    "repoPage": "../dashboards/index.html",
+    "readme": "README.md"
   },
   "systems": [
     {
@@ -31,8 +35,8 @@ window.dashboardLive&&window.dashboardLive("board",
       "name": "published test fixtures",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-url-policy",
@@ -125,12 +129,14 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 16,
           "repo": "SpartanLaboratories/KotlinBottools",
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         },
         {
           "issue": 9,
           "repo": "SpartanLaboratories/KotlinBottools",
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": "55-http-client-stack/dashboard.html",
@@ -138,34 +144,28 @@ window.dashboardLive&&window.dashboardLive("board",
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
+      "detail": "4 of 11 units landed; #64 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-25T12:08:09Z",
+      "updated": "2026-10-25T22:03:35Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 3,
+        "landed": 4,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 3,
+        "landed": 4,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
         "planned": false,
         "done": false,
-        "current": [
-          {
-            "issue": 63,
-            "slug": "test-support",
-            "step": null
-          }
-        ],
+        "current": [],
         "next": {
           "issue": 64,
           "slug": "url-policy",
@@ -188,12 +188,16 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "hold": "enables"
         },
         {
           "issue": 47,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-23T02:21:57Z",
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/61-build-logic/dashboard.html",
@@ -257,14 +261,19 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 61,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-22T21:58:58Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
@@ -285,7 +294,9 @@ window.dashboardLive&&window.dashboardLive("board",
             "test": 2,
             "code": 0
           },
-          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
+          "route": "on-the-spot",
+          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass",
+          "inPlace": "fixed"
         }
       ],
       "qaMax": 3,
@@ -317,30 +328,42 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 47,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-23T02:21:57Z",
+          "build": "clear",
+          "locality": "local-repository"
         },
         {
           "issue": 61,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-22T21:58:58Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 67,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 66,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 64,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/62-http-core/dashboard.html",
@@ -367,7 +390,8 @@ window.dashboardLive&&window.dashboardLive("board",
           },
           "route": "on-the-spot",
           "report": "build/reports/test-inspector/index.html",
-          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot.",
+          "inPlace": "fixed"
         }
       ],
       "qaMax": 3,
@@ -391,46 +415,101 @@ window.dashboardLive&&window.dashboardLive("board",
     {
       "issue": 63,
       "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 69,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 67,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 66,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         },
         {
           "issue": 65,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "enables"
         }
       ],
-      "board": null,
-      "folder": null,
+      "board": "55-http-client-stack/63-test-support/dashboard.html",
+      "folder": "55-http-client-stack/63-test-support/",
       "branch": null,
       "system": "webtools-http-test-fixtures",
-      "step": "implementation",
-      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
-      "qa": [],
+      "step": "landed",
+      "detail": "Merged through PR #84 as 4fcc6e0: the test-fixtures variant of `webtools-http` with its fixtures and tests, the fixtures-publication check in `build-logic`, the `.gitattributes` line and the README; one staging deviation; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-10-25T22:03:35Z",
+      "updated": "2026-10-25T22:03:35Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "at": "2026-10-25T19:38:32Z",
+          "findings": {
+            "documentation": 19,
+            "test": 15,
+            "code": 2
+          },
+          "severity": {
+            "minor": 27,
+            "other": 9
+          },
+          "route": "planner-then-rookie-dev",
+          "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "at": "2026-10-25T20:44:31Z",
+          "findings": {
+            "documentation": 15,
+            "test": 8,
+            "code": 3
+          },
+          "severity": {
+            "minor": 25,
+            "other": 1
+          },
+          "route": "on-the-spot",
+          "note": "The suite is 384 of 384 green. The one other finding is a Level 3 test JUnit never ran, its expression body returning a value, so the recorded counts were one short; the 25 minor findings are KDoc and comment wording, test asserts and a hang bound, and the plan documents' risk and Level 5 fields.",
+          "inPlace": "fixed"
+        }
+      ],
       "qaMax": 3,
-      "status": "building",
-      "landed": null,
-      "reconciliation": null,
-      "active": true,
+      "status": "landed",
+      "landed": {
+        "pr": 84,
+        "merge": "4fcc6e0",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-10-25"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
       "systemName": "published test fixtures",
       "group": "55",
       "order": 4
@@ -445,13 +524,17 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 65,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -481,17 +564,24 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 64,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -519,18 +609,26 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         },
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -558,18 +656,26 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         },
         {
           "issue": 62,
           "state": "CLOSED",
-          "stateReason": "COMPLETED"
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -597,21 +703,28 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 67,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 66,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 65,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 69,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -639,17 +752,24 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 68,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         },
         {
           "issue": 63,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T21:40:16Z",
+          "build": "clear",
+          "locality": "local-repository"
         }
       ],
       "blocks": [
         {
           "issue": 70,
-          "state": "OPEN"
+          "state": "OPEN",
+          "hold": "blocks"
         }
       ],
       "board": null,
@@ -677,7 +797,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 69,
-          "state": "OPEN"
+          "state": "OPEN",
+          "build": "blocking",
+          "locality": "local-repository"
         }
       ],
       "blocks": [],
@@ -751,68 +873,6 @@ window.dashboardLive&&window.dashboardLive("board",
       "systemName": "webtools-udp",
       "group": "other",
       "order": 0
-    },
-    {
-      "issue": 80,
-      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
-      "state": "OPEN",
-      "created": "2026-10-23",
-      "parent": null,
-      "waitsOn": [],
-      "blocks": [],
-      "board": null,
-      "folder": null,
-      "branch": null,
-      "system": null,
-      "unassigned": true,
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "status": "not-started",
-      "tracker": {
-        "branch": null,
-        "pr": null
-      },
-      "active": false,
-      "landed": null,
-      "reconciliation": null,
-      "systemName": "no system",
-      "group": "other",
-      "order": 1
-    },
-    {
-      "issue": 81,
-      "title": "webtools-localhook: local authenticated callback server",
-      "state": "OPEN",
-      "created": "2026-10-25",
-      "parent": null,
-      "waitsOn": [],
-      "blocks": [
-        {
-          "issue": 1,
-          "repo": "SpartanLaboratories/.github",
-          "state": "OPEN"
-        }
-      ],
-      "board": null,
-      "folder": null,
-      "branch": null,
-      "system": null,
-      "unassigned": true,
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "status": "not-started",
-      "tracker": {
-        "branch": null,
-        "pr": null
-      },
-      "active": false,
-      "landed": null,
-      "reconciliation": null,
-      "systemName": "no system",
-      "group": "other",
-      "order": 2
     }
   ],
   "roadmap": [
@@ -843,7 +903,8 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 63,
           "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 64,
