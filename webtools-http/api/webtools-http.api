@@ -1,0 +1,294 @@
+public final class com/spartanlabs/webtools/http/ExhaustedReason {
+	public static final field Companion Lcom/spartanlabs/webtools/http/ExhaustedReason$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/ExhaustedReason$Companion {
+	public final fun getCostExceedsLimit ()Lcom/spartanlabs/webtools/http/ExhaustedReason;
+	public final fun getPaused ()Lcom/spartanlabs/webtools/http/ExhaustedReason;
+	public final fun getQueueFull ()Lcom/spartanlabs/webtools/http/ExhaustedReason;
+	public final fun getWindow ()Lcom/spartanlabs/webtools/http/ExhaustedReason;
+}
+
+public abstract interface annotation class com/spartanlabs/webtools/http/ExperimentalForInheritanceWebToolsApi : java/lang/annotation/Annotation {
+}
+
+public abstract class com/spartanlabs/webtools/http/HttpFailure : java/lang/Exception {
+	protected fun <init> (Ljava/lang/String;)V
+	protected fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/HttpFailure$BudgetExhausted : com/spartanlabs/webtools/http/HttpFailure {
+	public synthetic fun <init> (JLcom/spartanlabs/webtools/http/ExhaustedReason;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getReason ()Lcom/spartanlabs/webtools/http/ExhaustedReason;
+	public final fun getWait-UwyO8pc ()J
+	public final fun getWindow ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpFailure$Closed : com/spartanlabs/webtools/http/HttpFailure {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getComponent ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpFailure$DecodeFailure : com/spartanlabs/webtools/http/HttpFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/HttpHeaders {
+	public final fun contains (Ljava/lang/String;)Z
+	public final fun entries ()Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Ljava/lang/String;)Ljava/lang/String;
+	public final fun getAll (Ljava/lang/String;)Ljava/util/List;
+	public final fun getSize ()I
+	public fun hashCode ()I
+	public final fun isEmpty ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpHeaders$Builder {
+	public final fun add (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addAll (Lcom/spartanlabs/webtools/http/HttpHeaders;)V
+	public final fun addSensitive (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun remove (Ljava/lang/String;)V
+	public final fun set (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun setSensitive (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/spartanlabs/webtools/http/HttpHeaders$Entry {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isSensitive ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpHeadersKt {
+	public static final fun HttpHeaders (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/HttpHeaders;
+	public static synthetic fun HttpHeaders$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/HttpHeaders;
+}
+
+public final class com/spartanlabs/webtools/http/HttpMethod {
+	public static final field Companion Lcom/spartanlabs/webtools/http/HttpMethod$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpMethod$Companion {
+	public final fun getDelete ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getGet ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getHead ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getOptions ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getPatch ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getPost ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getPut ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun of-IoAF18A (Ljava/lang/String;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/HttpRequest {
+	public final fun getBody ()Lcom/spartanlabs/webtools/http/RequestBody;
+	public final fun getHeaders ()Lcom/spartanlabs/webtools/http/HttpHeaders;
+	public final fun getMethod ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun getUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpRequest$Builder {
+	public final fun getBody ()Lcom/spartanlabs/webtools/http/RequestBody;
+	public final fun getHeaders ()Lcom/spartanlabs/webtools/http/HttpHeaders;
+	public final fun setBody (Lcom/spartanlabs/webtools/http/RequestBody;)V
+	public final fun setHeaders (Lcom/spartanlabs/webtools/http/HttpHeaders;)V
+}
+
+public final class com/spartanlabs/webtools/http/HttpRequestKt {
+	public static final fun HttpRequest (Lcom/spartanlabs/webtools/http/HttpMethod;Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/HttpRequest;
+	public static synthetic fun HttpRequest$default (Lcom/spartanlabs/webtools/http/HttpMethod;Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/HttpRequest;
+}
+
+public final class com/spartanlabs/webtools/http/HttpResponse {
+	public final fun body ()[B
+	public final fun getBodySize ()I
+	public final fun getHeaders ()Lcom/spartanlabs/webtools/http/HttpHeaders;
+	public final fun getRedirectChain ()Ljava/util/List;
+	public final fun getStatus ()I
+	public final fun getUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/HttpResponse$Builder {
+	public final fun body ([B)V
+	public final fun getHeaders ()Lcom/spartanlabs/webtools/http/HttpHeaders;
+	public final fun getRedirectChain ()Ljava/util/List;
+	public final fun setHeaders (Lcom/spartanlabs/webtools/http/HttpHeaders;)V
+	public final fun setRedirectChain (Ljava/util/List;)V
+}
+
+public final class com/spartanlabs/webtools/http/HttpResponseKt {
+	public static final fun HttpResponse (ILcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/HttpResponse;
+	public static synthetic fun HttpResponse$default (ILcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/HttpResponse;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/HttpTransport : java/lang/AutoCloseable {
+	public fun close ()V
+	public abstract fun execute-gIAlu-s (Lcom/spartanlabs/webtools/http/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/HttpTransport$DefaultImpls {
+	public static fun close (Lcom/spartanlabs/webtools/http/HttpTransport;)V
+}
+
+public final class com/spartanlabs/webtools/http/RedirectHop {
+	public fun <init> (Lcom/spartanlabs/webtools/http/Url;I)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStatus ()I
+	public final fun getUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/RefusalReason {
+	public static final field Companion Lcom/spartanlabs/webtools/http/RefusalReason$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/RefusalReason$Companion {
+	public final fun getDeniedAddress ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getHostForm ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getHostNotPinned ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getInsecureRedirect ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getPort ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getReservedName ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getScheme ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getSensitiveHeader ()Lcom/spartanlabs/webtools/http/RefusalReason;
+	public final fun getUserInfo ()Lcom/spartanlabs/webtools/http/RefusalReason;
+}
+
+public final class com/spartanlabs/webtools/http/RequestBody {
+	public fun <init> ([BLjava/lang/String;)V
+	public final fun bytes ()[B
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getSize ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/spartanlabs/webtools/http/TransportFailure : com/spartanlabs/webtools/http/HttpFailure {
+	protected fun <init> (Ljava/lang/String;)V
+	protected fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$BodyTooLarge : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> (JLjava/lang/Long;)V
+	public fun <init> (JLjava/lang/Long;Ljava/lang/Throwable;)V
+	public final fun getDeclared ()Ljava/lang/Long;
+	public final fun getLimit ()J
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$ConnectFailed : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$DnsFailed : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun getHost ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$InvalidRequest : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun getRule ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$Io : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$Protocol : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$RefusedByPolicy : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> (Lcom/spartanlabs/webtools/http/RefusalReason;)V
+	public fun <init> (Lcom/spartanlabs/webtools/http/RefusalReason;Ljava/lang/Throwable;)V
+	public final fun getReason ()Lcom/spartanlabs/webtools/http/RefusalReason;
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$RetryRefused : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$Timeout : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$TlsFailed : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportFailure$TooManyRedirects : com/spartanlabs/webtools/http/TransportFailure {
+	public fun <init> (I)V
+	public fun <init> (ILjava/lang/Throwable;)V
+	public final fun getLimit ()I
+}
+
+public abstract class com/spartanlabs/webtools/http/UpstreamFailure : com/spartanlabs/webtools/http/HttpFailure {
+	protected fun <init> (ILjava/lang/String;)V
+	public final fun getStatus ()I
+}
+
+public final class com/spartanlabs/webtools/http/UpstreamFailure$RateLimited : com/spartanlabs/webtools/http/UpstreamFailure {
+	public final fun getRetryAfter-UwyO8pc ()J
+}
+
+public final class com/spartanlabs/webtools/http/UpstreamFailure$UpstreamError : com/spartanlabs/webtools/http/UpstreamFailure {
+	public fun <init> (ILcom/spartanlabs/webtools/http/HttpHeaders;[B)V
+	public final fun body ()[B
+	public final fun getBodySize ()I
+	public final fun getHeaders ()Lcom/spartanlabs/webtools/http/HttpHeaders;
+}
+
+public final class com/spartanlabs/webtools/http/Url {
+	public static final field Companion Lcom/spartanlabs/webtools/http/Url$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEncodedPath ()Ljava/lang/String;
+	public final fun getEncodedQuery ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getPort ()I
+	public final fun getScheme ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun redacted ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/Url$Companion {
+	public final fun parse-IoAF18A (Ljava/lang/String;)Ljava/lang/Object;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/WallClock {
+	public abstract fun nowEpochMillis ()J
+}
+
+public final class com/spartanlabs/webtools/http/WallClock$System : com/spartanlabs/webtools/http/WallClock {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/WallClock$System;
+	public fun nowEpochMillis ()J
+	public fun toString ()Ljava/lang/String;
+}
+

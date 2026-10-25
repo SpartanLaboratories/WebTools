@@ -8,4 +8,4 @@ plugins {
 
 rootProject.name = "WebTools"
 
-include(":webtools-udp", ":webtools-scraping", ":webtools-browser")
+include(":webtools-udp", ":webtools-scraping", ":webtools-browser", ":webtools-http", ":webtools-http-commoncheck")
