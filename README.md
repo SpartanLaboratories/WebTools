@@ -1,13 +1,14 @@
 # WebTools
 
-A small Kotlin/JVM collection of internet I/O helpers, published as **three
-independent, single-concern artifacts** — depend only on the one you need:
+A small Kotlin/JVM collection of internet I/O helpers, published as **independent,
+single-concern artifacts** — depend only on the one you need:
 
 | Artifact | Package | Purpose | Third-party runtime deps |
 |---|---|---|---|
 | `io.github.spartanlaboratories:webtools-udp` | `com.spartanlabs.webtools.udp` | Multi-client UDP connection layer + NAT-traversal handshake | none (slf4j-api only) |
 | `io.github.spartanlaboratories:webtools-scraping` | `com.spartanlabs.webtools.scraping` | `Connector` — open/read a URL line by line, plus one-shot `get` / `skrape` / image `download` | skrapeit, jsoup, unirest |
 | `io.github.spartanlaboratories:webtools-browser` | `com.spartanlabs.webtools.browser` | `WebViewer` — headless-browser screenshots | selenium-java |
+| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model and the transport and wall-clock ports of a suspend HTTP client stack; **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover.
@@ -23,10 +24,17 @@ dependencies {
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
+    // not yet on Maven Central: webtools-http 1.0.0 is released when the HTTP client stack is complete
+    implementation("io.github.spartanlaboratories:webtools-http:1.0.0")
 }
 ```
 
 Requires JDK 11 or newer. Built with Kotlin 2.2.
+
+`webtools-http` is a Kotlin Multiplatform module that publishes `webtools-http` and `webtools-http-jvm`;
+a Gradle build resolves the right one itself, a Maven build depends on `webtools-http-jvm`. It is not on
+Maven Central yet. Its `okhttp-jvm` 5.5.0 dependency requires `kotlin-stdlib` 2.2.21, so a consumer's
+Kotlin standard library resolves to 2.2.21 or newer.
 
 The Java 11 floor starts with `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser`
 1.0.0a: Java 11 bytecode (class-file major 55), compiled against the Java 11 API. The releases
@@ -474,9 +482,9 @@ server-wide replacement to point a `ReplaceWith` at.
 
 ## Build & test
 
-The repo is a Gradle multi-module build; the three modules are `:webtools-udp`,
-`:webtools-scraping`, `:webtools-browser`. The configuration they share lives in the included
-`build-logic/` build (see below).
+The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webtools-scraping`,
+`:webtools-browser`, `:webtools-http` (Kotlin Multiplatform) and `:webtools-http-commoncheck`
+(unpublished). The configuration they share lives in the included `build-logic/` build (see below).
 
 ```sh
 ./gradlew build                    # compile + full test suite, every module
@@ -489,20 +497,26 @@ The repo is a Gradle multi-module build; the three modules are `:webtools-udp`,
 ./gradlew e2eTest                  # Level 4b - full-stack flows
 ./gradlew nonfunctionalTest        # Level 4c - robustness / security properties
 ./gradlew uatTest                  # Level 5  - manual acceptance (mostly @Disabled)
-./gradlew verifyJavaFloor          # the Java 11 floor of every module's jars, metadata and runtime classpath (part of check)
+./gradlew verifyJavaFloor          # the Java 11 floor of every published module's jars, metadata and runtime classpath (part of check)
+./gradlew :webtools-http-commoncheck:build  # compile webtools-http's commonMain for js (no Node.js needed)
 ./gradlew :build-logic:test        # build-logic's pre-commit gate: its gating, component and deterministic checks
 ./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest  # on demand: TestKit checks
 ```
 
-Each module organises its tests by the project's 5-level testing hierarchy under
-`<module>/src/test/kotlin/com/spartanlabs/testing/<level>/webtools/<module>/`. A level task
-selects its tests by package (`com.spartanlabs.testing.<level>.*`), so any level can be run or
-gated on its own; a test class outside those packages runs under `test` only. Shared fixtures live
-under `testing/support/`.
+`./gradlew build` and `check` also compile every `*-commoncheck` module for `js`: an unpublished module
+that compiles a multiplatform module's `commonMain` so a JVM API in common code is a compile error. No
+Node.js is needed.
+
+Each module organises its tests by the project's 5-level testing hierarchy: a JVM module under
+`<module>/src/test/kotlin/com/spartanlabs/testing/<level>/webtools/<module>/`, a multiplatform module
+under `<module>/src/commonTest/kotlin/…` (runs on the JVM target) and `<module>/src/jvmTest/kotlin/…`,
+with the same package. A level task selects its tests by package (`com.spartanlabs.testing.<level>.*`)
+from the module's JVM test compilation, so any level can be run or gated on its own; a test class
+outside those packages runs under `test` only. Shared fixtures live under `testing/support/`.
 
 ### Java floor
 
-Every module compiles to Java 11 bytecode against the Java 11 API, which is what the install
+Every JVM module compiles to Java 11 bytecode against the Java 11 API, which is what the install
 section's `Requires JDK 11 or newer` rests on. Building needs a JDK 17 to 26, the range Gradle
 9.7.1 runs on, and the level tests run on that JDK too; no JDK 11 is involved. The convention
 plugins set `jvmTarget`, `-Xjdk-release` and the Java compatibility from one constant,
@@ -511,19 +525,20 @@ plugins set `jvmTarget`, `-Xjdk-release` and the Java compatibility from one con
 bytecode, when a library variant of the generated Gradle Module Metadata declares another
 `org.gradle.jvm.version`, or when a runtime dependency holds such a class; on success it writes a
 one-line summary to `<module>/build/reports/java-floor/verifyJavaFloor.txt`. Running
-`./gradlew verifyJavaFloor` checks every module without running any module's tests.
+`./gradlew verifyJavaFloor` checks every library module without running any module's tests.
 
 ### Shared build logic
 
 `build-logic/` is a Gradle build included through `pluginManagement { includeBuild("build-logic") }`
-in `settings.gradle.kts`. It holds the build configuration every module shares as three convention
+in `settings.gradle.kts`. It holds the build configuration every module shares as four convention
 plugins, which a module applies by id in its `plugins {}` block:
 
 | Plugin id | Configures |
 |---|---|
 | `webtools.published-library` | the Maven Central publishing skeleton: signing and the shared POM metadata |
 | `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the level test tasks; applies `webtools.published-library` |
-| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (no module uses it yet): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
+| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (used by `webtools-http`): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
+| `webtools.kotlin-common-check` | an unpublished, check-only `js` module that compiles a sibling's `commonMain` (no publishing, no tests, no Node.js, no Java floor) |
 
 Change shared build behaviour there, not in a module's build file: a module's `build.gradle.kts`
 adds its dependencies, its coordinates, its POM name and description, and any configuration that
