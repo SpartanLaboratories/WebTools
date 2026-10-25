@@ -1,0 +1,1003 @@
+/* board.js: board.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit board.json and re-embed. */
+window.dashboardLive&&window.dashboardLive("board",
+{
+  "schema": "work-board/1",
+  "repo": "SpartanLaboratories/WebTools",
+  "generated": "2026-10-25T12:31:13Z",
+  "asOf": "2026-10-25",
+  "tree": {
+    "ref": "master",
+    "sha": "7de8207"
+  },
+  "systems": [
+    {
+      "slug": "gradle-build",
+      "name": "Gradle build",
+      "slot": 4,
+      "top": "Gradle build",
+      "status": "built",
+      "page": "docs/dashboards/gradle-build/index.html"
+    },
+    {
+      "slug": "webtools-http-core",
+      "name": "webtools-http common core",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
+    },
+    {
+      "slug": "webtools-http-test-fixtures",
+      "name": "published test fixtures",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-url-policy",
+      "name": "outbound-URL policy",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-transport",
+      "name": "OkHttp transport",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-cache",
+      "name": "response cache",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-budget",
+      "name": "call budget",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-http-facades",
+      "name": "call facades",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools-feeds",
+      "name": "webtools-feeds",
+      "slot": 6,
+      "top": "webtools-feeds",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "webtools",
+      "name": "WebTools",
+      "slot": 0,
+      "top": "WebTools",
+      "status": "built",
+      "page": "docs/dashboards/index.html"
+    },
+    {
+      "slug": "webtools-udp",
+      "name": "webtools-udp",
+      "slot": 1,
+      "top": "webtools-udp",
+      "status": "built",
+      "page": "docs/dashboards/webtools-udp/index.html"
+    }
+  ],
+  "groups": [
+    {
+      "key": "55",
+      "issue": 55,
+      "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+      "board": "55-http-client-stack/dashboard.html"
+    },
+    {
+      "key": "other",
+      "issue": null,
+      "title": "Other runs, oldest first",
+      "board": null
+    }
+  ],
+  "rows": [
+    {
+      "issue": 55,
+      "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+      "state": "OPEN",
+      "created": "2026-10-20",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 16,
+          "repo": "SpartanLaboratories/KotlinBottools",
+          "state": "OPEN"
+        },
+        {
+          "issue": 9,
+          "repo": "SpartanLaboratories/KotlinBottools",
+          "state": "OPEN"
+        }
+      ],
+      "board": "55-http-client-stack/dashboard.html",
+      "folder": "55-http-client-stack/",
+      "branch": null,
+      "system": null,
+      "step": "implementation",
+      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
+      "since": "2026-10-22T21:58:56Z",
+      "updated": "2026-10-25T12:08:09Z",
+      "qa": [],
+      "qaMax": 3,
+      "status": "building",
+      "landed": null,
+      "reconciliation": {
+        "state": "partial",
+        "landed": 3,
+        "total": 11
+      },
+      "active": false,
+      "chain": {
+        "total": 11,
+        "landed": 3,
+        "dropped": 0,
+        "deferred": 0,
+        "left": 0,
+        "planned": false,
+        "done": false,
+        "current": [
+          {
+            "issue": 63,
+            "slug": "test-support",
+            "step": null
+          }
+        ],
+        "next": {
+          "issue": 64,
+          "slug": "url-policy",
+          "blockedBy": []
+        }
+      },
+      "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
+      "group": "55",
+      "order": 0
+    },
+    {
+      "issue": 61,
+      "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        },
+        {
+          "issue": 47,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "board": "55-http-client-stack/61-build-logic/dashboard.html",
+      "folder": "55-http-client-stack/61-build-logic/",
+      "branch": null,
+      "system": "gradle-build",
+      "step": "landed",
+      "detail": "Merged through PR #74 as 1e27071; no version moved. The board was written after the landing, from the issue folder's documents: the run predates the dashboards service.",
+      "since": "2026-10-22T21:58:56Z",
+      "updated": "2026-10-22T22:22:20Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-22",
+          "findings": {
+            "documentation": 14,
+            "test": 9,
+            "code": 0
+          },
+          "note": "all remediated through amendment 1"
+        },
+        {
+          "pass": 2,
+          "verdict": "approved",
+          "date": "2026-10-22",
+          "findings": {
+            "documentation": 5,
+            "test": 1,
+            "code": 0
+          },
+          "note": "passed the code review and the narrowed Level-5 pass; six minor fixes applied on the spot, no third pass"
+        }
+      ],
+      "qaMax": 3,
+      "status": "landed",
+      "landed": {
+        "pr": 74,
+        "merge": "1e27071",
+        "version": "none: published output identical to 834ce4a",
+        "date": "2026-10-22"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
+      "systemName": "Gradle build",
+      "group": "55",
+      "order": 1
+    },
+    {
+      "issue": 47,
+      "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "created": "2026-09-28",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 61,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
+      "folder": "55-http-client-stack/47-java-23-bytecode/",
+      "branch": null,
+      "system": "gradle-build",
+      "step": "landed",
+      "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. The as-built record and the impact were reconciled after the landing (PR #78). Unit 3 of #55, #62, is no longer blocked by this issue.",
+      "since": "2026-10-23T02:21:55Z",
+      "updated": "2026-10-23T20:07:49Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-23",
+          "findings": {
+            "documentation": 7,
+            "test": 2,
+            "code": 0
+          },
+          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass"
+        }
+      ],
+      "qaMax": 3,
+      "status": "landed",
+      "landed": {
+        "pr": 76,
+        "merge": "3949b52",
+        "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
+        "date": "2026-10-23"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
+      "systemName": "Gradle build",
+      "group": "55",
+      "order": 2
+    },
+    {
+      "issue": 62,
+      "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 47,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        },
+        {
+          "issue": 61,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 67,
+          "state": "OPEN"
+        },
+        {
+          "issue": 66,
+          "state": "OPEN"
+        },
+        {
+          "issue": 64,
+          "state": "OPEN"
+        },
+        {
+          "issue": 63,
+          "state": "OPEN"
+        }
+      ],
+      "board": "55-http-client-stack/62-http-core/dashboard.html",
+      "folder": "55-http-client-stack/62-http-core/",
+      "branch": null,
+      "system": "webtools-http-core",
+      "step": "landed",
+      "detail": "Merged through PR #82 as 7de8207: `webtools-http` and its check-only `js` module, the `webtools.kotlin-common-check` plugin and the README; three deviations, all additions; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-10-25T11:51:40Z",
+      "updated": "2026-10-25T12:08:09Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "findings": {
+            "documentation": 18,
+            "test": 9,
+            "code": 2
+          },
+          "severity": {
+            "minor": 27,
+            "other": 2
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/test-inspector/index.html",
+          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+        }
+      ],
+      "qaMax": 3,
+      "status": "landed",
+      "landed": {
+        "pr": 82,
+        "merge": "7de8207",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-10-25"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
+      "systemName": "webtools-http common core",
+      "group": "55",
+      "order": 3
+    },
+    {
+      "issue": 63,
+      "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 69,
+          "state": "OPEN"
+        },
+        {
+          "issue": 67,
+          "state": "OPEN"
+        },
+        {
+          "issue": 66,
+          "state": "OPEN"
+        },
+        {
+          "issue": 65,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-http-test-fixtures",
+      "step": "implementation",
+      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
+      "qa": [],
+      "qaMax": 3,
+      "status": "building",
+      "landed": null,
+      "reconciliation": null,
+      "active": true,
+      "systemName": "published test fixtures",
+      "group": "55",
+      "order": 4
+    },
+    {
+      "issue": 64,
+      "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 65,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-http-url-policy",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "next",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "next": true,
+      "blockedBy": [],
+      "systemName": "outbound-URL policy",
+      "group": "55",
+      "order": 5
+    },
+    {
+      "issue": 65,
+      "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 64,
+          "state": "OPEN"
+        },
+        {
+          "issue": 63,
+          "state": "OPEN"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 68,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-http-transport",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "not-started",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "systemName": "OkHttp transport",
+      "group": "55",
+      "order": 6
+    },
+    {
+      "issue": 66,
+      "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 63,
+          "state": "OPEN"
+        },
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 68,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-http-cache",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "not-started",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "systemName": "response cache",
+      "group": "55",
+      "order": 7
+    },
+    {
+      "issue": 67,
+      "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 63,
+          "state": "OPEN"
+        },
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 68,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-http-budget",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "not-started",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "systemName": "call budget",
+      "group": "55",
+      "order": 8
+    },
+    {
+      "issue": 68,
+      "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 67,
+          "state": "OPEN"
+        },
+        {
+          "issue": 66,
+          "state": "OPEN"
+        },
+        {
+          "issue": 65,
+          "state": "OPEN"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 69,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-http-facades",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "not-started",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "systemName": "call facades",
+      "group": "55",
+      "order": 9
+    },
+    {
+      "issue": 69,
+      "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 68,
+          "state": "OPEN"
+        },
+        {
+          "issue": 63,
+          "state": "OPEN"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 70,
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools-feeds",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "not-started",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "systemName": "webtools-feeds",
+      "group": "55",
+      "order": 10
+    },
+    {
+      "issue": 70,
+      "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
+      "state": "OPEN",
+      "created": "2026-10-22",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 69,
+          "state": "OPEN"
+        }
+      ],
+      "blocks": [],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": "webtools",
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "qaMax": null,
+      "status": "not-started",
+      "landed": null,
+      "reconciliation": null,
+      "active": false,
+      "systemName": "WebTools",
+      "group": "55",
+      "order": 11
+    },
+    {
+      "issue": 38,
+      "title": "Handshake parsing accepts an empty peer name on extra whitespace",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "created": "2026-09-24",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": "38-handshake-empty-name/dashboard.html",
+      "folder": "38-handshake-empty-name/",
+      "branch": null,
+      "system": "webtools-udp",
+      "step": "landed",
+      "detail": "Merged through PR #59 as 806ce8e; the board was written after the fact as the worked example.",
+      "since": "2026-10-20",
+      "updated": "2026-10-20",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "findings": {
+            "documentation": 10,
+            "test": 8
+          },
+          "note": "Stage C added to the plan"
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "findings": {
+            "documentation": 4,
+            "test": 1
+          },
+          "note": "5 LOW items; Stage D added; no third review run, by the maintainer's decision"
+        }
+      ],
+      "qaMax": null,
+      "status": "landed",
+      "landed": {
+        "pr": 59,
+        "merge": "806ce8e",
+        "version": "webtools-udp 2.0.0a",
+        "date": "2026-10-20"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
+      "systemName": "webtools-udp",
+      "group": "other",
+      "order": 0
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "state": "OPEN",
+      "created": "2026-10-23",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 1
+    },
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "state": "OPEN",
+      "created": "2026-10-25",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 1,
+          "repo": "SpartanLaboratories/.github",
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 2
+    }
+  ],
+  "roadmap": [
+    {
+      "issue": 55,
+      "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+      "state": "OPEN",
+      "board": "55-http-client-stack/dashboard.html",
+      "items": [
+        {
+          "issue": 61,
+          "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        },
+        {
+          "issue": 47,
+          "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        },
+        {
+          "issue": 62,
+          "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
+        },
+        {
+          "issue": 63,
+          "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
+          "state": "OPEN"
+        },
+        {
+          "issue": 64,
+          "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
+          "state": "OPEN"
+        },
+        {
+          "issue": 65,
+          "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
+          "state": "OPEN"
+        },
+        {
+          "issue": 66,
+          "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
+          "state": "OPEN"
+        },
+        {
+          "issue": 67,
+          "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
+          "state": "OPEN"
+        },
+        {
+          "issue": 68,
+          "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
+          "state": "OPEN"
+        },
+        {
+          "issue": 69,
+          "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
+          "state": "OPEN"
+        },
+        {
+          "issue": 70,
+          "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
+          "state": "OPEN"
+        }
+      ]
+    }
+  ],
+  "unscheduled": [
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "labels": [
+        "type: feature"
+      ],
+      "created": "2026-10-25",
+      "system": null,
+      "unassigned": true
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "labels": [],
+      "created": "2026-10-23",
+      "system": null,
+      "unassigned": true
+    },
+    {
+      "issue": 58,
+      "title": "Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9",
+      "labels": [
+        "documentation",
+        "enhancement"
+      ],
+      "created": "2026-10-20",
+      "system": "gradle-build"
+    },
+    {
+      "issue": 57,
+      "title": "Server answers handshakes from unverified source addresses with no rate limit (reflection)",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-10-20",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 56,
+      "title": "Handshake from a registered origin gets REGISTERED 2 even when it names a different client",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-10-20",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 54,
+      "title": "A throwing onClientConnect kills the server's listener thread",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-10-20",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 53,
+      "title": "Server accepts handshake names and credentials containing tabs, CR/LF or other non-space whitespace",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-10-20",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 52,
+      "title": "Client sends malformed or misparsed handshakes for an empty or whitespace-containing name or credential",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-10-20",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 50,
+      "title": "webtools-udp: multiplatform protocol core and a datagram-transport seam for a future web client",
+      "labels": [
+        "type: feature"
+      ],
+      "created": "2026-10-20",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 49,
+      "title": "Handshake registration orphaned when the REGISTERED send fails",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-09-28",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 48,
+      "title": "MultiConnectionUDPServer.stop() blocks ~1 s joining the listener before closing the socket",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-09-28",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 41,
+      "title": "webtools-udp: rate-bound the per-datagram-drop WARN logs on server and client",
+      "labels": [],
+      "created": "2026-09-26",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 39,
+      "title": "Client only checks datagram origin on the reliable-channel receive branch",
+      "labels": [],
+      "created": "2026-09-24",
+      "system": "webtools-udp"
+    }
+  ]
+}
+);

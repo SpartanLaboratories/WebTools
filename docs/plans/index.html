@@ -6,6 +6,7 @@
 <meta name="dashboard" content="work-board">
 <meta name="template" content="plan/template/board.html">
 <title>Work board</title>
+<script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 /* Work board template (dashboards skill, plan set: plan/RULES.md §5; shared rules: GUIDANCE.md). Every /resolve-issue run in the
    repository at once: one row per issue that has a plan board or is sized for a run on the tracker, grouped by tracking issue in landing order,
@@ -13,7 +14,11 @@
    every plan.json under docs/plans/ and the tracker. Never hand-edit a page. Colour plan as on every page: --sys-1..6 are the
    registry slots, identical to the system pages'; status colours only beside a glyph and a word; the accent marks the runs
    being worked on now (an interior glow that breathes) and the next unit up (a mild, still outer glow and an UP NEXT tag);
-   dashed = not started or no board yet. */
+   dashed = not started or no board yet. A row with no board takes its state from the tracker (plan/RULES.md §5, "Boardless rows"):
+   not started (dashed), in progress (a branch or an open pull request; solid, never glowing), merged · awaiting close, landed, and
+   closed · not planned (closed on the tracker as not planned: solid, neutral, never landed) and closed · duplicate (closed as a
+   duplicate of another issue: solid, neutral, never landed). The same words mark a roadmap item and a waits-on or blocks entry closed
+   as not planned (stateReason NOT_PLANNED) or as a duplicate (stateReason DUPLICATE). */
 :root{
   --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
   --line:#dfe4ec; --hair:rgba(14,20,32,.10);
@@ -35,12 +40,51 @@ code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px}
 .crumbs a{text-decoration:none}
+/* The header's tools, right of the breadcrumb: the live indicator (plan/RULES.md §5, the live view) and the theme switch (GUIDANCE.md
+   §1, Themes). The live dot is ink, never a status or accent colour; it pulses while the live view is changing and holds still after a
+   quiet spell, when the data cannot be read, while no run is active, and under reduced motion. */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:18px}
+.topbar .crumbs{padding-top:0;min-width:0}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.livechip{display:inline-flex;align-items:center;gap:6px;font:600 11px/1 var(--mono);letter-spacing:.03em;padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
+.livechip:empty{display:none}
+.livechip .ld{width:8px;height:8px;border-radius:50%;background:var(--ink);flex:none}
+.livechip.on{color:var(--ink);border-color:var(--ink-2)}
+.livechip.on.pulse .ld{animation:livepulse 1.6s ease-in-out infinite}
+.livechip.off .ld{background:none;border:1.5px solid var(--muted)}
+.livechip.na .ld{background:var(--muted)}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+.themebtn{appearance:none;font:600 11px/1 var(--mono);padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.themebtn:hover{color:var(--ink);border-color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.livechip .ld{animation:none!important}}
 h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)}
 .function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
 .chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
 .chip b{color:var(--ink);font-weight:600}
-.chip.model{border-style:dashed}
+/* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
+   left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
+   long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
+   live indicator, the theme switch) runs across the top. The same rules on every dashboard type. */
+.issueline{font:12.5px/1.4 var(--mono);color:var(--ink-2);margin:0 0 8px;overflow-wrap:anywhere}
+.issueline a{text-decoration:none;border-bottom:1px solid var(--line)}
+.issueline a:hover{border-bottom-color:var(--ink)}
+.chip .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chip .sysl{display:inline-flex;align-items:center;margin-right:10px;white-space:nowrap}
+.chip .sysl:last-child{margin-right:0}
+@media (min-width:940px){
+  header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;column-gap:28px}
+  header>.topbar{grid-column:1/-1;grid-row:1}
+  header>.crumbs{grid-column:1;grid-row:1}
+  header>.systools{grid-column:2;grid-row:1;justify-self:end;align-self:start;float:none;margin:14px 0 4px}
+  header>h1{grid-column:1;grid-row:2}
+  header>.issueline{grid-column:1;grid-row:3}
+  header>.function{grid-column:1;grid-row:4;max-width:none}
+  header>.chips{grid-column:2;grid-row:2/-1;align-self:start;align-content:flex-start;gap:8px;margin:8px 0 6px}
+  header>.chips>.chip{display:block;flex:1 1 190px;padding:7px 10px 8px;font-size:12.5px;line-height:1.4;border-radius:6px}
+  header>.chips>.chip .ck{display:block;margin:0 0 2px}
+  header>.chips>.chip.wide{flex-basis:100%}
+}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 18px}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
 .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
@@ -79,6 +123,9 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 @keyframes glow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 3px 1px color-mix(in srgb,var(--accent) 35%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 9px 3px color-mix(in srgb,var(--accent) 65%,transparent)}}
 .vp.glow,.glow{animation:glow 2s ease-in-out infinite;background:color-mix(in srgb,var(--accent) 16%,var(--surface));border-color:var(--accent);border-left-color:var(--sc,var(--accent))}
 @media (prefers-reduced-motion:reduce){.vp.glow,.glow{animation:none!important;box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 50%,transparent)}}
+/* A run that waits on the user, halted or escalated, keeps its in-progress mark stopped to the ring alone (GUIDANCE.md §1): still. */
+.vp.held{box-shadow:inset 0 0 0 2px var(--accent)}
+.key i.hold{border:2px solid var(--accent)}
 .upnext{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--accent) 70%,transparent),0 0 9px 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .tag-next{display:inline-block;font:700 9.5px/1 var(--mono);letter-spacing:.08em;padding:3px 5px;border-radius:3px;border:1px solid var(--accent);color:var(--accent);background:var(--surface);white-space:nowrap;vertical-align:1px}
 .tags{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:4px}
@@ -123,7 +170,7 @@ footer code{color:var(--ink-2)}
 <body>
 <div class="page">
 <header>
-  <div class="crumbs" id="crumbs"></div>
+  <div class="topbar"><div class="crumbs" id="crumbs"></div><div class="tools"><span class="livechip" id="live"></span><button class="themebtn" id="theme" type="button"></button></div></div>
   <h1>Work board</h1>
   <p class="function" id="function"></p>
   <div class="chips" id="chips"></div>
@@ -135,7 +182,7 @@ footer code{color:var(--ink-2)}
 </div>
 <section class="view" role="tabpanel" id="p-runs" aria-labelledby="t-runs">
   <h2>Every run, grouped by tracking issue in landing order, then the rest by age</h2>
-  <p class="lede" id="runs-lede">One row per issue with a plan board or sized for a run on the tracker. A run's live state is on its own board, on its branch; this page is regenerated at each landing, so it may lag between landings. An issue's number opens it on GitHub and its title opens its board once it has one; a #n on its own opens the board, and the GitHub issue until there is one.</p>
+  <p class="lede" id="runs-lede">Regenerated at each landing, so it may lag; a run's live state is on its own board.</p>
   <div class="scroll"><table class="tbl" id="runs"></table></div>
   <div class="key" id="runs-key"></div>
 </section>
@@ -156,11 +203,11 @@ footer code{color:var(--ink-2)}
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-23T20:10:10Z",
-  "asOf": "2026-10-23",
+  "generated": "2026-10-25T12:31:13Z",
+  "asOf": "2026-10-25",
   "tree": {
     "ref": "master",
-    "sha": "77a69bc"
+    "sha": "7de8207"
   },
   "systems": [
     {
@@ -176,8 +223,8 @@ footer code{color:var(--ink-2)}
       "name": "webtools-http common core",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-test-fixtures",
@@ -291,25 +338,37 @@ footer code{color:var(--ink-2)}
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is up next and no longer blocked: both its blockers have landed. Units 4 to 11 follow in landing order.",
+      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-23T20:07:49Z",
+      "updated": "2026-10-25T12:08:09Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
       "landed": null,
+      "reconciliation": {
+        "state": "partial",
+        "landed": 3,
+        "total": 11
+      },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 2,
+        "landed": 3,
         "dropped": 0,
         "deferred": 0,
+        "left": 0,
         "planned": false,
         "done": false,
-        "current": [],
+        "current": [
+          {
+            "issue": 63,
+            "slug": "test-support",
+            "step": null
+          }
+        ],
         "next": {
-          "issue": 62,
-          "slug": "http-core",
+          "issue": 64,
+          "slug": "url-policy",
           "blockedBy": []
         }
       },
@@ -321,17 +380,20 @@ footer code{color:var(--ink-2)}
       "issue": 61,
       "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
       "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [],
       "blocks": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 47,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "board": "55-http-client-stack/61-build-logic/dashboard.html",
@@ -374,6 +436,11 @@ footer code{color:var(--ink-2)}
         "version": "none: published output identical to 834ce4a",
         "date": "2026-10-22"
       },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
       "systemName": "Gradle build",
       "group": "55",
@@ -383,18 +450,21 @@ footer code{color:var(--ink-2)}
       "issue": 47,
       "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
       "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-09-28",
       "parent": 55,
       "waitsOn": [
         {
           "issue": 61,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
@@ -426,6 +496,11 @@ footer code{color:var(--ink-2)}
         "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
         "date": "2026-10-23"
       },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
       "systemName": "Gradle build",
       "group": "55",
@@ -434,17 +509,20 @@ footer code{color:var(--ink-2)}
     {
       "issue": 62,
       "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
         {
           "issue": 47,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 61,
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -465,19 +543,47 @@ footer code{color:var(--ink-2)}
           "state": "OPEN"
         }
       ],
-      "board": null,
-      "folder": null,
+      "board": "55-http-client-stack/62-http-core/dashboard.html",
+      "folder": "55-http-client-stack/62-http-core/",
       "branch": null,
       "system": "webtools-http-core",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
+      "step": "landed",
+      "detail": "Merged through PR #82 as 7de8207: `webtools-http` and its check-only `js` module, the `webtools.kotlin-common-check` plugin and the README; three deviations, all additions; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-10-25T11:51:40Z",
+      "updated": "2026-10-25T12:08:09Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-25",
+          "findings": {
+            "documentation": 18,
+            "test": 9,
+            "code": 2
+          },
+          "severity": {
+            "minor": 27,
+            "other": 2
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/test-inspector/index.html",
+          "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+        }
+      ],
+      "qaMax": 3,
+      "status": "landed",
+      "landed": {
+        "pr": 82,
+        "merge": "7de8207",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-10-25"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
-      "next": true,
-      "blockedBy": [],
       "systemName": "webtools-http common core",
       "group": "55",
       "order": 3
@@ -491,7 +597,8 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -516,13 +623,14 @@ footer code{color:var(--ink-2)}
       "folder": null,
       "branch": null,
       "system": "webtools-http-test-fixtures",
-      "step": null,
-      "detail": "",
+      "step": "implementation",
+      "detail": "Units 1 to 3 have landed: #61 (`build-logic`) through PR #74 as 1e27071, #47 (`java-floor`) through PR #76 as 3949b52, and #62 (`http-core`) through PR #82 as 7de8207, which adds `webtools-http` 1.0.0, new and unreleased. Unit 4, #63 (`test-support`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.7, §6.1 and §11 and impact.md §7. Unit 5, #64 (`url-policy`), is up next. Units 6 to 11 follow in landing order.",
       "qa": [],
-      "qaMax": null,
-      "status": "not-started",
+      "qaMax": 3,
+      "status": "building",
       "landed": null,
-      "active": false,
+      "reconciliation": null,
+      "active": true,
       "systemName": "published test fixtures",
       "group": "55",
       "order": 4
@@ -536,7 +644,8 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -553,9 +662,12 @@ footer code{color:var(--ink-2)}
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
+      "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [],
       "systemName": "outbound-URL policy",
       "group": "55",
       "order": 5
@@ -592,6 +704,7 @@ footer code{color:var(--ink-2)}
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "OkHttp transport",
       "group": "55",
@@ -610,7 +723,8 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -629,6 +743,7 @@ footer code{color:var(--ink-2)}
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "response cache",
       "group": "55",
@@ -647,7 +762,8 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 62,
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ],
       "blocks": [
@@ -666,6 +782,7 @@ footer code{color:var(--ink-2)}
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "call budget",
       "group": "55",
@@ -707,6 +824,7 @@ footer code{color:var(--ink-2)}
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "call facades",
       "group": "55",
@@ -744,6 +862,7 @@ footer code{color:var(--ink-2)}
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "webtools-feeds",
       "group": "55",
@@ -772,6 +891,7 @@ footer code{color:var(--ink-2)}
       "qaMax": null,
       "status": "not-started",
       "landed": null,
+      "reconciliation": null,
       "active": false,
       "systemName": "WebTools",
       "group": "55",
@@ -781,6 +901,7 @@ footer code{color:var(--ink-2)}
       "issue": 38,
       "title": "Handshake parsing accepts an empty peer name on extra whitespace",
       "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-09-24",
       "parent": null,
       "waitsOn": [],
@@ -821,10 +942,77 @@ footer code{color:var(--ink-2)}
         "version": "webtools-udp 2.0.0a",
         "date": "2026-10-20"
       },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
       "active": false,
       "systemName": "webtools-udp",
       "group": "other",
       "order": 0
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "state": "OPEN",
+      "created": "2026-10-23",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 1
+    },
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "state": "OPEN",
+      "created": "2026-10-25",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 1,
+          "repo": "SpartanLaboratories/.github",
+          "state": "OPEN"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 2
     }
   ],
   "roadmap": [
@@ -837,17 +1025,20 @@ footer code{color:var(--ink-2)}
         {
           "issue": 61,
           "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 47,
           "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
-          "state": "CLOSED"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 62,
           "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 63,
@@ -893,6 +1084,24 @@ footer code{color:var(--ink-2)}
     }
   ],
   "unscheduled": [
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "labels": [
+        "type: feature"
+      ],
+      "created": "2026-10-25",
+      "system": null,
+      "unassigned": true
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "labels": [],
+      "created": "2026-10-23",
+      "system": null,
+      "unassigned": true
+    },
     {
       "issue": 58,
       "title": "Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9",
@@ -1008,17 +1217,20 @@ const day=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s
 function localizeTimes(root){ (root||document).querySelectorAll("time[datetime]").forEach(t=>{ const u=STAMP_RE.test(t.getAttribute("datetime"))&&utcIso(t.getAttribute("datetime")); if(!u||t.dataset.local) return;
   t.dataset.local="1"; t.title=`${u} (UTC)`; t.textContent=new Date(u).toLocaleString(undefined,LOCAL_FMT); }); }
 
-const B=JSON.parse(document.getElementById("board").textContent||"{}");
-// docs/plans/ relative to this page: "" for the committed board, "../" for the live one in docs/plans/.live/ (board.js --live).
-const BASE=B.base||"";
-const ROWS=B.rows||[], SYS=B.systems||[];
+/* board.json and what is derived from it: let, not const, so a live update (dashboardRedraw(), below) redraws the page in place.
+   BASE is docs/plans/ relative to this page: "" for the committed board, "../" for the live one in docs/plans/.live/ (board.js --live). */
+let B=JSON.parse(document.getElementById("board").textContent||"{}");
+let BASE="", ROWS=[], SYS=[];
 const ext=(h,t)=>`<a href="${esc(h)}" target="_blank" rel="noopener">${t}</a>`;
 /* Links to an issue and its board (plan/RULES.md §1, §5; GUIDANCE.md §5). Where an issue's number and its title appear together
    (a row, a group heading, a roadmap item, an unscheduled issue) they are two links, pair(): the number opens the GitHub issue and
    the title opens the issue's board, plain text while it has none. Where only one link fits (the "part of" line, the waits-on and
    blocks lists, the "blocked by" tags, the Up next count, any #n in the text) ilink() opens the board when one exists and the
    GitHub issue otherwise. board.js sets a row's "board" only when the board's file exists. */
-const ISSUE_BOARDS=new Map(ROWS.filter(r=>r.board).map(r=>[String(r.issue),r.board]));
+/* one Map, refilled by derive(): its name is the marker of the widened link rule (lib.js linkRule()) */
+const ISSUE_BOARDS=new Map();
+function derive(){ BASE=B.base||""; ROWS=B.rows||[]; SYS=B.systems||[]; ISSUE_BOARDS.clear(); ROWS.filter(r=>r.board).forEach(r=>ISSUE_BOARDS.set(String(r.issue),r.board)); }
+derive();
 const boardOf=(n,repo)=>!repo||repo===B.repo?ISSUE_BOARDS.get(String(n))||null:null;
 const ghUrl=(n,repo)=>`https://github.com/${repo||B.repo}/issues/${n}`;
 const ilabel=(n,repo)=>`${repo&&repo!==B.repo?esc(repo.split("/")[1])+"#":"#"}${esc(n)}`;
@@ -1033,7 +1245,14 @@ function paint(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=
 const STATUS={
   landed:{g:"✓",l:"landed",c:"good"}, complete:{g:"☑",l:"complete · not merged",c:"good",h:1}, building:{g:"●",l:"building",c:"neutral"}, planning:{g:"●",l:"planning",c:"neutral"},
   halted:{g:"⏸",l:"waiting on the user",c:"warning"}, escalated:{g:"⇧",l:"escalated",c:"serious"}, abandoned:{g:"✕",l:"cancelled",c:"critical"},
-  next:{g:"→",l:"next · not started",c:"neutral",d:1}, "not-started":{g:"…",l:"not started",c:"neutral",d:1}, "no-board":{g:"–",l:"no board",c:"neutral",d:1}};
+  next:{g:"→",l:"next · not started",c:"neutral",d:1}, "not-started":{g:"…",l:"not started",c:"neutral",d:1},
+  "in-progress":{g:"▸",l:"in progress",c:"neutral",desc:"no board: a branch or an open pull request refers to it"}, merged:{g:"✓",l:"merged · awaiting close",c:"good",desc:"no board: its pull request merged, the issue still open"},
+  "not-planned":{g:"⊖",l:"closed · not planned",c:"neutral",desc:"no board: closed on the tracker as not planned"},
+  duplicate:{g:"⊜",l:"closed · duplicate",c:"neutral",desc:"no board: closed on the tracker as a duplicate of another issue"},
+  "no-board":{g:"–",l:"no board",c:"neutral",d:1}};
+/* an issue's closed state in a list (a roadmap item, a waits-on or blocks entry): "closed · not planned" when the tracker closed it as
+   not planned, "closed · duplicate" when it closed it as a duplicate, "closed" otherwise, nothing while it is open */
+const closedWord=x=>x&&x.state==="CLOSED"?(x.stateReason==="NOT_PLANNED"?"closed · not planned":x.stateReason==="DUPLICATE"?"closed · duplicate":"closed"):"";
 const BLOCKED={g:"⊘",l:"blocked",c:"warning"};
 const TAG_NEXT=`<span class="tag-next">UP NEXT</span>`;
 const QA={approved:{g:"✓",l:"approved",c:"good"},"changes-requested":{g:"✕",l:"changes requested",c:"critical"},running:{g:"…",l:"in progress",c:"neutral",d:1}};
@@ -1044,50 +1263,112 @@ const stOf=r=>STATUS[r.status]?r.status:"no-board";
    starts; "landed · 11 of 11" once all have landed. A unit whose run waits reads "waiting on you". A halted, escalated or cancelled
    tracking issue keeps its pill above the summary. */
 const unitRunWord=u=>u.step==="halted"?"waiting on you":u.step==="escalated"?"escalated":u.step==="cancelled"?"run cancelled":`in progress${u.step?` (${esc(u.step)})`:""}`;
-function chainText(c){ const extra=[c.dropped?`${c.dropped} dropped`:"",c.deferred?`${c.deferred} deferred`:""].filter(Boolean);
+function chainText(c){ const extra=[c.dropped?`${c.dropped} dropped`:"",c.deferred?`${c.deferred} deferred`:"",c.left?`${c.left} left for later`:""].filter(Boolean);
   if(c.done) return [`<b>landed</b> · ${c.landed} of ${c.total}`,...extra].join(" · ");
   if(c.planned) return [`<b>planned</b> · ${c.total?`${c.total} unit${c.total===1?"":"s"}`:"no units yet"}`,...extra].join(" · ");
   return [`<b>${c.landed} of ${c.total} landed</b>`,...(c.current||[]).map(u=>`${u.issue?ilink(u.issue):esc(u.slug)} ${unitRunWord(u)}`),
     c.next?`${c.next.issue?ilink(c.next.issue):esc(c.next.slug)} up next${(c.next.blockedBy||[]).length?`, blocked by ${c.next.blockedBy.map(x=>ilink(x.issue,x.repo)).join(", ")}`:""}`:"",...extra].filter(Boolean).join(" · "); }
+/* a run that waits on the user, halted or escalated, on a row with a run board (its own, or its tracking board's unit row): its mark
+   stopped to the ring alone, still (GUIDANCE.md §1), never glowing and never only the yellow pill */
+const heldRow=r=>["halted","escalated"].includes(stOf(r))&&!!(r.board||r.parent);
 const chainCell=(r,st)=>{ const c=r.chain, pct=c.total?Math.round(100*c.landed/c.total):0;
-  return `${["halted","escalated","abandoned"].includes(st)?pill(STATUS[st]):""}<div class="chainsum">${chainText(c)}<span class="cbar" role="img" aria-label="${c.landed} of ${c.total} units landed"><i style="width:${pct}%"></i></span></div>`; };
+  return `${["halted","escalated","abandoned"].includes(st)?pill(STATUS[st],"",heldRow(r)?" held":""):""}<div class="chainsum">${chainText(c)}<span class="cbar" role="img" aria-label="${c.landed} of ${c.total} units landed"><i style="width:${pct}%"></i></span></div>`; };
+/* The impact's reconciliation state of a row's board (plan/RULES.md §2, Impact; §5), as board.json carries it: derived by board.js
+   (plan/scripts/lib.js reconciliation()), never by this page, and never stored on a board. Planned is dashed, partly reconciled
+   yellow (with the units landed of all on a tracking issue), as built green, each with its glyph and word. */
+const RECON={planned:{g:"…",l:"impact planned",c:"neutral",d:1,desc:"the plan's impact, nothing reconciled yet"},partial:{g:"◐",l:"impact partly reconciled",c:"warning",desc:"changes recorded as the work lands"},"as-built":{g:"✓",l:"impact as built",c:"good",desc:"reconciled with the build"}};
+const reconOf=r=>r.reconciliation&&RECON[r.reconciliation.state]?r.reconciliation:null;
+const reconTag=r=>{ const x=reconOf(r); if(!x) return ""; const d=RECON[x.state]; return `<div class="tags">${pill(d,x.state==="partial"&&x.total?`${d.l} · ${x.landed} of ${x.total}`:"")}</div>`; };
 /* the "blocked by" tag of the unit up next: each blocker linked like any #n */
 const blockedTag=r=>(r.blockedBy||[]).length?`<span class="vp ${BLOCKED.c}"><i aria-hidden="true">${BLOCKED.g}</i>blocked by ${r.blockedBy.map(x=>ilink(x.issue,x.repo)).join(", ")}</span>`:"";
 
 function render(){
   $("#crumbs").innerHTML=`<a href="${esc(BASE)}../dashboards/index.html">${esc(B.repo||"")}</a> › docs/plans › work board${B.live?" (live)":""}`;
   $("#function").textContent=`Every planning and development run in ${B.repo||"the repository"}: where each is, what it waits on, what it blocks.`;
-  if(B.live) $("#runs-lede").textContent="One row per issue with a plan board or sized for a run on the tracker, each read from the freshest of its boards across the repository's worktrees. This live copy is regenerated at every plan-board event and is never committed. An issue's number opens it on GitHub and its title opens its board once it has one; a #n on its own opens the board, and the GitHub issue until there is one.";
+  if(B.live) $("#runs-lede").textContent="Each run read from its freshest board across the worktrees; regenerated at every event, never committed.";
   document.title=`${(B.repo||"").split("/")[1]||""} · work board`;
   const t=B.tree||{};
-  $("#chips").innerHTML=[`<span class="chip">generated <b>${when(B.generated||"")}</b></span>`,t.sha?`<span class="chip">from <b>${esc(t.ref||"")} ${esc(t.sha)}</b></span>`:"",B.live?`<span class="chip">live · from <b>${esc(B.live.worktrees)}</b> worktree${B.live.worktrees===1?"":"s"}, each issue's freshest board</span>`:"",`<span class="chip">tracker as of <b>${day(B.asOf||"")}</b></span>`,`<span class="chip model">board <b>board.json</b> · ${ROWS.length} runs</span>`].filter(Boolean).join("");
+  /* the tags (GUIDANCE.md §6, "The header"): each its label (.ck) and its value; when and from which commit it was generated are one tag */
+  const tag=(ck,v,cls)=>`<span class="chip${cls?" "+cls:""}"><span class="ck">${ck}</span> ${v}</span>`;
+  $("#chips").innerHTML=[tag("generated",`<b>${when(B.generated||"")}</b>${t.sha?` · from <b>${esc(t.ref||"")} ${esc(t.sha)}</b>`:""}`),B.live?tag("live view",`from <b>${esc(B.live.worktrees)}</b> worktree${B.live.worktrees===1?"":"s"}, each issue's freshest board`):"",tag("tracker as of",`<b>${day(B.asOf||"")}</b>`),tag("board",`<b>board.json</b> · ${ROWS.length} runs`,"model")].filter(Boolean).join("");
   const n=k=>ROWS.filter(r=>stOf(r)===k).length;
   const nexts=ROWS.filter(r=>stOf(r)==="next");
-  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on the user",n("halted"),"halted runs"],["Landed",n("landed"),n("complete")?`${n("complete")} more complete, not merged`:"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),`${n("no-board")} without a board`]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div></div>`).join("");
+  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on the user",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div></div>`).join("");
   let h=`<thead><tr><th>Issue</th><th>State</th><th>Now</th><th>QA</th><th>Waits on · blocks</th><th>Branch</th><th>Board</th></tr></thead><tbody>`;
   (B.groups||[]).forEach(g=>{ const rs=ROWS.filter(r=>r.group===g.key).sort((a,b)=>a.order-b.order); if(!rs.length) return;
     h+=`<tr class="grp"><th colspan="7">${g.issue?pair(g.issue,g.title):esc(g.title)}</th></tr>`;
     rs.forEach(r=>{ const st=stOf(r), qa=r.qa||[];
-      const iss=x=>`${ilink(x.issue,x.repo)}${x.state==="CLOSED"?"<small> closed</small>":""}`;
-      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}${r.parent?` · part of ${ilink(r.parent)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return pill(d,`${p.pass} ${d.l}`); }).join(" ")}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`waits on ${r.waitsOn.map(iss).join(", ")}`:""}${(r.blocks||[]).length?`<div>blocks ${r.blocks.map(iss).join(", ")}</div>`:""}</td><td>${r.branch?`<code>${esc(r.branch)}</code>`:""}</td><td>${r.board?`<a href="${esc(r.board)}">board</a>`:r.folder?`<a href="${esc(r.folder)}">folder</a>`:"—"}</td></tr>`; }); });
+      const iss=x=>`${ilink(x.issue,x.repo)}${closedWord(x)?`<small> ${esc(closedWord(x))}</small>`:""}`;
+      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}${r.parent?` · part of ${ilink(r.parent)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return pill(d,`${p.pass} ${d.l}`); }).join(" ")}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`waits on ${r.waitsOn.map(iss).join(", ")}`:""}${(r.blocks||[]).length?`<div>blocks ${r.blocks.map(iss).join(", ")}</div>`:""}</td><td>${r.branch?`<code>${esc(r.branch)}</code>`:""}</td><td>${r.board?`<a href="${esc(r.board)}">board</a>`:r.folder?`<a href="${esc(r.folder)}">folder</a>`:"—"}</td></tr>`; }); });
   $("#runs").innerHTML=h+"</tbody>"; paint($("#runs"));
   const tops=new Map(); ROWS.forEach(r=>{ const s=sysOf(r.system), k=s&&s.slot>=1&&s.slot<=6?s.slot:0; if(!tops.has(k)) tops.set(k,{c:sysColour(r.system),n:new Set()}); tops.get(k).n.add(k?(s.top||s.name):"no system colour"); });
   const used=new Set(ROWS.filter(r=>!r.chain||["halted","escalated","abandoned"].includes(stOf(r))).map(stOf)), qv=new Set(ROWS.flatMap(r=>(r.qa||[]).map(p=>p.verdict)));
-  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} qa pass</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
+  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} qa pass</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on the user</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
   const cards=[];
-  cards.push(`<div class="card"><h3>Roadmap <small>${(B.roadmap||[]).length} item${(B.roadmap||[]).length===1?"":"s"} · ${day(B.asOf||"")}</small></h3>${(B.roadmap||[]).length?`<ul class="issues">${B.roadmap.map(m=>`<li><span class="nm">${pair(m.issue,m.title)}</span><ul class="issues">${(m.items||[]).map(i=>`<li><span class="nm">${pair(i.issue,i.title)} <small>${esc((i.state||"").toLowerCase())}</small></span></li>`).join("")}</ul></li>`).join("")}</ul>`:`<p class="lede">No tracking issue is open.</p>`}</div>`);
+  cards.push(`<div class="card"><h3>Roadmap <small>${(B.roadmap||[]).length} item${(B.roadmap||[]).length===1?"":"s"} · ${day(B.asOf||"")}</small></h3>${(B.roadmap||[]).length?`<ul class="issues">${B.roadmap.map(m=>`<li><span class="nm">${pair(m.issue,m.title)}</span><ul class="issues">${(m.items||[]).map(i=>`<li><span class="nm">${pair(i.issue,i.title)} <small>${esc(closedWord(i)||(i.state||"").toLowerCase())}</small></span></li>`).join("")}</ul></li>`).join("")}</ul>`:`<p class="lede">No tracking issue is open.</p>`}</div>`);
   const un=B.unscheduled||[];
   cards.push(`<div class="card"><h3>Unscheduled issues <small>${un.length} open · ${day(B.asOf||"")}</small></h3>${un.length?`<ul class="issues">${un.map(i=>`<li><span class="nm"><span class="sw" data-sys="${esc(i.system||"")}"></span>${pair(i.issue,i.title)}${i.labels&&i.labels.length?` <small>${esc(i.labels.join(" · "))}</small>`:""}</span></li>`).join("")}</ul>`:`<p class="lede">Every open issue sits on a roadmap item.</p>`}</div>`);
-  cards.push(`<div class="card"><h3>Plans and documents</h3><ul class="docs"><li><a href="${esc(BASE)}../dashboards/index.html">System dashboards</a> — the repository as built</li><li><a href="${esc(BASE)}README.md">docs/plans/README.md</a> — how to read a plan board</li>${ROWS.filter(r=>r.board).map(r=>`<li><a href="${esc(r.board)}">#${esc(r.issue)} plan board</a> — ${rich(r.title)}</li>`).join("")}</ul></div>`);
+  cards.push(`<div class="card"><h3>Plans and documents</h3><ul class="docs"><li><a href="${esc(BASE)}../dashboards/index.html">System dashboards</a> — the repository as built</li><li><a href="${esc(BASE)}README.md">docs/plans/README.md</a> — how to read a plan board</li>${ROWS.filter(r=>r.board).map(r=>`<li>${pair(r.issue,r.title)} — plan board</li>`).join("")}</ul></div>`);
   $("#context").innerHTML=cards.join(""); paint($("#context"));
-  $("#footer").innerHTML=`Built from <code>docs/plans/board.json</code>, generated by <code>plan/scripts/board.js</code> from every <code>plan.json</code> under <code>docs/plans/</code> and the tracker (issues, sub-issues, blocked-by), embedded verbatim. Regenerated at each landing; a run's live state is on its own board. Maintained by the presenter agent.`;
+  /* the footer (GUIDANCE.md §3): what the page corresponds to and what is authoritative; nothing more */
+  $("#footer").innerHTML=`Corresponds to <code>docs/plans/${B.live?".live/":""}board.json</code>. Code and the Markdown beside this page are authoritative on any conflict.`;
   $("#source-view").textContent=JSON.stringify(B,(k,v)=>k==="level"?undefined:v,2); /* a work level is never shown (GUIDANCE.md §4) */
-  $("#source-key").innerHTML=`<span><i class="pln"></i>this copy is replaced on every <code>board.js</code> run</span>`;
+  $("#source-key").innerHTML=`<span>this copy is replaced on every <code>board.js</code> run</span>`;
 }
+/* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
+   A light/night toggle in the header. Until it is clicked the page follows the system setting; a click picks the other palette and
+   remembers it (localStorage "dashboards-theme", shared by every dashboard of the same origin) across pages and reloads. It only
+   selects one of the two palettes the page defines: :root[data-theme]. The same code runs on every dashboard type. */
+(function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, btn=document.getElementById("theme"), mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+  if(!btn) return;
+  const chosen=()=>{ try{ const t=localStorage.getItem(KEY); return t==="light"||t==="dark"?t:null; }catch(e){ return null; } };
+  const now=()=>root.dataset.theme==="dark"||root.dataset.theme==="light"?root.dataset.theme:(mq&&mq.matches?"dark":"light");
+  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.textContent=t==="dark"?"☾ night":"☀ light"; btn.setAttribute("aria-pressed",String(t==="dark"));
+    btn.title=`Theme: ${word}${chosen()?"":", as the system setting"}. Click for ${t==="dark"?"light":"night"}.`; btn.setAttribute("aria-label",`Night theme${chosen()?"":" (follows the system setting until clicked)"}`); };
+  btn.addEventListener("click",()=>{ const t=now()==="dark"?"light":"dark"; root.dataset.theme=t; try{ localStorage.setItem(KEY,t); }catch(e){} label(); });
+  if(mq&&mq.addEventListener) mq.addEventListener("change",label);
+  if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
+  label(); })();
+
+/* ---------- Live updates (plan/RULES.md §1, "plan.js"; §5, the live view) ----------
+   The live work board (board.js --live, docs/plans/.live/) is regenerated at every board event; embed.js writes board.js beside it,
+   board.json as a script that hands the data to dashboardLive(). While the page is the live view and a local copy, it re-loads that
+   script every LIVE_POLL_MS and redraws in place when the data changed, keeping the scroll position and the tab; dashboardRedraw(data)
+   is the redraw, kept apart so a server push can call it. The committed work board is regenerated only at landings and does not
+   poll: "not live · as of <generated>". The indicator reads "LIVE · updated n s ago" (the dot pulses; the counter restarts at each
+   change), "LIVE · no change for n min" after a quiet spell, "LIVE · data unavailable" when board.js cannot be read. */
+const LIVE_POLL_MS=5000, LIVE_QUIET_MS=5*60000;
+const LIVE_LOCAL=location.protocol==="file:"||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const LIVE={json:JSON.stringify(B),last:0,ok:true,got:false,timer:null,tick:null};
+const isLive=()=>!!B.live&&LIVE_LOCAL;
+const ago=ms=>{ const s=Math.max(0,Math.round(ms/1000)); return s<90?`${s} s`:s<5400?`${Math.round(s/60)} min`:`${Math.round(s/3600)} h`; };
+function liveChip(){ const c=$("#live"); if(!c) return;
+  if(!isLive()){ c.className="livechip off"; c.innerHTML=`<span class="ld" aria-hidden="true"></span>not live${B.generated?` · as of ${when(B.generated)}`:""}`; c.title=B.live?"A published copy of the live view: it does not follow the runs.":"The committed work board, regenerated at each landing: each run's live state is on its own board."; return; }
+  if(!LIVE.ok){ c.className="livechip on na"; c.innerHTML=`<span class="ld" aria-hidden="true"></span>LIVE · data unavailable`; c.title="board.js beside this page cannot be read: run board.js --live."; return; }
+  const since=Date.now()-LIVE.last, quiet=since>LIVE_QUIET_MS, any=ROWS.some(r=>r.active);
+  c.className=`livechip on${quiet||!any?"":" pulse"}`;
+  c.innerHTML=quiet?`<span class="ld" aria-hidden="true"></span>LIVE · no change for ${ago(since)}`:`<span class="ld" aria-hidden="true">●</span>LIVE · updated ${ago(since)} ago`;
+  c.title=`Re-read from board.js every ${LIVE_POLL_MS/1000} s${any?"":"; no run is active"}.`; }
+function dashboardRedraw(data){
+  if(!data||typeof data!=="object") return false;
+  const j=JSON.stringify(data); if(j===LIVE.json){ liveChip(); return false; }
+  const keep={x:window.scrollX,y:window.scrollY,tab:(tabs.find(t=>t.getAttribute("aria-selected")==="true")||{}).id||"t-runs"};
+  LIVE.json=j; B=data; derive(); render(); show(keep.tab); window.scrollTo(keep.x,keep.y);
+  LIVE.last=Date.now(); liveChip(); return true; }
+window.dashboardRedraw=dashboardRedraw;
+window.dashboardLive=(id,data)=>{ if(id!=="board") return; LIVE.got=true; dashboardRedraw(data); };
+function poll(){ const sc=document.createElement("script"); LIVE.got=false;
+  sc.src="board.js?t="+Date.now(); sc.onload=()=>{ LIVE.ok=LIVE.got; sc.remove(); liveChip(); }; sc.onerror=()=>{ LIVE.ok=false; sc.remove(); liveChip(); };
+  document.head.appendChild(sc); }
+function startLive(){ const g=Date.parse(String(B.generated||"")); LIVE.last=isNaN(g)?Date.now():Math.min(Date.now(),g); liveChip();
+  if(LIVE.tick==null) LIVE.tick=setInterval(liveChip,1000);
+  if(isLive()&&!LIVE.timer) LIVE.timer=setInterval(poll,LIVE_POLL_MS); }
+
 const tabs=[...document.querySelectorAll(".tab")];
 function show(id){ tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; }); }
 tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); t.addEventListener("keydown",e=>{ if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const j=(i+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length; tabs[j].focus(); show(tabs[j].id); } }); });
 render(); show(location.hash==="#source"?"t-source":"t-runs");
+startLive();
 </script>
 </body>
 </html>
