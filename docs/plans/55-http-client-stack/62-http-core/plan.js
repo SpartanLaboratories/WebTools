@@ -1,0 +1,1747 @@
+/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
+window.dashboardLive&&window.dashboardLive("plan",
+{
+  "schema": "plan-board/1",
+  "repo": "SpartanLaboratories/WebTools",
+  "issue": 62,
+  "slug": "62-http-core",
+  "folder": "docs/plans/55-http-client-stack/62-http-core",
+  "kind": "issue",
+  "level": 3,
+  "title": "webtools-http common core",
+  "issueTitle": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+  "function": "WebTools has no HTTP stack of its own: `Connector`, a blocking line reader over `URLConnection`, is its only HTTP client, and nothing offers a suspend request, a typed failure model or a transport port (#55 architecture §2). This run creates the `webtools-http` module and its check-only `js` sibling `webtools-http-commoncheck`, and delivers the vocabulary every later unit of #55 speaks: the opt-in marker, the failure model with its two reason vocabularies, the request and response types, the transport and wall-clock ports and the logging seam. Unit 3 of #55: one new module's additive API inside one system; every default implementation and policy is left to the units after it.",
+  "status": "building",
+  "parent": {
+    "issue": 55,
+    "board": "../dashboard.html"
+  },
+  "branch": "feat/issue-62-http-core",
+  "baseline": {
+    "ref": "master",
+    "sha": "f72b115",
+    "date": "2026-10-23"
+  },
+  "asBuilt": null,
+  "systems": [
+    {
+      "slug": "webtools-http-core",
+      "name": "webtools-http common core",
+      "slot": 5,
+      "top": "webtools-http",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "js-commoncheck",
+      "name": "check-only js modules",
+      "slot": 4,
+      "top": "Gradle build",
+      "status": "planned",
+      "page": null
+    },
+    {
+      "slug": "gradle-build",
+      "name": "Gradle build",
+      "slot": 4,
+      "top": "Gradle build",
+      "status": "built",
+      "page": "docs/dashboards/gradle-build/index.html"
+    }
+  ],
+  "wip": {
+    "step": "remediation",
+    "since": "2026-10-25T11:58:00Z",
+    "updated": "2026-10-25T12:20:00Z",
+    "detail": "Fixes: HttpFailure message-rule KDoc, addSensitive flag wording, HttpTransport main-safety point, Amendment 1 comment in HttpSyntax, OkHttp set names in UrlEncoding, DNS-limit and no-octal comments in UrlHost; Kelvin sign escaped in six test files; UrlInputGenerator and UrlCorpus tags and comments; corpus gains every isUrlSpace code point and four dot-segment folds; one new HttpHeaders test; behaviour-named tests; RegExp injection hints; e2e class KDoc notes the common-check plugin is covered at level 3. Re-run: :webtools-http:check :webtools-http-commoncheck:check (131 tests, apiCheck, dump unchanged); CommonCheckPluginIntegrationTest 7 + e2eTest 5. No behaviour, API or design change.",
+    "steps": [
+      "sizing",
+      "interview",
+      "research",
+      "plan",
+      "branch",
+      "implementation",
+      "qa",
+      "remediation",
+      "landing",
+      "landed"
+    ],
+    "current": [
+      "failure-model.built",
+      "request-response.built",
+      "transport-port.built",
+      "common-tests.built",
+      "common-check-plugin.built",
+      "readme.built"
+    ],
+    "questions": [],
+    "next": null,
+    "qa": [
+      {
+        "pass": 1,
+        "verdict": "changes-requested",
+        "date": "2026-10-25",
+        "findings": {
+          "documentation": 18,
+          "test": 9,
+          "code": 2
+        },
+        "severity": {
+          "minor": 27,
+          "other": 2
+        },
+        "route": "on-the-spot",
+        "report": "build/reports/test-inspector/index.html",
+        "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+      }
+    ],
+    "qaMax": 3,
+    "waitingOn": null,
+    "resume": null,
+    "blockers": {
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 63
+        },
+        {
+          "issue": 64
+        },
+        {
+          "issue": 66
+        },
+        {
+          "issue": 67
+        }
+      ]
+    },
+    "landing": null,
+    "event": {
+      "name": "implementation-stage",
+      "at": "2026-10-25T12:20:00Z",
+      "note": "qa pass 1 fixes done (no behaviour, API or design change); the planner reconciles next"
+    },
+    "open": [
+      {
+        "text": "The S2 report raised one inconsistency in `plan.md` for the planner: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
+        "raised": "implementation-stage S2",
+        "ref": "plan.md",
+        "resolved": "Resolved by `plan.md`'s Amendment 1, which makes §9's media-type test row agree with the unchanged grammar of §6.4 and code of §7.5, applies in S4 and changes no verdict on this board."
+      },
+      {
+        "text": "Three items of the Level 5 pass need an IntelliJ session and were not performed; they are left to the maintainer: the IDE import of the check module and its `jsMain` actuals, the gate error and `@OptIn` quick fix on a scratch `WallClock` implementer, and Quick Documentation of `Url.parse`, `Url.toString`, `HttpTransport`, `HttpFailure` and the marker. The command-line items (the dump read, the tree hygiene) were done.",
+        "raised": "implementation-stage S7",
+        "ref": "final-implementation.md#6-level-5--the-manual-pass"
+      },
+      {
+        "text": "Two plan-sanctioned test-scope exclusions flagged by qa: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
+        "raised": "qa-pass 1",
+        "ref": "plan.md"
+      }
+    ],
+    "stages": [
+      {
+        "id": "S1",
+        "name": "common-check plugin and TestKit tests",
+        "state": "done",
+        "rows": [
+          "common-check-plugin"
+        ]
+      },
+      {
+        "id": "S2",
+        "name": "module skeleton, gated declarations, compile proof",
+        "state": "done",
+        "rows": [
+          "module-skeleton",
+          "opt-in-marker",
+          "failure-model",
+          "request-response",
+          "transport-port",
+          "wall-clock",
+          "logging-seam",
+          "commoncheck-module",
+          "compile-proof",
+          "release"
+        ]
+      },
+      {
+        "id": "S3",
+        "name": "Url, encoders, corpus, generator, commonTest",
+        "state": "done",
+        "rows": [
+          "request-response",
+          "common-tests"
+        ]
+      },
+      {
+        "id": "S4",
+        "name": "remaining level 2/4a/4c tests, jvmTest differentials, logback-test.xml",
+        "state": "done",
+        "rows": [
+          "logging-seam",
+          "common-tests"
+        ]
+      },
+      {
+        "id": "S5",
+        "name": "ABI dump and checks",
+        "state": "done",
+        "rows": [
+          "module-skeleton",
+          "commoncheck-module",
+          "compile-proof"
+        ]
+      },
+      {
+        "id": "S6",
+        "name": "README",
+        "state": "done",
+        "rows": [
+          "readme"
+        ]
+      },
+      {
+        "id": "S7",
+        "name": "level-5 pass and as-built record",
+        "state": "done",
+        "rows": []
+      }
+    ],
+    "remediation": {
+      "pass": 1,
+      "route": "on-the-spot",
+      "steps": [
+        {
+          "name": "rookie-dev: KDoc wording (HttpFailure, HttpHeaders.addSensitive, HttpTransport main-safety), level-1 line comments, test-fixture tags, U+212A escapes, corpus rows, test renames, absent-name set test; touched tasks re-run",
+          "state": "done"
+        },
+        {
+          "name": "planner: record the two scope exclusions (L1 per-type gating, e2e composite) in plan.md §9 and reconcile final-implementation.md and impact.md",
+          "state": "current"
+        }
+      ]
+    }
+  },
+  "milestones": [
+    {
+      "column": "gap",
+      "label": "Research verified, in #55's run",
+      "date": "2026-10-21",
+      "ref": "../research/README.md",
+      "note": "#55's ten questions and findings; 231 outside-world claims re-opened at source, 227 hold, none fails. Written on this board at sized from the research README, architecture §2 and this unit's row in §11"
+    },
+    {
+      "column": "gap",
+      "label": "Research verified, in this unit's run",
+      "date": "2026-10-25",
+      "ref": "research/README.md",
+      "note": "four questions and four findings files; 107 load-bearing claims re-opened at source, all hold. The Gap column, written at sized from #55's research and architecture, stands as written"
+    },
+    {
+      "column": "considered",
+      "label": "Architecture signed off, in #55's run",
+      "date": "2026-10-21",
+      "ref": "../architecture.md",
+      "note": "the options #55's architecture weighed for this unit: §6.2, §6.8, §6.9, §9 and §10; this unit's own plan adds to them at plan acceptance"
+    },
+    {
+      "column": "considered",
+      "label": "The unit's own plan adds to the options",
+      "date": "2026-10-25",
+      "ref": "plan.md",
+      "note": "the options plan.md weighs beside the architecture's: the `js` target's form, where the opt-in is set, a permanent gate check, `Url` building and host names, transport-owned headers"
+    },
+    {
+      "column": "verdict",
+      "label": "Plan accepted",
+      "date": "2026-10-25",
+      "ref": "plan.md",
+      "note": "seven stages, S1 to S7, on `feat/issue-62-http-core`; the compile proof opens S2 and gates S3. One departure from #55's architecture: the check plugin calls `js()` with no environment"
+    }
+  ],
+  "trail": [
+    {
+      "date": "2026-10-22",
+      "column": "gap",
+      "label": "Issue #62 opened as unit 3 of #55, blocked by #61 and #47",
+      "ref": "#62"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "gap",
+      "label": "Run started: sized as one system, one new module's additive API; planning begins from #55's architecture",
+      "ref": "../architecture.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "considered",
+      "label": "Gap and Considered filled from #55's research and architecture: 14 rows, the options with the verdicts the architecture gave",
+      "ref": "../architecture.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "verdict",
+      "label": "Halted at the interview: two questions on `Url` parsing and `toString()` wait on the user; the architecture slice re-validated against f72b115 with no drift",
+      "ref": "../architecture.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "verdict",
+      "label": "Resumed into research with the user's two answers on `Url`. Q1: `Url.parse` normalises as OkHttp's `HttpUrl` does for ASCII hosts (percent-encoding, dot segments resolved, default port dropped, an empty path made `/`, trimmed, fragment dropped) and rejects non-ASCII or percent-encoded hosts, backslashes, inner whitespace or control characters, and userinfo. Q2: `Url.toString()` returns the full canonical URL; `redacted()` is the explicit safe form"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "gap",
+      "label": "Research returned: header-and-method-validation, header, method, status and content-type validity",
+      "ref": "research/header-and-method-validation.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "gap",
+      "label": "Research returned: opt-in-gate, opting the module's main code into its own subclass gate while the tests stay a consumer",
+      "ref": "research/opt-in-gate.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "gap",
+      "label": "Research returned: url-parsing, `Url` parsing and canonicalising so every accepted URL reads the same in OkHttp 5.5.0's `HttpUrl`",
+      "ref": "research/url-parsing.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "gap",
+      "label": "Research returned: common-check-plugin, what a check-only `js` module needs and what it does to the root build",
+      "ref": "research/common-check-plugin.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "gap",
+      "label": "Research verified: one verifier re-opened the load-bearing claims of the four findings files at their sources; 107 claims, 107 hold, none fails, none is unclear",
+      "ref": "research/README.md#verification"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "considered",
+      "label": "Research ended: the four questions returned and were verified (the opt-in gate across `commonMain`, `jvmMain` and `js`, the common-check plugin's effect on the root build, the `Url` grammar against OkHttp 5.5.0, RFC 9110 header and method validation); the plan-writer runs next",
+      "ref": "research/README.md#summary"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "verdict",
+      "label": "Plan accepted: seven stages, from the `webtools.kotlin-common-check` plugin to the as-built record; the check plugin calls `js()` with no environment in place of the architecture's `js { nodejs { } }`, so the root project gains no task; `webtools-http` 1.0.0 is new and not a release candidate",
+      "ref": "plan.md#5-approach-and-staging"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Implementation starts on `feat/issue-62-http-core` at `865e6e4`, the branch that holds the research and the plan: rookie-dev builds `plan.md` stage by stage, from S1, the `webtools.kotlin-common-check` plugin and its TestKit tests",
+      "ref": "plan.md#5-approach-and-staging"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S1 done: the `webtools.kotlin-common-check` plugin, the `SampleProject.commonCheck` factory and the plugin's TestKit tests, as planned; every `build-logic` suite green (procedure P2). S2 is next",
+      "ref": "final-implementation.md#p2--the-plugin-s1"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S2 done: the settings, both module build files, every gated declaration and the `js` actuals, with a `Url` shell, as planned; the compile proof (P3) gave every predicted result in `jvm` and `js`, and `gatingTest` 5 green. S3 is next",
+      "ref": "final-implementation.md#3-the-compile-proof"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S3 done: the `Url` parser, with `UrlParsing`, `UrlHost`, `UrlEncoding` and `UrlProblem`, replaces S2's shell, and the `Url` tests run over `UrlCorpus` and `UrlInputGenerator`, as planned; `gatingTest`, `deterministicTest` and `nonfunctionalTest` green (procedure P5) and the check module's `js` compile green. Two mechanical fixes, neither a change to a rule. S4 is next",
+      "ref": "final-implementation.md#p5--the-commontest-levels-after-s3"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Open point resolved: `plan.md` was amended during implementation. Its Amendment 1 makes §9's media-type test row agree with the plan's own media-type grammar (§6.4 and §7.5, unchanged): `text/plain;;` and `text/plain ;` accepted, `text/plain; ` refused at index 11; it applies in S4. No verdict on this board changes: the Tests row's and the request-and-response row's verdicts name the media-type table without its rows",
+      "ref": "plan.md"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S4 done: the remaining Level 2, 4a and 4c tests and the three `jvmTest` differentials against OkHttp 5.5.0, as planned; `componentTest` 68, `deterministicTest` 48 and `nonfunctionalTest` 9 green, the `Url` differential 0 disagreements over 200,000 inputs and 2,000,000 on two more seeds, each of four mutants caught; `logback-test.xml` copied from `webtools-udp`. Three mechanical test-code fixes, none a change to a rule. S5 is next",
+      "ref": "final-implementation.md#p5--the-fast-loop-after-s4"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S5 done: the ABI dump and its checks, as planned; `apiDump` 294 lines matching plan §7.8, `apiCheck` and `verifyJavaFloor` green, `SubclassOptInRequired` on the five gated types only, class major version 55, coroutines `api` and OkHttp, Caffeine and slf4j runtime-only in the POM and module metadata; both modules' `check` green (130 `jvmTest` tests, 0 failures); configuration cache reused, no `kotlin-js-store/`, no Node.js task, no root `check`, a `java.io` leak in `commonMain` fails the `js` compile; the three existing modules untouched and compiling. Two mechanical test-code fixes, none a change to a rule. S6 is next",
+      "ref": "final-implementation.md#p6--the-dump-the-class-files-the-published-shape-s5"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S6 done: the README, as planned; the nine edits of plan §8 (the `webtools-http` artifact row and install line marked not yet released, the `-jvm` coordinate and `kotlin-stdlib` 2.2.21 note, the module list and `commoncheck` build line, the test-layout paragraph, the four-plugin table), 29 insertions and 14 deletions, no other line. The `verifyJavaFloor` comment tightening rides S7. S7, the Level 5 pass and the as-built record, is next",
+      "ref": "final-implementation.md#s6--the-readme"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "S7 done, implementation complete: the Level 5 pass from the command line (the dump read against plan §7.8 and the tree checked clean; the three IDE items not performed, left to the maintainer) and the as-built record: no deviation from `plan.md`, all eight acceptance criteria met, no research claim that failed to hold. qa pass 1 runs on the change set",
+      "ref": "final-implementation.md#4-acceptance"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "qa pass 1: changes requested, 29 findings (18 documentation, 9 test, 2 code; 27 minor, 2 other); code review passed, 231 tests green and apiCheck passed. Remediation on the spot: rookie-dev's fixes, then the planner records two scope exclusions in plan.md §9; landing follows with no new qa pass",
+      "ref": ""
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "qa pass 1 fixes done on the spot: KDoc and line-comment wording, test-fixture tags, U+212A escapes, corpus rows, behaviour-named tests and one new HttpHeaders test; re-run green (131 jvmTest tests, apiCheck, dump unchanged; CommonCheckPluginIntegrationTest 7, e2eTest 5). No behaviour, API or design change. The planner records the two scope exclusions in plan.md §9 and reconciles the as-built record",
+      "ref": "final-implementation.md#qa-pass-1-fixes"
+    }
+  ],
+  "rows": [
+    {
+      "id": "module-skeleton",
+      "group": "Code",
+      "name": "The webtools-http module and its build",
+      "system": "webtools-http-core",
+      "where": "webtools-http/build.gradle.kts · settings.gradle.kts · webtools-http/api/",
+      "gap": {
+        "kind": "missing",
+        "summary": "No `webtools-http` module exists. The build includes the three existing modules only, and the multiplatform convention that #61 shipped is applied by no module yet, so nothing in the repository offers a suspend request, a typed failure model or a transport port.",
+        "evidence": [
+          "settings.gradle.kts:11 — `include(\":webtools-udp\", \":webtools-scraping\", \":webtools-browser\")` (baseline)",
+          "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts:7 — the convention for a published multiplatform library with a single `jvm()` target; no module applies it (baseline)"
+        ],
+        "source": "../architecture.md §2, §11 unit 3",
+        "link": "../architecture.md#11-decomposition"
+      },
+      "options": [
+        {
+          "id": "kmp-module",
+          "name": "A Kotlin Multiplatform module on `webtools.kotlin-multiplatform-library`, `jvm()` only, with `explicitApi()`, the ABI dump and `kotlinx-coroutines-core` 1.10.2 as its one `api` dependency",
+          "verdict": "accepted",
+          "why": "OkHttp, Caffeine and slf4j stay `implementation` in `jvmMain`, so no implementation library reaches a consumer's compile classpath. Coroutines is `api` because it is the runtime of a suspend API and `CoroutineDispatcher` appears in configuration, which lets one virtual clock drive the cache, the budget and `delay`.",
+          "source": "../architecture.md §6.2",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "internal-subpackage",
+          "name": "An `.internal` subpackage beside the public one",
+          "verdict": "declined",
+          "why": "`internal` already does the hiding, and one flat package `com.spartanlabs.webtools.http` never needs a type to move.",
+          "source": "../architecture.md §6.2",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "scheduling-type",
+          "name": "An opaque library-owned `Scheduling` value in place of `CoroutineDispatcher` in configuration, keeping coroutines `implementation`",
+          "verdict": "declined",
+          "why": "A consumer could no longer pass its own dispatcher, such as a `limitedParallelism` view that bounds parse threads; every component would gain a bespoke type in place of the idiom, and it would keep off the compile classpath nothing a suspend API's consumer does not already have.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "kgp-abi-validation",
+          "name": "KGP's built-in `abiValidation` instead of binary-compatibility-validator for the ABI dump",
+          "verdict": "declined",
+          "why": "It is experimental on Kotlin 2.2.0, and its DSL changed by 2.4.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "coroutines-test",
+          "name": "Adding `kotlinx-coroutines-test` to the module's tests",
+          "verdict": "declined",
+          "why": "No test of this unit needs it: `runBlocking` in `jvmTest` covers the non-fatal helper. Unit 4 adds it on its fixtures variant.",
+          "source": "plan.md R1, §12",
+          "link": "plan.md#r1-the-module"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2 and S5: `settings.gradle.kts` includes `:webtools-http` and `:webtools-http-commoncheck`, and `webtools-http/build.gradle.kts` is written; in S5 the committed ABI dump `webtools-http/api/webtools-http.api` (294 lines) matches plan §7.8 point by point and `apiCheck` is green. The class files are Java 11 (major version 55); the POM and module metadata carry coroutines on the compile classpath and OkHttp, Caffeine and slf4j at runtime only, with JVM version 11. No deviation recorded.",
+        "files": [
+          "settings.gradle.kts",
+          "webtools-http/build.gradle.kts",
+          "webtools-http/api/webtools-http.api"
+        ],
+        "tests": "`:webtools-http:check` green: `jvmTest` 130 tests (gating 5, component 68, deterministic 48, non-functional 9), 0 failures, with `apiCheck` and `verifyJavaFloor` (acceptance 1); the generated POM and module metadata read as planned (acceptance 5).",
+        "verified": "Procedures P6 to P9 after S5, recorded in `final-implementation.md` §5 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#p6--the-dump-the-class-files-the-published-shape-s5"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`webtools-http` is a Kotlin Multiplatform module on `webtools.kotlin-multiplatform-library` with `explicitApi()` and one flat package. `kotlinx-coroutines-core` 1.10.2 is its one `api` dependency; `okhttp-jvm`, `caffeine` and `slf4j-api` are `implementation` in `jvmMain`. `settings.gradle.kts` includes it, and its ABI dump is generated and committed.",
+        "defense": "The convention plugin carries the target, the Java floor, the level tasks and publishing, so the build file adds only what is the module's own. Only the `jvmTest` differential uses OkHttp in this unit; the other two are declared for the units that follow.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          },
+          {
+            "id": "S5",
+            "what": "Generate and commit the ABI dump, then read the class files and the published metadata, and prove the root project and the three existing modules unchanged.",
+            "files": [
+              "webtools-http/api/webtools-http.api"
+            ],
+            "check": "Procedures P6 to P9",
+            "link": "plan.md#92-procedures"
+          }
+        ],
+        "tests": [
+          "`:webtools-http:check`: `jvmTest` at every level, `apiCheck` and `verifyJavaFloor` (acceptance 1)",
+          "The generated POM and module metadata: coroutines on the compile classpath, the other three at runtime only (acceptance 5)"
+        ],
+        "risks": [
+          "Kotlin 2.2.0 on Gradle 9.7.1 is outside Kotlin's documented range, and this is the first module to run the multiplatform plugin end to end; anything its tasks reveal is a deviation to record"
+        ],
+        "source": "plan.md R1, §7.1, §7.3, §7.8",
+        "link": "plan.md#73-webtools-httpbuildgradlekts-new"
+      }
+    },
+    {
+      "id": "opt-in-marker",
+      "group": "Code",
+      "name": "The opt-in marker ExperimentalForInheritanceWebToolsApi",
+      "system": "webtools-http-core",
+      "where": "common/",
+      "gap": {
+        "kind": "missing",
+        "summary": "No opt-in gate exists for the seams a consumer implements. The stack's rule puts every such seam behind one `@RequiresOptIn` marker while the supplied defaults stay usable without opting in, and the repository has no marker of its own.",
+        "evidence": [
+          "../research/README.md § The work, Stability — every seam a consumer implements or substitutes sits behind one marker; the defaults need no opt-in"
+        ],
+        "source": "../research/README.md § The work",
+        "link": "../research/README.md#the-work"
+      },
+      "options": [
+        {
+          "id": "subclass-gated-marker",
+          "name": "One marker at level `ERROR` with an empty `@Target`, applied only through `@SubclassOptInRequired`",
+          "verdict": "accepted",
+          "why": "`@SubclassOptInRequired` is stable on Kotlin 2.2.0 and gates implementing and delegating but not mentioning a type, so constructing and calling the supplied defaults needs no opt-in. With an empty target the marker can only be the argument of `@SubclassOptInRequired` and `@OptIn`. It is never removed, even after every seam graduates to `@SupportedExtension`.",
+          "source": "../architecture.md §6.2, §9",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "marker-on-types",
+          "name": "The marker placed directly on the seam types",
+          "verdict": "declined",
+          "why": "A directly marked type in a default-path signature contaminates every caller; placed only through `@SubclassOptInRequired`, a default-path signature can never force the opt-in on a caller.",
+          "source": "../architecture.md §6.2",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "module-wide-compiler-option",
+          "name": "The opt-in as `kotlin { compilerOptions { optIn.add(...) } }`, as a target-level option, or through `sourceSets.all { }`",
+          "verdict": "declined",
+          "why": "Each of them also reaches `commonTest` and `jvmTest`, which would then compile as a non-consumer and could implement a port or subclass a failure group without the `@OptIn` a consumer needs.",
+          "source": "plan.md R7, §6.2; research/opt-in-gate.md F2, F3, F5",
+          "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+        },
+        {
+          "id": "opt-in-in-convention",
+          "name": "The opt-in set in a convention plugin",
+          "verdict": "declined",
+          "why": "A module that cannot see the marker would print an unresolved-marker warning on every compile; the language setting belongs to the main source sets of each module's own build file.",
+          "source": "plan.md §6.2",
+          "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2: `ExperimentalForInheritanceWebToolsApi`, opted into as a language setting of the main source sets in both module build files, with the test source sets left without it. In procedure P3, with the four opt-in lines removed, three throwaway implementers failed with exactly the predicted errors, carrying the marker's own message, and compiled again once the lines were restored.",
+        "files": [
+          "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/",
+          "webtools-http/build.gradle.kts",
+          "webtools-http-commoncheck/build.gradle.kts"
+        ],
+        "tests": "L1 gating `GatedTypesConsumerGatingTest` 3 and `GatedTypesJvmConsumerGatingTest` 2, compiled without any opt-in: `gatingTest` 5 green.",
+        "verified": "Procedure P3, recorded in `final-implementation.md` §3 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#step-2--the-wiring-canary"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "One marker, `ExperimentalForInheritanceWebToolsApi`: `@RequiresOptIn(level = ERROR)` with its message as one string literal, an empty `@Target`, `BINARY` retention, used only through `@SubclassOptInRequired` and `@OptIn`, never removed. The main source sets opt in as a language setting of `commonMain` and `jvmMain` in the module's own build file, and the check module's of `commonMain` and `jsMain`; the test source sets stay without it.",
+        "defense": "In a single-target module only the leaf source set's setting reaches the compiler, and the other forms reach the test compilations too, which would stop the tests being a consumer. With the message as one literal, the module's own diagnostics carry it.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          }
+        ],
+        "tests": [
+          "Level 1 — `GatedTypesConsumerGatingTest` and `GatedTypesJvmConsumerGatingTest`, compiled without any opt-in"
+        ],
+        "risks": [
+          "The ABI dump does not record `@SubclassOptInRequired`, so `apiCheck` would not notice a dropped gate"
+        ],
+        "source": "plan.md R3, R7, §6.2",
+        "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+      }
+    },
+    {
+      "id": "failure-model",
+      "group": "Code",
+      "name": "The failure model and its two reason vocabularies",
+      "system": "webtools-http-core",
+      "where": "common/ — HttpFailure, TransportFailure, UpstreamFailure, RefusalReason, ExhaustedReason",
+      "gap": {
+        "kind": "missing",
+        "summary": "No typed HTTP failure exists, and nothing carries one in `Result`. The repository's precedent is `webtools-udp`'s open `ReliableSendFailure`, carried in `Result` and deliberately not sealed; its `Result.flatMap` helper is `internal` and copied per module on purpose.",
+        "evidence": [
+          "webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/ReliableSendFailure.kt:15 — `abstract class ReliableSendFailure(message: String) : Exception(message)` (baseline)",
+          "webtools-udp/src/main/kotlin/com/spartanlabs/webtools/udp/ResultExtensions.kt:3-5 — the internal `flatMap`, deliberately duplicated in `webtools-scraping` (baseline)"
+        ],
+        "source": "../architecture.md §2",
+        "link": "../architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "open-hierarchy",
+          "name": "An open, subclass-gated `abstract class HttpFailure : Exception` in `kotlin.Result`: the groups `TransportFailure` and `UpstreamFailure`, final leaves, one shared `Closed`, and the open constants classes `RefusalReason` and `ExhaustedReason`",
+          "verdict": "accepted",
+          "why": "It follows `ReliableSendFailure`: a leaf or a reason may be added in a feature release, and the KDoc says to match the groups and keep an `else`. Messages carry a constant per type and non-sensitive fields only. Cancellation is thrown, never wrapped: an internal non-fatal catch helper converts only exceptions other than `CancellationException`, and no `runCatching` wraps a suspend call.",
+          "source": "../architecture.md §6.2, §9",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "sealed-root",
+          "name": "A sealed failure root, or enums for the library-produced reasons",
+          "verdict": "declined",
+          "why": "Each added leaf or entry is a compile error in a consumer's exhaustive `when` and a runtime `NoWhenBranchMatchedException` in a compiled one; Apollo's sealed hierarchy shows the cost.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2: `HttpFailure` with its two groups, `TransportFailure` with its eleven leaves and `UpstreamFailure`, and the `RefusalReason` and `ExhaustedReason` constants classes. In procedure P3 the consumer tests constructed every public leaf without the opt-in.",
+        "files": [
+          "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/"
+        ],
+        "tests": "L1 gating: the consumer classes construct every public leaf without the opt-in (procedure P3 step 3). The Level 2 classes of the leaves and the reasons come in S4, with the Tests row.",
+        "verified": "Procedure P3, recorded in `final-implementation.md` §3 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#step-3--the-positive-consumer-cases"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`HttpFailure`, an abstract, subclass-gated `Exception`, with the groups `TransportFailure` and `UpstreamFailure` and final leaves nested in their group: `Closed`, `BudgetExhausted`, `DecodeFailure`, eleven transport leaves, `RateLimited` and `UpstreamError`. Every leaf a seam implementer or a decoder creates has a public constructor; `RateLimited`'s is `internal`. `RefusalReason` and `ExhaustedReason` are open constants classes, equal by name.",
+        "defense": "Nesting keeps `Timeout`, `Protocol` and `Io` out of the flat package, where a top-level class would shadow a star-imported OkHttp or Okio name. Every message is a constant per type plus non-sensitive fields; `UpstreamError` copies its body in and out and never prints headers or body.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          }
+        ],
+        "tests": [
+          "Level 1 — the consumer constructs every public leaf and matches the groups with an `else`",
+          "Level 2 — the leaves, `UpstreamError` and the reason constants"
+        ],
+        "risks": [
+          "A `cause` is outside the constant-message rule: OkHttp exceptions can carry hosts, resolved addresses or URLs, so the producer decides what it attaches (unit 6)"
+        ],
+        "source": "plan.md R4, §6.3",
+        "link": "plan.md#63-the-failure-model"
+      }
+    },
+    {
+      "id": "request-response",
+      "group": "Code",
+      "name": "Request and response types",
+      "system": "webtools-http-core",
+      "where": "common/ — HttpMethod, Url, HttpHeaders, RequestBody, HttpRequest, HttpResponse, RedirectHop",
+      "gap": {
+        "kind": "missing",
+        "summary": "No library-owned request or response type exists. `Connector` reads a URL line by line over `java.net.URLConnection` and offers one-shot helpers over Unirest, skrapeit and jsoup, so a URL, headers, a body and a response have no type of their own that a port could take.",
+        "evidence": [
+          "webtools-scraping/src/main/kotlin/com/spartanlabs/webtools/scraping/Connector.kt:85 — `open(urlName: String)`, the line reader over `URLConnection` (baseline)",
+          "webtools-scraping/src/main/kotlin/com/spartanlabs/webtools/scraping/Connector.kt:263 — `get(url: String)`, the one-shot Unirest call (baseline)"
+        ],
+        "source": "../architecture.md §2",
+        "link": "../architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "plain-common-classes",
+          "name": "Plain common classes: a validated `Url` parsed once, ordered case-insensitive `HttpHeaders` with per-entry sensitive flags, and `HttpRequest` and `HttpResponse` built by factory and builder, the response carrying its redirect chain as `RedirectHop(url, status)`",
+          "verdict": "accepted",
+          "why": "Vocabulary with no platform content compiles in common code, and a builder over an `internal` constructor is additive by construction. `Url` is `http` or `https` only, with no user-info and a query-free `redacted()`. Developer-written values are checked with `require`, and text from outside the process returns `Result`. No received-at time, which would bypass the injected clock, no charset and no streaming.",
+          "source": "../architecture.md §6.2, §6.9, §9",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        },
+        {
+          "id": "okhttp-typealias",
+          "name": "A JVM `actual typealias` to OkHttp's `HttpUrl` and `Headers`",
+          "verdict": "declined",
+          "why": "It would put OkHttp in a public signature.",
+          "source": "../architecture.md §6.9",
+          "link": "../architecture.md#69-common-code-mechanism-per-type"
+        },
+        {
+          "id": "java-net-uri",
+          "name": "`java.net.URI` as the URL model",
+          "verdict": "declined",
+          "why": "It parses hosts differently from OkHttp, the parser-disagreement bypass. The port's own `Url` is converted to `HttpUrl` inside the transport instead, and a differential test pins their agreement.",
+          "source": "../architecture.md §6.9",
+          "link": "../architecture.md#69-common-code-mechanism-per-type"
+        },
+        {
+          "id": "flat-constructors",
+          "name": "Flat constructors with defaulted parameters plus hidden deprecated overloads",
+          "verdict": "declined",
+          "why": "A permanent overload per addition, kept correct by hand, and `@IntroducedAt` is Kotlin 2.3+; builders are additive by construction.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "url-builder",
+          "name": "A public `Url` builder or `withQuery`, or building URLs with `HttpUrl.Builder`",
+          "verdict": "declined",
+          "why": "Building a URL from parts is the facades' job, as text through the `internal` encoders and then `Url.parse`, so one parser and one canonical form decide the result; `HttpUrl.Builder` treats empty segments differently from text assembly. A public builder stays additive later.",
+          "source": "plan.md R8, §6.5, §13",
+          "link": "plan.md#65-url"
+        },
+        {
+          "id": "idn-hosts",
+          "name": "Internationalised host names in `Url`",
+          "verdict": "declined",
+          "why": "1.0.0 refuses them, `xn--` labels included; supporting them needs an IDNA path that agrees with OkHttp's UTS 46 mapping.",
+          "source": "plan.md §4; impact.md §7",
+          "link": "impact.md#7-follow-ups-this-unit-leaves"
+        },
+        {
+          "id": "refuse-transport-headers",
+          "name": "Refusing transport-owned header names (`Host`, `Content-Length`, `User-Agent`, `Connection`, `Transfer-Encoding`) in `HttpRequest`",
+          "verdict": "declined",
+          "why": "What the transport does with them is unit 6's to settle; the research left it open.",
+          "source": "plan.md §4, §14",
+          "link": "plan.md#4-non-goals"
+        },
+        {
+          "id": "stdlib-case-fold",
+          "name": "Kotlin's `lowercase()` and `equals(ignoreCase = true)` for header names, schemes and hosts",
+          "verdict": "declined",
+          "why": "They fold U+212A (Kelvin) to `k` and U+0131 to `i`, so protocol text uses an ASCII-only fold written by hand.",
+          "source": "plan.md §6.4",
+          "link": "plan.md#64-the-request-and-response-value-types"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2 and S3: `HttpSyntax`, `HttpHeaders`, `HttpMethod`, `RequestBody`, `HttpRequest`, `HttpResponse` and `RedirectHop` in S2; in S3 the final `Url`, over `UrlParsing`, `UrlHost`, `UrlEncoding` and the `internal` `UrlProblem`, in place of S2's shell, with no deviation recorded. The check module's `js` compile passed with the S3 files, so `Url` uses no JVM API.",
+        "files": [
+          "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/"
+        ],
+        "tests": "L4a deterministic: seven `Url` classes, 27 tests; L4c non-functional: three `Url` classes, 6 tests (secrecy, 50,000 garbage inputs, linear time); all green (procedure P5). The Level 2 classes of these types and the header, method, status and media-type tables come in S4, with the Tests row.",
+        "verified": "Procedure P3 for S2 (`final-implementation.md` §3) and procedure P5 after S3 (§5), recorded on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#p5--the-commontest-levels-after-s3"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`HttpMethod`, `Url`, `HttpHeaders`, `RequestBody`, `HttpRequest`, `HttpResponse` and `RedirectHop`, with the shared predicates in `internal object HttpSyntax`. `Url.parse` reads like OkHttp 5.5.0's `HttpUrl` for ASCII hosts and is only ever stricter; `toString()` is the full canonical URL and `redacted()` the form for logs. Header names are RFC 9110 tokens, and `HttpRequest` refuses `CONNECT`, a body on `GET`, `HEAD` or `TRACE`, a value it cannot send and a second content type.",
+        "defense": "Configurable types are built by a factory over an `internal` constructor, so later additions stay additive. Developer-written values throw `IllegalArgumentException`, and text from outside the process returns `Result` with a message that never echoes the input. Byte arrays are copied in and out, and the types print their structure only. The `Url` rules follow the user's two answers at the interview.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          },
+          {
+            "id": "S3",
+            "what": "Replace the `Url` shell with the parser, and add the encoders, the corpus, the generator and the `Url` tests.",
+            "files": [
+              "webtools-http/src/commonMain/",
+              "webtools-http/src/commonTest/"
+            ],
+            "check": "Procedure P5, the `commonTest` levels",
+            "link": "plan.md#65-url"
+          }
+        ],
+        "tests": [
+          "Level 2 — one component class per type",
+          "Level 4a — the `Url`, header, method, status and media-type tables (the Tests row)",
+          "Level 4c — secrecy of every message, 50,000 garbage inputs, linear-time parsing"
+        ],
+        "risks": [
+          "`Url` equality is on the canonical text, not the resource: `%2f` and `%2F`, `h` and `h.` are different values",
+          "Public names the architecture does not fix are chosen here; they can still change before 1.0.0 is published"
+        ],
+        "source": "plan.md R8–R10, §6.4, §6.5",
+        "link": "plan.md#64-the-request-and-response-value-types"
+      }
+    },
+    {
+      "id": "transport-port",
+      "group": "Code",
+      "name": "The transport port HttpTransport",
+      "system": "webtools-http-core",
+      "where": "common/",
+      "gap": {
+        "kind": "missing",
+        "summary": "Nothing offers a suspend request. `Connector`, the only HTTP client, is blocking and stateful: it sets the JVM-wide `http.agent` on every connect and calls `Unirest.setTimeouts(0, 0)` in its `init`, and there is no port a consumer or a fake could substitute.",
+        "evidence": [
+          "webtools-scraping/src/main/kotlin/com/spartanlabs/webtools/scraping/Connector.kt:150 — `System.setProperty(\"http.agent\", BROWSER_USER_AGENT)` (baseline)",
+          "webtools-scraping/src/main/kotlin/com/spartanlabs/webtools/scraping/Connector.kt:65 — `Unirest.setTimeouts(0, 0)` (baseline)"
+        ],
+        "source": "../architecture.md §2; ../research/README.md § What the change touches",
+        "link": "../architecture.md#2-current-state"
+      },
+      "options": [
+        {
+          "id": "gated-interface",
+          "name": "`HttpTransport : AutoCloseable`, a subclass-gated interface with one `suspend fun execute(request): Result<HttpResponse>` and a `close()` with an empty default body",
+          "verdict": "accepted",
+          "why": "Consumers and the fakes substitute it, and an interface is a narrower contract than an overridable class and gates cleanly. A `304` is a response, never a failure; cancellation is thrown, never wrapped. The contract (one request per hop, caps, `Closed` after `close()`) is stated in KDoc, and the seam grows only by methods with bodies.",
+          "source": "../architecture.md §6.2, §6.9, §9",
+          "link": "../architecture.md#62-webtools-http-common-core"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2: `HttpTransport`, the subclass-gated port with `execute` and an empty default `close()`. In procedure P3 the consumer tests named it in signatures without the opt-in, and a throwaway implementer in `jvmMain` failed without the module's opt-in lines and compiled with them.",
+        "files": [
+          "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/"
+        ],
+        "tests": "L1 gating: the consumer classes name the port without the opt-in; the eight negative cases, implementers without the opt-in, failed with exactly eight consumer errors in `commonTest` and in `jvmTest` and compiled with `@OptIn` (procedure P3 step 4).",
+        "verified": "Procedure P3, recorded in `final-implementation.md` §3 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#step-4--the-eight-negative-cases"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`HttpTransport : AutoCloseable`, a subclass-gated interface with `suspend fun execute(request): Result<HttpResponse>` and an empty default `close()`. Its KDoc states a seven-point contract: one request per hop, the documented caps, a `304` a response, a status outside 100..599 `Protocol`, received entries sanitised rather than failed, cancellation thrown, `Closed` after an idempotent `close()`, and concurrent calls allowed.",
+        "defense": "The contract is the integration surface for a consumer's own transport and for unit 4's fakes, so it is stated where an implementer reads it; the seam grows only by methods with bodies.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          }
+        ],
+        "tests": [
+          "Level 1 — the consumer names the port in signatures and cannot implement it without the opt-in"
+        ],
+        "risks": [
+          "Transport-owned header names are not refused by `HttpRequest`; unit 6 settles what the transport does with them"
+        ],
+        "source": "plan.md R5, §6.6",
+        "link": "plan.md#66-ports-the-logging-seam-and-the-helpers"
+      }
+    },
+    {
+      "id": "wall-clock",
+      "group": "Code",
+      "name": "The wall-clock port WallClock",
+      "system": "webtools-http-core",
+      "where": "common/, jvm/",
+      "gap": {
+        "kind": "missing",
+        "summary": "No injectable wall clock exists, and the standard library's own types are not open to a library on Kotlin 2.2.0: `kotlin.time.Clock` and `Instant` need an error-level opt-in there and are stable only from 2.3.0.",
+        "evidence": [
+          "../research/README.md § Call budget, Time — `Clock` and `Instant` need an error-level opt-in on Kotlin 2.2.0",
+          "../architecture.md §2 — the same, among the verified outside-world facts"
+        ],
+        "source": "../research/README.md § Call budget",
+        "link": "../research/README.md#call-budget"
+      },
+      "options": [
+        {
+          "id": "epoch-millis-port",
+          "name": "A plain gated interface `WallClock` with `nowEpochMillis(): Long`, and `WallClock.System` over an `internal expect fun epochMillisNow()`",
+          "verdict": "accepted",
+          "why": "Epoch milliseconds keep experimental standard-library API out of a library's signatures. The platform reading is one line per target (`System.currentTimeMillis()`, `Date.now()`), and substitution goes through `WallClock`.",
+          "source": "../architecture.md §6.2, §6.9",
+          "link": "../architecture.md#69-common-code-mechanism-per-type"
+        },
+        {
+          "id": "kotlin-time",
+          "name": "`kotlin.time.Clock` and `Instant`, or kotlinx-datetime, in signatures",
+          "verdict": "declined",
+          "why": "An error-level opt-in on every 2.2.x consumer, and the budget needs no calendar arithmetic.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "clock-system-opt-in",
+          "name": "`kotlin.time.Clock.System` under `@OptIn(ExperimentalTime)` behind `WallClock.System`",
+          "verdict": "declined",
+          "why": "It works and was measured binary-compatible across stdlib 2.2.0 to 2.4.10, but the standard library's own KDoc tells libraries not to depend on experimental time API.",
+          "source": "../architecture.md §6.9",
+          "link": "../architecture.md#69-common-code-mechanism-per-type"
+        },
+        {
+          "id": "fun-interface",
+          "name": "A `fun interface` for `WallClock`",
+          "verdict": "declined",
+          "why": "A `fun interface` cannot carry the subclass gate; one rule holds for every seam.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2: `WallClock` and its default `WallClock.System`, over the JVM actual and the check module's `js` actual. In procedure P3 the consumer tests used `WallClock.System` as a default without the opt-in, and throwaway `WallClock` implementers in `commonMain` and the check module's `jsMain` failed without the opt-in lines, as predicted.",
+        "files": [
+          "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/",
+          "webtools-http/src/jvmMain/",
+          "webtools-http-commoncheck/src/jsMain/"
+        ],
+        "tests": "L1 gating: `WallClock.System` as a default compiles without the opt-in (procedure P3 step 3). The Level 2 classes of `WallClock.System` and the JVM actual come in S4, with the Tests row.",
+        "verified": "Procedure P3, recorded in `final-implementation.md` §3 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#step-3--the-positive-consumer-cases"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`WallClock` with `nowEpochMillis(): Long`, a gated interface, and its nested default `WallClock.System`, final and usable without the opt-in, over `internal expect fun epochMillisNow()`: `System.currentTimeMillis()` in `jvmMain`, `Date.now()` in the check module's `jsMain`.",
+        "defense": "The shape of the standard library's `TimeSource.Monotonic`, with epoch milliseconds keeping experimental time API out of the signatures. The actual files are named apart from the `expect` file, so no two JVM facade classes clash.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          }
+        ],
+        "tests": [
+          "Level 1 — `WallClock.System` as a parameter default in the consumer",
+          "Level 2 — `WallClock.System` and the JVM actual"
+        ],
+        "risks": [
+          "`WallClockSystemComponentTest` bounds two reads by 5 s; a failure on a loaded host is rerun once before it counts as a defect"
+        ],
+        "source": "plan.md R5, §6.1, §6.6",
+        "link": "plan.md#66-ports-the-logging-seam-and-the-helpers"
+      }
+    },
+    {
+      "id": "logging-seam",
+      "group": "Code",
+      "name": "The logging seam",
+      "system": "webtools-http-core",
+      "where": "common/, jvm/",
+      "gap": {
+        "kind": "missing",
+        "summary": "Common code has no way to log. `slf4j-api` is JVM-only, while the repository's rule asks for logging of lifecycle events, data flows and failure states; the build findings had left `commonMain` without a logger.",
+        "evidence": [
+          "../research/README.md § Where the findings differ, Logging in common code",
+          "../architecture.md §2 — logging in the repository is parameterised slf4j with `{}` placeholders"
+        ],
+        "source": "../research/README.md § Where the findings differ",
+        "link": "../research/README.md#where-the-findings-differ-and-which-view-holds"
+      },
+      "options": [
+        {
+          "id": "expect-fun-logger",
+          "name": "An `internal interface Log` obtained through `internal expect fun logger(name)`, with an slf4j actual in `jvm/` and a no-op `js` actual in the check module",
+          "verdict": "accepted",
+          "why": "`expect fun` raises no Beta warning, and a missing actual is a compile error, which the check module enforces. Every logging site uses it, so there is one style and one test-capture path (logback in `jvmTest`).",
+          "source": "../architecture.md §6.2, §6.9",
+          "link": "../architecture.md#69-common-code-mechanism-per-type"
+        },
+        {
+          "id": "kotlin-logging",
+          "name": "kotlin-logging in `commonMain`",
+          "verdict": "declined",
+          "why": "A startup line, a runtime dependency on every consumer, and no gain with one published target; the `internal expect fun` seam is the smallest thing that logs by default.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2 and S4: the `internal` `Log` seam, its slf4j actual on the JVM and its `js` actual in the check module in S2; in S4 its Level 2 tests, the slf4j mapping against a logback `ListAppender` and `catchNonFatal`, with `logback-test.xml` copied unchanged from `webtools-udp`. No deviation recorded.",
+        "files": [
+          "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/",
+          "webtools-http/src/jvmMain/",
+          "webtools-http-commoncheck/src/jsMain/",
+          "webtools-http/src/jvmTest/"
+        ],
+        "tests": "L2 component in `jvmTest`: `Slf4jLogComponentTest` and `CatchNonFatalComponentTest`, inside `componentTest`'s 68 tests in 14 classes, all green (procedure P5 after S4).",
+        "verified": "Procedure P3 for S2 (`final-implementation.md` §3) and procedure P5 after S4 (§5), recorded on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#p5--the-fast-loop-after-s4"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`internal interface Log` (`debug`, `info`, `warn` with `{}` placeholders) through `internal expect fun logger(name)`, slf4j in `jvmMain` and a no-op in the check module. Beside it, the `internal` helpers: a third copy of `Result.flatMap`, whose header names the other two, and `catchNonFatal`, which turns an `Exception` other than `CancellationException` into a failure and lets `Error` through. This unit has no production logging site.",
+        "defense": "The seam and its rules, levels and the never-list (headers, bodies, query strings, credentials, any `Url` except through `redacted()`), are delivered for the later units. `catchNonFatal` is the module's one `try`/`catch`, inline so it surrounds suspend calls safely; the two legacy `ResultExtensions.kt` files are not edited.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          },
+          {
+            "id": "S4",
+            "what": "Add the remaining Level 2, 4a and 4c tests, the three differentials and `logback-test.xml`.",
+            "files": [
+              "webtools-http/src/commonTest/",
+              "webtools-http/src/jvmTest/"
+            ],
+            "check": "Procedures P4 and P5",
+            "link": "plan.md#9-test-plan"
+          }
+        ],
+        "tests": [
+          "Level 2 — the slf4j mapping against a logback `ListAppender`, `catchNonFatal` under cancellation and timeout, `flatMap`"
+        ],
+        "risks": [],
+        "source": "plan.md R6, §6.6, §6.9",
+        "link": "plan.md#66-ports-the-logging-seam-and-the-helpers"
+      }
+    },
+    {
+      "id": "commoncheck-module",
+      "group": "Code",
+      "name": "webtools-http-commoncheck, the check-only js compile",
+      "system": "js-commoncheck",
+      "where": "webtools-http-commoncheck/ · settings.gradle.kts",
+      "gap": {
+        "kind": "risk",
+        "summary": "With `jvm()` as the only target, a JVM API in `commonMain` compiles silently, so nothing keeps common code common. A target cannot be declared in the module and left unpublished, so the module cannot hold the second target itself.",
+        "evidence": [
+          "build-logic/src/main/kotlin/webtools.kotlin-multiplatform-library.gradle.kts:7 — a single `jvm()` target (baseline)",
+          "../research/README.md § Build, publishing and the Java 11 floor — `java.io.File`, `java.time.Instant` and `System.currentTimeMillis()` compile in `commonMain` with one target (measured)"
+        ],
+        "source": "../research/README.md § Build, publishing and the Java 11 floor; ../architecture.md §2",
+        "link": "../research/README.md#build-publishing-and-the-java-11-floor"
+      },
+      "options": [
+        {
+          "id": "check-only-module",
+          "name": "An unpublished module compiling the sibling's `src/commonMain/kotlin` for `js` only, its test task disabled, with a `js` actual for every `expect` in its `jsMain` and no publishing plugin, part of `./gradlew build`",
+          "verdict": "accepted",
+          "why": "A JVM API in `commonMain` becomes a compile error and nothing new is published; it compiles only, so nothing downloads Node. `commonTest` is not covered: the common tests run on the JVM.",
+          "source": "../architecture.md §6.8",
+          "link": "../architecture.md#68-check-only-js-modules"
+        },
+        {
+          "id": "published-js-target",
+          "name": "A published `js` target instead of check-only modules",
+          "verdict": "declined",
+          "why": "It adds a coordinate and a klib that nothing consumes, Node and Yarn downloads for tests, and a published surface the requirements do not name.",
+          "wins": "The day a non-JVM consumer exists: the check modules are then deleted and `js { nodejs() }` is added to the plugin.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
+        },
+        {
+          "id": "common-test-on-js",
+          "name": "Running `commonTest` on `js` as well",
+          "verdict": "declined",
+          "why": "The check module compiles `commonMain` only, so nothing downloads Node.js; the common tests run on the JVM target.",
+          "source": "plan.md §4",
+          "link": "plan.md#4-non-goals"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2 and S5: `webtools-http-commoncheck/build.gradle.kts` and its `js` actuals; in S5 `:webtools-http-commoncheck:check` is green, the configuration cache is reused on a second build, no `kotlin-js-store/` and no Node.js, Yarn or npm task appear, the root project still has no `check` task, and a `java.io` reference left in `commonMain` fails the `js` compile as designed. No deviation recorded.",
+        "files": [
+          "webtools-http-commoncheck/build.gradle.kts",
+          "webtools-http-commoncheck/src/jsMain/"
+        ],
+        "tests": "`:webtools-http-commoncheck:check` green; the root and no-Node.js proofs and the leak canary (procedure P7, acceptance 2 and 7).",
+        "verified": "Procedures P6 to P9 after S5, recorded in `final-implementation.md` §5 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#p7--the-check-module-and-the-root"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`webtools-http-commoncheck` applies `webtools.kotlin-common-check`, adds the sibling's `commonMain` directory by a relative path, opts in on `commonMain` and `jsMain`, declares `kotlinx-coroutines-core` and holds the two `js` actuals. It has no `explicitApi()`, publishing or version; `./gradlew build` and `check` compile it.",
+        "defense": "A JVM API in common code and an `expect` with no `js` actual become compile errors, and nothing new is published. With the plugin's `js()` the root project gains no plugin and no task, and nothing downloads Node.js or Yarn. A mistyped sibling path fails loudly, because the actuals would lose their `expect`s.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          },
+          {
+            "id": "S5",
+            "what": "Generate and commit the ABI dump, then read the class files and the published metadata, and prove the root project and the three existing modules unchanged.",
+            "files": [
+              "webtools-http/api/webtools-http.api"
+            ],
+            "check": "Procedures P6 to P9",
+            "link": "plan.md#92-procedures"
+          }
+        ],
+        "tests": [
+          "`:webtools-http-commoncheck:check` compiles `commonMain` for `js` (acceptance 2)",
+          "The root project has no `check` task, and no Node.js, Yarn or `kotlin-js-store/` appears (acceptance 7)"
+        ],
+        "risks": [
+          "IntelliJ's import of the module, a source directory outside it and actuals for a sibling's `expect`s, is untested; the Level 5 pass observes it",
+          "The `jsMain { }` accessor was measured in a probe, not in this layout; the fallback is `getByName(\"jsMain\")`"
+        ],
+        "source": "plan.md R11, §6.7, §7.4",
+        "link": "plan.md#74-webtools-http-commoncheck-new"
+      }
+    },
+    {
+      "id": "common-check-plugin",
+      "group": "Code",
+      "name": "The webtools.kotlin-common-check convention plugin",
+      "system": "gradle-build",
+      "where": "build-logic/src/main/kotlin/",
+      "gap": {
+        "kind": "missing",
+        "summary": "`build-logic` holds the published-library, Kotlin/JVM and multiplatform conventions only. There is no convention for an unpublished check module; #55's architecture lands it with the first one, in this unit.",
+        "evidence": [
+          "build-logic/src/main/kotlin/ — `webtools.published-library`, `webtools.kotlin-jvm-library` and `webtools.kotlin-multiplatform-library`, and no common-check plugin (baseline)",
+          "../architecture.md §11 unit 3 — the plugin is added to `build-logic` with `webtools-http-commoncheck`"
+        ],
+        "source": "../architecture.md §11 unit 3",
+        "link": "../architecture.md#11-decomposition"
+      },
+      "options": [
+        {
+          "id": "common-check-convention",
+          "name": "A precompiled plugin applying the multiplatform plugin with only a `js` target whose test task is disabled, and no publishing plugin",
+          "verdict": "accepted",
+          "why": "`build-logic` is the one place where every module's compile target, test layout and publishing shape are decided, and the feeds check module takes the same plugin later.",
+          "source": "../architecture.md §6.8, §6.1",
+          "link": "../architecture.md#68-check-only-js-modules"
+        },
+        {
+          "id": "nodejs-test-disabled",
+          "name": "`js { nodejs { testTask { enabled = false } } }`, the form #55's architecture gives (§3, §6.1, §6.8)",
+          "verdict": "declined",
+          "why": "Disabling a task does not skip the tasks it depends on: `build` still downloads Node.js and Yarn, runs the npm install and writes `kotlin-js-store/`, and the root project gains Gradle's base plugin and about 18 tasks. The plugin calls `js()` with no environment instead.",
+          "source": "plan.md §2, §7.2; research/common-check-plugin.md F2–F5",
+          "link": "plan.md#72-build-logic-one-new-plugin-three-changed-or-new-test-files"
+        },
+        {
+          "id": "nodejs-no-dependencies",
+          "name": "`js { nodejs { testTask { enabled = false; setDependsOn(emptyList<Any>()) } } }`",
+          "verdict": "declined",
+          "why": "It downloads nothing, but it still gives the root project the base plugin and about 18 tasks, its own `build`, `check`, `assemble` and `clean` among them. It is kept as the fallback in the plugin's header.",
+          "wins": "The day a Kotlin Gradle plugin release turns the missing environment into an error, which fails the plugin's TestKit `build` test.",
+          "source": "plan.md §6.7, §7.2",
+          "link": "plan.md#67-the-check-only-js-module"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S1: `webtools.kotlin-common-check` applies the multiplatform plugin, declares `mavenCentral()`, calls `js()` with no environment and wires `check` to `compileKotlinJs`; its header gives the reason, the accepted warning and the fallback. `build-logic/build.gradle.kts` did not change, and the build wrote no `kotlin-js-store/`.",
+        "files": [
+          "build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts",
+          "build-logic/src/test/kotlin/"
+        ],
+        "tests": "L1 gating `BuildLogicPluginsGatingTest` lists four plugin ids; L3 integration `CommonCheckPluginIntegrationTest` 7/7, on the new `SampleProject.commonCheck` factory; L4c non-functional `CommonCheckConfigurationCacheReuseNonFunctionalTest` 1/1. The full `build-logic` suites passed: integration 46, e2e 5, non-functional 3.",
+        "verified": "Procedure P2, recorded in `final-implementation.md` §5 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#p2--the-plugin-s1"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`webtools.kotlin-common-check`, a new precompiled script plugin: it applies the multiplatform plugin, declares `mavenCentral()`, calls `js()` with no environment and wires `check` to `compileKotlinJs`. Its header says why there is no environment, the accepted cost and the fallback; `build-logic/build.gradle.kts` does not change.",
+        "defense": "This departs from #55's architecture, which gives `js { nodejs { testTask { enabled = false } } }`: the research measured that form downloading Node.js and Yarn and giving the root project about 18 tasks. Without an environment the target compiles to a klib and leaves the root alone, so the root still has no `check` and unit 4's open point on where the publication check attaches stands. The cost is one \"JS Environment Not Selected\" warning per configuration-cache miss.",
+        "steps": [
+          {
+            "id": "S1",
+            "what": "Add the `webtools.kotlin-common-check` plugin, the `SampleProject.commonCheck` factory, the two TestKit classes and the fourth id in `BuildLogicPluginsGatingTest`.",
+            "files": [
+              "build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts",
+              "build-logic/src/test/kotlin/"
+            ],
+            "check": "Procedure P2: the plugin's TestKit tests pass",
+            "link": "plan.md#72-build-logic-one-new-plugin-three-changed-or-new-test-files"
+          }
+        ],
+        "tests": [
+          "Level 1 — `BuildLogicPluginsGatingTest` lists the fourth plugin",
+          "Level 3 — `CommonCheckPluginIntegrationTest`, seven TestKit tests",
+          "Level 4c — the second identical `build` reuses the configuration cache"
+        ],
+        "risks": [
+          "A Kotlin Gradle plugin release that makes the missing environment an error fails the plugin's TestKit `build` test; the fallback then gives the root project base-plugin tasks"
+        ],
+        "source": "plan.md R11, §6.7, §7.2, §13",
+        "link": "plan.md#72-build-logic-one-new-plugin-three-changed-or-new-test-files"
+      }
+    },
+    {
+      "id": "compile-proof",
+      "group": "Tests",
+      "name": "The first compile proof of the opt-in gate",
+      "system": "webtools-http-core",
+      "where": "common/, jvm/",
+      "gap": {
+        "kind": "risk",
+        "summary": "The public surface has never been compiled: the opt-in behaviour rests on compiler test data and one JVM-only measurement. The marker, a gated interface, a constructor default that mentions it and a consumer without the opt-in have not been compiled together in `commonMain` and `jvmMain`.",
+        "evidence": [
+          "../research/README.md § Known gaps — the public surface was not compiled; four things need a compile check before the first unit lands",
+          "../architecture.md §11 unit 3 — its plan starts with that compile proof"
+        ],
+        "source": "../research/README.md § Known gaps",
+        "link": "../research/README.md#known-gaps"
+      },
+      "options": [
+        {
+          "id": "compile-first",
+          "name": "Compile the four together in `commonMain` and `jvmMain` before anything else in the plan",
+          "verdict": "accepted",
+          "why": "This unit is where they meet for the first time, and ABI dumps do not record `@SubclassOptInRequired`, so `apiCheck` alone would not notice a dropped gate.",
+          "source": "../architecture.md §6.2, §9",
+          "link": "../architecture.md#9-extension--stability"
+        },
+        {
+          "id": "permanent-gate-check",
+          "name": "A permanent check of the gate: the research's `verifyTestsAreConsumers` guard task, or a TestKit compile-fail snippet in `build-logic`",
+          "verdict": "declined",
+          "why": "The eight negative cases and their texts are recorded once; a TestKit snippet would cost a nested build per `build-logic` integration run. It is left as a follow-up.",
+          "source": "plan.md R7, §4, §13",
+          "link": "plan.md#13-sequencing-and-follow-ups"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2 and S5: procedure P3 gave every predicted result in S2; in S5 `javap` shows `SubclassOptInRequired` on the five gated types only, and the marker's `RequiresOptIn` at level `ERROR` with its message, while the ABI dump records no `SubclassOptInRequired`, as the plan expects. `webtools-udp`, `webtools-scraping` and `webtools-browser` are untouched and compile. No deviation recorded.",
+        "files": [
+          "webtools-http/src/commonTest/",
+          "webtools-http/src/jvmTest/"
+        ],
+        "tests": "L1 gating `gatingTest` 5, 0 failures, inside the 130 `jvmTest` tests of S5's `check`; the eight negative cases were run once in S2 and deleted.",
+        "verified": "Procedure P3 for S2 (`final-implementation.md` §3) and procedures P6 and P8 after S5 (§5), recorded on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#3-the-compile-proof"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "The implementation opens with the compile proof in the real module, after the S2 declarations exist and before S3: main compiles; a wiring canary of three throwaway top-level implementers compiles, and fails once the opt-in lines are removed; the positive consumer cases compile; the eight negative cases fail with exactly eight consumer errors and compile with `@OptIn`; the class files and the dump are read. The output goes to `final-implementation.md` §3.",
+        "defense": "Every implementer this unit commits is nested inside a gated declaration and compiles without the wiring, so a proof over the committed code alone would pass vacuously; the canary is what exercises the opt-in. A result that differs from the plan stops S3 until the cause is understood.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          }
+        ],
+        "tests": [
+          "Level 1 — the permanent consumer classes",
+          "The eight negative cases, run once"
+        ],
+        "risks": [
+          "The research probes used a simplified convention plugin; if the real plugin changes an outcome, the proof shows it before anything else is built"
+        ],
+        "source": "plan.md R7, §6.2, §9.2 P3",
+        "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+      }
+    },
+    {
+      "id": "common-tests",
+      "group": "Tests",
+      "name": "Parsing and validation tests, and the Url-against-HttpUrl differential",
+      "system": "webtools-http-core",
+      "where": "webtools-http/src/commonTest · webtools-http/src/jvmTest",
+      "gap": {
+        "kind": "missing",
+        "summary": "No test covers parsing, validation or query encoding of a library-owned request type, and none compares the stack's `Url` with OkHttp's `HttpUrl`, into which the transport converts it.",
+        "evidence": [
+          "../architecture.md §11 unit 3 — Level 4a tests for parsing, validation and query encoding in `commonTest`, the differential in `jvmTest`"
+        ],
+        "source": "../architecture.md §11 unit 3",
+        "link": "../architecture.md#11-decomposition"
+      },
+      "options": [
+        {
+          "id": "deterministic-and-differential",
+          "name": "Level 4a tests in `commonTest` for parsing, validation and query encoding, and a differential of `Url` against `HttpUrl` in `jvmTest`",
+          "verdict": "accepted",
+          "why": "`java.net.URI` parses hosts differently from OkHttp; converting the port's own `Url` to `HttpUrl` inside the transport is safe only while a differential test pins their agreement.",
+          "source": "../architecture.md §6.9",
+          "link": "../architecture.md#69-common-code-mechanism-per-type"
+        },
+        {
+          "id": "mockk-fakes",
+          "name": "MockK for the component tests",
+          "verdict": "declined",
+          "why": "This unit has no external call to fake; the logging actual is tested against a real logback appender, and the repository's Level 2 tests use hand-written fakes.",
+          "source": "plan.md §2, §9",
+          "link": "plan.md#9-test-plan"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S3 and S4: the `Url` tests over `UrlCorpus` and `UrlInputGenerator` in S3; in S4 the remaining Level 2, 4a and 4c tests, the media-type table on `plan.md`'s Amendment 1 rows, and the three `jvmTest` differentials against OkHttp 5.5.0 for `Url`, the encoders and the headers. The `Url` differential found no disagreement and caught each of four deliberate mutants. No deviation recorded; three mechanical test-code fixes on the way, none a change to a rule.",
+        "files": [
+          "webtools-http/src/commonTest/",
+          "webtools-http/src/jvmTest/"
+        ],
+        "tests": "L1 gating 5 tests in 2 classes; L2 component 68 in 14; L4a deterministic 48 in 16, three of them the differentials; L4c non-functional 9 in 4; all green. `Url` differential: the corpus and 200,000 generated inputs, 0 disagreements and every coverage floor met; 2,000,000 inputs on two more seeds, 0 disagreements.",
+        "verified": "Procedures P5 after S3 and after S4, and P4, recorded in `final-implementation.md` §5 on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#p4--the-url-differential-s4"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "Level 4a tables in `commonTest` over a `Url` corpus and generator (accepted, rejected, confusing, boundary, IPv6, printing and encoder cases), sweeps of header names and values over U+0000..U+FFFF, method tokens, statuses and media types. In `jvmTest`, three differentials with OkHttp as the oracle: `Url` against `HttpUrl` on the corpus and 200,000 generated inputs, the encoders against `HttpUrl.Builder`, and header validity against `Request.Builder`.",
+        "defense": "The transport converts `Url` to `HttpUrl` through `toString()`, which is safe only while the differential pins their agreement; a later OkHttp that changes a canonicalisation shows up as a differential failure. Test sources never contain `@OptIn`, so they stay a consumer.",
+        "steps": [
+          {
+            "id": "S3",
+            "what": "Replace the `Url` shell with the parser, and add the encoders, the corpus, the generator and the `Url` tests.",
+            "files": [
+              "webtools-http/src/commonMain/",
+              "webtools-http/src/commonTest/"
+            ],
+            "check": "Procedure P5, the `commonTest` levels",
+            "link": "plan.md#65-url"
+          },
+          {
+            "id": "S4",
+            "what": "Add the remaining Level 2, 4a and 4c tests, the three differentials and `logback-test.xml`.",
+            "files": [
+              "webtools-http/src/commonTest/",
+              "webtools-http/src/jvmTest/"
+            ],
+            "check": "Procedures P4 and P5",
+            "link": "plan.md#9-test-plan"
+          }
+        ],
+        "tests": [
+          "Level 1 — two gating classes",
+          "Level 2 — fourteen component classes",
+          "Level 4a — thirteen tables in `commonTest` and three differentials in `jvmTest`",
+          "Level 4c — four in `webtools-http`, one in `build-logic`",
+          "Level 5 — the manual pass, procedure P10"
+        ],
+        "risks": [
+          "Only OkHttp 5.5.0 was measured; the files `Url` mirrors are identical at 5.5.1"
+        ],
+        "source": "plan.md §9, §9.1",
+        "link": "plan.md#91-the-url-corpus-generator-and-differential"
+      }
+    },
+    {
+      "id": "readme",
+      "group": "Documents",
+      "name": "The README's artifact row and install line",
+      "system": "webtools-http-core",
+      "where": "README.md",
+      "gap": {
+        "kind": "missing",
+        "summary": "The README's artifact table and install block name the three existing artifacts only.",
+        "evidence": [
+          "README.md:6-10 — the artifact table (baseline)",
+          "README.md:20-27 — the install block (baseline)"
+        ],
+        "source": "../architecture.md §11 unit 3",
+        "link": "../architecture.md#11-decomposition"
+      },
+      "options": [
+        {
+          "id": "row-and-install-line",
+          "name": "Add the `webtools-http` row to the artifact table and its install line; the HTTP-stack sections wait for the documentation unit",
+          "verdict": "accepted",
+          "why": "The module lands on `master` in this unit. The evergreen architecture document and the README's HTTP-stack sections are written once the stack has landed, in unit 11 (`http-docs`).",
+          "source": "../architecture.md §11 units 3 and 11",
+          "link": "../architecture.md#11-decomposition"
+        }
+      ],
+      "asBuilt": {
+        "state": "amended",
+        "summary": "Built as decided in S6: the README changes at the nine sites of plan §8: the opening sentence no longer counts three artifacts; the `webtools-http` artifact row and its install line, both marked not yet released; the multiplatform `-jvm` Maven coordinate and `kotlin-stdlib` 2.2.21 note; and in Build & test the module list, the `commoncheck` build line, the test-layout paragraph and the four-plugin table. In S7, on the coordinator's instruction, the `verifyJavaFloor` comment was tightened to \"every published module's jars\"; `git diff --stat README.md`: 30 insertions, 15 deletions. The as-built record lists this one edit beyond plan §8 (§2).",
+        "files": [
+          "README.md"
+        ],
+        "tests": "None: a documentation change, reviewed by `git diff` as plan §8 sets out.",
+        "verified": "`git diff --stat README.md` review after S6 and S7 (`final-implementation.md` §5, S6), recorded on 2026-10-25; acceptance 8 met (§4); not committed yet.",
+        "link": "final-implementation.md#s6--the-readme",
+        "changes": [
+          {
+            "what": "One README edit beyond plan §8: the `verifyJavaFloor` command comment now reads \"the Java 11 floor of every published module's jars\".",
+            "why": "The check module has no JVM jar, so \"every module's jars\" was slightly loose; tightened on the coordinator's instruction. Line 60's \"three modules\" stays as correct history of the retired combined artifact.",
+            "when": "S7",
+            "ref": "final-implementation.md#2-deviations-from-the-plan"
+          }
+        ]
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "The README changes in the same change, in nine edits: the opening line no longer counts three artifacts; a `webtools-http` row and its install line, both marked not yet released; a paragraph on the `-jvm` Maven coordinate and the `kotlin-stdlib` 2.2.21 requirement; and in Build & test, the module list, the multiplatform test layout, a sentence on the `*-commoncheck` modules and a plugin table of four.",
+        "defense": "Each edit repairs a sentence the module makes false. The `### webtools-http` Components table waits for the later units and unit 11.",
+        "steps": [
+          {
+            "id": "S6",
+            "what": "Edit the README where the module makes a sentence false.",
+            "files": [
+              "README.md"
+            ],
+            "check": "`git diff --stat README.md` lists only the intended lines",
+            "link": "plan.md#8-documentation-impact"
+          }
+        ],
+        "tests": [],
+        "risks": [
+          "`README.md` is CRLF in the working tree and LF in the index on this host: the edit keeps its line endings"
+        ],
+        "source": "plan.md R12, §8",
+        "link": "plan.md#8-documentation-impact"
+      }
+    },
+    {
+      "id": "release",
+      "group": "Release",
+      "name": "The module's version",
+      "system": "webtools-http-core",
+      "where": "webtools-http/build.gradle.kts",
+      "gap": {
+        "kind": "missing",
+        "summary": "A new module takes the root default version, and nothing of the stack can be released until its last unit lands.",
+        "evidence": [
+          "build.gradle.kts:12 — the shared default `version = \"1.0.0\"` (baseline)",
+          "../architecture.md §11 — `webtools-http` and `webtools-feeds` stay unreleased at 1.0.0 until the stack is complete"
+        ],
+        "source": "../architecture.md §11",
+        "link": "../architecture.md#11-decomposition"
+      },
+      "options": [
+        {
+          "id": "new-unreleased",
+          "name": "`webtools-http` 1.0.0, new and unreleased until the stack is complete; no existing module's version moves",
+          "verdict": "accepted",
+          "why": "The units that build the stack move no version of their own, and the three existing modules moved only in the Java floor unit.",
+          "source": "../architecture.md §11",
+          "link": "../architecture.md#11-decomposition"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Built as decided in S2, with no deviation recorded: `webtools-http` takes `1.0.0` from the root default, with no `version =` line in its build file, which says that 1.0.0 is unreleased and not a release candidate until #55's stack is complete. The land request's statement that no existing module moves a version belongs to the landing.",
+        "files": [
+          "webtools-http/build.gradle.kts"
+        ],
+        "tests": "",
+        "verified": "Recorded in `final-implementation.md` on 2026-10-25 (versions moved: none); not committed yet.",
+        "link": "final-implementation.md#final-implementation-http-core-issue-62"
+      },
+      "verdict": {
+        "kind": "build",
+        "summary": "`webtools-http` takes `1.0.0` from the root default, with no `version =` line; its build file says that 1.0.0 is unreleased and not a release candidate until #55's stack is complete. No existing module moves a version, and the land request says so.",
+        "defense": "The units that build the stack move no version of their own; nothing is released, signed or tagged by this unit.",
+        "steps": [
+          {
+            "id": "S2",
+            "what": "Write `settings.gradle.kts`, both module build files, every declaration the gate touches, the value types other than `Url`, a `Url` shell with its final members, the `js` actuals and the permanent Level 1 consumer classes, then run the compile proof.",
+            "files": [
+              "settings.gradle.kts",
+              "webtools-http/",
+              "webtools-http-commoncheck/"
+            ],
+            "check": "Procedure P3, recorded in `final-implementation.md` §3; S3 does not start if it differs from the plan",
+            "link": "plan.md#62-the-gate-and-the-compile-proof-that-opens-the-implementation"
+          }
+        ],
+        "tests": [],
+        "risks": [],
+        "source": "plan.md R1, §11",
+        "link": "plan.md#11-version-control"
+      }
+    },
+    {
+      "id": "defaults-left",
+      "group": "Left for later",
+      "name": "Default implementations and policy numbers",
+      "system": "webtools-http-core",
+      "where": "units 4 to 9 of #55",
+      "gap": {
+        "kind": "missing",
+        "summary": "The ports this unit defines have no implementation and no policy yet: no fake transport, no URL policy, no OkHttp transport, cache, budget or facade.",
+        "evidence": [
+          "../architecture.md §11 unit 3 — leaves every default implementation and policy",
+          "../architecture.md §6.2 — the common core owns no default implementation, no policy number and no fixtures"
+        ],
+        "source": "../architecture.md §11 unit 3",
+        "link": "../architecture.md#11-decomposition"
+      },
+      "options": [
+        {
+          "id": "leave-to-units",
+          "name": "Leave them to units 4 to 9, each its own sub-issue: #63, #64, #65, #66, #67 and #68",
+          "verdict": "accepted",
+          "why": "#55's decomposition gives each its own unit, landing after this one, so this unit delivers only the vocabulary they all speak.",
+          "source": "../architecture.md §11",
+          "link": "../architecture.md#11-decomposition"
+        }
+      ],
+      "asBuilt": {
+        "state": "as-planned",
+        "summary": "Left as decided: the unit built only the vocabulary, and no port has an implementation beyond `WallClock.System`. `OkHttpTransport`, the URL policies, the response cache, the call budget, the facades and the fixtures remain with units 4 to 9 (#63 to #68), and `webtools-feeds` with unit 10.",
+        "files": [],
+        "tests": "",
+        "verified": "`final-implementation.md` §1, what was built, recorded on 2026-10-25; not committed yet.",
+        "link": "final-implementation.md#1-what-was-built"
+      },
+      "verdict": {
+        "kind": "leave",
+        "summary": "Not built here: `OkHttpTransport`, the URL policies, the response cache, the call budget, the facades and the fixtures stay with units 4 to 9, and `webtools-feeds` with unit 10. No port has an implementation beyond `WallClock.System`.",
+        "defense": "This unit delivers only the vocabulary they all speak; the plan fixes the names it takes and what each sibling builds on.",
+        "steps": [],
+        "tests": [],
+        "risks": [],
+        "source": "plan.md §4, §12",
+        "link": "plan.md#12-interfaces-with-sibling-units"
+      }
+    }
+  ],
+  "impact": {
+    "basis": "plan",
+    "summary": "A new module, `webtools-http` 1.0.0, with the common core of the HTTP stack and no implementation beyond `WallClock.System`; it is unreleased and not a release candidate at this landing. The three existing artifacts do not change. Inside the repository, `./gradlew build` and `check` also compile and test the module and compile its common code for `js`, with no Node.js and no new root task.",
+    "none": null,
+    "release": {
+      "bump": "none",
+      "version": null,
+      "note": "`webtools-http` 1.0.0 is new, inherited from the root default, and published once #55's stack is complete; no existing version moves",
+      "unreleased": true
+    },
+    "downstream": [
+      {
+        "who": "`io.github.spartanlaboratories:webtools-http` (new artifact)",
+        "kind": "artifact",
+        "system": "webtools-http-core",
+        "effect": "additive",
+        "summary": "A new artifact at 1.0.0 that publishes `webtools-http` and `webtools-http-jvm` once released; its ABI dump is committed. Not a release candidate at this landing.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "Consumers of `webtools-http` 1.0.0, once it is released",
+        "kind": "consumer",
+        "system": "webtools-http-core",
+        "effect": "additive",
+        "summary": "`kotlinx-coroutines-core` 1.10.2 on the compile classpath as the one `api` dependency; `okhttp-jvm`, `caffeine` and `slf4j-api` at runtime only; class files at the Java 11 floor. Through `okhttp-jvm`, a `kotlin-stdlib` 2.2.21 requirement.",
+        "compat": "notable",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "Consumers of `webtools-udp`, `webtools-scraping` and `webtools-browser`",
+        "kind": "consumer",
+        "system": null,
+        "effect": "none",
+        "summary": "Nothing changes: no source, build-script or test change in the three modules, and no version moves.",
+        "link": "impact.md#1-published-artifacts"
+      },
+      {
+        "who": "Repository builds",
+        "kind": "repository",
+        "system": "gradle-build",
+        "effect": "additive",
+        "summary": "`./gradlew build` and `check` also run the module's compile, tests, `apiCheck` and `verifyJavaFloor` and the check module's `js` compile. A configuration-cache miss prints one more warning, \"JS Environment Not Selected\"; nothing downloads Node.js or Yarn, and the root project gains no plugin and no task.",
+        "compat": "notable",
+        "link": "impact.md#build"
+      },
+      {
+        "who": "The later units of #55 (#63 to #70)",
+        "kind": "system",
+        "system": "webtools-http-core",
+        "effect": "additive",
+        "summary": "They build on this vocabulary: the failure leaves and reasons, `Url`'s canonical host, the transport contract, `WallClock`, the logging seam and helpers, and the check-module pattern. Unit 6 holds the first top-level implementer of a gated port.",
+        "link": "impact.md#4-sibling-units"
+      }
+    ],
+    "adaptation": [
+      {
+        "who": "Unit 4, `test-support` (#63)",
+        "system": "webtools-http-core",
+        "need": "required",
+        "summary": "Its fixtures source sets opt in themselves for the fakes that implement `HttpTransport` and `WallClock`. The root project still has no `check` task, so where the publication check attaches stays its decision.",
+        "link": "impact.md#4-sibling-units"
+      },
+      {
+        "who": "Existing code in the repository",
+        "system": null,
+        "need": "none",
+        "summary": "Nothing moves onto `webtools-http` before 1.0.0 is released: `Connector`, `WebViewer` and the legacy `ResultExtensions.kt` copies are unchanged.",
+        "link": "impact.md#3-adoption"
+      }
+    ],
+    "api": [
+      {
+        "surface": "`ExperimentalForInheritanceWebToolsApi`",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": null,
+        "summary": "The one opt-in marker of the stack's seams, used only through `@SubclassOptInRequired` and `@OptIn`, and never removed.",
+        "link": "plan.md#r3-stability"
+      },
+      {
+        "surface": "`HttpTransport`, `WallClock` (implementing)",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "experimental",
+        "summary": "Implementing either needs the opt-in. Calling and passing them are Stable Core, and `WallClock.System` is usable without opting in.",
+        "link": "plan.md#61-mechanism-per-type-architecture-69-for-this-units-types"
+      },
+      {
+        "surface": "`HttpFailure`, `TransportFailure`, `UpstreamFailure` (subclassing)",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "experimental",
+        "summary": "Subclassing a group needs the opt-in; matching the groups with an `else` does not.",
+        "link": "plan.md#63-the-failure-model"
+      },
+      {
+        "surface": "The failure leaves, `RefusalReason`, `ExhaustedReason`",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "stable-core",
+        "summary": "Final leaves nested in their group, and two open constants classes that may gain constants in a feature release.",
+        "link": "plan.md#63-the-failure-model"
+      },
+      {
+        "surface": "`HttpMethod`, `Url`, `HttpHeaders`, `RequestBody`, `HttpRequest`, `HttpResponse`, `RedirectHop`",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "stable-core",
+        "summary": "The request and response vocabulary, with factories over `internal` constructors and value or identity equality per type.",
+        "link": "plan.md#64-the-request-and-response-value-types"
+      },
+      {
+        "surface": "`Log`, `logger`, `HttpSyntax`, `flatMap`, `catchNonFatal`, the `Url` encoders",
+        "system": "webtools-http-core",
+        "change": "added",
+        "tier": "internal",
+        "summary": "Internal helpers the later units of the module reuse; nothing a consumer reaches.",
+        "link": "plan.md#12-interfaces-with-sibling-units"
+      }
+    ],
+    "conversion": [],
+    "changes": [],
+    "source": "impact.md",
+    "link": "impact.md#1-published-artifacts"
+  },
+  "roadmap": null,
+  "followUps": [
+    {
+      "name": "A permanent compile-fail check of the gate",
+      "note": "A TestKit snippet in `build-logic` that re-runs the eight negative cases; the research's `verifyTestsAreConsumers` guard task can be reconsidered with it. Not filed."
+    },
+    {
+      "name": "A dated callout on #55's `architecture.md`",
+      "note": "§3, §6.1 and §6.8 describe the check plugin as `js { nodejs { } }`; the document is left as written until the maintainer approves a callout, and unit 11 describes the as-built form."
+    },
+    {
+      "issue": 58,
+      "note": "CI and repository practices: the first place the check module, `apiCheck` and the `Url` differential would run on every change; releasing `webtools-http` waits on it and on the rest of the stack."
+    },
+    {
+      "issue": 50,
+      "note": "`webtools-udp` multiplatform: can reuse the check-module pattern and the logging seam."
+    }
+  ],
+  "documents": [
+    {
+      "label": "Issue #62",
+      "path": "https://github.com/SpartanLaboratories/WebTools/issues/62",
+      "note": "the unit as #55 filed it"
+    },
+    {
+      "label": "#62 plan",
+      "path": "plan.md",
+      "note": "the requirements, the design, the seven stages and the procedures"
+    },
+    {
+      "label": "#62 impact",
+      "path": "impact.md",
+      "note": "the published artifacts, the blast radius, the sibling units, and §5 where the unit departs from #55's documents"
+    },
+    {
+      "label": "#62 as-built record",
+      "path": "final-implementation.md",
+      "note": "the implementer's as-built input through S7: §1 what was built, §2 no deviation, §4 the eight acceptance criteria met, §6 the Level 5 pass, §8 the known gaps; the planner reconciles it into the final record"
+    },
+    {
+      "label": "#62 research",
+      "path": "research/README.md",
+      "note": "this unit's four questions, their verification (107 claims, all hold) and the summary the plan rests on"
+    },
+    {
+      "label": "#55 research",
+      "path": "../research/README.md",
+      "note": "the questions, verification and summary the Gap column rests on"
+    },
+    {
+      "label": "#55 architecture",
+      "path": "../architecture.md",
+      "note": "§2 current state, §6.2 the common core, §6.8 the check-only `js` modules, §6.9 the common-code mechanism per type, §9 extension and stability, §10 alternatives, §11 unit 3"
+    },
+    {
+      "label": "#55 impact",
+      "path": "../impact.md",
+      "note": "§7 the open point this unit settles: the first compile of the marker, a gated interface, a default naming it and a consumer without the opt-in"
+    },
+    {
+      "label": "#55 tracking board",
+      "path": "../dashboard.html",
+      "note": "the eleven units in landing order"
+    }
+  ],
+  "notes": {
+    "paths": "`common/` and `jvm/` abbreviate `webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/` and its `jvmMain` twin, as #55's architecture does. Line references marked baseline are to `f72b115`.",
+    "origin": "This unit's research and architecture happened in #55's run, so the Gap and Considered columns were written at sized from #55's research README and architecture; the unit's own plan adds to Considered and writes the Verdict at plan acceptance.",
+    "corrections": [
+      {
+        "what": "The glow is corrected from Considered and Verdict to Considered alone. The glow follows the step: research works on the Considered column, and the Verdict column glows from the moment plan writing starts.",
+        "when": "research, 2026-10-25"
+      }
+    ],
+    "departure": "The unit's plan departs from #55's architecture in one decision: the check plugin calls `js()` with no environment in place of `js { nodejs { testTask { enabled = false } } }` (plan.md §13, impact.md §5). It shows in the common-check-plugin row's Considered and Verdict columns and, on #55's tracking board, as a change on the http-core unit row; `architecture.md` is left as written."
+  },
+  "issueBoards": {
+    "47": "../47-java-23-bytecode/dashboard.html",
+    "61": "../61-build-logic/dashboard.html"
+  }
+}
+);

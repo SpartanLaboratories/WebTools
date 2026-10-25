@@ -103,8 +103,8 @@
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-23T20:07:49Z",
-    "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is up next and no longer blocked: both its blockers have landed. Units 4 to 11 follow in landing order.",
+    "updated": "2026-10-25T07:21:21Z",
+    "detail": "Units 1 and 2 have landed: #61 (`build-logic`) through PR #74 as 1e27071 with no version moved, and #47 (`java-floor`) through PR #76 as 3949b52, which puts every module on the Java 11 floor at 1.0.0a and 2.0.0a, unpublished. Unit 3, #62 (`http-core`), is in progress: its run started on 2026-10-25 at the plan step, a re-pass against architecture.md §6.2, §6.8, §6.9 and §11. Unit 4, #63 (`test-support`), is up next, blocked by #62. Units 5 to 11 follow in landing order.",
     "steps": [
       "sizing",
       "interview",
@@ -114,8 +114,10 @@
       "implementation",
       "landed"
     ],
-    "current": [],
-    "next": "http-core",
+    "current": [
+      "http-core.built"
+    ],
+    "next": "test-support",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -252,6 +254,12 @@
       "column": "built",
       "label": "Unit 2, #47: as-built record and impact reconciled after the landing (PR #78); this tracking issue's `impact.md` brought to units 1 and 2 as built",
       "ref": "77a69bc"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Unit 3, #62, started: sized as one system; the planner re-passes unit 3 against architecture.md §6.2, §6.8, §6.9 and §11 and impact.md §7",
+      "ref": "#62"
     }
   ],
   "rows": [
@@ -487,8 +495,172 @@
         ],
         "versions": "webtools-http 1.0.0 (new, unreleased)",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "62-http-core/",
+        "board": "62-http-core/dashboard.html",
+        "live": {
+          "step": "remediation",
+          "since": "2026-10-25T11:58:00Z",
+          "updated": "2026-10-25T12:20:00Z",
+          "detail": "Fixes: HttpFailure message-rule KDoc, addSensitive flag wording, HttpTransport main-safety point, Amendment 1 comment in HttpSyntax, OkHttp set names in UrlEncoding, DNS-limit and no-octal comments in UrlHost; Kelvin sign escaped in six test files; UrlInputGenerator and UrlCorpus tags and comments; corpus gains every isUrlSpace code point and four dot-segment folds; one new HttpHeaders test; behaviour-named tests; RegExp injection hints; e2e class KDoc notes the common-check plugin is covered at level 3. Re-run: :webtools-http:check :webtools-http-commoncheck:check (131 tests, apiCheck, dump unchanged); CommonCheckPluginIntegrationTest 7 + e2eTest 5. No behaviour, API or design change.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "landing",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-10-25",
+              "findings": {
+                "documentation": 18,
+                "test": 9,
+                "code": 2
+              },
+              "severity": {
+                "minor": 27,
+                "other": 2
+              },
+              "route": "on-the-spot",
+              "report": "build/reports/test-inspector/index.html",
+              "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-62-http-core",
+          "event": {
+            "name": "implementation-stage",
+            "at": "2026-10-25T12:20:00Z",
+            "note": "qa pass 1 fixes done (no behaviour, API or design change); the planner reconciles next"
+          },
+          "stages": [
+            {
+              "id": "S1",
+              "name": "common-check plugin and TestKit tests",
+              "state": "done",
+              "rows": [
+                "common-check-plugin"
+              ]
+            },
+            {
+              "id": "S2",
+              "name": "module skeleton, gated declarations, compile proof",
+              "state": "done",
+              "rows": [
+                "module-skeleton",
+                "opt-in-marker",
+                "failure-model",
+                "request-response",
+                "transport-port",
+                "wall-clock",
+                "logging-seam",
+                "commoncheck-module",
+                "compile-proof",
+                "release"
+              ]
+            },
+            {
+              "id": "S3",
+              "name": "Url, encoders, corpus, generator, commonTest",
+              "state": "done",
+              "rows": [
+                "request-response",
+                "common-tests"
+              ]
+            },
+            {
+              "id": "S4",
+              "name": "remaining level 2/4a/4c tests, jvmTest differentials, logback-test.xml",
+              "state": "done",
+              "rows": [
+                "logging-seam",
+                "common-tests"
+              ]
+            },
+            {
+              "id": "S5",
+              "name": "ABI dump and checks",
+              "state": "done",
+              "rows": [
+                "module-skeleton",
+                "commoncheck-module",
+                "compile-proof"
+              ]
+            },
+            {
+              "id": "S6",
+              "name": "README",
+              "state": "done",
+              "rows": [
+                "readme"
+              ]
+            },
+            {
+              "id": "S7",
+              "name": "level-5 pass and as-built record",
+              "state": "done",
+              "rows": []
+            }
+          ],
+          "remediation": {
+            "pass": 1,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "rookie-dev: KDoc wording (HttpFailure, HttpHeaders.addSensitive, HttpTransport main-safety), level-1 line comments, test-fixture tags, U+212A escapes, corpus rows, test renames, absent-name set test; touched tasks re-run",
+                "state": "done"
+              },
+              {
+                "name": "planner: record the two scope exclusions (L1 per-type gating, e2e composite) in plan.md §9 and reconcile final-implementation.md and impact.md",
+                "state": "current"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "The S2 report raised one inconsistency in `plan.md` for the planner: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
+              "raised": "implementation-stage S2",
+              "ref": "plan.md",
+              "resolved": "Resolved by `plan.md`'s Amendment 1, which makes §9's media-type test row agree with the unchanged grammar of §6.4 and code of §7.5, applies in S4 and changes no verdict on this board."
+            },
+            {
+              "text": "Three items of the Level 5 pass need an IntelliJ session and were not performed; they are left to the maintainer: the IDE import of the check module and its `jsMain` actuals, the gate error and `@OptIn` quick fix on a scratch `WallClock` implementer, and Quick Documentation of `Url.parse`, `Url.toString`, `HttpTransport`, `HttpFailure` and the marker. The command-line items (the dump read, the tree hygiene) were done.",
+              "raised": "implementation-stage S7",
+              "ref": "final-implementation.md#6-level-5--the-manual-pass"
+            },
+            {
+              "text": "Two plan-sanctioned test-scope exclusions flagged by qa: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
+              "raised": "qa-pass 1",
+              "ref": "plan.md"
+            }
+          ],
+          "deviations": 1,
+          "rowNames": {
+            "module-skeleton": "The webtools-http module and its build",
+            "opt-in-marker": "The opt-in marker ExperimentalForInheritanceWebToolsApi",
+            "failure-model": "The failure model and its two reason vocabularies",
+            "request-response": "Request and response types",
+            "transport-port": "The transport port HttpTransport",
+            "wall-clock": "The wall-clock port WallClock",
+            "logging-seam": "The logging seam",
+            "commoncheck-module": "webtools-http-commoncheck, the check-only js compile",
+            "common-check-plugin": "The webtools.kotlin-common-check convention plugin",
+            "compile-proof": "The first compile proof of the opt-in gate",
+            "common-tests": "Parsing and validation tests, and the Url-against-HttpUrl differential",
+            "readme": "The README's artifact row and install line",
+            "release": "The module's version"
+          }
+        }
       },
       "gap": {
         "kind": "missing",
@@ -589,7 +761,15 @@
       },
       "asBuilt": {
         "state": "pending",
-        "summary": ""
+        "summary": "",
+        "changes": [
+          {
+            "what": "The check plugin `webtools.kotlin-common-check` calls `js()` with no environment, in place of the `js { nodejs { testTask { enabled = false } } }` of architecture §3, §6.1 and §6.8, so the root project gains no task and unit 4's open point on where the publication check attaches stands.",
+            "why": "#62's research measured the architecture's form downloading Node.js and Yarn during `build`, writing `kotlin-js-store/` and giving the root project the base plugin and about 18 tasks; without an environment the target compiles to a klib, at the cost of one warning per configuration-cache miss. `architecture.md` is left as written (#62 `plan.md` §13).",
+            "when": "#62 plan",
+            "ref": "62-http-core/plan.md#67-the-check-only-js-module"
+          }
+        ]
       }
     },
     {
@@ -1390,7 +1570,7 @@
         "kind": "operator",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "`./gradlew build` adds `verifyJavaFloor`, `apiCheck` on the new modules, the fixtures-publication check and the check-only JS compiles; `build-logic` brings its own level tests, run on demand.",
+        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, and the fixtures-publication check once unit 4 attaches it to a `check` that `build` reaches. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
         "link": "impact.md#build"
       }
     ],
@@ -1399,7 +1579,7 @@
         "who": "Consumers on JDK 11 to 22",
         "system": null,
         "need": "required",
-        "summary": "Move to the lettered versions of the existing artifacts once published, requesting them `strictly` where the graph also asks for the plain release.",
+        "summary": "Move to the lettered versions of all three existing artifacts once they are published (`webtools-udp` 2.0.0a, `webtools-scraping` and `webtools-browser` 1.0.0a), requesting them `strictly` where the graph also asks for the plain release, which orders above them.",
         "link": "impact.md#1-published-artifacts"
       },
       {
@@ -1476,9 +1656,39 @@
         "source": "47-java-23-bytecode/impact.md",
         "link": "47-java-23-bytecode/impact.md#1-published-artifacts",
         "compat": "notable"
+      },
+      {
+        "unit": "http-core",
+        "basis": "plan",
+        "summary": "A new module, `webtools-http` 1.0.0, unreleased and not a release candidate at this landing: the marker, the failure model, the request and response types, the transport and wall-clock ports and the logging seam, with `kotlinx-coroutines-core` as its one `api` dependency. The three existing artifacts do not change. The build also compiles its common code for `js`, with no Node.js and no new root task.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "webtools-http 1.0.0 is new and unreleased; no existing version moves"
+        },
+        "source": "62-http-core/impact.md",
+        "link": "62-http-core/impact.md#1-published-artifacts"
       }
     ],
-    "changes": [],
+    "changes": [
+      {
+        "what": "`build-logic`'s own level tests stay outside `./gradlew build`, and the fixtures-publication check reaches `build` only once unit 4 attaches it to a `check` that `build` reaches.",
+        "why": "#61 built `build-logic` with its own level tests, none of them in `check`, and cut the root build to `group` and `version`, with no `check` task. The architecture wires the publication check into the root `check`, which has no target until unit 4's plan chooses one (#55 `impact.md` §2, §7, §8).",
+        "when": "#61 landing",
+        "ref": "1e27071",
+        "entry": "downstream.4",
+        "system": "gradle-build",
+        "unit": "build-logic"
+      },
+      {
+        "what": "The `strictly` request covers `webtools-udp` too: its `2.0.0a` orders below `2.0.0`, the Java 23 build on Central, as `1.0.0a` orders below `1.0.0` for the other two artifacts.",
+        "why": "The architecture's §12 calls `webtools-udp` unaffected by the lettered-version ordering. #47 found the rule holds for all three artifacts (its `final-implementation.md` §9), and #55's reconciled `impact.md` §1 and §8 state it for all three; `architecture.md` is left as written.",
+        "when": "#47 landing",
+        "ref": "3949b52",
+        "entry": "adaptation.0",
+        "unit": "java-floor"
+      }
+    ],
     "source": "impact.md",
     "link": "impact.md#1-published-artifacts"
   }

@@ -96,7 +96,7 @@
       "label": "Options weighed",
       "date": "2026-10-23",
       "ref": "plan.md",
-      "note": "the plan raised no considerations: each row records the one option it takes, with the alternatives it rules out in that option's reasons"
+      "note": "the plan raised no considerations; beside the option each row takes stand the alternatives #55's architecture (§6.1, §10) and research summary weighed for the floor, its guard and the test JDK"
     },
     {
       "column": "verdict",
@@ -234,6 +234,23 @@
           "why": "`-Xjdk-release` limits the API to Java 11, which `jvmTarget` alone does not, and it needs no JDK 11 on the build host. A `jvmToolchain(11)` would need #58's resolver bump, make every consumer's composite build need a JDK 11, and still write no multiplatform attribute.",
           "source": "plan.md, Root cause and Fix",
           "link": "plan.md#fix"
+        },
+        {
+          "id": "jvm-target-alone",
+          "name": "`jvmTarget = 11` alone",
+          "verdict": "declined",
+          "why": "It lowers the class-file version but not the API surface: on a JDK 23 host `MutableList.removeFirst()` compiled to JDK 21's `List.removeFirst` without a warning.",
+          "source": "../research/README.md § Build, publishing and the Java 11 floor",
+          "link": "../research/README.md#build-publishing-and-the-java-11-floor"
+        },
+        {
+          "id": "jvm-toolchain",
+          "name": "`jvmToolchain(11)` as the floor",
+          "verdict": "declined",
+          "why": "It gives the same API limit at the cost of the foojay resolver bump and a JDK 11 on every consumer's composite machine, and it still writes no multiplatform attribute.",
+          "wins": "If the level tests had to run on a JDK 11 inside this work.",
+          "source": "../architecture.md §10, §6.1",
+          "link": "../architecture.md#10-alternatives-considered"
         }
       ],
       "verdict": {
@@ -328,6 +345,14 @@
           "why": "It reads the files a consumer receives rather than the settings that should produce them, and it fails when there is nothing to check, so a wiring mistake cannot pass silently. The classpath scan catches a Java 17 dependency that publishes no Gradle metadata.",
           "source": "plan.md, Fix (the guard)",
           "link": "plan.md#fix"
+        },
+        {
+          "id": "level-test-guard",
+          "name": "The floor's checks as a level test",
+          "verdict": "declined",
+          "why": "The facts live in the publishable files, the built jars and the generated `.module` files, so the guard is a Gradle verification task wired into `check`, not a level test.",
+          "source": "../architecture.md §6.1",
+          "link": "../architecture.md#61-shared-build-logic--build-logic"
         }
       ],
       "verdict": {
@@ -540,6 +565,14 @@
           "why": "No module test suite runs in this change; procedures A to D compile, guard and load the three modules on a real JDK 11 instead.",
           "source": "plan.md, Known gaps",
           "link": "plan.md#known-gaps"
+        },
+        {
+          "id": "launcher-now",
+          "name": "Run the level tests on a JDK 11 launcher in this work",
+          "verdict": "declined",
+          "why": "A JDK 11 launcher or toolchain needs the foojay resolver bump, since 0.8.0 fails on Gradle 9.7.1 the moment a JDK must be provisioned, and that bump is #58's; the floor's mechanism needs no JDK 11 at all.",
+          "source": "../research/README.md § Build, publishing and the Java 11 floor; ../architecture.md §4",
+          "link": "../research/README.md#build-publishing-and-the-java-11-floor"
         }
       ],
       "verdict": {
@@ -618,10 +651,16 @@
   ],
   "notes": {
     "paths": "Paths are relative to the repository root; `build-logic/` is the included build #61 added.",
-    "corrections": []
+    "corrections": [
+      {
+        "what": "Four options #55's documents weighed for this unit were missing from the Considered column and are added, declined as #55 declined them: `jvmTarget` alone and `jvmToolchain(11)` for the floor setting, a level test for the guard, and a JDK 11 launcher in this work. The considered milestone's note names the sources. No verdict changed; the Gap column already rested on #55's research and is unchanged.",
+        "when": "the rule for a sub-issue of a signed-off tracking plan (Gap and Considered from the parent's documents), 2026-10-25"
+      }
+    ]
   },
   "issueBoards": {
-    "61": "../61-build-logic/dashboard.html"
+    "61": "../61-build-logic/dashboard.html",
+    "62": "../62-http-core/dashboard.html"
   },
   "impact": {
     "basis": "as-built",

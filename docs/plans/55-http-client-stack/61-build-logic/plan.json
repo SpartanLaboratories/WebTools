@@ -139,7 +139,7 @@
       "label": "Options weighed",
       "date": "2026-10-21",
       "ref": "../architecture.md",
-      "note": "#55's architecture §6.1 and §10 for the topology; this unit's research summary for publishing, the validator and the harness"
+      "note": "#55's architecture §6.1 and §10 for the topology and the ABI tooling; #55's research summary for the level selection; this unit's research summary for publishing, the validator and the harness"
     },
     {
       "column": "verdict",
@@ -365,6 +365,14 @@
           "why": "It works over whatever test classes and classpath the caller passes, so both library plugins share it; the package already is each class's level, so on the three modules it selects exactly what the tags select, and a level with nothing to run still passes.",
           "source": "../architecture.md §6.1; plan.md §5.3",
           "link": "plan.md#53-level-tasks"
+        },
+        {
+          "id": "junit-tags",
+          "name": "Keep selecting the level tasks by JUnit tag (`includeTags`)",
+          "verdict": "declined",
+          "why": "A `commonTest` class cannot carry a JUnit tag, so a multiplatform module's common tests could not be selected by level; on the three existing modules the package filter selects exactly the classes the tags select.",
+          "source": "../research/README.md § Build, publishing and the Java 11 floor",
+          "link": "../research/README.md#build-publishing-and-the-java-11-floor"
         }
       ],
       "verdict": {
@@ -627,6 +635,14 @@
           "why": "It picks the same today; `configure(KotlinMultiplatform(JavadocJar.Empty(), SourcesJar.Sources()))` pins it, so it stays the same if a Dokka plugin is ever applied.",
           "source": "plan.md §5.4",
           "link": "plan.md#54-publishing"
+        },
+        {
+          "id": "kgp-abi-validation",
+          "name": "KGP's built-in `abiValidation` instead of binary-compatibility-validator",
+          "verdict": "declined",
+          "why": "It is experimental on Kotlin 2.2.0, and its DSL changed by 2.4.",
+          "source": "../architecture.md §10",
+          "link": "../architecture.md#10-alternatives-considered"
         }
       ],
       "verdict": {
@@ -1247,11 +1263,16 @@
       {
         "what": "The function and the release row's accepted option named the sizing; they now say what the work is (a change inside one system), as a board never shows it. The decisions are unchanged.",
         "when": "re-templating, 2026-10-23"
+      },
+      {
+        "what": "Two options #55's documents weighed for this unit were missing from the Considered column and are added, declined as #55 declined them: selecting the level tasks by JUnit tag (#55 research summary) and KGP's built-in `abiValidation` (#55 architecture §10). The considered milestone's note names the sources. No verdict changed.",
+        "when": "the rule for a sub-issue of a signed-off tracking plan (Gap and Considered from the parent's documents), 2026-10-25"
       }
     ]
   },
   "issueBoards": {
-    "47": "../47-java-23-bytecode/dashboard.html"
+    "47": "../47-java-23-bytecode/dashboard.html",
+    "62": "../62-http-core/dashboard.html"
   },
   "impact": {
     "basis": "as-built",
