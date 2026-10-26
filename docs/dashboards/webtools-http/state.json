@@ -1,7 +1,7 @@
 {
   "slug": "webtools-http",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "4fcc6e0", "date": "2026-10-25"},
-  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "4fcc6e0"},
-  "written": {"sha": "4fcc6e0"}
+  "asIs": {"ref": "feat/issue-64-url-policy", "sha": "543bd08", "date": "2026-10-26T22:10:15Z"},
+  "lastAmended": {"issue": 64, "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier", "sha": "543bd08"},
+  "written": {"sha": "543bd08"}
 }

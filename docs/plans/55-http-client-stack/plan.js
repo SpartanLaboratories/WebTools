@@ -1,4 +1,4 @@
-/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
+/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the board for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
 window.dashboardLive&&window.dashboardLive("plan",
 {
   "schema": "plan-board/1",
@@ -42,16 +42,16 @@ window.dashboardLive&&window.dashboardLive("plan",
       "name": "published test fixtures",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-url-policy",
       "name": "outbound-URL policy",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-transport",
@@ -105,8 +105,8 @@ window.dashboardLive&&window.dashboardLive("plan",
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-25T22:03:35Z",
-    "detail": "4 of 11 units landed; #64 up next.",
+    "updated": "2026-10-25T21:42:50Z",
+    "detail": "4 of 11 units landed; #64 in progress; #65 up next.",
     "steps": [
       "sizing",
       "interview",
@@ -116,8 +116,10 @@ window.dashboardLive&&window.dashboardLive("plan",
       "implementation",
       "landed"
     ],
-    "current": [],
-    "next": "url-policy",
+    "current": [
+      "url-policy.built"
+    ],
+    "next": "okhttp-transport",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -258,7 +260,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Unit 3, #62, started: sized as one system; the planner re-passes unit 3 against architecture.md §6.2, §6.8, §6.9 and §11 and impact.md §7",
+      "label": "Unit 3, #62, started: sized as one system; unit 3's plan is re-passed against architecture.md §6.2, §6.8, §6.9 and §11 and impact.md §7",
       "ref": "#62"
     },
     {
@@ -270,13 +272,19 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Unit 4, #63, started: sized as one system; the planner re-passes unit 4 against architecture.md §6.7, §6.1 and §11 and impact.md §7",
+      "label": "Unit 4, #63, started: sized as one system; unit 4's plan is re-passed against architecture.md §6.7, §6.1 and §11 and impact.md §7",
       "ref": "#63"
     },
     {
       "date": "2026-10-25",
       "column": "built",
       "label": "#63 landed"
+    },
+    {
+      "date": "2026-10-25",
+      "column": "built",
+      "label": "Unit 5, #64, started: sized as one subsystem; unit 5's plan is re-passed against architecture.md §6.3.1 and §11 with units 3 and 4 as built",
+      "ref": "#64"
     }
   ],
   "rows": [
@@ -360,7 +368,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -370,7 +378,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -380,7 +388,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -503,7 +511,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -513,7 +521,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -523,7 +531,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -533,7 +541,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -700,7 +708,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -730,7 +738,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -1266,7 +1274,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -1300,7 +1308,7 @@ window.dashboardLive&&window.dashboardLive("plan",
           "a95f5cb",
           "f325b20"
         ],
-        "verified": "qa pass 1 changes requested (19 documentation, 15 test, 2 code findings; 27 of them minor), answered by a planner ruling and the fixes; qa pass 2 changes requested (15 documentation, 8 test, 3 code; 25 minor), fixed in place with no third pass; 384 tests green, among them the fixtures' 141 and the check's 10.",
+        "verified": "qa pass 1 changes requested (19 documentation, 15 test, 2 code findings; 27 of them minor), answered by a plan ruling and the fixes; qa pass 2 changes requested (15 documentation, 8 test, 3 code; 25 minor), fixed in place with no third pass; 384 tests green, among them the fixtures' 141 and the check's 10.",
         "link": "63-test-support/final-implementation.md"
       }
     },
@@ -1320,8 +1328,2397 @@ window.dashboardLive&&window.dashboardLive("plan",
         ],
         "versions": "none",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "64-url-policy/",
+        "board": "64-url-policy/dashboard.html",
+        "live": {
+          "step": "merge",
+          "since": "2026-10-26T22:45:45Z",
+          "updated": "2026-10-26T22:45:45Z",
+          "detail": "State boards refreshed and stamped at 543bd08; the board commit, the pull request and the merge follow.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "landing",
+            "state-boards",
+            "merge",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-10-26",
+              "at": "2026-10-26T01:09:46Z",
+              "findings": {
+                "documentation": 19,
+                "test": 4,
+                "code": 0
+              },
+              "severity": {
+                "minor": 23,
+                "other": 0
+              },
+              "route": "on-the-spot",
+              "note": "Every plan item and acceptance criterion traced to the code, the public surface exactly the planned Stable Core set, hygiene clean. The findings, all minor: the internal JVM guards (`GuardedDns`, `GuardedSocket`, `GuardedSocketFactory`, `PolicyEnforcement`, the markers) lacked contract tags and the facts a wirer needs (builder wiring, thread, the `DEBUG` line, guard order, the stackless markers); the common helpers (`OutboundUrlPolicy.kt`, `UrlGuard`, `StrictIp`, the test support) carried line comments where KDoc is due; six bit-arithmetic or reserved-name lines (`CidrBlock`, `AddressRanges`, `HostRules`, `UrlGuard`) lacked a comment; one duplicated assertion (`TrustedGuardComponentTest`), one timing bound equal to its timeout (`PolicyEnforcementOkHttpIntegrationTest`) and two dangling cross-references in the as-built record."
+            },
+            {
+              "pass": 2,
+              "verdict": "changes-requested",
+              "date": "2026-10-26",
+              "at": "2026-10-26T22:02:11Z",
+              "findings": {
+                "documentation": 15,
+                "test": 4,
+                "code": 0
+              },
+              "severity": {
+                "minor": 18,
+                "other": 1
+              },
+              "route": "on-the-spot",
+              "note": "Pass 1's fixes confirmed with no regression, and stage S8 checked line for line against the plan: the `WebToolsDsl` marker, the six builders that carry it, both of its tests and the dump's three new lines, with no JavaScript warning once plan Amendment 5 left the retention at its default. Correctness clean and every acceptance criterion met. The findings: KDoc tags on the sibling test fixtures, a boundary paragraph on `GuardedSocket`, four line comments, stale S8 wording in the records, the host-form count reconciled to the 36 forms the parent research's table publishes, and pre-existing wording in the documents the commits carry that states each unit's sizing. 504 tests in 90 classes passed, the change's 36 classes (232 tests) among them."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-64-url-policy",
+          "event": {
+            "name": "merge",
+            "at": "2026-10-26T22:45:45Z",
+            "note": "merging"
+          },
+          "stages": [
+            {
+              "id": "S1",
+              "name": "TransportSettings, StrictIp, CidrBlock",
+              "state": "done",
+              "rows": [
+                "transport-settings",
+                "untrusted",
+                "host-rules",
+                "classifier-tests"
+              ]
+            },
+            {
+              "id": "S2",
+              "name": "Trusted and Untrusted policies",
+              "state": "done",
+              "rows": [
+                "policy-pair",
+                "trusted",
+                "untrusted"
+              ]
+            },
+            {
+              "id": "S3",
+              "name": "classifier and tables",
+              "state": "done",
+              "rows": [
+                "trusted",
+                "untrusted",
+                "address-table",
+                "host-rules",
+                "url-guard",
+                "classifier-tests"
+              ]
+            },
+            {
+              "id": "S4",
+              "name": "ABI dump (first commit point)",
+              "state": "done",
+              "rows": [
+                "release"
+              ]
+            },
+            {
+              "id": "S5",
+              "name": "JVM guards: GuardedDns, GuardedSocketFactory, markers, enforcement bundle",
+              "state": "done",
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ]
+            },
+            {
+              "id": "S6",
+              "name": "floor guard, check, mechanical rules, mutation checks (second commit point)",
+              "state": "done",
+              "rows": [
+                "classifier-tests",
+                "jvm-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "S7",
+              "name": "README line and acceptance pass",
+              "state": "done",
+              "rows": []
+            },
+            {
+              "id": "S8",
+              "name": "WebToolsDsl marker on the six builders, canary proof, two tests, dump (third commit point)",
+              "state": "done",
+              "rows": [
+                "policy-pair",
+                "transport-settings",
+                "release"
+              ]
+            }
+          ],
+          "remediation": {
+            "pass": 2,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "the 14 documentation items and the advisory test items: KDoc on the sibling fixtures, a GuardedSocket boundary paragraph, four line comments, the records' stale S8 wording, the host-form count reconciled; apiCheck and the level tasks re-run",
+                "state": "done"
+              },
+              {
+                "name": "reword the pre-existing wording that states each unit's sizing or names a role, in every document the commits carry (the architecture's per-unit lines included)",
+                "state": "current"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "One IP-literal grammar for the module, or a separate StrictIp beside Url's host parsing",
+              "raised": "the plan re-pass",
+              "resolved": "StrictIp is self-contained and Url's host parsing stays unchanged; an agreement test pins the two to the same literal forms"
+            },
+            {
+              "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
+              "raised": "plan-accepted",
+              "ref": "impact.md",
+              "resolved": "2026-10-26T01:50:38Z"
+            },
+            {
+              "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
+              "raised": "plan-accepted",
+              "ref": "plan.md",
+              "resolved": "2026-10-26T01:50:38Z"
+            },
+            {
+              "text": "Plan §9's CidrBlockParseDeterministicTest lists `/8` and `10.0.0.0/` as shape refusals, while §7.2's parse, as written, answers the address and prefix constants for an empty part; the code stays as §7.2 and the two rows assert only a refusal until the plan is made consistent.",
+              "raised": "implementation-stage S1",
+              "ref": "plan.md",
+              "resolved": "2026-10-25T23:58:10Z"
+            },
+            {
+              "text": "The planned reflection check that GuardedDns declares no newCall method is defeated by a compiler-emitted bridge method; the test asserts the behaviour instead. The plan's row awaits amendment.",
+              "raised": "implementation-stage S5",
+              "ref": "final-implementation.md",
+              "resolved": "2026-10-26T00:30:51Z"
+            },
+            {
+              "text": "The js check compile prints six warnings that annotations cannot be read at runtime on the JavaScript target, one per builder carrying the marker, a consequence of the runtime retention the reflection test needs; the JVM compile prints none. The plan's expectation of a single warning line is amended, or a suppression is specified.",
+              "raised": "implementation-stage S8",
+              "ref": "plan.md",
+              "resolved": "Plan Amendment 5 leaves the marker's retention at its default, which the JVM keeps at runtime, so the reflection test still works and the js compile prints no warning."
+            },
+            {
+              "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
+              "raised": "qa pass 2",
+              "ref": "../architecture.md"
+            }
+          ],
+          "history": {
+            "sizing": [
+              {
+                "since": null,
+                "ended": "2026-10-25T21:42:50Z",
+                "endedBy": "sized",
+                "to": "plan"
+              }
+            ],
+            "plan": [
+              {
+                "since": "2026-10-25T21:42:50Z",
+                "ended": "2026-10-25T22:01:05Z",
+                "endedBy": "research-planning",
+                "to": "research",
+                "event": {
+                  "name": "sized",
+                  "at": "2026-10-25T21:42:50Z"
+                },
+                "detail": "Sized as one subsystem of `webtools-http`, the outbound-URL policy: additive, no version moved; the blocker #62 is closed. Unit 5's plan is re-passed against architecture.md §6.3.1 and §11 with units 3 and 4 as built.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-10-25T21:42:50Z"
+                }
+              },
+              {
+                "since": "2026-10-25T22:50:29Z",
+                "ended": "2026-10-25T23:33:53Z",
+                "endedBy": "plan-accepted",
+                "to": "branch",
+                "event": {
+                  "name": "researched",
+                  "at": "2026-10-25T22:50:29Z"
+                },
+                "detail": "Four questions (IANA special-purpose address rows, the configuration API shape, the published bypass vectors, JVM enforcement) returned and verified: 81 load-bearing claims re-checked at their sources, 80 hold, none fails, one cites the repository itself. The findings and the summary are committed on the branch. Nothing is left open; plan.md is being written.",
+                "plan": {
+                  "state": "writing",
+                  "since": "2026-10-25T22:50:29Z"
+                }
+              }
+            ],
+            "research": [
+              {
+                "since": "2026-10-25T22:01:05Z",
+                "ended": "2026-10-25T22:50:29Z",
+                "endedBy": "researched",
+                "to": "plan",
+                "event": {
+                  "name": "verification-started",
+                  "at": "2026-10-25T22:40:34Z"
+                },
+                "detail": "The sources of 80 load-bearing claims from the four findings files are re-opened.",
+                "research": {
+                  "phase": "complete",
+                  "drafted": 0,
+                  "since": {
+                    "planning": "2026-10-25T22:01:05Z",
+                    "research": "2026-10-25T22:22:42Z",
+                    "verification": "2026-10-25T22:40:34Z",
+                    "complete": "2026-10-25T22:50:29Z"
+                  }
+                },
+                "questions": [
+                  {
+                    "question": "jvm-enforcement",
+                    "rows": [],
+                    "findings": "research/jvm-enforcement.md",
+                    "state": "complete",
+                    "started": "2026-10-25T22:22:42Z",
+                    "returned": "2026-10-25T22:39:55Z"
+                  },
+                  {
+                    "question": "iana-special-purpose-rows",
+                    "rows": [],
+                    "findings": "research/iana-special-purpose-rows.md",
+                    "state": "complete",
+                    "started": "2026-10-25T22:22:42Z",
+                    "returned": "2026-10-25T22:27:23Z"
+                  },
+                  {
+                    "question": "bypass-vectors",
+                    "rows": [],
+                    "findings": "research/bypass-vectors.md",
+                    "state": "complete",
+                    "started": "2026-10-25T22:22:42Z",
+                    "returned": "2026-10-25T22:38:50Z"
+                  },
+                  {
+                    "question": "config-api-shape",
+                    "rows": [],
+                    "findings": "research/config-api-shape.md",
+                    "state": "complete",
+                    "started": "2026-10-25T22:22:42Z",
+                    "returned": "2026-10-25T22:32:35Z"
+                  }
+                ]
+              }
+            ],
+            "branch": [
+              {
+                "since": "2026-10-25T23:33:53Z",
+                "ended": "2026-10-25T23:33:53Z",
+                "endedBy": "branch-cut",
+                "to": "implementation",
+                "event": {
+                  "name": "plan-accepted",
+                  "at": "2026-10-25T23:33:53Z"
+                },
+                "detail": "Seven stages: S1 TransportSettings, StrictIp, CidrBlock; S2 the Trusted and Untrusted policies; S3 the classifier (HostRules, AddressRanges, GuardRelaxation, UrlGuard) and the IANA, control and bypass-vector tables; S4 the ABI dump (first commit point); S5 the JVM guards (GuardedDns overriding lookup only, GuardedSocketFactory on its own Proxy.NO_PROXY sockets, two stackless marker exceptions, the per-policy enforcement bundle); S6 floor guard, check, mechanical rules, six mutation checks (second commit point); S7 README line and the acceptance pass. About 34 test classes across test levels 1, 2, 3 (loopback only), 4a and 4c; no build-file change; UrlHost.kt untouched; nothing added to the fixtures. Design refinements beyond the architecture text, recorded in impact.md §5: two deny rules outside the IANA registry (the Azure platform endpoint 168.63.129.16/32 and ISATAP identifiers in 2000::/3) closing published bypasses; sockets created on Proxy.NO_PROXY; newCall inherited so record-based resolvers cannot bypass the guard; refusals carry a range class for the log line only. No version moves; webtools-http 1.0.0 stays unreleased.",
+                "open": [
+                  {
+                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
+                    "raised": "plan-accepted",
+                    "ref": "impact.md"
+                  },
+                  {
+                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md"
+                  }
+                ],
+                "branch": "feat/issue-64-url-policy"
+              }
+            ],
+            "implementation": [
+              {
+                "since": "2026-10-25T23:33:53Z",
+                "ended": "2026-10-26T00:34:29Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-26T00:30:51Z",
+                  "note": "S6 reported done; S7 current"
+                },
+                "detail": "S6: verifyJavaFloor passes (174 classes in 2 jars at major 55 or below); :webtools-http:check and :webtools-http-commoncheck:check green, jvmTest 88 classes / 500 tests. Mechanical rules all hold. Mutations: a forwarding newCall fails exactly the Amendment 2 set; a plain Socket goes through the fake SOCKS listener and fails the SOCKS test; deleting the Azure row or widening the ISATAP mask fails the controls and the published-vector groups; dropping idleConnectionTtl from equals fails its property test; a loopback early return fails the relaxation test. Plan Amendment 2 (dated 2026-10-25) replaces the declaredMethods check with the behavioural one, so the S5 note is a plan inconsistency, not a deviation. Legacy modules, build-logic, the module build file and the fixtures untouched.",
+                "open": [
+                  {
+                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
+                    "raised": "plan-accepted",
+                    "ref": "impact.md"
+                  },
+                  {
+                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md"
+                  }
+                ],
+                "stages": [
+                  {
+                    "id": "S1",
+                    "name": "TransportSettings, StrictIp, CidrBlock",
+                    "state": "done",
+                    "rows": [
+                      "transport-settings",
+                      "untrusted",
+                      "host-rules",
+                      "classifier-tests"
+                    ]
+                  },
+                  {
+                    "id": "S2",
+                    "name": "Trusted and Untrusted policies",
+                    "state": "done",
+                    "rows": [
+                      "policy-pair",
+                      "trusted",
+                      "untrusted"
+                    ]
+                  },
+                  {
+                    "id": "S3",
+                    "name": "classifier and tables",
+                    "state": "done",
+                    "rows": [
+                      "trusted",
+                      "untrusted",
+                      "address-table",
+                      "host-rules",
+                      "url-guard",
+                      "classifier-tests"
+                    ]
+                  },
+                  {
+                    "id": "S4",
+                    "name": "ABI dump (first commit point)",
+                    "state": "done",
+                    "rows": [
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S5",
+                    "name": "JVM guards: GuardedDns, GuardedSocketFactory, markers, enforcement bundle",
+                    "state": "done",
+                    "rows": [
+                      "jvm-guards",
+                      "jvm-tests"
+                    ]
+                  },
+                  {
+                    "id": "S6",
+                    "name": "floor guard, check, mechanical rules, mutation checks (second commit point)",
+                    "state": "done",
+                    "rows": [
+                      "classifier-tests",
+                      "jvm-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S7",
+                    "name": "README line and acceptance pass",
+                    "state": "done",
+                    "rows": []
+                  }
+                ]
+              },
+              {
+                "since": "2026-10-26T01:50:38Z",
+                "ended": "2026-10-26T01:59:36Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-26T01:50:38Z",
+                  "note": "S8 current"
+                },
+                "detail": "Amendment 3 adds WebToolsDsl, a Stable Core @DslMarker annotation on every builder the module hands to a consumer's lambda (the headers, request, response, settings and both policy builders): inside a nested block an outer builder is reachable only through its label. Proof: a throwaway canary of five implicit outer reaches compiles before the marker and fails at each statement after it; a gating test of labelled reaches and a reflection test over the six builders; the dump grows by exactly three lines. Amendment 4 records matchesPrefix as private and the architecture's corrections. The records are reconciled (acceptance criteria 1 to 7 met, 8 pending S8; the two IDE-only checks owned by the maintainer before #65 starts); the parent impact carries unit 5's as-built block; architecture.md carries the three corrections dated 2026-10-26. Commit plan: 3 the marker with plan.md and the research summary, 4 README, 5 the records with the parent impact and the architecture.",
+                "stages": [
+                  {
+                    "id": "S1",
+                    "name": "TransportSettings, StrictIp, CidrBlock",
+                    "state": "done",
+                    "rows": [
+                      "transport-settings",
+                      "untrusted",
+                      "host-rules",
+                      "classifier-tests"
+                    ]
+                  },
+                  {
+                    "id": "S2",
+                    "name": "Trusted and Untrusted policies",
+                    "state": "done",
+                    "rows": [
+                      "policy-pair",
+                      "trusted",
+                      "untrusted"
+                    ]
+                  },
+                  {
+                    "id": "S3",
+                    "name": "classifier and tables",
+                    "state": "done",
+                    "rows": [
+                      "trusted",
+                      "untrusted",
+                      "address-table",
+                      "host-rules",
+                      "url-guard",
+                      "classifier-tests"
+                    ]
+                  },
+                  {
+                    "id": "S4",
+                    "name": "ABI dump (first commit point)",
+                    "state": "done",
+                    "rows": [
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S5",
+                    "name": "JVM guards: GuardedDns, GuardedSocketFactory, markers, enforcement bundle",
+                    "state": "done",
+                    "rows": [
+                      "jvm-guards",
+                      "jvm-tests"
+                    ]
+                  },
+                  {
+                    "id": "S6",
+                    "name": "floor guard, check, mechanical rules, mutation checks (second commit point)",
+                    "state": "done",
+                    "rows": [
+                      "classifier-tests",
+                      "jvm-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S7",
+                    "name": "README line and acceptance pass",
+                    "state": "done",
+                    "rows": []
+                  },
+                  {
+                    "id": "S8",
+                    "name": "WebToolsDsl marker on the six builders, canary proof, two tests, dump (third commit point)",
+                    "state": "done",
+                    "rows": []
+                  }
+                ]
+              }
+            ],
+            "qa": [
+              {
+                "since": "2026-10-26T00:34:29Z",
+                "ended": "2026-10-26T01:09:46Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-26T00:34:29Z",
+                  "note": "S7 reported done; qa next"
+                },
+                "detail": "S7: the README's webtools-http row names the outbound-URL policies (one line, CRLF kept). Acceptance pass from the command line: the committed dump re-read against the plan and the tier table; two IDE-only items (Quick Documentation of five declarations; the IntelliJ import check of the js module) recorded as not performed, for the maintainer. All seven acceptance criteria met with measurements in the record. Commits 1 (fd93ff9) and 2 (b46f58a) hold the code; README and the records are uncommitted for commits 3 and 4. Legacy modules, build-logic, the module build file, the fixtures, the check module and UrlHost.kt untouched.",
+                "open": [
+                  {
+                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
+                    "raised": "plan-accepted",
+                    "ref": "impact.md"
+                  },
+                  {
+                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-26",
+                    "at": "2026-10-26T01:09:46Z",
+                    "findings": {
+                      "documentation": 19,
+                      "test": 4,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 23,
+                      "other": 0
+                    },
+                    "route": "on-the-spot"
+                  }
+                ]
+              },
+              {
+                "since": "2026-10-26T01:59:36Z",
+                "ended": "2026-10-26T22:02:11Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-26T01:59:36Z",
+                  "note": "S8 reported done; qa next"
+                },
+                "detail": "S8: WebToolsDsl (a Stable Core DSL marker, runtime retention) on the headers, request, response, settings and both policy builders; the canary's five implicit outer reaches compiled before the marker and each failed after it, with no other file affected; the gating test shows labelled reaches work and the component test finds the marker on all six builders; removing it from one builder fails that test naming it; the dump grows by exactly its three lines; verifyJavaFloor counts 175 classes; both modules' check green, jvmTest 90 classes / 504 tests. Acceptance criterion 8 met. Commit 3 (the marker, its tests, the dump, plan.md) follows the plan's ruling on the js warnings.",
+                "open": [
+                  {
+                    "text": "The js check compile prints six warnings that annotations cannot be read at runtime on the JavaScript target, one per builder carrying the marker, a consequence of the runtime retention the reflection test needs; the JVM compile prints none. The plan's expectation of a single warning line is amended, or a suppression is specified.",
+                    "raised": "implementation-stage S8",
+                    "ref": "plan.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-26",
+                    "at": "2026-10-26T22:02:11Z",
+                    "findings": {
+                      "documentation": 15,
+                      "test": 4,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 18,
+                      "other": 1
+                    },
+                    "route": "on-the-spot"
+                  }
+                ]
+              }
+            ],
+            "remediation": [
+              {
+                "since": "2026-10-26T01:09:46Z",
+                "ended": "2026-10-26T01:50:38Z",
+                "endedBy": "implementation-stage",
+                "to": "implementation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-10-26T01:16:18Z",
+                  "note": "qa pass 1 fixes done; reconciliation current"
+                },
+                "detail": "Fixes: the internal JVM seams now state their wiring (which builder methods take which field, the client preconditions, the guard order, that literal hosts never reach the resolver), thread and logging contracts, after-throw behaviour and the stackless markers' consequence, with @property, @param, @return and @throws throughout; the common helpers carry KDoc instead of line comments; six line comments on bit arithmetic and reserved names; one duplicated assertion dropped; the integration timing bound tightened to two seconds; cross-references in the record fixed. 18 code and test files changed, by comments and KDoc apart from the dropped assertion, the tightened bound and `matchesPrefix` made `private` to `CidrBlock.kt` (plan Amendment 4); the dump unchanged; apiCheck, componentTest, integrationTest and deterministicTest green.",
+                "open": [
+                  {
+                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
+                    "raised": "plan-accepted",
+                    "ref": "impact.md"
+                  },
+                  {
+                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
+                    "raised": "plan-accepted",
+                    "ref": "plan.md"
+                  }
+                ],
+                "remediation": {
+                  "pass": 1,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "KDoc contract sentences and tags on the internal JVM seams and common helpers, six line comments, one stray assertion, one timing bound, two cross-references in the record; apiCheck and the touched level tasks re-run",
+                      "state": "done"
+                    },
+                    {
+                      "name": "as-built reconciliation of the records and the parent impact",
+                      "state": "done"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-26",
+                    "at": "2026-10-26T01:09:46Z",
+                    "findings": {
+                      "documentation": 19,
+                      "test": 4,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 23,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "note": "Every plan item and acceptance criterion traced to the code, the public surface exactly the planned Stable Core set, hygiene clean. The findings, all minor: the internal JVM guards (`GuardedDns`, `GuardedSocket`, `GuardedSocketFactory`, `PolicyEnforcement`, the markers) lacked contract tags and the facts a wirer needs (builder wiring, thread, the `DEBUG` line, guard order, the stackless markers); the common helpers (`OutboundUrlPolicy.kt`, `UrlGuard`, `StrictIp`, the test support) carried line comments where KDoc is due; six bit-arithmetic or reserved-name lines (`CidrBlock`, `AddressRanges`, `HostRules`, `UrlGuard`) lacked a comment; one duplicated assertion (`TrustedGuardComponentTest`), one timing bound equal to its timeout (`PolicyEnforcementOkHttpIntegrationTest`) and two dangling cross-references in the as-built record."
+                  }
+                ]
+              },
+              {
+                "since": "2026-10-26T22:02:11Z",
+                "ended": "2026-10-26T22:11:39Z",
+                "endedBy": "landing",
+                "to": "landing",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-10-26T22:02:11Z",
+                  "note": "pass 2: changes-requested"
+                },
+                "detail": "Pass 1's remediation confirmed complete with no regression; S8 verified line for line against the plan (the marker byte for byte, six annotated builders, both tests, the three dump lines, the canary absent, no JavaScript warnings after Amendment 5 left the retention implicit); correctness clean with every acceptance item met. The documentation items were sibling-fixture tags, one boundary paragraph, four line comments and stale wording in the records; the host-form table publishes 36 forms, now stated as measured.",
+                "open": [
+                  {
+                    "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
+                    "raised": "qa pass 2",
+                    "ref": "../architecture.md"
+                  }
+                ],
+                "remediation": {
+                  "pass": 2,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "the 14 documentation items and the advisory test items: KDoc on the sibling fixtures, a GuardedSocket boundary paragraph, four line comments, the records' stale S8 wording, the host-form count reconciled; apiCheck and the level tasks re-run",
+                      "state": "done"
+                    },
+                    {
+                      "name": "reword the pre-existing wording that states each unit's sizing or names a role, in every document the commits carry (the architecture's per-unit lines included)",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-10-26",
+                    "at": "2026-10-26T22:02:11Z",
+                    "findings": {
+                      "documentation": 15,
+                      "test": 4,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 18,
+                      "other": 1
+                    },
+                    "route": "on-the-spot",
+                    "note": "Pass 1's fixes confirmed with no regression, and stage S8 checked line for line against the plan: the `WebToolsDsl` marker, the six builders that carry it, both of its tests and the dump's three new lines, with no JavaScript warning once plan Amendment 5 left the retention at its default. Correctness clean and every acceptance criterion met. The findings: KDoc tags on the sibling test fixtures, a boundary paragraph on `GuardedSocket`, four line comments, stale S8 wording in the records, the host-form count reconciled to the 36 forms the parent research's table publishes, and pre-existing wording in the documents the commits carry that states each unit's sizing. 504 tests in 90 classes passed, the change's 36 classes (232 tests) among them."
+                  }
+                ]
+              }
+            ],
+            "landing": [
+              {
+                "since": "2026-10-26T22:11:39Z",
+                "ended": "2026-10-26T22:14:14Z",
+                "endedBy": "state-boards",
+                "to": "state-boards",
+                "event": {
+                  "name": "landing",
+                  "at": "2026-10-26T22:11:39Z",
+                  "note": "land accepted"
+                },
+                "detail": "Landing accepted: sync with master, then the pre-merge state-board refresh and the merge.",
+                "open": [
+                  {
+                    "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
+                    "raised": "qa pass 2",
+                    "ref": "../architecture.md"
+                  }
+                ]
+              }
+            ],
+            "state-boards": [
+              {
+                "since": "2026-10-26T22:14:14Z",
+                "ended": "2026-10-26T22:45:45Z",
+                "endedBy": "merge",
+                "to": "merge",
+                "event": {
+                  "name": "state-boards",
+                  "at": "2026-10-26T22:14:14Z",
+                  "note": "the state boards refreshed on the branch"
+                },
+                "detail": "Synced with master (unchanged at ad0ae63); no version moves. The state boards are refreshed on the branch at 543bd08.",
+                "open": [
+                  {
+                    "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
+                    "raised": "qa pass 2",
+                    "ref": "../architecture.md"
+                  }
+                ]
+              }
+            ]
+          },
+          "rowNames": {
+            "policy-pair": "`OutboundUrlPolicy`, the closed `Trusted`/`Untrusted` pair",
+            "trusted": "`Trusted`: scheme, user-info, pinning and cleartext",
+            "untrusted": "`Untrusted`, with `CidrBlock` and `MixedAnswers`",
+            "transport-settings": "`TransportSettings`, one default set per policy",
+            "address-table": "`AddressRanges`, the IANA deny table",
+            "host-rules": "`StrictIp` and `HostRules`, the host-text rules",
+            "url-guard": "`UrlGuard` and `GuardRelaxation`",
+            "jvm-guards": "`GuardedDns`, `GuardedSocketFactory` and the marker exceptions",
+            "classifier-tests": "The classifier's Level 4a tables",
+            "jvm-tests": "The guards' Level 2 tests and the `jvmTest` gap and differential tests",
+            "release": "The ABI dump and the version"
+          },
+          "recon": {
+            "interview": {
+              "reconstructed": true,
+              "ended": null,
+              "trail": [],
+              "milestones": []
+            }
+          }
+        },
+        "tests": {
+          "base": "b46f58a",
+          "updated": "2026-10-26T22:02:11Z",
+          "added": [
+            {
+              "class": "TransportSettingsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/TransportSettingsComponentTest.kt",
+              "tests": 23,
+              "rows": [
+                "transport-settings"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 23,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "CidrBlockComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/CidrBlockComponentTest.kt",
+              "tests": 7,
+              "rows": [
+                "untrusted"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "StrictIpDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/StrictIpDeterministicTest.kt",
+              "tests": 6,
+              "rows": [
+                "host-rules",
+                "classifier-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "StrictIpUrlAgreementDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/StrictIpUrlAgreementDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "host-rules",
+                "classifier-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "CidrBlockParseDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/CidrBlockParseDeterministicTest.kt",
+              "tests": 6,
+              "rows": [
+                "untrusted",
+                "classifier-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "TrustedPolicyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/TrustedPolicyComponentTest.kt",
+              "tests": 13,
+              "rows": [
+                "policy-pair",
+                "trusted"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 13,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UntrustedPolicyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/UntrustedPolicyComponentTest.kt",
+              "tests": 18,
+              "rows": [
+                "policy-pair",
+                "untrusted"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 18,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "PolicyWithSettingsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/PolicyWithSettingsComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "policy-pair"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "OutboundUrlPolicyConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/OutboundUrlPolicyConsumerGatingTest.kt",
+              "tests": 5,
+              "rows": [
+                "policy-pair"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "AddressRangesRowsDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/AddressRangesRowsDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "address-table",
+                "classifier-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "AddressRangesControlsDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/AddressRangesControlsDeterministicTest.kt",
+              "tests": 8,
+              "rows": [
+                "address-table",
+                "classifier-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "PublishedBypassVectorsDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/PublishedBypassVectorsDeterministicTest.kt",
+              "tests": 9,
+              "rows": [
+                "address-table",
+                "host-rules",
+                "classifier-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HostRulesDirectInputDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HostRulesDirectInputDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "host-rules",
+                "classifier-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardReasonOrderDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/GuardReasonOrderDeterministicTest.kt",
+              "tests": 11,
+              "rows": [
+                "url-guard",
+                "classifier-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "TrustedGuardComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/TrustedGuardComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "trusted",
+                "url-guard"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UntrustedGuardComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/UntrustedGuardComponentTest.kt",
+              "tests": 11,
+              "rows": [
+                "untrusted",
+                "url-guard"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardRelaxationComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/GuardRelaxationComponentTest.kt",
+              "tests": 14,
+              "rows": [
+                "url-guard"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 14,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "RedirectAdmissionComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/RedirectAdmissionComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "url-guard"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "AnswerJudgementComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/AnswerJudgementComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "untrusted",
+                "url-guard"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "ClassifierLinearTimeNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/ClassifierLinearTimeNonFunctionalTest.kt",
+              "tests": 3,
+              "rows": [
+                "host-rules"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "ClassifierGarbageNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/ClassifierGarbageNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "host-rules"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "PolicySecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/PolicySecrecyNonFunctionalTest.kt",
+              "tests": 3,
+              "rows": [
+                "url-guard"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardedDnsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/GuardedDnsComponentTest.kt",
+              "tests": 14,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 14,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardedSocketFactoryComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/GuardedSocketFactoryComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardedSocketComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/GuardedSocketComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "PolicyRefusalMarkersComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/PolicyRefusalMarkersComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "PolicyEnforcementComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/PolicyEnforcementComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardedSocketLoopbackIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/GuardedSocketLoopbackIntegrationTest.kt",
+              "tests": 3,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GuardedSocketSocksIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/GuardedSocketSocksIntegrationTest.kt",
+              "tests": 1,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "PolicyEnforcementOkHttpIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/PolicyEnforcementOkHttpIntegrationTest.kt",
+              "tests": 6,
+              "rows": [
+                "jvm-guards",
+                "jvm-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "JdkPredicateGapDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/JdkPredicateGapDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "address-table",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "AddressRangesJdkSupersetDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/AddressRangesJdkSupersetDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "address-table",
+                "jvm-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "StrictIpJdkDifferentialDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/StrictIpJdkDifferentialDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "host-rules",
+                "jvm-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "OkHttpLiteralRegexDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/OkHttpLiteralRegexDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "host-rules",
+                "jvm-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "WebToolsDslConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/WebToolsDslConsumerGatingTest.kt",
+              "tests": 3,
+              "rows": [
+                "policy-pair",
+                "transport-settings"
+              ],
+              "stage": "S8",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "WebToolsDslComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WebToolsDslComponentTest.kt",
+              "tests": 1,
+              "rows": [
+                "policy-pair",
+                "transport-settings"
+              ],
+              "stage": "S8",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            }
+          ],
+          "amended": [],
+          "relevant": [
+            {
+              "class": "FixturesConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/testing/FixturesConsumerGatingTest.kt",
+              "tests": 4,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GatedTypesConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/GatedTypesConsumerGatingTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "GatedTypesJvmConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/GatedTypesJvmConsumerGatingTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "CatchNonFatalComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CatchNonFatalComponentTest.kt",
+              "tests": 5,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "EpochMillisJvmComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/EpochMillisJvmComponentTest.kt",
+              "tests": 1,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FailureLeavesComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/FailureLeavesComponentTest.kt",
+              "tests": 7,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FakeHttpTransportComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FakeHttpTransportComponentTest.kt",
+              "tests": 21,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 21,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FixtureComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FixtureComponentTest.kt",
+              "tests": 10,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FixtureLoaderComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FixtureLoaderComponentTest.kt",
+              "tests": 9,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpHeadersComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/HttpHeadersComponentTest.kt",
+              "tests": 12,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 12,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpMethodComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/HttpMethodComponentTest.kt",
+              "tests": 6,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpRequestComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/HttpRequestComponentTest.kt",
+              "tests": 9,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpResponseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/HttpResponseComponentTest.kt",
+              "tests": 6,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "ReasonConstantsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/ReasonConstantsComponentTest.kt",
+              "tests": 4,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "RedactionComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/RedactionComponentTest.kt",
+              "tests": 13,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 13,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "RedirectHopComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/RedirectHopComponentTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "RequestBodyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/RequestBodyComponentTest.kt",
+              "tests": 4,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "RequestMatchComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/RequestMatchComponentTest.kt",
+              "tests": 9,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "ResultFlatMapComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/ResultFlatMapComponentTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "Slf4jLogComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/Slf4jLogComponentTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "StepComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/StepComponentTest.kt",
+              "tests": 7,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UpstreamErrorComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/UpstreamErrorComponentTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "VirtualClockComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/VirtualClockComponentTest.kt",
+              "tests": 11,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "VirtualClockThreeClocksComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/VirtualClockThreeClocksComponentTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "WallClockSystemComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/WallClockSystemComponentTest.kt",
+              "tests": 4,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FixtureRecorderIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/testing/FixtureRecorderIntegrationTest.kt",
+              "tests": 16,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 16,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FixtureFileNamesDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/FixtureFileNamesDeterministicTest.kt",
+              "tests": 8,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HeaderOkHttpDifferentialDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HeaderOkHttpDifferentialDeterministicTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpHeaderNameDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HttpHeaderNameDeterministicTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpHeaderValueDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HttpHeaderValueDeterministicTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpMessageCodecDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/HttpMessageCodecDeterministicTest.kt",
+              "tests": 8,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpMethodTokenDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HttpMethodTokenDeterministicTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpSyntaxDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HttpSyntaxDeterministicTest.kt",
+              "tests": 4,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "MediaTypeDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/MediaTypeDeterministicTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "QueryPairsDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/QueryPairsDeterministicTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "RecordingGateDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/RecordingGateDeterministicTest.kt",
+              "tests": 7,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "SensitiveNamesDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/SensitiveNamesDeterministicTest.kt",
+              "tests": 7,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "StatusRangeDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/StatusRangeDeterministicTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlAcceptDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlAcceptDeterministicTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlBoundaryDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlBoundaryDeterministicTest.kt",
+              "tests": 4,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlConfusionDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlConfusionDeterministicTest.kt",
+              "tests": 1,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlEncoderDifferentialDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlEncoderDifferentialDeterministicTest.kt",
+              "tests": 1,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlEncodersDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlEncodersDeterministicTest.kt",
+              "tests": 5,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlIpv6DeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlIpv6DeterministicTest.kt",
+              "tests": 9,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlOkHttpDifferentialDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlOkHttpDifferentialDeterministicTest.kt",
+              "tests": 1,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlPrintingDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlPrintingDeterministicTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlRejectDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UrlRejectDeterministicTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FakeHttpTransportConcurrencyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/testing/FakeHttpTransportConcurrencyNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "FixturesSecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/testing/FixturesSecrecyNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HeaderMessageSecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/HeaderMessageSecrecyNonFunctionalTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "HttpMessageCodecGarbageNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/testing/HttpMessageCodecGarbageNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlParseGarbageNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/UrlParseGarbageNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlParseLinearTimeNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/UrlParseLinearTimeNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            },
+            {
+              "class": "UrlParseSecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/UrlParseSecrecyNonFunctionalTest.kt",
+              "tests": 3,
+              "rows": [],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-10-26T22:02:11Z"
+              }
+            }
+          ],
+          "other": {
+            "byModule": {
+              "build-logic": {
+                "1": 1,
+                "2": 4,
+                "3": 9,
+                "4a": 2,
+                "4b": 3,
+                "4c": 3
+              },
+              "webtools-browser": {
+                "1": 1,
+                "5": 1
+              },
+              "webtools-scraping": {
+                "2": 1
+              },
+              "webtools-udp": {
+                "1": 19,
+                "2": 21,
+                "3": 20,
+                "5": 1,
+                "4a": 9,
+                "4b": 11,
+                "4c": 11
+              }
+            }
+          },
+          "rowNames": {
+            "policy-pair": "`OutboundUrlPolicy`, the closed `Trusted`/`Untrusted` pair",
+            "trusted": "`Trusted`: scheme, user-info, pinning and cleartext",
+            "untrusted": "`Untrusted`, with `CidrBlock` and `MixedAnswers`",
+            "transport-settings": "`TransportSettings`, one default set per policy",
+            "address-table": "`AddressRanges`, the IANA deny table",
+            "host-rules": "`StrictIp` and `HostRules`, the host-text rules",
+            "url-guard": "`UrlGuard` and `GuardRelaxation`",
+            "jvm-guards": "`GuardedDns`, `GuardedSocketFactory` and the marker exceptions",
+            "classifier-tests": "The classifier's Level 4a tables",
+            "jvm-tests": "The guards' Level 2 tests and the `jvmTest` gap and differential tests"
+          }
+        }
       },
       "gap": {
         "kind": "risk",
@@ -1383,7 +3780,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#631-outbound-url-policy-common-plus-jvm-enforcement",
               "heading": "6.3.1 Outbound-URL policy (`common/`, plus `jvm/` enforcement)",
               "paragraph": "Responsibility: decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten. · Owns: · `OutboundUrlPolicy`, a sealed pair (the closed set is the contract): `Trusted` (optional `pinnedHosts`; `allowCleartext = false`; no address filtering, no name or port rule) and `Untrusted` (`allowedPorts` default `{80, 443, 8080, 8443}`, `null` for any; `extraDeniedRanges`; `extraDeniedHostSuffixes`; `mixedAnswers` default `Reject`). Each is built by a factory with a builder (`OutboundUrlPolicy.trusted { }`, `untrusted { }`) and carries its …",
-              "hash": "e3a3769e81fe"
+              "hash": "c2efdc00f29c"
             }
           },
           {
@@ -1393,7 +3790,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -1403,7 +3800,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -1518,7 +3915,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -1734,7 +4131,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           },
           {
@@ -1744,7 +4141,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -1853,7 +4250,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -1985,7 +4382,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -2061,7 +4458,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "4440f63c01d9"
+              "hash": "89ad136c2590"
             }
           }
         ]
@@ -2350,6 +4747,19 @@ window.dashboardLive&&window.dashboardLive("plan",
         },
         "source": "63-test-support/impact.md, reconciled with 63-test-support/final-implementation.md",
         "link": "63-test-support/impact.md#1-published-artifacts"
+      },
+      {
+        "unit": "url-policy",
+        "basis": "plan",
+        "summary": "`webtools-http`, new and unreleased, gains the `Trusted` and `Untrusted` outbound-URL policies, `TransportSettings` with two named default sets, `CidrBlock` and `MixedAnswers`, all Stable Core, with an `internal` classifier and `internal` JVM guards. Nothing is enforced until the transport (#65) and the call facades (#68) land; the three existing artifacts do not change.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
+          "unreleased": true
+        },
+        "source": "64-url-policy/impact.md",
+        "link": "64-url-policy/impact.md#1-published-artifacts"
       }
     ],
     "changes": [
@@ -2411,10 +4821,12 @@ window.dashboardLive&&window.dashboardLive("plan",
   },
   "links": {
     "workBoard": "../index.html",
-    "repoPage": "../../dashboards/index.html",
-    "pages": {
+    "repoBoard": "../../dashboards/index.html",
+    "boards": {
       "gradle-build": "../../dashboards/gradle-build/index.html",
       "webtools-http-core": "../../dashboards/webtools-http/index.html",
+      "webtools-http-test-fixtures": "../../dashboards/webtools-http/index.html",
+      "webtools-http-url-policy": "../../dashboards/webtools-http/index.html",
       "webtools": "../../dashboards/index.html"
     }
   }

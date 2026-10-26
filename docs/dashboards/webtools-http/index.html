@@ -7,9 +7,9 @@
 <title>webtools-http · WebTools</title>
 <script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
-/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → Guarantees bubbles → Context cards → provenance footer.
-   System page template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
-   Colour plan: --server / --client / --wire are the page's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
+/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → guarantee cards → Context cards → provenance footer.
+   System board template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
+   Colour plan: --server / --client / --wire are the board's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
    (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned, and nothing else: lifelines, returns and frames are solid. */
 :root{
   --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
@@ -110,7 +110,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
 .tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
 /* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
-   ending with planned. check-page.js fails a tab without a visible one. */
+   ending with planned. check-board.js fails a tab without a visible one. */
 .key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
@@ -169,7 +169,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .outcome code{font-weight:600}
 .ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
 .ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
-/* A segmented control wraps onto a second row at phone width rather than pushing the page sideways. */
+/* A segmented control wraps onto a second row at phone width rather than pushing the board sideways. */
 .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
 .seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
 .seg button:last-child{border-right:0}
@@ -316,29 +316,29 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .states rect.planned{stroke-dasharray:6 4;opacity:.6}
 .states line,.states path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
 
-/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled bubble per guarantee */
+/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled guarantee card per guarantee */
 .guarantees{margin-top:20px}
 .guarantees>h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
-.bubbles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
-.bubble{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
-.bubble h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
-.bubble h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
-.bubble ul{margin:0;padding:0 0 0 15px}
-.bubble li{margin:3px 0}
-.bubble p{margin:6px 0 0}
-.bubble code{color:var(--ink)}
-.bubble .gap{color:var(--muted);font-style:italic}
-.bubble .badge{margin-left:2px}
+.guarantee-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.guarantee-card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.guarantee-card h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
+.guarantee-card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.guarantee-card ul{margin:0;padding:0 0 0 15px}
+.guarantee-card li{margin:3px 0}
+.guarantee-card p{margin:6px 0 0}
+.guarantee-card code{color:var(--ink)}
+.guarantee-card .gap{color:var(--muted);font-style:italic}
+.guarantee-card .badge{margin-left:2px}
 
-/* Wide desktop (16:9 screens, GUIDANCE.md §6): the page uses most of the window, so the C4 canvas, the thread columns, the
+/* Wide desktop (16:9 screens, GUIDANCE.md §6): the board uses most of the window, so the C4 canvas, the thread columns, the
    lifecycle cards, the Guarantees and the Context get room; a diagram drawn to a fixed aspect grows to at most 1280 px wide, so it
    is never smaller than in the 1280 px layout and never outgrows the screen, and prose keeps its own measure. At 1500 px and below
-   the page keeps its 1280 px measure and the narrow layouts below 940 and 700 px apply. */
+   the board keeps its 1280 px measure and the narrow layouts below 940 and 700 px apply. */
 @media (min-width:1500px){
   .page{max-width:min(2400px,100%)}
   .stage{grid-template-columns:minmax(0,1fr) 360px}
   .view>svg{max-width:1280px}
-  .bubbles{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .guarantee-cards{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 }
 
 /* context */
@@ -376,7 +376,7 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .roadmap .ri a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
 .roadmap .issues{margin:4px 0 0 14px}
 .roadmap .more{margin:4px 0 0 14px;font-size:12px;color:var(--muted)}
-/* An issue's number and its title are two links (GUIDANCE.md §5): the number opens the GitHub issue, the title its plan board
+/* An issue's number and its title are two links (GUIDANCE.md §5): the number opens the GitHub issue, the title its issue board
    (plain text while it has none, linkIssues() below) */
 .issues span a,.roadmap .ri span a{font-family:inherit;color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
 .issues span a:hover,.roadmap .ri span a:hover{border-bottom-color:var(--ink)}
@@ -404,7 +404,7 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs"><a href="../index.html">WebTools</a> › webtools-http</div>
   <h1>webtools-http</h1>
-  <p class="function">The common core of a suspend HTTP stack for Kotlin: the request and response types, a canonical <code>Url</code> that parses like OkHttp's <code>HttpUrl</code> and is only ever stricter, a typed failure model returned inside <code>Result</code>, and the transport and wall-clock ports a consumer calls or, with the opt-in, implements; and a published test-fixtures variant, so a consumer tests its providers with no network: a scripted fake transport, one virtual clock, <code>.http</code> fixtures and a gated, redacting recorder. No production transport, cache or budget is built yet: those are the stack's later units, drawn dashed.</p>
+  <p class="function">The common core of a suspend HTTP stack for Kotlin: the request and response types, a canonical <code>Url</code> that parses like OkHttp's <code>HttpUrl</code> and is only ever stricter, a typed failure model returned inside <code>Result</code>, and the transport and wall-clock ports a consumer calls or, with the opt-in, implements; the outbound-URL policies <code>Trusted</code> and <code>Untrusted</code> with their <code>TransportSettings</code>, judged by an internal, JVM-free address classifier and, on the JVM, by internal resolver and socket guards made for the OkHttp transport; and a published test-fixtures variant, so a consumer tests its providers with no network: a scripted fake transport, one virtual clock, <code>.http</code> fixtures and a gated, redacting recorder. Nothing applies a policy yet: the transport and the call facades that will, and the cache and budget, are the stack's later units, drawn dashed.</p>
   <div class="chips">
     <span class="chip" id="chip-version" hidden></span>
     <span class="chip"><span class="ck">platform</span> <b>Kotlin Multiplatform</b> · <code>jvm()</code> · Java 11 bytecode</span>
@@ -417,12 +417,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">47 files</div><div class="s">3,365 lines · commonMain 24 · jvmMain 2 · jvmTestFixtures 20 · the check module's jsMain 1</div></div>
-  <div class="kpi"><div class="l">Types</div><div class="v">29 public</div><div class="s">15 in the core · 14 in the fixtures · 11 internal · two flat packages</div></div>
+  <div class="kpi"><div class="l">Source</div><div class="v">62 files</div><div class="s">4,719 lines · commonMain 34 · jvmMain 7 · jvmTestFixtures 20 · the check module's jsMain 1</div></div>
+  <div class="kpi"><div class="l">Types</div><div class="v">34 public</div><div class="s">20 in the main variant · 14 in the fixtures · 27 internal · two flat packages</div></div>
   <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">calls run on the caller's thread or coroutine; the recorder writes on <code>Dispatchers.IO</code></div></div>
-  <div class="kpi"><div class="l">Contracts</div><div class="v">2 ports</div><div class="s">an 8-point transport contract · 1 opt-in marker · 294-line ABI dump</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">54 classes</div><div class="s">272 tests across 5 testing levels, on the JVM · 18 classes test the fixtures</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">6</div><div class="s">5 planned units · 1 docs</div></div>
+  <div class="kpi"><div class="l">Contracts</div><div class="v">2 ports</div><div class="s">an 8-point transport contract · 1 opt-in marker · 1 DSL marker · 424-line ABI dump</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">90 classes</div><div class="s">504 tests across 5 testing levels, on the JVM · 36 classes test the URL policy and the DSL marker · 18 the fixtures</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">6</div><div class="s">the URL policy's, landing with this board · 4 planned units · 1 docs</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -439,8 +439,8 @@ footer code{color:var(--ink-2)}
   <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
     <h2>Component map</h2>
     <p class="lede">Nesting is ownership. Click a box for its role, files and threads, and its place in the C4 model.</p>
-    <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of webtools-http"></svg>
-    <div class="key"><span><i class="pub srv"></i>public · common core</span><span><i class="srv"></i>internal · common core</span><span><i class="pub cli"></i>public · test fixtures, JVM only</span><span><i class="cli"></i>internal · JVM actuals</span><span><i class="wir"></i>internal · check-only js module</span><span><i class="pln"></i>planned, not built</span></div>
+    <svg id="svg-structure" viewBox="0 0 1000 812" role="img" aria-label="Component map of webtools-http"></svg>
+    <div class="key"><span><i class="pub srv"></i>public · common core</span><span><i class="srv"></i>internal · common core</span><span><i class="pub cli"></i>public · test fixtures, JVM only</span><span><i class="cli"></i>internal · jvmMain: the actuals and the policy's guards</span><span><i class="wir"></i>internal · check-only js module</span><span><i class="pln"></i>planned, not built</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
@@ -462,7 +462,7 @@ footer code{color:var(--ink-2)}
     <p class="lede">webtools-http 1.0.0 starts no thread of its own; the fixtures run on the test's scheduler. Click a row for what runs there.</p>
     <div class="threads">
       <div class="tside"><h3>Common core · on the caller</h3>
-        <div class="thread server" data-t="caller's thread or coroutine" tabindex="0" role="button"><span class="n">caller's thread or coroutine</span><span class="pill eager">the caller's</span><span class="r">parsing, the factories, the clock read, the non-fatal helper</span></div>
+        <div class="thread server" data-t="caller's thread or coroutine" tabindex="0" role="button"><span class="n">caller's thread or coroutine</span><span class="pill eager">the caller's</span><span class="r">parsing, the factories, building a policy, the clock read, the non-fatal helper</span></div>
       </div>
       <div class="tside"><h3>Test fixtures · in a consumer's tests</h3>
         <div class="thread client" data-t="the test's scheduler" tabindex="0" role="button"><span class="n">the test's scheduler</span><span class="pill eager">the test's</span><span class="r">VirtualClock's dispatcher and executor, a fake's delay, advanceBy</span></div>
@@ -480,22 +480,24 @@ footer code{color:var(--ink-2)}
       <tbody>
         <tr><td><code>Url.parse</code>, <code>HttpMethod.of</code>, the factories and their builders</td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td><code>WallClock.System.nowEpochMillis()</code>, <code>catchNonFatal</code></td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>OutboundUrlPolicy.untrusted { }</code>, <code>trusted { }</code>, <code>TransportSettings(from) { }</code>, <code>CidrBlock.parse</code>; the internal guard's checks of a URL, an address or a resolver answer</td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td>Entering <code>execute(request)</code>, a <code>suspend</code> call; concurrent calls are allowed</td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td><code>FakeHttpTransport.execute</code>: the stub lookup under its lock, then the step's <code>delay</code>, virtual on the test's scheduler</td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td><code>VirtualClock.advanceBy</code> and the tasks it runs; its <code>maintenanceExecutor</code> runs a task inline</td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td><code>FixtureLoader.load</code>, <code>Fixture.parse</code></td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td>The recorder's serialisation, redaction, scrubbing and atomic write</td><td></td><td><span class="dot"></span></td><td></td></tr>
         <tr><td>The blocking I/O behind a network transport's <code>execute</code>: main-safe, on a dispatcher the implementation documents</td><td></td><td></td><td><span class="dot"></span></td></tr>
+        <tr><td>The internal policy guards made for the OkHttp transport, <code>GuardedDns.lookup</code> and <code>GuardedSocket.connect</code>: on the thread OkHttp resolves or connects on, the caller's for <code>execute()</code>, OkHttp's for <code>enqueue()</code> and fast fallback</td><td><span class="dot"></span></td><td></td><td><span class="dot"></span></td></tr>
       </tbody>
     </table></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-datagrams" aria-labelledby="t-datagrams" hidden>
-    <h2>How <code>Url.parse</code> and the fake transport decide</h2>
+    <h2>How <code>Url.parse</code>, the fake transport and the URL policies decide</h2>
     <p class="lede">Pick a variant and its inputs; the steps that settle it light up.</p>
     <div class="ctl" id="flow-ctl"></div>
     <p class="outcome" id="outcome"></p>
-    <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Url.parse decision path"></svg>
+    <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Decision paths of Url.parse, the fake transport and the URL policies"></svg>
     <div class="key" id="flow-key"></div>
   </section>
 
@@ -514,7 +516,7 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
     <h2>Lifecycles and rules</h2>
-    <p class="lede">A transport's life, how values are built, and the rules the module holds to.</p>
+    <p class="lede">A transport's life, how values and policies are built, and the rules the module holds to.</p>
     <div class="lgrid">
       <div class="card"><h3>A transport's life <small><code>HttpTransport</code>'s contract</small></h3>
         <ol class="steps"><li class="ph1">constructed by its implementation (the fixtures' <code>FakeHttpTransport</code> and the recorder's decorator; no network one yet)</li><li class="ph2"><code>execute(request)</code>: one request per hop, never a retry; concurrent calls allowed</li><li class="ph2">a status in 100..599 is a response, a <code>304</code> included; outside it, <code>Protocol</code></li><li class="ph3"><code>close()</code>: idempotent, non-suspending, never throws</li><li class="ph3">after it, <code>execute</code> returns <code>HttpFailure.Closed("transport")</code></li></ol>
@@ -525,7 +527,14 @@ footer code{color:var(--ink-2)}
       <div class="card ph2"><h3>Rules the module holds to</h3>
         <div class="callout"><b>Values are immutable.</b> Byte arrays are copied in and read back as copies, so a response shared by several callers cannot be changed by one. <code>Url</code>, <code>HttpMethod</code>, <code>HttpHeaders</code>, <code>RedirectHop</code> and the reasons compare by value; <code>HttpRequest</code>, <code>HttpResponse</code> and <code>RequestBody</code> by identity.</div>
         <div class="callout"><b>Nothing prints a secret.</b> <code>toString()</code> shows names, the method or status, the redacted URL and sizes, never a header value or a body; a failure's message is constant text plus named non-sensitive fields.</div>
-        <div class="callout"><b>Common code stays common.</b> <code>webtools-http-commoncheck</code> compiles <code>commonMain</code> for <code>js</code> in <code>check</code>, so a JVM API there is a compile error.</div></div>
+        <div class="callout"><b>Common code stays common.</b> <code>webtools-http-commoncheck</code> compiles <code>commonMain</code> for <code>js</code> in <code>check</code>, so a JVM API there is a compile error; the URL policy's classifier is common code under the same check.</div>
+        <div class="callout"><b>One DSL scope per block.</b> <code>@WebToolsDsl</code> marks the six builders a consumer's lambda receives, so inside a nested block an outer builder is reached only through its label (<code>this@untrusted.allowedPorts</code>).</div></div>
+      <div class="card"><h3>Building a policy <small>configuration values</small></h3>
+        <ol class="steps"><li class="ph1"><code>OutboundUrlPolicy.untrusted { }</code> starts from ports 80, 443, 8080 and 8443, <code>MixedAnswers.Reject</code> and <code>TransportSettings.UntrustedDefaults</code>; <code>trusted { }</code> from no pins, no cleartext and <code>TrustedDefaults</code></li><li class="ph1"><code>settings { }</code> inside the block derives new settings from the policy's current ones</li><li class="ph2">the block's end validates every value and throws <code>IllegalArgumentException</code>: an empty port set or a port outside 1..65535, a pinned host or a suffix that is not a host, a timeout outside 1 ms to <code>Int.MAX_VALUE</code> ms, a cap or a concurrency below 1, a negative redirect limit</li><li class="ph2"><code>untrusted(from) { }</code> and <code>trusted(from) { }</code> derive a new policy; policies and settings compare by value</li></ol>
+        <div class="callout"><b>No parameter lets a denied address, a reserved name or a malformed host through:</b> <code>extraDeniedRanges</code> and <code>extraDeniedHostSuffixes</code> only add denials, and the one relaxation, loopback for tests, is internal. Nothing applies a policy in 1.0.0 yet.</div></div>
+      <div class="card"><h3>One call through the guards <small>internal · for the OkHttp transport</small></h3>
+        <ol class="steps"><li class="ph1">the guard judges the URL before any call: an IP-literal host is judged here and never reaches the resolver</li><li class="ph2"><code>GuardedDns.lookup</code> judges every resolver answer: <code>Reject</code> refuses it whole, <code>DropDenied</code> keeps the allowed addresses in order</li><li class="ph2"><code>GuardedSocket.connect</code>, a <code>Socket(Proxy.NO_PROXY)</code> that ignores a JVM-wide SOCKS setting, judges every target before any I/O</li><li class="ph3">a refusal ends the call as <code>PolicyRefusedUnknownHost</code> or <code>PolicyRefusedIo</code>, constant messages with no stack trace, which <code>policyRefusal()</code> finds through the causes and the suppressed lists</li></ol>
+        <div class="callout"><b>Measured through a real <code>OkHttpClient</code></b> in the module's Level 3 tests on JDK 23.0.2; no production client is wired yet.</div></div>
       <div class="card"><h3>A test with the fixtures <small>no network</small></h3>
         <ol class="steps"><li class="ph1"><code>runTest { val clock = virtualClock() }</code>: one scheduler drives the time source, the wall clock, the dispatcher and the executor</li><li class="ph1"><code>FakeHttpTransport(clock.timeSource).on(match, steps…)</code>: the latest stub that matches wins; its steps run in order and the last repeats</li><li class="ph2"><code>execute(request)</code>: recorded with a virtual stamp, then the step's delay; an unmatched request throws <code>UnmatchedRequestError</code></li><li class="ph2"><code>clock.advanceBy(d)</code>: moves every clock at once and runs what fell due</li><li class="ph3"><code>close()</code>: idempotent; every later call returns <code>Closed("transport")</code></li></ol>
         <div class="callout"><b>Never at Level 3:</b> real I/O under <code>runTest</code> turns <code>withTimeout</code> into a spurious timeout, as the clock's KDoc says.</div></div>
@@ -545,41 +554,41 @@ footer code{color:var(--ink-2)}
 
 <section class="guarantees" aria-label="Guarantees">
   <h2>Guarantees</h2>
-  <div class="bubbles">
-    <div class="bubble"><h3>Failure model</h3>
-      <ul><li><code>Url.parse</code> and <code>HttpMethod.of</code> return <code>Result.failure(IllegalArgumentException)</code> with a constant message that never echoes the input.</li><li>A port returns its <code>HttpFailure</code> inside the <code>Result</code>: a <code>TransportFailure</code> leaf, an <code>UpstreamFailure</code>, or <code>Closed</code> after <code>close()</code>.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> from a factory given a broken developer-written value; cancellation.</li><li>Retried inside: nothing; a transport sends one request per hop.</li><li>Fixtures: the fake returns its scripted <code>Result</code>, <code>BodyTooLarge</code> over its cap and <code>Closed</code> after <code>close()</code>, and throws <code>UnmatchedRequestError</code>, an <code>Error</code>, for a request no stub matches; <code>FixtureLoader.load</code> throws <code>FixtureError</code> naming the resource and line, never a value; the recorder never fails a call: an I/O failure or a surviving secret lands in <code>refused</code>.</li></ul></div>
-    <div class="bubble"><h3>Extension points</h3>
-      <ul><li><code>HttpTransport</code>, <code>WallClock</code> — implement <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; calling and passing them are Stable Core</li><li><code>HttpFailure</code>, <code>TransportFailure</code>, <code>UpstreamFailure</code> — subclass <span class="badge">Experimental</span>, the same marker</li><li><code>RefusalReason</code>, <code>ExhaustedReason</code> — may gain constants; keep an <code>else</code> <span class="badge">Stable Core</span></li><li>Every other public type is final or a factory <span class="badge">Stable Core</span></li><li>Test fixtures — every class final, <code>RecordingGate</code> and <code>Unmatched</code> sealed; source compatibility only, since no ABI dump covers them. <code>FakeHttpTransport</code> and the recorder's decorator are the worked examples of implementing <code>HttpTransport</code> with the opt-in, <code>VirtualClock</code>'s wall clock of <code>WallClock</code> <span class="badge">Stable Core</span></li></ul></div>
-    <div class="bubble"><h3>Test levels <small>54 classes</small></h3>
+  <div class="guarantee-cards">
+    <div class="guarantee-card"><h3>Failure model</h3>
+      <ul><li><code>Url.parse</code> and <code>HttpMethod.of</code> return <code>Result.failure(IllegalArgumentException)</code> with a constant message that never echoes the input.</li><li>A port returns its <code>HttpFailure</code> inside the <code>Result</code>: a <code>TransportFailure</code> leaf, an <code>UpstreamFailure</code>, or <code>Closed</code> after <code>close()</code>.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> from a factory given a broken developer-written value; cancellation.</li><li>Retried inside: nothing; a transport sends one request per hop.</li><li>Fixtures: the fake returns its scripted <code>Result</code>, <code>BodyTooLarge</code> over its cap and <code>Closed</code> after <code>close()</code>, and throws <code>UnmatchedRequestError</code>, an <code>Error</code>, for a request no stub matches; <code>FixtureLoader.load</code> throws <code>FixtureError</code> naming the resource and line, never a value; the recorder never fails a call: an I/O failure or a surviving secret lands in <code>refused</code>.</li><li>URL policy: a broken policy or settings value throws <code>IllegalArgumentException</code> with a constant message when its block ends; <code>CidrBlock.parse</code> returns <code>Result.failure</code> with one of four constant messages. The internal guards refuse with a <code>RefusalReason</code>, and for a denied address its range class, inside markers with constant messages; no public call surfaces them in 1.0.0 yet.</li></ul></div>
+    <div class="guarantee-card"><h3>Extension points</h3>
+      <ul><li><code>HttpTransport</code>, <code>WallClock</code> — implement <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; calling and passing them are Stable Core</li><li><code>HttpFailure</code>, <code>TransportFailure</code>, <code>UpstreamFailure</code> — subclass <span class="badge">Experimental</span>, the same marker</li><li><code>RefusalReason</code>, <code>ExhaustedReason</code> — may gain constants; keep an <code>else</code> <span class="badge">Stable Core</span></li><li><code>OutboundUrlPolicy</code> (sealed, its <code>Trusted</code> and <code>Untrusted</code> final), <code>TransportSettings</code>, <code>CidrBlock</code> — final values built by factories over internal constructors; <code>MixedAnswers</code> is an enum a consumer chooses; <code>WebToolsDsl</code> marks every builder. The address classifier and the guards are internal: no seam for a consumer's own guard <span class="badge">Stable Core</span></li><li>Every other public type is final or a factory <span class="badge">Stable Core</span></li><li>Test fixtures — every class final, <code>RecordingGate</code> and <code>Unmatched</code> sealed; source compatibility only, since no ABI dump covers them. <code>FakeHttpTransport</code> and the recorder's decorator are the worked examples of implementing <code>HttpTransport</code> with the opt-in, <code>VirtualClock</code>'s wall clock of <code>WallClock</code> <span class="badge">Stable Core</span></li></ul></div>
+    <div class="guarantee-card"><h3>Test levels <small>90 classes</small></h3>
       <div class="bars" role="table" aria-label="Test classes per testing level">
-        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:14%"></span></span><span class="val">3</span>
-        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">22</span>
-        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:5%"></span></span><span class="val">1</span>
-        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:95%"></span></span><span class="val">21</span>
-        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:32%"></span></span><span class="val">7</span>
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:13%"></span></span><span class="val">5</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">38</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:11%"></span></span><span class="val">4</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:87%"></span></span><span class="val">33</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:26%"></span></span><span class="val">10</span>
       </div>
-      <p>272 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM; 18 classes (141 tests) test the fixtures, which <code>jvmTest</code> reaches through its association; three differentials hold OkHttp 5.5.0 as the oracle. No L4b e2e or L5 UAT class here: the fixtures' publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. <span class="gap">On <code>js</code> the code is compiled, never tested; seven IDE items of the manual L5 passes, three for the core and four for the fixtures, were not performed.</span></p></div>
-    <div class="bubble"><h3>Compatibility &amp; versioning</h3>
-      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (294 lines) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code>, and no permanent check proves the gate.</span></li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>), released and versioned with the module. No dump covers it; <code>fixturesPublicationCheck</code>, in <code>check</code>, asserts its two variants, their dependencies, a signature beside every published file and its resolution from three build shapes.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
-    <div class="bubble"><h3>Thread safety</h3>
-      <ul><li>Safe to share: every value type, which is immutable, and <code>WallClock.System</code>, which is stateless.</li><li><code>HttpTransport.execute</code> may be called concurrently and is main-safe; a <code>WallClock</code> implementation must be safe for concurrent calls.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li><li>Fixtures: <code>FakeHttpTransport</code> and <code>FixtureRecorder</code> are safe to share, each behind one lock never held across a suspension, their lists snapshots; <code>FixtureLoader</code> is stateless; <code>VirtualClock</code>'s readings are safe from any thread, <code>advanceBy</code> from the test's thread only.</li></ul></div>
-    <div class="bubble"><h3>Resources to close</h3>
-      <ul><li><code>HttpTransport</code> is <code>AutoCloseable</code>: <code>close()</code> is idempotent and never throws; the default does nothing.</li><li>Fixtures: <code>FakeHttpTransport.close()</code> is idempotent, and every later call returns <code>Closed</code>; the recorder's wrapper closes its delegate. <code>FixtureRecorder</code> holds no open file: each write goes to a temporary file moved into place.</li><li>No other type holds a resource, and no network transport ships in 1.0.0.</li></ul></div>
-    <div class="bubble"><h3>On your classpath</h3>
-      <ul><li><code>org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2</code> — api: a suspend API's runtime</li><li><code>kotlin-stdlib</code> 2.2.0 in compile scope; <code>okhttp-jvm</code> lifts it to 2.2.21 or newer at runtime</li><li>Runtime only: <code>okhttp-jvm</code> 5.5.0, <code>caffeine</code> 3.3.1, <code>slf4j-api</code> 2.0.13; no slf4j backend ships</li><li>Test classpath only, through <code>testFixtures(…)</code>: the <code>-test-fixtures.jar</code>, <code>kotlinx-coroutines-test</code> 1.10.2 and <code>mockwebserver3</code> 5.5.0, optional in the root POM and on neither main variant. Gradle only: a Maven build cannot select the variant.</li></ul></div>
+      <p>504 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM; 18 classes (141 tests) test the fixtures, which <code>jvmTest</code> reaches through its association, and 36 (232 tests) the URL policy and the DSL marker, among them 249 published bypass vectors, a loopback SOCKS test and JDK and OkHttp differentials; three more differentials hold OkHttp 5.5.0 as the oracle for <code>Url</code>. No L4b e2e or L5 UAT class here: the fixtures' publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. <span class="gap">On <code>js</code> the code is compiled, never tested; nine IDE items of the manual L5 passes, three for the core, four for the fixtures and two for the URL policy, were not performed. Two test classes assume sequential execution: the SOCKS test sets process-wide properties.</span></p></div>
+    <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
+      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (424 lines) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code>, and no permanent check proves the gate or the effect of <code>WebToolsDsl</code>.</span></li><li><code>WebToolsDsl</code> on the request, response and header builders tightens a consumer's source: a lambda that reaches an outer builder implicitly stops compiling. Nothing is released, so no published consumer has one.</li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>), released and versioned with the module. No dump covers it; <code>fixturesPublicationCheck</code>, in <code>check</code>, asserts its two variants, their dependencies, a signature beside every published file and its resolution from three build shapes.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
+    <div class="guarantee-card"><h3>Thread safety</h3>
+      <ul><li>Safe to share: every value type, which is immutable, and <code>WallClock.System</code>, which is stateless.</li><li><code>HttpTransport.execute</code> may be called concurrently and is main-safe; a <code>WallClock</code> implementation must be safe for concurrent calls.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li><li>URL policy: policies, settings and <code>CidrBlock</code> are immutable values, safe to share. The internal guards hold no state beyond their references, are safe to share between calls and clients, and run on whichever thread OkHttp resolves or connects on.</li><li>Fixtures: <code>FakeHttpTransport</code> and <code>FixtureRecorder</code> are safe to share, each behind one lock never held across a suspension, their lists snapshots; <code>FixtureLoader</code> is stateless; <code>VirtualClock</code>'s readings are safe from any thread, <code>advanceBy</code> from the test's thread only.</li></ul></div>
+    <div class="guarantee-card"><h3>Resources to close</h3>
+      <ul><li><code>HttpTransport</code> is <code>AutoCloseable</code>: <code>close()</code> is idempotent and never throws; the default does nothing.</li><li>Fixtures: <code>FakeHttpTransport.close()</code> is idempotent, and every later call returns <code>Closed</code>; the recorder's wrapper closes its delegate. <code>FixtureRecorder</code> holds no open file: each write goes to a temporary file moved into place.</li><li>No other type holds a resource, a policy included, and no network transport ships in 1.0.0.</li></ul></div>
+    <div class="guarantee-card"><h3>On your classpath</h3>
+      <ul><li><code>org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2</code> — api: a suspend API's runtime</li><li><code>kotlin-stdlib</code> 2.2.0 in compile scope; <code>okhttp-jvm</code> lifts it to 2.2.21 or newer at runtime</li><li>Runtime only: <code>okhttp-jvm</code> 5.5.0, <code>caffeine</code> 3.3.1, <code>slf4j-api</code> 2.0.13; no slf4j backend ships. The URL policy's guards use the OkHttp already there and add no dependency</li><li>Test classpath only, through <code>testFixtures(…)</code>: the <code>-test-fixtures.jar</code>, <code>kotlinx-coroutines-test</code> 1.10.2 and <code>mockwebserver3</code> 5.5.0, optional in the root POM and on neither main variant. Gradle only: a Maven build cannot select the variant.</li></ul></div>
   </div>
 </section>
 
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-10-25</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-10-26</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · 4 of 11 units landed</small></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="4" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span><a data-board="62">webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile</a> <small>unit 3 · landed in 7de8207: this page</small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · landed in 4fcc6e0: this page's test fixtures</small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/64" target="_blank" rel="noopener">#64</a><span><a data-board="64">webtools-http: outbound-URL policies <code>Trusted</code>/<code>Untrusted</code>, <code>TransportSettings</code> and the common address classifier</a> <small>unit 5 · up next</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span><a data-board="62">webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile</a> <small>unit 3 · landed in 7de8207: this board's common core</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · landed in 4fcc6e0: this board's test fixtures</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/64" target="_blank" rel="noopener">#64</a><span><a data-board="64">webtools-http: outbound-URL policies <code>Trusted</code>/<code>Untrusted</code>, <code>TransportSettings</code> and the common address classifier</a> <small>unit 5 · this board's outbound-URL policy, landing with it</small></span><span class="tags"><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a><span><a data-board="65">webtools-http: <code>OkHttpTransport</code> with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories</a> <small>unit 6 · adds the loopback factories to the fixtures</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/66" target="_blank" rel="noopener">#66</a><span><a data-board="66">webtools-http: <code>ResponseCache</code> port and <code>CaffeineResponseCache</code> default</a> <small>unit 7</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>unit 8</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
@@ -588,49 +597,54 @@ footer code{color:var(--ink-2)}
           </ul>
           <p class="more">3 more of its issues touch other systems: #61 and #47 the build, #69 webtools-feeds.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-10-25</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-10-26</small></h3>
       <ul class="issues">
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>the first CI to run <code>apiCheck</code> and the differentials; the release waits on it</small></span><span class="tags"><span class="badge">docs · enhancement</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>the first CI to run <code>apiCheck</code> and the differentials, which must keep the SOCKS test sequential; the release waits on it</small></span><span class="tags"><span class="badge">docs · enhancement</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Plan boards that amended this system: <a data-issue="63">#63</a> test-support — the fixtures and their publication check · <a data-issue="62">#62</a> http-core — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>Issue boards that amended this system: <a data-issue="64">#64</a> url-policy — the policies, the classifier and the guards · <a data-issue="63">#63</a> test-support — the fixtures and their publication check · <a data-issue="62">#62</a> http-core — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order · all runs on the <a data-workboard>repository work board</a></li>
+        <li><a href="../../plans/55-http-client-stack/64-url-policy/plan.md">#64 plan</a> · <a href="../../plans/55-http-client-stack/64-url-policy/final-implementation.md">as built</a> — every measurement, the bypass vectors, the manual pass and the known gaps · <a href="../../plans/55-http-client-stack/64-url-policy/impact.md">impact</a> — what the transport and the facades build on · <a href="../../plans/55-http-client-stack/64-url-policy/research/README.md">research</a></li>
         <li><a href="../../plans/55-http-client-stack/62-http-core/plan.md">#62 plan</a> · <a href="../../plans/55-http-client-stack/62-http-core/final-implementation.md">as built</a> — the compile proof, the differentials, every measurement · <a href="../../plans/55-http-client-stack/62-http-core/impact.md">impact</a> — what the later units build on · <a href="../../plans/55-http-client-stack/62-http-core/research/README.md">research</a></li>
         <li><a href="../../plans/55-http-client-stack/63-test-support/plan.md">#63 plan</a> · <a href="../../plans/55-http-client-stack/63-test-support/final-implementation.md">as built</a> — every measurement, the manual pass and the known gaps · <a href="../../plans/55-http-client-stack/63-test-support/impact.md">impact</a> — the published variant, what the later units add to it · <a href="../../plans/55-http-client-stack/63-test-support/research/README.md">research</a></li>
-        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 the common core, §6.7 the published test support, §6.8 the check-only js modules, §6.9 the mechanism per type, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/impact.md">#55 impact</a></li>
-        <li><a href="../../../README.md">README</a> — the artifact row and install lines, the <code>testFixtures(…)</code> line among them, marked not yet released; the fixtures paragraph and its <code>.gitattributes</code> line; "Build &amp; test"</li>
-        <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it · the build it is made with: the <a href="../gradle-build/index.html">Gradle build</a> page</li>
+        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 the common core, §6.3.1 the outbound-URL policy, §6.7 the published test support, §6.8 the check-only js modules, §6.9 the mechanism per type, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/impact.md">#55 impact</a></li>
+        <li><a href="../../../README.md">README</a> — the artifact row, which names the outbound-URL policies, and the install lines, the <code>testFixtures(…)</code> line among them, marked not yet released; the fixtures paragraph and its <code>.gitattributes</code> line; "Build &amp; test"</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the build it is made with: the <a href="../gradle-build/index.html">Gradle build</a> board</li>
       </ul></div>
   </div>
 </section>
 
-<footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-dashboard template (presenter, 2026-10-25, the page's first writing at 7de8207):
+<footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-board template (2026-10-25, the board's first writing at 7de8207):
      None in the template parts: the page's CSS, tab set, script before MODEL and renderer are the template's. What it fills in:
      1. The core tabs are named for what they show: "URL parse" (the decision path: Url.parse's steps) and "Request" (the sequence).
      2. The Threads tab says the module starts no thread of its own and lists the caller's thread, the fixtures' two places (the test's scheduler, Dispatchers.IO for the recorder) and a planned transport dispatcher.
      3. The stack's later units are drawn as planned (dashed) components.
      4. The page carries two registry systems, webtools-http's common core and its test fixtures (both parts of the planned webtools-http supersystem); the fixtures are a JVM-only compilation and take the JVM side's hue, and the decision path has a second variant for the fake transport.
      Nothing is removed. Refreshed at the landing of #63 (master 4fcc6e0, 2026-10-25): the fixtures drawn built on every tab, in the Guarantees and the header. Spliced onto the verified system template on feat/issue-63-test-support at 5d98102
-     (2026-10-25): the state block and its header chips, the work-board link; issue numbers taken out of the part above Context. --></footer>
+     (2026-10-25): the state block and its header chips, the work-board link; issue numbers taken out of the part above Context.
+     Refreshed for #64 on feat/issue-64-url-policy at 543bd08 (2026-10-26): spliced onto the current system template (guarantee cards, the fill: marks); the
+     outbound-URL policy drawn built on every tab, the Guarantees and the header: its public types and the internal classifier in commonMain, the internal
+     guards in jvmMain, WebToolsDsl; two decision-path variants for the Untrusted and the Trusted hop; two lifecycle cards. The component map's canvas is
+     1000 x 812 rather than 612, to fit the policy's rows below the core; the map is a hand-written panel, so this is not a template divergence. --></footer>
 </div>
 
-<!-- The page's state. A verbatim copy of state.json beside the page (scripts/embed.js state.json index.html state). -->
+<!-- The board's state. A verbatim copy of state.json beside the board (scripts/embed.js state.json index.html state). -->
 <script type="application/json" id="state">
 {
   "slug": "webtools-http",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "4fcc6e0", "date": "2026-10-25"},
-  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "4fcc6e0"},
-  "written": {"sha": "4fcc6e0"}
+  "asIs": {"ref": "feat/issue-64-url-policy", "sha": "543bd08", "date": "2026-10-26T22:10:15Z"},
+  "lastAmended": {"issue": 64, "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier", "sha": "543bd08"},
+  "written": {"sha": "543bd08"}
 }
 </script>
 
-<!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
+<!-- The C4 model. A verbatim copy of workspace.dsl, re-embedded here on every run,
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http/index.html.
-// As-is at WebTools master 4fcc6e0 (2026-10-25), webtools-http 1.0.0 (new, unreleased): the common core from #62, its check-only js module, and the test-fixtures variant from #63. Code is authoritative on any conflict.
-// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.3 to 6.6 and 11). None of them is built; they are drawn dashed.
+// As-is at WebTools feat/issue-64-url-policy 543bd08 (2026-10-26), webtools-http 1.0.0 (new, unreleased): the common core from #62, its check-only js module, the test-fixtures variant from #63, and the outbound-URL policies with their internal classifier and JVM guards and the WebToolsDsl marker from #64. Code is authoritative on any conflict.
+// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.3.2 to 6.6 and 11). None of them is built; they are drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -639,7 +653,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         consumer = person "Consumer" "A Kotlin service that builds requests, matches the failures and supplies or receives an HttpTransport."
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            http = container "webtools-http" "The common core of a suspend HTTP stack: the opt-in marker, the failure model, the request and response types, Url, and the transport and wall-clock ports; and its published test-fixtures variant. No production implementation beyond WallClock.System yet." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
+            http = container "webtools-http" "The common core of a suspend HTTP stack: the opt-in marker, the failure model, the request and response types, Url, and the transport and wall-clock ports; the outbound-URL policies with their internal classifier and JVM guards; and its published test-fixtures variant. No production transport yet: nothing applies a policy." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
                 // ---- public surface ----
                 marker    = component "ExperimentalForInheritanceWebToolsApi" "The one opt-in marker: @RequiresOptIn(level = ERROR), used only through @SubclassOptInRequired and @OptIn; never removed." "annotation class" "Public"
                 transport = component "HttpTransport" "suspend execute(request): Result<HttpResponse> and an idempotent close(); an eight-point contract. Implementing it needs the opt-in." "interface · AutoCloseable · gated" "Public"
@@ -653,11 +667,15 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 syntax    = component "HttpSyntax" "The shared predicates: the token rule, the value rules, the media type, sanitizeReceivedValue." "internal object" "Internal"
                 log       = component "Log seam" "Log with debug, info and warn, through expect fun logger(name): slf4j in jvmMain. No production logging site yet." "internal interface · expect/actual" "Internal"
                 helpers   = component "Helpers" "Result.flatMap, catchNonFatal and expect fun epochMillisNow(): System.currentTimeMillis() in jvmMain." "internal functions · expect/actual" "Internal"
+                dsl       = component "WebToolsDsl" "The DSL marker on the six builders a consumer's lambda receives; a nested block reaches an outer builder only through its label." "annotation class · @DslMarker" "Public"
+                // ---- the outbound-URL policy: public configuration values, an internal JVM-free classifier, internal JVM guards ----
+                policy    = component "OutboundUrlPolicy" "Trusted and Untrusted policies as configuration values, with TransportSettings (TrustedDefaults, UntrustedDefaults), CidrBlock and MixedAnswers. Untrusted parameters only add denials. Not applied until the transport and the facades land." "sealed class · final leaves · builders" "Public"
+                classifier = component "Address classifier" "UrlGuard with HostRules, AddressRanges, StrictIp and GuardRelaxation: pure, JVM-free judgement of a hop, a redirect target, a resolved address and a resolver answer under one policy." "internal · commonMain" "Internal"
+                guards    = component "JVM guards" "PolicyEnforcement: GuardedDns, GuardedSocketFactory with its Socket(Proxy.NO_PROXY) and Proxy.NO_PROXY for Untrusted; the refusal markers found by policyRefusal(). Made for the OkHttp transport; no production client uses them yet." "internal · jvmMain · okhttp-jvm 5.5.0" "Internal"
                 // ---- the test-fixtures variant: a JVM-only testFixtures compilation associated with main, published beside it ----
                 fixtures  = component "Test fixtures" "The webtools-http-test-fixtures variant, package com.spartanlabs.webtools.http.testing: VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader for .http and body-only files, and the gated, redacting FixtureRecorder. All final; Stable Core with source compatibility only." "jvmTestFixtures · testFixtures(...) · test classpath only" "Public"
                 // ---- planned by Issue #55, not built ----
-                policy    = component "OutboundUrlPolicy" "Trusted and Untrusted policies, TransportSettings and the address classifier." "planned" "Planned"
-                okhttp    = component "OkHttpTransport" "The OkHttp transport with manual redirects and the resolver and socket guards." "planned" "Planned"
+                okhttp    = component "OkHttpTransport" "The OkHttp transport with manual redirects, applying a policy's resolver and socket guards." "planned" "Planned"
                 cache     = component "ResponseCache" "The cache port and its Caffeine default." "planned" "Planned"
                 budget    = component "CallBudget" "The budget port, WindowedCallBudget and the rate signals." "planned" "Planned"
                 facades   = component "UpstreamClient · UrlFetcher" "The facades composing cache, budget and transport." "planned" "Planned"
@@ -688,9 +706,18 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.http.fixtures -> webtools.http.clock "Implements it with VirtualClock's wall clock"
         webtools.http.fixtures -> webtools.http.values "Builds responses from fixtures; parses and writes .http files"
         webtools.http.fixtures -> webtools.http.failures "Returns Closed and BodyTooLarge as a transport does"
+        consumer -> webtools.http.policy "Builds Trusted or Untrusted policies and their settings"
+        webtools.http.classifier -> webtools.http.policy "Judges hops and addresses under"
+        webtools.http.classifier -> webtools.http.url "Reads the canonical host, port and scheme of"
+        webtools.http.classifier -> webtools.http.reasons "Refuses with a RefusalReason"
+        webtools.http.guards -> webtools.http.classifier "Judge every resolver answer and every connect through"
+        webtools.http.dsl -> webtools.http.values "Marks the header, request and response builders"
+        webtools.http.dsl -> webtools.http.policy "Marks the policy and settings builders"
 
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
-        webtools.http.policy -> webtools.http.failures "Would refuse with RefusedByPolicy"
+        webtools.http.okhttp -> webtools.http.guards "Would apply them to its client"
+        webtools.http.okhttp -> webtools.http.failures "Would map a policy refusal to RefusedByPolicy"
+        webtools.http.facades -> webtools.http.classifier "Would pre-check a URL with checkRequest"
         webtools.http.okhttp -> webtools.http.transport "Would implement"
         webtools.http.cache -> webtools.http.clock "Would expire by"
         webtools.http.budget -> webtools.http.failures "Would fail with BudgetExhausted"
@@ -706,7 +733,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at master 4fcc6e0, its test fixtures included, with the stack's later units dashed." {
+        component webtools.http "Components" "webtools-http as built at feat/issue-64-url-policy 543bd08, its URL policy and test fixtures included, with the stack's later units dashed." {
             include *
             autoLayout tb
         }
@@ -736,7 +763,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
 "use strict";
 /* Times (GUIDANCE.md §6, "Times"): stored as UTC ISO stamps; shown in the viewer's own time zone, with the zone's abbreviation,
    as a <time> whose datetime and title hold the exact UTC value. A date alone stays a date; a stamp with no zone is shown as written.
-   localizeTimes() formats every <time datetime> the page draws, so a stamp written into hand-made HTML is shown the same way. */
+   localizeTimes() formats every <time datetime> the board draws, so a stamp written into hand-made HTML is shown the same way. */
 const STAMP_RE=/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/;
 const utcIso=s=>{ const d=new Date(String(s).replace(" ","T")); return isNaN(d)?null:d.toISOString().replace(/\.000Z$/,"Z"); };
 const LOCAL_FMT={day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZoneName:"short"};
@@ -746,28 +773,28 @@ function localizeTimes(root){ (root||document).querySelectorAll("time[datetime]"
   t.dataset.local="1"; t.title=`${u} (UTC)`; t.textContent=new Date(u).toLocaleString(undefined,LOCAL_FMT); }); }
 window.addEventListener("DOMContentLoaded",()=>localizeTimes());
 const REPO="https://github.com/SpartanLaboratories/WebTools";
-const SRC=REPO+"/blob/master/webtools-http/"; // presenter: every d.files entry links under here
+const SRC=REPO+"/blob/master/webtools-http/"; // fill: every d.files entry links under here
 const NS="http://www.w3.org/2000/svg";
 const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
 const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","text-anchor":anchor||"start"},p);(Array.isArray(lines)?lines:[lines]).forEach((l,i)=>{const s=mk("tspan",{x,dy:i?(dy||12):0},t);s.textContent=l;});return t;};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
-/* Links to an issue and its board (GUIDANCE.md §5; system/RULES.md §6). BOARDS maps an issue's number to its plan board, relative
-   to this page, for every issue the page names whose board is in the repository; the presenter fills it from the folders on disk
-   when the page is written, on its one line, and check-page.js fails an entry whose file is not there. Where an issue's number and
+/* Links to an issue and its board (GUIDANCE.md §5; system/RULES.md §6). BOARDS maps an issue's number to its issue board, relative
+   to this board, for every issue the board names whose board is in the repository; it is filled from the folders on disk
+   when the board is written, on its one line, and check-board.js fails an entry whose file is not there. Where an issue's number and
    its title appear together they are two links: the number opens the GitHub issue (pair(), or a plain href in hand-written HTML)
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
+const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line
 const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
-/* The work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this page when that file exists
-   (else null: no link to a file that is not there; check-page.js fails a committed path that is missing), and "live" the live view's
-   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the work board opens the live view when
+/* The repository work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this board when that file exists
+   (else null: no link to a file that is not there; check-board.js fails a committed path that is missing), and "live" the live view's
+   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the repository work board opens the live view when
    its marker loads (the board on this machine), else the committed one, else stays plain text: the hand-written
-   <a data-workboard>work board</a>, and the Plans card's line the renderer adds when the page has none. */
-const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // presenter: the work board relative to this page, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
+   <a data-workboard>repository work board</a>, and the Plans card's line the renderer adds when the board has none. */
+const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // fill: the repository work board relative to this board, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
 /* A live marker (plan/RULES.md §5): a script in the git-ignored docs/plans/.live/ that sets one key of window.DASHBOARDS_LIVE; cb gets
    its value, or null when the marker is not there (a published copy, another clone, no live view on this machine). */
 function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
@@ -775,47 +802,49 @@ function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.c
 const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
 function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_BOARD:{};
   const docs=[...document.querySelectorAll("section.context .docs")].pop();
-  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
-  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed work board, as of the last landing":href?"The live work board on this machine":"No work board in this checkout"; });
+  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Repository work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
+  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed repository work board, as of the last landing":href?"The live repository work board on this machine":"No repository work board in this checkout"; });
   set(W.committed||null);
   liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); }); }
 window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
-/* The page's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
+/* The board's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
    restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
 const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
 const ghIssue=n=>`${REPO}/issues/${n}`;
-const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
-const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${esc(title)}</a>`:esc(title)}`; };
+const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
+const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
   /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
-     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-page.js (ISSUE TITLE NAMES
-     A WORK LEVEL: #n), never shown as the page's (GUIDANCE.md §5; dashboards-skill/28) */
-  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
-  r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its plan board`; else { a.target="_blank"; a.rel="noopener"; } }); }
+     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-board.js (ISSUE TITLE NAMES
+     A WORK LEVEL: #n), never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
+  r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its issue board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
 function inspect(html){ $("#insp-body").innerHTML=html; }
 function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker",{id,viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:color||"var(--ink-2)"},m); const mo=mk("marker",{id:id+"-open",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10",fill:"none",stroke:color||"var(--ink-2)","stroke-width":"1.5"},mo); const mon=mk("marker",{id:id+"-on",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--on)"},mon); }
 
 /* =========================================================================
-   MODEL — the as-built behaviour this page draws (threads, flows, sequence) and the
+   MODEL — the as-built behaviour this board draws (threads, flows, sequence) and the
    hand-placed component map. Structure also lives in the DSL above; `c4` maps map
    nodes to their DSL element so the two views cross-reference.
    ========================================================================= */
 const MODEL = {
-  // The page's colour groups: server = the common core (blue), client = the JVM-only source sets, jvmMain and the test fixtures (purple),
+  // The board's colour groups: server = the common core (blue), client = the JVM-only source sets, jvmMain and the test fixtures (purple),
   // wire = the check-only js module (teal); the consumer's code, and anything outside the module.
-  sides:{server:"common core · commonMain",client:"JVM · jvmMain and the test fixtures",wire:"check-only js module",consumer:"the consumer's code",external:"a transport implementation, outside the module"},
+  sides:{server:"common · commonMain: the core and the URL policy",client:"JVM · jvmMain and the test fixtures",wire:"check-only js module",consumer:"the consumer's code",external:"a transport implementation, outside the module"},
   // Map node id → DSL element id.
   c4:{core:"webtools.http",marker:"webtools.http.marker",transport:"webtools.http.transport",clock:"webtools.http.clock",failures:"webtools.http.failures",tf:"webtools.http.failures",uf:"webtools.http.failures",leaves:"webtools.http.failures",
       req:"webtools.http.values",resp:"webtools.http.values",headers:"webtools.http.values",method:"webtools.http.values",body:"webtools.http.values",hop:"webtools.http.values",reasons:"webtools.http.reasons",
       url:"webtools.http.url",parsing:"webtools.http.pipeline",host:"webtools.http.pipeline",enc:"webtools.http.pipeline",problem:"webtools.http.pipeline",syntax:"webtools.http.syntax",log:"webtools.http.log",helpers:"webtools.http.helpers",epoch:"webtools.http.helpers",
       jvm:"webtools.http.log",logJvm:"webtools.http.log",epochJvm:"webtools.http.helpers",check:"webtools.check",jsAct:"webtools.check",
-      fix:"webtools.http.fixtures",fClock:"webtools.http.fixtures",fFake:"webtools.http.fixtures",fFiles:"webtools.http.fixtures",fRec:"webtools.http.fixtures",pPolicy:"webtools.http.policy",pOk:"webtools.http.okhttp",pCache:"webtools.http.cache",pBudget:"webtools.http.budget",pFac:"webtools.http.facades"},
+      fix:"webtools.http.fixtures",fClock:"webtools.http.fixtures",fFake:"webtools.http.fixtures",fFiles:"webtools.http.fixtures",fRec:"webtools.http.fixtures",
+      polBox:"webtools.http.policy",pol:"webtools.http.policy",set:"webtools.http.policy",cidr:"webtools.http.policy",mixed:"webtools.http.policy",guard:"webtools.http.classifier",hostR:"webtools.http.classifier",ranges:"webtools.http.classifier",strict:"webtools.http.classifier",
+      dsl:"webtools.http.dsl",jvmG:"webtools.http.guards",pe:"webtools.http.guards",gdns:"webtools.http.guards",gsock:"webtools.http.guards",refusals:"webtools.http.guards",pOk:"webtools.http.okhttp",pCache:"webtools.http.cache",pBudget:"webtools.http.budget",pFac:"webtools.http.facades"},
   structure: {
     lanes:[["COMMON CORE · commonMain",40,44,"start"],["JVM · jvmMain",960,44,"end"],["CHECK MODULE · js",960,212,"end"],["TEST FIXTURES · jvmTestFixtures",960,318,"end"],["PLANNED · LATER UNITS",960,510,"end"]],
     notes:[],
     nodes:[
-      {id:"core",side:"server",vis:"pub",container:true,x:40,y:56,w:640,h:540,t:"webtools-http",s:"package com.spartanlabs.webtools.http · explicitApi() · 1.0.0 unreleased",
+      {id:"core",side:"server",vis:"pub",container:true,x:40,y:56,w:640,h:744,t:"webtools-http",s:"package com.spartanlabs.webtools.http · explicitApi() · 1.0.0 unreleased",
         d:{role:"One flat package; internal does the hiding. Built on webtools.kotlin-multiplatform-library with one jvm() target at the Java 11 floor; kotlinx-coroutines-core 1.10.2 is its one api dependency. The opt-in is a language setting of commonMain and jvmMain in its own build file, so the test source sets and the fixtures stay a consumer without it.",vis:"public · module",files:["build.gradle.kts","api/webtools-http.api"],threads:["caller's thread or coroutine"],issues:[64,65,66,67,68]}},
       {id:"marker",side:"server",vis:"pub",x:56,y:96,w:300,h:44,t:"ExperimentalForInheritanceWebToolsApi",s:"@RequiresOptIn(ERROR) · the one opt-in marker",
         d:{role:"Marks the seams whose implementation or subclassing is Experimental. Applied only through @SubclassOptInRequired on the five gated types and @OptIn in an implementer; never removed. Its message is one string literal, so the module's own errors carry it.",vis:"public · annotation class · Stable Core",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/ExperimentalForInheritanceWebToolsApi.kt"]}},
@@ -869,7 +898,7 @@ const MODEL = {
         d:{role:"The JVM actual of logger(name), wrapping slf4j; a trailing Throwable argument is the exception, as slf4j reads it.",vis:"internal · actual",files:["src/jvmMain/kotlin/com/spartanlabs/webtools/http/Log.jvm.kt"]}},
       {id:"epochJvm",side:"client",vis:"int",x:716,y:150,w:228,h:42,t:"EpochMillis.jvm.kt",s:"System.currentTimeMillis()",
         d:{role:"The JVM actual of epochMillisNow().",vis:"internal · actual",files:["src/jvmMain/kotlin/com/spartanlabs/webtools/http/EpochMillis.jvm.kt"]}},
-      {id:"check",side:"wire",vis:"int",container:true,x:700,y:220,w:260,h:92,t:"webtools-http-commoncheck",s:"unpublished · commonMain compiled for js",
+      {id:"check",side:"wire",vis:"int",container:true,x:700,y:220,w:260,h:88,t:"webtools-http-commoncheck",s:"unpublished · commonMain compiled for js",
         d:{role:"A sibling module on webtools.kotlin-common-check: it adds ../webtools-http/src/commonMain/kotlin as a source directory, opts in on commonMain and jsMain, and compiles in check, so a JVM API in common code is a compile error. It publishes nothing and runs no test; js() has no environment, so no Node.js.",vis:"internal · module",files:["../webtools-http-commoncheck/build.gradle.kts"]}},
       {id:"jsAct",side:"wire",vis:"int",x:716,y:258,w:228,h:46,t:"JsActuals.kt",s:["a no-op Log","Date.now() for epochMillisNow"],
         d:{role:"The js actuals of the two expect declarations.",vis:"internal · actual",files:["../webtools-http-commoncheck/src/jsMain/kotlin/com/spartanlabs/webtools/http/JsActuals.kt"]}},
@@ -883,18 +912,32 @@ const MODEL = {
         d:{role:"Fixture holds a status, headers and a body, parsed from a .http file by the internal HttpMessageCodec (strict UTF-8 head, the body verbatim, each fault a FixtureError naming the origin and line, never a value) and written back with the RFC 9110 reason phrase. FixtureLoader reads <root>/<name> from the consumer's own classpath, fixtures by default: a .http name is parsed, any other is a body-only 200 with a Content-Type by its extension. The fixtures jar ships no fixture file.",vis:"public · final classes · Stable Core",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/Fixture.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FixtureLoader.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/HttpMessageCodec.kt"],threads:["caller's thread or coroutine"]}},
       {id:"fRec",side:"client",vis:"pub",x:834,y:432,w:114,h:54,t:"FixtureRecorder",s:["gate · redaction","scrub · write"],
         d:{role:"Records a live transport's successful responses as .http files: wrap(delegate, group) returns an internal decorator that hands back the delegate's result untouched. It takes only a RecordingGate.Enabled, which RecordingGate.evaluate() gives when WEBTOOLS_HTTP_RECORD allows it and none of twelve CI variables is set. No request header is written; sensitive query values and headers are redacted, five connection headers dropped, every supplied secret replaced in the whole file, and a file in which a form of one survives is refused, never written. New keeps an existing file, Overwrite rewrites it; writes go through a temporary file and an atomic move.",vis:"public · final class · Stable Core",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FixtureRecorder.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RecordingGate.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/Redaction.kt","src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/SecretScrubber.kt"],threads:["Dispatchers.IO"]}},
-      {id:"pPolicy",side:"server",vis:"pub",kind:"planned",x:700,y:520,w:126,h:24,t:"OutboundUrlPolicy",s:"",d:{role:"Planned: Trusted and Untrusted policies, TransportSettings and the address classifier. Not built.",vis:"planned",files:[],issues:[64]}},
-      {id:"pOk",side:"server",vis:"pub",kind:"planned",x:834,y:520,w:126,h:24,t:"OkHttpTransport",s:"",d:{role:"Planned: the OkHttp transport, the first top-level production implementer of a gated port; it adds the loopback factories to the fixtures. Not built.",vis:"planned",files:[],issues:[65]}},
-      {id:"pCache",side:"server",vis:"pub",kind:"planned",x:700,y:550,w:126,h:24,t:"ResponseCache",s:"",d:{role:"Planned: the cache port and its Caffeine default, driven by VirtualClock in its tests. Not built.",vis:"planned",files:[],issues:[66]}},
-      {id:"pBudget",side:"server",vis:"pub",kind:"planned",x:834,y:550,w:126,h:24,t:"CallBudget",s:"",d:{role:"Planned: the budget port and WindowedCallBudget, with its fakes added to the fixtures. Not built.",vis:"planned",files:[],issues:[67]}},
-      {id:"pFac",side:"server",vis:"pub",kind:"planned",x:700,y:580,w:260,h:24,t:"UpstreamClient · UrlFetcher",s:"",d:{role:"Planned: the facades composing cache, budget and transport. Not built.",vis:"planned",files:[],issues:[68]}}
+      {"id":"polBox","side":"server","vis":"pub","container":true,"x":56,"y":600,"w":608,"h":152,"t":"outbound-URL policy","s":"public configuration values · the internal, JVM-free classifier","d":{"role":"Decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters a consumer sets. The public part is configuration only; the classifier that applies it is internal common code, compiled for js by the check module, so it stays JVM-free. Nothing applies a policy until the OkHttp transport and the call facades land.","vis":"public types · internal classifier · Stable Core","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt","src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"],"threads":["caller's thread or coroutine"]}},
+      {"id":"pol","side":"server","vis":"pub","x":72,"y":642,"w":150,"h":48,"t":"OutboundUrlPolicy","s":["sealed · Trusted · Untrusted","factories · builders"],"d":{"role":"A sealed policy with two final leaves. Untrusted, for a URL a third party supplies: ports 80, 443, 8080 and 8443 by default (any when allowedPorts is null), extraDeniedRanges and extraDeniedHostSuffixes that only add denials, mixedAnswers (Reject by default) and UntrustedDefaults. Trusted, for a known upstream: https only unless allowCleartext, optional pinnedHosts matched by exact canonical equality, and TrustedDefaults. Built with untrusted { }, trusted { } or their from(…) forms; each builder's settings { } derives the settings; every value is validated when the block ends. Value equality; toString() prints counts, never a host.","vis":"public · sealed class, final leaves · Stable Core","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"],"threads":["caller's thread or coroutine"]}},
+      {"id":"set","side":"server","vis":"pub","x":230,"y":642,"w":150,"h":48,"t":"TransportSettings","s":["10 settings · 2 default sets","derived with from { }"],"d":{"role":"The ten transport settings a policy carries: call, connect, read and write timeouts, the response-body cap, the redirect limit, https-to-http downgrades, total and per-host concurrency, and the idle-connection TTL. TrustedDefaults: 30 s call; 10 s connect, read and write; 5,242,880 bytes; 5 redirects; no downgrade; 16 and 5; 4 s. UntrustedDefaults: 15 s; 5 s; 2,097,152 bytes; 3 redirects; no downgrade; 8 and 2; 4 s. TransportSettings(from) { } validates every value: a timeout from 1 ms to Int.MAX_VALUE ms, a cap and concurrency of at least 1, the per-host limit within the total.","vis":"public · final class · Stable Core","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt"]}},
+      {"id":"cidr","side":"server","vis":"pub","x":388,"y":642,"w":128,"h":48,"t":"CidrBlock","s":["parse(text): Result","canonical toString"],"d":{"role":"An IPv4 or IPv6 block for extraDeniedRanges. CidrBlock.parse(text) returns a Result: a failure carries one of four constant messages (shape, address, prefix, host bits), never the input. An IPv4 block also matches the IPv4-mapped and NAT64 64:ff9b::/96 forms of its addresses.","vis":"public · final class · Stable Core","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/CidrBlock.kt"]}},
+      {"id":"mixed","side":"server","vis":"pub","x":524,"y":642,"w":124,"h":48,"t":"MixedAnswers","s":["Reject","DropDenied"],"d":{"role":"What an Untrusted policy does with a resolver answer that holds allowed and denied addresses: Reject refuses the whole answer (the default); DropDenied keeps the allowed ones in answer order and refuses only when none is left. An enum a consumer chooses; a when over it keeps an else.","vis":"public · enum class · Stable Core","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/MixedAnswers.kt"]}},
+      {"id":"guard","side":"server","vis":"int","x":72,"y":698,"w":158,"h":48,"t":"UrlGuard","s":["checkHop · checkRequest","admitRedirect · judgeAnswer"],"d":{"role":"Applies one policy. checkHop judges a URL (Untrusted: the host form, a literal's address or a name's reserved suffixes, then the port, then the downgrade; Trusted: the scheme, the pins, the downgrade); checkRequest adds the sensitive-header rule on hop 1; admitRedirect parses and judges a redirect target; checkAddress and judgeAnswer judge resolved addresses under MixedAnswers. A refusal carries the RefusalReason and, for DeniedAddress, the range class. GuardRelaxation.LoopbackForTests, reachable only from the fixtures and the module's tests, exempts loopback; None is the only production value.","vis":"internal · class · pure","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt","src/commonMain/kotlin/com/spartanlabs/webtools/http/GuardRelaxation.kt"],"threads":["caller's thread or coroutine"]}},
+      {"id":"hostR","side":"server","vis":"int","x":238,"y":698,"w":120,"h":48,"t":"HostRules","s":["host forms","reserved names"],"d":{"role":"Classifies any host text as an IP literal, a name, or refused: a strict dotted quad or IPv6 literal; the lenient numeric forms (127.1, 2130706433, 0x7f.1, a trailing dot on a literal) are HostForm; localhost, local, internal, home.arpa, localdomain, a single label and the policy's own suffixes are ReservedName. Total on any text, ASCII-only folding.","vis":"internal · object","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/HostRules.kt"]}},
+      {"id":"ranges","side":"server","vis":"int","x":366,"y":698,"w":150,"h":48,"t":"AddressRanges","s":["IANA rows · 168.63.129.16","mapped · NAT64 · ISATAP"],"d":{"role":"The address table: the IPv4 special-purpose registry's 26 prefixes, nested ones first, with 224.0.0.0/4 and 168.63.129.16/32; IPv4-mapped and NAT64 64:ff9b::/96 addresses judged by their embedded IPv4; everything outside 2000::/3 denied; the 15 IPv6 registry rows inside it and an ISATAP interface identifier. Each row names its range class for the log. A dated snapshot comment (both registries last updated 2025-10-09) holds the refresh procedure.","vis":"internal · object","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/AddressRanges.kt"]}},
+      {"id":"strict","side":"server","vis":"int","x":524,"y":698,"w":124,"h":48,"t":"StrictIp","s":["strict IPv4 · RFC 4291","RFC 5952 printing"],"d":{"role":"The literal parser the guard trusts: a strict dotted quad and RFC 4291 IPv6 text, printed in RFC 5952 form. A deterministic test pins it to Url's own host parser; in 100,000 generated strings the JDK's parser accepted 1,221 IPv6 strings it refuses, so the guard never uses the JDK's.","vis":"internal · object","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/StrictIp.kt"]}},
+      {"id":"dsl","side":"server","vis":"pub","x":56,"y":760,"w":608,"h":36,"t":"WebToolsDsl","s":"@DslMarker on the six builders a consumer's lambda receives: headers, request, response, settings, both policies","d":{"role":"The module's DSL marker, on HttpHeaders.Builder, HttpRequest.Builder, HttpResponse.Builder, TransportSettings.Builder and both policy builders: inside a nested block only the innermost builder is an implicit receiver, and an outer one is reached through its label. Its retention is the default, RUNTIME on the JVM.","vis":"public · annotation class · Stable Core","files":["src/commonMain/kotlin/com/spartanlabs/webtools/http/WebToolsDsl.kt"]}},
+      {"id":"jvmG","side":"client","vis":"int","container":true,"x":700,"y":600,"w":260,"h":196,"t":"jvmMain · the policy's guards","s":"internal · made for the OkHttp transport","d":{"role":"The JVM enforcement of a policy, internal and unused by any production client until the OkHttp transport lands: one bundle per policy that the transport applies to its OkHttpClient.Builder. Exercised through a real OkHttpClient by the module's Level 3 tests.","vis":"internal · source set","files":["src/jvmMain/kotlin/com/spartanlabs/webtools/http/"],"threads":["caller's thread or coroutine"]}},
+      {"id":"pe","side":"client","vis":"int","x":716,"y":640,"w":228,"h":46,"t":"PolicyEnforcement","s":["UrlGuard.enforcement(baseDns)","dns · socket factory · proxy"],"d":{"role":"The three client settings a policy implies. Untrusted: GuardedDns over the base resolver, GuardedSocketFactory and Proxy.NO_PROXY (a proxy resolves names itself and would route around both guards). Trusted: the base resolver, OkHttp's default socket factory and proxy selection. Its KDoc states the wiring: retryOnConnectionFailure(false), fast fallback at its default, and the order of the three guards.","vis":"internal · class","files":["src/jvmMain/kotlin/com/spartanlabs/webtools/http/PolicyEnforcement.kt"]}},
+      {"id":"gdns","side":"client","vis":"int","x":716,"y":692,"w":110,"h":46,"t":"GuardedDns","s":["judges every","resolver answer"],"d":{"role":"An okhttp3.Dns that overrides lookup only and inherits newCall, whose default routes record resolution through lookup. Under Reject a denied address refuses the answer; under DropDenied the denied ones are dropped and one DEBUG line names the host, the counts and the range classes, never an address. An empty answer becomes an UnknownHostException with a constant message. Stateless; safe to share.","vis":"internal · class","files":["src/jvmMain/kotlin/com/spartanlabs/webtools/http/GuardedDns.kt"],"threads":["caller's thread or coroutine"]}},
+      {"id":"gsock","side":"client","vis":"int","x":834,"y":692,"w":110,"h":46,"t":"GuardedSocket","s":["NO_PROXY socket","and its factory"],"d":{"role":"GuardedSocketFactory creates only unconnected GuardedSockets, each a Socket(Proxy.NO_PROXY) that judges the target of every connect before any I/O, so a JVM-wide SOCKS setting cannot route around it; an unresolved target is refused. The factory's four connecting overloads, which OkHttp 5.5.0 never calls, throw a SocketException.","vis":"internal · classes","files":["src/jvmMain/kotlin/com/spartanlabs/webtools/http/GuardedSocket.kt","src/jvmMain/kotlin/com/spartanlabs/webtools/http/GuardedSocketFactory.kt"],"threads":["caller's thread or coroutine"]}},
+      {"id":"refusals","side":"client","vis":"int","x":716,"y":744,"w":228,"h":42,"t":"Refusal markers","s":"constant messages · found by policyRefusal()","d":{"role":"PolicyRefusedUnknownHost (an UnknownHostException, so OkHttp rethrows it unwrapped) and PolicyRefusedIo (an IOException, never a ConnectException), each with a constant message and no stack trace, carrying the refusal. Throwable.policyRefusal() finds one through the cause chain and the suppressed lists fast fallback fills, at most 100 throwables, cycle-safe.","vis":"internal · classes and a function","files":["src/jvmMain/kotlin/com/spartanlabs/webtools/http/PolicyRefusals.kt"]}},
+      {id:"pOk",side:"server",vis:"pub",kind:"planned",x:700,y:520,w:126,h:24,t:"OkHttpTransport",s:"",d:{role:"Planned: the OkHttp transport, the first top-level production implementer of a gated port, which will apply a policy's guards to its client; it adds the loopback factories to the fixtures. Not built.",vis:"planned",files:[],issues:[65]}},
+      {id:"pCache",side:"server",vis:"pub",kind:"planned",x:834,y:520,w:126,h:24,t:"ResponseCache",s:"",d:{role:"Planned: the cache port and its Caffeine default, driven by VirtualClock in its tests. Not built.",vis:"planned",files:[],issues:[66]}},
+      {id:"pBudget",side:"server",vis:"pub",kind:"planned",x:700,y:550,w:100,h:24,t:"CallBudget",s:"",d:{role:"Planned: the budget port and WindowedCallBudget, with its fakes added to the fixtures. Not built.",vis:"planned",files:[],issues:[67]}},
+      {id:"pFac",side:"server",vis:"pub",kind:"planned",x:808,y:550,w:152,h:24,t:"UpstreamClient · UrlFetcher",s:"",d:{role:"Planned: the facades composing cache, budget and transport, which will pre-check a URL against its policy. Not built.",vis:"planned",files:[],issues:[68]}}
     ]
   },
   threads:{
-    "caller's thread or coroutine":{side:"server",kind:"the caller's",daemon:false,created:"never by webtools-http: every call runs where the caller makes it",runs:"Url.parse, HttpMethod.of, the factories and their builders, WallClock.System.nowEpochMillis(), catchNonFatal; and the entry into a transport's suspend execute(request).",sends:[],note:"webtools-http 1.0.0 creates no thread, executor or dispatcher.",issues:[]},
+    "caller's thread or coroutine":{side:"server",kind:"the caller's",daemon:false,created:"never by webtools-http: every call runs where the caller makes it",runs:"Url.parse, HttpMethod.of, the factories and their builders, the policy and settings factories, CidrBlock.parse, the internal guard's checks, WallClock.System.nowEpochMillis(), catchNonFatal; and the entry into a transport's suspend execute(request). The internal resolver and socket guards run on whichever thread OkHttp resolves or connects on: the caller's for execute().",sends:[],note:"webtools-http 1.0.0 creates no thread, executor or dispatcher.",issues:[]},
     "the test's scheduler":{side:"client",kind:"the test's",daemon:false,created:"never by the fixtures: VirtualClock's dispatcher is a StandardTestDispatcher on the TestCoroutineScheduler it is given, under runTest the test's own",runs:"what is dispatched to VirtualClock.dispatcher, a FakeHttpTransport step's delay when the caller runs on that scheduler, the tasks advanceBy makes due; maintenanceExecutor runs each task inline on the thread that submits it.",sends:[],note:"Readings of timeSource, elapsed and wallClock are safe from any thread; advanceBy is for the test's thread.",issues:[]},
     "Dispatchers.IO":{side:"client",kind:"recording only",daemon:true,created:"never by the fixtures: kotlinx.coroutines' shared I/O pool",runs:"FixtureRecorder's serialisation, redaction, scrubbing and its write through a temporary file and an atomic move, inside withContext(Dispatchers.IO), so the caller's thread never blocks (transport contract point 8).",sends:[],note:"Only while recording is on: the recorder exists only from a RecordingGate.Enabled.",issues:[]},
-    "OkHttpTransport's dispatcher":{side:"client",kind:"planned",daemon:false,created:"planned: by the OkHttp transport, through OkHttp's own dispatcher",runs:"the blocking I/O behind execute, off the caller's thread, as point 8 of HttpTransport's contract asks of every implementation.",sends:[],note:"Not built.",issues:[65]}
+    "OkHttpTransport's dispatcher":{side:"client",kind:"planned",daemon:false,created:"planned: by the OkHttp transport, through OkHttp's own dispatcher",runs:"the blocking I/O behind execute, off the caller's thread, as point 8 of HttpTransport's contract asks of every implementation; there the built resolver and socket guards would judge every lookup and connect.",sends:[],note:"Not built.",issues:[65]}
   },
   flows:[
     {id:"parse",label:"Url.parse",kicker:"URL PARSE",runsOn:"caller's thread or coroutine",foot:"runs on the caller's thread · pure, never throws",
@@ -956,7 +999,60 @@ const MODEL = {
        if(s.step==="failure"){ p.push("FL"); return R(`${which[0].toUpperCase()+which.slice(1)} fails, for example with a TransportFailure.Timeout: its Result.failure is returned as it is, and the cap is not applied.`,["cap"]); }
        p.push("CAP");
        if(s.cap==="over"){ p.push("BT"); return R("A declared Content-Length or a body above maxResponseBytes becomes Result.failure(TransportFailure.BodyTooLarge(cap, declared)), as the real transport reports its cap."); }
-       p.push("OK"); return R(`Result.success: HttpResponse(status, request.url) { headers; body } from ${which}, or the response a lambda step builds.`); }}
+       p.push("OK"); return R(`Result.success: HttpResponse(status, request.url) { headers; body } from ${which}, or the response a lambda step builds.`); }},
+    {id:"untrusted",label:"Untrusted hop",kicker:"URL POLICY",runsOn:"caller's thread or coroutine",foot:"UrlGuard.checkHop, internal and pure · hop 1 adds the sensitive-header rule · no production caller yet",
+     controls:[{key:"host",label:"Host",def:"name",options:[["name","example.com"],["reserved","printer.local"],["single","intranet"],["private","10.0.0.5"],["metadata","169.254.169.254"],["mapped","[::ffff:10.0.0.5]"],["public","8.8.8.8"],["lenient","0x7f.1"]]},
+               {key:"port",label:"Port",def:"ok",options:[["ok","80, 443, 8080 or 8443"],["bad","6379"]]},
+               {key:"hop",label:"Hop",def:"first",options:[["first","the first hop"],["down","a redirect from https to http"]]}],
+     names:{name:"example.com",reserved:"printer.local",single:"intranet",private:"10.0.0.5",metadata:"169.254.169.254",mapped:"[::ffff:10.0.0.5]",public:"8.8.8.8",lenient:"0x7f.1"},
+     nodes:{
+      HF:{c:0,r:0,k:"d",t:["a strict host","form?"]},
+      LIT:{c:1,r:0,k:"d",t:["an IP literal?"]},
+      TAB:{c:2,r:0,k:"d",t:["outside the table","and extra ranges?"]},
+      R2:{c:3,r:0,k:"t",lvl:"REFUSE",t:["DeniedAddress","· its range class"]},
+      R0:{c:0,r:1,k:"t",lvl:"REFUSE",t:["HostForm"]},
+      RES:{c:1,r:1,k:"d",t:["not reserved or","a denied suffix?"]},
+      PORT:{c:2,r:1,k:"d",t:["a port the","policy allows?"]},
+      DG:{c:3,r:1,k:"d",t:["no https → http","downgrade?"]},
+      OK:{c:4,r:1,k:"t",lvl:"DELIVER",t:["null: the hop","may proceed"]},
+      R3:{c:1,r:2,k:"t",lvl:"REFUSE",t:["ReservedName"]},
+      R4:{c:2,r:2,k:"t",lvl:"REFUSE",t:["Port"]},
+      R5:{c:3,r:2,k:"t",lvl:"REFUSE",t:["InsecureRedirect"]}},
+     edges:[["HF","LIT","yes"],["LIT","TAB","yes"],["TAB","PORT","yes"],["PORT","DG","yes"],["DG","OK","yes"],
+            ["HF","R0","no"],["LIT","RES","no"],["TAB","R2","no"],["RES","PORT","yes"],["RES","R3","no"],["PORT","R4","no"],["DG","R5","no"]],
+     rules(s){ const p=["HF"], R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
+       if(s.host==="lenient"){ p.push("R0"); return R("GuardRefusal(HostForm): a lenient numeric form (0x7f.1, 127.1, 2130706433, a trailing dot on a literal) is refused, never read as an address.",["port","hop"]); }
+       p.push("LIT");
+       if(["private","metadata","mapped","public"].includes(s.host)){ p.push("TAB");
+         if(s.host!=="public"){ p.push("R2"); const cls=s.host==="metadata"?"link-local":"private-use";
+           return R("GuardRefusal(DeniedAddress, "+cls+"): a literal host is judged here by the address table and never reaches the resolver"+(s.host==="mapped"?"; an IPv4-mapped address is judged by its embedded IPv4 address.":"."),["port","hop"]); } }
+       else { p.push("RES"); if(s.host!=="name"){ p.push("R3"); return R("GuardRefusal(ReservedName): "+(s.host==="single"?"a single-label name":"a name under a reserved suffix (localhost, local, internal, home.arpa, localdomain) or one of the policy's extraDeniedHostSuffixes")+" is refused before any lookup.",["port","hop"]); } }
+       p.push("PORT");
+       if(s.port==="bad"){ p.push("R4"); return R("GuardRefusal(Port): a port outside allowedPorts, by default 80, 443, 8080 and 8443; allowedPorts = null allows any port.",["hop"]); }
+       p.push("DG");
+       if(s.hop==="down"){ p.push("R5"); return R("GuardRefusal(InsecureRedirect): an https hop redirecting to http, while the settings' allowHttpsToHttp is false, the default."); }
+       p.push("OK"); return R(s.host==="public"?"null: the literal is outside the table, so the hop may proceed.":"null: the hop may proceed; once a transport resolves the name, the resolver and socket guards judge every address it resolves to under mixedAnswers."); }},
+    {id:"trusted",label:"Trusted hop",kicker:"URL POLICY",runsOn:"caller's thread or coroutine",foot:"UrlGuard.checkHop, internal and pure · no address, name or port rule · no production caller yet",
+     controls:[{key:"scheme",label:"Scheme",def:"https",options:[["https","https"],["http","http, cleartext not allowed"],["clear","http, allowCleartext = true"]]},
+               {key:"pin",label:"Pins",def:"none",options:[["none","none"],["match","the host is pinned"],["other","another host is pinned"]]},
+               {key:"hop",label:"Hop",def:"first",options:[["first","the first hop"],["down","a redirect from https"]]}],
+     names:{https:"https://api.example.com/",http:"http://api.example.com/",clear:"http://api.example.com/"},
+     nodes:{
+      SCH:{c:0,r:0,k:"d",t:["https, or","cleartext allowed?"]},
+      PIN:{c:1,r:0,k:"d",t:["no pins, or","the host pinned?"]},
+      DG:{c:2,r:0,k:"d",t:["no https → http","downgrade?"]},
+      OK:{c:3,r:0,k:"t",lvl:"DELIVER",t:["null: the hop","may proceed"]},
+      R0:{c:0,r:1,k:"t",lvl:"REFUSE",t:["Scheme"]},
+      R1:{c:1,r:1,k:"t",lvl:"REFUSE",t:["HostNotPinned"]},
+      R2:{c:2,r:1,k:"t",lvl:"REFUSE",t:["InsecureRedirect"]}},
+     edges:[["SCH","PIN","yes"],["PIN","DG","yes"],["DG","OK","yes"],["SCH","R0","no"],["PIN","R1","no"],["DG","R2","no"]],
+     rules(s){ const p=["SCH"], R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
+       if(s.scheme==="http"){ p.push("R0"); return R("GuardRefusal(Scheme): a Trusted policy fetches https only unless allowCleartext is set.",["pin","hop"]); }
+       p.push("PIN");
+       if(s.pin==="other"){ p.push("R1"); return R("GuardRefusal(HostNotPinned): with pinnedHosts set, the canonical host must equal one of them exactly.",["hop"]); }
+       p.push("DG");
+       if(s.hop==="down"&&s.scheme==="clear"){ p.push("R2"); return R("GuardRefusal(InsecureRedirect): an https hop redirecting to http, while the settings' allowHttpsToHttp is false, the default."); }
+       p.push("OK"); return R("null: the hop may proceed. A Trusted policy has no address, name or port rule, and its enforcement keeps the base resolver and OkHttp's default socket factory and proxy selection."+(s.hop==="down"?" An https target after an https hop is no downgrade.":"")); }}
   ],
   sequence:{
     kicker:"REQUEST",
@@ -1130,7 +1226,7 @@ function drawFrame(svg,L){
   if(L.boundary){ const b=L.boundary; mk("rect",{class:"c4bound",x:b.x,y:b.y,width:b.w,height:b.h,rx:10},svg); const g=mk("g",{class:"c4boundl"},svg); const tw=b.label.length*6.3+18; mk("rect",{x:b.x+12,y:b.y-10,width:tw,height:20,rx:10},g); txt(g,b.x+21,b.y+4,b.label,""); }
   if(L.bands.length>1) L.bands.forEach((b,i)=>txt(svg,L.bx0+14,L.bandBox[i][0]-6,L.names[i],"c4band"));
 }
-/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the page's own ink. */
+/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the board's own ink. */
 function glyph(g,type,x,y,color){
   if(type==="person"){ mk("circle",{cx:x+7,cy:y+4,r:3.2,fill:color},g); mk("path",{d:`M${x+1},${y+14} a6,6 0 0 1 12,0 z`,fill:color},g); }
   else if(type==="softwareSystem"){ mk("rect",{x:x+1,y:y+1,width:9,height:9,rx:1.5,fill:color,opacity:.55},g); mk("rect",{x:x+4,y:y+4,width:9,height:9,rx:1.5,fill:color},g); }
@@ -1237,7 +1333,7 @@ function showDsl(){
   document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
   $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
   if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
-  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. The presenter edits it when a run changes the structure, re-embeds it here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this page.</p>`);
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
 }
 (function buildLadderAndKey(){
   const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
@@ -1290,7 +1386,7 @@ function selectThread(id){
 document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
 
 /* ---------- Decision path (MODEL.flows) ----------
-   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the page draws the
+   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the board draws the
    grid, builds the controls, and lights the path the rules return. Nothing here is specific to one system. */
 const CW=138,CH=70,NW=118,NH=50,X0=12,Y0=12;
 const fx=n=>X0+n.c*CW, fy=n=>Y0+n.r*CH;
@@ -1383,10 +1479,10 @@ $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
 /* ---------- The stamps (state.json) ----------
-   The header's chips: the version (a system page), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
-   the page shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
-   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the page
-   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the plan board
+   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
+   the board shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the board
+   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the issue board
    (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
 function renderState(){
   const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
@@ -1402,7 +1498,7 @@ function renderState(){
 renderState();
 
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
-   Generated from what each section draws, so a hand-written bubble or card needs no legend of its own: the system swatches present, a
+   Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
    planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
    chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
    data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
@@ -1457,9 +1553,9 @@ const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+
 show(start);
 
 /* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
-   A light/night toggle in the header (the renderer adds it when the page's header has none). Until it is clicked the page follows the
+   A light/night toggle in the header (the renderer adds it when the board's header has none). Until it is clicked the board follows the
    system setting; a click picks the other palette and remembers it (localStorage "dashboards-theme", shared by every dashboard of the
-   same origin) across pages and reloads. It only selects one of the two palettes the page defines: :root[data-theme]. The same code
+   same origin) across boards and reloads. It only selects one of the two palettes the board defines: :root[data-theme]. The same code
    runs on every dashboard type. */
 (function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
   let btn=document.getElementById("theme");

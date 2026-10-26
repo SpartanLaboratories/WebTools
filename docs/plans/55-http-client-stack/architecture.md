@@ -9,8 +9,8 @@
   failure model, published test support), a feeds module `webtools-feeds` built on it, the
   shared build logic every module reads (an included `build-logic` build with the Java 11
   floor), the unpublished check-only `js` compiles that keep common code common, and the
-  documentation that describes them. Level-4 work: nothing is implemented from this document;
-  each unit in §11 becomes a sub-issue of #55, planned and built at its own level.
+  documentation that describes them. Nothing is implemented from this document; each unit in §11
+  becomes a sub-issue of #55 and is built later from its own plan.
 - **Status:** systems design — implementation plans to follow.
 - **Baseline:** `master` `806ce8e`; branch `feat/issue-55-http-client-stack` at `96c30d6` holds
   only the planning documents under `docs/plans/55-http-client-stack/`.
@@ -86,8 +86,8 @@ is `fixtures/`. Line references are to `806ce8e`.
    `webtools-udp`'s constructors do (`MultiConnectionUDPClient.kt:188`, `:195`); `okhttp-jvm`
    5.5.0 as an ordinary `implementation` requirement moving only with the OkHttp that JDA
    adopts; Kotlin 2.2.0, kotlinx-coroutines 1.10.2, Gradle 9.7.1; no `-SNAPSHOT` dependency;
-   Gradle Module Metadata beside each POM; `explicitApi()` on the new modules only; Level-2
-   KDoc on every public declaration; five-level tests in packages
+   Gradle Module Metadata beside each POM; `explicitApi()` on the new modules only; KDoc
+   contracts on every public declaration; five-level tests in packages
    `com.spartanlabs.testing.<level>.webtools.<module>` with `mockwebserver3` at Level 3;
    nothing from skrapeit, jsoup, unirest, Ktor or Jackson on a consumer's classpath; every
    third-party library an `implementation` dependency with none in a public signature, with
@@ -474,12 +474,21 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     `localhost`, `127.0.0.1`, `[::1]`, `127.0.0.0/8`, `::1` and the port rule for those hosts.
     `LoopbackForTests` is reachable only through the fixtures (§6.7): the main artifact has no
     loosening knob.
+    > **Corrected 2026-10-26 (#64 as built):** the table also denies two addresses no IANA registry
+    > lists: `168.63.129.16/32` (the Azure platform endpoint) and an ISATAP interface identifier
+    > inside `2000::/3`, denied wholesale. Both close published bypasses of a registry-only table.
+    > See `64-url-policy/impact.md` §5.
   - **JVM enforcement** (`jvm/`, `internal`): `GuardedDns` (wraps `Dns.SYSTEM` or a stub;
     judges every returned address; rejects a mixed answer whole under `Reject`),
     `GuardedSocketFactory` (judges the `InetSocketAddress` of every `connect`, including
     fallback attempts; the version-independent backstop), two marker exceptions carrying the
     `RefusalReason` with constant messages, and `Proxy.NO_PROXY` for `Untrusted` (a proxy
     resolves names itself and bypasses both guards; `Trusted` keeps OkHttp's default selector).
+    > **Corrected 2026-10-26 (#64 as built):** `proxy(Proxy.NO_PROXY)` on the client does not keep a
+    > JVM-wide SOCKS setting away from a direct connection, so `GuardedSocketFactory` creates its own
+    > sockets on `Socket(Proxy.NO_PROXY)` instead of wrapping a delegate's. `GuardedDns` overrides
+    > `lookup` only and inherits OkHttp 5.5.0's record-based `newCall`. See
+    > `64-url-policy/research/jvm-enforcement.md` F1 and F4.
 - **Refusals** carry a coarse reason and never an address, a range or a query; logs carry
   `Url.redacted()`, the reason name and the matched range class only.
 
@@ -992,7 +1001,7 @@ What crosses each boundary:
 | facade → `ResponseCache` | `CacheKey`, `CachePolicy`, `maxAge`, a suspend loader | call | one load per key at a time; failures never stored; `Closed` after `close()` |
 | cache loader → `CallBudget` | `cost`, `lane`, `maxWait` → `Permit`; `RateSignals` on `complete` | call | fail fast beyond the cap; charged at grant; `complete`/`release` idempotent, `NonCancellable` |
 | loader → `HttpTransport` | `HttpRequest` → `Result<HttpResponse>` | call | one request per hop; capped body; `304` is a response; cancellation thrown |
-| transport → policy | `UrlGuard.checkHop`/`checkAddress` | call (pure) | a `RefusalReason?`; no I/O; coarse reasons |
+| transport → policy | `UrlGuard.checkHop`/`checkAddress` | call (pure) | a `RefusalReason?` (**Corrected 2026-10-26 (#64 as built):** an internal refusal holding the `RefusalReason` and, for `DeniedAddress`, the range class); no I/O; coarse reasons |
 | transport → OkHttp | `Dns`, `SocketFactory`, network interceptor, `Call` | call, JVM only | nothing OkHttp-typed leaves `jvmMain` |
 | budget → `BudgetStore` | `BudgetSnapshot` | suspend call | write-ahead; a save error is logged and ignored |
 | budget → `BudgetObserver` | `BudgetEvent` | event (callback) | one emission point; also the log site |
@@ -1187,19 +1196,19 @@ building with every test green. `webtools-http` and `webtools-feeds` stay unrele
 three existing modules move only in `java-floor`. "Blocked by" names true dependencies;
 units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
 
-| # | Slug | Sub-issue title | Blocked by | Level | Versions moved |
+| # | Slug | Sub-issue title | Blocked by | Scope | Versions moved |
 |---|---|---|---|---|---|
-| 1 | `build-logic` | Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks | — | 3 | none (published POMs and metadata identical) |
-| 2 | `java-floor` (**#47**) | webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+ (existing title; re-parented) | 1 | 2 | `webtools-scraping` 1.0.0 → `1.0.0a`, `webtools-browser` 1.0.0 → `1.0.0a` (fix; consumers pin a lettered version with `strictly`); `webtools-udp` rides in the unreleased `2.0.0a` |
-| 3 | `http-core` | webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile | 1, 2 | 3 | `webtools-http` 1.0.0 (new, unreleased) |
-| 4 | `test-support` | webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check | 3 | 3 | none |
-| 5 | `url-policy` | webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier | 3 | 3 | none |
-| 6 | `okhttp-transport` | webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories | 4, 5 | 3 | none |
-| 7 | `response-cache` | webtools-http: `ResponseCache` port and `CaffeineResponseCache` default | 3, 4 | 3 | none |
-| 8 | `call-budget` | webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes | 3, 4 | 3 | none |
-| 9 | `call-facades` | webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport | 6, 7, 8 | 3 | none |
-| 10 | `feeds` | webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher` | 4, 9 | 3 | `webtools-feeds` 1.0.0 (new, unreleased) |
-| 11 | `http-docs` | Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections | 10 | 1 | none |
+| 1 | `build-logic` | Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks | — | one system (the build), additive | none (published POMs and metadata identical) |
+| 2 | `java-floor` (**#47**) | webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+ (existing title; re-parented) | 1 | a fix inside one component (the build) | `webtools-scraping` 1.0.0 → `1.0.0a`, `webtools-browser` 1.0.0 → `1.0.0a` (fix; consumers pin a lettered version with `strictly`); `webtools-udp` rides in the unreleased `2.0.0a` |
+| 3 | `http-core` | webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile | 1, 2 | one new module, additive | `webtools-http` 1.0.0 (new, unreleased) |
+| 4 | `test-support` | webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check | 3 | one system, additive | none |
+| 5 | `url-policy` | webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier | 3 | one system, additive | none |
+| 6 | `okhttp-transport` | webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories | 4, 5 | one system, additive | none |
+| 7 | `response-cache` | webtools-http: `ResponseCache` port and `CaffeineResponseCache` default | 3, 4 | one system, additive | none |
+| 8 | `call-budget` | webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes | 3, 4 | one system, additive | none |
+| 9 | `call-facades` | webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport | 6, 7, 8 | one system, additive | none |
+| 10 | `feeds` | webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher` | 4, 9 | one new module, additive | `webtools-feeds` 1.0.0 (new, unreleased) |
+| 11 | `http-docs` | Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections | 10 | documentation only | none |
 
 **Landing order:** 1 → 2 → 3 → 4 → {5 → 6, 7, 8 in any order} → 9 → 10 → 11.
 
@@ -1214,7 +1223,7 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    three existing modules on the JVM plugin with `api(slf4j-api)` in their own files; keeps
    the `webtools-udp` port lock verbatim; moves the level tasks to the package filter; updates
    the README's build section. Leaves: the floor and its guard (2), any KMP module (3), the
-   common-check plugin (3), the fixtures check (4). *Level 3:* the build is one system; the
+   common-check plugin (3), the fixtures check (4). *Scope:* the build is one system; the
    change is additive build behaviour with no library API change. Measured: the three modules
    publish identical output.
 2. **`java-floor` (#47)** — Adds `WebToolsBuild.JAVA_FLOOR = 11` and wires `jvmTarget`,
@@ -1222,7 +1231,7 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    attribute (KMP plugin) from it; adds the `verifyJavaFloor` task into `check`; sets
    `version = "1.0.0a"` in `webtools-scraping` and `webtools-browser` and extends
    `webtools-udp`'s `2.0.0a` note; confirms `README.md:26` as written and adds the build-JDK
-   note. Leaves: a JDK 11 test launcher (follow-up), the foojay bump (#58). *Level 2:* a bug
+   note. Leaves: a JDK 11 test launcher (follow-up), the foojay bump (#58). *Scope:* a bug
    fix (bytecode and metadata) with no public API, state or wire change, local to the build.
    Its documents live in `47-java-23-bytecode/`.
 3. **`http-core`** — Creates `webtools-http` (KMP plugin, `explicitApi()`, coordinates,
@@ -1235,7 +1244,7 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    validation and query encoding in `commonTest`, the `Url`-vs-`HttpUrl` differential in
    `jvmTest`; the README artifact-table row and install line. Its plan starts with the
    compile proof of the marker, a gated interface, a default mentioning it and a consumer
-   without opt-in. Leaves: every default implementation and policy. *Level 3:* one new
+   without opt-in. Leaves: every default implementation and policy. *Scope:* one new
    module's additive API.
 4. **`test-support`** — Delivers the `testFixtures` compilation and its publication (recipe
    B: two variants, the capability, `TargetJvmVersion` from the floor, Maven scope mapping,
@@ -1245,7 +1254,7 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    in `build-logic` wired into `check`, and the README's `testFixtures(...)` line. Leaves:
    `LoopbackTransports` and the `MockWebServer` helpers (6), the budget fakes (8), the
    "three clocks move together" proof against the real cache and budget (re-run in 7 and 8).
-   *Level 3:* one system (the fixtures variant); the build check is this unit's own test, not
+   *Scope:* one system (the fixtures variant); the build check is this unit's own test, not
    a change to another system's behaviour.
 5. **`url-policy`** — Delivers `OutboundUrlPolicy` with `Trusted`/`Untrusted` builders,
    `TransportSettings` with both default sets, `CidrBlock`, `MixedAnswers`, the `internal`
@@ -1254,7 +1263,7 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    `GuardedSocketFactory`, the marker exceptions) with their stub-based Level 2 tests; Level
    4a tables in `commonTest` (every IANA row's first and last address, the public controls,
    the host-form catalogue, the published bypass vectors) and the JDK-predicate-gap and
-   differential tests in `jvmTest`. Leaves: wiring into a client (6). *Level 3:* one
+   differential tests in `jvmTest`. Leaves: wiring into a client (6). *Scope:* one
    subsystem, additive.
 6. **`okhttp-transport`** — Delivers `OkHttpTransport` (factory + `internal` constructor),
    `ExchangeGuard`, the redirect loop, the capped in-callback body read, the failure mapping,
@@ -1265,14 +1274,14 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    bomb; cancel during an endless body; `close()` lets the JVM exit; hop 2 refused with the
    second server at 0 requests; cross-origin stripping; the unrelaxed `Untrusted` refusing
    loopback; rebinding and `NO_PROXY`) and Level 4c (slow drip, endless chunked, redirect
-   chain over the cap). Leaves: sizing from `maxBurst` (9). *Level 3.*
+   chain over the cap). Leaves: sizing from `maxBurst` (9). *Scope:* one system, additive.
 7. **`response-cache`** — Delivers the `ResponseCache` port, `CacheKey`, `CachePolicy`,
    `Lookup`, `CacheStats`, `ResponseCache.Disabled` and `CaffeineResponseCache` with the
    load-start, failure-as-value, `asDeferred` waiting, `maxAge` compare-and-remove and
    `Closed` behaviours; Level 2 on `VirtualClock` (hits, expiry, miss TTL, `maxAge`,
    coalescing, one waiter's cancellation, close), Level 4a for key canonicalisation, Level 4c
    for the size bound and the 2,000-retry failure-identity check. Leaves: the loader's content
-   (9). *Level 3.*
+   (9). *Scope:* one system, additive.
 8. **`call-budget`** — Delivers `CallBudget`, `Permit`, `withPermit`, `Lane`, `RateWindow`,
    `RateSignals`, `WindowReading`, `RateSignalsReader` (+`Standard`), `RetryAfter`,
    `BudgetStore`, `InMemoryBudgetStore`, the snapshot types, `BudgetObserver`, `BudgetEvent`,
@@ -1283,14 +1292,14 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
    crash, `complete` from a cancelled coroutine, the three clocks together), Level 4a (the
    HTTP-date table against `java.time`, window arithmetic, the guard's two-cell charge, share
    rounding, a seeded property test). Leaves: reading signals from a real response in a
-   pipeline (9). *Level 3.*
+   pipeline (9). *Scope:* one system, additive.
 9. **`call-facades`** — Delivers `Endpoint`, `CallSpec`, `FetchSpec`, `UpstreamClient`,
    `UrlFetcher`, their configs, the common factories and the JVM owning factories (with the
    `maxBurst` dispatcher sizing and the cache→budget→transport closing order); Level 2 on the
    fake transport (refusal costs nothing: zero calls, no permit, nothing cached; a `429` with
    `Retry-After` pauses the budget and the next call fails fast; a decode failure is never
    stored; a miss status is stored; non-`GET` bypasses the cache), Level 3 for a real
-   end-to-end call over loopback, and the README how-to. Leaves: feeds. *Level 3.*
+   end-to-end call over loopback, and the README how-to. Leaves: feeds. *Scope:* one system, additive.
 10. **`feeds`** — Creates `webtools-feeds` and `webtools-feeds-commoncheck`; delivers the
     port, model, limits, validators, `FeedFetch`, `FeedFailure`, `FeedFetcher` and the prolog
     scan in `commonMain`, `RomeFeedParser` and `FeedFetcher.untrusted` in `jvmMain`; Level 2
@@ -1301,11 +1310,11 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
     fixed heap; README artifact row, install line and how-to. The hardening and conformance
     suite is an abstract `FeedParserContract` in `jvmTest`, the gate for the Rome default.
     Leaves: a published `FeedParserContract` variant, which ships with the feature release
-    that graduates `FeedParser`. *Level 3:* one new module built on published seams;
+    that graduates `FeedParser`. *Scope:* one new module built on published seams;
     depending on a sibling module does not make it two systems.
 11. **`http-docs`** — Writes `docs/webtools-http-architecture.md` and makes the final README
     pass (the "HTTP client stack" and "Feeds" sections, the stability notes, the test-layout
-    paragraph) consistent with what landed. *Level 1:* Markdown only; no plan folder.
+    paragraph) consistent with what landed. *Scope:* Markdown only; no plan folder.
 
 **Mapping of #47.** #47 keeps its number and becomes the sub-issue for unit 2, re-parented
 under #55 (`gh` sub-issue link). Its folder `47-java-23-bytecode/` already holds its

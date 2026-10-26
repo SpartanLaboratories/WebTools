@@ -1,7 +1,7 @@
 # Issue #55 — HTTP client stack (impact)
 
 - **Covers:** `SpartanLaboratories/WebTools#55`, with `#47` folded in as its `java-floor` unit.
-- **Level:** systems. What each artifact, build file, document and neighbouring issue gains or
+- **Scope:** systems. What each artifact, build file, document and neighbouring issue gains or
   loses once all eleven units in [`architecture.md`](architecture.md) §11 have landed. The
   file-level detail belongs to each unit's own plan.
 - **Baseline:** `master` `806ce8e`. Line references are to that commit.
@@ -16,7 +16,7 @@
 | `webtools-udp` | Java 11 floor (landed, #76): class files major 55, `org.gradle.jvm.version` 11 in the module metadata (23 on Central). Public API unchanged (`javap -protected` identical, measured); the UDP port lock unchanged. | rides in the unreleased `2.0.0a` (`webtools-udp/build.gradle.kts:116`); Central holds 1.0.0, 1.1.0 and 2.0.0, all Java 23 | JDK 11–22 can load it once it is published. POM identical; metadata identical except the JVM version. `2.0.0a` orders below `2.0.0`, so a graph that also asks for `2.0.0` keeps the Java 23 build unless it pins with `strictly`, as for the other two. This corrects the architecture's §12, which calls `webtools-udp` unaffected. |
 | `webtools-scraping` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As above. `1.0.0a` orders below `1.0.0`, so a graph that also asks for `1.0.0` keeps the Java 23 build unless it pins with `strictly`. The README and the release note say so. |
 | `webtools-browser` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As for `webtools-scraping`. |
-| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. Its test-fixtures variant is built (#63): `VirtualClock`, `FakeHttpTransport`, the `.http` fixtures and the recorder, with the fixtures-publication check that guards their publication. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. The fixtures variant as built (#63) matches too: the root module's metadata holds `testFixturesApiElements` and `testFixturesRuntimeElements`, each with the capability `io.github.spartanlaboratories:webtools-http-test-fixtures`, `org.gradle.jvm.version` 11 and the one `-test-fixtures.jar` (classes only, major 55); the root POM lists the two test libraries as `compile` and `optional`, and neither the main variants nor the `-jvm` POM lists them. A consumer takes it with `testFixtures(...)`, in Gradle only. |
+| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. Its test-fixtures variant is built (#63): `VirtualClock`, `FakeHttpTransport`, the `.http` fixtures and the recorder, with the fixtures-publication check that guards their publication. Its outbound-URL policies are built (#64): `OutboundUrlPolicy` (`Trusted`, `Untrusted`), `TransportSettings`, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core, over an `internal` common classifier and `internal` JVM resolver and socket guards; the dump grows by exactly these, and no dependency moves. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. The fixtures variant as built (#63) matches too: the root module's metadata holds `testFixturesApiElements` and `testFixturesRuntimeElements`, each with the capability `io.github.spartanlaboratories:webtools-http-test-fixtures`, `org.gradle.jvm.version` 11 and the one `-test-fixtures.jar` (classes only, major 55); the root POM lists the two test libraries as `compile` and `optional`, and neither the main variants nor the `-jvm` POM lists them. A consumer takes it with `testFixtures(...)`, in Gradle only. |
 | `webtools-feeds` (new) | RSS/Atom parser port with the Rome default and a conditional-GET fetcher. Kotlin Multiplatform; publishes `webtools-feeds` and `webtools-feeds-jvm`; no fixtures variant. | `1.0.0` | `webtools-http` and its `api` dependency on the compile classpath; `rome` 2.1.0 and `slf4j-api` at runtime. |
 
 **Not published:** the included `build-logic` build and the check-only modules
@@ -178,14 +178,15 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 | 2 `java-floor` | Settled (#76). The floor's effect on dependency resolution is exercised: KGP copies the `jvm` target's attributes onto the four `jvm` classpaths, and `MultiplatformJavaFloorIntegrationTest` asserts that each requests 11 (§8). |
 | 3 `http-core` | Settled (#62). The compile proof held in `commonMain`, `jvmMain` and the check module's `jsMain`: a top-level implementer of a gated port compiles with the module's opt-in and fails to compile without it, with the marker's message in the error; a consumer without the opt-in names the gated types, takes `WallClock.System` as a default and constructs every public leaf; eight subclassing declarations give exactly eight errors in `commonTest` and in `jvmTest`, and none with `@OptIn` ([`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3). The check module compiles `commonMain` for `js()` with no environment, so the root project gains no task (§8). |
 | 4 `test-support` | Settled (#63). The fixtures-publication check, `:build-logic:fixturesPublicationCheck`, is a dependency of `webtools-http`'s own `check`, declared only when WebTools is the root build: `./gradlew build`, `check` and `:webtools-http:check` run it, and a build that includes WebTools never does. It stays the only guard on the experimental publishing API, and it now signs the multiplatform publication, adhoc variant included, with a throwaway key on every run and asserts a signature beside every published file. Only Maven Central's upload and validator meet the fixtures jar first at the first release ([`63-test-support/impact.md`](63-test-support/impact.md) §1 and §5). |
+| 5 `url-policy` | Settled (#64). The guards below the transport are measured through a real `OkHttpClient` on JDK 23.0.2: a JVM-wide SOCKS setting reaches the default socket factory's sockets even with `proxy(Proxy.NO_PROXY)`, so the socket guard creates its own `Socket(Proxy.NO_PROXY)` sockets; a resolver-guard refusal is the call's exception, unwrapped, and socket-guard refusals reach its `suppressed` list, never as a `ConnectException`; OkHttp 5.5.0's inherited `Dns.newCall` resolves through the guard. Real DNS answers for the bypass catalogue stay unmeasured (architecture §13), and the settings' numbers, the `Untrusted` port set and the reserved names stay judgement defaults ([`64-url-policy/impact.md`](64-url-policy/impact.md) §5 and §8). |
 | 8 `call-budget` | How a `Mutex`-based ledger closes without suspending (the port's non-suspend `close()`). |
 | 9 `call-facades` | The generic `Endpoint<T>` factory-over-class resolution; whether `RateLimited.retryAfter` still needs the `max` with the budget's `pausedFor` once `complete` has applied the signals. |
 | 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 to 4 as built
+## 8. What the later units build on: units 1 to 5 as built
 
-Units 1 to 4 are built.
+Units 1 to 5 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -202,6 +203,10 @@ Units 1 to 4 are built.
   [`63-test-support/final-implementation.md`](63-test-support/final-implementation.md). Its contracts
   for the later units are pinned in [`63-test-support/plan.md`](63-test-support/plan.md) §12 and
   summarised in [`63-test-support/impact.md`](63-test-support/impact.md) §4.
+- **Unit 5, `url-policy` (#64).** Its as-built record is
+  [`64-url-policy/final-implementation.md`](64-url-policy/final-implementation.md). Its contracts for
+  the later units are pinned in [`64-url-policy/plan.md`](64-url-policy/plan.md) §12 and summarised in
+  [`64-url-policy/impact.md`](64-url-policy/impact.md) §4.
 
 What they settle for the units still to come:
 
@@ -330,8 +335,8 @@ What they settle for the units still to come:
     texts from [`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3. The
     evergreen architecture document describes the check module as `js()` with no environment.
 - **The IDE checks unit 3 leaves** (IntelliJ's import of the check module, the gate's error and its
-  `@OptIn` quick fix, Quick Documentation) are the maintainer's and still open. They share unit 4's
-  trigger: the next IntelliJ import after #63 lands, at the latest before unit 5 (#64) starts
+  `@OptIn` quick fix, Quick Documentation) are the maintainer's and still open. They share the trigger
+  of units 4 and 5: the next IntelliJ import, at the latest before unit 6 (#65) starts
   ([`62-http-core/impact.md`](62-http-core/impact.md) §7).
 
 **Units 3 `http-core` and 10 `feeds`.**
@@ -416,11 +421,75 @@ What they settle for the units still to come:
     own covers it.
   - **Unit 11 (#70).** It documents the fixtures (the tier, the `.http` format, the recorder workflow,
     the `testFixtures(...)` line, the Gradle-only note) and the check, from unit 4's KDoc and README text.
-- **The IDE checks of units 3 and 4** are the maintainer's: at the next IntelliJ import after #63 lands,
-  and at the latest before unit 5 (#64) starts
+- **The IDE checks of units 3 and 4** are the maintainer's: at the next IntelliJ import, and at the
+  latest before unit 6 (#65) starts, with unit 5's
   ([`63-test-support/impact.md`](63-test-support/impact.md) §7).
 - **The first release.** The check signs the multiplatform publication, adhoc variant included, on every
   run. Only Maven Central's upload and validator meet the fixtures jar first, at `webtools-http`'s first
   release (§7).
 - **`architecture.md`** carries dated corrections (2026-10-25) at §6.1 (where the check attaches), §12
   (the signing on every run of the check) and §6.7 (the two `MockWebServer` helpers land with unit 6).
+
+**Unit 5, `url-policy` (#64), as built.**
+- **The policies.** `webtools-http` holds the outbound-URL policies in `com.spartanlabs.webtools.http`,
+  all Stable Core:
+  - the sealed `OutboundUrlPolicy` with the final `Trusted` and `Untrusted`, their builders and the
+    factories `trusted { }`, `trusted(from) { }`, `untrusted { }` and `untrusted(from) { }`;
+  - `TransportSettings`, with its builder, the named defaults `TrustedDefaults` and `UntrustedDefaults`
+    and the factory `TransportSettings(from) { }`; every value is validated when it is built, inside
+    the limits OkHttp 5.5.0 accepts;
+  - `CidrBlock` (`parse(text): Result<CidrBlock>`, a canonical `toString`) and `MixedAnswers`
+    (`Reject`, `DropDenied`).
+
+  The names it takes, public and `internal`, are listed in
+  [`64-url-policy/plan.md`](64-url-policy/plan.md) §12. No sibling reuses them.
+- **The classifier** (`commonMain`, `internal`, pure and JVM-free): `StrictIp`, `HostRules`,
+  `AddressRanges` (the IANA special-purpose rows, multicast, `168.63.129.16/32` and the ISATAP rule;
+  mapped and NAT64 addresses judged by their embedded IPv4; everything outside `2000::/3` denied),
+  `GuardRelaxation`, and `UrlGuard` with `checkHop`, `checkRequest`, `admitRedirect`, `checkAddress`
+  and `judgeAnswer`. A refusal is a `GuardRefusal`: the reason and, for `DeniedAddress`, the range class.
+- **The JVM guards** (`jvmMain`, `internal`): `GuardedDns`, which overrides `lookup` only;
+  `GuardedSocketFactory` and its `GuardedSocket`, a `Socket(Proxy.NO_PROXY)` that judges every connect;
+  the stackless markers `PolicyRefusedUnknownHost` and `PolicyRefusedIo`, which `policyRefusal()` finds in
+  the cause chain and the `suppressed` lists; and `UrlGuard.enforcement(baseDns)`, the bundle a client
+  applies. Their KDoc states the wiring, the threads, the one `DEBUG` line and what a call does after a
+  guard throws.
+- **The builder DSL.** `WebToolsDsl`, a public `@DslMarker`, marks every builder the module passes to a
+  consumer's lambda: `HttpHeaders.Builder`, `HttpRequest.Builder`, `HttpResponse.Builder`,
+  `TransportSettings.Builder` and the two policy builders. A nested block reaches an outer builder only
+  through its label.
+- **Rules for the later units.**
+  - A builder that a later unit adds to `webtools-http` and passes to a consumer's lambda carries
+    `@WebToolsDsl`, and joins the list of `WebToolsDslComponentTest` and the list in the marker's KDoc.
+  - A refusal is logged once, by the site that creates the `RefusedByPolicy` failure: the transport for
+    its own refusals, the facade for its pre-check. No classifier or guard logs one.
+  - The policy pair is sealed, and nothing of the policy is gated by
+    `ExperimentalForInheritanceWebToolsApi`.
+- **What each later unit takes.** [`64-url-policy/plan.md`](64-url-policy/plan.md) §12 has the
+  signatures.
+  - **Unit 6 (#65).** The settings, each with the OkHttp 5.5.0 limit it respects.
+    `UrlGuard.checkRequest(request)` before hop 1 and `UrlGuard.admitRedirect(target, previous)` for each
+    redirect target, both before any `Call`; a `GuardRefusal` becomes `RefusedByPolicy(refusal.reason)`.
+    `UrlGuard.enforcement(baseDns)` on its `OkHttpClient.Builder` (`dns`, and `socketFactory` and
+    `proxy` when set), with fast fallback at its default and `retryOnConnectionFailure(false)`. A failure
+    mapping that checks `policyRefusal()` first and logs the one `WARN` with `Url.redacted()`, the reason
+    name and the range class. `LoopbackTransports.untrusted` takes `GuardRelaxation.LoopbackForTests`,
+    and `LoopbackTransports.trusted` `trusted { allowCleartext = true }`. The transport vectors T01 to
+    T08 and T10 of
+    [`64-url-policy/research/bypass-vectors.md`](64-url-policy/research/bypass-vectors.md) §5 are its
+    tests.
+  - **Unit 9 (#68).** `UrlFetcher`'s pre-check is `UrlGuard.checkRequest`: a refusal costs no permit and
+    no call, and the facade logs it once. `withSettings` raises the concurrency to the budget's burst.
+    The client's default policy is `OutboundUrlPolicy.trusted { pinnedHosts = setOf(baseUrl.host) }`.
+    Vector T09, an absolute URL in a path argument, is its test.
+  - **Unit 10 (#69).** Its owning factory builds an `Untrusted` fetcher with
+    `OutboundUrlPolicy.untrusted { }`.
+  - **Unit 11 (#70).** It documents the policies (the tier, the numbers, the `extraDeniedRanges`
+    statement, `MixedAnswers`) and the builder DSL from unit 5's KDoc, and the README row.
+  - **Units 7 and 8 (#66, #67).** Nothing from the policy; any builder of theirs carries `@WebToolsDsl`.
+- **The IDE checks of units 3, 4 and 5** are the maintainer's, in one session: at the next IntelliJ
+  import, and at the latest before unit 6 (#65) starts
+  ([`64-url-policy/impact.md`](64-url-policy/impact.md) §6).
+- **`architecture.md`** carries dated corrections (2026-10-26) at §6.3.1 (the address table's two rules
+  that are not registry rows; the socket guard's own `Socket(Proxy.NO_PROXY)` sockets and the inherited
+  `newCall`) and §7.4 (a refusal carries the range class beside the reason).

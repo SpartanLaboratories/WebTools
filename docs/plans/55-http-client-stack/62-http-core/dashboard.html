@@ -626,12 +626,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   <div class="chips" id="chips"></div>
 </header>
 
-<!-- presenter: the WIP strip is rendered from plan.json "wip" (plan/RULES.md §3); the strip carries its own legend. -->
+<!-- fill: the WIP strip is rendered from plan.json "wip" (plan/RULES.md §3); the strip carries its own legend. -->
 <section class="wip" id="wip" aria-label="Work in progress"></section>
 
 <div class="kpis" id="kpis"></div>
 
-<!-- presenter: three views of the same rows, the Impact (plan.json "impact") and the source; a tracking board adds Landing Order. Every tab
+<!-- fill: three views of the same rows, the Impact (plan.json "impact") and the source; a tracking board adds Landing Order. Every tab
      carries a legend. -->
 <div class="tabs" role="tablist" aria-label="Views">
   <button class="tab" role="tab" id="t-timeline" aria-controls="p-timeline" aria-selected="true">Timeline</button>
@@ -684,7 +684,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
 
   <section class="view" role="tabpanel" id="p-source" aria-labelledby="t-source" hidden>
     <h2>plan.json <small>the committed file, embedded verbatim</small></h2>
-    <p class="lede">The presenter writes it at each event of the run; the few fields kept as data only are left out of this view.</p>
+    <p class="lede">Written at each event of the run; the few fields kept as data only are left out of this view.</p>
     <pre class="src" id="source-view" tabindex="0"></pre>
     <div class="key" id="source-key"></div>
   </section>
@@ -801,7 +801,6 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "other": 2
         },
         "route": "on-the-spot",
-        "report": "build/reports/test-inspector/index.html",
         "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
       }
     ],
@@ -838,7 +837,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     },
     "open": [
       {
-        "text": "The S2 report raised one inconsistency in `plan.md` for the planner: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
+        "text": "The S2 report raised one inconsistency in `plan.md`, for a plan ruling: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
         "raised": "implementation-stage S2",
         "ref": "plan.md",
         "resolved": "Resolved by `plan.md`'s Amendment 1, which makes §9's media-type test row agree with the unchanged grammar of §6.4 and code of §7.5, applies in S4 and changes no verdict on this board."
@@ -850,7 +849,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "resolved": "Left to the maintainer as a known gap: the owner and the trigger (the next IntelliJ import, at the latest before unit 4, #63, starts) are recorded in `impact.md` §7 and `final-implementation.md` §6 and §8."
       },
       {
-        "text": "Two plan-sanctioned test-scope exclusions flagged by qa: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
+        "text": "Two plan-sanctioned test-scope exclusions flagged in qa pass 1: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
         "raised": "qa-pass 1",
         "ref": "plan.md",
         "resolved": "Recorded in `plan.md` as Amendment 2 (§9), and in `IncludedBuildEndToEndTest`'s KDoc."
@@ -999,7 +998,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "verdict",
-      "label": "Resumed into research with the user's two answers on `Url`. Q1: `Url.parse` normalises as OkHttp's `HttpUrl` does for ASCII hosts (percent-encoding, dot segments resolved, default port dropped, an empty path made `/`, trimmed, fragment dropped) and rejects non-ASCII or percent-encoded hosts, backslashes, inner whitespace or control characters, and userinfo. Q2: `Url.toString()` returns the full canonical URL; `redacted()` is the explicit safe form"
+      "label": "Resumed into research with the two `Url` questions answered. Q1: `Url.parse` normalises as OkHttp's `HttpUrl` does for ASCII hosts (percent-encoding, dot segments resolved, default port dropped, an empty path made `/`, trimmed, fragment dropped) and rejects non-ASCII or percent-encoded hosts, backslashes, inner whitespace or control characters, and userinfo. Q2: `Url.toString()` returns the full canonical URL; `redacted()` is the explicit safe form"
     },
     {
       "date": "2026-10-25",
@@ -1028,13 +1027,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "gap",
-      "label": "Research verified: one verifier re-opened the load-bearing claims of the four findings files at their sources; 107 claims, 107 hold, none fails, none is unclear",
+      "label": "Research verified: the load-bearing claims of the four findings files were re-opened at their sources; 107 claims, 107 hold, none fails, none is unclear",
       "ref": "research/README.md#verification"
     },
     {
       "date": "2026-10-25",
       "column": "considered",
-      "label": "Research ended: the four questions returned and were verified (the opt-in gate across `commonMain`, `jvmMain` and `js`, the common-check plugin's effect on the root build, the `Url` grammar against OkHttp 5.5.0, RFC 9110 header and method validation); the plan-writer runs next",
+      "label": "Research ended: the four questions returned and were verified (the opt-in gate across `commonMain`, `jvmMain` and `js`, the common-check plugin's effect on the root build, the `Url` grammar against OkHttp 5.5.0, RFC 9110 header and method validation); the plan is written next",
       "ref": "research/README.md#summary"
     },
     {
@@ -1046,7 +1045,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Implementation starts on `feat/issue-62-http-core` at `865e6e4`, the branch that holds the research and the plan: rookie-dev builds `plan.md` stage by stage, from S1, the `webtools.kotlin-common-check` plugin and its TestKit tests",
+      "label": "Implementation starts on `feat/issue-62-http-core` at `865e6e4`, the branch that holds the research and the plan: the implementer builds `plan.md` stage by stage, from S1, the `webtools.kotlin-common-check` plugin and its TestKit tests",
       "ref": "plan.md#5-approach-and-staging"
     },
     {
@@ -1100,13 +1099,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "qa pass 1: changes requested, 29 findings (18 documentation, 9 test, 2 code; 27 minor, 2 other); code review passed, 231 tests green and apiCheck passed. Remediation on the spot: rookie-dev's fixes, then the planner records two scope exclusions in plan.md §9; landing follows with no new qa pass",
+      "label": "qa pass 1: changes requested, 29 findings (18 documentation, 9 test, 2 code; 27 minor, 2 other); code review passed, 231 tests green and apiCheck passed. Remediation on the spot: the fixes, then two scope exclusions recorded in plan.md §9; landing follows with no new qa pass",
       "ref": ""
     },
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "qa pass 1 fixes done on the spot: KDoc and line-comment wording, test-fixture tags, U+212A escapes, corpus rows, behaviour-named tests and one new HttpHeaders test; re-run green (131 jvmTest tests, apiCheck, dump unchanged; CommonCheckPluginIntegrationTest 7, e2eTest 5). No behaviour, API or design change. The planner records the two scope exclusions in plan.md §9 and reconciles the as-built record",
+      "label": "qa pass 1 fixes done on the spot: KDoc and line-comment wording, test-fixture tags, U+212A escapes, corpus rows, behaviour-named tests and one new HttpHeaders test; re-run green (131 jvmTest tests, apiCheck, dump unchanged; CommonCheckPluginIntegrationTest 7, e2eTest 5). No behaviour, API or design change. The two scope exclusions are recorded in plan.md §9 and the as-built record reconciled",
       "ref": "final-implementation.md#qa-pass-1-fixes"
     },
     {
@@ -1118,7 +1117,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "The planner reconciled the as-built record and the impact: three deviations, all additions (a README sentence, `HttpTransport`'s eighth contract point, one KDoc sentence); #55's impact and architecture carry dated callouts",
+      "label": "The as-built record and the impact reconciled: three deviations, all additions (a README sentence, `HttpTransport`'s eighth contract point, one KDoc sentence); #55's impact and architecture carry dated callouts",
       "ref": "40cb538"
     },
     {
@@ -1803,7 +1802,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       },
       "verdict": {
         "kind": "build",
-        "defense": "Configurable types are built by a factory over an `internal` constructor, so later additions stay additive. Developer-written values throw `IllegalArgumentException`, and text from outside the process returns `Result` with a message that never echoes the input. Byte arrays are copied in and out, and the types print their structure only. The `Url` rules follow the user's two answers at the interview.",
+        "defense": "Configurable types are built by a factory over an `internal` constructor, so later additions stay additive. Developer-written values throw `IllegalArgumentException`, and text from outside the process returns `Result` with a message that never echoes the input. Byte arrays are copied in and out, and the types print their structure only. The `Url` rules follow the interview's two answers.",
         "steps": [
           {
             "id": "S2",
@@ -3231,7 +3230,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "excerpt": {
               "ref": "plan.md#11-version-control",
               "heading": "11. Version control",
-              "paragraph": "Branch: `feat/issue-62-http-core`. It exists and holds the research commits; the executor confirms it (P1) rather than cutting it again. · Commits. Each is coherent and leaves the build green. The type and the split are the manager's final call; subject lines carry `(Issue #62)`; no attribution trailers. · `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`, `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new TestKit classes and the `BuildLogicPluginsGatingTest.kt` edit. The plan is in this …",
+              "paragraph": "Branch: `feat/issue-62-http-core`. It exists and holds the research commits; … · Commits. Each is coherent and leaves the build green. …; subject lines carry `(Issue #62)`; no attribution trailers. · `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`, `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new TestKit classes and the `BuildLogicPluginsGatingTest.kt` edit. The plan is in this commit so `git log --follow` binds the two. No module applies the plugin yet, so the build is unchanged for …",
               "hash": "0bca7759e342"
             }
           }
@@ -3477,7 +3476,72 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "source": "impact.md, reconciled with final-implementation.md",
     "link": "impact.md#1-published-artifacts"
   },
-  "roadmap": null,
+  "roadmap": {
+    "issue": 55,
+    "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+    "asOf": "2026-10-26",
+    "items": [
+      {
+        "issue": 61,
+        "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 47,
+        "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 62,
+        "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 63,
+        "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 64,
+        "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
+        "state": "OPEN"
+      },
+      {
+        "issue": 65,
+        "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
+        "state": "OPEN"
+      },
+      {
+        "issue": 66,
+        "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
+        "state": "OPEN"
+      },
+      {
+        "issue": 67,
+        "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
+        "state": "OPEN"
+      },
+      {
+        "issue": 68,
+        "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
+        "state": "OPEN"
+      },
+      {
+        "issue": 69,
+        "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
+        "state": "OPEN"
+      },
+      {
+        "issue": 70,
+        "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
+        "state": "OPEN"
+      }
+    ]
+  },
   "followUps": [
     {
       "name": "A permanent compile-fail check of the gate",
@@ -3515,7 +3579,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "label": "#62 as-built record",
       "path": "final-implementation.md",
-      "note": "the implementer's as-built input through S7: §1 what was built, §2 no deviation, §4 the eight acceptance criteria met, §6 the Level 5 pass, §8 the known gaps; the planner reconciles it into the final record"
+      "note": "the implementer's as-built input through S7: §1 what was built, §2 no deviation, §4 the eight acceptance criteria met, §6 the Level 5 pass, §8 the known gaps; reconciled into the final record at the landing"
     },
     {
       "label": "#62 research",
@@ -3556,7 +3620,17 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   },
   "issueBoards": {
     "47": "../47-java-23-bytecode/dashboard.html",
-    "61": "../61-build-logic/dashboard.html"
+    "61": "../61-build-logic/dashboard.html",
+    "63": "../63-test-support/dashboard.html",
+    "64": "../64-url-policy/dashboard.html"
+  },
+  "links": {
+    "workBoard": "../../index.html",
+    "repoBoard": "../../../dashboards/index.html",
+    "boards": {
+      "webtools-http-core": "../../../dashboards/webtools-http/index.html",
+      "gradle-build": "../../../dashboards/gradle-build/index.html"
+    }
   }
 }
 </script>
@@ -3809,7 +3883,7 @@ function runKeys(rows){ const Ls=rows.map(runOf).filter(Boolean); if(!Ls.length)
    cell in the research scale (red, orange, orange with a check, yellow, green) with a pill saying it. plan/scripts/lib.js qState()
    and researchRows() are the same rule for the scripts. */
 const RS={planning:{g:"✎",label:"planning",cls:"critical",desc:"the question is being drafted"},
-  researching:{g:"↻",label:"researching",cls:"serious",desc:"a researcher is out on it"},
+  researching:{g:"↻",label:"researching",cls:"serious",desc:"being researched"},
   returned:{g:"✓",label:"returned",cls:"serious",desc:"its findings are back, awaiting verification"},
   verifying:{g:"◇",label:"verifying",cls:"warning",desc:"its findings are being verified"},
   complete:{g:"✔",label:"complete",cls:"good",desc:"verified; kept until the plan is accepted"}};
@@ -3821,7 +3895,7 @@ function researchRowsOf(w,rows){ const m=new Map(), ids=new Set((rows||[]).map(r
   return m; }
 let RROWS=new Map();
 const rsPill=st=>pill(RS[st]);
-const RSP_DESC={planning:"a question being drafted",researching:"a question a researcher is out on",returned:"a question returned, awaiting verification",verifying:"a question being verified",complete:"a question verified"};
+const RSP_DESC={planning:"a question being drafted",researching:"a question being researched",returned:"a question returned, awaiting verification",verifying:"a question being verified",complete:"a question verified"};
 const KEY_RSP=st=>`<span>${rsPill(st)} ${RSP_DESC[st]}</span>`;
 const KEY_RS=st=>`<span><i class="ring rs-${st}"></i>${rsPill(st)} research state: ${esc(RS[st].desc)}</span>`;
 /* The strip's research line (plan/RULES.md §3): the questions still open, and how many have returned. */
@@ -3842,11 +3916,11 @@ const OPEN_PT={g:"!",label:"open",cls:"warning"};
 const KEY_OPEN=`<span>${pill(OPEN_PT)} an open point raised during the run, not resolved yet</span>`;
 const IV={answered:{g:"✓",label:"answered",cls:"neutral"},waiting:{g:"?",label:"waiting on the user",cls:"warning"}};
 const STAGE_DOT={done:"done",current:"cur",todo:"todo"};
-const NEXT_STEP={qa:"landing, or remediation if qa requests changes",remediation:"qa, the next pass",landing:"landed"};
-/* The route /resolve-issue step 5 takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
-   no fallout), fixed on the spot with no new qa pass; otherwise a remediation pass by rookie-dev, or a planner re-pass then rookie-dev,
+const NEXT_STEP={qa:"landing, or remediation if the qa pass requests changes",remediation:"qa, the next pass",landing:"landed"};
+/* The route the pipeline takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
+   no fallout), fixed on the spot with no new qa pass; otherwise a remediation pass, or a plan re-pass then a remediation pass,
    and the next qa pass (at most three in all). */
-const ROUTE={"on-the-spot":{label:"fixed on the spot, no new qa pass",next:"landing (no new qa pass)"},"rookie-dev":{label:"a remediation pass: rookie-dev, then the next qa pass",next:"qa, the next pass"},"planner-then-rookie-dev":{label:"a remediation pass: a planner re-pass, then rookie-dev, then the next qa pass",next:"qa, the next pass"}};
+const ROUTE={"on-the-spot":{label:"fixed on the spot, no new qa pass",next:"landing (no new qa pass)"},"rookie-dev":{label:"a remediation pass, then the next qa pass",next:"qa, the next pass"},"planner-then-rookie-dev":{label:"a remediation pass: a plan re-pass, then the fixes, then the next qa pass",next:"qa, the next pass"}};
 const stepName=x=>x&&(x.name||x.what)||"";
 function nextStepOf(R,S){ if(S==="remediation"&&R.remediation&&ROUTE[R.remediation.route]) return ROUTE[R.remediation.route].next; if(NEXT_STEP[S]) return NEXT_STEP[S]; const st=R.steps&&R.steps.length?R.steps:STEP_ORDER, i=st.indexOf(S); return i>=0&&i<st.length-1?st[i+1]:""; }
 /* a step's title, as the step panel's heading shows it */
@@ -3880,11 +3954,11 @@ const PANEL={
       h+=spList(qs.map(q=>{ const x=qState(q); keys.add(KEY_RSP(x)); const rows=(Array.isArray(q.rows)?q.rows:[]).map(id=>esc(o.rowName(id)));
         return spItem("",rsPill(x),`<code>${esc(q.question)}</code>`,[rows.length?`bears on ${rows.join(", ")}`:"bears on no row: the whole Considered column",q.returned?`returned ${when(q.returned)}`:q.started?`sent ${when(q.started)}`:"",q.findings?refHtml(q.findings,"findings"):""].filter(Boolean).join(" · ")); })); }
     return h; },
-  architecture:(R,o)=>`<p>The architecture weighs the options and decomposes the work into its units; it is signed off by the user.</p>${o.options!=null?`<p class="sp-sum">${o.options} option${o.options===1?"":"s"} weighed so far</p>`:""}`,
+  architecture:(R,o)=>`<p>The architecture weighs the options and decomposes the work into its units; the step ends at its sign-off.</p>${o.options!=null?`<p class="sp-sum">${o.options} option${o.options===1?"":"s"} weighed so far</p>`:""}`,
   plan:(R,o,keys)=>{ const P=R.plan||{}, V=R.verdicts, re=P.state==="re-pass";
     const first=re?`re-pass ${P.from==="qa"?`after qa pass ${esc(P.pass||"?")}`:P.from==="parent"?(o.parent?`from #${esc(o.parent)}'s plan`:"from the parent's plan"):P.from==="existing"?`verifying the existing plan${P.against?` against ${esc(P.against)}`:""}`:""}`:"plan writing";
     let h=`<ol class="steps" aria-label="The plan's stages"><li class="cur${o.held?" held":" glow"}" aria-current="step"><span class="dot" aria-hidden="true"></span>${first}</li><li class="todo"><span class="dot" aria-hidden="true"></span>plan accepted</li></ol>`;
-    if(re) h+=`<p>${P.from==="qa"?`The planner re-passes the plan to answer qa pass ${esc(P.pass||"?")}'s findings${R.remediation&&R.remediation.route==="planner-then-rookie-dev"?"; rookie-dev's fixes and the next qa pass follow":""}.`:P.from==="existing"?`The planner verifies the plan already written${P.against?` against <code>${esc(P.against)}</code> as it stands now`:" against the code as it stands now"}, and records each delta.`:`The planner verifies the plan this unit takes from its parent's architecture, and writes its own.`}</p>`;
+    if(re) h+=`<p>${P.from==="qa"?`The plan is re-passed to answer qa pass ${esc(P.pass||"?")}'s findings${R.remediation&&R.remediation.route==="planner-then-rookie-dev"?"; the fixes and the next qa pass follow":""}.`:P.from==="existing"?`The plan already written is verified${P.against?` against <code>${esc(P.against)}</code> as it stands now`:" against the code as it stands now"}, and each delta recorded.`:`The plan this unit takes from its parent's architecture is verified, and the unit's own written.`}</p>`;
     if(V&&V.total) { h+=`<p class="sp-sum">${V.written} of ${V.total} verdict${V.total===1?"":"s"} written</p>`; if(o.unwritten&&o.unwritten.length&&V.written<V.total) h+=`<p>Still to write: ${o.unwritten.slice(0,6).map(esc).join(", ")}${o.unwritten.length>6?`, and ${o.unwritten.length-6} more`:""}.</p>`; }
     return h; },
   branch:()=>`<p>The plan is accepted; the branch is cut next and the build starts.</p>`,
@@ -3902,9 +3976,9 @@ const PANEL={
   remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null, route=M.route||(last&&last.route)||null, nx=`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`;
     /* while no sub-step is recorded, the loop the route takes (the pipeline's, when no route is recorded either) */
     const dflt=route==="on-the-spot"?[{what:`Minor fixes for qa pass ${n||"n"}, made on the spot`,state:"current"},{what:"Landing, with no new qa pass",state:"todo"}]
-      :route==="planner-then-rookie-dev"?[{what:`Planner re-pass for qa pass ${n||"n"}'s findings`,state:"current"},{what:"rookie-dev fixes",state:"todo"},{what:nx,state:"todo"}]
-      :route==="rookie-dev"?[{what:`rookie-dev fixes for qa pass ${n||"n"}'s findings`,state:"current"},{what:nx,state:"todo"}]
-      :[{what:`Fixes for the findings of qa pass ${n||"n"}: the implementer, the planner first where the plan itself is wrong`,state:"current"},{what:nx,state:"todo"}];
+      :route==="planner-then-rookie-dev"?[{what:`Plan re-pass for qa pass ${n||"n"}'s findings`,state:"current"},{what:"Fixes",state:"todo"},{what:nx,state:"todo"}]
+      :route==="rookie-dev"?[{what:`Fixes for qa pass ${n||"n"}'s findings`,state:"current"},{what:nx,state:"todo"}]
+      :[{what:`Fixes for the findings of qa pass ${n||"n"}: the implementer, with a plan re-pass first where the plan itself is wrong`,state:"current"},{what:nx,state:"todo"}];
     const steps=Array.isArray(M.steps)&&M.steps.length?M.steps:dflt;
     let h=`<p class="sp-sum">Answering qa pass ${esc(n||"?")}${last?` · ${(QA[last.verdict]||QA.running).label}`:""}</p>`;
     if(ROUTE[route]) h+=`<p>Route: ${esc(ROUTE[route].label)}.</p>`;
@@ -3912,7 +3986,7 @@ const PANEL={
     h+=spList(steps.map(x=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${rich(stepName(x))}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,"")));
     if(!(Array.isArray(M.steps)&&M.steps.length)) h+=`<p>${ROUTE[route]?"The route's loop":"The pipeline's remediation loop"}; its sub-steps are recorded as they run.</p>`;
     return h; },
-  landing:R=>{ const qa=Array.isArray(R.qa)?R.qa:[], last=qa.length?qa[qa.length-1]:null; return `<p>qa has approved${last?` (pass ${esc(last.pass)})`:""}; the merge and the landing refresh are the admin team's.</p>`; },
+  landing:R=>{ const qa=Array.isArray(R.qa)?R.qa:[], last=qa.length?qa[qa.length-1]:null; return `<p>The qa pass approved${last?` (pass ${esc(last.pass)})`:""}; the land follows: its state boards refreshed on the branch, then the merge.</p>`; },
   _:R=>R.detail?`<p>${rich(R.detail)}</p>`:`<p>Nothing recorded for this step.</p>`};
 function stepPanel(R,o){ o=o||{}; const k=R.step||"", held=["halted","escalated"].includes(k), S=held?(R.resume||""):k, keys=o.keys||new Set();
   const opts={...o,held};

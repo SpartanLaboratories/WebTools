@@ -1,3 +1,15 @@
+public final class com/spartanlabs/webtools/http/CidrBlock {
+	public static final field Companion Lcom/spartanlabs/webtools/http/CidrBlock$Companion;
+	public synthetic fun <init> ([BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/CidrBlock$Companion {
+	public final fun parse-IoAF18A (Ljava/lang/String;)Ljava/lang/Object;
+}
+
 public final class com/spartanlabs/webtools/http/ExhaustedReason {
 	public static final field Companion Lcom/spartanlabs/webtools/http/ExhaustedReason$Companion;
 	public fun equals (Ljava/lang/Object;)Z
@@ -145,6 +157,72 @@ public final class com/spartanlabs/webtools/http/HttpTransport$DefaultImpls {
 	public static fun close (Lcom/spartanlabs/webtools/http/HttpTransport;)V
 }
 
+public final class com/spartanlabs/webtools/http/MixedAnswers : java/lang/Enum {
+	public static final field DropDenied Lcom/spartanlabs/webtools/http/MixedAnswers;
+	public static final field Reject Lcom/spartanlabs/webtools/http/MixedAnswers;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/spartanlabs/webtools/http/MixedAnswers;
+	public static fun values ()[Lcom/spartanlabs/webtools/http/MixedAnswers;
+}
+
+public abstract class com/spartanlabs/webtools/http/OutboundUrlPolicy {
+	public static final field Companion Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Companion;
+	public abstract fun getSettings ()Lcom/spartanlabs/webtools/http/TransportSettings;
+}
+
+public final class com/spartanlabs/webtools/http/OutboundUrlPolicy$Companion {
+	public final fun trusted (Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Trusted;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Trusted;
+	public final fun trusted (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Trusted;
+	public static synthetic fun trusted$default (Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Trusted;
+	public final fun untrusted (Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted;
+	public final fun untrusted (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted;
+	public static synthetic fun untrusted$default (Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Companion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted;
+}
+
+public final class com/spartanlabs/webtools/http/OutboundUrlPolicy$Trusted : com/spartanlabs/webtools/http/OutboundUrlPolicy {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowCleartext ()Z
+	public final fun getPinnedHosts ()Ljava/util/Set;
+	public fun getSettings ()Lcom/spartanlabs/webtools/http/TransportSettings;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/OutboundUrlPolicy$Trusted$Builder {
+	public final fun getAllowCleartext ()Z
+	public final fun getPinnedHosts ()Ljava/util/Set;
+	public final fun getSettings ()Lcom/spartanlabs/webtools/http/TransportSettings;
+	public final fun setAllowCleartext (Z)V
+	public final fun setPinnedHosts (Ljava/util/Set;)V
+	public final fun setSettings (Lcom/spartanlabs/webtools/http/TransportSettings;)V
+	public final fun settings (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted : com/spartanlabs/webtools/http/OutboundUrlPolicy {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowedPorts ()Ljava/util/Set;
+	public final fun getExtraDeniedHostSuffixes ()Ljava/util/Set;
+	public final fun getExtraDeniedRanges ()Ljava/util/Set;
+	public final fun getMixedAnswers ()Lcom/spartanlabs/webtools/http/MixedAnswers;
+	public fun getSettings ()Lcom/spartanlabs/webtools/http/TransportSettings;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted$Builder {
+	public final fun getAllowedPorts ()Ljava/util/Set;
+	public final fun getExtraDeniedHostSuffixes ()Ljava/util/Set;
+	public final fun getExtraDeniedRanges ()Ljava/util/Set;
+	public final fun getMixedAnswers ()Lcom/spartanlabs/webtools/http/MixedAnswers;
+	public final fun getSettings ()Lcom/spartanlabs/webtools/http/TransportSettings;
+	public final fun setAllowedPorts (Ljava/util/Set;)V
+	public final fun setExtraDeniedHostSuffixes (Ljava/util/Set;)V
+	public final fun setExtraDeniedRanges (Ljava/util/Set;)V
+	public final fun setMixedAnswers (Lcom/spartanlabs/webtools/http/MixedAnswers;)V
+	public final fun setSettings (Lcom/spartanlabs/webtools/http/TransportSettings;)V
+	public final fun settings (Lkotlin/jvm/functions/Function1;)V
+}
+
 public final class com/spartanlabs/webtools/http/RedirectHop {
 	public fun <init> (Lcom/spartanlabs/webtools/http/Url;I)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -248,6 +326,55 @@ public final class com/spartanlabs/webtools/http/TransportFailure$TooManyRedirec
 	public final fun getLimit ()I
 }
 
+public final class com/spartanlabs/webtools/http/TransportSettings {
+	public static final field Companion Lcom/spartanlabs/webtools/http/TransportSettings$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowHttpsToHttp ()Z
+	public final fun getCallTimeout-UwyO8pc ()J
+	public final fun getConnectTimeout-UwyO8pc ()J
+	public final fun getIdleConnectionTtl-UwyO8pc ()J
+	public final fun getMaxConcurrentRequests ()I
+	public final fun getMaxConcurrentRequestsPerHost ()I
+	public final fun getMaxRedirects ()I
+	public final fun getMaxResponseBytes ()J
+	public final fun getReadTimeout-UwyO8pc ()J
+	public final fun getWriteTimeout-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/TransportSettings$Builder {
+	public final fun getAllowHttpsToHttp ()Z
+	public final fun getCallTimeout-UwyO8pc ()J
+	public final fun getConnectTimeout-UwyO8pc ()J
+	public final fun getIdleConnectionTtl-UwyO8pc ()J
+	public final fun getMaxConcurrentRequests ()I
+	public final fun getMaxConcurrentRequestsPerHost ()I
+	public final fun getMaxRedirects ()I
+	public final fun getMaxResponseBytes ()J
+	public final fun getReadTimeout-UwyO8pc ()J
+	public final fun getWriteTimeout-UwyO8pc ()J
+	public final fun setAllowHttpsToHttp (Z)V
+	public final fun setCallTimeout-LRDsOJo (J)V
+	public final fun setConnectTimeout-LRDsOJo (J)V
+	public final fun setIdleConnectionTtl-LRDsOJo (J)V
+	public final fun setMaxConcurrentRequests (I)V
+	public final fun setMaxConcurrentRequestsPerHost (I)V
+	public final fun setMaxRedirects (I)V
+	public final fun setMaxResponseBytes (J)V
+	public final fun setReadTimeout-LRDsOJo (J)V
+	public final fun setWriteTimeout-LRDsOJo (J)V
+}
+
+public final class com/spartanlabs/webtools/http/TransportSettings$Companion {
+	public final fun getTrustedDefaults ()Lcom/spartanlabs/webtools/http/TransportSettings;
+	public final fun getUntrustedDefaults ()Lcom/spartanlabs/webtools/http/TransportSettings;
+}
+
+public final class com/spartanlabs/webtools/http/TransportSettingsKt {
+	public static final fun TransportSettings (Lcom/spartanlabs/webtools/http/TransportSettings;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/TransportSettings;
+}
+
 public abstract class com/spartanlabs/webtools/http/UpstreamFailure : com/spartanlabs/webtools/http/HttpFailure {
 	protected fun <init> (ILjava/lang/String;)V
 	public final fun getStatus ()I
@@ -290,5 +417,8 @@ public final class com/spartanlabs/webtools/http/WallClock$System : com/spartanl
 	public static final field INSTANCE Lcom/spartanlabs/webtools/http/WallClock$System;
 	public fun nowEpochMillis ()J
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface annotation class com/spartanlabs/webtools/http/WebToolsDsl : java/lang/annotation/Annotation {
 }
 

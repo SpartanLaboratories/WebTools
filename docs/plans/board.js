@@ -1,16 +1,16 @@
-/* board.js: board.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit board.json and re-embed. */
+/* board.js: board.json as a script, written by plan/scripts/embed.js beside the board for its live view (plan/RULES.md §1). Do not edit: edit board.json and re-embed. */
 window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-25T22:06:00Z",
-  "asOf": "2026-10-25",
+  "generated": "2026-10-26T22:44:14Z",
+  "asOf": "2026-10-26",
   "tree": {
-    "ref": "master",
-    "sha": "4fcc6e0"
+    "ref": "feat/issue-64-url-policy",
+    "sha": "543bd08"
   },
   "links": {
-    "repoPage": "../dashboards/index.html",
+    "repoBoard": "../dashboards/index.html",
     "readme": "README.md"
   },
   "systems": [
@@ -20,7 +20,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 4,
       "top": "Gradle build",
       "status": "built",
-      "page": "docs/dashboards/gradle-build/index.html"
+      "board": "docs/dashboards/gradle-build/index.html"
     },
     {
       "slug": "webtools-http-core",
@@ -28,7 +28,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "page": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-test-fixtures",
@@ -36,15 +36,15 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "page": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-url-policy",
       "name": "outbound-URL policy",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-transport",
@@ -52,7 +52,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 5,
       "top": "webtools-http",
       "status": "planned",
-      "page": null
+      "board": null
     },
     {
       "slug": "webtools-http-cache",
@@ -60,7 +60,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 5,
       "top": "webtools-http",
       "status": "planned",
-      "page": null
+      "board": null
     },
     {
       "slug": "webtools-http-budget",
@@ -68,7 +68,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 5,
       "top": "webtools-http",
       "status": "planned",
-      "page": null
+      "board": null
     },
     {
       "slug": "webtools-http-facades",
@@ -76,7 +76,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 5,
       "top": "webtools-http",
       "status": "planned",
-      "page": null
+      "board": null
     },
     {
       "slug": "webtools-feeds",
@@ -84,7 +84,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 6,
       "top": "webtools-feeds",
       "status": "planned",
-      "page": null
+      "board": null
     },
     {
       "slug": "webtools",
@@ -92,7 +92,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 0,
       "top": "WebTools",
       "status": "built",
-      "page": "docs/dashboards/index.html"
+      "board": "docs/dashboards/index.html"
     },
     {
       "slug": "webtools-udp",
@@ -100,7 +100,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "slot": 1,
       "top": "webtools-udp",
       "status": "built",
-      "page": "docs/dashboards/webtools-udp/index.html"
+      "board": "docs/dashboards/webtools-udp/index.html"
     }
   ],
   "groups": [
@@ -144,9 +144,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "4 of 11 units landed; #64 up next.",
+      "detail": "4 of 11 units landed; #64 in progress; #65 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-25T22:03:35Z",
+      "updated": "2026-10-25T21:42:50Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -165,11 +165,21 @@ window.dashboardLive&&window.dashboardLive("board",
         "left": 0,
         "planned": false,
         "done": false,
-        "current": [],
+        "current": [
+          {
+            "issue": 64,
+            "slug": "url-policy",
+            "step": "state-boards"
+          }
+        ],
         "next": {
-          "issue": 64,
-          "slug": "url-policy",
-          "blockedBy": []
+          "issue": 65,
+          "slug": "okhttp-transport",
+          "blockedBy": [
+            {
+              "issue": 64
+            }
+          ]
         }
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
@@ -389,7 +399,6 @@ window.dashboardLive&&window.dashboardLive("board",
             "other": 2
           },
           "route": "on-the-spot",
-          "report": "build/reports/test-inspector/index.html",
           "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot.",
           "inPlace": "fixed"
         }
@@ -474,7 +483,7 @@ window.dashboardLive&&window.dashboardLive("board",
             "minor": 27,
             "other": 9
           },
-          "route": "planner-then-rookie-dev",
+          "route": "re-plan-then-remediation",
           "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
         },
         {
@@ -537,20 +546,60 @@ window.dashboardLive&&window.dashboardLive("board",
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/64-url-policy/dashboard.html",
+      "folder": "55-http-client-stack/64-url-policy/",
+      "branch": "feat/issue-64-url-policy",
       "system": "webtools-http-url-policy",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
+      "step": "state-boards",
+      "detail": "Synced with master (unchanged at ad0ae63); no version moves. The state boards are refreshed on the branch at 543bd08.",
+      "since": "2026-10-26T22:14:14Z",
+      "updated": "2026-10-26T22:14:14Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-26",
+          "at": "2026-10-26T01:09:46Z",
+          "findings": {
+            "documentation": 19,
+            "test": 4,
+            "code": 0
+          },
+          "severity": {
+            "minor": 23,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "note": "Every plan item and acceptance criterion traced to the code, the public surface exactly the planned Stable Core set, hygiene clean. The findings, all minor: the internal JVM guards (`GuardedDns`, `GuardedSocket`, `GuardedSocketFactory`, `PolicyEnforcement`, the markers) lacked contract tags and the facts a wirer needs (builder wiring, thread, the `DEBUG` line, guard order, the stackless markers); the common helpers (`OutboundUrlPolicy.kt`, `UrlGuard`, `StrictIp`, the test support) carried line comments where KDoc is due; six bit-arithmetic or reserved-name lines (`CidrBlock`, `AddressRanges`, `HostRules`, `UrlGuard`) lacked a comment; one duplicated assertion (`TrustedGuardComponentTest`), one timing bound equal to its timeout (`PolicyEnforcementOkHttpIntegrationTest`) and two dangling cross-references in the as-built record."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-10-26",
+          "at": "2026-10-26T22:02:11Z",
+          "findings": {
+            "documentation": 15,
+            "test": 4,
+            "code": 0
+          },
+          "severity": {
+            "minor": 18,
+            "other": 1
+          },
+          "route": "on-the-spot",
+          "note": "Pass 1's fixes confirmed with no regression, and stage S8 checked line for line against the plan: the `WebToolsDsl` marker, the six builders that carry it, both of its tests and the dump's three new lines, with no JavaScript warning once plan Amendment 5 left the retention at its default. Correctness clean and every acceptance criterion met. The findings: KDoc tags on the sibling test fixtures, a boundary paragraph on `GuardedSocket`, four line comments, stale S8 wording in the records, the host-form count reconciled to the 36 forms the parent research's table publishes, and pre-existing wording in the documents the commits carry that states each unit's sizing. 504 tests in 90 classes passed, the change's 36 classes (232 tests) among them.",
+          "inPlace": "fixed"
+        }
+      ],
+      "qaMax": 3,
+      "status": "building",
       "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [],
+      "reconciliation": {
+        "state": "partial",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "outbound-URL policy",
       "group": "55",
       "order": 5
@@ -592,10 +641,16 @@ window.dashboardLive&&window.dashboardLive("board",
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [
+        {
+          "issue": 64
+        }
+      ],
       "systemName": "OkHttp transport",
       "group": "55",
       "order": 6
