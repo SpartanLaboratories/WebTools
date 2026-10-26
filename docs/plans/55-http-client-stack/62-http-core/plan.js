@@ -1,4 +1,4 @@
-/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
+/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the board for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
 window.dashboardLive&&window.dashboardLive("plan",
 {
   "schema": "plan-board/1",
@@ -91,7 +91,6 @@ window.dashboardLive&&window.dashboardLive("plan",
           "other": 2
         },
         "route": "on-the-spot",
-        "report": "build/reports/test-inspector/index.html",
         "note": "Code review passed: no logic bug, every plan item done, the diff inside the unit. Tests 231 passed, 0 failed, 0 skipped; apiCheck passed. The findings are KDoc and line-comment wording, test-fixture tags, literal homoglyphs, corpus rows, test names and one missing branch test; fixed on the spot."
       }
     ],
@@ -128,7 +127,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     },
     "open": [
       {
-        "text": "The S2 report raised one inconsistency in `plan.md` for the planner: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
+        "text": "The S2 report raised one inconsistency in `plan.md`, for a plan ruling: its media-type test rows do not agree with the plan's own media-type grammar. It bears on the Level 4a tables of the Tests row (`common-tests`); it is not a deviation, and it does not block S3.",
         "raised": "implementation-stage S2",
         "ref": "plan.md",
         "resolved": "Resolved by `plan.md`'s Amendment 1, which makes §9's media-type test row agree with the unchanged grammar of §6.4 and code of §7.5, applies in S4 and changes no verdict on this board."
@@ -140,7 +139,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "resolved": "Left to the maintainer as a known gap: the owner and the trigger (the next IntelliJ import, at the latest before unit 4, #63, starts) are recorded in `impact.md` §7 and `final-implementation.md` §6 and §8."
       },
       {
-        "text": "Two plan-sanctioned test-scope exclusions flagged by qa: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
+        "text": "Two plan-sanctioned test-scope exclusions flagged in qa pass 1: no per-type testing.gating smoke classes for webtools-http's value types (the plan makes componentTest+deterministicTest the pre-commit gate) and the common-check plugin absent from the included-build e2e composite; resolved by recording them in plan §9 and the test KDoc",
         "raised": "qa-pass 1",
         "ref": "plan.md",
         "resolved": "Recorded in `plan.md` as Amendment 2 (§9), and in `IncludedBuildEndToEndTest`'s KDoc."
@@ -289,7 +288,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "verdict",
-      "label": "Resumed into research with the user's two answers on `Url`. Q1: `Url.parse` normalises as OkHttp's `HttpUrl` does for ASCII hosts (percent-encoding, dot segments resolved, default port dropped, an empty path made `/`, trimmed, fragment dropped) and rejects non-ASCII or percent-encoded hosts, backslashes, inner whitespace or control characters, and userinfo. Q2: `Url.toString()` returns the full canonical URL; `redacted()` is the explicit safe form"
+      "label": "Resumed into research with the two `Url` questions answered. Q1: `Url.parse` normalises as OkHttp's `HttpUrl` does for ASCII hosts (percent-encoding, dot segments resolved, default port dropped, an empty path made `/`, trimmed, fragment dropped) and rejects non-ASCII or percent-encoded hosts, backslashes, inner whitespace or control characters, and userinfo. Q2: `Url.toString()` returns the full canonical URL; `redacted()` is the explicit safe form"
     },
     {
       "date": "2026-10-25",
@@ -318,13 +317,13 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "gap",
-      "label": "Research verified: one verifier re-opened the load-bearing claims of the four findings files at their sources; 107 claims, 107 hold, none fails, none is unclear",
+      "label": "Research verified: the load-bearing claims of the four findings files were re-opened at their sources; 107 claims, 107 hold, none fails, none is unclear",
       "ref": "research/README.md#verification"
     },
     {
       "date": "2026-10-25",
       "column": "considered",
-      "label": "Research ended: the four questions returned and were verified (the opt-in gate across `commonMain`, `jvmMain` and `js`, the common-check plugin's effect on the root build, the `Url` grammar against OkHttp 5.5.0, RFC 9110 header and method validation); the plan-writer runs next",
+      "label": "Research ended: the four questions returned and were verified (the opt-in gate across `commonMain`, `jvmMain` and `js`, the common-check plugin's effect on the root build, the `Url` grammar against OkHttp 5.5.0, RFC 9110 header and method validation); the plan is written next",
       "ref": "research/README.md#summary"
     },
     {
@@ -336,7 +335,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Implementation starts on `feat/issue-62-http-core` at `865e6e4`, the branch that holds the research and the plan: rookie-dev builds `plan.md` stage by stage, from S1, the `webtools.kotlin-common-check` plugin and its TestKit tests",
+      "label": "Implementation starts on `feat/issue-62-http-core` at `865e6e4`, the branch that holds the research and the plan: the implementer builds `plan.md` stage by stage, from S1, the `webtools.kotlin-common-check` plugin and its TestKit tests",
       "ref": "plan.md#5-approach-and-staging"
     },
     {
@@ -390,13 +389,13 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "qa pass 1: changes requested, 29 findings (18 documentation, 9 test, 2 code; 27 minor, 2 other); code review passed, 231 tests green and apiCheck passed. Remediation on the spot: rookie-dev's fixes, then the planner records two scope exclusions in plan.md §9; landing follows with no new qa pass",
+      "label": "qa pass 1: changes requested, 29 findings (18 documentation, 9 test, 2 code; 27 minor, 2 other); code review passed, 231 tests green and apiCheck passed. Remediation on the spot: the fixes, then two scope exclusions recorded in plan.md §9; landing follows with no new qa pass",
       "ref": ""
     },
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "qa pass 1 fixes done on the spot: KDoc and line-comment wording, test-fixture tags, U+212A escapes, corpus rows, behaviour-named tests and one new HttpHeaders test; re-run green (131 jvmTest tests, apiCheck, dump unchanged; CommonCheckPluginIntegrationTest 7, e2eTest 5). No behaviour, API or design change. The planner records the two scope exclusions in plan.md §9 and reconciles the as-built record",
+      "label": "qa pass 1 fixes done on the spot: KDoc and line-comment wording, test-fixture tags, U+212A escapes, corpus rows, behaviour-named tests and one new HttpHeaders test; re-run green (131 jvmTest tests, apiCheck, dump unchanged; CommonCheckPluginIntegrationTest 7, e2eTest 5). No behaviour, API or design change. The two scope exclusions are recorded in plan.md §9 and the as-built record reconciled",
       "ref": "final-implementation.md#qa-pass-1-fixes"
     },
     {
@@ -408,7 +407,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "The planner reconciled the as-built record and the impact: three deviations, all additions (a README sentence, `HttpTransport`'s eighth contract point, one KDoc sentence); #55's impact and architecture carry dated callouts",
+      "label": "The as-built record and the impact reconciled: three deviations, all additions (a README sentence, `HttpTransport`'s eighth contract point, one KDoc sentence); #55's impact and architecture carry dated callouts",
       "ref": "40cb538"
     },
     {
@@ -1093,7 +1092,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       },
       "verdict": {
         "kind": "build",
-        "defense": "Configurable types are built by a factory over an `internal` constructor, so later additions stay additive. Developer-written values throw `IllegalArgumentException`, and text from outside the process returns `Result` with a message that never echoes the input. Byte arrays are copied in and out, and the types print their structure only. The `Url` rules follow the user's two answers at the interview.",
+        "defense": "Configurable types are built by a factory over an `internal` constructor, so later additions stay additive. Developer-written values throw `IllegalArgumentException`, and text from outside the process returns `Result` with a message that never echoes the input. Byte arrays are copied in and out, and the types print their structure only. The `Url` rules follow the interview's two answers.",
         "steps": [
           {
             "id": "S2",
@@ -2521,7 +2520,7 @@ window.dashboardLive&&window.dashboardLive("plan",
             "excerpt": {
               "ref": "plan.md#11-version-control",
               "heading": "11. Version control",
-              "paragraph": "Branch: `feat/issue-62-http-core`. It exists and holds the research commits; the executor confirms it (P1) rather than cutting it again. · Commits. Each is coherent and leaves the build green. The type and the split are the manager's final call; subject lines carry `(Issue #62)`; no attribution trailers. · `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`, `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new TestKit classes and the `BuildLogicPluginsGatingTest.kt` edit. The plan is in this …",
+              "paragraph": "Branch: `feat/issue-62-http-core`. It exists and holds the research commits; … · Commits. Each is coherent and leaves the build green. …; subject lines carry `(Issue #62)`; no attribution trailers. · `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`, `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new TestKit classes and the `BuildLogicPluginsGatingTest.kt` edit. The plan is in this commit so `git log --follow` binds the two. No module applies the plugin yet, so the build is unchanged for …",
               "hash": "0bca7759e342"
             }
           }
@@ -2767,7 +2766,72 @@ window.dashboardLive&&window.dashboardLive("plan",
     "source": "impact.md, reconciled with final-implementation.md",
     "link": "impact.md#1-published-artifacts"
   },
-  "roadmap": null,
+  "roadmap": {
+    "issue": 55,
+    "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+    "asOf": "2026-10-26",
+    "items": [
+      {
+        "issue": 61,
+        "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 47,
+        "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 62,
+        "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 63,
+        "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 64,
+        "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
+        "state": "OPEN"
+      },
+      {
+        "issue": 65,
+        "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
+        "state": "OPEN"
+      },
+      {
+        "issue": 66,
+        "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
+        "state": "OPEN"
+      },
+      {
+        "issue": 67,
+        "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
+        "state": "OPEN"
+      },
+      {
+        "issue": 68,
+        "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
+        "state": "OPEN"
+      },
+      {
+        "issue": 69,
+        "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
+        "state": "OPEN"
+      },
+      {
+        "issue": 70,
+        "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
+        "state": "OPEN"
+      }
+    ]
+  },
   "followUps": [
     {
       "name": "A permanent compile-fail check of the gate",
@@ -2805,7 +2869,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "label": "#62 as-built record",
       "path": "final-implementation.md",
-      "note": "the implementer's as-built input through S7: §1 what was built, §2 no deviation, §4 the eight acceptance criteria met, §6 the Level 5 pass, §8 the known gaps; the planner reconciles it into the final record"
+      "note": "the implementer's as-built input through S7: §1 what was built, §2 no deviation, §4 the eight acceptance criteria met, §6 the Level 5 pass, §8 the known gaps; reconciled into the final record at the landing"
     },
     {
       "label": "#62 research",
@@ -2846,7 +2910,17 @@ window.dashboardLive&&window.dashboardLive("plan",
   },
   "issueBoards": {
     "47": "../47-java-23-bytecode/dashboard.html",
-    "61": "../61-build-logic/dashboard.html"
+    "61": "../61-build-logic/dashboard.html",
+    "63": "../63-test-support/dashboard.html",
+    "64": "../64-url-policy/dashboard.html"
+  },
+  "links": {
+    "workBoard": "../../index.html",
+    "repoBoard": "../../../dashboards/index.html",
+    "boards": {
+      "webtools-http-core": "../../../dashboards/webtools-http/index.html",
+      "gradle-build": "../../../dashboards/gradle-build/index.html"
+    }
   }
 }
 );

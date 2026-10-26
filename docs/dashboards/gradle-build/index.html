@@ -8,9 +8,9 @@
 <title>Gradle build · WebTools</title>
 <script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
-/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → Guarantees bubbles → Context cards → provenance footer.
-   System page template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
-   Colour plan: --server / --client / --wire are the page's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
+/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → guarantee cards → Context cards → provenance footer.
+   System board template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
+   Colour plan: --server / --client / --wire are the board's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
    (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned, and nothing else: lifelines, returns and frames are solid. */
 :root{
   --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
@@ -111,7 +111,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
 .tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
 /* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
-   ending with planned. check-page.js fails a tab without a visible one. */
+   ending with planned. check-board.js fails a tab without a visible one. */
 .key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
 .key span{display:inline-flex;align-items:center;gap:6px}
 .key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
@@ -170,7 +170,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .outcome code{font-weight:600}
 .ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
 .ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
-/* A segmented control wraps onto a second row at phone width rather than pushing the page sideways. */
+/* A segmented control wraps onto a second row at phone width rather than pushing the board sideways. */
 .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
 .seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
 .seg button:last-child{border-right:0}
@@ -317,29 +317,29 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .states rect.planned{stroke-dasharray:6 4;opacity:.6}
 .states line,.states path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
 
-/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled bubble per guarantee */
+/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled guarantee card per guarantee */
 .guarantees{margin-top:20px}
 .guarantees>h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
-.bubbles{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
-.bubble{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
-.bubble h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
-.bubble h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
-.bubble ul{margin:0;padding:0 0 0 15px}
-.bubble li{margin:3px 0}
-.bubble p{margin:6px 0 0}
-.bubble code{color:var(--ink)}
-.bubble .gap{color:var(--muted);font-style:italic}
-.bubble .badge{margin-left:2px}
+.guarantee-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.guarantee-card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.guarantee-card h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
+.guarantee-card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.guarantee-card ul{margin:0;padding:0 0 0 15px}
+.guarantee-card li{margin:3px 0}
+.guarantee-card p{margin:6px 0 0}
+.guarantee-card code{color:var(--ink)}
+.guarantee-card .gap{color:var(--muted);font-style:italic}
+.guarantee-card .badge{margin-left:2px}
 
-/* Wide desktop (16:9 screens, GUIDANCE.md §6): the page uses most of the window, so the C4 canvas, the thread columns, the
+/* Wide desktop (16:9 screens, GUIDANCE.md §6): the board uses most of the window, so the C4 canvas, the thread columns, the
    lifecycle cards, the Guarantees and the Context get room; a diagram drawn to a fixed aspect grows to at most 1280 px wide, so it
    is never smaller than in the 1280 px layout and never outgrows the screen, and prose keeps its own measure. At 1500 px and below
-   the page keeps its 1280 px measure and the narrow layouts below 940 and 700 px apply. */
+   the board keeps its 1280 px measure and the narrow layouts below 940 and 700 px apply. */
 @media (min-width:1500px){
   .page{max-width:min(2400px,100%)}
   .stage{grid-template-columns:minmax(0,1fr) 360px}
   .view>svg{max-width:1280px}
-  .bubbles{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .guarantee-cards{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 }
 
 /* context */
@@ -377,7 +377,7 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .roadmap .ri a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
 .roadmap .issues{margin:4px 0 0 14px}
 .roadmap .more{margin:4px 0 0 14px;font-size:12px;color:var(--muted)}
-/* An issue's number and its title are two links (GUIDANCE.md §5): the number opens the GitHub issue, the title its plan board
+/* An issue's number and its title are two links (GUIDANCE.md §5): the number opens the GitHub issue, the title its issue board
    (plain text while it has none, linkIssues() below) */
 .issues span a,.roadmap .ri span a{font-family:inherit;color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
 .issues span a:hover,.roadmap .ri span a:hover{border-bottom-color:var(--ink)}
@@ -548,8 +548,8 @@ footer code{color:var(--ink-2)}
 
 <section class="guarantees" aria-label="Guarantees">
   <h2>Guarantees</h2>
-  <div class="bubbles">
-    <div class="bubble"><h3>Failure model</h3>
+  <div class="guarantee-cards">
+    <div class="guarantee-card"><h3>Failure model</h3>
       <ul>
         <li>A failing compile or test fails <code>./gradlew build</code>; nothing is retried.</li>
         <li>Configuration errors fail the build at configuration: a second level-task registration on one project throws <code>InvalidUserDataException</code>.</li>
@@ -557,7 +557,7 @@ footer code{color:var(--ink-2)}
         <li>A module's level task passes on an empty selection; build-logic's own test tasks fail on one. A multiplatform module's <code>apiCheck</code> fails until its dump is committed. A JVM API in <code>webtools-http</code>'s common code fails the check module's <code>compileKotlinJs</code>, in <code>check</code>.</li>
         <li><code>verifyJavaFloor</code>, in <code>check</code>, fails on a class above major 55 in a module's jars or runtime classpath, a library variant declaring another <code>org.gradle.jvm.version</code>, an unreadable input, or nothing to check; it lists up to 20 violations.</li>
       </ul></div>
-    <div class="bubble"><h3>Extension points</h3>
+    <div class="guarantee-card"><h3>Extension points</h3>
       <ul>
         <li>For a module's build file: the plugin ids <code>webtools.kotlin-jvm-library</code> (three modules), <code>webtools.kotlin-multiplatform-library</code> (<code>webtools-http</code>), <code>webtools.kotlin-common-check</code> (<code>webtools-http-commoncheck</code>), <code>webtools.published-library</code>.</li>
         <li><code>WebToolsBuild</code>, a public object in the default package: <code>LEVELS</code>, <code>LEVEL_PACKAGE_ROOT</code>, <code>registerLevelTasks</code>, <code>JAVA_FLOOR</code>, <code>classFileMajor</code>, <code>registerVerifyJavaFloor</code>, readable from any module script.</li>
@@ -565,7 +565,7 @@ footer code{color:var(--ink-2)}
         <li>A module adds its own dependencies, coordinates, POM name and description, and anything that is its alone (webtools-udp's version and port lock; a multiplatform module's opt-in as a language setting of its main source sets). A check module adds the sibling's <code>commonMain</code> as a relative <code>srcDir</code> and its <code>js</code> actuals.</li>
         <li>Unpublished, used only inside this repository: no stability tier or opt-in marker applies.</li>
       </ul></div>
-    <div class="bubble"><h3>Test levels <small>22 classes · build-logic</small></h3>
+    <div class="guarantee-card"><h3>Test levels <small>22 classes · build-logic</small></h3>
       <div class="bars" role="table" aria-label="Test classes per testing level">
         <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:11%"></span></span><span class="val">1</span>
         <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:44%"></span></span><span class="val">4</span>
@@ -575,35 +575,35 @@ footer code{color:var(--ink-2)}
         <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:33%"></span></span><span class="val">3</span>
         <span class="lbl">L5 UAT</span><span class="trk"><span class="fil" style="width:0%"></span></span><span class="val">0</span>
       </div>
-      <p>113 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 11 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1 gating, L2 component, L4a deterministic: 47 tests) is the pre-commit gate; the three nested-build level tasks (66 tests: integration 46, e2e 17, non-functional 3) run on demand; <code>./gradlew build</code> runs one task of build-logic's: <code>fixturesPublicationCheck</code>, the 10 tests of <code>FixturesPublicationEndToEndTest</code>, through <code>webtools-http</code>'s <code>check</code>. <span class="gap">No test-inspector report is committed, and no module test runs on a JDK 11: the level tests run on the build JDK, with no JDK 11 launcher yet.</span></p></div>
-    <div class="bubble"><h3>Compatibility &amp; versioning</h3>
+      <p>113 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.buildlogic</code>, plus 11 harness classes in <code>testing.support</code>. <code>./gradlew :build-logic:test</code> (L1 gating, L2 component, L4a deterministic: 47 tests) is the pre-commit gate; the three nested-build level tasks (66 tests: integration 46, e2e 17, non-functional 3) run on demand; <code>./gradlew build</code> runs one task of build-logic's: <code>fixturesPublicationCheck</code>, the 10 tests of <code>FixturesPublicationEndToEndTest</code>, through <code>webtools-http</code>'s <code>check</code>. <span class="gap">No test report is committed, and no module test runs on a JDK 11: the level tests run on the build JDK, with no JDK 11 launcher yet.</span></p></div>
+    <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
       <ul>
         <li>The build has no version; it publishes nothing. Every module's class files are Java 11 bytecode (major 55) compiled against the Java 11 API, and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, whichever JDK 17 to 26 runs the build.</li>
         <li>The floor rides in versions set in the modules' own build files: <code>webtools-scraping</code> and <code>webtools-browser</code> <code>1.0.0a</code>, <code>webtools-udp</code> <code>2.0.0a</code>, none published; Maven Central's 1.0.0 and 2.0.0 are Java 23 bytecode. A lettered version orders below the plain one, so a consumer requests it <code>strictly</code>.</li>
         <li>Gradle 9.7.1 · Kotlin Gradle plugin 2.2.0 · vanniktech 0.36.0 · binary-compatibility-validator 0.18.2 on its own ASM (the pin went with the floor) · foojay 0.8.0; build-logic's tests add <code>bcpg-jdk18on</code> 1.86 for the throwaway signing key.</li>
         <li>Kotlin 2.2.0 prints a Gradle-10 deprecation at <code>jvm()</code> and at <code>js()</code> (KT-78620), and "JS Environment Not Selected" at the check module, so no build runs with <code>--warning-mode=fail</code>. Configuration-cache compatible: a second identical run reuses the entry. <code>-Xjdk-release</code> is an experimental Kotlin flag; <code>verifyJavaFloor</code> is its backstop.</li>
       </ul></div>
-    <div class="bubble"><h3>Thread safety</h3>
+    <div class="guarantee-card"><h3>Thread safety</h3>
       <ul>
         <li>No runtime threads: build-logic is never on a module's runtime classpath.</li>
         <li><code>commonUdpPortLock</code> (one permit) runs webtools-udp's <code>test</code>, <code>integrationTest</code>, <code>e2eTest</code> and <code>nonfunctionalTest</code> one at a time, so two never bind UDP 9998 at once.</li>
         <li><code>testKitHomeLock</code> (one permit) runs build-logic's four nested-build tasks one at a time on the shared TestKit home.</li>
         <li>Every nested build runs with <code>ORG_GRADLE_PROJECT_*</code> removed from its environment, so a release key exported for the outer build never reaches one.</li>
       </ul></div>
-    <div class="bubble"><h3>Resources to close</h3>
+    <div class="guarantee-card"><h3>Resources to close</h3>
       <ul>
         <li>Nothing a module or a consumer holds.</li>
         <li>The TestKit home (about 910 MB) stays between runs; <code>clean</code> resets it and any generated project a held file left behind. The fixtures check's workspace, with its file repository and the throwaway key, is deleted when its test class ends.</li>
         <li>A TestKit daemon outlives each nested build and is reused until its test JVM exits.</li>
       </ul></div>
-    <div class="bubble"><h3>On your classpath</h3>
+    <div class="guarantee-card"><h3>On your classpath</h3>
       <ul>
         <li>Nothing from the build itself: <code>build-logic</code> is never published and never on a module's runtime.</li>
         <li>Through the Kotlin plugin it applies, each module's POM carries <code>kotlin-stdlib:2.2.0</code>; each module declares its own <code>api(slf4j-api:2.0.13)</code>.</li>
         <li>What a module ships is Java 11 bytecode whose metadata declares <code>org.gradle.jvm.version</code> 11, and <code>verifyJavaFloor</code> fails it when a runtime dependency holds a class above Java 11, so nothing it brings needs a newer JVM.</li>
         <li>Test-only, from the plugins: <code>kotlin-test</code>, <code>kotlin-test-junit5</code>, <code>logback-classic:1.5.6</code>.</li>
       </ul></div>
-    <div class="bubble"><h3>Releasing</h3>
+    <div class="guarantee-card"><h3>Releasing</h3>
       <ul>
         <li><code>publishToMavenCentral</code> with <code>signAllPublications()</code>: every publication is signed.</li>
         <li>Needs, as Gradle properties and never committed: <code>mavenCentralUsername</code>, <code>mavenCentralPassword</code>, and a signing key (<code>signing.keyId</code>, <code>signing.password</code>, <code>signing.secretKeyRingFile</code>, or the <code>signingInMemoryKey</code> trio).</li>
@@ -643,15 +643,15 @@ footer code{color:var(--ink-2)}
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.1 shared build logic, §6.8 the check-only js modules, §11 the decomposition</li>
         <li><a href="../../../README.md">README</a> — "Build &amp; test", "Java floor" and "Shared build logic": the commands, the floor and its guard, the package rule, the plugin ids</li>
         <li><a href="../../plans/15-split-into-three-modules/plan.md">#15 split into three modules</a> — the plan that made the three artifacts and the build as it stood before #61</li>
-        <li><code>workspace.dsl</code> — the C4 model beside this page; the C4 tab is rendered from it · the modules built with it: <a href="../webtools-udp/index.html">webtools-udp</a>, <a href="../webtools-http/index.html">webtools-http</a>, and on the <a href="../index.html">repository page</a> webtools-scraping and webtools-browser</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the modules built with it: <a href="../webtools-udp/index.html">webtools-udp</a>, <a href="../webtools-http/index.html">webtools-http</a>, and on the <a href="../index.html">repository state board</a> webtools-scraping and webtools-browser</li>
       </ul></div>
   </div>
 </section>
 
-<footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-dashboard template (presenter, 2026-10-25 refresh after #62):
+<footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-dashboard template (2026-10-25 refresh after #62):
      1. The core tabs are adapted to a build system and named for what they show: "Processes" (the Threads tab: the build starts no runtime threads, so it lists the processes a build run starts and its two build-service locks, with a "which process runs what" matrix), "Test selection" (the decision path, two variants: a module's tasks and build-logic's own) and "Module configuration" (the sequence).
      2. The KPI row names a build's facts: plugins, processes, level tasks, in place of types, threads and contracts.
-     3. An eighth Guarantees bubble, "Releasing": what a publish needs, by property key only.
+     3. An eighth Guarantees guarantee card, "Releasing": what a publish needs, by property key only.
      4. The decision path's end levels are RUNS (green), NOT RUN (grey) and FAILS (red), each with its glyph; the template's lvlCol knows only DELIVER and WARN, so this page's lvlCol adds them.
      5. The structure map draws the module build files, which belong to the modules, because they are where the plugins are applied; the band in the middle holds what both plugins and module scripts share.
      Refreshed at the landing of #63 (master 4fcc6e0, 2026-10-25): fixturesPublicationCheck, its harness classes and its wiring into webtools-http's check, on every tab and in the Guarantees; the build-logic decision path's ./gradlew build now runs it.
@@ -664,7 +664,7 @@ footer code{color:var(--ink-2)}
 </div>
 
 
-<!-- The page's state. A verbatim copy of state.json beside the page (scripts/embed.js state.json index.html state). -->
+<!-- The board's state. A verbatim copy of state.json beside the board (scripts/embed.js state.json index.html state). -->
 <script type="application/json" id="state">
 {
   "slug": "gradle-build",
@@ -675,7 +675,7 @@ footer code{color:var(--ink-2)}
 }
 </script>
 
-<!-- The C4 model. A verbatim copy of workspace.dsl: the presenter re-embeds the file here on every run,
+<!-- The C4 model. A verbatim copy of workspace.dsl, re-embedded here on every run,
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
@@ -799,7 +799,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
 "use strict";
 /* Times (GUIDANCE.md §6, "Times"): stored as UTC ISO stamps; shown in the viewer's own time zone, with the zone's abbreviation,
    as a <time> whose datetime and title hold the exact UTC value. A date alone stays a date; a stamp with no zone is shown as written.
-   localizeTimes() formats every <time datetime> the page draws, so a stamp written into hand-made HTML is shown the same way. */
+   localizeTimes() formats every <time datetime> the board draws, so a stamp written into hand-made HTML is shown the same way. */
 const STAMP_RE=/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/;
 const utcIso=s=>{ const d=new Date(String(s).replace(" ","T")); return isNaN(d)?null:d.toISOString().replace(/\.000Z$/,"Z"); };
 const LOCAL_FMT={day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZoneName:"short"};
@@ -816,21 +816,21 @@ const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","te
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
-/* Links to an issue and its board (GUIDANCE.md §5; system/RULES.md §6). BOARDS maps an issue's number to its plan board, relative
-   to this page, for every issue the page names whose board is in the repository; the presenter fills it from the folders on disk
-   when the page is written, on its one line, and check-page.js fails an entry whose file is not there. Where an issue's number and
+/* Links to an issue and its board (GUIDANCE.md §5; system/RULES.md §6). BOARDS maps an issue's number to its issue board, relative
+   to this board, for every issue the board names whose board is in the repository; it is filled from the folders on disk
+   when the board is written, on its one line, and check-board.js fails an entry whose file is not there. Where an issue's number and
    its title appear together they are two links: the number opens the GitHub issue (pair(), or a plain href in hand-written HTML)
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html"}; // presenter: issue number → its plan board relative to this page, on this one line
+const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
-/* The work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this page when that file exists
-   (else null: no link to a file that is not there; check-page.js fails a committed path that is missing), and "live" the live view's
-   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the work board opens the live view when
+/* The repository work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this board when that file exists
+   (else null: no link to a file that is not there; check-board.js fails a committed path that is missing), and "live" the live view's
+   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the repository work board opens the live view when
    its marker loads (the board on this machine), else the committed one, else stays plain text: the hand-written
-   <a data-workboard>work board</a>, and the Plans card's line the renderer adds when the page has none. */
-const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // presenter: the work board relative to this page, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
+   <a data-workboard>repository work board</a>, and the Plans card's line the renderer adds when the board has none. */
+const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // fill: the repository work board relative to this board, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
 /* A live marker (plan/RULES.md §5): a script in the git-ignored docs/plans/.live/ that sets one key of window.DASHBOARDS_LIVE; cb gets
    its value, or null when the marker is not there (a published copy, another clone, no live view on this machine). */
 function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
@@ -838,29 +838,29 @@ function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.c
 const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
 function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_BOARD:{};
   const docs=[...document.querySelectorAll("section.context .docs")].pop();
-  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
-  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed work board, as of the last landing":href?"The live work board on this machine":"No work board in this checkout"; });
+  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Repository work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
+  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed repository work board, as of the last landing":href?"The live repository work board on this machine":"No repository work board in this checkout"; });
   set(W.committed||null);
   liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); }); }
 window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
-/* The page's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
+/* The board's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
    restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
 const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
 const ghIssue=n=>`${REPO}/issues/${n}`;
-const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
-const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its plan board">${esc(title)}</a>`:esc(title)}`; };
+const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
+const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
   /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
-     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-page.js (ISSUE TITLE NAMES
-     A WORK LEVEL: #n), never shown as the page's (GUIDANCE.md §5; dashboards-skill/28) */
-  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its plan board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
-  r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its plan board`; else { a.target="_blank"; a.rel="noopener"; } }); }
+     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-board.js (ISSUE TITLE NAMES
+     A WORK LEVEL: #n), never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
+  r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its issue board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
 function inspect(html){ $("#insp-body").innerHTML=html; }
 function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker",{id,viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:color||"var(--ink-2)"},m); const mo=mk("marker",{id:id+"-open",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10",fill:"none",stroke:color||"var(--ink-2)","stroke-width":"1.5"},mo); const mon=mk("marker",{id:id+"-on",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--on)"},mon); }
 
 /* =========================================================================
-   MODEL — the as-built behaviour this page draws (threads, flows, sequence) and the
+   MODEL — the as-built behaviour this board draws (threads, flows, sequence) and the
    hand-placed component map. Structure also lives in the DSL above; `c4` maps map
    nodes to their DSL element so the two views cross-reference.
    ========================================================================= */
@@ -1159,7 +1159,7 @@ function drawFrame(svg,L){
   if(L.boundary){ const b=L.boundary; mk("rect",{class:"c4bound",x:b.x,y:b.y,width:b.w,height:b.h,rx:10},svg); const g=mk("g",{class:"c4boundl"},svg); const tw=b.label.length*6.3+18; mk("rect",{x:b.x+12,y:b.y-10,width:tw,height:20,rx:10},g); txt(g,b.x+21,b.y+4,b.label,""); }
   if(L.bands.length>1) L.bands.forEach((b,i)=>txt(svg,L.bx0+14,L.bandBox[i][0]-6,L.names[i],"c4band"));
 }
-/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the page's own ink. */
+/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the board's own ink. */
 function glyph(g,type,x,y,color){
   if(type==="person"){ mk("circle",{cx:x+7,cy:y+4,r:3.2,fill:color},g); mk("path",{d:`M${x+1},${y+14} a6,6 0 0 1 12,0 z`,fill:color},g); }
   else if(type==="softwareSystem"){ mk("rect",{x:x+1,y:y+1,width:9,height:9,rx:1.5,fill:color,opacity:.55},g); mk("rect",{x:x+4,y:y+4,width:9,height:9,rx:1.5,fill:color},g); }
@@ -1266,7 +1266,7 @@ function showDsl(){
   document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
   $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
   if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
-  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. The presenter edits it when a run changes the structure, re-embeds it here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this page.</p>`);
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
 }
 (function buildLadderAndKey(){
   const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
@@ -1319,7 +1319,7 @@ function selectThread(id){
 document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
 
 /* ---------- Decision path (MODEL.flows) ----------
-   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the page draws the
+   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the board draws the
    grid, builds the controls, and lights the path the rules return. Nothing here is specific to one system. */
 const CW=138,CH=70,NW=118,NH=50,X0=12,Y0=12;
 const fx=n=>X0+n.c*CW, fy=n=>Y0+n.r*CH;
@@ -1414,10 +1414,10 @@ $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
 /* ---------- The stamps (state.json) ----------
-   The header's chips: the version (a system page), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
-   the page shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
-   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the page
-   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the plan board
+   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
+   the board shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the board
+   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the issue board
    (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
 function renderState(){
   const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
@@ -1433,7 +1433,7 @@ function renderState(){
 renderState();
 
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
-   Generated from what each section draws, so a hand-written bubble or card needs no legend of its own: the system swatches present, a
+   Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
    planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
    chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
    data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
@@ -1488,9 +1488,9 @@ const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+
 show(start);
 
 /* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
-   A light/night toggle in the header (the renderer adds it when the page's header has none). Until it is clicked the page follows the
+   A light/night toggle in the header (the renderer adds it when the board's header has none). Until it is clicked the board follows the
    system setting; a click picks the other palette and remembers it (localStorage "dashboards-theme", shared by every dashboard of the
-   same origin) across pages and reloads. It only selects one of the two palettes the page defines: :root[data-theme]. The same code
+   same origin) across boards and reloads. It only selects one of the two palettes the board defines: :root[data-theme]. The same code
    runs on every dashboard type. */
 (function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
   let btn=document.getElementById("theme");

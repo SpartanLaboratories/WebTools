@@ -1,5 +1,5 @@
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools master 4fcc6e0 (2026-10-25): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62) and its test-fixtures variant (#63), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-64-url-policy 543bd08 (2026-10-26): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63) and its outbound-URL policies (#64), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
 // Every element tagged Planned comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11) and carries its sub-issue. None of it is built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
@@ -32,12 +32,12 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 feedsCheck = component "webtools-feeds-commoncheck" "Unit 10: compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
             }
 
-            // ---- webtools-http: its common core (#62) and its test fixtures (#63) built, its other parts planned by Issue #55 ----
-            http = container "webtools-http" "A suspend HTTP stack: its common core and its published test fixtures are built; outbound-URL policies, the transport, the cache, the budget and the facades are planned." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
+            // ---- webtools-http: its common core (#62), its test fixtures (#63) and its outbound-URL policy (#64) built, its other parts planned by Issue #55 ----
+            http = container "webtools-http" "A suspend HTTP stack: its common core, its outbound-URL policies and its published test fixtures are built; the transport, the cache, the budget and the facades are planned." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
                 core      = component "Common core" "The opt-in marker, the HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain + jvmMain"
                 fixtures  = component "Published test fixtures" "The webtools-http-test-fixtures variant: VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader for .http files, and the gated, redacting FixtureRecorder, on a consumer's test classpath only." "jvmTestFixtures · capability webtools-http-test-fixtures" "Public"
+                policy    = component "Outbound-URL policy" "Trusted and Untrusted policies with TransportSettings, CidrBlock and MixedAnswers; an internal JVM-free address classifier; internal resolver and socket guards for the OkHttp transport. Not applied until the transport and the facades land." "commonMain + jvmMain" "Public"
                 // planned by Issue #55: not built
-                policy    = component "Outbound-URL policy" "Trusted and Untrusted policies, TransportSettings, the common address classifier, GuardedDns and GuardedSocketFactory." "commonMain + jvmMain" "Planned"
                 transport = component "OkHttp transport" "OkHttpTransport, one request per hop, manual redirects, capped body read, failure mapping." "jvmMain · okhttp-jvm 5.5.0" "Planned"
                 cache     = component "Response cache" "ResponseCache port, ResponseCache.Disabled and the CaffeineResponseCache default; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Planned"
                 budget    = component "Call budget" "CallBudget port and WindowedCallBudget, rate signals, BudgetStore and BudgetObserver seams." "commonMain" "Planned"
@@ -74,6 +74,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         consumer -> webtools.http.fixtures "Tests its providers with testFixtures(...), no network (1.0.0, not released)"
         webtools.http.fixtures -> webtools.http.core "Fakes HttpTransport and WallClock; decorates a live transport to record"
         webtools.gradleBuild.buildLogic -> webtools.http.fixtures "Checks its publication: fixturesPublicationCheck, in webtools-http's check"
+        consumer -> webtools.http.policy "Builds Trusted or Untrusted policies (1.0.0, not released)"
+        webtools.http.policy -> webtools.http.core "Judges Url hops; refuses with a RefusalReason"
+        webtools.gradleBuild.httpCheck -> webtools.http.policy "Compiles its classifier for js"
 
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
         webtools.gradleBuild.buildLogic -> webtools.feeds "Would configure: multiplatform plugin"
@@ -103,11 +106,11 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 4fcc6e0, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 543bd08, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 4fcc6e0: its common core and test fixtures built, its planned parts dashed." {
+        component webtools.http "Http" "webtools-http at 543bd08: its common core, URL policy and test fixtures built, its planned parts dashed." {
             include *
             autoLayout lr
         }

@@ -26,7 +26,49 @@
     "merge": "4fcc6e0",
     "pr": 84,
     "version": "none moved; webtools-http 1.0.0 new, unreleased",
-    "date": "2026-10-25"
+    "date": "2026-10-25",
+    "at": "2026-10-25T21:40:14Z",
+    "commits": [
+      {
+        "sha": "eb274e0",
+        "at": "2026-10-25T12:35:59Z",
+        "step": "research"
+      },
+      {
+        "sha": "abdb8c2",
+        "at": "2026-10-25T13:38:44Z",
+        "step": "research"
+      },
+      {
+        "sha": "7cabe98",
+        "at": "2026-10-25T13:45:54Z",
+        "step": "research"
+      }
+    ],
+    "approx": [
+      {
+        "step": "sizing",
+        "ended": "2026-10-25T11:54:26Z",
+        "source": "arrival"
+      },
+      {
+        "step": "research",
+        "since": "2026-10-25T12:13:51Z",
+        "ended": "2026-10-25T13:46:13Z",
+        "source": "arrival"
+      },
+      {
+        "step": "plan",
+        "since": "2026-10-25T13:46:13Z",
+        "ended": "2026-10-25T14:23:05Z",
+        "source": "arrival"
+      },
+      {
+        "step": "branch",
+        "since": "2026-10-25T14:23:05Z",
+        "source": "arrival"
+      }
+    ]
   },
   "systems": [
     {
@@ -158,38 +200,38 @@
       "route": "on-the-spot",
       "steps": [
         {
-          "name": "rookie-dev: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
+          "name": "The fixes: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
           "state": "done"
         },
         {
-          "name": "planner: reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
+          "name": "Reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
           "state": "current"
         }
       ]
     },
     "open": [
       {
-        "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+        "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed, to be decided before landing.",
         "raised": "plan-accepted",
         "ref": "plan.md#13-sequencing-and-follow-ups",
         "resolved": "Dated corrections (2026-10-25) in architecture.md at §6.1, §6.7 and §12, written with the as-built reconciliation (a95f5cb); §11 already gives the two helpers to unit 6."
       },
       {
-        "text": "Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. The planner rules whether §9's row or §6.8's list is amended.",
+        "text": "Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. A plan ruling decides whether §9's row or §6.8's list is amended.",
         "raised": "implementation-stage S5",
         "ref": "plan.md",
         "resolved": "Plan amendment 1 (2026-10-25) brings §9's Level 2 and Level 3 rows to §6.8's detection list, which is unchanged: a secret escaped only in part is neither replaced nor detected, the same boundary as a base64, hashed or truncated echo."
       },
       {
-        "text": "S6 paused on a plan gap: verifyJavaFloor failed on two output directories the module never creates (main's allOutputs on the fixtures' runtime classpath). Planner ruled: filter the classpath to existing entries in the module script (Amendment 2); build-logic untouched.",
+        "text": "S6 paused on a plan gap: verifyJavaFloor failed on two output directories the module never creates (main's allOutputs on the fixtures' runtime classpath). Ruled: filter the classpath to existing entries in the module script (Amendment 2); build-logic untouched.",
         "raised": "implementation-stage S6",
         "ref": "plan.md",
         "resolved": "2026-10-25T18:40:00Z"
       },
       {
-        "text": "Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
+        "text": "Nine test gaps from qa pass 1 await an add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
         "raised": "qa pass 1",
-        "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)",
+        "ref": "qa pass 1's test report (a build output, git-ignored: not linked)",
         "resolved": "2026-10-25T19:58:08Z"
       },
       {
@@ -220,7 +262,7 @@
           "minor": 27,
           "other": 9
         },
-        "route": "planner-then-rookie-dev",
+        "route": "re-plan-then-remediation",
         "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
       },
       {
@@ -277,7 +319,7 @@
           "detail": "S6 after the ruling: verifyJavaFloor passes with two jars; publication reads as planned (fixtures variants with the one capability, jvm version 11, optional test deps in the root POM, none in the -jvm POM); apiCheck green, dump unchanged. S7: build-logic gains the fixturesPublicationCheck task (BouncyCastle throwaway key, nested builds with ORG_GRADLE_PROJECT_* scrubbed), harness types ModuleSource, ThrowawayPgpKey, ResolutionReport and extended ModuleMetadata/PomFile/SampleProject; FixturesPublicationEndToEndTest's ten assertions pass (52 s cold, up-to-date and configuration cache reused on repeat); the edge in webtools-http's check runs it; root tasks unchanged; the guard composite does not run it; signing scrub holds against an invalid injected key; three mutants each caught (1, 5 and 5 failures).",
           "open": [
             {
-              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed, to be decided before landing.",
               "raised": "plan-accepted",
               "ref": "plan.md#13-sequencing-and-follow-ups"
             }
@@ -378,7 +420,7 @@
           "detail": "S8: legacy modules, webtools-http main sources, the ABI dump, the check module, build-logic/src/main and the root build files untouched (diffs empty; the three legacy modules compile); every mechanical rule holds (three @OptIn lines in the fixtures, none in tests; no TODO; KDoc coverage; no credential or local path; .http fixtures carry -text); README gains the six planned edits (CRLF kept). Level 5: the published .module, POMs and the fixtures jar's signature read from a kept check workspace and recorded; four IDE-only items recorded as not performed. Final state: webtools-http check green incl. verifyJavaFloor (2 jars) and fixturesPublicationCheck (10/10); all build-logic suites green. 61 files in the change set.",
           "open": [
             {
-              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed, to be decided before landing.",
               "raised": "plan-accepted",
               "ref": "plan.md#13-sequencing-and-follow-ups"
             }
@@ -398,7 +440,7 @@
                 "minor": 27,
                 "other": 9
               },
-              "route": "planner-then-rookie-dev"
+              "route": "re-plan-then-remediation"
             }
           ]
         },
@@ -415,7 +457,7 @@
           "detail": "Remediation: 21 files took the 27 minor fixes (KDoc wording incl. the Amendment 1 boundary in FixtureRecorder and Redaction, comments, test renames, two 200 asserts, snapshot asserts, the gating test no longer does file I/O, JAVA_FLOOR constant instead of a literal, a mangled path in the record). Amendment 3: RedactionComponentTest +4, FixtureRecorderIntegrationTest +1 (eight concurrent recordings to one name), new FixturesCheckWiringEndToEndTest (2: the module's check schedules the publication check as root build; an including build never does), JarClasses.entries with the classes-only jar assertion, codec size-linearity test, start barrier in the concurrency test, an encodable second canary in the secrecy test, NestedBuild KDoc records the scrub's scope. webtools-http check: 271 jvm tests, 54 classes, 0 failures; build-logic e2eTest 17 and fixturesPublicationCheck 10 green.",
           "open": [
             {
-              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed, to be decided before landing.",
               "raised": "plan-accepted",
               "ref": "plan.md#13-sequencing-and-follow-ups"
             }
@@ -454,30 +496,30 @@
           "detail": "Code review: no logic defect, every plan item done, no unplanned change, inside the unit, the single recorded deviation is the only one, hygiene clean (no key material, paths or attribution). Doc: KDoc complete and tier-named; residuals are the Amendment 1 partial-escape boundary missing from two consumer-facing KDocs, header and crypto-constant comments, and ten collapsed wording items. Tests: all plan rows present; the nine non-minor items are edges or guarantees the plan states but no test pins.",
           "open": [
             {
-              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed, to be decided before landing.",
               "raised": "plan-accepted",
               "ref": "plan.md#13-sequencing-and-follow-ups"
             },
             {
-              "text": "Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
+              "text": "Nine test gaps from qa pass 1 await an add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
               "raised": "qa pass 1",
-              "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)"
+              "ref": "qa pass 1's test report (a build output, git-ignored: not linked)"
             }
           ],
           "remediation": {
             "pass": 1,
-            "route": "planner-then-rookie-dev",
+            "route": "re-plan-then-remediation",
             "steps": [
               {
-                "name": "rookie-dev: the 27 minor fixes (KDoc and comment wording, test renames and asserts, two mechanical code fixes); re-run webtools-http check and build-logic e2eTest",
+                "name": "The 27 minor fixes (KDoc and comment wording, test renames and asserts, two mechanical code fixes); re-run webtools-http check and build-logic e2eTest",
                 "state": "done"
               },
               {
-                "name": "planner: rule add-or-record on the nine test gaps (Amendment 3 to plan §9)",
+                "name": "Rule add-or-record on the nine test gaps (Amendment 3 to plan §9)",
                 "state": "done"
               },
               {
-                "name": "rookie-dev: write the tests the planner adds",
+                "name": "Write the tests the ruling adds",
                 "state": "done"
               },
               {
@@ -501,7 +543,7 @@
                 "minor": 27,
                 "other": 9
               },
-              "route": "planner-then-rookie-dev",
+              "route": "re-plan-then-remediation",
               "note": "Code review passed and the suite is 376 of 376 green. The 27 minor findings are doc and comment wording, test renames and asserts and two mechanical code fixes; the nine others are test gaps, edges or guarantees the plan states but no test pins."
             }
           ]
@@ -519,7 +561,7 @@
           "detail": "qa pass 2 fixes: the integration test runs (16 cases, the nameFor case present and passing; no other expression-bodied test has the non-Unit shape); FixtureRecorder KDoc states the atomic-move fallback and the attached-throwable rule as plan §6.12 has them; 14 wording and KDoc items; the gating consumer no longer touches the file system; the publication check asserts no nested build's output holds the passphrase or any line of the armoured key; the concurrency test's awaits carry a two-minute hang bound; guard mutation recorded (removing the root-build condition fails the wiring test's consumer case, so the condition is load-bearing). webtools-http check: 272 jvm tests, 54 classes, 0 failures; build-logic e2eTest 17 green.",
           "open": [
             {
-              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed; the user decides before landing.",
+              "text": "Architecture §6.1, §6.7, §11 and §12 word where the publication check attaches and when adhoc-variant signing is first exercised differently from the plan, and §6.7 lists two helpers that §11 gives to unit 6. Dated callouts are proposed, to be decided before landing.",
               "raised": "plan-accepted",
               "ref": "plan.md#13-sequencing-and-follow-ups"
             }
@@ -529,11 +571,11 @@
             "route": "on-the-spot",
             "steps": [
               {
-                "name": "rookie-dev: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
+                "name": "The fixes: make the non-void integration test run (runBlocking<Unit>), correct the recorded counts, apply the 25 minor wording, KDoc and test items incl. the two optional 4b assertions and the 4c hang bound; re-run webtools-http check and build-logic e2eTest",
                 "state": "done"
               },
               {
-                "name": "planner: reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
+                "name": "Reconcile final-implementation.md, impact.md and plan.md §10 (flaky-timing bullet, level-5 owner and trigger fields)",
                 "state": "current"
               }
             ]
@@ -568,9 +610,9 @@
           "event": {
             "name": "landing",
             "at": "2026-10-25T21:38:04Z",
-            "note": "accepted by the admin team"
+            "note": "accepted"
           },
-          "detail": "Landing accepted by the admin team: sync, commits, PR and merge."
+          "detail": "Landing accepted: sync, commits, PR and merge."
         }
       ]
     }
@@ -635,7 +677,7 @@
     {
       "date": "2026-10-25",
       "column": "gap",
-      "label": "Run started: sized as one system, the fixtures variant; the planner re-passes unit 4 against #55's architecture §6.7, §6.1 and §11 and impact §7",
+      "label": "Run started: sized as one system, the fixtures variant; a plan re-pass takes unit 4 against #55's architecture §6.7, §6.1 and §11 and impact §7",
       "ref": "../architecture.md"
     },
     {
@@ -716,7 +758,7 @@
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Open point resolved: Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. The planner rules whether §9's row or §6.8's list is amended.",
+      "label": "Open point resolved: Plan §9's level-3 row says a secret echoed only as lower-case percent-escapes refuses the file, but §6.8's scrubber list covers the three forms, their lower-hex variants and the full byte escape, so a partial escape of safe characters would be written; tests use covered forms. A plan ruling decides whether §9's row or §6.8's list is amended.",
       "ref": "plan.md"
     },
     {
@@ -727,7 +769,7 @@
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Open point resolved: S6 paused on a plan gap: verifyJavaFloor failed on two output directories the module never creates (main's allOutputs on the fixtures' runtime classpath). Planner ruled: filter the classpath to existing entries in the module script (Amendment 2); build-logic untouched.",
+      "label": "Open point resolved: S6 paused on a plan gap: verifyJavaFloor failed on two output directories the module never creates (main's allOutputs on the fixtures' runtime classpath). Ruled: filter the classpath to existing entries in the module script (Amendment 2); build-logic untouched.",
       "ref": "plan.md"
     },
     {
@@ -748,8 +790,8 @@
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Open point resolved: Nine test gaps from qa pass 1 await the planner's add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
-      "ref": "qa pass 1's test-inspector report, `build/reports/test-inspector/index.html` (a build output, git-ignored: not linked)"
+      "label": "Open point resolved: Nine test gaps from qa pass 1 await an add-or-record ruling: Amendment 1 edge forms and longest-first ordering (L2 component), concurrent same-name recordings (L3 integration), the positive branch of the check edge, fixtures-jar resource entries and the -Dorg.gradle.project route (L4b), codec size robustness, concurrency start barrier and an encodable canary (L4c).",
+      "ref": "qa pass 1's test report (a build output, git-ignored: not linked)"
     },
     {
       "date": "2026-10-25",
@@ -776,13 +818,13 @@
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "The planner reconciled the as-built record and the impact: one deviation, a staging one (the Level 1 consumer written in S5), and plan Amendments 1 to 3; #55's impact and architecture carry dated corrections",
+      "label": "The as-built record and the impact reconciled: one deviation, a staging one (the Level 1 consumer written in S5), and plan Amendments 1 to 3; #55's impact and architecture carry dated corrections",
       "ref": "a95f5cb"
     },
     {
       "date": "2026-10-25",
       "column": "built",
-      "label": "Landing: the admin team merges it"
+      "label": "Landing: merging it"
     },
     {
       "date": "2026-10-25",
@@ -943,7 +985,7 @@
         "changes": [
           {
             "what": "`verifyJavaFloor` scans only the entries of the fixtures' runtime classpath that exist, filtered lazily in the module script, so main's class directory is scanned beside the `jvm` jar.",
-            "why": "The associated main compilation's outputs put two directories the module never creates (its Java classes and its resources) on that classpath, and the guard fails closed on a missing root, which is its contract. The planner's ruling, plan Amendment 2, keeps `build-logic` untouched.",
+            "why": "The associated main compilation's outputs put two directories the module never creates (its Java classes and its resources) on that classpath, and the guard fails closed on a missing root, which is its contract. The plan ruling, Amendment 2, keeps `build-logic` untouched.",
             "when": "S6",
             "ref": "final-implementation.md#p6---the-dump-and-the-floor-s6"
           }
@@ -2056,7 +2098,7 @@
           "build-logic/build.gradle.kts:51-72 — the TestKit home lock and the nested-build level tasks a new check reuses (baseline)"
         ],
         "source": "../architecture.md §6.1, §12; ../impact.md §8",
-        "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-4-as-built"
+        "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-5-as-built"
       },
       "options": [
         {
@@ -2073,7 +2115,7 @@
           "verdict": "deferred",
           "why": "The architecture's target does not exist: a root `check` changes the root build's shape, and the module's own `check` keeps it beside the publication. #55's impact leaves the choice to this unit's plan.",
           "source": "../impact.md §8; ../62-http-core/plan.md §12",
-          "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-4-as-built"
+          "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-5-as-built"
         },
         {
           "id": "root-lifecycle-check",
@@ -2364,7 +2406,7 @@
             "excerpt": {
               "ref": "final-implementation.md#p11---the-unaffected-modules-s8",
               "heading": "P11 - the unaffected modules (S8)",
-              "paragraph": "On head `5d98102` (master merged into the branch by the admin team): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
+              "paragraph": "On head `5d98102` (master merged into the branch …): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
               "hash": "34391c926593"
             }
           }
@@ -2628,7 +2670,7 @@
             "excerpt": {
               "ref": "final-implementation.md#p11---the-unaffected-modules-s8",
               "heading": "P11 - the unaffected modules (S8)",
-              "paragraph": "On head `5d98102` (master merged into the branch by the admin team): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
+              "paragraph": "On head `5d98102` (master merged into the branch …): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
               "hash": "34391c926593"
             }
           },
@@ -2692,7 +2734,7 @@
             "excerpt": {
               "ref": "plan.md#11-version-control",
               "heading": "11. Version control",
-              "paragraph": "Branch: `feat/issue-63-test-support`. It exists and holds the research commits; the executor confirms it (P1) rather than cutting it again. · Commits. Each leaves the build green. The type and the split are the manager's final call; subject lines carry `(Issue #63)`; no attribution trailers. · `feat: add the webtools-http test-fixtures variant, its fixtures and the fixtures-publication check (Issue #63)` — this `plan.md`, `.gitattributes`, `webtools-http/build.gradle.kts`, `webtools-http/src/jvmTestFixtures/`, the new `webtools-http/src/jvmTest/` files (tests and the sample resources), and …",
+              "paragraph": "Branch: `feat/issue-63-test-support`. It exists and holds the research commits; … · Commits. Each leaves the build green. …; subject lines carry `(Issue #63)`; no attribution trailers. · `feat: add the webtools-http test-fixtures variant, its fixtures and the fixtures-publication check (Issue #63)` — this `plan.md`, `.gitattributes`, `webtools-http/build.gradle.kts`, `webtools-http/src/jvmTestFixtures/`, the new `webtools-http/src/jvmTest/` files (tests and the sample resources), and every `build-logic/` change (`build.gradle.kts` and the test sources). It is one commit because …",
               "hash": "1c2c6725c8aa"
             }
           },
@@ -2989,7 +3031,72 @@
     "source": "impact.md, reconciled with final-implementation.md; plan.md §6 and §12",
     "link": "impact.md#1-published-artifacts"
   },
-  "roadmap": null,
+  "roadmap": {
+    "issue": 55,
+    "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+    "asOf": "2026-10-26",
+    "items": [
+      {
+        "issue": 61,
+        "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 47,
+        "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 62,
+        "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 63,
+        "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 64,
+        "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
+        "state": "OPEN"
+      },
+      {
+        "issue": 65,
+        "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
+        "state": "OPEN"
+      },
+      {
+        "issue": 66,
+        "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
+        "state": "OPEN"
+      },
+      {
+        "issue": 67,
+        "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
+        "state": "OPEN"
+      },
+      {
+        "issue": 68,
+        "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
+        "state": "OPEN"
+      },
+      {
+        "issue": 69,
+        "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
+        "state": "OPEN"
+      },
+      {
+        "issue": 70,
+        "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
+        "state": "OPEN"
+      }
+    ]
+  },
   "followUps": [],
   "documents": [
     {
@@ -3052,19 +3159,22 @@
         "when": "researched, 2026-10-25"
       },
       {
-        "what": "The publication-check row's Gap and its second option linked #55's impact.md §8 by its old heading, \"units 1 to 3 as built\"; the planner renamed the section \"units 1 to 4 as built\" with this unit's reconciliation. The two links now name the renamed section; the text is unchanged.",
+        "what": "The publication-check row's Gap and its second option linked #55's impact.md §8 by its old heading, \"units 1 to 3 as built\"; the section was renamed \"units 1 to 4 as built\" with this unit's reconciliation. The two links now name the renamed section; the text is unchanged.",
         "when": "qa pass 2 reconciliation, 2026-10-25"
       }
     ],
     "departure": "The unit's plan departs from #55's architecture in three decisions (plan.md §13, impact.md §5): the fixtures-publication check hangs off `webtools-http`'s own `check` rather than a root `check` (§6.1, §6.7, §11), since the root project has none and a root one would miss `./gradlew build`; the signing of the multiplatform publication with its adhoc variant is exercised on every run of the check with a throwaway key, leaving only Central's validator to the first release (§12); and `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)`, which §6.7 lists among this unit's types, follow §11 to unit 6. They show in the publication-check, release and contributions-left rows' Considered and Verdict columns, in the publication-check row's settled option, and on #55's tracking board as changes on the test-support unit row. A dated correction to `architecture.md` §6.1 is written with the as-built reconciliation."
   },
   "issueBoards": {
-    "62": "../62-http-core/dashboard.html"
+    "47": "../47-java-23-bytecode/dashboard.html",
+    "61": "../61-build-logic/dashboard.html",
+    "62": "../62-http-core/dashboard.html",
+    "64": "../64-url-policy/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",
-    "repoPage": "../../../dashboards/index.html",
-    "pages": {
+    "repoBoard": "../../../dashboards/index.html",
+    "boards": {
       "gradle-build": "../../../dashboards/gradle-build/index.html"
     }
   },
