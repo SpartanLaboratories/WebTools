@@ -18,6 +18,9 @@ class AddressRangesJdkSupersetDeterministicTest {
 
     private val seed = 7
     private val count = 200_000
+    // Forced first bytes, each probing a region the JDK flags or the table treats specially: 0x00 the unspecified, loopback,
+    // mapped and NAT64 space (::/8); 0xFE link-local and site-local (fe80::/10, fec0::/10); 0xFF multicast (ff00::/8); 0x20 and
+    // 0x26 global unicast (2000::/3, where the table's explicit rows and the ISATAP rule live); 0xFC unique-local (fc00::/7).
     private val firstBytes = byteArrayOf(0x00, 0xFE.toByte(), 0xFF.toByte(), 0x20, 0x26, 0xFC.toByte())
 
     private fun jdkFlags(address: InetAddress): Boolean =
@@ -49,6 +52,7 @@ class AddressRangesJdkSupersetDeterministicTest {
         repeat(count) { index ->
             val bytes = random.nextBytes(16)
             if (random.nextBoolean()) bytes[0] = firstBytes[random.nextInt(firstBytes.size)]
+            // One array in ten gets the IPv4-mapped prefix ::ffff:0:0/96, so the JDK's collapse to an Inet4Address is exercised.
             if (random.nextInt(10) == 0) {
                 for (i in 0..9) bytes[i] = 0
                 bytes[10] = 0xFF.toByte()

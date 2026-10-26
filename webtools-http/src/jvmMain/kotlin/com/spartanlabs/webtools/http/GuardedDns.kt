@@ -5,6 +5,8 @@ import java.net.InetAddress
 import java.net.UnknownHostException
 
 private val log: Log = logger("com.spartanlabs.webtools.http.GuardedDns")
+
+/** The message of the plain `UnknownHostException` for an empty delegate answer; OkHttp's own message for one holds the host. */
 internal const val EMPTY_ANSWER_MESSAGE: String = "The resolver returned no addresses."
 
 /**
@@ -12,8 +14,26 @@ internal const val EMPTY_ANSWER_MESSAGE: String = "The resolver returned no addr
  * default routes record resolution through `lookup`; it never uses `by delegate` and never forwards `newCall`. Delegate
  * exceptions pass through; an empty delegate answer becomes an `UnknownHostException` with a constant message; it never
  * returns an empty list (OkHttp's message for one holds the host).
+ *
+ * `lookup` runs on whichever thread drives route selection: the caller's for `execute()`, a `Dispatcher` thread for
+ * `enqueue()`, the `Dns.Call`'s thread through the inherited bridge. The class is stateless beyond its two references and
+ * safe to share between calls and clients. Under `DropDenied` it writes one `DEBUG` line per lookup that dropped addresses
+ * (the host, the counts and the range classes; never an address); otherwise it logs nothing. After it throws, the call fails
+ * with the marker on top, unwrapped: no further route is tried and no socket is opened. An IP-literal host never reaches
+ * this class: OkHttp resolves a literal itself, so the literal is judged by [UrlGuard.checkHop] before any call.
+ *
+ * @property delegate the resolver that answers; `Dns.SYSTEM` in production, a stub in tests.
+ * @property guard the guard whose policy judges each address ([UrlGuard.judgeAnswer]).
  */
 internal class GuardedDns(private val delegate: Dns, private val guard: UrlGuard) : Dns {
+    /**
+     * Resolves [hostname] through the delegate and judges the answer.
+     *
+     * @param hostname the name OkHttp resolves; never an IP literal.
+     * @return the delegate's addresses, whole under `Reject`, the allowed ones in answer order under `DropDenied`; never empty.
+     * @throws PolicyRefusedUnknownHost when the answer is refused (any denied address under `Reject`; none left under `DropDenied`).
+     * @throws UnknownHostException when the delegate answers with no address (constant message), or whatever the delegate throws.
+     */
     override fun lookup(hostname: String): List<InetAddress> {
         val answer = delegate.lookup(hostname)
         if (answer.isEmpty()) throw UnknownHostException(EMPTY_ANSWER_MESSAGE)

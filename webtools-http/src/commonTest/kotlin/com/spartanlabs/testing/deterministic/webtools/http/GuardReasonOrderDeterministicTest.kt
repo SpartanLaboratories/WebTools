@@ -11,8 +11,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Level 4a - the reason that wins when two rules apply (plan §6.5's order: scheme, user-info, host form, IP literal,
- * reserved name, port, pin, downgrade; the URL before the headers). User-info has no row: a `Url` never carries any.
+ * Level 4a - the reason that wins when two rules apply (the order `UrlGuard.checkHop`'s KDoc lists: scheme, user-info, host
+ * form, IP literal, reserved name, port, pin, downgrade; the URL before the headers). User-info has no row: a `Url` never
+ * carries any.
  */
 class GuardReasonOrderDeterministicTest {
 

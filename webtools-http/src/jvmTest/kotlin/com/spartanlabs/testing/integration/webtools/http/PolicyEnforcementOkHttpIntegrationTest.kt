@@ -132,7 +132,13 @@ class PolicyEnforcementOkHttpIntegrationTest {
         client.newCall(request()).execute().use { response -> assertEquals(200, response.code) }
         val elapsed = mark.elapsedNow()
         assertEquals(1, server.requestCount)
-        assertTrue(elapsed.inWholeMilliseconds < 10_000, "took $elapsed")
+        // What the 2 s bound catches: the denied 10.0.0.5 attempt being connected instead of refused. With fast fallback
+        // OkHttp would race that attempt against 127.0.0.1 after its 250 ms stagger, so a connected-but-denied attempt would
+        // not stall the call; what it would do is either reach the server (requestCount above shows it did not) or, had the
+        // relaxation been applied to the socket guard wrongly, make the whole call fail. The bound guards against a refusal
+        // that is not instant: a guard that does I/O before refusing (a reverse lookup, a probe) would push this past 2 s on
+        // an unroutable address, well short of the 10 s connect timeout.
+        assertTrue(elapsed.inWholeMilliseconds < 2_000, "took $elapsed")
     }
 
     @Test

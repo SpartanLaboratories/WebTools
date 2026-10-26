@@ -176,6 +176,8 @@ class GuardedDnsComponentTest {
         assertEquals(listOf(inet("10.0.0.1"), inet("127.0.0.1")), guarded(trustedGuard(), "10.0.0.1", "127.0.0.1").lookup("name.test"))
     }
 
+    // Captures the shared "com.spartanlabs.webtools.http.GuardedDns" logger: it relies on JUnit running test methods
+    // sequentially (no parallel execution is enabled), since the level and the appender are process-wide for its duration.
     private fun <T> withDebugCapture(block: (ListAppender<ILoggingEvent>) -> T): T {
         val logbackLogger = LoggerFactory.getLogger("com.spartanlabs.webtools.http.GuardedDns") as Logger
         val appender = ListAppender<ILoggingEvent>().apply { start() }

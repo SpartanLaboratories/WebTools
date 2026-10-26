@@ -6,7 +6,13 @@ import kotlin.random.Random
 internal object IpLiteralGenerator {
     private const val HEX = "0123456789abcdef"
 
-    /** [count] dotted-style strings: mostly four parts, sometimes one to five; parts with leading zeros, above 255, hex or empty. */
+    /**
+     * Dotted-style strings: mostly four parts, sometimes one to five; parts with leading zeros, above 255, hex or empty.
+     *
+     * @param seed the random seed; the same seed and count always give the same list.
+     * @param count how many strings.
+     * @return the strings, valid and invalid mixed.
+     */
     fun ipv4(seed: Int, count: Int): List<String> {
         val random = Random(seed)
         return List(count) {
@@ -26,7 +32,14 @@ internal object IpLiteralGenerator {
         }
     }
 
-    /** [count] IPv6-style strings without brackets: zero to nine groups, an optional "::", an optional dotted quad last, one in ten mutated. */
+    /**
+     * IPv6-style strings without brackets: zero to nine groups, an optional "::", an optional dotted quad last, one in ten
+     * mutated.
+     *
+     * @param seed the random seed; the same seed and count always give the same list.
+     * @param count how many strings.
+     * @return the strings, valid and invalid mixed.
+     */
     fun ipv6(seed: Int, count: Int): List<String> {
         val random = Random(seed)
         return List(count) { mutate(random, shape(random), random.nextInt(10) == 0) }
@@ -34,6 +47,7 @@ internal object IpLiteralGenerator {
 
     private fun group(random: Random): String {
         if (random.nextInt(10) < 3) return listOf("0", "00", "000", "0000").random(random)
+        // One group in twenty is five digits long: one too many, so the parsers' group-length limit is exercised.
         val length = if (random.nextInt(20) == 0) 5 else 1 + random.nextInt(4)
         val digits = (1..length).map { HEX[random.nextInt(16)] }.joinToString("")
         return if (random.nextBoolean()) digits else digits.uppercase()
@@ -43,6 +57,7 @@ internal object IpLiteralGenerator {
         (1..4).joinToString(".") { if (random.nextInt(20) == 0) "0" + random.nextInt(10) else random.nextInt(256).toString() }
 
     private fun shape(random: Random): String {
+        // Usually 1..8 groups; one in five draws 0..9, so zero groups and nine (one too many) occur as well.
         val count = if (random.nextInt(10) < 8) 1 + random.nextInt(8) else random.nextInt(10)
         val parts = MutableList(count) { group(random) }
         if (count > 0 && random.nextInt(8) == 0) parts[count - 1] = quad(random)

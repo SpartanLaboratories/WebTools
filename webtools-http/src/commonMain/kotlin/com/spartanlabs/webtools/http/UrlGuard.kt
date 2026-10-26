@@ -3,6 +3,9 @@ package com.spartanlabs.webtools.http
 /**
  * A refusal: the coarse [reason] and, for `DeniedAddress` only, the matched range's [rangeClass] (for logs; never an
  * address or a range). Value equality; `toString()` prints the reason only.
+ *
+ * @property reason the coarse reason, one of the `RefusalReason` constants.
+ * @property rangeClass the matched range's class when [reason] is `DeniedAddress`; `null` otherwise.
  */
 internal class GuardRefusal(val reason: RefusalReason, val rangeClass: String?) {
     init {
@@ -16,25 +19,44 @@ internal class GuardRefusal(val reason: RefusalReason, val rangeClass: String?) 
 
 /** The outcome of [UrlGuard.admitRedirect]. */
 internal sealed class RedirectAdmission {
-    /** The target parsed and passed every rule; follow [url]. */
+    /**
+     * The target parsed and passed every rule; follow [url].
+     *
+     * @property url the parsed target, the next hop.
+     */
     class Admitted(val url: Url) : RedirectAdmission()
 
-    /** The target was refused for [refusal]. */
+    /**
+     * The target was refused for [refusal].
+     *
+     * @property refusal the reason (a parse problem mapped to a reason, or a hop rule) and, for `DeniedAddress`, the range class.
+     */
     class Refused(val refusal: GuardRefusal) : RedirectAdmission()
 }
 
 /** The outcome of [UrlGuard.judgeAnswer]. */
 internal sealed class AnswerVerdict {
-    /** Use the addresses at [indices], in answer order. Empty only for an empty answer. */
+    /**
+     * Use the addresses at [indices], in answer order. Empty only for an empty answer.
+     *
+     * @property indices the positions in the judged answer to keep, ascending.
+     */
     class Allowed(val indices: List<Int>) : AnswerVerdict()
 
-    /** The answer is refused for [refusal]. */
+    /**
+     * The answer is refused for [refusal].
+     *
+     * @property refusal the first denied address's refusal: `DeniedAddress` with its range class.
+     */
     class Refused(val refusal: GuardRefusal) : AnswerVerdict()
 }
 
 /**
  * Applies a policy to a hop, a request, a redirect target and a resolved address. Pure and immutable after construction: no
  * I/O, safe to share between threads, never logs.
+ *
+ * @property policy the policy whose rules are applied.
+ * @property relaxation a test-only loosening of the loopback rules; [GuardRelaxation.None] in every production path.
  */
 internal class UrlGuard(val policy: OutboundUrlPolicy, val relaxation: GuardRelaxation = GuardRelaxation.None) {
 
@@ -54,6 +76,7 @@ internal class UrlGuard(val policy: OutboundUrlPolicy, val relaxation: GuardRela
     /**
      * Judges a request before hop 1: [checkHop] of its URL, then, for `Untrusted`, any header with `isSensitive`.
      *
+     * @param request the request about to be sent; its URL is hop 1.
      * @return the refusal, or `null` when the request may be sent.
      */
     fun checkRequest(request: HttpRequest): GuardRefusal? =
@@ -92,6 +115,9 @@ internal class UrlGuard(val policy: OutboundUrlPolicy, val relaxation: GuardRela
      * Judges a whole resolver answer. `Reject` refuses it at its first denied address; `DropDenied` keeps the allowed
      * indices in order and refuses (with the first refusal) when none is left; `Trusted` allows every index. An empty list is
      * `Allowed(emptyList())`: not the guard's to judge.
+     *
+     * @param addresses the resolved addresses as 4- or 16-byte arrays, in answer order; any other length is denied.
+     * @return [AnswerVerdict.Allowed] with the indices to use, or [AnswerVerdict.Refused] with the first refusal.
      */
     fun judgeAnswer(addresses: List<ByteArray>): AnswerVerdict {
         if (addresses.isEmpty()) return AnswerVerdict.Allowed(emptyList())
@@ -131,6 +157,8 @@ internal class UrlGuard(val policy: OutboundUrlPolicy, val relaxation: GuardRela
     private fun checkPort(policy: OutboundUrlPolicy.Untrusted, url: Url): GuardRefusal? {
         val ports = policy.allowedPorts ?: return null
         if (url.port in ports) return null
+        // The relaxation exempts the port rule for exactly the hosts "localhost", "127.0.0.1" and "::1" (a loopback test
+        // server listens on an ephemeral port); any other host, 127.0.0.2 included, keeps the port rule.
         return if (relaxation.allowLoopback && url.host in LOOPBACK_HOSTS) null else GuardRefusal(RefusalReason.Port, null)
     }
 

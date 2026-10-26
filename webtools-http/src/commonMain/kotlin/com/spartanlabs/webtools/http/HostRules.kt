@@ -2,20 +2,30 @@ package com.spartanlabs.webtools.http
 
 /** What [HostRules.classify] says about a host. */
 internal sealed class HostVerdict {
-    /** The host is a strict IP literal; judge [address] (4 bytes, or 16 for IPv6) with the address table. */
+    /**
+     * The host is a strict IP literal; judge [address] with the address table.
+     *
+     * @property address the literal's bytes: 4 for a dotted quad, 16 for IPv6 (a mapped literal is not collapsed).
+     */
     class Literal(val address: ByteArray) : HostVerdict()
 
     /** A name no host rule fires on; the resolver guard judges what it resolves to. */
     object Name : HostVerdict()
 
-    /** The host is refused for [reason]: `HostForm` or `ReservedName`. */
+    /**
+     * The host is refused for [reason].
+     *
+     * @property reason `HostForm` or `ReservedName`.
+     */
     class Refused(val reason: RefusalReason) : HostVerdict()
 }
 
 /** The host rules of the `Untrusted` policy, as pure functions over strings. */
 internal object HostRules {
-    // localhost names are loopback by RFC 6761; .local is mDNS; .internal and home.arpa are reserved for private use. These
-    // rules are fail-fast and diagnostic: the resolver guard denies whatever they resolve to.
+    // localhost names are loopback by RFC 6761; .local is mDNS; .internal and home.arpa are reserved for private use;
+    // localdomain is the default search domain glibc gives a host with no domain in resolv.conf, so "host.localdomain" names
+    // a loopback or LAN host on such a machine. These rules are fail-fast and diagnostic: the resolver guard denies whatever
+    // they resolve to.
     private val RESERVED: List<String> = listOf("localhost", "local", "internal", "home.arpa", "localdomain")
 
     /**
@@ -44,7 +54,13 @@ internal object HostRules {
         return if (reserved) refused(RefusalReason.ReservedName) else HostVerdict.Name
     }
 
-    /** True when [name] is [suffix] or ends with `.` plus [suffix] (a label boundary). */
+    /**
+     * True when [name] is [suffix] or ends with `.` plus [suffix] (a label boundary).
+     *
+     * @param name a canonical host name without its trailing dot.
+     * @param suffix a canonical suffix (a reserved name or a policy suffix).
+     * @return whether [suffix] is [name] or a parent domain of it.
+     */
     fun matchesSuffix(name: String, suffix: String): Boolean = name == suffix || name.endsWith(".$suffix")
 
     private fun refused(reason: RefusalReason): HostVerdict = HostVerdict.Refused(reason)

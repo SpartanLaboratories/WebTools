@@ -11,7 +11,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Level 4a - `StrictIp.parseV6` agrees with `Url`'s own IPv6 canonicalisation (`UrlHost.kt`, which this unit leaves
+ * Level 4a - `StrictIp.parseV6` agrees with `Url`'s own IPv6 canonicalisation (`UrlHost.kt`, which this change leaves
  * untouched) on the IPv6 inputs of `UrlCorpus` and on 20,000 seeded literals: when `Url` refuses `http://[L]/`,
  * `parseV6(L)` is `null`; when `Url` accepts, `parseV6(L)` is the address `Url.host` prints (an IPv4-mapped host is
  * printed as dotted IPv4 and is read back as the low four bytes of a mapped address). At least 2,000 generated literals

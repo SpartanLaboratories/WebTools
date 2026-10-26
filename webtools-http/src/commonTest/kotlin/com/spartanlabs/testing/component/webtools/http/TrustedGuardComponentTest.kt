@@ -8,7 +8,6 @@ import com.spartanlabs.webtools.http.AnswerVerdict
 import com.spartanlabs.webtools.http.HttpHeaders
 import com.spartanlabs.webtools.http.HttpMethod
 import com.spartanlabs.webtools.http.HttpRequest
-import com.spartanlabs.webtools.http.RefusalReason
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -85,6 +84,5 @@ class TrustedGuardComponentTest {
     fun `judgeAnswer allows every index`() {
         val verdict = assertIs<AnswerVerdict.Allowed>(default.judgeAnswer(listOf(addr("10.0.0.1"), addr("127.0.0.1"))))
         assertEquals(listOf(0, 1), verdict.indices)
-        assertEquals(RefusalReason.Scheme, default.checkHop(url("http://x/"), null)?.reason)
     }
 }

@@ -51,7 +51,7 @@ class CidrBlockParseDeterministicTest {
 
     @Test
     fun `an empty address is an address failure and an empty prefix a prefix failure`() {
-        // Plan Amendment 1: a shape failure is a text without exactly one slash; the empty parts belong to their own kinds.
+        // A shape failure is a text without exactly one slash; an empty address or prefix belongs to its own kind.
         assertEquals(address, refusal("/8"))
         assertEquals(prefix, refusal("10.0.0.0/"))
     }

@@ -19,6 +19,7 @@ import kotlin.test.assertTrue
 class OkHttpLiteralRegexDeterministicTest {
 
     // okhttp/src/commonJvmAndroid/kotlin/okhttp3/internal/-HostnamesCommon.kt at tag parent-5.5.0: VERIFY_AS_IP_ADDRESS.
+    //language=RegExp
     private val verifyAsIpAddress = Regex("([0-9a-fA-F]*:[0-9a-fA-F:.]*)|([\\d.]+)")
 
     private val seed = 7

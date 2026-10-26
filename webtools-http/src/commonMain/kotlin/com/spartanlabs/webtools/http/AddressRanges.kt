@@ -1,6 +1,10 @@
 package com.spartanlabs.webtools.http
 
-/** The class of a denied address: a short kebab-case name used only in logs and tests. */
+/**
+ * The class of a denied address: a short kebab-case name used only in logs and tests.
+ *
+ * @property rangeClass the name (`loopback`, `private-use`, `not-global-unicast`, ...); never an address or a range.
+ */
 internal class DeniedRange(val rangeClass: String)
 
 // Source of this table: the IANA IPv4 and IPv6 Special-Purpose Address Registries, "Last Updated 2025-10-09" (read
@@ -92,22 +96,38 @@ internal object AddressRanges {
         else -> UNUSUAL_LENGTH
     }
 
-    /** True for a 16-byte IPv4-mapped address `::ffff:0:0/96`. */
+    /**
+     * Whether [a] is a 16-byte IPv4-mapped address, `::ffff:0:0/96`.
+     *
+     * @param a any byte array; a length other than 16 is `false`.
+     * @return `true` for the mapped prefix.
+     */
     fun isMapped(a: ByteArray): Boolean =
         a.size == 16 && (0..9).all { a[it].toInt() == 0 } && (a[10].toInt() and 0xFF) == 0xFF && (a[11].toInt() and 0xFF) == 0xFF
 
-    /** True for a 16-byte address in the NAT64 well-known prefix `64:ff9b::/96`. */
+    /**
+     * Whether [a] is a 16-byte address in the NAT64 well-known prefix `64:ff9b::/96`.
+     *
+     * @param a any byte array; a length other than 16 is `false`.
+     * @return `true` for the well-known prefix (not for `64:ff9b:1::/48`, the local-use prefix).
+     */
     fun isNat64WellKnown(a: ByteArray): Boolean =
         a.size == 16 && a[0].toInt() == 0 && a[1].toInt() == 0x64 && (a[2].toInt() and 0xFF) == 0xFF &&
             (a[3].toInt() and 0xFF) == 0x9B && (4..11).all { a[it].toInt() == 0 }
 
-    /** The IPv4 address embedded in a mapped or NAT64 well-known address (its low 4 bytes), otherwise `null`. */
+    /**
+     * The IPv4 address a mapped or NAT64 well-known address embeds.
+     *
+     * @param a any byte array.
+     * @return the low 4 bytes as a new array when [isMapped] or [isNat64WellKnown]; `null` otherwise.
+     */
     fun embeddedV4(a: ByteArray): ByteArray? = if (isMapped(a) || isNat64WellKnown(a)) a.copyOfRange(12, 16) else null
 
     private fun denyV4(a: ByteArray): DeniedRange? = V4_ROWS.firstOrNull { it.block.contains(a) }?.denied
 
     private fun denyV6(a: ByteArray): DeniedRange? {
         embeddedV4(a)?.let { return denyV4(it) }
+        // Global unicast is 2000::/3 (RFC 4291 §2.4): the top three bits of the first byte are 001, so (byte and 0xE0) == 0x20.
         if ((a[0].toInt() and 0xE0) != 0x20) return NOT_GLOBAL_UNICAST
         V6_ROWS.firstOrNull { it.block.contains(a) }?.let { return it.denied }
         return if (isIsatap(a)) ISATAP else null

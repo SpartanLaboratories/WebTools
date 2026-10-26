@@ -2,12 +2,23 @@ package com.spartanlabs.testing.support.webtools.http
 
 /** The registry rows the address table must deny, with the class the table reports for each row's first and last address. */
 internal object RegistryRows {
-    /** A block, its first and last address and the class expected for each (a nested row's edge may belong to a more specific row). */
+    /**
+     * A block, its first and last address and the class expected for each (a nested row's edge may belong to a more specific row).
+     *
+     * @property block the registry's address block in CIDR notation.
+     * @property first the block's first address.
+     * @property firstClass the range class the table reports for [first].
+     * @property last the block's last address.
+     * @property lastClass the range class the table reports for [last].
+     */
     class Row(val block: String, val first: String, val firstClass: String, val last: String, val lastClass: String)
 
     private fun same(block: String, first: String, last: String, rangeClass: String) = Row(block, first, rangeClass, last, rangeClass)
 
-    /** The 26 IPv4 registry prefixes (25 rows), then the two rows that are not registry rows. */
+    /**
+     * The 26 IPv4 registry prefixes (the registry's 25 rows, one of which lists two prefixes), then the two rows that are
+     * not registry rows: 28 entries.
+     */
     val ipv4: List<Row> = listOf(
         Row("0.0.0.0/8", "0.0.0.0", "this-host", "0.255.255.255", "this-network"),
         same("0.0.0.0/32", "0.0.0.0", "0.0.0.0", "this-host"),

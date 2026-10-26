@@ -77,6 +77,7 @@ class PolicyRefusalMarkersComponentTest {
 
     private fun chain(depth: Int, bottom: Throwable): Throwable = (1..depth).fold(bottom) { inner, _ -> IOException("wrap", inner) }
 
+    // The two depths straddle the search's bound of 100 throwables (a private constant of the production file).
     @Test
     fun `depth 50 is found and depth 150 is beyond the bound`() {
         assertSame(a, chain(50, PolicyRefusedIo(a)).policyRefusal())

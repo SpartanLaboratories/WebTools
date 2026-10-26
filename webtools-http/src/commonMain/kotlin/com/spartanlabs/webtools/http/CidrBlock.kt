@@ -18,10 +18,16 @@ public class CidrBlock private constructor(
     private val bytes: ByteArray,
     private val prefixLength: Int,
 ) {
+    /** Whether this is an IPv4 block (4 address bytes) rather than an IPv6 one (16). */
     internal val isIpv4: Boolean get() = bytes.size == 4
 
-    // Same family (same width) and the first prefixLength bits equal; judged at the address's full width, so a prefix that
-    // is not taken from the input can never shorten the match.
+    /**
+     * Whether [address] is in this block: the same family (the same width) and the first `prefixLength` bits equal, judged
+     * at the address's full width, so a prefix that is not taken from the input can never shorten the match.
+     *
+     * @param address 4 or 16 bytes; an address of the other family, or of any other length, is never contained.
+     * @return `true` when the block covers [address].
+     */
     internal fun contains(address: ByteArray): Boolean = address.size == bytes.size && matchesPrefix(bytes, address, prefixLength)
 
     override fun equals(other: Any?): Boolean = other is CidrBlock && other.prefixLength == prefixLength && other.bytes.contentEquals(bytes)
@@ -60,6 +66,7 @@ public class CidrBlock private constructor(
             return text.toInt().takeIf { it <= width }
         }
 
+        // Bits are numbered MSB-first across the array, as CIDR counts them: bit n lives in byte n / 8 at shift 7 - n % 8.
         private fun hasBitsAfter(bytes: ByteArray, prefix: Int): Boolean {
             for (bit in prefix until bytes.size * 8) {
                 if (((bytes[bit / 8].toInt() shr (7 - bit % 8)) and 1) != 0) return true
@@ -70,11 +77,12 @@ public class CidrBlock private constructor(
 }
 
 // The first `prefix` bits of a and b are equal (a and b have the same length, at least prefix / 8 + 1 when prefix % 8 != 0).
-internal fun matchesPrefix(a: ByteArray, b: ByteArray, prefix: Int): Boolean {
+private fun matchesPrefix(a: ByteArray, b: ByteArray, prefix: Int): Boolean {
     val whole = prefix / 8
     for (i in 0 until whole) if (a[i] != b[i]) return false
     val rest = prefix % 8
     if (rest == 0) return true
+    // The top `rest` bits of the partial byte: 0xFF shifted left by the bits that do not count, cut back to one byte.
     val mask = (0xFF shl (8 - rest)) and 0xFF
     return (a[whole].toInt() and mask) == (b[whole].toInt() and mask)
 }

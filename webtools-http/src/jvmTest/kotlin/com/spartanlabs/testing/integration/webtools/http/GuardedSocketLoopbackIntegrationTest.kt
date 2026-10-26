@@ -34,6 +34,7 @@ class GuardedSocketLoopbackIntegrationTest {
 
     @Test
     fun `under the loopback relaxation a connect reaches the server`() = withServer { server ->
+        // A loopback connect completes in milliseconds; 2 s is a generous bound that keeps a broken connect from hanging the test.
         server.soTimeout = 2000
         val factory = GuardedSocketFactory(untrustedGuard(GuardRelaxation.LoopbackForTests))
         overloads.forEach { (name, connect) ->
@@ -47,6 +48,7 @@ class GuardedSocketLoopbackIntegrationTest {
 
     @Test
     fun `under None the connect is refused and no connection is made`() = withServer { server ->
+        // Short, so the accept() that must find nothing returns quickly: a refused connect never reaches the listener.
         server.soTimeout = 300
         val factory = GuardedSocketFactory(untrustedGuard())
         overloads.forEach { (name, connect) ->

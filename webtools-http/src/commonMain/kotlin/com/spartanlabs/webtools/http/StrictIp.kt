@@ -8,6 +8,7 @@ internal object StrictIp {
     /**
      * Exactly four decimal parts, each 1..3 ASCII digits, no leading zero unless the part is `0`, at most 255.
      *
+     * @param text the candidate literal, untrimmed.
      * @return the four bytes, or `null` when [text] is not that grammar.
      */
     fun parseV4(text: String): ByteArray? {
@@ -27,6 +28,7 @@ internal object StrictIp {
      * RFC 4291 text: groups of 1..4 hex digits (either case), at most one `::` standing for at least one group, an optional
      * strict dotted quad as the last 32 bits, no brackets, no zone.
      *
+     * @param text the candidate literal, untrimmed and without brackets.
      * @return the 16 bytes (an IPv4-mapped literal stays 16 bytes), or `null` when [text] is not that grammar.
      */
     fun parseV6(text: String): ByteArray? {

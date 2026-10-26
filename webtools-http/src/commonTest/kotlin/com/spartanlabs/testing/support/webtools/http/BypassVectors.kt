@@ -14,8 +14,21 @@ import com.spartanlabs.webtools.http.UrlProblem
  * `845bafca22fb0c5a42c4bf384a9bdea525a2f10d`; advisories by CVE or GHSA id.
  */
 internal object BypassVectors {
+    /** The stage-2 verdict of a vector: the `RefusalReason` names the `Untrusted` hop rules can give, plus `Allowed`. */
     enum class Outcome { HostForm, ReservedName, DeniedAddress, Port, Allowed }
 
+    /**
+     * One published vector.
+     *
+     * @property id the group id (`P01`, `H05`, `D14`, `G1`, `R03`, `N02`, `C01`, ...); repeated across the rows of one group.
+     * @property source where it was published (the tags of this file's header), for the reader, never asserted.
+     * @property parent the parent research's catalogue tags this row belongs to, comma-separated (`F1`, `F10`, `F1,F10`), or `null`.
+     * @property text the URL text fed to `Url.parse`.
+     * @property problem stage 1: the `UrlProblem` `Url.parse` must fail with; `null` for a stage-2 vector.
+     * @property host stage 2: the `Url.host` the parsed URL must print; `null` for a stage-1 vector.
+     * @property outcome stage 2: the default `Untrusted` guard's verdict on `checkHop(url, null)`; `null` for a stage-1 vector.
+     * @property rangeClass stage 2: the range class for a `DeniedAddress` outcome; `null` otherwise.
+     */
     class Vector(
         val id: String, val source: String, val parent: String?, val text: String, val problem: UrlProblem?,
         val host: String?, val outcome: Outcome?, val rangeClass: String?,
@@ -23,6 +36,7 @@ internal object BypassVectors {
         override fun toString(): String = "$id <${UrlCorpus.visible(text)}>"
     }
 
+    /** Every vector, stage 1 first, then stage 2 by group (port rule, `HostForm`, `DeniedAddress`, the two gaps, `ReservedName`, names and controls). */
     val vectors: List<Vector> = buildList {
         fun refused(id: String, source: String, parent: String?, problem: UrlProblem, vararg texts: String) =
             texts.forEach { add(Vector(id, source, parent, it, problem, null, null, null)) }
