@@ -419,3 +419,6 @@ public final class com/spartanlabs/webtools/http/WallClock$System : com/spartanl
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface annotation class com/spartanlabs/webtools/http/WebToolsDsl : java/lang/annotation/Annotation {
+}
+

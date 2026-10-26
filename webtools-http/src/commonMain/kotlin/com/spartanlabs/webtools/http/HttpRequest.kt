@@ -43,6 +43,7 @@ public class HttpRequest internal constructor(
      *
      * **Stable Core.**
      */
+    @WebToolsDsl
     public class Builder internal constructor() {
         /** The request headers; empty by default. */
         public var headers: HttpHeaders = HttpHeaders()

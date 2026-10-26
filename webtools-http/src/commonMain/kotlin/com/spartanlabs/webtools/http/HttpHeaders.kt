@@ -90,6 +90,7 @@ public class HttpHeaders internal constructor(entries: List<Entry>) {
      * is an RFC 9110 token and that the value obeys the container rule; a failing call throws and changes
      * nothing. A name is echoed in a message only after it passed the token rule; a value never.
      */
+    @WebToolsDsl
     public class Builder internal constructor() {
         private val items = ArrayList<Entry>()
 
@@ -105,8 +106,8 @@ public class HttpHeaders internal constructor(entries: List<Entry>) {
         }
 
         /**
-         * Appends an entry marked sensitive: it is never printed, and the stack's redirect policy (a later
-         * unit) reads the flag.
+         * Appends an entry marked sensitive: it is never printed; an `Untrusted` outbound-URL policy refuses a
+         * request that carries it, and the transport's redirect policy strips it on a cross-origin hop.
          *
          * @param name the header name, an RFC 9110 token.
          * @param value the value; stored trimmed of SP and HTAB at the ends.

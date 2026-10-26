@@ -48,6 +48,7 @@ public class HttpResponse internal constructor(
      *
      * **Stable Core.**
      */
+    @WebToolsDsl
     public class Builder internal constructor() {
         /** The response headers; empty by default. */
         public var headers: HttpHeaders = HttpHeaders()

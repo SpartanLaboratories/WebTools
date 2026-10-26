@@ -351,10 +351,11 @@ The claims about this repository were checked against `ad0ae63`:
   architecture names the idle-connection TTL.
 - **`CidrBlock.toString()`** prints the canonical block (`10.0.0.0/8`), not only its family and prefix length.
   A block is a value, as a `Url` is; the stack never logs one, and a policy prints only how many it holds.
-- **A DSL marker** for the module's builders is not part of this unit. The builders already in the module carry
-  none, and inside a nested block the outer builder's members remain visible and still set what they name. A
-  marker can be added to every builder of the module before `webtools-http` 1.0.0 is released at no cost to a
-  consumer; after the release it would tighten consumers' sources.
+- **A DSL marker** for the module's builders: `config-api-shape.md` recommends one public marker on every builder,
+  and the design adopts it as `WebToolsDsl`, on every builder of the module, the existing ones included (plan
+  Amendment 3). Inside a nested block an outer builder's members are then reached only through its label. Before
+  `webtools-http` 1.0.0 is released the marker costs a consumer nothing; after the release it would tighten
+  consumers' sources.
 - **The parent research's IPv6 list** names `::/96`, `::ffff:0:0:0/96`, `fec0::/10` and `ff00::/8` as
   special-purpose rows. They are not rows of that registry. All four lie outside `2000::/3`, so the outcome
   is the same.

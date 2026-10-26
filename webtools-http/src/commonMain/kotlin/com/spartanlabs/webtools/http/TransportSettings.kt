@@ -82,6 +82,7 @@ public class TransportSettings internal constructor(
      *
      * **Stable Core.**
      */
+    @WebToolsDsl
     public class Builder internal constructor(from: TransportSettings) {
         /** See [TransportSettings.callTimeout]. */
         public var callTimeout: Duration = from.callTimeout

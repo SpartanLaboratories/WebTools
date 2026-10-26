@@ -17,11 +17,11 @@
   [`../research/outbound-url-policy.md`](../research/outbound-url-policy.md) (the deny-table design, the host rules, the
   three layers, the F1 host-form catalogue, the F7 JDK-predicate gap, the F10 advisories).
   Where the code block in `config-api-shape.md` §6 differs from this plan (the names `maxResponseBodyBytes` and
-  `idleConnectionLifetime`, `CidrBlock(IPv4/8)` as the printed form, the `@WebToolsDsl` marker, a policy without
+  `idleConnectionLifetime`, `CidrBlock(IPv4/8)` as the printed form, a policy without
   `withSettings`), this plan is the specification.
 - **Branch:** `feat/issue-64-url-policy` (exists; cut from `master` at `ad0ae63`; holds the research commits).
-- **Commit:** TBD — this `plan.md` is committed in the same commit as the first stage of the implementation (§11), so
-  `git log --follow` binds the two.
+- **Commit:** `fd93ff9` (commit 1 of §11): this `plan.md` is committed in the same commit as the first stage of the
+  implementation, so `git log --follow` binds the two.
 - **PR:** TBD (the PR closes #64).
 - **What this plans:**
   - the public configuration types of `webtools-http` in the package `com.spartanlabs.webtools.http`:
@@ -29,6 +29,7 @@
     `OutboundUrlPolicy.trusted { }` and `untrusted { }` with their `from` overloads), `TransportSettings` (with
     `TrustedDefaults`, `UntrustedDefaults` and the factory `TransportSettings(from) { }`), `CidrBlock` and
     `MixedAnswers`;
+  - the public `@DslMarker` annotation `WebToolsDsl` on every builder of the module (Amendment 3);
   - the `internal` classification core in `commonMain`: `StrictIp`, `HostRules` with `HostVerdict`, `AddressRanges`
     with `DeniedRange`, `GuardRelaxation`, and `UrlGuard` with `GuardRefusal`, `RedirectAdmission` and
     `AnswerVerdict`;
@@ -36,7 +37,7 @@
     exceptions with `policyRefusal()`, and the per-policy bundle `PolicyEnforcement`;
   - the tests of all of it (Level 1 (gating) to Level 4c (non-functional), and the Level 5 (user acceptance) pass), the
     regenerated ABI dump, and the `README.md` row.
-- **Status:** planning only. The implementer appends each deviation from this plan, with its reasoning, to
+- **Status:** built through S8; amendments above. The implementer appends each deviation from this plan, with its reasoning, to
   [`final-implementation.md`](final-implementation.md) §2 at the moment it is made, and records the procedures' results
   in its §4 and the Level 5 (user acceptance) pass in its §5.
 - **Version moved:** none. `webtools-http` `1.0.0` stays unreleased until #55's stack is complete and is **not a release
@@ -60,6 +61,32 @@ compile error mechanically and records any change to a rule (as opposed to a spe
 > once and `newCall` never. P9 mutation 1 now fails that test and the two inherited-`newCall` behaviour tests.
 > `GuardedDns.kt` (§7.8) is unchanged.
 
+> **Amended during implementation (2026-10-26).** Amendment 3 adds `WebToolsDsl`, a public `@DslMarker` annotation, and puts
+> it on every builder the module passes to a consumer's lambda as its receiver: this unit's `TransportSettings.Builder`,
+> `Trusted.Builder` and `Untrusted.Builder`, and the existing `HttpHeaders.Builder`, `HttpRequest.Builder` and
+> `HttpResponse.Builder`. A nested builder block then reaches an outer builder only through its label
+> (`this@untrusted.allowedPorts`). The code is in §7.11 and the dump lines in §7.9; stage S8 (§5) builds it, procedure P12
+> (§9.2) proves it, `WebToolsDslConsumerGatingTest` and `WebToolsDslComponentTest` (§9) keep it, acceptance item 8 (§1) states
+> it, and commit 3 (§11) carries it. R1 and §12 list the new public name; the marker is no longer a non-goal (§4), a
+> follow-up (§13) or a known gap (§14).
+
+> **Amended during implementation (2026-10-26).** Amendment 4 brings two facts of the as-built change into the plan.
+> `../architecture.md` carries three dated corrections for this unit: at §6.3.1, the address table's two rules that are not
+> registry rows, and the socket guard's own `Socket(Proxy.NO_PROXY)` sockets with the inherited `newCall`; at §7.4, a refusal
+> that carries the range class beside the reason. §8, §11 and §13 say so; the other refinements of §6.3.1 stay listed in
+> [`impact.md`](impact.md) §5. And `matchesPrefix` is `private` to `CidrBlock.kt`, whose `contains` is its only caller; §7.2
+> and §12 show it so.
+
+> **Amended during implementation (2026-10-26).** Amendment 5 leaves the retention of `WebToolsDsl` at its default instead
+> of writing `@Retention(AnnotationRetention.RUNTIME)` (§7.11). Written out, that retention makes the `js` compile of the check
+> module warn once per annotated builder ("Reflection is not supported in JavaScript target; therefore, annotations cannot
+> be read at runtime."): Kotlin 2.2.0's JS checker, `FirJsRuntimeAnnotationChecker`, reports the warning only for a RUNTIME
+> retention that is written out (`getExplicitAnnotationRetention`). The default retention is RUNTIME all the same: the JVM
+> backend writes `@java.lang.annotation.Retention(RUNTIME)` when none is given (`AdditionalClassAnnotationLowering`), so
+> `WebToolsDslComponentTest` finds the marker by reflection as before, and the dump does not change. No suppression is
+> needed, and P12 step 2's expectation (only `w: JS Environment Not Selected`) holds. Applied to the built S8 before commit
+> 3, P12 steps 2, 6 and 9 run again.
+
 ---
 
 ## 1. Requirements
@@ -67,14 +94,16 @@ compile error mechanically and records any change to a rule (as opposed to a spe
 ### R1. Public surface and tier
 
 `webtools-http` gains these public declarations in `com.spartanlabs.webtools.http`, all **Stable Core**, each with
-Level-2 KDoc (`@param`, `@return`, `@throws`) that names its tier:
+KDoc (`@param`, `@return`, `@throws`) that names its tier:
 
 - `TransportSettings` (final, `internal` constructor, nested `Builder`, companion values `TrustedDefaults` and
   `UntrustedDefaults`) and the top-level factory `TransportSettings(from, configure)`;
 - `OutboundUrlPolicy` (sealed, parameterless), its final nested `Trusted` and `Untrusted` (each with `internal`
   constructor and nested `Builder`) and the companion factories `trusted`/`untrusted` (four functions);
 - `CidrBlock` (final, `private` constructor, `parse(text): Result<CidrBlock>`);
-- `MixedAnswers` (`Reject`, `DropDenied`).
+- `MixedAnswers` (`Reject`, `DropDenied`);
+- `WebToolsDsl` (an annotation class marked `@DslMarker`; §7.11), on the three builders above and on the existing
+  `HttpHeaders.Builder`, `HttpRequest.Builder` and `HttpResponse.Builder` (Amendment 3).
 
 Nothing else becomes public. No seam is added: the policy pair is sealed, so nothing here is gated by
 `ExperimentalForInheritanceWebToolsApi`, and no `@OptIn` is added to any source set. The module's existing rules hold:
@@ -179,6 +208,11 @@ Runs are limited to the tasks that exercise the change (§9.2). The Java 11 API 
 6. `git diff --stat` for `webtools-udp`, `webtools-scraping`, `webtools-browser`, `build-logic`,
    `webtools-http/build.gradle.kts`, `webtools-http/src/jvmTestFixtures` and `webtools-http-commoncheck` is empty.
 7. The mechanical rules of P8 hold; `README.md` line 11 reads as §8 says.
+8. `WebToolsDsl` is in `commonMain` as §7.11 writes it and on the six builders it names. The canary of P12 compiles before
+   the marker and fails after it at each of its five statements, then is deleted. `apiDump` adds exactly the three lines of
+   §7.9 and `apiCheck` passes; `WebToolsDslConsumerGatingTest` and `WebToolsDslComponentTest` pass;
+   `:webtools-http-commoncheck:compileKotlinJs` passes with no compiler line but `w: JS Environment Not Selected`
+   (Amendments 3 and 5).
 
 ---
 
@@ -262,8 +296,8 @@ test tasks select by package (`com.spartanlabs.testing.<level>.*`), so a test cl
 - **`Socket.connect(SocketAddress)` calls `connect(endpoint, 0)` on every build JDK 17 to 26** (read on 11, 17, 21 and 27).
   If one JDK did not, a `connect(SocketAddress)` call would skip the guard; Level 2 (component) tests call both overloads, so
   the first run on that JDK fails.
-- **`Socket(Proxy.NO_PROXY)` keeps a JVM-wide SOCKS selector away** (read from source, not run). The Level 3
-  (integration) SOCKS test measures it. If its control (the default factory's socket reaching the fake SOCKS listener) does
+- **`Socket(Proxy.NO_PROXY)` keeps a JVM-wide SOCKS selector away** (read from source, not run). The
+  Level 3 (integration) SOCKS test measures it. If its control (the default factory's socket reaching the fake SOCKS listener) does
   not hold on the build JDK, the claim does not hold there: the implementer records the measurement in
   `final-implementation.md` §6 and keeps `Socket(Proxy.NO_PROXY)` as the base (it is the stricter choice).
 - **A `Dns` stub that returns `InetAddress.getByAddress(bytes)` values triggers no lookup** (the JDK documents it). Every
@@ -284,9 +318,6 @@ test tasks select by package (`com.spartanlabs.testing.<level>.*`), so a test cl
   this module's tests; the main artifact has no way to switch the address guard off.
 - **No public `CidrBlock.contains`, accessors or `of(...)` constructors** (additive later), no `Trusted` address rules, no
   proxy parameter for `Untrusted`, no callback or predicate seam for the verdict.
-- **No `@DslMarker` for the module's builders.** The existing builders (`HttpHeaders.Builder`, `HttpRequest.Builder`)
-  carry none; a marker can be added to every builder before `webtools-http` 1.0.0 is released at no cost to a consumer,
-  and is left open (§14).
 - **No change to `Url`, `UrlHost.kt`, `RefusalReason` or `TransportFailure`.**
 - **No `docs/` change.** The evergreen `docs/webtools-http-architecture.md` is unit 11's.
 - **No version change, no CHANGELOG** (none exists), no new dependency.
@@ -297,7 +328,7 @@ test tasks select by package (`com.spartanlabs.testing.<level>.*`), so a test cl
 
 ## 5. Approach and staging
 
-The code lands in two commits (§11) and is built in an order that puts the pure, portable core first and the
+The code lands in three commits (§11) and is built in an order that puts the pure, portable core first and the
 JDK-and-OkHttp-facing code last, because the first can be proved without a network and the second needs the first's
 `UrlGuard` to exist. After every stage the stage's procedure (§9.2) is run and a result that differs from this plan is
 understood before anything is built on it.
@@ -347,7 +378,8 @@ flowchart TB
 | S4 | The dump (`apiDump`), the JS compile, commit 1 | P4 |
 | S5 | The markers, `GuardedDns`, `GuardedSocketFactory`, `GuardedSocket`, `PolicyEnforcement` and their Level 2 (component) tests; then the Level 3 (integration) tests; then the JDK-based Level 4a (deterministic) tests | P5, P6 |
 | S6 | `verifyJavaFloor`, the full `check`, the mechanical rules, the mutations, the unaffected-module proofs, commit 2 | P7, P8, P9, P10 |
-| S7 | The README row (commit 3), the Level 5 (user acceptance) pass and the as-built reconciliation (commit 4) | P11 |
+| S7 | The README row (commit 4), the Level 5 (user acceptance) pass and the as-built reconciliation (commit 5) | P11 |
+| S8 | `WebToolsDsl` on the six builders (Amendment 3): the canary before and after the marker, the two test classes, the dump, the floor and the full check, commit 3 (before the commits of S7) | P12 |
 
 ---
 
@@ -976,7 +1008,7 @@ public class CidrBlock private constructor(
 }
 
 // The first `prefix` bits of a and b are equal (a and b have the same length, at least prefix / 8 + 1 when prefix % 8 != 0).
-internal fun matchesPrefix(a: ByteArray, b: ByteArray, prefix: Int): Boolean {
+private fun matchesPrefix(a: ByteArray, b: ByteArray, prefix: Int): Boolean {
     val whole = prefix / 8
     for (i in 0 until whole) if (a[i] != b[i]) return false
     val rest = prefix % 8
@@ -1944,6 +1976,11 @@ prints: alphabetical by class):
 - `TransportSettings` (the ten mangled getters, `equals`/`hashCode`/`toString`, `Companion`), `TransportSettings$Builder`,
   `TransportSettings$Companion` (`getTrustedDefaults`, `getUntrustedDefaults`) and `TransportSettingsKt` with the static
   factory `TransportSettings (…Function1)`.
+- `WebToolsDsl` (Amendment 3, S8): `public abstract interface annotation class com/spartanlabs/webtools/http/WebToolsDsl : java/lang/annotation/Annotation {`,
+  then `}` and a blank line, last in the file (BCV sorts it after `WallClock$System`), printed as
+  `ExperimentalForInheritanceWebToolsApi` is; `git diff --stat` of S8's `apiDump` is `1 file changed, 3 insertions(+)`. No
+  builder's lines change: the dump does not record a class's annotations (the gated ports carry `@SubclassOptInRequired`, and
+  their lines show none).
 - `grep -c '\$default'` prints **5** (the three existing plus `trusted$default` and `untrusted$default`).
 - Nothing `internal` appears: P8 greps the dump for every internal name of this plan (`StrictIp`, `HostRules`, `HostVerdict`,
   `AddressRanges`, `DeniedRange`, `GuardRelaxation`, `UrlGuard`, `GuardRefusal`, `RedirectAdmission`, `AnswerVerdict`,
@@ -1962,6 +1999,87 @@ Line 11, the `webtools-http` row: the purpose cell becomes
 The other cells of the row (artifact, package, dependencies) do not change: no dependency is added. No other README line
 changes (no command, build step, module or dependency moves).
 
+### 7.11 `<cm>WebToolsDsl.kt` (new) and the six builders (changed) — Amendment 3
+
+**`<cm>WebToolsDsl.kt`:**
+
+```kotlin
+package com.spartanlabs.webtools.http
+
+/**
+ * Marks the configuration builders of `webtools-http` as one DSL. Inside a lambda whose receiver is a builder carrying this
+ * marker, only the innermost such builder is an implicit receiver, so a nested block cannot read or set an outer builder's
+ * member by accident: in `OutboundUrlPolicy.untrusted { settings { allowedPorts = null } }` the assignment does not compile,
+ * because `allowedPorts` belongs to the outer builder. The outer builder stays reachable through its label:
+ * `this@untrusted.allowedPorts = null`.
+ *
+ * **Stable Core.** The marker is never removed, and a builder that carries it keeps it. The module applies it to every
+ * builder whose instance it passes to a consumer's lambda as the receiver: [HttpHeaders.Builder], [HttpRequest.Builder],
+ * [HttpResponse.Builder], [TransportSettings.Builder], [OutboundUrlPolicy.Trusted.Builder] and
+ * [OutboundUrlPolicy.Untrusted.Builder].
+ */
+@DslMarker
+@Target(AnnotationTarget.CLASS)
+// Retention is left at its default, RUNTIME: a test finds the marker on each builder by reflection (the ABI dump does
+// not record a class's annotations), and Kotlin/JS warns about a RUNTIME retention only when it is written out.
+@MustBeDocumented
+public annotation class WebToolsDsl
+```
+
+The annotation is public because the scope check is meant for consumers' lambdas, and whether an `internal` marker on a
+public builder scopes a consumer's lambda is not established (`research/config-api-shape.md` F4, gap 1); Ktor and
+kotlinx.html both ship theirs public. It is JVM-free (`kotlin.DslMarker` and the meta-annotations are common), so the check
+module compiles it, and with its retention left implicit it compiles without a warning (Amendment 5).
+
+**The six builders.** One line, `@WebToolsDsl`, directly above each declaration and below its KDoc; nothing else in these
+files changes:
+
+| File | Declaration |
+|---|---|
+| `<cm>HttpHeaders.kt` | `public class Builder internal constructor()`, nested in `HttpHeaders` |
+| `<cm>HttpRequest.kt` | `public class Builder internal constructor()`, nested in `HttpRequest` |
+| `<cm>HttpResponse.kt` | `public class Builder internal constructor()`, nested in `HttpResponse` |
+| `<cm>TransportSettings.kt` | `public class Builder internal constructor(from: TransportSettings)` |
+| `<cm>OutboundUrlPolicy.kt` | `public class Builder internal constructor(from: Trusted)` and `public class Builder internal constructor(from: Untrusted)` |
+
+These are the receiver types of every public lambda the module has: the factories `HttpHeaders { }`,
+`HttpRequest(method, url) { }`, `HttpResponse(status, url) { }` and `TransportSettings(from) { }`, the four policy factories,
+and the two `settings { }` functions. `jvmMain` has none, and the test fixtures expose no lambda with a receiver
+(`Step.respond` and `Step.fail` take plain function types), so `src/jvmMain` and `src/jvmTestFixtures` do not change.
+
+**Existing code.** No main source and no test reaches an outer builder implicitly from a nested block (the nested blocks in
+`commonTest` and `jvmTest` set only their own receiver's members, for example `settings { maxRedirects = 1 }` inside a policy
+block and `HttpHeaders { add(...) }` inside a request block), so the marker breaks no existing compile. If P12 step 3 names a
+file other than the canary, that statement gets the explicit label (`this@<function>.<member>`, for example
+`this@untrusted.allowedPorts`), recorded in `final-implementation.md` §4 as a mechanical fix.
+
+**The canary (throwaway; P12; never committed):**
+`webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/DslScopeCanary.kt`, exactly:
+
+```kotlin
+package com.spartanlabs.testing.gating.webtools.http
+
+import com.spartanlabs.webtools.http.HttpHeaders
+import com.spartanlabs.webtools.http.HttpMethod
+import com.spartanlabs.webtools.http.HttpRequest
+import com.spartanlabs.webtools.http.HttpResponse
+import com.spartanlabs.webtools.http.OutboundUrlPolicy
+import com.spartanlabs.webtools.http.Url
+
+// Throwaway: each statement reaches an outer builder's member implicitly from a nested block.
+internal fun dslScopeCanary(url: Url) {
+    OutboundUrlPolicy.untrusted { settings { allowedPorts = null } }
+    OutboundUrlPolicy.trusted { settings { allowCleartext = true } }
+    OutboundUrlPolicy.untrusted { settings { settings { maxRedirects = 1 } } }
+    HttpRequest(HttpMethod.Get, url) { headers = HttpHeaders { body = null } }
+    HttpResponse(200, url) { headers = HttpHeaders { redirectChain = emptyList() } }
+}
+```
+
+Lines 12 to 16 are its five statements, one per nesting the module's builders allow. Without the marker each compiles, and
+each is the hazard: the assignment lands on the outer builder, and on line 14 the inner `settings { }` re-enters the outer
+builder's `settings`. With the marker each is a compile error.
+
 ---
 ## 8. Documentation impact
 
@@ -1970,14 +2088,14 @@ Audience-Reach rings touched:
 | Ring | What moves with this change |
 |---|---|
 | 1 Inner Core (in-editor) | `//region` markers in `UrlGuard.kt` (Trusted, Untrusted); the dated snapshot comment and the refresh procedure above `AddressRanges` (§6.4, verbatim); a line comment on every non-obvious rule (nested-first row order, the two non-registry rows, the ISATAP mask, why `Socket(Proxy.NO_PROXY)`, why `newCall` is not overridden, why the markers skip the stack, the table's `getOrThrow`). No `TODO` is left in the sources. |
-| 2 Component (KDoc) | KDoc with `@param`/`@return`/`@throws` and a **Stable Core** statement on `TransportSettings` (the table of numbers, the `callTimeout`-spans-all-hops and `allowHttpsToHttp` statements, the behaviour-change warning), its `Builder` and companion values and the factory; `OutboundUrlPolicy` (the closed-pair statement, "to fetch from a private address use `Trusted`"), `Trusted`, `Untrusted` (every property, the `extraDeniedRanges` statement about mapped and NAT64 addresses and about a deployment's own NAT64 prefix), the builders and the four factories; `CidrBlock` (the grammar, the host-bits rule, the constant failure messages); `MixedAnswers` (a `when` keeps an `else`). The internal classes carry KDoc stating their contract. |
+| 2 Component (KDoc) | KDoc with `@param`/`@return`/`@throws` and a **Stable Core** statement on `TransportSettings` (the table of numbers, the `callTimeout`-spans-all-hops and `allowHttpsToHttp` statements, the behaviour-change warning), its `Builder` and companion values and the factory; `OutboundUrlPolicy` (the closed-pair statement, "to fetch from a private address use `Trusted`"), `Trusted`, `Untrusted` (every property, the `extraDeniedRanges` statement about mapped and NAT64 addresses and about a deployment's own NAT64 prefix), the builders and the four factories; `CidrBlock` (the grammar, the host-bits rule, the constant failure messages); `MixedAnswers` (a `when` keeps an `else`); `WebToolsDsl` (one DSL for the module's builders, the label form, the six builders it marks; Amendment 3). The internal classes carry KDoc stating their contract. |
 | 3 Boundary (integration) | The contract between the policy and the transport, in the KDoc of `UrlGuard`, `PolicyEnforcement`, the markers and `policyRefusal()`, and pinned in §12: which call comes before any `Call`, what a marker is (constant message, no stack, never a `ConnectException`), where to look for it, what the bundle applies. The ABI dump is the machine-readable boundary of the public part. |
-| 4 Architectural outer | No change: the evergreen `docs/webtools-http-architecture.md` is unit 11's. This change does not edit `../architecture.md`; where the design refines its §6.3.1 is listed in [`impact.md`](impact.md) §5. |
+| 4 Architectural outer | The evergreen `docs/webtools-http-architecture.md` is unit 11's and does not change. `../architecture.md` carries three dated corrections (2026-10-26; Amendment 4): at §6.3.1, the address table's two rules that are not registry rows, and the socket guard's own `Socket(Proxy.NO_PROXY)` sockets with the inherited `newCall`; at §7.4, a refusal that carries the range class. The other refinements of §6.3.1 are listed in [`impact.md`](impact.md) §5. |
 
-**README (same change, commit 3):** `README.md` line 11 as §7.10 says. No command, build step, module, dependency or
+**README (same change, commit 4):** `README.md` line 11 as §7.10 says. No command, build step, module, dependency or
 protocol changes, so no other README line moves.
 
-**Not changed:** `docs/`, the dashboards, `CHANGELOG` (none exists), any build file.
+**Not changed:** the documentation under `docs/` outside `docs/plans/`, the dashboards, `CHANGELOG` (none exists), any build file.
 
 ---
 
@@ -2404,6 +2522,7 @@ internal class StubDns(private val answer: (String) -> List<InetAddress>) : Dns 
 | File | Behaviours |
 |---|---|
 | `CT gating/OutboundUrlPolicyConsumerGatingTest.kt` | The permanent consumer of the new public API, compiled in `commonTest` **without any opt-in**. It builds `OutboundUrlPolicy.trusted { pinnedHosts = setOf("api.example.com") }`, `OutboundUrlPolicy.untrusted { allowedPorts = null; extraDeniedRanges += CidrBlock.parse("10.0.0.0/8").getOrThrow(); mixedAnswers = MixedAnswers.DropDenied; settings { callTimeout = 20.seconds } }`, both `from` factories, `TransportSettings.TrustedDefaults`, `TransportSettings.UntrustedDefaults` and `TransportSettings(TransportSettings.UntrustedDefaults) { maxRedirects = 1 }`; it unwraps a `CidrBlock.parse` failure with `fold`; it matches a policy with a `when` that has **no `else`** (the sealed pair is the contract) and matches `policy.mixedAnswers` with a `when` that **keeps an `else`**; it passes a policy and a `RefusalReason` through a function signature. Compiling it proves the new API is reachable without `ExperimentalForInheritanceWebToolsApi`; running it through `gatingTest` and finding its class in that task's result XML proves the level task reaches the commonTest source set. It is the pre-commit gate of this unit together with `componentTest` and `deterministicTest`. |
+| `CT gating/WebToolsDslConsumerGatingTest.kt` | Amendment 3. The permanent consumer of the builder DSL, compiled in `commonTest` **without any opt-in** and using only public API (its URL is `Url.parse("https://api.example.com/").getOrThrow()`). Three tests. **Each block sets its own receiver:** `OutboundUrlPolicy.untrusted { allowedPorts = setOf(443); settings { maxRedirects = 1 } }` has `allowedPorts == setOf(443)` and `settings.maxRedirects == 1`; `HttpRequest(HttpMethod.Post, url) { headers = HttpHeaders { add("Accept", "text/plain") }; body = RequestBody(byteArrayOf(1, 2), null) }` has `headers.getAll("Accept") == listOf("text/plain")` and `body?.size == 2`. **An outer policy builder through its label:** `OutboundUrlPolicy.untrusted { settings { maxRedirects = 1; this@untrusted.allowedPorts = null } }` has `allowedPorts == null` and `settings.maxRedirects == 1`; `OutboundUrlPolicy.trusted { settings { maxRedirects = 2; this@trusted.allowCleartext = true } }` has `allowCleartext == true` and `settings.maxRedirects == 2`. **An outer request or response builder through its label:** `HttpRequest(HttpMethod.Post, url) { headers = HttpHeaders { add("Accept", "text/plain"); this@HttpRequest.body = RequestBody(byteArrayOf(1, 2), null) } }` has `body?.size == 2` and `headers.getAll("Accept") == listOf("text/plain")`; `HttpResponse(200, url) { headers = HttpHeaders { add("X-Trace", "t"); this@HttpResponse.body(byteArrayOf(3)) } }` has `bodySize == 1` and `headers.getAll("X-Trace") == listOf("t")`. The class KDoc states that an implicit reach into an outer builder is a compile error, which a passing test cannot show. |
 
 ### Level 2 — component (`componentTest`)
 
@@ -2431,6 +2550,7 @@ internal class StubDns(private val answer: (String) -> List<InetAddress>) : Dns 
 | `JT component/GuardedSocketComponentTest.kt` | On an unconnected `GuardedSocket` of an `Untrusted` guard, each of `connect(SocketAddress, Int)` and `connect(SocketAddress)`: a denied `InetSocketAddress(inet("10.0.0.5"), 80)` throws `PolicyRefusedIo` with `DeniedAddress`/`private-use` (never a `ConnectException`; the message is the constant); the socket stays unconnected and unclosed; an unresolved `InetSocketAddress.createUnresolved("host.example", 80)` throws `PolicyRefusedIo` with class `unresolved`; a `SocketAddress` that is not an `InetSocketAddress` (a local subclass) the same; `inet("fd00::1")` and the 16-byte mapped `127.0.0.1` are denied; **before any I/O:** a marker is thrown for every denied or unresolved target (a real connect attempt can never produce it). The class declares exactly one public method, `connect` (reflection over `declaredMethods` filtered to public). Allowed targets reach `super.connect` only under the Level 3 (integration) tests. |
 | `JT component/PolicyRefusalMarkersComponentTest.kt` | Both markers: constant messages `POLICY_REFUSED_HOST_MESSAGE` and `POLICY_REFUSED_IO_MESSAGE` for refusals built from different classes (the message never changes), `stackTrace` is empty, `PolicyRefusedUnknownHost` is an `UnknownHostException`, `PolicyRefusedIo` is an `IOException` and is not a `ConnectException`; `suppressed` can still be added to a marker. `policyRefusal()`: the marker itself returns its refusal; a marker as the `cause` of an `IOException` and as the cause's cause (depth 3); a marker in `suppressed` of an `IOException`; a marker in the `suppressed` of the cause; a plain `IOException` returns `null`; a cause cycle (`a.initCause(b)`, `b.initCause(a)`) returns `null` and terminates; a marker at depth 50 of a cause chain is found and at depth 150 is not (the 100-throwable bound); **order:** with the cause holding marker A and `suppressed` holding marker B, A is returned; with two markers in `suppressed`, the first. A canary placed in the refusal's class string never appears in a marker's `message`, `toString()` or `localizedMessage`. |
 | `JT component/PolicyEnforcementComponentTest.kt` | `UrlGuard(untrusted).enforcement(StubDns.of("8.8.8.8"))`: `dns` is a `GuardedDns`, `socketFactory` is a `GuardedSocketFactory`, `proxy` is `Proxy.NO_PROXY`; applied to an `OkHttpClient.Builder` (`builder.dns(e.dns)`, `e.socketFactory?.let(builder::socketFactory)`, `e.proxy?.let(builder::proxy)`) and built (`build()` opens nothing): `client.proxy === Proxy.NO_PROXY`, `client.dns === e.dns`, `client.socketFactory === e.socketFactory`. For `trusted`: `dns` is the base stub itself, `socketFactory` and `proxy` are `null`; the built client has `proxy == null` and `socketFactory === SocketFactory.getDefault()`. The `Untrusted` bundle's `GuardedDns` judges: a lookup through `client.dns` of a private answer throws the marker. |
+| `JT component/WebToolsDslComponentTest.kt` | Amendment 3. One test: each of `HttpHeaders.Builder::class.java`, `HttpRequest.Builder::class.java`, `HttpResponse.Builder::class.java`, `TransportSettings.Builder::class.java`, `OutboundUrlPolicy.Trusted.Builder::class.java` and `OutboundUrlPolicy.Untrusted.Builder::class.java` has `isAnnotationPresent(WebToolsDsl::class.java)`, asserted as `assertEquals(emptyList<String>(), missing)` over the names of the classes without it, so a failure names the builder. The ABI dump does not record a class's annotations, so this is the check that fails when a builder loses the marker; the marker's default retention, RUNTIME, keeps it visible to reflection (Amendment 5). The class KDoc says that a builder added later joins the list. |
 
 ### Level 3 — integration (`integrationTest`)
 
@@ -2466,7 +2586,7 @@ All in `jvmTest`, loopback only, no external network; every `MockWebServer` and 
 | `JT deterministic/JdkPredicateGapDeterministicTest.kt` | The 26 addresses of the parent research F7 are all denied by `AddressRanges.deny`: the ten the JDK predicates catch (`127.0.0.1`, `0.0.0.0`, `10.0.0.1`, `169.254.169.254`, `224.0.0.1`, `::1`, `::`, `fe80::1`, `fec0::1`, `ff02::1`) and the sixteen they miss (`100.64.0.1`, `192.0.0.1`, `198.18.0.1`, `192.0.2.1`, `240.0.0.1`, `255.255.255.255`, `fd00::1`, `fc00::1`, `::7f00:1`, `64:ff9b::7f00:1`, `2002:7f00:1::`, `2001:db8::1`, `100::1`, `::ffff:0:7f00:1`, `2001::1`, `5f00::1`). The test also records, without asserting the JDK's output, which of the 26 the JDK predicates (`isAnyLocalAddress`, `isLoopbackAddress`, `isLinkLocalAddress`, `isSiteLocalAddress`, `isMulticastAddress`) flag, as the documentation of the gap (an `assertTrue(missedByJdk.isNotEmpty())` is the only JDK-dependent assertion: the gap exists). |
 | `JT deterministic/AddressRangesJdkSupersetDeterministicTest.kt` | Seeded (seed 7) random addresses, 200,000 four-byte and 200,000 sixteen-byte (the 16-byte ones biased: a forced first byte from `00 fe ff 20 26 fc` in half of them, a forced mapped prefix in a tenth), each built with `InetAddress.getByAddress`: **whenever any JDK predicate flags the address, `AddressRanges.deny(address.address)` is non-null** (a superset property: the table is never looser than the JDK's own check; no pin of the JDK's output). The address handed to `deny` is the JDK object's `address` (4 bytes for a collapsed mapped address), as the guards pass it. A failure prints the seed and the address. |
 | `JT deterministic/StrictIpJdkDifferentialDeterministicTest.kt` | Seed 7; 100,000 strings of `IpLiteralGenerator.ipv4` and 100,000 of `ipv6`. For every string `StrictIp` accepts: IPv4 → `InetAddress.getByName(s)`; IPv6 → `InetAddress.getByName("[" + s + "]")` (never an unbracketed non-literal, which would reach the resolver); the result's `address` equals `StrictIp`'s bytes (a 16-byte mapped array compared with the JDK's 4-byte `Inet4Address` through its last four bytes), its length matches the family, and `toString()` starts with `/` (no host name, so no lookup happened). Floors: at least 25,000 accepted IPv4 and 10,000 accepted IPv6. For IPv6 strings `StrictIp` refuses, the bracketed form either parses (counted as "JDK looser") or throws `UnknownHostException`, and nothing else is thrown. The strict parser is a subset of the JDK's: whatever it accepts, the JDK connects to the same address. |
-| `JT deterministic/OkHttpLiteralRegexDeterministicTest.kt` | OkHttp 5.5.0 sends a host that matches `([0-9a-fA-F]*:[0-9a-fA-F:.]*)\|([\d.]+)` straight to `InetAddress.getByName` and never to `Dns` (`VERIFY_AS_IP_ADDRESS` in `okhttp/src/commonJvmAndroid/kotlin/okhttp3/internal/-HostnamesCommon.kt` at tag `parent-5.5.0`; copied into the test with that source tag). For every string of `IpLiteralGenerator` (both families, 50,000 each, seed 7) plus the 39 host forms of the parent research F1 and every host of `BypassVectors` that the regex matches: `HostRules.classify` is never a `Name` (it is a `Literal` or a `Refused`), so the resolver guard can never be the only layer between such a host and a socket. The converse (a name that does not match) is not asserted. |
+| `JT deterministic/OkHttpLiteralRegexDeterministicTest.kt` | OkHttp 5.5.0 sends a host that matches `([0-9a-fA-F]*:[0-9a-fA-F:.]*)\|([\d.]+)` straight to `InetAddress.getByName` and never to `Dns` (`VERIFY_AS_IP_ADDRESS` in `okhttp/src/commonJvmAndroid/kotlin/okhttp3/internal/-HostnamesCommon.kt` at tag `parent-5.5.0`; copied into the test with that source tag). For every string of `IpLiteralGenerator` (both families, 50,000 each, seed 7) plus the 36 host forms of the parent research F1 (its table publishes 36; the figure 39 given earlier was the research's own count) and every host of `BypassVectors` that the regex matches: `HostRules.classify` is never a `Name` (it is a `Literal` or a `Refused`), so the resolver guard can never be the only layer between such a host and a socket. The converse (a name that does not match) is not asserted. |
 
 ### Level 4b — end-to-end
 
@@ -2490,7 +2610,7 @@ this unit gets: a real `OkHttpClient` over loopback.
 
 No `testing.uat` package: nothing here is interactive product behaviour. The pass is a reading and an IDE check recorded in
 `final-implementation.md` §5: the ABI dump read against §7.9 and the architecture §9 tier table; Quick Documentation of
-`OutboundUrlPolicy.untrusted`, `TransportSettings`, `Untrusted.extraDeniedRanges`, `CidrBlock.parse` and `MixedAnswers` as a
+`OutboundUrlPolicy.untrusted`, `TransportSettings`, `Untrusted.extraDeniedRanges`, `CidrBlock.parse`, `MixedAnswers` and `WebToolsDsl` (Amendment 3) as a
 consumer sees them (tier, numbers and the `extraDeniedRanges` statement present); IntelliJ's import with the new files and no
 spurious red in `commonMain` for the `js` check module (the maintainer's, with the other IDE items of #62 and #63); and the
 Level 3 (integration) measurements read (§9.2 P6).
@@ -2498,6 +2618,9 @@ Level 3 (integration) measurements read (§9.2 P6).
 ### What cannot be tested automatically
 
 - **IDE behaviour** (P11): import, Quick Documentation, absence of false red.
+- **The marker's compile-time effect** (Amendment 3): that an implicit reach into an outer builder does not compile is a
+  compile error, which no passing test can show. The P12 canary shows it once; `WebToolsDslComponentTest` keeps the marker on
+  every builder.
 - **KDoc quality**, beyond the mechanical coverage check of P8. `-Xexplicit-api` is compiler-enforced for visibility and return
   types only.
 - **Real DNS answers and real networks:** only stubs and loopback are used. A name that resolves to a public and a private
@@ -2618,7 +2741,46 @@ need no compile: nothing they depend on changed).
 
 **P11 — the Level 5 (user acceptance) pass.** Read and record in `final-implementation.md` §5: the dump against §7.9 and the
 architecture §9 tier table (every new type Stable Core; `OutboundUrlPolicy` sealed; nothing gated); Quick Documentation of the
-five declarations named above (IDE; the maintainer's); the IntelliJ import (the maintainer's); the P6 measurements.
+six declarations named above (IDE; the maintainer's); the IntelliJ import (the maintainer's); the P6 measurements.
+
+**P12 — S8: the `WebToolsDsl` marker (Amendment 3).** Record each step in `final-implementation.md` §4 under "S8", in order.
+1. *The canary, before the marker.* Write `webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/DslScopeCanary.kt`
+   exactly as §7.11 gives it. `./gradlew :webtools-http:compileTestKotlinJvm` — `BUILD SUCCESSFUL`: without the marker each of
+   its five statements compiles, which is the hazard.
+2. *The marker.* Add `<cm>WebToolsDsl.kt` and the six `@WebToolsDsl` lines (§7.11).
+   `./gradlew :webtools-http:compileKotlinJvm :webtools-http-commoncheck:compileKotlinJs` — `BUILD SUCCESSFUL`; the only compiler
+   line is `w: JS Environment Not Selected`.
+3. *The canary, after the marker.* `./gradlew :webtools-http:compileTestKotlinJvm` fails with five `e:` lines, one at each of
+   lines 12 to 16 of `DslScopeCanary.kt`, each a DSL-scope violation (the member cannot be called with an implicit receiver);
+   record them verbatim. A different count is recorded verbatim with the lines it names: the step holds when each of lines 12
+   to 16 is named and no `e:` line names another file. An `e:` line in another file is an existing implicit reach: give that
+   statement its label (§7.11), record the fix, and repeat this step.
+4. *Delete the canary.* `git status --short` shows no `DslScopeCanary.kt`; `./gradlew :webtools-http:compileTestKotlinJvm` —
+   `BUILD SUCCESSFUL`.
+5. *The tests and the dump.* Write `WebToolsDslConsumerGatingTest` and `WebToolsDslComponentTest` (§9).
+   `./gradlew :webtools-http:apiDump`: `git diff --stat webtools-http/api/webtools-http.api` is `1 file changed, 3 insertions(+)`,
+   the three lines of §7.9 at the end of the file, and no other line moves; a dump that differs is the as-built fact (§3),
+   recorded with the difference. `grep -c '\$default'` still prints `5`, and the internal-name grep of P4 step 2, run
+   word-bounded (`grep -w`), prints nothing.
+6. *The level tasks.* `./gradlew :webtools-http:apiCheck :webtools-http:gatingTest :webtools-http:componentTest
+   :webtools-http:deterministicTest :webtools-http:nonfunctionalTest :webtools-http:integrationTest
+   :webtools-http-commoncheck:compileKotlinJs` — `BUILD SUCCESSFUL`; the result XML lists `WebToolsDslConsumerGatingTest`
+   (3 tests) under `gatingTest` and `WebToolsDslComponentTest` (1 test) under `componentTest`; 0 failures.
+7. *A mutation (once; not committed).* Copy `<cm>TransportSettings.kt` to a scratch directory outside the repository, delete its
+   `@WebToolsDsl` line, and run `./gradlew :webtools-http:componentTest --tests "*WebToolsDslComponentTest*"`: it fails, and its
+   message names `com.spartanlabs.webtools.http.TransportSettings$Builder`. Copy the file back; `diff` against the copy prints
+   nothing; the class passes again.
+8. *The mechanical rules.* For the new and changed files, P8's commands print what P8 says: the KDoc-coverage awk over
+   `commonMain` and `jvmMain`, the `OptIn` grep over `commonTest` and `jvmTest`, and the package-and-path and
+   one-class-per-file checks over the two new test files.
+9. *The floor and the full check.* `./gradlew :webtools-http:verifyJavaFloor` passes, its report counting one class more than
+   P7 (`WebToolsDsl`). `./gradlew :webtools-http:check :webtools-http-commoncheck:check` — `BUILD SUCCESSFUL`
+   (`:build-logic:fixturesPublicationCheck` runs again, since `commonMain` changed). Record each level's count against P7's:
+   `gatingTest` 4/14 → 5/17 and `componentTest` 37/297 → 38/298 (classes/tests), the others unchanged; `jvmTest` 90 classes
+   and 504 tests.
+10. *The unaffected modules.* P10's `git diff --stat` is still empty.
+11. Commit 3 (§11). Then bring `final-implementation.md` up to date: its status line, the `WebToolsDsl` entry of §1 and item 8
+    of §3.
 
 ---
 ## 10. Risks and edge cases
@@ -2676,6 +2838,10 @@ five declarations named above (IDE; the maintainer's); the IntelliJ import (the 
   Windows firewall prompts do not occur for loopback-only listeners.
 - **Build cost.** `:webtools-http:check` re-runs the fixtures-publication check (about 45 to 52 s) because this unit changes
   `commonMain` and `jvmMain`.
+- **A builder added later without the marker** (Amendment 3). A nested block could reach an outer builder implicitly through
+  it, and `WebToolsDslComponentTest` checks only the builders on its list. §12 makes every later builder carry the marker and
+  join that list and the list in `WebToolsDsl`'s KDoc. A Kotlin/JS release that also warned about an implicit RUNTIME
+  retention would print one warning per builder in the check module's compile again, and fail nothing (Amendment 5).
 - **Cross-repo impact.** None in this repository. A downstream consumer adopts the policy through the transport and facades of
   later units.
 
@@ -2696,12 +2862,18 @@ five declarations named above (IDE; the maintainer's); the IntelliJ import (the 
      (`PolicyRefusals.kt`, `GuardedDns.kt`, `GuardedSocketFactory.kt`, `GuardedSocket.kt`, `PolicyEnforcement.kt`); every new file
      under `webtools-http/src/jvmTest/**` (including the JDK-based Level 4a (deterministic) classes and `StubDns.kt`). The dump
      does not change in this commit (everything here is `internal`).
-  3. `docs: name the outbound-URL policies in the README's webtools-http row (Issue #64)` — `README.md` line 11 (§7.10).
-  4. `docs: record the url-policy as-built results and impact (Issue #64)` — the reconciled `final-implementation.md`, this
-     issue's `impact.md`, and the parent's `impact.md` §8 entry for this unit.
+  3. `feat: mark the webtools-http builders with the WebToolsDsl DSL marker (Issue #64)` (Amendment 3, S8) — this `plan.md`
+     (Amendments 3 to 5); `webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/WebToolsDsl.kt`; the
+     `@WebToolsDsl` line in `HttpHeaders.kt`, `HttpRequest.kt`, `HttpResponse.kt`, `TransportSettings.kt` and
+     `OutboundUrlPolicy.kt`; `WebToolsDslConsumerGatingTest.kt` and `WebToolsDslComponentTest.kt`; the regenerated
+     `webtools-http/api/webtools-http.api` (three added lines).
+  4. `docs: name the outbound-URL policies in the README's webtools-http row (Issue #64)` — `README.md` line 11 (§7.10).
+  5. `docs: record the url-policy as-built results and impact (Issue #64)` — the reconciled `final-implementation.md`, this
+     issue's `impact.md`, the parent's `impact.md` (its §1 row, §7 and §8), and the three dated corrections of
+     `../architecture.md` (Amendment 4).
 - **Never carried into these commits:** any plan-board file (`dashboard.html`, `plan.js`, `plan.json` under `docs/plans/`),
   whether modified (`55-http-client-stack/`) or untracked (`64-url-policy/`): they are committed with the landing, not with this
-  work; also never `docs/plans/.live/`, IDE files, `build/` directories, a `Canary.kt`, or a scratch backup of the P9 mutations.
+  work; also never `docs/plans/.live/`, IDE files, `build/` directories, a `Canary.kt`, the P12 canary `DslScopeCanary.kt`, or a scratch backup of the P9 and P12 mutations.
   The research files under `research/` are already committed.
 - **No version bump.** `webtools-http` `1.0.0` is unreleased and **not a release candidate**; no existing module moves.
 - **The PR** is based on `master`, its body states that `webtools-http` `1.0.0` is not a release candidate and stays unpublished
@@ -2716,16 +2888,21 @@ five declarations named above (IDE; the maintainer's); the IntelliJ import (the 
 **Names this unit takes** (a sibling must not reuse them), in `com.spartanlabs.webtools.http`:
 - *public* — `TransportSettings` (with `Builder`, `Companion.TrustedDefaults`, `Companion.UntrustedDefaults`) and the top-level
   function `TransportSettings(from, configure)`; `OutboundUrlPolicy` with `Trusted`, `Untrusted`, their `Builder`s and the
-  companion functions `trusted` and `untrusted`; `CidrBlock`; `MixedAnswers`.
+  companion functions `trusted` and `untrusted`; `CidrBlock`; `MixedAnswers`; `WebToolsDsl` (Amendment 3).
 - *internal, `commonMain`* — `StrictIp`, `HostVerdict` (`Literal`, `Name`, `Refused`), `HostRules`, `DeniedRange`, `AddressRanges`,
   `GuardRelaxation`, `GuardRefusal`, `RedirectAdmission` (`Admitted`, `Refused`), `AnswerVerdict` (`Allowed`, `Refused`), `UrlGuard`,
-  `OutboundUrlPolicy.withSettings`, `canonicalPinnedHost`, `canonicalHostSuffix`, `matchesPrefix`.
+  `OutboundUrlPolicy.withSettings`, `canonicalPinnedHost`, `canonicalHostSuffix`; and `matchesPrefix`, `private` to
+  `CidrBlock.kt`.
 - *internal, `jvmMain`* — `PolicyRefusedUnknownHost`, `PolicyRefusedIo`, `Throwable.policyRefusal()`, `GuardedDns`,
   `GuardedSocketFactory`, `GuardedSocket`, `PolicyEnforcement`, `UrlGuard.enforcement`, and the constants
   `POLICY_REFUSED_HOST_MESSAGE`, `POLICY_REFUSED_IO_MESSAGE`, `EMPTY_ANSWER_MESSAGE`, `NOT_A_GUARDED_ENTRY_POINT_MESSAGE`.
 - *test support* (`com.spartanlabs.testing.support.webtools.http`) — `PolicyTestSupport.kt` (`url`, `addr`, `cidr`,
   `untrustedGuard`, `trustedGuard`, `outcome`), `IpLiteralGenerator`, `RegistryRows`, `BypassVectors`, `StubDns` and `inet`.
 - *No name is added to* `com.spartanlabs.webtools.http.testing` (the fixtures).
+
+**The builder DSL** (Amendment 3). Every builder that a later unit adds to `webtools-http` and passes to a consumer's lambda as
+its receiver carries `@WebToolsDsl`, and joins the list of `WebToolsDslComponentTest` and the list in `WebToolsDsl`'s KDoc. A
+nested block of the module's builders then reaches an outer builder only through its label.
 
 **What this unit takes from unit 3 (`http-core`, #62, landed).**
 - `Url` (`scheme`, `host`, `port`, `parse`), `UrlProblem` and `UrlParseException` (`internal`; `admitRedirect` maps `problem`), the
@@ -2787,24 +2964,17 @@ canonicalisation, an IPv6 host included).
 ## 13. Sequencing and follow-ups
 
 **Order of operations.** P1; S1 and P2; S2 and P2; S3 and P3 (including the `js` canary); S4 and P4, then commit 1; S5 with P5
-and P6; S6 with P7, P8, P9 and P10, then commit 2; the README (commit 3); P11 and the reconciliation (commit 4). The implementer
+and P6; S6 with P7, P8, P9 and P10, then commit 2; the README and P11 (S7); S8 with P12, then commit 3; the README's commit
+(commit 4); the reconciliation, with the three dated corrections of `../architecture.md` (commit 5). The implementer
 appends each deviation, with its reasoning, to `final-implementation.md` §2 the moment it makes it. A stage that fails its
 procedure stops the next one.
 
 **Follow-ups deliberately left.**
-- **A `@DslMarker` for the module's builders** — open until `webtools-http` 1.0.0 is released (§14); adopting one before then
-  costs a consumer nothing.
-- **Refinements of `architecture.md` §6.3.1,** listed in [`impact.md`](impact.md) §5, where this unit makes the systems-level
-  text concrete: the address table's two rules that are not registry rows (`168.63.129.16/32` and the ISATAP rule) and its
-  nested rows with their own classes; `GuardedSocketFactory` with no delegate and sockets that extend `Socket(Proxy.NO_PROXY)`
-  (because `proxy(Proxy.NO_PROXY)` on the client does not close a JVM-wide SOCKS setting); `GuardedDns` inheriting `newCall`;
-  a refusal that carries the range class beside the reason; `HostRules` total on any string; the settings' named default
-  values with `TransportSettings(from) { }`, the policies' `from` factories and the `internal` `withSettings`. This change
-  does not edit the architecture document.
 - **Additive later:** public `CidrBlock` accessors or `contains`, further `TransportSettings` properties, a refresh script for the
   IANA registries (the procedure is documented; a script is not built), a JDK-version matrix for the Level 3 (integration) SOCKS
   measurement (JDK 24 to 26).
-- **The compile-fail check of the subclass gate** remains the follow-up recorded by #62 (not this unit's seam).
+- **The compile-fail check of the subclass gate** remains the follow-up recorded by #62 (not this unit's seam); the same
+  check would hold the effect of `WebToolsDsl`, which the P12 canary shows once (Amendment 3).
 
 ---
 
@@ -2831,7 +3001,6 @@ procedure stops the next one.
 - **A `Socket.setSocketImplFactory` or `ProxySelector.setDefault` by other code** in the same JVM is not defended against.
 - **IDE behaviour** (import, Quick Documentation, the `js` check module's resolution) is the maintainer's (P11).
 - **The `$default` and sealed-class dump lines are inferred** until the first `apiDump` (§3).
-- **A DSL marker for the module's builders** is open until `webtools-http` 1.0.0 is released.
 - **Only the maintainer's Windows host runs the build;** Linux and macOS are unexercised. The dump is written CRLF here; `apiCheck`
   compares line by line.
 

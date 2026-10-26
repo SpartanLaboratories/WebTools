@@ -1,5 +1,6 @@
 package com.spartanlabs.webtools.http
 
+//region defaults and messages
 // The default Untrusted port set. A top-level value of this file, not state of the sealed base's companion: a policy
 // instance held there would make the base's class initialiser construct a subclass (a class-initialisation cycle).
 private val DEFAULT_UNTRUSTED_PORTS: Set<Int> = setOf(80, 443, 8080, 8443)
@@ -10,6 +11,7 @@ private const val SUFFIX_MESSAGE =
     "extraDeniedHostSuffixes must hold only dotted host-name suffixes (no IP literal, no leading or trailing dot)."
 private const val PORTS_EMPTY_MESSAGE = "allowedPorts must not be empty; use null to allow any port."
 private const val PORTS_RANGE_MESSAGE = "allowedPorts must hold only ports from 1 to 65535."
+//endregion
 
 /**
  * Which URLs and addresses a fetch may reach, and the [TransportSettings] that go with that choice. A closed pair:
@@ -23,6 +25,7 @@ public sealed class OutboundUrlPolicy {
     /** The caps, timeouts and concurrency limits that go with this policy. */
     public abstract val settings: TransportSettings
 
+    //region Trusted
     /**
      * The policy for a known upstream: it checks the scheme, optionally pins the host, and applies the downgrade rule. It
      * does no address filtering, has no name rule and no port rule, so a private address is fetchable.
@@ -49,6 +52,7 @@ public sealed class OutboundUrlPolicy {
          *
          * **Stable Core.**
          */
+        @WebToolsDsl
         public class Builder internal constructor(from: Trusted) {
             /**
              * The hosts to pin, as host names or IP literals (an IPv6 literal with or without brackets); empty means any host.
@@ -79,7 +83,9 @@ public sealed class OutboundUrlPolicy {
             }
         }
     }
+    //endregion
 
+    //region Untrusted
     /**
      * The policy for a URL a third party supplied. Per hop it refuses a lenient or malformed host form, a reserved name, a
      * denied IP literal and a port outside [allowedPorts]; for every resolved address and every connect it refuses a denied
@@ -129,6 +135,7 @@ public sealed class OutboundUrlPolicy {
          *
          * **Stable Core.**
          */
+        @WebToolsDsl
         public class Builder internal constructor(from: Untrusted) {
             /** The allowed ports: `null` for any port, otherwise a non-empty set of ports 1..65535. The default is 80, 443, 8080, 8443. */
             public var allowedPorts: Set<Int>? = from.allowedPorts
@@ -165,7 +172,9 @@ public sealed class OutboundUrlPolicy {
             }
         }
     }
+    //endregion
 
+    //region companion: the factories
     /** The factories. */
     public companion object {
         /**
@@ -211,16 +220,24 @@ public sealed class OutboundUrlPolicy {
         public fun untrusted(from: Untrusted, configure: Untrusted.Builder.() -> Unit): Untrusted =
             Untrusted.Builder(from).apply(configure).build()
     }
+    //endregion
 }
 
+//region canonicalisation and derivation
 private fun checkedPorts(ports: Set<Int>): Set<Int> {
     require(ports.isNotEmpty()) { PORTS_EMPTY_MESSAGE }
     require(ports.all { it in 1..65535 }) { PORTS_RANGE_MESSAGE }
     return ports.toSet()
 }
 
-// A pinned host as canonicalHost reads it. An entry holding ':' is an IPv6 literal, with or without brackets (a lone
-// bracket is refused); anything else is a name. The result is what Url.host would print for the same host.
+/**
+ * A pinned host as `canonicalHost` reads it. An entry holding `:` is an IPv6 literal, with or without brackets (a lone
+ * bracket is refused); anything else is a name. The result is what `Url.host` prints for the same host.
+ *
+ * @param entry one `pinnedHosts` entry as the caller wrote it.
+ * @return the canonical host (lower-case; IPv6 without brackets, a mapped literal as dotted IPv4), or a failure holding an
+ *   `IllegalArgumentException` with a constant message that never echoes [entry].
+ */
 internal fun canonicalPinnedHost(entry: String): Result<String> {
     val opens = entry.startsWith('[')
     if (opens != entry.endsWith(']')) return Result.failure(IllegalArgumentException(PINNED_HOST_MESSAGE))
@@ -232,20 +249,34 @@ internal fun canonicalPinnedHost(entry: String): Result<String> {
     }
 }
 
-// A suffix is a dotted name: refused when empty, when it holds ':', '[' or ']', starts or ends with '.', is digits and dots
-// only, or fails canonicalHost. A single label ("corp") is allowed.
+/**
+ * A suffix as a dotted name: refused when empty, when it holds `:`, `[` or `]`, starts or ends with `.`, is digits and dots
+ * only, or fails `canonicalHost`. A single label (`corp`) is allowed.
+ *
+ * @param entry one `extraDeniedHostSuffixes` entry as the caller wrote it.
+ * @return the canonical suffix (lower-case), or a failure holding an `IllegalArgumentException` with a constant message
+ *   that never echoes [entry].
+ */
 internal fun canonicalHostSuffix(entry: String): Result<String> {
     val refused = entry.isEmpty() || entry.any { it == ':' || it == '[' || it == ']' } || entry.startsWith('.') ||
         entry.endsWith('.') || entry.all { it == '.' || it in '0'..'9' }
     return if (refused) Result.failure(IllegalArgumentException(SUFFIX_MESSAGE)) else canonicalHost(entry)
 }
 
-// Derives a policy with other settings through the from factories; the call facades use it to raise concurrency to the
-// budget's burst. The parameter is copied so the lambdas' `settings` is the builder's property.
+/**
+ * Derives a policy with other settings through the `from` factories; the call facades use it to raise concurrency to the
+ * budget's burst. The same kind comes back (`Trusted` for `Trusted`, `Untrusted` for `Untrusted`) with every property kept
+ * except `settings`; the receiver is unchanged.
+ *
+ * @param settings the settings of the derived policy.
+ * @return a new policy of the receiver's kind holding [settings].
+ */
 internal fun OutboundUrlPolicy.withSettings(settings: TransportSettings): OutboundUrlPolicy {
+    // Copied, so that `settings` inside the lambdas is the builder's property and the parameter is still reachable.
     val replacement = settings
     return when (this) {
         is OutboundUrlPolicy.Trusted -> OutboundUrlPolicy.trusted(this) { this.settings = replacement }
         is OutboundUrlPolicy.Untrusted -> OutboundUrlPolicy.untrusted(this) { this.settings = replacement }
     }
 }
+//endregion
