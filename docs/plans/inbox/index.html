@@ -1,0 +1,451 @@
+<title>WebTools Questions</title><meta name="claude:viewport-fit-sides" content="cover"><style id="inbox-css">
+/* Questions inbox for the WebTools pipeline: one column of question cards, open ones first in the order the runs asked them, closed
+   ones below with what came of them; a send bar sticks to the bottom while answers wait to be sent. Tokens and type follow the plan
+   boards (dashboards skill, GUIDANCE.md): status colours only beside a glyph and a word, the accent marks what waits on you. */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --good:#0ca30c; --warning:#c98a00; --critical:#d03b3b;
+  --accent:#6d47e0; --accent-soft:rgba(109,71,224,.08); --on-accent:#ffffff; --focus:#2a78d6; --link:#2a78d6;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--good:#3fbf3f;--warning:#fab219;--critical:#ec6262;--accent:#a58bff;--accent-soft:rgba(165,139,255,.12);--on-accent:#10141b;--focus:#3987e5;--link:#6aa6f0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--good:#3fbf3f;--warning:#fab219;--critical:#ec6262;--accent:#a58bff;--accent-soft:rgba(165,139,255,.12);--on-accent:#10141b;--focus:#3987e5;--link:#6aa6f0;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);padding-block:0 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+a{color:var(--link)}
+code{font-family:var(--mono);font-size:.92em;background:var(--surface-2);border-radius:3px;padding:0 3px;overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:18px}
+.crumbs{font-size:12px;color:var(--muted);min-width:0}
+.crumbs a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+.crumbs a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+.livechip{display:inline-flex;align-items:center;gap:6px;font:600 11px/1 var(--mono);letter-spacing:.03em;padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
+.livechip .ld{width:8px;height:8px;border-radius:50%;background:var(--ink);flex:none}
+.livechip.on{color:var(--ink);border-color:var(--ink-2)}
+.livechip.off .ld{background:none;border:1.5px solid var(--muted)}
+.livechip.na .ld{background:var(--muted)}
+header{display:flex;flex-direction:column;gap:6px}
+h1{font:600 28px/1.15 var(--mono);margin:0;letter-spacing:-.01em}
+.function{color:var(--ink-2);margin:0;max-width:66ch;font-size:15px;text-wrap:pretty}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.chip b{color:var(--ink);font-weight:600}
+.g{font-size:10px;line-height:1}
+.g-accent{color:var(--accent)} .g-warn{color:var(--warning)} .g-good{color:var(--good)} .g-crit{color:var(--critical)} .g-ink{color:var(--ink-2)} .g-link{color:var(--link)}
+.notice{margin:0;padding:12px 14px;border:1px dashed var(--line);border-radius:8px;color:var(--ink-2);background:var(--surface)}
+.empty{padding:28px 18px;border:1px dashed var(--line);border-radius:8px;text-align:left;color:var(--ink-2);background:var(--surface)}
+.empty h2{font:600 15px/1.3 var(--sans);color:var(--ink);margin:0 0 4px}
+.empty p{margin:0;max-width:62ch}
+.list{display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.q-waiting{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qtags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{font:600 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:4px 6px;border:1px solid var(--line);border-radius:3px;text-decoration:none}
+a.tag:hover{color:var(--ink);border-color:var(--ink-2)}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 12px/1 var(--sans);color:var(--ink-2);margin-left:auto;white-space:nowrap}
+.qt{font:600 17px/1.3 var(--sans);margin:0;text-wrap:balance}
+.prompt,.ctxb{color:var(--ink-2);max-width:68ch}
+.prompt p,.ctxb p,.res dd p{margin:0 0 6px}
+.prompt p:last-child,.ctxb p:last-child,.res dd p:last-child{margin-bottom:0}
+.ctx summary{cursor:pointer;font:600 12px/1.4 var(--mono);color:var(--ink-2);width:max-content}
+.ctx summary:hover{color:var(--ink)}
+.ctxb{margin-top:6px;padding:10px 12px;background:var(--surface-2);border-radius:6px;font-size:13.5px}
+.opts{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--surface)}
+.opt:hover{border-color:var(--ink-2)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt input{margin:3px 0 0;accent-color:var(--accent);flex:none}
+.opt input:disabled+.ob{opacity:.7}
+.ob{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ol{font-weight:600;color:var(--ink)}
+.od{color:var(--ink-2);font-size:13.5px}
+.rec{display:inline-block;margin-left:6px;font:700 10px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:3px 5px;vertical-align:2px}
+.nl{font:600 12px/1.4 var(--mono);color:var(--ink-2)}
+.nl .optl{font-weight:400;color:var(--muted)}
+textarea{width:100%;font:14px/1.45 var(--sans);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;resize:vertical;min-height:2.8em}
+textarea:focus{border-color:var(--ink-2)}
+textarea:disabled{opacity:.7}
+.field{display:flex;flex-direction:column;gap:4px}
+.qfoot{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font:12px/1.4 var(--mono);color:var(--muted)}
+.qfoot .save{margin-left:auto;color:var(--ink-2)}
+.qfoot .save.err{color:var(--critical)}
+.linkbtn{appearance:none;background:none;border:0;padding:0;font:inherit;color:var(--link);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.sec{font:600 12px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:10px 0 0;display:flex;gap:8px}
+.q-closed{background:transparent;gap:8px}
+.q-closed .qt{font-size:15px}
+.res{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:0;font-size:13.5px}
+.res dt{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.res dd{margin:0;color:var(--ink-2)}
+@media (max-width:520px){.res{grid-template-columns:minmax(0,1fr)}.res dd{margin-bottom:6px}}
+.sendbar{position:sticky;bottom:env(safe-area-inset-bottom,0px);z-index:5;background:var(--surface);border:1px solid var(--ink-2);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 6px 24px var(--hair)}
+.sbrow{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.sbt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sbs{color:var(--ink-2);font-size:12.5px}
+.send{appearance:none;font:600 14px/1 var(--sans);padding:11px 16px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;white-space:nowrap}
+.send:hover{filter:brightness(1.08)}
+.send:disabled{opacity:.55;cursor:default;filter:none}
+.smsg{margin:0;font-size:13px;color:var(--ink-2)}
+.smsg::before{content:"● ";font-size:10px;vertical-align:1px}
+.smsg-good::before{color:var(--good)} .smsg-warn::before{color:var(--warning)} .smsg-crit::before{color:var(--critical)}
+</style><main class="page" id="app"></main><script type="application/json" id="inbox-state">{"sends":[]}</script><script id="inbox-main">
+/* The page reads questions from the db collection `questions` (written by Claude) and keeps each answer in `answers/<question id>`
+   as you pick it. Send to Claude republishes this page with the send log below appended: the republish is what wakes the watching
+   Claude session, which then reads `answers` and closes each question with what came of it. */
+(function () {
+  "use strict";
+
+  // The publish skeleton the Artifact tool wraps this page in; a self-publish sends the same shape so a later tool publish replaces it.
+  var CLOSE_SCRIPT = "</" + "script>";
+  var CLOSE_STYLE = "</" + "style>";
+  var SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>' +
+    ':root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}' +
+    'html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}' +
+    'img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}' + CLOSE_STYLE + '</head><body>\n';
+  var TITLE = '<title>WebTools Questions</title><meta name="claude:viewport-fit-sides" content="cover">';
+  var MOUNT = '<main class="page" id="app"></main>';
+  var REPO = "https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans";
+
+  var STATE = (function () {
+    try {
+      var s = JSON.parse(document.getElementById("inbox-state").textContent);
+      if (s && Array.isArray(s.sends)) return s;
+    } catch (e) {}
+    return { sends: [] };
+  })();
+
+  var db = null, artifact = null, me = null;
+  var conn = "connecting"; // connecting | cached | live | off
+  var readOnly = false, cannotSend = false;
+  var questions = new Map(), answers = new Map(), haveQ = false;
+  var drafts = {}, pendingChoice = {}, saveState = {}, timers = {}, chains = {}, openCtx = {};
+  var sending = false, sendMsg = null;
+
+  var PILLS = {
+    waiting: ["Waiting on you", "g-accent", "●"],
+    unsent: ["Answered, not sent", "g-warn", "◆"],
+    sent: ["Sent to Claude", "g-ink", "▲"],
+    seen: ["Claude has it", "g-link", "▲"],
+    closed: ["Closed", "g-good", "✓"]
+  };
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function rich(s) {
+    return String(s || "").split(/\n{2,}/).map(function (p) {
+      return "<p>" + esc(p).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
+  function when(iso) {
+    var d = new Date(iso);
+    if (!iso || isNaN(d)) return "";
+    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function answerOf(id) {
+    var saved = answers.get(id) || null;
+    return {
+      saved: saved,
+      choice: id in pendingChoice ? pendingChoice[id] : (saved && saved.choice) || null,
+      note: id in drafts ? drafts[id] : (saved && typeof saved.note === "string" ? saved.note : "")
+    };
+  }
+  function answered(a) { return !!a.choice || !!a.note.trim(); }
+  function lastSendFor(id) {
+    var best = null;
+    STATE.sends.forEach(function (s) {
+      if (s && Array.isArray(s.ids) && s.ids.indexOf(id) >= 0 && (!best || s.at > best.at)) best = s;
+    });
+    return best;
+  }
+  function stateOf(q) {
+    if (q.status === "closed") return "closed";
+    var a = answerOf(q.id);
+    if (!answered(a)) return "waiting";
+    var s = lastSendFor(q.id);
+    if (q.id in drafts || q.id in pendingChoice || !a.saved || !s || s.at < a.saved.at) return "unsent";
+    return q.seen && q.seen === a.saved.at ? "seen" : "sent";
+  }
+  function ordered() {
+    var all = Array.from(questions.values());
+    var open = all.filter(function (q) { return q.status !== "closed"; }).sort(function (x, y) {
+      var ox = typeof x.order === "number" ? x.order : 1e9, oy = typeof y.order === "number" ? y.order : 1e9;
+      return ox - oy || String(x.asked || "").localeCompare(String(y.asked || ""));
+    });
+    var closed = all.filter(function (q) { return q.status === "closed"; }).sort(function (x, y) {
+      return String(y.closedAt || y.asked || "").localeCompare(String(x.closedAt || x.asked || ""));
+    });
+    return { open: open, closed: closed };
+  }
+  function unsentIds() {
+    return ordered().open.filter(function (q) {
+      return stateOf(q) === "unsent" && answers.get(q.id) && saveState[q.id] !== "error";
+    }).map(function (q) { return q.id; });
+  }
+
+  // ---- rendering ----
+
+  function liveChip() {
+    if (conn === "live") return '<span class="livechip on"><span class="ld"></span>LIVE</span>';
+    if (conn === "cached") return '<span class="livechip na"><span class="ld"></span>SYNCING</span>';
+    if (conn === "off") return '<span class="livechip off"><span class="ld"></span>OFFLINE</span>';
+    return '<span class="livechip na"><span class="ld"></span>CONNECTING</span>';
+  }
+  function chip(glyph, cls, n, label) {
+    return '<span class="chip"><span class="g ' + cls + '" aria-hidden="true">' + glyph + "</span><b>" + n + "</b> " + label + "</span>";
+  }
+  function header() {
+    var c = { waiting: 0, unsent: 0, sent: 0, closed: 0 };
+    questions.forEach(function (q) { var s = stateOf(q); c[s === "seen" ? "sent" : s]++; });
+    var last = STATE.sends.length ? STATE.sends[STATE.sends.length - 1] : null;
+    return '<div class="topbar"><div class="crumbs"><a href="' + REPO + '" target="_blank" rel="noopener">SpartanLaboratories/WebTools</a> · plan boards</div>' + liveChip() + "</div>" +
+      "<header><h1>Questions</h1>" +
+      '<p class="function">Decisions the pipeline needs from you. An answer saves the moment you pick it; <b>Send to Claude</b> wakes the run that asked.</p>' +
+      (haveQ ? '<div class="chips">' + chip("●", "g-accent", c.waiting, "waiting on you") + chip("◆", "g-warn", c.unsent, "not sent") +
+        chip("▲", "g-ink", c.sent, "with Claude") + chip("✓", "g-good", c.closed, "closed") +
+        (last ? '<span class="chip">last sent ' + esc(when(last.at)) + "</span>" : "") + "</div>" : "") +
+      "</header>";
+  }
+  function pill(st) {
+    var p = PILLS[st];
+    return '<span class="pill"><span class="g ' + p[1] + '" aria-hidden="true">' + p[2] + "</span>" + p[0] + "</span>";
+  }
+  function tags(q, st) {
+    var run = q.runLabel ? (q.link ? '<a class="tag" href="' + esc(q.link) + '" target="_blank" rel="noopener">' + esc(q.runLabel) + "</a>" : '<span class="tag">' + esc(q.runLabel) + "</span>") : "";
+    var step = q.step ? '<span class="tag">' + esc(q.step) + "</span>" : "";
+    return '<div class="qtags">' + run + step + pill(st) + "</div>";
+  }
+  function saveChip(id, a) {
+    var s = saveState[id];
+    if (s === "saving") return '<span class="save">Saving…</span>';
+    if (s === "error") return '<span class="save err">Not saved. Pick again or edit the note to retry.</span>';
+    if (s === "refused") return '<span class="save err">This view can’t save answers.</span>';
+    if (a.saved && a.saved.at) return '<span class="save">Saved ' + esc(when(a.saved.at)) + "</span>";
+    return "";
+  }
+  function card(q) {
+    var id = q.id, a = answerOf(id), st = stateOf(q), dis = readOnly ? " disabled" : "";
+    var html = '<article class="q q-' + st + '" id="q-' + esc(id) + '">' + tags(q, st) + '<h2 class="qt">' + esc(q.title) + "</h2>";
+    if (q.prompt) html += '<div class="prompt">' + rich(q.prompt) + "</div>";
+    if (q.context) html += '<details class="ctx" data-q="' + esc(id) + '"' + (openCtx[id] ? " open" : "") + '><summary>Context</summary><div class="ctxb">' + rich(q.context) + "</div></details>";
+    if (q.kind !== "text" && Array.isArray(q.options)) {
+      html += '<fieldset class="opts"><legend class="sr">' + esc(q.title) + "</legend>" + q.options.map(function (o) {
+        var oid = "o-" + id + "-" + o.key, sel = a.choice === o.key;
+        return '<label class="opt' + (sel ? " sel" : "") + '" for="' + esc(oid) + '"><input type="radio" id="' + esc(oid) + '" name="o-' + esc(id) +
+          '" value="' + esc(o.key) + '" data-q="' + esc(id) + '"' + (sel ? " checked" : "") + dis + '><span class="ob"><span class="ol">' + esc(o.label) +
+          (q.recommended === o.key ? '<span class="rec">Recommended</span>' : "") + "</span>" + (o.detail ? '<span class="od">' + esc(o.detail) + "</span>" : "") + "</span></label>";
+      }).join("") + "</fieldset>";
+    }
+    var nid = "n-" + id, text = q.kind === "text";
+    html += '<div class="field"><label class="nl" for="' + esc(nid) + '">' + (text ? "Your answer" : 'Note <span class="optl">optional</span>') + "</label>" +
+      '<textarea id="' + esc(nid) + '" data-q="' + esc(id) + '" rows="' + (text ? 4 : 2) + '" placeholder="' +
+      esc(text ? q.placeholder || "Write your answer" : "Add a reason, or describe another option") + '"' + dis + ">" + esc(a.note) + "</textarea></div>";
+    var run = q.blocking ? '<span><span class="g g-crit" aria-hidden="true">■</span> Blocks the run until you answer</span>'
+      : '<span><span class="g g-ink" aria-hidden="true">▷</span> ' + (q.fallback ? "If unanswered, the run goes on with: " + esc(q.fallback) : "The run goes on without it") + "</span>";
+    html += '<div class="qfoot">' + run + (q.asked ? "<span>Asked " + esc(when(q.asked)) + "</span>" : "") + saveChip(id, a) +
+      (a.saved && !readOnly ? '<button type="button" class="linkbtn" data-act="clear" data-q="' + esc(id) + '">Clear</button>' : "") + "</div>";
+    return html + "</article>";
+  }
+  function closedCard(q) {
+    var a = answers.get(q.id), opt = null;
+    if (a && a.choice && Array.isArray(q.options)) q.options.forEach(function (o) { if (o.key === a.choice) opt = o; });
+    var rows = (opt ? "<dt>You chose</dt><dd>" + esc(opt.label) + "</dd>" : "") +
+      (a && a.note ? "<dt>Your note</dt><dd>" + rich(a.note) + "</dd>" : "") +
+      (q.outcome ? "<dt>What came of it</dt><dd>" + rich(q.outcome) + "</dd>" : "");
+    return '<article class="q q-closed" id="q-' + esc(q.id) + '">' + tags(q, "closed") + '<h2 class="qt">' + esc(q.title) + "</h2>" +
+      (rows ? '<dl class="res">' + rows + "</dl>" : "") + "</article>";
+  }
+  function main() {
+    if (!haveQ) {
+      if (conn === "off") return '<p class="notice">This page loads and saves answers through claude.ai. Open it from your artifacts on claude.ai or in the Claude app to answer.</p>';
+      return '<div class="empty"><h2>Loading questions…</h2><p>Questions from the pipeline appear here with their options and the run’s recommendation.</p></div>';
+    }
+    var o = ordered(), html = "";
+    if (conn === "off") html += '<p class="notice">Lost the connection to claude.ai. Reload the page to reconnect; answers already marked Saved are kept.</p>';
+    if (readOnly) html += '<p class="notice">You can read these questions but not answer them here.</p>';
+    if (!o.open.length && !o.closed.length) {
+      return html + '<div class="empty"><h2>No questions yet</h2><p>When a run needs a decision from you, it appears here with the options, the run’s recommendation and whether the run waits for you.</p></div>';
+    }
+    html += o.open.length ? '<div class="list">' + o.open.map(card).join("") + "</div>"
+      : '<div class="empty"><h2>Nothing is waiting on you</h2><p>Every question so far is closed. New ones appear here when a run asks.</p></div>';
+    if (o.closed.length) html += '<h2 class="sec">Closed <span>' + o.closed.length + '</span></h2><div class="list">' + o.closed.map(closedCard).join("") + "</div>";
+    return html;
+  }
+  function sendbar() {
+    var ids = unsentIds();
+    if (!ids.length && !sendMsg) return "";
+    var n = ids.length, html = '<div class="sendbar">';
+    if (n) {
+      html += '<div class="sbrow"><div class="sbt"><span><b>' + n + (n === 1 ? " answer" : " answers") + "</b> ready to send</span>" +
+        '<span class="sbs">Answers are saved already. Sending tells the run they are ready.</span></div>' +
+        '<button type="button" class="send" id="send" data-act="send"' + (sending || readOnly || cannotSend ? " disabled" : "") + ">" + (sending ? "Sending…" : "Send to Claude") + "</button></div>";
+    }
+    if (sendMsg) html += '<p class="smsg smsg-' + sendMsg.tone + '" role="status">' + esc(sendMsg.text) + "</p>";
+    return html + "</div>";
+  }
+  function render() {
+    var app = document.getElementById("app");
+    if (!app) return;
+    var a = document.activeElement, fid = a && a.id, ss = null, se = null;
+    if (a && a.tagName === "TEXTAREA") { ss = a.selectionStart; se = a.selectionEnd; }
+    app.innerHTML = header() + main() + sendbar();
+    if (fid) {
+      var el = document.getElementById(fid);
+      if (el && el !== document.activeElement) {
+        el.focus({ preventScroll: true });
+        if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, se);
+      }
+    }
+  }
+
+  // ---- saving ----
+
+  function save(id) {
+    clearTimeout(timers[id]);
+    delete timers[id];
+    var q = questions.get(id);
+    if (!db || readOnly || !q || q.status === "closed") return Promise.resolve();
+    var a = answerOf(id), choice = a.choice, note = a.note, ref = db.collection("answers").doc(id), op = null;
+    if (choice || note.trim()) {
+      var body = { choice: choice || null, note: note, at: new Date().toISOString() };
+      if (me) body.by = me;
+      op = function () { return ref.set(body); };
+    } else if (a.saved) {
+      op = function () { return ref.delete(); };
+    }
+    if (!op) { delete drafts[id]; delete pendingChoice[id]; render(); return Promise.resolve(); }
+    saveState[id] = "saving";
+    render();
+    chains[id] = (chains[id] || Promise.resolve()).then(op).then(function () {
+      saveState[id] = "saved";
+      if (drafts[id] === note) delete drafts[id];
+      if (pendingChoice[id] === choice) delete pendingChoice[id];
+      render();
+    }, function (e) {
+      saveState[id] = e && e.code === "invalid_argument" ? "refused" : "error";
+      if (e && e.code === "invalid_argument") readOnly = true;
+      render();
+    });
+    return chains[id];
+  }
+  function flushAll() {
+    Object.keys(timers).forEach(save);
+    return Promise.all(Object.keys(chains).map(function (k) { return chains[k]; }));
+  }
+
+  // ---- sending ----
+
+  function regenerate(state) {
+    var css = document.getElementById("inbox-css").textContent;
+    var src = document.getElementById("inbox-main").textContent;
+    var json = JSON.stringify(state).replace(/</g, "\\u003c");
+    return SKELETON + TITLE + '<style id="inbox-css">' + css + CLOSE_STYLE + MOUNT +
+      '<script type="application/json" id="inbox-state">' + json + CLOSE_SCRIPT +
+      '<script id="inbox-main">' + src + CLOSE_SCRIPT + "\n</body></html>";
+  }
+  function sendError(e) {
+    var code = e && e.code;
+    if (code === "conflict") return { tone: "warn", text: "A newer version of this page was published, so it is reloading. Your answers are saved; press Send again once it has reloaded." };
+    if (code === "rate_limited") return { tone: "warn", text: "Sent too often. Wait a minute, then press Send again." };
+    if (code === "upstream_error" || !code) return { tone: "crit", text: "Sending failed. Your answers are saved; press Send to try again." };
+    cannotSend = true;
+    return { tone: "warn", text: "This view can’t wake Claude (" + code + "). Your answers are saved; tell Claude in the chat that you’ve answered." };
+  }
+  function send() {
+    if (sending) return;
+    sending = true;
+    sendMsg = null;
+    render();
+    flushAll().then(function () {
+      var ids = unsentIds();
+      if (!ids.length) { sending = false; render(); return; }
+      if (!artifact || !SKELETON) {
+        sending = false;
+        cannotSend = true;
+        sendMsg = { tone: "warn", text: "This view can’t wake Claude. Your answers are saved; tell Claude in the chat that you’ve answered." };
+        render();
+        return;
+      }
+      var next = { sends: STATE.sends.concat([{ at: new Date().toISOString(), ids: ids }]).slice(-100) };
+      return artifact.publish(regenerate(next)).then(function () {
+        sending = false;
+        sendMsg = { tone: "good", text: "Sent. Claude has been told; the page is reloading." };
+        render();
+      }, function (e) {
+        sending = false;
+        sendMsg = sendError(e);
+        render();
+      });
+    });
+  }
+
+  // ---- events ----
+
+  var app = document.getElementById("app");
+  app.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.type === "radio" && t.dataset.q) { pendingChoice[t.dataset.q] = t.value; save(t.dataset.q); }
+  });
+  app.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.tagName !== "TEXTAREA" || !t.dataset.q) return;
+    var id = t.dataset.q, before = answered(answerOf(id));
+    drafts[id] = t.value;
+    clearTimeout(timers[id]);
+    timers[id] = setTimeout(function () { save(id); }, 1000);
+    if (answered(answerOf(id)) !== before) render();
+  });
+  app.addEventListener("focusout", function (e) {
+    var t = e.target;
+    if (t.tagName === "TEXTAREA" && t.dataset.q && timers[t.dataset.q]) save(t.dataset.q);
+  });
+  app.addEventListener("toggle", function (e) {
+    var t = e.target;
+    if (t.tagName === "DETAILS" && t.dataset.q) openCtx[t.dataset.q] = t.open;
+  }, true);
+  app.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]");
+    if (!b) return;
+    if (b.dataset.act === "send") send();
+    if (b.dataset.act === "clear") { drafts[b.dataset.q] = ""; pendingChoice[b.dataset.q] = null; save(b.dataset.q); }
+  });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flushAll(); });
+
+  // ---- start ----
+
+  render();
+  var C = window.claude;
+  if (!C || typeof C.use !== "function") { conn = "off"; render(); return; }
+  C.use("artifact").then(function (x) { artifact = x; }, function () {});
+  C.use("user").then(function (u) {
+    if (!u) return;
+    u.id().then(function (i) { me = i; }, function () {});
+    u.can("data.write").then(function (w) { if (w === false) { readOnly = true; render(); } }, function () {});
+  }, function () {});
+  C.use("db").then(function (d) {
+    db = d;
+    if (!d) { conn = "off"; render(); return; }
+    var dead = function () { conn = "off"; render(); };
+    d.collection("questions").onSnapshot(function (s) {
+      var m = new Map();
+      s.docs.forEach(function (doc) { var v = doc.data(); if (v) m.set(doc.id, Object.assign({}, v, { id: doc.id })); });
+      questions = m;
+      haveQ = true;
+      conn = s.metadata.fromCache ? "cached" : "live";
+      render();
+    }, dead);
+    d.collection("answers").onSnapshot(function (s) {
+      var m = new Map();
+      s.docs.forEach(function (doc) { var v = doc.data(); if (v) m.set(doc.id, v); });
+      answers = m;
+      render();
+    }, dead);
+  }, function () { conn = "off"; render(); });
+})();
+</script>

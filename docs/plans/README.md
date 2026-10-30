@@ -6,6 +6,10 @@ One folder per issue, `docs/plans/<issue>-<slug>/`, nested under its tracking is
 
 [**`index.html`**](index.html) lists every planning and development run in the repository: one row per issue that has a plan board or a `level:` label, grouped by tracking issue in landing order, then the rest by age. Each row shows the run's state and pipeline step, what it is doing now, its qa passes, what it waits on and what it blocks, its branch and its board. The runs being worked on glow. Its Context lists the roadmap and the open issues no roadmap item claims. It is regenerated from every board and the issue tracker each time a change lands, so between landings a run's live state is on its own board, on its branch.
 
+## The questions inbox
+
+[**`inbox/`**](inbox/README.md) holds the source and the protocol of the published page where the pipeline asks you its questions and you answer them, from any device. Each card says which run asked, what the run recommends and whether the run waits for you.
+
 ## Reading a plan board
 
 A board is `dashboard.html` in the issue's folder, rendered from `plan.json` beside it. Under the header, the **WIP strip** shows where the run is: its step on the pipeline, what it is doing, its qa passes and its blockers, or, once merged, the landing. Below it, the **Timeline** has one row per part of the change and four columns:
