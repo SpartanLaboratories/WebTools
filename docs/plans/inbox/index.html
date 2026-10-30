@@ -1,4 +1,4 @@
-<title>WebTools Questions</title><meta name="claude:viewport-fit-sides" content="cover"><style id="inbox-css">
+<title>WebTools Questions</title><meta name="claude:viewport-fit-sides" content="cover"><style>
 /* Questions inbox for the WebTools pipeline: one column of question cards, open ones first in the order the runs asked them, closed
    ones below with what came of them; a send bar sticks to the bottom while answers wait to be sent. Tokens and type follow the plan
    boards (dashboards skill, GUIDANCE.md): status colours only beside a glyph and a word, the accent marks what waits on you. */
@@ -41,8 +41,9 @@ h1{font:600 28px/1.15 var(--mono);margin:0;letter-spacing:-.01em}
 .empty h2{font:600 15px/1.3 var(--sans);color:var(--ink);margin:0 0 4px}
 .empty p{margin:0;max-width:62ch}
 .list{display:flex;flex-direction:column;gap:12px}
-.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0;scroll-margin-top:16px}
 .q-waiting{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.q.target{outline:2px solid var(--focus);outline-offset:3px}
 .qtags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tag{font:600 11px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:4px 6px;border:1px solid var(--line);border-radius:3px;text-decoration:none}
 a.tag:hover{color:var(--ink);border-color:var(--ink-2)}
@@ -91,38 +92,25 @@ textarea:disabled{opacity:.7}
 .smsg{margin:0;font-size:13px;color:var(--ink-2)}
 .smsg::before{content:"● ";font-size:10px;vertical-align:1px}
 .smsg-good::before{color:var(--good)} .smsg-warn::before{color:var(--warning)} .smsg-crit::before{color:var(--critical)}
-</style><main class="page" id="app"></main><script type="application/json" id="inbox-state">{"sends":[]}</script><script id="inbox-main">
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style><main class="page" id="app"></main><script>
 /* The page reads questions from the db collection `questions` (written by Claude) and keeps each answer in `answers/<question id>`
-   as you pick it. Send to Claude republishes this page with the send log below appended: the republish is what wakes the watching
-   Claude session, which then reads `answers` and closes each question with what came of it. */
+   as you pick it. Send to Claude messages the session that asked each question (its `session` field) through the viewer's
+   Claude Code Remote connector, then logs the send in `sends`; that message is what wakes the run, which then reads `answers`
+   and closes each question with what came of it. A link ending in `#<question id>` opens the page at that question's card. */
 (function () {
   "use strict";
 
-  // The publish skeleton the Artifact tool wraps this page in; a self-publish sends the same shape so a later tool publish replaces it.
-  var CLOSE_SCRIPT = "</" + "script>";
-  var CLOSE_STYLE = "</" + "style>";
-  var SKELETON = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>' +
-    ':root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}' +
-    'html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}' +
-    'img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}' + CLOSE_STYLE + '</head><body>\n';
-  var TITLE = '<title>WebTools Questions</title><meta name="claude:viewport-fit-sides" content="cover">';
-  var MOUNT = '<main class="page" id="app"></main>';
+  var INBOX_URL = "https://claude.ai/artifact/5hzqM3YmTnBcSyPaYbpbEW";
   var REPO = "https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans";
+  var NOTIFY = "Claude Code Remote";
 
-  var STATE = (function () {
-    try {
-      var s = JSON.parse(document.getElementById("inbox-state").textContent);
-      if (s && Array.isArray(s.sends)) return s;
-    } catch (e) {}
-    return { sends: [] };
-  })();
-
-  var db = null, artifact = null, me = null;
+  var db = null, mcp = null, me = null;
   var conn = "connecting"; // connecting | cached | live | off
-  var readOnly = false, cannotSend = false;
-  var questions = new Map(), answers = new Map(), haveQ = false;
+  var readOnly = false;
+  var questions = new Map(), answers = new Map(), sends = [], haveQ = false;
   var drafts = {}, pendingChoice = {}, saveState = {}, timers = {}, chains = {}, openCtx = {};
-  var sending = false, sendMsg = null;
+  var sending = false, sendMsg = null, target = null;
 
   var PILLS = {
     waiting: ["Waiting on you", "g-accent", "●"],
@@ -159,7 +147,7 @@ textarea:disabled{opacity:.7}
   function answered(a) { return !!a.choice || !!a.note.trim(); }
   function lastSendFor(id) {
     var best = null;
-    STATE.sends.forEach(function (s) {
+    sends.forEach(function (s) {
       if (s && Array.isArray(s.ids) && s.ids.indexOf(id) >= 0 && (!best || s.at > best.at)) best = s;
     });
     return best;
@@ -201,15 +189,15 @@ textarea:disabled{opacity:.7}
     return '<span class="chip"><span class="g ' + cls + '" aria-hidden="true">' + glyph + "</span><b>" + n + "</b> " + label + "</span>";
   }
   function header() {
-    var c = { waiting: 0, unsent: 0, sent: 0, closed: 0 };
+    var c = { waiting: 0, unsent: 0, sent: 0, closed: 0 }, last = null;
     questions.forEach(function (q) { var s = stateOf(q); c[s === "seen" ? "sent" : s]++; });
-    var last = STATE.sends.length ? STATE.sends[STATE.sends.length - 1] : null;
+    sends.forEach(function (s) { if (s && s.at && (!last || s.at > last)) last = s.at; });
     return '<div class="topbar"><div class="crumbs"><a href="' + REPO + '" target="_blank" rel="noopener">SpartanLaboratories/WebTools</a> · plan boards</div>' + liveChip() + "</div>" +
       "<header><h1>Questions</h1>" +
-      '<p class="function">Decisions the pipeline needs from you. An answer saves the moment you pick it; <b>Send to Claude</b> wakes the run that asked.</p>' +
+      '<p class="function">Decisions the pipeline needs from you. An answer saves the moment you pick it; <b>Send to Claude</b> tells the run that asked.</p>' +
       (haveQ ? '<div class="chips">' + chip("●", "g-accent", c.waiting, "waiting on you") + chip("◆", "g-warn", c.unsent, "not sent") +
         chip("▲", "g-ink", c.sent, "with Claude") + chip("✓", "g-good", c.closed, "closed") +
-        (last ? '<span class="chip">last sent ' + esc(when(last.at)) + "</span>" : "") + "</div>" : "") +
+        (last ? '<span class="chip">last sent ' + esc(when(last)) + "</span>" : "") + "</div>" : "") +
       "</header>";
   }
   function pill(st) {
@@ -229,9 +217,10 @@ textarea:disabled{opacity:.7}
     if (a.saved && a.saved.at) return '<span class="save">Saved ' + esc(when(a.saved.at)) + "</span>";
     return "";
   }
+  function cardClass(q, st) { return "q q-" + st + (q.id === target ? " target" : ""); }
   function card(q) {
     var id = q.id, a = answerOf(id), st = stateOf(q), dis = readOnly ? " disabled" : "";
-    var html = '<article class="q q-' + st + '" id="q-' + esc(id) + '">' + tags(q, st) + '<h2 class="qt">' + esc(q.title) + "</h2>";
+    var html = '<article class="' + cardClass(q, st) + '" id="' + esc(id) + '">' + tags(q, st) + '<h2 class="qt">' + esc(q.title) + "</h2>";
     if (q.prompt) html += '<div class="prompt">' + rich(q.prompt) + "</div>";
     if (q.context) html += '<details class="ctx" data-q="' + esc(id) + '"' + (openCtx[id] ? " open" : "") + '><summary>Context</summary><div class="ctxb">' + rich(q.context) + "</div></details>";
     if (q.kind !== "text" && Array.isArray(q.options)) {
@@ -258,7 +247,7 @@ textarea:disabled{opacity:.7}
     var rows = (opt ? "<dt>You chose</dt><dd>" + esc(opt.label) + "</dd>" : "") +
       (a && a.note ? "<dt>Your note</dt><dd>" + rich(a.note) + "</dd>" : "") +
       (q.outcome ? "<dt>What came of it</dt><dd>" + rich(q.outcome) + "</dd>" : "");
-    return '<article class="q q-closed" id="q-' + esc(q.id) + '">' + tags(q, "closed") + '<h2 class="qt">' + esc(q.title) + "</h2>" +
+    return '<article class="' + cardClass(q, "closed") + '" id="' + esc(q.id) + '">' + tags(q, "closed") + '<h2 class="qt">' + esc(q.title) + "</h2>" +
       (rows ? '<dl class="res">' + rows + "</dl>" : "") + "</article>";
   }
   function main() {
@@ -283,8 +272,8 @@ textarea:disabled{opacity:.7}
     var n = ids.length, html = '<div class="sendbar">';
     if (n) {
       html += '<div class="sbrow"><div class="sbt"><span><b>' + n + (n === 1 ? " answer" : " answers") + "</b> ready to send</span>" +
-        '<span class="sbs">Answers are saved already. Sending tells the run they are ready.</span></div>' +
-        '<button type="button" class="send" id="send" data-act="send"' + (sending || readOnly || cannotSend ? " disabled" : "") + ">" + (sending ? "Sending…" : "Send to Claude") + "</button></div>";
+        '<span class="sbs">Answers are saved already. Sending messages the run that asked.</span></div>' +
+        '<button type="button" class="send" id="send" data-act="send"' + (sending || readOnly ? " disabled" : "") + ">" + (sending ? "Sending…" : "Send to Claude") + "</button></div>";
     }
     if (sendMsg) html += '<p class="smsg smsg-' + sendMsg.tone + '" role="status">' + esc(sendMsg.text) + "</p>";
     return html + "</div>";
@@ -301,6 +290,18 @@ textarea:disabled{opacity:.7}
         el.focus({ preventScroll: true });
         if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, se);
       }
+    }
+  }
+
+  // A plan board links a question as this page's link plus `#<question id>`: open at that card, once it has loaded.
+  var scrolledTo = null;
+  function followHash() {
+    var h = decodeURIComponent((location.hash || "").slice(1));
+    target = h && questions.has(h) ? h : null;
+    render();
+    if (target && scrolledTo !== target) {
+      var el = document.getElementById(target);
+      if (el) { el.scrollIntoView({ block: "start" }); scrolledTo = target; }
     }
   }
 
@@ -341,21 +342,20 @@ textarea:disabled{opacity:.7}
 
   // ---- sending ----
 
-  function regenerate(state) {
-    var css = document.getElementById("inbox-css").textContent;
-    var src = document.getElementById("inbox-main").textContent;
-    var json = JSON.stringify(state).replace(/</g, "\\u003c");
-    return SKELETON + TITLE + '<style id="inbox-css">' + css + CLOSE_STYLE + MOUNT +
-      '<script type="application/json" id="inbox-state">' + json + CLOSE_SCRIPT +
-      '<script id="inbox-main">' + src + CLOSE_SCRIPT + "\n</body></html>";
+  function message(ids) {
+    return "New answers in WebTools Questions (" + INBOX_URL + ") for: " + ids.join(", ") + ". Read that artifact's `answers` collection.";
   }
-  function sendError(e) {
-    var code = e && e.code;
-    if (code === "conflict") return { tone: "warn", text: "A newer version of this page was published, so it is reloading. Your answers are saved; press Send again once it has reloaded." };
-    if (code === "rate_limited") return { tone: "warn", text: "Sent too often. Wait a minute, then press Send again." };
-    if (code === "upstream_error" || !code) return { tone: "crit", text: "Sending failed. Your answers are saved; press Send to try again." };
-    cannotSend = true;
-    return { tone: "warn", text: "This view can’t wake Claude (" + code + "). Your answers are saved; tell Claude in the chat that you’ve answered." };
+  function notifyError(e, partial) {
+    var code = e && e.code, pre = partial ? "Some runs were told, but not all. " : "";
+    var why;
+    if (code === "approval_required" || code === "not_in_manifest") why = "this page needs your permission to message Claude. Press Send again and choose Allow.";
+    else if (code === "server_not_connected" || code === "selection_required" || code === "server_not_found") why = "Claude Code Remote isn’t available to this page here. Open it on claude.ai or in the Claude app, or tell Claude in the chat.";
+    else if (code === "needs_reauth") why = "reconnect Claude Code Remote in claude.ai Settings → Connectors, then press Send again.";
+    else if (code === "blocked_by_policy") why = "your organization doesn’t let pages message Claude sessions. Tell Claude in the chat.";
+    else if (code === "tool_error") why = "the run’s session didn’t take the message (" + String(e.message || "").slice(0, 140) + "). Tell Claude in the chat.";
+    else if (code === "not_granted" || code === "capability_disabled" || code === "capability_removed" || code === "bad_request" || code === "transform_error") why = "this view can’t message Claude. Tell Claude in the chat.";
+    else return { tone: "warn", text: pre + "It isn’t certain Claude was told. Your answers are saved; press Send again (a repeat does no harm) or tell Claude in the chat." };
+    return { tone: code === "tool_error" ? "crit" : "warn", text: pre + "Claude wasn’t told: " + why };
   }
   function send() {
     if (sending) return;
@@ -363,24 +363,37 @@ textarea:disabled{opacity:.7}
     sendMsg = null;
     render();
     flushAll().then(function () {
-      var ids = unsentIds();
+      var ids = unsentIds(), bySession = {}, orphans = [];
+      ids.forEach(function (id) {
+        var s = questions.get(id).session;
+        if (typeof s === "string" && s) (bySession[s] = bySession[s] || []).push(id); else orphans.push(id);
+      });
+      var sessions = Object.keys(bySession);
       if (!ids.length) { sending = false; render(); return; }
-      if (!artifact || !SKELETON) {
+      if (!mcp || !sessions.length) {
         sending = false;
-        cannotSend = true;
-        sendMsg = { tone: "warn", text: "This view can’t wake Claude. Your answers are saved; tell Claude in the chat that you’ve answered." };
+        sendMsg = { tone: "warn", text: !mcp ? "This view can’t message Claude. Your answers are saved; tell Claude in the chat that you’ve answered."
+          : "No run is waiting on these answers, so there is no one to message. They are saved; tell Claude in the chat." };
         render();
         return;
       }
-      var next = { sends: STATE.sends.concat([{ at: new Date().toISOString(), ids: ids }]).slice(-100) };
-      return artifact.publish(regenerate(next)).then(function () {
-        sending = false;
-        sendMsg = { tone: "good", text: "Sent. Claude has been told; the page is reloading." };
-        render();
-      }, function (e) {
-        sending = false;
-        sendMsg = sendError(e);
-        render();
+      var told = [], failure = null;
+      return sessions.reduce(function (p, sid) {
+        return p.then(function () {
+          if (failure) return;
+          return mcp.callTool(NOTIFY, "send_message", { session_id: sid, message: message(bySession[sid]) }).then(function () {
+            told = told.concat(bySession[sid]);
+          }, function (e) { failure = e; });
+        });
+      }, Promise.resolve()).then(function () {
+        var log = told.length ? db.collection("sends").add({ at: new Date().toISOString(), ids: told, by: me || null }).catch(function () {}) : Promise.resolve();
+        return log.then(function () {
+          sending = false;
+          if (failure) sendMsg = notifyError(failure, told.length > 0);
+          else if (orphans.length) sendMsg = { tone: "warn", text: "Sent. " + orphans.length + (orphans.length === 1 ? " answer has" : " answers have") + " no run waiting on it; tell Claude in the chat." };
+          else sendMsg = { tone: "good", text: "Sent. The run that asked has been told." };
+          render();
+        });
       });
     });
   }
@@ -415,6 +428,7 @@ textarea:disabled{opacity:.7}
     if (b.dataset.act === "send") send();
     if (b.dataset.act === "clear") { drafts[b.dataset.q] = ""; pendingChoice[b.dataset.q] = null; save(b.dataset.q); }
   });
+  window.addEventListener("hashchange", function () { scrolledTo = null; followHash(); });
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flushAll(); });
 
   // ---- start ----
@@ -422,7 +436,7 @@ textarea:disabled{opacity:.7}
   render();
   var C = window.claude;
   if (!C || typeof C.use !== "function") { conn = "off"; render(); return; }
-  C.use("artifact").then(function (x) { artifact = x; }, function () {});
+  C.use("mcp").then(function (m) { mcp = m; }, function () {});
   C.use("user").then(function (u) {
     if (!u) return;
     u.id().then(function (i) { me = i; }, function () {});
@@ -438,12 +452,16 @@ textarea:disabled{opacity:.7}
       questions = m;
       haveQ = true;
       conn = s.metadata.fromCache ? "cached" : "live";
-      render();
+      followHash();
     }, dead);
     d.collection("answers").onSnapshot(function (s) {
       var m = new Map();
       s.docs.forEach(function (doc) { var v = doc.data(); if (v) m.set(doc.id, v); });
       answers = m;
+      render();
+    }, dead);
+    d.collection("sends").onSnapshot(function (s) {
+      sends = s.docs.map(function (doc) { return doc.data(); }).filter(Boolean);
       render();
     }, dead);
   }, function () { conn = "off"; render(); });
