@@ -10,8 +10,9 @@ and nothing else.
 
 - A run asks by writing a document to the page's `questions` collection, naming its own session in `session`.
 - You answer on the page. Each answer saves to `answers/<question id>` the moment you pick an option or stop typing.
-- **Send to Claude** messages each asking session through your Claude Code Remote connector (`send_message`), then logs
-  the send in `sends`. The message is what wakes the run; the page says whether it was delivered.
+- **Send to Claude** tries to message each asking session through the Claude Code Remote connector (`send_message`)
+  and logs a delivered send in `sends`; the page says whether it was delivered. A run does not wait for the message: it
+  checks the inbox on a schedule while it waits (step 5 below), and a message only makes it sooner.
 - The run reads the answers, records them, and closes each question with what came of it, which the page shows under
   Closed.
 - A link ending in `#<question id>` opens the inbox at that question's card; the plan boards link their questions this
@@ -41,16 +42,18 @@ this repository.
    and link its card.
 4. **Wait or go on.** A `blocking` question stops the run at its step. Otherwise the run goes on with `fallback`,
    recorded on the board as an assumption.
-5. **Read.** On a message from the inbox, on resuming, and at each check-in while blocked, list `answers`. An answer is
-   new when its `at` differs from the question's `seen`; set `seen` to that `at`, and the card reads "Claude has it".
+5. **Read.** While a question is open, check the inbox every 15 minutes (a cloud run arms a `send_later` check-in, a
+   local run uses `/loop`), and also on a message from the inbox and on resuming: list `answers`. An answer is new when
+   its `at` differs from the question's `seen`; set `seen` to that `at`, and the card reads "Claude has it", sent or not.
 6. **Record.** Copy the question, the choice, the note and the answer's `at` into `wip.interview` (interview step) or
    `wip.questions`, and into the run's Markdown.
 7. **Close.** Set `status: "closed"`, `closedAt`, and `outcome`: what changed, with the commit.
 
-Never rely on the message alone. `send_message` reaches only cloud sessions, so a run in a local CLI is never messaged,
-and a message can fail (the page then says so). A run checks the answers itself on resuming and while it is blocked.
-The first design had Send republish the page so that a session watching it would wake. Both sends on 2026-10-30
-(02:13 and 03:15 UTC) republished the page and neither woke the watching session, which had restarted in between.
+The scheduled check is what finds answers. On 2026-10-30 neither way of waking the session from the page worked. Send
+first republished the page so that a session watching it would wake: both sends (02:13 and 03:15 UTC) republished it and
+neither woke the watching session, which had restarted in between. Send then messaged the session through Claude Code
+Remote: the page could not load that connector (03:57 UTC), and the connector is not among the account's claude.ai
+connectors. `send_message` would in any case reach only cloud sessions, never a run in a local CLI.
 
 ### Data
 

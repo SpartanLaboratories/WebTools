@@ -156,9 +156,10 @@ textarea:disabled{opacity:.7}
     if (q.status === "closed") return "closed";
     var a = answerOf(q.id);
     if (!answered(a)) return "waiting";
+    if (q.id in drafts || q.id in pendingChoice || !a.saved) return "unsent";
+    if (q.seen && q.seen === a.saved.at) return "seen";
     var s = lastSendFor(q.id);
-    if (q.id in drafts || q.id in pendingChoice || !a.saved || !s || s.at < a.saved.at) return "unsent";
-    return q.seen && q.seen === a.saved.at ? "seen" : "sent";
+    return !s || s.at < a.saved.at ? "unsent" : "sent";
   }
   function ordered() {
     var all = Array.from(questions.values());
@@ -349,7 +350,7 @@ textarea:disabled{opacity:.7}
     var code = e && e.code, pre = partial ? "Some runs were told, but not all. " : "";
     var why;
     if (code === "approval_required" || code === "not_in_manifest") why = "this page needs your permission to message Claude. Press Send again and choose Allow.";
-    else if (code === "server_not_connected" || code === "selection_required" || code === "server_not_found") why = "Claude Code Remote isn’t available to this page here. Open it on claude.ai or in the Claude app, or tell Claude in the chat.";
+    else if (code === "server_not_connected" || code === "selection_required" || code === "server_not_found") why = "Claude Code Remote couldn’t be loaded for this page. Your answers are saved, and the run reads them at its next check of the inbox; to have them read now, tell Claude in the chat.";
     else if (code === "needs_reauth") why = "reconnect Claude Code Remote in claude.ai Settings → Connectors, then press Send again.";
     else if (code === "blocked_by_policy") why = "your organization doesn’t let pages message Claude sessions. Tell Claude in the chat.";
     else if (code === "tool_error") why = "the run’s session didn’t take the message (" + String(e.message || "").slice(0, 140) + "). Tell Claude in the chat.";
@@ -372,7 +373,7 @@ textarea:disabled{opacity:.7}
       if (!ids.length) { sending = false; render(); return; }
       if (!mcp || !sessions.length) {
         sending = false;
-        sendMsg = { tone: "warn", text: !mcp ? "This view can’t message Claude. Your answers are saved; tell Claude in the chat that you’ve answered."
+        sendMsg = { tone: "warn", text: !mcp ? "This view can’t message Claude. Your answers are saved, and the run reads them at its next check of the inbox; to have them read now, tell Claude in the chat."
           : "No run is waiting on these answers, so there is no one to message. They are saved; tell Claude in the chat." };
         render();
         return;
