@@ -239,3 +239,230 @@ caller in the repository yet.
   `okhttp-coroutines` 5.5.0, Retrofit 3.0.0, Coil 3 and Ktor's OkHttp engine; probes for the messages and
   the surfacing the source leaves unclear.
 - **Findings file:** [`okhttp-failure-surface.md`](okhttp-failure-surface.md).
+
+## Verification
+
+Every load-bearing claim of the four findings files was re-opened at its source on 2026-11-01: 85 claims,
+plus two that the summary below rests on (X1, X2). **All hold; none fails and none is unclear.** The
+measured results (the closing claim of [`loopback-test-mechanics.md`](loopback-test-mechanics.md) and the
+closing paragraph of [`okhttp-failure-surface.md`](okhttp-failure-surface.md)) are probe output with no source
+to re-open.
+
+| File | Claims | Result |
+|---|---|---|
+| [`transport-controlled-headers.md`](transport-controlled-headers.md) | 1 to 20 | hold; 3 and 10 qualified |
+| [`redirect-decision-table.md`](redirect-decision-table.md) | 1 to 19, with 18a | hold; 1 qualified |
+| [`loopback-test-mechanics.md`](loopback-test-mechanics.md) | 1 to 20 | hold (21 is measured) |
+| [`okhttp-failure-surface.md`](okhttp-failure-surface.md) | 1 to 27 | hold; 1 qualified |
+| X1, RFC 9110 §12.5.3 | `Accept-Encoding: identity` | holds, qualified |
+| X2, OkHttp 5.5.0 `BridgeInterceptor` | a request's own `Accept-Encoding` | holds |
+
+The qualifications, none of which changes a conclusion:
+
+- **transport-controlled-headers 3.** OkHttp removes `Transfer-Encoding` only for a body of known length; a
+  body of unknown length gets `Transfer-Encoding: chunked` and loses `Content-Length`. The transport's
+  bodies are byte arrays of known length.
+- **transport-controlled-headers 10.** Ktor's quoted message is in `HttpHeaders.kt` (`UnsafeHeaderException`),
+  which `HttpClientEngine.kt` throws.
+- **redirect-decision-table 1.** `followUpRequest` also acts on `401`, `407`, `408`, `421` and `503`; "nothing
+  else" holds for the redirect statuses.
+- **okhttp-failure-surface 1.** An `InterruptedException` in the chain is not rethrown on the dispatcher
+  thread (the interrupt flag is set again instead); every other `Throwable` is.
+- **X1.** RFC 9110 §12.5.3: "An "identity" token is used as a synonym for "no encoding" in order to
+  communicate when no encoding is preferred." A request that lists only `identity` makes every other
+  content coding unacceptable, and a server that cannot honour the list "SHOULD send a response without any
+  content coding". It is a SHOULD: a server that sends a coding anyway is answered with the bytes as
+  received, `Content-Encoding` included.
+- **X2.** `BridgeInterceptor` reads a request's `Accept-Encoding` and `Range` only in its condition and never
+  rewrites a request's own `Accept-Encoding`; with either present it neither adds `gzip` nor decodes.
+
+**Source movement.** `github.com/square/okhttp` now redirects to `github.com/lysine-dev/okhttp`; the cited
+`parent-5.5.0` URLs still resolve and the tag is intact. OkHttp 5.5.1 changes this area only by one more
+`SSLPeerUnverifiedException` message of the same type.
+
+## Summary
+
+What the four findings establish, the approach each one leads to, and where the sources disagree. The
+findings files hold the evidence, the per-scenario detail and the quoted sources.
+
+### 1. The loopback tests and the four fixtures
+
+[`loopback-test-mechanics.md`](loopback-test-mechanics.md).
+
+- **Every required scenario fits `mockwebserver3` 5.5.0 as it is.** The default queue dispatcher with
+  `MockResponse.Builder` covers them: `onResponseStart(CloseSocket())` for a pooled connection dropped
+  after the server read the next request, `throttleBody` for the slow drip, `chunkedBody` and a hand-written
+  endless `MockResponseBody` for the caps and the cancel test, and a gzip body built in the test for the
+  bomb. Only the redirect chain longer than the cap needs a small custom `Dispatcher`.
+- **What a test asserts.** `requestCount` counts a request as soon as the server has read it, before it
+  answers, so the count is final once the call has returned. Header checks read `takeRequest(1, SECONDS)`;
+  connection reuse reads `connectionIndex` and `exchangeIndex`. An untimed `takeRequest()` is never used.
+- **A new connection** is forced by the server's `Connection: close` (a second resolver lookup in 10 runs
+  of 10); `CloseSocket` at the end of a response is a race that reuses a dead connection (0 of 10).
+- **"`close()` lets the JVM exit"** is proved by a child JVM started from the test with `java.home` and
+  `java.class.path`, both correct inside a Gradle 9.7.1 test worker; a check of live threads cannot tell a
+  missed thread from one still exiting.
+- **`MockWebServer.webtoolsUrl(path)`** names the bound address as an IP literal (`127.0.0.1`, or `[::1]`),
+  never `hostName` or `url()`, which reverse-resolve an address created without a name. The literals are
+  exactly the hosts the loopback relaxation exempts from the port rule, and a literal never reaches the
+  resolver.
+- **`Fixture.toMockResponse(method)`** derives the framing from the body instead of copying it: a fixture's
+  `Content-Length` and `Transfer-Encoding` are never written as given; a `204` or `205` gets no body and no
+  `Content-Length`; a `304`, and a response to `HEAD`, write no body and keep the declared length; a `1xx`
+  fixture is refused, because it cannot be a final response. **`MockWebServer.enqueue(fixture, method)`**
+  fails with a clear message when a custom dispatcher has replaced the queue. The request method is a
+  defaulted parameter (`GET`), because only a response to `HEAD` is written differently.
+- **`LoopbackTransports`** is an `object` with `untrusted(userAgent, policy, resolve)` and
+  `trusted(userAgent, policy, resolve)`. The policy is a whole `OutboundUrlPolicy.Untrusted` or
+  `OutboundUrlPolicy.Trusted` with a default, because the settings live on the policy and the rebinding and
+  mixed-answer tests need `allowedPorts` and `mixedAnswers` through the factory; `trusted` turns cleartext
+  on and keeps everything else. The resolver is a function type, `(host: String) -> List<InetAddress>`,
+  last, defaulting to the system resolver, so a test writes a trailing lambda. Both return the
+  `OkHttpTransport`, which the caller closes.
+- **HTTPS loopback** for the one `https` to `http` hop uses `okhttp-tls` 5.5.0 (Java 8 bytecode) in the
+  module's own tests only; the test builds the transport through its `internal` constructor with a donor
+  client that carries the trust, and pins the server to HTTP/1.1.
+- **Proxies.** A second `MockWebServer` stands in for an HTTP proxy, with `http.nonProxyHosts` set to `""`
+  (its default skips every loopback literal); the SOCKS case reuses the counting raw listener of the
+  existing SOCKS test. Both set process-wide properties, so each class is `@Isolated` and restores them.
+- **A refused second hop** points the first server's `Location` at `second.test:<the second server's
+  port>`, resolved by the stub resolver to `127.0.0.1`: the port rule refuses it (the relaxation exempts the
+  port rule only for `localhost`, `127.0.0.1` and `::1`), and an `allowedPorts = null` policy is the
+  positive control.
+
+### 2. The request headers the transport controls
+
+[`transport-controlled-headers.md`](transport-controlled-headers.md).
+
+- **OkHttp 5.5.0 lets a caller's value win** for `Host`, `Connection`, `Accept-Encoding` and `User-Agent`,
+  and for `Content-Length` and `Transfer-Encoding` on a request without a body; its HTTP/2 codec drops the
+  connection-specific names its HTTP/1.1 writer sends (measured on both protocols).
+- **The refused set is twelve names:** `User-Agent`, `Accept-Encoding`, `Host`, `Connection`,
+  `Content-Length`, `Transfer-Encoding`, `Keep-Alive`, `Proxy-Connection`, `TE`, `Trailer`, `Upgrade` and
+  `Expect`. Each changes the framing, the decoding, the target host, the protocol or the exchange's flow on
+  at least one protocol, or behaves differently on HTTP/1.1 and HTTP/2. A request carrying one is refused
+  before anything is sent with `InvalidRequest("header <Name> is controlled by the transport")`, the name in
+  the list's spelling; the first such entry in request order is the one named.
+- **`Range` is admitted.** With `Range` OkHttp adds no `Accept-Encoding` and decodes nothing, and a server
+  may then answer with any content coding (measured). The transport therefore sends `Accept-Encoding:
+  identity` itself on a request that carries `Range`, so the body stays the decoded representation without
+  refusing a caller's range request. The findings file recommends refusing `Range`; the summary does not,
+  because the refused set holds the names whose caller value the transport itself must control, and `Range`
+  interferes only with the transport's own `Accept-Encoding`, which the transport sets.
+- **Left out:** `Content-Encoding`, `Via`, `Origin`, `Referer`, `Date`, `Accept-Charset`, the other `Proxy-`
+  names and the `Sec-` prefix. OkHttp sends them verbatim on both protocols with no effect on the exchange.
+- **Where the check runs:** after the `Closed` check and before `UrlGuard.checkRequest`, once, on the
+  request passed to `execute`. A redirect hop carries a subset of those headers plus what the transport sets
+  itself, so it needs no second check. The list is plain text compared with `HttpSyntax.equalsName`, so it
+  lives in `commonMain`, where the call facades can use it as well.
+
+### 3. The redirect decision
+
+[`redirect-decision-table.md`](redirect-decision-table.md).
+
+- **Followed:** `301`, `302`, `303`, `307` and `308`, for `GET` and `HEAD` only, as the Fetch standard, the
+  JDK client, Go and Ktor follow. `300`, `304`, `305`, `306` and every other `3xx` are returned as the
+  response; OkHttp and http4k also follow `300`, which is not a redirect in the Fetch sense.
+- **The checks, first match wins:** the method and the status (return the `3xx`); no single usable
+  `Location`, meaning none, all empty or whitespace, or several different values (return the `3xx`); the
+  cap, `TooManyRedirects(maxRedirects)`, so `maxRedirects = 0` never reports a policy refusal; resolving and
+  admitting the target, `RefusedByPolicy` with `Scheme` for a scheme other than `http` or `https`,
+  `HostForm` for a `Location` that `HttpUrl.resolve` returns `null` for or throws on, and otherwise the
+  reason `UrlGuard.admitRedirect` gives; the shared deadline, `Timeout` when less than 1 ms remains (a
+  timeout of 0 would lift the limit); then follow.
+- **A followed hop** carries the original method (`HEAD` stays `HEAD` after a `303`), no body, no `Referer`,
+  and the original headers minus every sensitive entry removed on a hop whose scheme, host or effective port
+  differs. A removal is permanent: a later hop back to the first origin does not restore it. Conditional
+  headers, `Range` and `Accept` go along. The next request is built from the admitted `Url`'s text, because
+  `HttpUrl.resolve` has already rewritten backslashes, decoded a `%65` and dropped TAB and LF: what is
+  judged is what is connected.
+- **The result:** `HttpResponse.url` is the last URL requested and `redirectChain` lists each followed hop
+  with its status; a `Retry-After` on a followed `3xx` is not honoured (no compared client honours it); a
+  `3xx` that is returned keeps its headers.
+- **Where it runs:** the decision is a pure `internal` function that takes `HttpUrl.resolve` as a parameter,
+  so a Level 4a suite drives every row without a network. It runs inside `Callback.onResponse` before the
+  body is read, so a followed `3xx`'s body is never read and a returned one is read under the cap.
+
+### 4. The failure mapping, the bridge and `close()`
+
+[`okhttp-failure-surface.md`](okhttp-failure-surface.md).
+
+- **Mapping by type and by who cancelled, never by message.** First match wins: the calling coroutine
+  cancelled (nothing is mapped or logged); a policy marker anywhere in the cause chain or the suppressed
+  lists (`RefusedByPolicy`); the exchange guard's marker, found by the same walk (`RetryRefused`); the
+  transport closed (`Closed("transport")`); `UnknownHostException` (`DnsFailed` with the hop's host); a
+  socket timeout or the call timeout (`Timeout`); TLS (`TlsFailed`); connect (`ConnectFailed`);
+  `ProtocolException` and a status outside 100..599 (`Protocol`); OkHttp's `canceled due to` wrapper
+  (`Protocol` for a negative status, `Io` otherwise); every other `IOException` (`Io`); an
+  `IllegalArgumentException` while building the request (`InvalidRequest` with a constant rule). The call
+  timeout wraps the real failure, so both marker walks run before any type test. OkHttp's `internal` HTTP/2
+  exception classes are never named; they are `IOException`s and map to `Io`.
+- **The `cause`** is kept only for `Timeout`, `DnsFailed` and `ConnectFailed` (the JDK exception inside
+  OkHttp's `Failed to connect to <address>` wrapper, never the wrapper). Every other leaf has none: their
+  messages hold server bytes, certificate names, the resolved address or a header value.
+- **The bridge** is `suspendCancellableCoroutine<Result<HttpResponse>>` with `invokeOnCancellation {
+  call.cancel() }` registered before `enqueue`, and each callback resumes the continuation with a value,
+  exactly once, from a `finally`. Resuming with an exception is avoided: under `-ea`, which the Gradle test
+  JVMs use, kotlinx-coroutines 1.10.2 copies a thrown failure whose only constructor argument is its cause
+  and sets the original as the copy's cause (measured).
+- **Three OkHttp behaviours** need handling: a throw out of `onResponse` leaves the continuation unresumed
+  (hence the `finally`); a non-`IOException` in the chain, such as the `IllegalStateException` a server-sent
+  negative status causes, is rethrown on the dispatcher thread; and a `407` through a direct route throws
+  `ProtocolException` instead of being returned, which the port's "any status in 100..599 is a response"
+  rule does not allow. The exchange guard therefore hides a `407` as it hides a `503`'s `Retry-After` (a
+  placeholder status, the original kept in a private header the guard first strips from what the server
+  sent), and the response restores it.
+- **`close()`** sets the closed flag, then cancels every call (`Dispatcher.cancelAll()` reaches a body read
+  inside `onResponse`), shuts the dispatcher's `ExecutorService` down (not `shutdownNow()`), and evicts the
+  idle connections, each step inside `catchNonFatal`. A call enqueued after the shutdown fails at once, on
+  the enqueuing thread, which is why the cancellation handler is registered first and why `execute` checks
+  the flag before every hop.
+- **The dispatcher gets its own `ExecutorService`:** the shape of OkHttp's default, with daemon threads under
+  a recognisable name and an uncaught-exception handler. A forgotten `close()` then costs nothing at JVM exit
+  (0.4 s with or without `close()`, measured, against the 61 s linger of OkHttp's non-daemon default), and a
+  hostile status line cannot print a stack trace or kill a thread. The connection pool keeps at most
+  `maxConcurrentRequests` idle connections for `idleConnectionTtl`.
+
+### 5. Codebase blast radius (surveyed directly)
+
+- **No caller exists.** No production code calls an `HttpTransport` yet; its only implementations are the
+  published fake and the recorder's decorator in the fixtures. OkHttp is used in `webtools-http`'s
+  `jvmMain` only by the policy's resolver and socket guards.
+- **New files:** the transport and its parts in `jvmMain`; the controlled-header list in `commonMain` (so the
+  check module compiles it for `js` too); the four fixtures; the tests and their support classes.
+- **Changed files:**
+  - `FakeHttpTransport.kt`: its cap skips a response to `HEAD` and a `1xx`, `204` or `304`, as the transport
+    reads no body for them, with one component test and a KDoc line;
+  - `PolicyEnforcement.kt`: its KDoc names the transport instead of the issue that builds it;
+  - `webtools-http/build.gradle.kts`: `okhttp-tls` 5.5.0 for `jvmTest` only, and the fixtures comment about
+    `mockwebserver3` in the present tense;
+  - `api/webtools-http.api`: the transport class and its factory;
+  - `README.md`: the `webtools-http` row and the fixtures paragraph;
+  - `CHANGELOG.md`, created with this change's entry under `## [Unreleased]`.
+- **Unchanged:** the three legacy modules, `build-logic`, the check module's sources, and every public type
+  of `webtools-http` other than the additions above.
+
+### Where the sources disagree, and which view holds
+
+- **`Range`:** refused in the findings, admitted here with `Accept-Encoding: identity` (topic 2).
+- **An unresolvable or foreign-scheme `Location`:** the earlier transport probe
+  ([`../../research/http-transport.md`](../../research/http-transport.md) F4) returned the `3xx`, as OkHttp
+  does by side effect; the Fetch standard and Go treat it as an error. A refusal holds: a `file:` or
+  `gopher:` target then fails like a denied address, the outcome the transport's bypass vectors require,
+  and neither opens a socket.
+- **`300`:** OkHttp and http4k follow it; Fetch, the JDK, Go and Ktor do not. Not following holds.
+- **The cap before or after admission:** Go, Fetch and OkHttp check the target first, http4k the cap first.
+  The order is observable here because the two failures differ, and cap-first keeps `maxRedirects = 0`
+  meaning "no redirects".
+- **Daemon dispatcher threads:** no compared client configures them; they hold because this is a library
+  whose callers' lifecycles are unknown, and the measurements show both benefits.
+
+### Options that do not fit
+
+- Refusing `Range`, or admitting it without `identity` (topic 2).
+- Following `300`; returning the `3xx` for a foreign or unresolvable target; admitting before the cap; loop
+  detection beyond the cap (topic 3).
+- Attaching every OkHttp exception as the `cause`; resuming the continuation with an exception; naming
+  OkHttp's `internal` HTTP/2 classes; telling timeouts apart by message (topic 4).
+- `localhost` as the loopback URL host; a thread check in place of the child JVM; `@StartStop`, which does
+  not close servers on JUnit 5.10.1 (topic 1).
