@@ -4,9 +4,9 @@
 (`okhttp-transport`) of the HTTP client stack,
 [#55](https://github.com/SpartanLaboratories/WebTools/issues/55). The systems-level design is
 [`../../architecture.md`](../../architecture.md) (§6.3.2, with §6.2, §6.3.1, §6.6, §6.7, §7.3, §7.4, §9 and
-§11 unit 6) and the systems-level impact [`../../impact.md`](../../impact.md) (§7 and §8). This folder
-researches the implementation details that design leaves to the unit and that need evidence from outside
-this repository.
+§11 unit 6) and the systems-level consequences [`../../consequences.md`](../../consequences.md) (§7 and
+§8). This folder researches the implementation details that design leaves to the unit and that need
+evidence from outside this repository.
 
 ## The work
 
