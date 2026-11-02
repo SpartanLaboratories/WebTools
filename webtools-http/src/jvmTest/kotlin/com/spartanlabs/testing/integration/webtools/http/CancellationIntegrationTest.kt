@@ -73,7 +73,7 @@ class CancellationIntegrationTest {
     }
 
     @Test
-    fun `close during an in-flight call ends it with Closed and every later call is Closed`() = runBlocking {
+    fun `close during an in-flight call ends it with Closed and every later call is Closed`(): Unit = runBlocking {
         val body = EndlessBody()
         server.enqueue(body.response { throttleBody(1024, 50, TimeUnit.MILLISECONDS) })
         val transport = transport()
@@ -91,6 +91,8 @@ class CancellationIntegrationTest {
         val transport = transport { settings { maxConcurrentRequests = 1; maxConcurrentRequestsPerHost = 1 } }
         val resumed = AtomicInteger()
         val calls = (1..3).map { async { transport.execute(fleet.get(server.webtoolsUrl("/$it"))).also { resumed.incrementAndGet() } } }
+        // Lets the three coroutines reach the dispatcher before close(): with one permit, the first call holds it (its headers are 20 s away)
+        // and the other two sit queued, so close() has to end queued calls, not calls that never started.
         delay(500)
         transport.close()
         val results: List<Result<HttpResponse>> = withTimeout(10.seconds) { calls.awaitAll() }
