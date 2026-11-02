@@ -165,6 +165,16 @@ public final class com/spartanlabs/webtools/http/MixedAnswers : java/lang/Enum {
 	public static fun values ()[Lcom/spartanlabs/webtools/http/MixedAnswers;
 }
 
+public final class com/spartanlabs/webtools/http/OkHttpTransport : com/spartanlabs/webtools/http/HttpTransport {
+	public fun close ()V
+	public fun execute-gIAlu-s (Lcom/spartanlabs/webtools/http/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/OkHttpTransportKt {
+	public static final fun OkHttpTransport (Ljava/lang/String;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;)Lcom/spartanlabs/webtools/http/OkHttpTransport;
+}
+
 public abstract class com/spartanlabs/webtools/http/OutboundUrlPolicy {
 	public static final field Companion Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Companion;
 	public abstract fun getSettings ()Lcom/spartanlabs/webtools/http/TransportSettings;
