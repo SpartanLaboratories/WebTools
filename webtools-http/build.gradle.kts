@@ -56,6 +56,13 @@ kotlin {
                 implementation("org.slf4j:slf4j-api:2.0.13")
             }
         }
+        jvmTest {
+            dependencies {
+                // OkHttp's TLS test helper: a self-signed certificate and matching SSL contexts for the https-to-http redirect
+                // test and the TLS failure test. A test-only dependency of this module; never a fixtures dependency.
+                implementation("com.squareup.okhttp3:okhttp-tls:5.5.0")
+            }
+        }
     }
 }
 
