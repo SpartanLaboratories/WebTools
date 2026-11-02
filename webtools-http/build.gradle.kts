@@ -128,7 +128,7 @@ publishing.publications.withType<MavenPublication>().configureEach {
 
 dependencies {
     // The module itself (a consumer gets main at the same version), then the fixtures' own libraries.
-    // mockwebserver3 is declared for the loopback factories of a later unit; nothing else is added.
+    // mockwebserver3 serves the loopback factories (LoopbackTransports, webtoolsUrl, toMockResponse, enqueue); nothing else is added.
     "jvmTestFixturesApi"(project(project.path))
     "jvmTestFixturesApi"("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     "jvmTestFixturesApi"("com.squareup.okhttp3:mockwebserver3:5.5.0")
