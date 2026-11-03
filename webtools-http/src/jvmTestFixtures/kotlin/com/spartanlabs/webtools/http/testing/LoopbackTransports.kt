@@ -26,7 +26,8 @@ public object LoopbackTransports {
      * @param policy the policy; the defaults when omitted.
      * @param resolve answers a host name with addresses; the system resolver by default. Its exceptions reach the transport unchanged.
      * @return the transport; the caller closes it.
-     * @throws IllegalArgumentException for a `userAgent` the public factory refuses.
+     * @throws IllegalArgumentException for a `userAgent` the public factory refuses, or a `policy.settings.maxResponseBytes` above
+     *   `Int.MAX_VALUE - 8`; the message is constant and never echoes a value.
      */
     public fun untrusted(
         userAgent: String,
@@ -42,7 +43,8 @@ public object LoopbackTransports {
      * @param policy the policy; the defaults when omitted.
      * @param resolve answers a host name with addresses; the system resolver by default. Its exceptions reach the transport unchanged.
      * @return the transport; the caller closes it.
-     * @throws IllegalArgumentException for a `userAgent` the public factory refuses.
+     * @throws IllegalArgumentException for a `userAgent` the public factory refuses, or a `policy.settings.maxResponseBytes` above
+     *   `Int.MAX_VALUE - 8`; the message is constant and never echoes a value.
      */
     public fun trusted(
         userAgent: String,

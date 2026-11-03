@@ -133,7 +133,7 @@ class RedirectDecisionDeterministicTest {
         assertEquals(RefusalReason.DeniedAddress, decide("http://127.0.0.1/").refusedFor())
         assertEquals(RefusalReason.HostForm, decide("//2130706433/").refusedFor())
         assertEquals(RefusalReason.HostForm, decide("//0x7f.1/").refusedFor())
-        assertEquals(RefusalReason.DeniedAddress, decide("http://169.254.169.254/latest/").refusedFor())
+        assertEquals(RefusalReason.DeniedAddress, decide("http://169.254.169.254/latest/").refusedFor())   // link-local; the cloud metadata address
         assertEquals(RefusalReason.DeniedAddress, decide("//[::ffff:127.0.0.1]/").refusedFor())
         assertEquals(RefusalReason.ReservedName, decide("http://localhost/").refusedFor())
         val pinned = trustedGuard { pinnedHosts = setOf("example.com") }

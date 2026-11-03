@@ -24,6 +24,7 @@ internal object ChildJvm {
     /**
      * Runs the child in [mode] (`close` or `noclose`).
      *
+     * @param mode `close` makes the child close the transport after its call; `noclose` (any other value) leaves it open.
      * @return the outcome.
      */
     fun run(mode: String): Outcome {

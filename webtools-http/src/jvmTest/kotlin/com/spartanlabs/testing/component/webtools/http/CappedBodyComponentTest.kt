@@ -88,7 +88,7 @@ class CappedBodyComponentTest {
     fun `a 64 MiB source under a 1 KiB cap is read for at most the cap plus one segment`() {
         val source = CountingSource(64L * 1024 * 1024)
         assertIs<TransportFailure.BodyTooLarge>(readCappedBody(source.buffer(), null, 1024).exceptionOrNull())
-        assertTrue(source.read <= 1024 + 8192, "read ${source.read} bytes")
+        assertTrue(source.read <= 1024 + 8192, "read ${source.read} bytes")   // the cap plus one okio segment
     }
 
     @Test

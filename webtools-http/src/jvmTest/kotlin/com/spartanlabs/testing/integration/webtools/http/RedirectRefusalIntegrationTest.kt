@@ -69,7 +69,7 @@ class RedirectRefusalIntegrationTest {
 
     @Test
     fun `a redirect to a denied literal is refused with no connection`() {
-        first.enqueue(MockResponse.Builder().code(302).addHeader("Location", "http://169.254.169.254/").build())
+        first.enqueue(MockResponse.Builder().code(302).addHeader("Location", "http://169.254.169.254/").build())   // link-local; the cloud metadata address
         val transport = fleet.track(LoopbackTransports.untrusted("agent", resolve = resolve))
         val failure = assertIs<TransportFailure.RefusedByPolicy>(fleet.fetch(transport, fleet.get(first.webtoolsUrl("/"))).exceptionOrNull())
         assertEquals(RefusalReason.DeniedAddress, failure.reason)

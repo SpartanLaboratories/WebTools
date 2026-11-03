@@ -107,7 +107,7 @@ class TransportClientComponentTest {
         assertNotSame(donor.connectionPool, derived.pool)
         assertEquals(listOf(noisy), donor.interceptors)
         assertEquals(listOf(noisy), donor.networkInterceptors)
-        assertEquals(64, donor.dispatcher.maxRequests)
+        assertEquals(64, donor.dispatcher.maxRequests)   // OkHttp's default: the donor's dispatcher was never touched
         assertEquals(true, donor.followRedirects)
     }
 

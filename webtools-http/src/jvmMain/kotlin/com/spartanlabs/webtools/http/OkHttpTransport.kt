@@ -45,9 +45,9 @@ internal fun isValidUserAgent(userAgent: String): Boolean =
  *
  * - **Main-safe.** [execute] suspends; every blocking step (DNS, connect, TLS, the write, the read of the body) runs on the transport's own
  *   daemon dispatcher threads, named `webtools-http-dispatcher-<n>`, never on the caller's thread or dispatcher.
- * - **Never retries.** One `Call` per hop, one request per `Call`. A dropped pooled connection, a `408`, a `421`, a `503` with `Retry-After: 0`
- *   or a `429` is returned (as the response it is, every header untouched) or failed once; OkHttp's own re-send paths are turned off and a
- *   network interceptor refuses any second exchange of one hop with [TransportFailure.RetryRefused].
+ * - **Never retries.** One `Call` per hop, one request per `Call`. A dropped pooled connection, a `407` (with its `Proxy-Authenticate`), a `408`,
+ *   a `421`, a `503` with `Retry-After: 0` or a `429` is returned (as the response it is, every header untouched) or failed once; OkHttp's own
+ *   re-send paths are turned off and a network interceptor refuses any second exchange of one hop with [TransportFailure.RetryRefused].
  * - **The caps**, from `policy.settings`: `maxResponseBytes` bounds the decoded body ([TransportFailure.BodyTooLarge], with the declared length
  *   when the server declared one above the cap, decided before any byte is read); `maxRedirects` bounds the hops ([TransportFailure.TooManyRedirects];
  *   `0` follows none); `callTimeout` is one deadline across every hop ([TransportFailure.Timeout]); `connectTimeout`, `readTimeout` and

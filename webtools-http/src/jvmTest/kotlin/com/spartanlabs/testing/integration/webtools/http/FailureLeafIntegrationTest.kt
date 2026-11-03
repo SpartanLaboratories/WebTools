@@ -31,8 +31,8 @@ import kotlin.time.measureTimedValue
 
 /**
  * Level 3 - the failure leaves on the wire: an `UnknownHostException` from the stub resolver is `DnsFailed` with the hop's host and the
- * stub's exception as the cause; a closed port is `ConnectFailed` whose cause is not OkHttp's `Failed to connect to` wrapper and whose text
- * holds no address; a 300 ms read timeout against a 3 s headers delay is `Timeout` with a `SocketTimeoutException` cause; a truncated chunked
+ * stub's exception as the cause; a closed port is `ConnectFailed` whose cause is not OkHttp's `Failed to connect to` wrapper (and is absent
+ * when that wrapper carried no JDK cause) and whose text holds no address; a 300 ms read timeout against a 3 s headers delay is `Timeout` with a `SocketTimeoutException` cause; a truncated chunked
  * body is `Io` with no cause; a garbage status line, a `600` and a `099` are `Protocol` with no cause and the body never read; a `101` is a
  * response.
  */
@@ -66,9 +66,12 @@ class FailureLeafIntegrationTest {
 
     @Test
     fun `a closed port is ConnectFailed without OkHttp's wrapper or an address`() {
+        // A port that was bound and released a moment ago: nothing listens, so the connect is refused.
         val port = ServerSocket(0, 1, fleet.loopback).use { it.localPort }
         val failure = assertIs<TransportFailure.ConnectFailed>(fleet.fetch(transport(), fleet.get(url("http://127.0.0.1:$port/"))).exceptionOrNull())
         val cause = failure.cause
+        // Absent when OkHttp's `Failed to connect to` wrapper carried no JDK cause: the leaf then has no cause at all rather than the wrapper
+        // (FailureMapping's connectFailure).
         if (cause != null) {
             assertFalse(cause.message.orEmpty().contains("Failed to connect to"), cause.toString())
             assertFalse(cause.message.orEmpty().contains("127.0.0.1"), cause.toString())

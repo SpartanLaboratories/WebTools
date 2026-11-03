@@ -57,6 +57,7 @@ class PolicyEnforcementTransportIntegrationTest {
         val lookups = AtomicInteger()
         val resolve: (String) -> List<InetAddress> = { lookups.incrementAndGet(); answers.removeFirst() }
         val transport = fleet.track(LoopbackTransports.untrusted("agent", OutboundUrlPolicy.untrusted { allowedPorts = null }, resolve))
+        // Connection: close, so the second call opens a new connection and asks the resolver again; a reused pooled connection would never see the rebind.
         server.enqueue(MockResponse.Builder().addHeader("Connection", "close").body("first").build())
         server.enqueue(MockResponse(body = "second"))
         val target = url("http://rebind.test:${server.port}/")

@@ -81,6 +81,7 @@ class ToMockResponseComponentTest {
     @Test
     fun `a Transfer-Encoding fixture to GET is chunked with no Content-Length`() {
         val response = fixture(200, "body") { add("Transfer-Encoding", "chunked"); add("X-A", "1") }.toMockResponse()
+        // Lowercased because chunkedBody writes its header in its own spelling, `Transfer-encoding`; every other test compares names as given.
         val names = pairs(response).map { it.first.lowercase() }
         assertEquals(listOf("x-a", "transfer-encoding"), names)
         assertEquals("chunked", response.headers["Transfer-Encoding"])
