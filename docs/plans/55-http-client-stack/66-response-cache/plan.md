@@ -26,7 +26,7 @@
   - the KDoc lists of `ExperimentalForInheritanceWebToolsApi` and `WebToolsDsl`, the builder list of `WebToolsDslComponentTest`, the KDoc of
     `VirtualClockThreeClocksComponentTest`, the regenerated ABI dump, the `README.md` row and the `CHANGELOG.md` entry;
   - the tests of all of it (Level 1 to Level 4c and a Level 5 manual pass).
-- **Status:** planning only.
+- **Status:** built; the as-built record, with every deviation from this plan, is [`final-implementation.md`](final-implementation.md).
 - **Version moved:** none. `webtools-http` `1.0.0` stays unreleased and this landing is **not a release candidate**. No existing module moves a version and
   no build line changes (`caffeine` 3.3.1 is already a `jvmMain` `implementation` dependency of `webtools-http`).
 - **Baseline:** `master` at `e8f0a88` plus the research commits. Line references are to it.
