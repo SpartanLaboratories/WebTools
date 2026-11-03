@@ -1,11 +1,11 @@
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-03T00:33:36Z",
+  "generated": "2026-11-03T19:24:14Z",
   "asOf": "2026-11-03",
   "tree": {
-    "ref": "feat/issue-65-okhttp-transport",
-    "sha": "db82470"
+    "ref": "master",
+    "sha": "38483ea"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -57,8 +57,8 @@
       "name": "response cache",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-budget",
@@ -142,9 +142,9 @@
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "5 of 11 units landed; #65 in progress; #66 up next.",
+      "detail": "6 of 11 units landed; #66 in progress; #67 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-01T17:10:00Z",
+      "updated": "2026-11-03T02:17:16Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -152,13 +152,13 @@
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 5,
+        "landed": 6,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 5,
+        "landed": 6,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -166,14 +166,14 @@
         "done": false,
         "current": [
           {
-            "issue": 65,
-            "slug": "okhttp-transport",
+            "issue": 66,
+            "slug": "response-cache",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 66,
-          "slug": "response-cache",
+          "issue": 67,
+          "slug": "call-budget",
           "blockedBy": []
         }
       },
@@ -456,7 +456,9 @@
         },
         {
           "issue": 65,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T01:09:31Z",
           "hold": "enables"
         }
       ],
@@ -544,7 +546,9 @@
       "blocks": [
         {
           "issue": 65,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T01:09:31Z",
           "hold": "enables"
         }
       ],
@@ -615,7 +619,8 @@
     {
       "issue": 65,
       "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -640,17 +645,17 @@
         {
           "issue": 68,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/65-okhttp-transport/dashboard.html",
       "folder": "55-http-client-stack/65-okhttp-transport/",
-      "branch": "feat/issue-65-okhttp-transport",
+      "branch": null,
       "system": "webtools-http-transport",
-      "step": "document",
-      "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
-      "since": "2026-11-03T00:00:03Z",
-      "updated": "2026-11-03T00:33:11Z",
+      "step": "landed",
+      "detail": "Merged through PR #88 as e8f0a88: `OkHttpTransport` and its factory in `webtools-http`, the one-exchange guard, manual redirects and a capped body, with the loopback test factories; ten deviations recorded; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-11-03T01:09:30Z",
+      "updated": "2026-11-03T01:09:30Z",
       "qa": [
         {
           "pass": 1,
@@ -691,15 +696,20 @@
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 88,
+        "merge": "e8f0a88",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-11-03"
+      },
       "reconciliation": {
-        "state": "planned",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "OkHttp transport",
       "group": "55",
       "order": 6
@@ -735,20 +745,63 @@
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/66-response-cache/dashboard.html",
+      "folder": "55-http-client-stack/66-response-cache/",
+      "branch": "feat/issue-66-response-cache",
       "system": "webtools-http-cache",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
+      "step": "document",
+      "detail": "Document: 5 of 6 tasks done; State boards current.",
+      "since": "2026-11-03T18:33:16Z",
+      "updated": "2026-11-03T19:10:20Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-03",
+          "at": "2026-11-03T04:48:46Z",
+          "findings": {
+            "test": 7,
+            "code": 0
+          },
+          "severity": {
+            "minor": 5,
+            "other": 2
+          },
+          "route": "remediation",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html",
+          "note": "Code review passed: the implementation is the plan's design as written, the ABI diff is additions only, and all six acceptance criteria are met. Seven test findings, in the As built rows the fixes touch: two uncovered defensive branches in CaffeineResponseCache, each wanting one Level 2 method (`close`: a foreign cancellation of the shared future read as closed; `failure-value`: an Error thrown by the load dispatcher mapped to fatal); six runBlocking methods in LoaderRunnerComponentTest to move under runTest and one test name to reword (`component-tests`); two Level 4a table rows for CacheExpiry and CacheEntry.isFailure (`deterministic-tests`); and the P5 procedure and an acceptance mapping missing from the as-built record (`release`, whose verdict names P5). Suite: 883 passed, 0 failed, 0 skipped."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-11-03",
+          "at": "2026-11-03T18:24:12Z",
+          "findings": {
+            "test": 0,
+            "code": 1
+          },
+          "severity": {
+            "minor": 1,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html",
+          "note": "Test audit: compliant at every level, and all seven remediations from pass 1 hold. Code review: one minor finding, in the As built row the fix touches (`caffeine-default`, whose verdict logs `DEBUG` once per load end): the load body logs its \"load ended\" line before knowing whether its completion won, so a result a mid-flight `close()` or `invalidate(key)` discards still reads `stored`, and after `close()` a second line follows, against the once-per-load-end rule (plan.md R12, §6.9). The fix logs the line only when the completion wins. Suite: 887 passed, 0 failed, 0 skipped.",
+          "inPlace": "fixed"
+        }
+      ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
       "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [],
+      "reconciliation": {
+        "state": "planned",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "response cache",
       "group": "55",
       "order": 7
@@ -792,10 +845,12 @@
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [],
       "systemName": "call budget",
       "group": "55",
       "order": 8
@@ -821,8 +876,10 @@
         },
         {
           "issue": 65,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T01:09:31Z",
+          "build": "clear",
           "locality": "local-repository"
         }
       ],
@@ -1022,7 +1079,8 @@
         {
           "issue": 65,
           "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 66,

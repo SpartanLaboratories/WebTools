@@ -1,7 +1,7 @@
 {
   "slug": "webtools",
   "version": null,
-  "asIs": {"ref": "feat/issue-65-okhttp-transport", "sha": "db82470", "date": "2026-11-02T04:13:24Z"},
-  "lastAmended": {"issue": 65, "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories", "sha": "db82470"},
-  "written": {"sha": "db82470"}
+  "asIs": {"ref": "feat/issue-66-response-cache", "sha": "38483ea", "date": "2026-11-03T18:39:52Z"},
+  "lastAmended": {"issue": 66, "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default", "sha": "38483ea"},
+  "written": {"sha": "38483ea"}
 }

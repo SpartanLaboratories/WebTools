@@ -563,6 +563,14 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   `Missing` (a confirmed miss is a value, never null and never a failure); `CacheStats`;
   `ResponseCache.Disabled` (pass-through: no storage, no sharing; the only implementation
   constructible in common code).
+  > **Corrected 2026-11-03 (#66 as built):** the overload without `maxAge` has a body that passes
+  > `Duration.INFINITE`, and a negative `maxAge` throws `IllegalArgumentException`; `getOrLoad`
+  > checks the caller's cancellation first, so a cancelled caller gets its `CancellationException`
+  > even on a hit. A policy is built as `CachePolicy(ttl) { missTtl = … }`: `missTtl`, 60 s by
+  > default, is a builder property, not a second parameter. `Found(value)` weighs 1 and
+  > `Found(value, weight)` refuses a weight below 1, because Caffeine never evicts an entry of
+  > weight 0 for size. `ResponseCache.Disabled.close()` does nothing, so a client may close it.
+  > See `66-response-cache/consequences.md` §5.
 - **Owns (`jvm/`):** `CaffeineResponseCache`, final, factory + builder over `timeSource`
   (default `TimeSource.Monotonic`), `maxWeight` (1,000; weight 1 per entry unless the loader
   reports one), `loadDispatcher` (default `Dispatchers.Default`), `maintenanceExecutor`
@@ -576,6 +584,20 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   cancellation leaves the load and the other waiters intact; a load nobody waits for still
   completes and lands; `maxAge` is an age check on read with a compare-and-remove (one load
   for N stale callers); `close()` cancels the scope and completes every waiter with `Closed`.
+  > **Corrected 2026-11-03 (#66 as built):** no `recordStats()`, and one `evictionListener` that
+  > counts size removals only, because Caffeine's `evictionCount` also counts expiry and failure
+  > removals; the cache keeps its hit, miss, eviction and failed-load counts itself. A fatal
+  > `Error` is carried by value too, never as an exceptional completion, and rethrown to every
+  > waiter as the same instance; a loader's own cancellation (a `withTimeout` inside it) is an
+  > `IllegalStateException` failure, never `Closed`; a completed entry of zero lifetime is treated
+  > as absent; a `Found` heavier than `maxWeight` is delivered and never stored. The load scope
+  > also carries a `CoroutineExceptionHandler` that logs a load coroutine's failure outside the
+  > loader (a rejected dispatch) once at `WARN`. The load's body, the starting call's re-check of
+  > the closed flag with `close()`'s sweep, and the job's completion handler each complete the
+  > shared future, and the first wins: `close()` sets the flag, cancels the scope, completes every
+  > future still in the map itself, without waiting for a loader to unwind, and clears the map.
+  > The cache's `DEBUG` line for a load's end is written once, by the completion that wins. See
+  > `66-response-cache/consequences.md` §5.
 - **Does not own:** what is a miss (the endpoint declares it), the budget (it runs inside the
   loader the facade supplies), raw bodies (an endpoint that wants bytes decodes to
   `HttpResponse`).
@@ -1044,7 +1066,7 @@ What crosses each boundary:
 
 | From → to | Crosses | Kind | Contract |
 |---|---|---|---|
-| facade → `ResponseCache` | `CacheKey`, `CachePolicy`, `maxAge`, a suspend loader | call | one load per key at a time; failures never stored; `Closed` after `close()` |
+| facade → `ResponseCache` | `CacheKey`, `CachePolicy`, `maxAge`, a suspend loader | call | one load per key at a time; failures never stored; `Closed` after `close()` (**Corrected 2026-11-03 (#66 as built):** `Closed("cache")`; a negative `maxAge` throws `IllegalArgumentException`; a loader's `Error` is rethrown to every waiter, and its own cancellation is an `IllegalStateException` failure) |
 | cache loader → `CallBudget` | `cost`, `lane`, `maxWait` → `Permit`; `RateSignals` on `complete` | call | fail fast beyond the cap; charged at grant; `complete`/`release` idempotent, `NonCancellable` |
 | loader → `HttpTransport` | `HttpRequest` → `Result<HttpResponse>` | call | one request per hop; capped body; `304` is a response; cancellation thrown |
 | transport → policy | `UrlGuard.checkHop`/`checkAddress` | call (pure) | a `RefusalReason?` (**Corrected 2026-10-26 (#64 as built):** an internal refusal holding the `RefusalReason` and, for `DeniedAddress`, the range class); no I/O; coarse reasons |

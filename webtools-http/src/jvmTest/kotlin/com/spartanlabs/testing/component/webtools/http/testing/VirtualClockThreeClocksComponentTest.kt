@@ -21,9 +21,11 @@ import kotlin.time.TimeSource
 /**
  * Level 2 - the three clocks move together: a Caffeine cache whose ticker reads `clock.timeSource` and
  * whose maintenance runs on `clock.maintenanceExecutor`, a `delay` on `clock.dispatcher`, and a UTC-minute
- * index from `clock.wallClock`, all driven by one `advanceBy`. Caffeine stands in for the cache a later
- * unit builds. The control shows why the proof is needed: a cache on `TimeSource.Monotonic` beside the same
- * virtual clock does not expire, so one clock of three would pass for the wrong reason.
+ * index from `clock.wallClock`, all driven by one `advanceBy`. A plain Caffeine cache keeps the proof of the
+ * clock apart from the response cache; `CaffeineResponseCacheThreeClocksComponentTest` proves the same with
+ * the real `CaffeineResponseCache`. The control shows why the proof is needed: a cache on
+ * `TimeSource.Monotonic` beside the same virtual clock does not expire, so one clock of three would pass
+ * for the wrong reason.
  */
 class VirtualClockThreeClocksComponentTest {
 

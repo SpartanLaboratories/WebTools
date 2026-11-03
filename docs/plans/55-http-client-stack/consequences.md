@@ -186,9 +186,9 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 | 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 to 6 as built
+## 8. What the later units build on: units 1 to 7 as built
 
-Units 1 to 6 are built.
+Units 1 to 7 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -213,6 +213,10 @@ Units 1 to 6 are built.
   [`65-okhttp-transport/final-implementation.md`](65-okhttp-transport/final-implementation.md). Its
   contracts for the later units are pinned in [`65-okhttp-transport/plan.md`](65-okhttp-transport/plan.md)
   §12 and summarised in [`65-okhttp-transport/consequences.md`](65-okhttp-transport/consequences.md) §4.
+- **Unit 7, `response-cache` (#66).** Its as-built record is
+  [`66-response-cache/final-implementation.md`](66-response-cache/final-implementation.md). Its
+  contracts for the later units are pinned in [`66-response-cache/plan.md`](66-response-cache/plan.md)
+  §12 and summarised in [`66-response-cache/consequences.md`](66-response-cache/consequences.md) §4.
 
 What they settle for the units still to come:
 

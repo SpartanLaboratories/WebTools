@@ -1,3 +1,83 @@
+public final class com/spartanlabs/webtools/http/CacheKey {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndpointId ()Ljava/lang/String;
+	public final fun getParams ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/CachePolicy {
+	public static final field Companion Lcom/spartanlabs/webtools/http/CachePolicy$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMissTtl-UwyO8pc ()J
+	public final fun getTtl-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/CachePolicy$Builder {
+	public final fun getMissTtl-UwyO8pc ()J
+	public final fun setMissTtl-LRDsOJo (J)V
+}
+
+public final class com/spartanlabs/webtools/http/CachePolicy$Companion {
+	public final fun getDEFAULT_MISS_TTL-UwyO8pc ()J
+}
+
+public final class com/spartanlabs/webtools/http/CachePolicyKt {
+	public static final fun CachePolicy-VtjQ1oo (JLkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/CachePolicy;
+	public static synthetic fun CachePolicy-VtjQ1oo$default (JLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/CachePolicy;
+}
+
+public final class com/spartanlabs/webtools/http/CacheStats {
+	public static final field Companion Lcom/spartanlabs/webtools/http/CacheStats$Companion;
+	public fun <init> (JJJJ)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvictions ()J
+	public final fun getFailedLoads ()J
+	public final fun getHits ()J
+	public final fun getMisses ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/CacheStats$Companion {
+	public final fun getEmpty ()Lcom/spartanlabs/webtools/http/CacheStats;
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCache : com/spartanlabs/webtools/http/ResponseCache {
+	public static final field Companion Lcom/spartanlabs/webtools/http/CaffeineResponseCache$Companion;
+	public static final field DEFAULT_MAX_WEIGHT J
+	public fun close ()V
+	public fun getOrLoad-3utLRjc (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getOrLoad-BWLJW6A (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun invalidate (Lcom/spartanlabs/webtools/http/CacheKey;)V
+	public fun invalidateAll ()V
+	public fun stats ()Lcom/spartanlabs/webtools/http/CacheStats;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCache$Builder {
+	public final fun getLoadDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public final fun getMaintenanceExecutor ()Ljava/util/concurrent/Executor;
+	public final fun getMaxWeight ()J
+	public final fun getTimeSource ()Lkotlin/time/TimeSource;
+	public final fun setLoadDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun setMaintenanceExecutor (Ljava/util/concurrent/Executor;)V
+	public final fun setMaxWeight (J)V
+	public final fun setTimeSource (Lkotlin/time/TimeSource;)V
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCache$Companion {
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCacheKt {
+	public static final fun CaffeineResponseCache (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
+	public static synthetic fun CaffeineResponseCache$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
+}
+
 public final class com/spartanlabs/webtools/http/CidrBlock {
 	public static final field Companion Lcom/spartanlabs/webtools/http/CidrBlock$Companion;
 	public synthetic fun <init> ([BILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -157,6 +237,24 @@ public final class com/spartanlabs/webtools/http/HttpTransport$DefaultImpls {
 	public static fun close (Lcom/spartanlabs/webtools/http/HttpTransport;)V
 }
 
+public abstract interface class com/spartanlabs/webtools/http/Lookup {
+}
+
+public final class com/spartanlabs/webtools/http/Lookup$Found : com/spartanlabs/webtools/http/Lookup {
+	public fun <init> (Ljava/lang/Object;)V
+	public fun <init> (Ljava/lang/Object;I)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Object;
+	public final fun getWeight ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/Lookup$Missing : com/spartanlabs/webtools/http/Lookup {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/Lookup$Missing;
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/spartanlabs/webtools/http/MixedAnswers : java/lang/Enum {
 	public static final field DropDenied Lcom/spartanlabs/webtools/http/MixedAnswers;
 	public static final field Reject Lcom/spartanlabs/webtools/http/MixedAnswers;
@@ -267,6 +365,31 @@ public final class com/spartanlabs/webtools/http/RequestBody {
 	public final fun bytes ()[B
 	public final fun getContentType ()Ljava/lang/String;
 	public final fun getSize ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/ResponseCache : java/lang/AutoCloseable {
+	public fun close ()V
+	public abstract fun getOrLoad-3utLRjc (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getOrLoad-BWLJW6A (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun invalidate (Lcom/spartanlabs/webtools/http/CacheKey;)V
+	public abstract fun invalidateAll ()V
+	public abstract fun stats ()Lcom/spartanlabs/webtools/http/CacheStats;
+}
+
+public final class com/spartanlabs/webtools/http/ResponseCache$DefaultImpls {
+	public static fun close (Lcom/spartanlabs/webtools/http/ResponseCache;)V
+	public static fun getOrLoad-BWLJW6A (Lcom/spartanlabs/webtools/http/ResponseCache;Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/ResponseCache$Disabled : com/spartanlabs/webtools/http/ResponseCache {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/ResponseCache$Disabled;
+	public fun close ()V
+	public fun getOrLoad-3utLRjc (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getOrLoad-BWLJW6A (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun invalidate (Lcom/spartanlabs/webtools/http/CacheKey;)V
+	public fun invalidateAll ()V
+	public fun stats ()Lcom/spartanlabs/webtools/http/CacheStats;
 	public fun toString ()Ljava/lang/String;
 }
 

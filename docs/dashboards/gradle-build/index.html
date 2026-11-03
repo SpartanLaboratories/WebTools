@@ -398,6 +398,8 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 footer code{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* an archived system holds no colour (GUIDANCE.md §1): the board's three sides neutral, the sides told apart by their labels */
+:root:has(.chip[data-sys-status="archived"]){--server:var(--muted);--client:var(--muted);--wire:var(--muted);--server-soft:var(--surface-2);--client-soft:var(--surface-2);--wire-soft:var(--surface-2)}
 </style>
 </head>
 <body>
