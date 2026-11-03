@@ -48,6 +48,7 @@ class CaffeineResponseCacheSizeBoundNonFunctionalTest {
 
     @Test
     fun `20000 inserts from 8 workers leave the weighted size within the bound`(): Unit = runBlocking {
+        // Fixed seed (the issue number) so the weights, and any failure, are reproducible.
         val weights = Random(66).let { random -> IntArray(KEYS) { random.nextInt(1, 6) } }
         val cache = CaffeineResponseCache { maxWeight = MAX_WEIGHT }
         try {

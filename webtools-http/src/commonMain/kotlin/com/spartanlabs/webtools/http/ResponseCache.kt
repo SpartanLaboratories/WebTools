@@ -4,6 +4,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlin.time.Duration
 
+// `commonMain` cannot link a `jvmMain` type, so the KDoc below names `CaffeineResponseCache` in code font, not as a link.
 /**
  * Stores the decoded answer of a load for a bounded time and serves it to any number of concurrent callers from one load; failures are never stored.
  *
@@ -15,14 +16,14 @@ import kotlin.time.Duration
  * 3. `maxAge`: a stored entry whose age exceeds it is not served (an age at most `maxAge` is served, as RFC 9111's `max-age` request directive reads). The call loads,
  *    or joins a load already in flight, which counts as fresh. At most one reload per call.
  * 4. A loader's `Exception` becomes the call's failure, the same instance for every waiter. An `Error` is rethrown to every waiter. A cancellation the loader throws, or
- *    returns inside `Result.failure`, while its caller is still active becomes `Result.failure(IllegalStateException(…, cause))`; a `CancellationException` is never put
- *    inside a `Result`.
+ *    returns inside `Result.failure`, while the coroutine running the loader is still active (the caller's for [Disabled]; the cache's own, until [close], for a cache
+ *    that loads in its own scope) becomes `Result.failure(IllegalStateException(…, cause))`; a `CancellationException` is never put inside a `Result`.
  * 5. A caller's own cancellation is thrown as `CancellationException` and cancels only that caller. A caller that is already cancelled gets it even on a hit.
  * 6. After [close], [getOrLoad] returns `Result.failure(HttpFailure.Closed("cache"))` without running the loader, and a call waiting on a load when [close] runs returns
  *    the same. [close] is idempotent, non-suspending and never throws. [Disabled], which stores nothing and is shared, ignores [close].
  * 7. After [invalidate], the next call for the key loads anew; a load in flight still completes for the calls already waiting and its result is not stored.
  *    [invalidateAll] is the same for every key. Both never throw and are no-ops after [close].
- * 8. [stats] is a snapshot of four counts.
+ * 8. [stats] is an immutable reading of four counts; the four are read separately, not as one atomic snapshot.
  * 9. Every member may be called concurrently from any thread.
  * 10. The key's type parameter is not part of its equality: one endpoint id serves one value type; a second type under the same id is a programming error.
  * 11. A negative `maxAge` is a programmer error: `IllegalArgumentException("maxAge must not be negative")`.
@@ -30,8 +31,7 @@ import kotlin.time.Duration
  * A loader must not wait for a load of its own key. A supplied loader runs in the cache's own scope, not in the caller's; [Disabled] runs it on the caller's coroutine.
  *
  * **Experimental (implement).** Implementing or delegating to this interface needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`; calling it and passing it are
- * Stable Core, and the supplied [Disabled] and the JVM's `CaffeineResponseCache` need no opt-in. (`commonMain` cannot link a `jvmMain` type, so
- * `CaffeineResponseCache` is named in code font, not as a link.)
+ * Stable Core, and the supplied [Disabled] and the JVM's `CaffeineResponseCache` need no opt-in.
  */
 @SubclassOptInRequired(ExperimentalForInheritanceWebToolsApi::class)
 public interface ResponseCache : AutoCloseable {
@@ -42,7 +42,7 @@ public interface ResponseCache : AutoCloseable {
      * @param policy how long the load's outcome is stored (used only by the call that starts the load).
      * @param maxAge the oldest stored answer this call accepts; [Duration.INFINITE] accepts any live entry; not negative.
      * @param loader produces the outcome: `Found`/`Missing` are stored, a failure is not.
-     * @return the outcome, or the loader's failure, or `Closed("cache")` after [close].
+     * @return `Result.success` of the loader's [Lookup]; `Result.failure` of the loader's failure; or `Result.failure` of [HttpFailure.Closed] (component `"cache"`) after [close].
      * @throws IllegalArgumentException if [maxAge] is negative.
      * @throws kotlinx.coroutines.CancellationException if the caller is cancelled.
      * @throws Error if the loader threw one (the same instance for every waiter).
@@ -86,7 +86,7 @@ public interface ResponseCache : AutoCloseable {
     /**
      * Reads the four counts (contract point 8).
      *
-     * @return a snapshot of the four counts; the four are read separately, not as one atomic snapshot.
+     * @return an immutable reading of the four counts, read separately, not atomically.
      */
     public fun stats(): CacheStats
 

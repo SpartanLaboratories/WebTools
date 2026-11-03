@@ -26,7 +26,8 @@ public class CachePolicy internal constructor(
     override fun toString(): String = "CachePolicy(ttl=$ttl, missTtl=$missTtl)"
 
     /**
-     * Collects the optional properties of a [CachePolicy]. Not thread-safe; use it only inside the factory's lambda. **Stable Core.** A later `staleFor` is added here.
+     * Collects the optional properties of a [CachePolicy]. Not thread-safe; use it only inside the factory's lambda. **Stable Core.** Today its only property is
+     * [missTtl]; further optional policy properties, when they exist, are added here rather than to the factory's parameter list.
      */
     @WebToolsDsl
     public class Builder internal constructor() {

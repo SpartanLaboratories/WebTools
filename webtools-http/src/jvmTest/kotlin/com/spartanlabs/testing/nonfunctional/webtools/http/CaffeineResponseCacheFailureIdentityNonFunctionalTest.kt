@@ -35,6 +35,7 @@ class CaffeineResponseCacheFailureIdentityNonFunctionalTest {
     @Test
     fun `no retry receives the failure its joiner just received`(): Unit = runBlocking {
         val cores = Runtime.getRuntime().availableProcessors()
+        // Fixed seed (the issue number) so a failing round is reproducible.
         val random = Random(66)
         val cache = CaffeineResponseCache()
         try {

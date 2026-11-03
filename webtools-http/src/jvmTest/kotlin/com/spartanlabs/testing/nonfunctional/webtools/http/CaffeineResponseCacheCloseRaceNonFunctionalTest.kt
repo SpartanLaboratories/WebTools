@@ -50,13 +50,17 @@ class CaffeineResponseCacheCloseRaceNonFunctionalTest {
     @Volatile
     private var sink = 0
 
-    /** Spins for [iterations] volatile writes, so the closer lands at a different point of the callers' progress on each round. */
+    /**
+     * Spins for [iterations] volatile writes, so the closer lands at a different point of the callers' progress on each round. The rounds draw
+     * [iterations] from 0 to 19 999: a few microseconds to a few milliseconds on current hardware, spanning the callers' insert-to-recheck window.
+     */
     private fun spin(iterations: Int) {
         repeat(iterations) { sink++ }
     }
 
     @Test
     fun `every call returns a value or Closed while close races getOrLoad`(): Unit = runBlocking {
+        // Fixed seed (the issue number) so a failing round is reproducible.
         val random = Random(66)
         repeat(ROUNDS) { round ->
             val cache = CaffeineResponseCache { maxWeight = 100 }

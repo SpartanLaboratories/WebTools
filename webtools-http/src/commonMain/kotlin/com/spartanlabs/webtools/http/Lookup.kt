@@ -18,7 +18,7 @@ public sealed interface Lookup<out V : Any> {
      *
      * @param value the decoded value.
      * @param weight how much of the cache's `maxWeight` the value uses: at least 1.
-     * @throws IllegalArgumentException if [weight] is below 1 (Caffeine never size-evicts an entry of weight 0).
+     * @throws IllegalArgumentException if [weight] is below 1: a weightless entry would escape any size bound.
      */
     public class Found<out V : Any>(
         /** The decoded value. */

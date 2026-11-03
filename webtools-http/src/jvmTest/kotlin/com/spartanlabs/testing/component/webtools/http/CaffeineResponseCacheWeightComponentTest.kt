@@ -108,6 +108,7 @@ class CaffeineResponseCacheWeightComponentTest {
     fun `the bound holds after each of 200 inserts of mixed weights`() = runTest {
         val clock = virtualClock()
         val log = LoadLog()
+        // Fixed seed (the issue number) so a failing insert is reproducible.
         val random = Random(66)
         cacheOn(clock) { maxWeight = this@CaffeineResponseCacheWeightComponentTest.maxWeight }.use { cache ->
             repeat(200) { i ->

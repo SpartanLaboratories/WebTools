@@ -55,6 +55,7 @@ class CacheKeyCanonicalFormDeterministicTest {
 
     @Test
     fun `the sort agrees with a stable reference over 200 seeded random lists`() {
+        // Fixed seed (the issue number) so a failing round is reproducible.
         val random = Random(66)
         val names = listOf("a", "b", "c", "d", "e")
         repeat(200) { round ->
