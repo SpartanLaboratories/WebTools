@@ -15,6 +15,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   sensitive headers on an origin change; reads a capped, decoded body inside the callback so cancelling the caller
   stops the read; refuses twelve request headers the transport controls; maps every OkHttp failure onto
   `TransportFailure`; and closes with `close()`.
+- `webtools-http` (unreleased, `1.0.0`): the response cache. The port `ResponseCache` (`getOrLoad` with and without
+  a per-call `maxAge`, `invalidate`, `invalidateAll`, `stats`, `close`; implementing it needs the opt-in) with its
+  values `CacheKey`, `CachePolicy` (built with `CachePolicy(ttl) { missTtl = … }`), `Lookup` (`Found`, with a weight
+  of at least 1, and `Missing`) and `CacheStats`; `ResponseCache.Disabled`, the pass-through that stores and shares
+  nothing; and `CaffeineResponseCache`, the supplied JVM cache, built with `CaffeineResponseCache { }`: N concurrent
+  callers of one key cost one load, a value and a confirmed miss are stored for their own lifetimes, a weight bound
+  limits what is stored, a `Found` heavier than `maxWeight` is delivered but not stored, failures are never stored,
+  a loader's `Error` reaches every waiter, `close()` ends every waiting call with `Closed`, and one `DEBUG` line per
+  load end says whether the result was stored or why not. Its `timeSource`, `loadDispatcher` and
+  `maintenanceExecutor` are builder properties, so one virtual clock drives it under test.
 - `webtools-http` test fixtures: `LoopbackTransports.untrusted` and `trusted`, `MockWebServer.webtoolsUrl(path)`,
   `Fixture.toMockResponse(method)` and `MockWebServer.enqueue(fixture, method)`.
 
