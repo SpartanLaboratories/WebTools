@@ -9,7 +9,7 @@
   "title": "OkHttp transport",
   "issueTitle": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
   "function": "Nothing in `webtools-http` reaches the network yet: #62 built the `HttpTransport` port and the failure model, #63 the fixtures with a fake transport and `mockwebserver3` on their API, and #64 the outbound-URL policies and the resolver and socket guards, which no client applies (#55 architecture §6.3.2). This run adds `OkHttpTransport`, built by a factory over an `internal` constructor, with the redirect loop, the one-exchange guard, the capped body read inside the callback, the failure mapping, `close()` and its logging, and adds the loopback factories and `MockWebServer` helpers to the fixtures, with Level 3 and Level 4c tests. Unit 6 of #55: the transport subsystem of `webtools-http`, with additions to its published test fixtures; additive, no version moved; sizing the dispatcher from the budget's `maxBurst` is unit 9's.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-11-01T17:10:00Z",
   "parent": {
     "issue": 55,
@@ -22,7 +22,31 @@
     "sha": "53965c8",
     "date": "2026-10-26"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "e8f0a88",
+    "merge": "e8f0a88",
+    "pr": 88,
+    "date": "2026-11-03",
+    "at": "2026-11-03T01:09:30Z",
+    "commits": [
+      {
+        "sha": "0a64484",
+        "at": "2026-11-01T17:48:00Z",
+        "step": "research"
+      },
+      {
+        "sha": "1b9aabf",
+        "at": "2026-11-01T18:15:04Z",
+        "step": "research"
+      },
+      {
+        "sha": "aac2a81",
+        "at": "2026-11-01T18:23:40Z",
+        "step": "research"
+      }
+    ],
+    "version": "none moved; webtools-http 1.0.0 new, unreleased"
+  },
   "systems": [
     {
       "slug": "webtools-http-transport",
@@ -42,10 +66,10 @@
     }
   ],
   "wip": {
-    "step": "document",
-    "since": "2026-11-03T00:00:03Z",
-    "updated": "2026-11-03T00:33:11Z",
-    "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
+    "step": "landed",
+    "since": "2026-11-03T01:09:30Z",
+    "updated": "2026-11-03T01:09:30Z",
+    "detail": "Merged through PR #88 as e8f0a88: `OkHttpTransport` and its factory in `webtools-http`, the one-exchange guard, manual redirects and a capped body, with the loopback test factories; ten deviations recorded; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
     "steps": [
       "sizing",
       "interview",
@@ -60,9 +84,7 @@
       "merge",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "questions": [],
     "research": null,
     "interview": [],
@@ -193,9 +215,8 @@
       }
     ],
     "event": {
-      "name": "run-restarted",
-      "at": "2026-11-03T00:33:11Z",
-      "note": "run not running 19 h 43 min: session restart"
+      "name": "landed",
+      "at": "2026-11-03T01:09:30Z"
     },
     "history": {
       "sizing": [
@@ -688,6 +709,84 @@
             ]
           },
           "outage": "session restart"
+        },
+        {
+          "since": "2026-11-03T00:00:03Z",
+          "ended": "2026-11-03T01:07:32Z",
+          "endedBy": "landing",
+          "to": "landing",
+          "event": {
+            "name": "run-restarted",
+            "at": "2026-11-03T00:33:11Z",
+            "note": "run not running 19 h 43 min: session restart"
+          },
+          "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review of the change set",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Apply the review's findings to KDoc and comments; second review",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards at the code-landing commit",
+                "state": "done"
+              },
+              {
+                "id": "prepare-landing",
+                "name": "Commit the change set, sync with master, no version bump",
+                "state": "done"
+              }
+            ]
+          }
+        }
+      ],
+      "landing": [
+        {
+          "since": "2026-11-03T01:07:32Z",
+          "ended": "2026-11-03T01:09:18Z",
+          "endedBy": "merge",
+          "to": "merge",
+          "event": {
+            "name": "landing",
+            "at": "2026-11-03T01:07:32Z",
+            "note": "land accepted, PR #88"
+          },
+          "detail": "Landing: the land accepted in PR #88; the branch carries the code, the version bump, the reconciled documents and the state boards."
+        }
+      ],
+      "merge": [
+        {
+          "since": "2026-11-03T01:09:18Z",
+          "ended": "2026-11-03T01:09:30Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-11-03T01:09:30Z"
+          },
+          "detail": "Landed in PR #88."
         }
       ]
     },
@@ -792,7 +891,7 @@
         {
           "id": "state-boards",
           "name": "State boards at the code-landing commit",
-          "state": "current"
+          "state": "done"
         },
         {
           "id": "prepare-landing",
@@ -852,6 +951,13 @@
       "date": "2026-11-02",
       "ref": "plan.md",
       "note": "after the test-coverage review, so a Level 2 test reaches the deadline check before a later hop: two defaulted `internal` parameters trail the transport's constructor, the shared deadline's `TimeSource` and each hop's `Call.Factory`, with stage S6a, procedure P13 and mutations 14 to 16; the public factory, the ABI dump and the fixtures do not change. Every Verdict statement still rests on its section; the plan before the amendment is kept in `superseded/plan-2026-11-02.md`"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-11-03",
+      "ref": "PR #88",
+      "note": "the research 0a64484 to aac2a81; the controlled headers and the pure parts 962bbe3, the transport dd4097e, the fixtures 357554a, the Level 3 and Level 4c suites 300fb67 and the in-flight close case db82470, the code-landing commit; the README and changelog 4d5be37, the KDoc and test comments 1a7174c, the as-built record 53b4bf4 and the boards d4dfa2c and f82485e; merged as e8f0a88. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -1049,6 +1155,30 @@
       "date": "2026-11-03",
       "column": "built",
       "label": "Run not running for 19 h 43 min, not counted: session restart"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Document: State boards at the code-landing commit done, committed as f82485e",
+      "ref": "f82485e"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Landing: the land accepted in PR #88",
+      "ref": "PR #88"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Merge: merging it in PR #88",
+      "ref": "PR #88"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Landed in PR #88, merge e8f0a88",
+      "ref": "PR #88"
     }
   ],
   "rows": [
@@ -2826,8 +2956,80 @@
         "link": "plan.md#11-version-control"
       },
       "asBuilt": {
-        "state": "partially-built",
-        "summary": "Built: the ABI dump grew by exactly the `OkHttpTransport` class (`close`, `execute`, `toString`) and its factory, nothing internal, and `apiCheck` passes; no version moved and no other module changed. Left: the README delta, the new `CHANGELOG.md`, the parent architecture's dated corrections and the branch's commits, none written yet."
+        "state": "amended",
+        "statements": [
+          {
+            "text": "No version moved: `webtools-http` stays new and unreleased at `1.0.0`, this landing is not a release candidate, and no other module moved.",
+            "state": "as-planned",
+            "ref": "consequences.md#1-published-artifacts",
+            "excerpt": {
+              "ref": "consequences.md#1-published-artifacts",
+              "heading": "1. Published artifacts",
+              "paragraph": "What a consumer of `webtools-http` 1.0.0 gets from this unit:",
+              "hash": "ab74ca754c0d"
+            }
+          },
+          {
+            "text": "The ABI dump grew by ten lines, exactly the `OkHttpTransport` class with `close`, `execute` and `toString` and `OkHttpTransportKt` with the factory, and holds nothing `internal`; `apiCheck` passes.",
+            "state": "as-planned",
+            "ref": "final-implementation.md#3-acceptance",
+            "excerpt": {
+              "ref": "final-implementation.md#3-acceptance",
+              "heading": "3. Acceptance",
+              "paragraph": "The plan's acceptance items, with the runs that show them (§4):",
+              "hash": "2d5a2ccedc59"
+            }
+          },
+          {
+            "text": "`README.md` names the transport in the `webtools-http` row and the loopback fixtures in the fixtures paragraph, and the new `CHANGELOG.md` carries the entry under `## [Unreleased]`, in `4d5be37`.",
+            "state": "as-planned",
+            "ref": "final-implementation.md#3-acceptance",
+            "excerpt": {
+              "ref": "final-implementation.md#3-acceptance",
+              "heading": "3. Acceptance",
+              "paragraph": "The plan's acceptance items, with the runs that show them (§4):",
+              "hash": "2d5a2ccedc59"
+            }
+          },
+          {
+            "text": "`architecture.md` carries the dated corrections (2026-11-02) at §6.3.2, §6.6, §6.7 and §7.3, and at §13 for the `CHANGELOG.md`, written in the as-built reconciliation, `53b4bf4`.",
+            "state": "as-planned",
+            "ref": "consequences.md#documentation",
+            "excerpt": {
+              "ref": "consequences.md#documentation",
+              "heading": "Documentation",
+              "paragraph": "`README.md`: the `webtools-http` row of the artifacts table names the OkHttp transport, and the test-fixtures paragraph names the loopback fixtures. · `CHANGELOG.md` is created with this unit, in the Keep a Changelog layout, its entry under `## [Unreleased]`. · KDoc on every new public declaration states its tier and contract; `HttpHeaders.addSensitive`'s KDoc, which already says the transport strips a sensitive header on a cross-origin hop, becomes true. · `../architecture.md` carries dated corrections (2026-11-02) at §6.3.2, §6.6, §6.7 and §7.3 for the points of §5, and at §13 for the …",
+              "hash": "ed720966732c"
+            }
+          },
+          {
+            "text": "The six commits of §11 stand on the branch, the first carrying the plan; a fifth code commit, `db82470`, and a commit for the KDoc and test comments, `1a7174c`, were added, and `LogCapture.kt` rode commit 2, not commit 4.",
+            "state": "amended",
+            "ref": "final-implementation.md#d10-one-case-of-cancellationintegrationtest-ran-only-once-its-result-type-was-declared",
+            "excerpt": {
+              "ref": "final-implementation.md#d10-one-case-of-cancellationintegrationtest-ran-only-once-its-result-type-was-declared",
+              "heading": "D10. One case of `CancellationIntegrationTest` ran only once its result type was declared",
+              "paragraph": "Plan: §9 Level 3, `CancellationIntegrationTest`: \"`close()` during an in-flight call (a slow drip) ends it with `Closed(\"transport\")`, and every later call is `Closed`\"; §11 lists four code commits. · As built: the case was written as `fun … = runBlocking { … }` ending in `assertIs<HttpFailure.Closed>(…)`, so the function returned that value, and JUnit Jupiter does not run a test method that returns one: every run of §4 before the fix, P7's and the first two forced runs included, executed 3 of the class's 4 cases (93 of the 94 Level 3 methods), with no failure or skip to show for it. The …",
+              "hash": "985ac36e8ad2"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "what": "A fifth code commit, `db82470`, declares the in-flight close case of `CancellationIntegrationTest` `Unit`: JUnit Jupiter does not run a test method that returns a value, so the case had not run.",
+            "why": "The as-built reconciliation found it by comparing each class's test methods with its result XML; no production code changed.",
+            "when": "the as-built reconciliation",
+            "ref": "db82470",
+            "link": "final-implementation.md#d10-one-case-of-cancellationintegrationtest-ran-only-once-its-result-type-was-declared"
+          },
+          {
+            "what": "`LogCapture.kt` is in commit 2, `dd4097e`, not commit 4.",
+            "why": "Five Level 2 classes of that commit capture the transport's log lines through it, and each commit leaves the build green.",
+            "when": "implementation",
+            "ref": "dd4097e",
+            "link": "final-implementation.md#d9-logcapturekt-is-in-commit-2-not-commit-4"
+          }
+        ]
       }
     },
     {
@@ -2917,7 +3119,7 @@
     }
   ],
   "impact": {
-    "basis": "plan",
+    "basis": "as-built",
     "summary": "`webtools-http`, new and unreleased, gains its supplied transport: the final `OkHttpTransport` and its factory, Stable Core, the first thing that applies the outbound-URL policy to a network fetch, with one request per hop, redirects followed by the transport, a capped decoded body and twelve refused request headers. The test fixtures gain four loopback helpers, and the fake's cap follows the transport's no-body rule. No dependency of either variant changes, the three existing artifacts do not, and no version moves.",
     "none": null,
     "release": {
@@ -2997,7 +3199,7 @@
         "who": "Unit 9, the call facades (#68)",
         "system": "webtools-http-transport",
         "need": "required",
-        "summary": "It builds each transport with the factory after deriving the policy with `withSettings` to raise concurrency to the budget's burst, can refuse a controlled default header when a client is built, through the `internal` list, and settles the permit-release rule against what each failure implies about what was sent: the architecture's rule is exact only for `InvalidRequest`.",
+        "summary": "It builds each transport with the factory after deriving the policy with `withSettings` to raise concurrency to the budget's burst, can refuse a controlled default header when a client is built, through the `internal` list, and settles the permit-release rule against what each failure implies about what was sent: the architecture's rule is exact only for `InvalidRequest`. Its two further `internal` constructor parameters, the deadline's `TimeSource` and each hop's `Call.Factory`, are for the module's own tests; the facades never pass them.",
         "link": "plan.md#12-interfaces-with-sibling-units"
       },
       {
@@ -3044,13 +3246,179 @@
       }
     ],
     "conversion": [],
-    "changes": [],
-    "source": "consequences.md; plan.md",
+    "changes": [
+      {
+        "what": "The `internal` constructor takes two further defaulted parameters, the shared deadline's `TimeSource` and each hop's `Call.Factory`, passed only by the module's own Level 2 test; the call facades never pass them.",
+        "why": "The plan's amendment of 2026-11-02 after the test-coverage review (stage S6a), so a Level 2 test reaches the deadline check before a later hop. The public factory, the dump and the fixtures do not change.",
+        "when": "S6a (the plan's amendment)",
+        "ref": "consequences.md#4-sibling-units",
+        "entry": "adaptation.0",
+        "system": "webtools-http-transport"
+      },
+      {
+        "what": "`UrlParseLinearTimeNonFunctionalTest`, landed with #62 and untouched here, exceeds its bound while the five level tasks run concurrently and passes on its own; it is WebTools#87.",
+        "why": "It failed in the test-coverage review's forced run; the follow-up belongs to the test, not to this change.",
+        "when": "the test-coverage review",
+        "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+        "entry": "downstream.5"
+      },
+      {
+        "what": "The systems-level document is `../consequences.md`: it was `impact.md` until this landing, and the sub-issue folders from before it keep their own `impact.md`.",
+        "why": "The rename rides the as-built reconciliation, with the one line this unit adds there.",
+        "when": "the as-built reconciliation",
+        "ref": "consequences.md#documentation"
+      }
+    ],
+    "source": "consequences.md, reconciled with final-implementation.md; plan.md",
     "link": "consequences.md#1-published-artifacts"
   },
   "tests": {
     "updated": "2026-11-02T03:16:00Z",
     "added": [
+      {
+        "class": "LoopbackTransportsConsumerGatingTest",
+        "module": "webtools-http",
+        "testLevel": "1",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/testing/LoopbackTransportsConsumerGatingTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "OkHttpTransportConsumerGatingTest",
+        "module": "webtools-http",
+        "testLevel": "1",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/OkHttpTransportConsumerGatingTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "CallBridgeComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CallBridgeComponentTest.kt",
+        "tests": 6,
+        "result": {
+          "state": "passed",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "CallDeadlineComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CallDeadlineComponentTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "CappedBodyComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CappedBodyComponentTest.kt",
+        "tests": 8,
+        "result": {
+          "state": "passed",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "DispatcherExecutorComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/DispatcherExecutorComponentTest.kt",
+        "tests": 4,
+        "result": {
+          "state": "passed",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ExchangeGuardComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/ExchangeGuardComponentTest.kt",
+        "tests": 9,
+        "rows": [
+          "one-exchange"
+        ],
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "FailureReportComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/FailureReportComponentTest.kt",
+        "tests": 5,
+        "result": {
+          "state": "passed",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "FunctionDnsComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FunctionDnsComponentTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "HopRequestComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/HopRequestComponentTest.kt",
+        "tests": 8,
+        "result": {
+          "state": "passed",
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
       {
         "class": "HopResponseComponentTest",
         "module": "webtools-http",
@@ -3062,51 +3430,70 @@
           "body-read",
           "one-exchange"
         ],
-        "stage": "R1"
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
-        "class": "ThrowableSearchDeterministicTest",
+        "class": "LoopbackTransportsComponentTest",
         "module": "webtools-http",
-        "testLevel": "4a",
-        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ThrowableSearchDeterministicTest.kt",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/LoopbackTransportsComponentTest.kt",
         "tests": 5,
-        "rows": [
-          "failure-mapping"
-        ],
-        "stage": "R1"
+        "result": {
+          "state": "passed",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
-        "class": "RestoredStatusDeterministicTest",
+        "class": "MockWebServerEnqueueComponentTest",
         "module": "webtools-http",
-        "testLevel": "4a",
-        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RestoredStatusDeterministicTest.kt",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/MockWebServerEnqueueComponentTest.kt",
         "tests": 3,
-        "rows": [
-          "one-exchange"
-        ],
-        "stage": "R1"
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
-        "class": "BodyExpectedDeterministicTest",
+        "class": "OkHttpTransportCloseComponentTest",
         "module": "webtools-http",
-        "testLevel": "4a",
-        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyExpectedDeterministicTest.kt",
-        "tests": 2,
-        "rows": [
-          "body-read"
-        ],
-        "stage": "R1"
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportCloseComponentTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
-        "class": "TransportControlledHeadersDeterministicTest",
+        "class": "OkHttpTransportConstructionComponentTest",
         "module": "webtools-http",
-        "testLevel": "4a",
-        "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/TransportControlledHeadersDeterministicTest.kt",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportConstructionComponentTest.kt",
         "tests": 5,
-        "rows": [
-          "transport"
-        ],
-        "stage": "R1"
+        "result": {
+          "state": "passed",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
         "class": "OkHttpTransportDeadlineComponentTest",
@@ -3118,40 +3505,28 @@
           "transport",
           "redirects"
         ],
-        "stage": "R2"
+        "stage": "R2",
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
-        "class": "WebtoolsUrlComponentTest",
+        "class": "OkHttpTransportPreflightComponentTest",
         "module": "webtools-http",
         "testLevel": "2",
-        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/WebtoolsUrlComponentTest.kt",
-        "tests": 3,
-        "rows": [
-          "fixtures"
-        ]
-      },
-      {
-        "class": "ReceiveHeadersDeterministicTest",
-        "module": "webtools-http",
-        "testLevel": "4a",
-        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ReceiveHeadersDeterministicTest.kt",
-        "tests": 4,
-        "rows": [
-          "body-read"
-        ]
-      }
-    ],
-    "amended": [
-      {
-        "class": "ExchangeGuardComponentTest",
-        "module": "webtools-http",
-        "testLevel": "2",
-        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/ExchangeGuardComponentTest.kt",
-        "tests": 9,
-        "rows": [
-          "one-exchange"
-        ],
-        "stage": "R1"
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportPreflightComponentTest.kt",
+        "tests": 6,
+        "result": {
+          "state": "passed",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       },
       {
         "class": "ReceivedResponseComponentTest",
@@ -3162,7 +3537,598 @@
         "rows": [
           "body-read"
         ],
-        "stage": "R1"
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ToMockResponseComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/ToMockResponseComponentTest.kt",
+        "tests": 9,
+        "result": {
+          "state": "passed",
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "TransportClientComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/TransportClientComponentTest.kt",
+        "tests": 6,
+        "result": {
+          "state": "passed",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "WebtoolsUrlComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/WebtoolsUrlComponentTest.kt",
+        "tests": 3,
+        "rows": [
+          "fixtures"
+        ],
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "BodyCapIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/BodyCapIntegrationTest.kt",
+        "tests": 6,
+        "result": {
+          "state": "passed",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "CancellationIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/CancellationIntegrationTest.kt",
+        "tests": 4,
+        "result": {
+          "state": "passed",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ControlledHeadersIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ControlledHeadersIntegrationTest.kt",
+        "tests": 4,
+        "result": {
+          "state": "passed",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "CrossOriginStripIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/CrossOriginStripIntegrationTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ExchangeCountIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ExchangeCountIntegrationTest.kt",
+        "tests": 6,
+        "result": {
+          "state": "passed",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ExchangeGuardStatusIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ExchangeGuardStatusIntegrationTest.kt",
+        "tests": 5,
+        "result": {
+          "state": "passed",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ExchangeGuardWireIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ExchangeGuardWireIntegrationTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "FailureLeafIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/FailureLeafIntegrationTest.kt",
+        "tests": 6,
+        "result": {
+          "state": "passed",
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "FixtureRoundTripIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/FixtureRoundTripIntegrationTest.kt",
+        "tests": 4,
+        "result": {
+          "state": "passed",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "HttpsRedirectIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/HttpsRedirectIntegrationTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "JvmExitIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/JvmExitIntegrationTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "MainSafetyIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/MainSafetyIntegrationTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "PolicyEnforcementTransportIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/PolicyEnforcementTransportIntegrationTest.kt",
+        "tests": 4,
+        "result": {
+          "state": "passed",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ProxySettingsIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ProxySettingsIntegrationTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ReceivedHeadersIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ReceivedHeadersIntegrationTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "RedirectFollowingIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/RedirectFollowingIntegrationTest.kt",
+        "tests": 9,
+        "result": {
+          "state": "passed",
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "RedirectRefusalIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/RedirectRefusalIntegrationTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "SocksProxySettingsIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/SocksProxySettingsIntegrationTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "TlsFailureIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/TlsFailureIntegrationTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "TransportLoggingIntegrationTest",
+        "module": "webtools-http",
+        "testLevel": "3",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/TransportLoggingIntegrationTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "BodyExpectedDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyExpectedDeterministicTest.kt",
+        "tests": 2,
+        "rows": [
+          "body-read"
+        ],
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "BodyRequiredMethodDifferentialDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyRequiredMethodDifferentialDeterministicTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "FailureMappingDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/FailureMappingDeterministicTest.kt",
+        "tests": 13,
+        "result": {
+          "state": "passed",
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "HeadersForHopDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HeadersForHopDeterministicTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "LoopbackUrlTextDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/LoopbackUrlTextDeterministicTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ReceiveHeadersDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ReceiveHeadersDeterministicTest.kt",
+        "tests": 4,
+        "rows": [
+          "body-read"
+        ],
+        "result": {
+          "state": "passed",
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "RedirectDecisionDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RedirectDecisionDeterministicTest.kt",
+        "tests": 11,
+        "result": {
+          "state": "passed",
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "RestoredStatusDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RestoredStatusDeterministicTest.kt",
+        "tests": 3,
+        "rows": [
+          "one-exchange"
+        ],
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "ThrowableSearchDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ThrowableSearchDeterministicTest.kt",
+        "tests": 5,
+        "rows": [
+          "failure-mapping"
+        ],
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "TransportControlledHeadersDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/TransportControlledHeadersDeterministicTest.kt",
+        "tests": 5,
+        "rows": [
+          "transport"
+        ],
+        "stage": "R1",
+        "result": {
+          "state": "passed",
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "UserAgentDeterministicTest",
+        "module": "webtools-http",
+        "testLevel": "4a",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UserAgentDeterministicTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "EndlessBodyNonFunctionalTest",
+        "module": "webtools-http",
+        "testLevel": "4c",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/EndlessBodyNonFunctionalTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "HostileStatusLineNonFunctionalTest",
+        "module": "webtools-http",
+        "testLevel": "4c",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/HostileStatusLineNonFunctionalTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "RedirectChainCapNonFunctionalTest",
+        "module": "webtools-http",
+        "testLevel": "4c",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/RedirectChainCapNonFunctionalTest.kt",
+        "tests": 1,
+        "result": {
+          "state": "passed",
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "SlowDripNonFunctionalTest",
+        "module": "webtools-http",
+        "testLevel": "4c",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/SlowDripNonFunctionalTest.kt",
+        "tests": 2,
+        "result": {
+          "state": "passed",
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      },
+      {
+        "class": "TransportSecrecyNonFunctionalTest",
+        "module": "webtools-http",
+        "testLevel": "4c",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/TransportSecrecyNonFunctionalTest.kt",
+        "tests": 3,
+        "result": {
+          "state": "passed",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
+      }
+    ],
+    "amended": [
+      {
+        "class": "FakeHttpTransportComponentTest",
+        "module": "webtools-http",
+        "testLevel": "2",
+        "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FakeHttpTransportComponentTest.kt",
+        "tests": 22,
+        "result": {
+          "state": "passed",
+          "passed": 22,
+          "failed": 0,
+          "skipped": 0,
+          "at": "2026-11-02T03:16:00Z"
+        }
       }
     ],
     "relevant": [
@@ -3277,7 +4243,8 @@
           }
         }
       }
-    }
+    },
+    "base": "53965c8"
   },
   "roadmap": {
     "issue": 55,
@@ -3413,7 +4380,8 @@
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
     "63": "../63-test-support/dashboard.html",
-    "64": "../64-url-policy/dashboard.html"
+    "64": "../64-url-policy/dashboard.html",
+    "66": "../66-response-cache/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

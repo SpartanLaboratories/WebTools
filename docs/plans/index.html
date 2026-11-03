@@ -243,7 +243,8 @@ pre.src{margin:0;background:var(--surface-2);border:1px solid var(--line);border
 .docs a{text-decoration:none;border-bottom:1px solid var(--line);color:var(--ink)}
 footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
 footer code{color:var(--ink-2)}
-/* an archived system (registry status "archived", dashboards-skill/35): a neutral tag beside its name */
+/* an archived system (registry status "archived", dashboards-skill/35): neutral through its slot 0, solid, faded, a neutral tag beside its name */
+.sysarch,.sbar.arch{opacity:.6;filter:saturate(.35)}
 .archtag{display:inline-block;font:700 10px/1.2 var(--mono);letter-spacing:.04em;color:var(--ink-2);padding:1px 5px;border:1px solid var(--muted);border-radius:3px;background:var(--surface-2);margin-left:4px}
 </style>
 </head>
@@ -283,11 +284,11 @@ footer code{color:var(--ink-2)}
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-03T00:33:36Z",
+  "generated": "2026-11-03T19:24:14Z",
   "asOf": "2026-11-03",
   "tree": {
-    "ref": "feat/issue-65-okhttp-transport",
-    "sha": "db82470"
+    "ref": "master",
+    "sha": "38483ea"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -339,8 +340,8 @@ footer code{color:var(--ink-2)}
       "name": "response cache",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-budget",
@@ -424,9 +425,9 @@ footer code{color:var(--ink-2)}
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "5 of 11 units landed; #65 in progress; #66 up next.",
+      "detail": "6 of 11 units landed; #66 in progress; #67 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-01T17:10:00Z",
+      "updated": "2026-11-03T02:17:16Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -434,13 +435,13 @@ footer code{color:var(--ink-2)}
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 5,
+        "landed": 6,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 5,
+        "landed": 6,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -448,14 +449,14 @@ footer code{color:var(--ink-2)}
         "done": false,
         "current": [
           {
-            "issue": 65,
-            "slug": "okhttp-transport",
+            "issue": 66,
+            "slug": "response-cache",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 66,
-          "slug": "response-cache",
+          "issue": 67,
+          "slug": "call-budget",
           "blockedBy": []
         }
       },
@@ -738,7 +739,9 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 65,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T01:09:31Z",
           "hold": "enables"
         }
       ],
@@ -826,7 +829,9 @@ footer code{color:var(--ink-2)}
       "blocks": [
         {
           "issue": 65,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T01:09:31Z",
           "hold": "enables"
         }
       ],
@@ -897,7 +902,8 @@ footer code{color:var(--ink-2)}
     {
       "issue": 65,
       "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -922,17 +928,17 @@ footer code{color:var(--ink-2)}
         {
           "issue": 68,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/65-okhttp-transport/dashboard.html",
       "folder": "55-http-client-stack/65-okhttp-transport/",
-      "branch": "feat/issue-65-okhttp-transport",
+      "branch": null,
       "system": "webtools-http-transport",
-      "step": "document",
-      "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
-      "since": "2026-11-03T00:00:03Z",
-      "updated": "2026-11-03T00:33:11Z",
+      "step": "landed",
+      "detail": "Merged through PR #88 as e8f0a88: `OkHttpTransport` and its factory in `webtools-http`, the one-exchange guard, manual redirects and a capped body, with the loopback test factories; ten deviations recorded; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-11-03T01:09:30Z",
+      "updated": "2026-11-03T01:09:30Z",
       "qa": [
         {
           "pass": 1,
@@ -973,15 +979,20 @@ footer code{color:var(--ink-2)}
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 88,
+        "merge": "e8f0a88",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-11-03"
+      },
       "reconciliation": {
-        "state": "planned",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "OkHttp transport",
       "group": "55",
       "order": 6
@@ -1017,20 +1028,63 @@ footer code{color:var(--ink-2)}
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/66-response-cache/dashboard.html",
+      "folder": "55-http-client-stack/66-response-cache/",
+      "branch": "feat/issue-66-response-cache",
       "system": "webtools-http-cache",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
+      "step": "document",
+      "detail": "Document: 5 of 6 tasks done; State boards current.",
+      "since": "2026-11-03T18:33:16Z",
+      "updated": "2026-11-03T19:10:20Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-03",
+          "at": "2026-11-03T04:48:46Z",
+          "findings": {
+            "test": 7,
+            "code": 0
+          },
+          "severity": {
+            "minor": 5,
+            "other": 2
+          },
+          "route": "remediation",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html",
+          "note": "Code review passed: the implementation is the plan's design as written, the ABI diff is additions only, and all six acceptance criteria are met. Seven test findings, in the As built rows the fixes touch: two uncovered defensive branches in CaffeineResponseCache, each wanting one Level 2 method (`close`: a foreign cancellation of the shared future read as closed; `failure-value`: an Error thrown by the load dispatcher mapped to fatal); six runBlocking methods in LoaderRunnerComponentTest to move under runTest and one test name to reword (`component-tests`); two Level 4a table rows for CacheExpiry and CacheEntry.isFailure (`deterministic-tests`); and the P5 procedure and an acceptance mapping missing from the as-built record (`release`, whose verdict names P5). Suite: 883 passed, 0 failed, 0 skipped."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-11-03",
+          "at": "2026-11-03T18:24:12Z",
+          "findings": {
+            "test": 0,
+            "code": 1
+          },
+          "severity": {
+            "minor": 1,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html",
+          "note": "Test audit: compliant at every level, and all seven remediations from pass 1 hold. Code review: one minor finding, in the As built row the fix touches (`caffeine-default`, whose verdict logs `DEBUG` once per load end): the load body logs its \"load ended\" line before knowing whether its completion won, so a result a mid-flight `close()` or `invalidate(key)` discards still reads `stored`, and after `close()` a second line follows, against the once-per-load-end rule (plan.md R12, §6.9). The fix logs the line only when the completion wins. Suite: 887 passed, 0 failed, 0 skipped.",
+          "inPlace": "fixed"
+        }
+      ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
       "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [],
+      "reconciliation": {
+        "state": "planned",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "response cache",
       "group": "55",
       "order": 7
@@ -1074,10 +1128,12 @@ footer code{color:var(--ink-2)}
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [],
       "systemName": "call budget",
       "group": "55",
       "order": 8
@@ -1103,8 +1159,10 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 65,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T01:09:31Z",
+          "build": "clear",
           "locality": "local-repository"
         }
       ],
@@ -1304,7 +1362,8 @@ footer code{color:var(--ink-2)}
         {
           "issue": 65,
           "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 66,
@@ -1506,11 +1565,13 @@ const pair=(n,title,repo)=>{ const b=boardOf(n,repo), t=codeOnly(title), m=` dat
 /* #n and owner/repo#n are linked in one pass; "PR #n" is a pull request, never an issue's board */
 const rich=s=>String(s==null?"":s).split("`").map((p,i)=>i%2?`<code>${esc(p)}</code>`:esc(p).replace(/(^|[\s(>;,])(?:PR #(\d+)|([\w.-]+\/[\w.-]+)#(\d+)|#(\d+))\b/g,(m,a,pr,r,rn,n)=>a+(pr?ext(`https://github.com/${B.repo}/pull/${pr}`,`PR #${esc(pr)}`):r?ilink(rn,r):ilink(n)))).join("");
 const sysOf=sl=>SYS.find(s=>s.slug===sl);
-const sysColour=sl=>{ const s=sysOf(sl); return s&&s.slot>=1&&s.slot<=6?`var(--sys-${s.slot})`:"var(--muted)"; };
+/* an archived system holds no slot (GUIDANCE.md §1): board.js gives it slot 0; an entry written before keeps it neutral too */
+const sysLit=s=>!!s&&s.status!=="archived"&&s.slot>=1&&s.slot<=6;
+const sysColour=sl=>{ const s=sysOf(sl); return sysLit(s)?`var(--sys-${s.slot})`:"var(--muted)"; };
 function paint(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=>e.style.setProperty("--c",sysColour(e.dataset.sys))); }
 const STATUS={
   landed:{g:"✓",l:"landed",c:"good"}, complete:{g:"☑",l:"complete · not merged",c:"good",h:1}, building:{g:"●",l:"building",c:"neutral"}, planning:{g:"●",l:"planning",c:"neutral"},
-  halted:{g:"⏸",l:"waiting on the user",c:"warning"}, escalated:{g:"⇧",l:"escalated",c:"serious"}, abandoned:{g:"✕",l:"cancelled",c:"critical"},
+  halted:{g:"⏸",l:"waiting on you",c:"warning"}, escalated:{g:"⇧",l:"escalated",c:"serious"}, abandoned:{g:"✕",l:"cancelled",c:"critical"},
   next:{g:"→",l:"next · not started",c:"neutral",d:1}, "not-started":{g:"…",l:"not started",c:"neutral",d:1},
   "in-progress":{g:"▸",l:"in progress",c:"neutral",desc:"no board: a branch or an open pull request refers to it"}, merged:{g:"✓",l:"merged · awaiting close",c:"good",desc:"no board: its pull request merged, the issue still open"},
   "not-planned":{g:"⊖",l:"closed · not planned",c:"neutral",desc:"no board: closed on the tracker as not planned"},
@@ -1607,22 +1668,22 @@ function render(){
   const n=k=>ROWS.filter(r=>stOf(r)===k).length;
   const nexts=ROWS.filter(r=>stOf(r)==="next");
   /* the Runs tile's bar: every run by its state; the Landed tile's: landed, complete, merged, and the closed ones not counted */
-  const RUNSEG=[["landed","good","landed"],["merged","good","merged · awaiting close"],["complete","hollow","complete · not merged"],["building","accent","building"],["planning","accent","planning"],["in-progress","accent","in progress, no board"],["halted","warning","waiting on the user"],["escalated","serious","escalated"],["next","pln","next · not started"],["not-started","pln","not started"],["no-board","pln","no board"],["abandoned","critical","cancelled"],["not-planned","neutral","closed · not planned"],["duplicate","neutral","closed · duplicate"]];
+  const RUNSEG=[["landed","good","landed"],["merged","good","merged · awaiting close"],["complete","hollow","complete · not merged"],["building","accent","building"],["planning","accent","planning"],["in-progress","accent","in progress, no board"],["halted","warning","waiting on you"],["escalated","serious","escalated"],["next","pln","next · not started"],["not-started","pln","not started"],["no-board","pln","no board"],["abandoned","critical","cancelled"],["not-planned","neutral","closed · not planned"],["duplicate","neutral","closed · duplicate"]];
   const segOf=keys=>{ const parts=RUNSEG.filter(([k])=>keys.includes(k)).map(([k,c,l])=>({n:n(k),c,l:`${STATUS[k].g} ${l}`})).filter(p=>p.n);
     return parts.length?`<div class="seg-bar" role="img" aria-label="${esc(parts.map(p=>`${p.n} ${p.l}`).join(", "))}">${parts.map(p=>`<i class="${p.c}" style="flex:${p.n}" title="${esc(`${p.n} ${p.l}`)}"></i>`).join("")}</div><div class="key">${[...new Map(parts.map(p=>[p.c+p.l,p])).values()].map(p=>`<span><i class="segk ${p.c}"></i>${esc(p.l)}</span>`).join("")}</div>`:""; };
   const bars={Runs:segOf(RUNSEG.map(x=>x[0])),Landed:segOf(["landed","complete","merged","not-planned","duplicate"])};
-  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on the user",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div>${bars[l]||""}</div>`).join("");
+  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on you",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div>${bars[l]||""}</div>`).join("");
   let h=`<thead><tr><th>Issue</th><th>State</th><th>Now</th><th>QA</th><th>Depends on</th><th>Blocks · enables</th></tr></thead><tbody>`;
   (B.groups||[]).forEach(g=>{ const rs=ROWS.filter(r=>r.group===g.key).sort((a,b)=>a.order-b.order); if(!rs.length) return;
     h+=`<tr class="grp"><th colspan="6">${g.issue?pair(g.issue,g.title):esc(g.title)}</th></tr>`;
     rs.forEach(r=>{ const st=stOf(r), qa=qaShown(r);
       /* "closed" beside a clear dependency says nothing its pill does not: only a closing reason is kept there */
       const iss=(x,bub,dep)=>{ const cw=closedWord(x), say=cw&&!(dep&&x.build==="clear"&&cw==="closed"); return `<span class="dep">${ilink(x.issue,x.repo)} ${bub}${say?`<small>${esc(cw)}</small>`:""}</span>`; };
-      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}${r.systemArchived?` <span class="archtag">⊟ archived</span>`:""}${r.parent?` · part of ${ilink(r.parent)}`:""}${r.fixOf?` · fix to ${ilink(r.fixOf)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}${r.branch?`<div class="sub">branch <code>${esc(r.branch)}</code></div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.length?`<div class="qas">${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return `<span class="qa1">${pill(d,`${ordinal(p.pass)} · ${d.l}`)}${inPlaceMark(p)}</span>`; }).join("")}</div>`:""}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`<div class="deps">${r.waitsOn.map(x=>iss(x,depPill(x),1)).join("")}</div>`:""}</td><td>${(r.blocks||[]).length?`<div class="deps">${r.blocks.map(x=>iss(x,pill(HOLD[holdOf(x,r)]))).join("")}</div>`:""}</td></tr>`; }); });
+      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="${r.systemArchived?"sysarch":""}"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}</span>${r.systemArchived?` <span class="archtag">⊟ archived</span>`:""}${r.parent?` · part of ${ilink(r.parent)}`:""}${r.fixOf?` · fix to ${ilink(r.fixOf)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}${r.branch?`<div class="sub">branch <code>${esc(r.branch)}</code></div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.length?`<div class="qas">${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return `<span class="qa1">${pill(d,`${ordinal(p.pass)} · ${d.l}`)}${inPlaceMark(p)}</span>`; }).join("")}</div>`:""}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`<div class="deps">${r.waitsOn.map(x=>iss(x,depPill(x),1)).join("")}</div>`:""}</td><td>${(r.blocks||[]).length?`<div class="deps">${r.blocks.map(x=>iss(x,pill(HOLD[holdOf(x,r)]))).join("")}</div>`:""}</td></tr>`; }); });
   $("#runs").innerHTML=h+"</tbody>"; paint($("#runs"));
-  const tops=new Map(); ROWS.forEach(r=>{ const s=sysOf(r.system), k=s&&s.slot>=1&&s.slot<=6?s.slot:0; if(!tops.has(k)) tops.set(k,{c:sysColour(r.system),n:new Set()}); tops.get(k).n.add(k?(s.top||s.name):"no system colour"); });
+  const tops=new Map(); ROWS.filter(r=>!r.systemArchived).forEach(r=>{ const s=sysOf(r.system), k=sysLit(s)?s.slot:0; if(!tops.has(k)) tops.set(k,{c:sysColour(r.system),n:new Set()}); tops.get(k).n.add(k?(s.top||s.name):"no system colour"); });
   const used=new Set(ROWS.filter(r=>!r.chain||["halted","escalated","abandoned"].includes(stOf(r))).map(stOf)), qv=new Set(ROWS.flatMap(r=>qaShown(r).map(p=>p.verdict))), dv=new Set(ROWS.flatMap(r=>(r.waitsOn||[]).map(x=>x.build).filter(k=>DEP[k]))), lv=new Set(ROWS.flatMap(r=>(r.waitsOn||[]).map(locOf).filter(Boolean).map(L=>L.k))), dn=ROWS.some(r=>(r.waitsOn||[]).some(x=>x.why)), hv=new Set(ROWS.flatMap(r=>(r.blocks||[]).map(x=>holdOf(x,r))));
-  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.systemArchived)?`<span><span class="archtag">⊟ archived</span>its system is archived: no longer developed</span>`:"")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} ${v==="running"?"the qa pass running now":"a qa pass's verdict"}, by its number: 1st, 2nd, 3rd</span>`).join("")+["fixed","fixing"].map(k=>ROWS.flatMap(r=>qaShown(r)).find(p=>p.inPlace===k)).filter(Boolean).map(p=>`<span>${inPlaceMark(p)} ${esc(INPLACE.desc[p.inPlace])}</span>`).join("")+Object.keys(DEP).filter(k=>dv.has(k)).map(k=>`<span>${pill(DEP[k])} a dependency's build state: ${esc(DEP[k].desc)}</span>`).join("")+Object.keys(LOC).filter(k=>lv.has(k)).map(k=>`<span>${locChip({k},k==="external"?"external · name":"")} a dependency's locality: ${esc(LOC[k].desc)}</span>`).join("")+(dn?`<span>a dependency with no build state or locality drawn: no rule fits (its reason on hover)</span>`:"")+Object.keys(HOLD).filter(k=>hv.has(k)).map(k=>`<span>${pill(HOLD[k])} ${esc(HOLD[k].desc)}</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on the user</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
+  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.systemArchived)?`<span><i class="sbar arch" style="--c:var(--muted)"></i><span class="archtag">⊟ archived</span>its system is archived: no longer developed, no colour of its own</span>`:"")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} ${v==="running"?"the qa pass running now":"a qa pass's verdict"}, by its number: 1st, 2nd, 3rd</span>`).join("")+["fixed","fixing"].map(k=>ROWS.flatMap(r=>qaShown(r)).find(p=>p.inPlace===k)).filter(Boolean).map(p=>`<span>${inPlaceMark(p)} ${esc(INPLACE.desc[p.inPlace])}</span>`).join("")+Object.keys(DEP).filter(k=>dv.has(k)).map(k=>`<span>${pill(DEP[k])} a dependency's build state: ${esc(DEP[k].desc)}</span>`).join("")+Object.keys(LOC).filter(k=>lv.has(k)).map(k=>`<span>${locChip({k},k==="external"?"external · name":"")} a dependency's locality: ${esc(LOC[k].desc)}</span>`).join("")+(dn?`<span>a dependency with no build state or locality drawn: no rule fits (its reason on hover)</span>`:"")+Object.keys(HOLD).filter(k=>hv.has(k)).map(k=>`<span>${pill(HOLD[k])} ${esc(HOLD[k].desc)}</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on you</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
   const cards=[];
   cards.push(`<div class="card"><h3>Roadmap <small>${(B.roadmap||[]).length} item${(B.roadmap||[]).length===1?"":"s"} · ${day(B.asOf||"")}</small></h3>${(B.roadmap||[]).length?`<ul class="issues">${B.roadmap.map(m=>`<li><span class="nm">${pair(m.issue,m.title)}</span><ul class="issues">${(m.items||[]).map(i=>`<li><span class="nm">${i.title?pair(i.issue,i.title):ilink(i.issue)} <small>${esc(closedWord(i)||(i.state||"").toLowerCase())}</small></span></li>`).join("")}</ul></li>`).join("")}</ul>`:`<p class="lede">No tracking issue is open.</p>`}</div>`);
   const un=B.unscheduled||[];
@@ -1631,7 +1692,7 @@ function render(){
   $("#context").innerHTML=cards.join(""); paint($("#context"));
   /* the Context's legend (GUIDANCE.md §2): the system swatches its cards drew, and the muted one of an issue with no system */
   const sws=[...$("#context").querySelectorAll(".sw[data-sys]")].map(e=>e.dataset.sys), ctops=new Map();
-  sws.forEach(sl=>{ const s=sysOf(sl), k=s&&s.slot>=1&&s.slot<=6?s.slot:0; if(!ctops.has(k)) ctops.set(k,{c:sysColour(sl),n:new Set()}); ctops.get(k).n.add(k?(s.top||s.name):"no system recorded"); });
+  sws.forEach(sl=>{ const s=sysOf(sl), k=sysLit(s)?s.slot:0; if(!ctops.has(k)) ctops.set(k,{c:sysColour(sl),n:new Set()}); ctops.get(k).n.add(k?(s.top||s.name):"no system recorded"); });
   let ck=document.getElementById("context-key"); const kh=[...ctops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("");
   if(!kh){ if(ck) ck.remove(); } else { if(!ck){ ck=document.createElement("div"); ck.className="key"; ck.id="context-key"; $("#context").parentElement.appendChild(ck); } ck.innerHTML=kh; }
   /* the footer (GUIDANCE.md §3): what the board corresponds to and what is authoritative; nothing more */

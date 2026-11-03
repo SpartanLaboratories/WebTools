@@ -7,7 +7,6 @@ window.dashboardLive&&window.dashboardLive("plan",
   "slug": "55-http-client-stack",
   "folder": "docs/plans/55-http-client-stack",
   "kind": "tracking",
-  "level": 4,
   "title": "HTTP client stack",
   "issueTitle": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
   "function": "BotTools needs a suspend HTTP stack: a transport, an outbound-URL guard, a response cache, a call budget and test fakes. This tracking issue designs it as a new Kotlin Multiplatform module `webtools-http`, a feeds module `webtools-feeds` on top of it, the shared `build-logic` with the Java 11 floor that folds in #47, and their documentation, and builds it as eleven units, each a sub-issue planned and built on its own board.",
@@ -66,8 +65,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       "name": "response cache",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-budget",
@@ -105,8 +104,8 @@ window.dashboardLive&&window.dashboardLive("plan",
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-11-01T17:10:00Z",
-    "detail": "5 of 11 units landed; #65 in progress; #66 up next.",
+    "updated": "2026-11-03T02:17:16Z",
+    "detail": "6 of 11 units landed; #66 in progress; #67 up next.",
     "steps": [
       "sizing",
       "interview",
@@ -117,9 +116,9 @@ window.dashboardLive&&window.dashboardLive("plan",
       "landed"
     ],
     "current": [
-      "okhttp-transport.built"
+      "response-cache.built"
     ],
-    "next": "response-cache",
+    "next": "call-budget",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -295,6 +294,16 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-01",
       "column": "built",
       "label": "#65 started"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "#65 landed"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "#66 started"
     }
   ],
   "rows": [
@@ -308,7 +317,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 1,
         "slug": "build-logic",
         "issue": 61,
-        "level": 3,
         "blockedBy": [],
         "versions": "none: published POMs and metadata identical",
         "branch": "feat/issue-61-build-logic",
@@ -458,7 +466,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 2,
         "slug": "java-floor",
         "issue": 47,
-        "level": 2,
         "blockedBy": [
           61
         ],
@@ -605,7 +612,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 3,
         "slug": "http-core",
         "issue": 62,
-        "level": 3,
         "blockedBy": [
           61,
           47
@@ -785,7 +791,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 4,
         "slug": "test-support",
         "issue": 63,
-        "level": 3,
         "blockedBy": [
           62
         ],
@@ -1264,7 +1269,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#67-published-test-support",
               "heading": "6.7 Published test support",
               "paragraph": "Responsibility: make the production stack testable without bending it: a clock, a script engine, a fixture codec, a loopback factory, a recorder. · Placement: `fixtures/`, package `com.spartanlabs.webtools.http.testing`, a JVM-only `testFixtures` compilation associated with `main` (so it reaches `internal` declarations) and published as two variants (`testFixturesApiElements`, `testFixturesRuntimeElements`, capability `io.github.spartanlaboratories:webtools-http-test-fixtures:<v>`, `TargetJvmVersion` from `JAVA_FLOOR`, `mapToMavenScope` + `mapToOptional`) through …",
-              "hash": "ebae2799fbaa"
+              "hash": "ec57681ae3d4"
             }
           },
           {
@@ -1274,7 +1279,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#67-published-test-support",
               "heading": "6.7 Published test support",
               "paragraph": "Responsibility: make the production stack testable without bending it: a clock, a script engine, a fixture codec, a loopback factory, a recorder. · Placement: `fixtures/`, package `com.spartanlabs.webtools.http.testing`, a JVM-only `testFixtures` compilation associated with `main` (so it reaches `internal` declarations) and published as two variants (`testFixturesApiElements`, `testFixturesRuntimeElements`, capability `io.github.spartanlaboratories:webtools-http-test-fixtures:<v>`, `TargetJvmVersion` from `JAVA_FLOOR`, `mapToMavenScope` + `mapToOptional`) through …",
-              "hash": "ebae2799fbaa"
+              "hash": "ec57681ae3d4"
             }
           },
           {
@@ -1332,7 +1337,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 5,
         "slug": "url-policy",
         "issue": 64,
-        "level": 3,
         "blockedBy": [
           62
         ],
@@ -3103,7 +3107,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 6,
         "slug": "okhttp-transport",
         "issue": 65,
-        "level": 3,
         "blockedBy": [
           64,
           63
@@ -3112,757 +3115,153 @@ window.dashboardLive&&window.dashboardLive("plan",
         "branch": null,
         "folder": "65-okhttp-transport/",
         "board": "65-okhttp-transport/dashboard.html",
-        "live": {
-          "step": "document",
-          "since": "2026-11-03T00:00:03Z",
-          "updated": "2026-11-03T00:33:11Z",
-          "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "document",
-            "landing",
-            "merge",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-11-02",
-              "at": "2026-11-02T00:08:52Z",
-              "findings": {
-                "test": 4,
-                "code": 0
-              },
-              "severity": {
-                "minor": 2,
-                "other": 2
-              },
-              "route": "remediation",
-              "report": "build/reports/tests/index.html",
-              "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html",
-              "note": "Code review passed: every plan item built, all eight acceptance criteria met, the issue's scope and the sibling interfaces hold. Four test findings, all in the As built rows the fixes touch: HopResponse.settleResponse has no isolated Level 2 component test; no test at any level reaches the hop loop's pre-hop deadline branch (under 1 ms left gives Timeout with no Call); Throwable.firstInChain has no direct Level 4a deterministic test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite: 711 passed, 0 failed, 0 skipped."
-            },
-            {
-              "pass": 2,
-              "verdict": "changes-requested",
-              "date": "2026-11-02",
-              "at": "2026-11-02T02:06:09Z",
-              "findings": {
-                "test": 2,
-                "code": 0
-              },
-              "severity": {
-                "minor": 2,
-                "other": 0
-              },
-              "route": "on-the-spot",
-              "report": "build/reports/tests/index.html",
-              "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html",
-              "note": "Code review passed: the deadline seam is inert at its defaults, the public factory and the ABI dump are unchanged, and every moved assertion is preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. All four pass-1 findings verified answered. Two minor test findings, both in the As built rows the fixes touch, fixed on the spot: the fixture `webtoolsUrl`'s three refusal branches have no test (a `WebtoolsUrlComponentTest` is added); `receiveHeaders`' four pure table cases sit at Level 2 rather than 4a (moved, for consistency with pass 1). Suite, all five levels forced: 731 passed, 1 failed, 0 skipped. The one failure is not this change's: #62's untouched `UrlParseLinearTimeNonFunctionalTest` times out under parallel task execution and passes 31/31 in isolation, per its own documented policy; it is being filed as its own issue."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-65-okhttp-transport",
-          "event": {
-            "name": "run-restarted",
-            "at": "2026-11-03T00:33:11Z",
-            "note": "run not running 19 h 43 min: session restart"
-          },
-          "stages": [
-            {
-              "id": "S1",
-              "name": "TransportControlledHeaders and its component test; commoncheck compile",
-              "state": "done",
-              "rows": [
-                "transport"
-              ]
-            },
-            {
-              "id": "S2",
-              "name": "Pure parts with Level 2 and 4a tests",
-              "state": "done",
-              "rows": [
-                "transport",
-                "one-exchange",
-                "redirects",
-                "body-read",
-                "guards",
-                "failure-mapping"
-              ]
-            },
-            {
-              "id": "S3",
-              "name": "TransportClient, HopResponse, CallBridge, OkHttpTransport and factory; apiDump",
-              "state": "done",
-              "rows": [
-                "transport",
-                "one-exchange",
-                "redirects",
-                "body-read",
-                "guards",
-                "failure-mapping",
-                "lifecycle",
-                "release",
-                "dispatcher-sizing"
-              ]
-            },
-            {
-              "id": "S4",
-              "name": "Fixtures and the FakeHttpTransport cap rule",
-              "state": "done",
-              "rows": [
-                "fixtures"
-              ]
-            },
-            {
-              "id": "S5",
-              "name": "Level 3 suites against mockwebserver3",
-              "state": "done",
-              "rows": [
-                "integration-tests"
-              ]
-            },
-            {
-              "id": "S6",
-              "name": "Level 4c suites; verifyJavaFloor; full check; mutations",
-              "state": "done",
-              "rows": [
-                "nonfunctional-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "R1",
-              "name": "Remediation: HopResponseComponentTest, ThrowableSearchDeterministicTest, 4a placement of the table cases",
-              "state": "done",
-              "rows": [
-                "transport",
-                "one-exchange",
-                "body-read",
-                "failure-mapping"
-              ]
-            },
-            {
-              "id": "R2",
-              "name": "Remediation: time-source and call-factory seam on the transport's internal constructor, OkHttpTransportDeadlineComponentTest, procedure P13",
-              "state": "done",
-              "rows": [
-                "transport",
-                "redirects"
-              ]
-            }
-          ],
-          "remediation": {
-            "pass": 2,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "WebtoolsUrlComponentTest for the fixture's refusal branches",
-                "state": "current"
-              },
-              {
-                "name": "receiveHeaders table cases moved to ReceiveHeadersDeterministicTest",
-                "state": "current"
-              }
-            ]
-          },
-          "document": {
-            "tasks": [
-              {
-                "id": "documentation-review",
-                "name": "Documentation review of the change set",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-documentation",
-                "name": "Apply the review's findings to KDoc and comments; second review",
-                "state": "done"
-              },
-              {
-                "id": "dokka-check",
-                "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-plan",
-                "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
-                "state": "done"
-              },
-              {
-                "id": "readme-changelog",
-                "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
-                "state": "done"
-              },
-              {
-                "id": "state-boards",
-                "name": "State boards at the code-landing commit",
-                "state": "current"
-              },
-              {
-                "id": "prepare-landing",
-                "name": "Commit the change set, sync with master, no version bump",
-                "state": "done"
-              }
-            ]
-          },
-          "open": [
-            {
-              "text": "Close-step-throws case of OkHttpTransportCloseComponentTest not directly testable: the dispatcher is private and no step can be made to throw from outside",
-              "raised": "implement",
-              "resolved": "accepted as a recorded gap; settled at reconciliation in consequences.md"
-            },
-            {
-              "text": "D3 exact-class reading of SocketException in hasBenignCause awaits confirmation",
-              "raised": "implement",
-              "resolved": "confirmed: only a direct java.net.SocketException counts as a benign cause"
-            },
-            {
-              "text": "D2 partial Level 2 coverage and D5 unrun mutation await a decision",
-              "raised": "implement",
-              "resolved": "accepted as recorded deviations; settled at reconciliation"
-            },
-            {
-              "text": "CancellationIntegrationTest 'close during an in-flight call ends it with Closed and every later call is Closed' never runs: its runBlocking body returns the assertion's value",
-              "raised": "document",
-              "resolved": "fixed in this landing: the function is declared Unit; integration becomes 94 tests"
-            },
-            {
-              "text": "Landed #47/#61/#62/#63 plan and impact documents and docs/plans/README.md held pre-existing internal names; reworded (meaning kept) so the document-landing commit passes the scan",
-              "raised": "document",
-              "resolved": "rewordings accepted"
-            }
-          ],
-          "history": {
-            "sizing": [
-              {
-                "since": null,
-                "ended": "2026-11-01T17:10:00Z",
-                "endedBy": "sized",
-                "to": "plan"
-              }
-            ],
-            "plan": [
-              {
-                "since": "2026-11-01T17:10:00Z",
-                "ended": "2026-11-01T17:30:52Z",
-                "endedBy": "halted",
-                "to": "plan",
-                "held": true,
-                "event": {
-                  "name": "sized",
-                  "at": "2026-11-01T17:10:00Z"
-                },
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-01T17:10:00Z"
-                }
-              },
-              {
-                "since": "2026-11-01T17:43:53Z",
-                "ended": "2026-11-01T17:44:30Z",
-                "endedBy": "research-planning",
-                "to": "research",
-                "event": {
-                  "name": "resumed",
-                  "at": "2026-11-01T17:43:53Z"
-                },
-                "detail": "Answers: a request carrying a transport-controlled header (User-Agent, Accept-Encoding, Host, Connection, Content-Length, Transfer-Encoding and the hop-by-hop names) is refused with TransportFailure.InvalidRequest before anything is sent; the published fake skips its body cap for HEAD and for 1xx, 204 and 304, fixed in this unit; CHANGELOG.md is created in this landing with the unit's entry under Unreleased. The IDE checks recorded by #62-#64 do not gate this run. Next: three research questions on mockwebserver3 scenarios, per-hop request headers and OkHttp's exception surface.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-01T17:10:00Z"
-                }
-              },
-              {
-                "since": "2026-11-01T19:03:40Z",
-                "ended": "2026-11-01T21:31:00Z",
-                "endedBy": "plan-accepted",
-                "to": "branch",
-                "event": {
-                  "name": "researched",
-                  "at": "2026-11-01T19:03:40Z"
-                },
-                "detail": "Verification complete: every load-bearing claim holds, five with qualifications that change no conclusion. plan.md and consequences.md are drafted (uncommitted; they ride the first implementation commit). Seven design choices the interview did not spell out are being confirmed before implementation.",
-                "plan": {
-                  "state": "writing",
-                  "since": "2026-11-01T19:03:40Z"
-                }
-              }
-            ],
-            "research": [
-              {
-                "since": "2026-11-01T17:44:30Z",
-                "ended": "2026-11-01T19:03:40Z",
-                "endedBy": "researched",
-                "to": "plan",
-                "event": {
-                  "name": "verification-started",
-                  "at": "2026-11-01T18:14:30Z"
-                },
-                "detail": "Research: verifying 4 findings.",
-                "research": {
-                  "phase": "complete",
-                  "drafted": 0,
-                  "since": {
-                    "planning": "2026-11-01T17:44:30Z",
-                    "research": "2026-11-01T17:48:08Z",
-                    "verification": "2026-11-01T18:14:30Z",
-                    "complete": "2026-11-01T19:03:40Z"
-                  }
-                },
-                "questions": [
-                  {
-                    "question": "loopback-test-mechanics",
-                    "rows": [
-                      "fixtures",
-                      "integration-tests",
-                      "nonfunctional-tests"
-                    ],
-                    "findings": "research/loopback-test-mechanics.md",
-                    "state": "complete",
-                    "started": "2026-11-01T17:48:08Z",
-                    "returned": "2026-11-01T18:10:50Z"
-                  },
-                  {
-                    "question": "transport-controlled-headers",
-                    "rows": [
-                      "transport"
-                    ],
-                    "findings": "research/transport-controlled-headers.md",
-                    "state": "complete",
-                    "started": "2026-11-01T17:48:08Z",
-                    "returned": "2026-11-01T18:01:30Z"
-                  },
-                  {
-                    "question": "redirect-decision-table",
-                    "rows": [
-                      "redirects",
-                      "guards"
-                    ],
-                    "findings": "research/redirect-decision-table.md",
-                    "state": "complete",
-                    "started": "2026-11-01T17:48:08Z",
-                    "returned": "2026-11-01T18:03:50Z"
-                  },
-                  {
-                    "question": "okhttp-failure-surface",
-                    "rows": [
-                      "failure-mapping",
-                      "body-read",
-                      "lifecycle",
-                      "one-exchange"
-                    ],
-                    "findings": "research/okhttp-failure-surface.md",
-                    "state": "complete",
-                    "started": "2026-11-01T17:48:08Z",
-                    "returned": "2026-11-01T18:12:00Z"
-                  }
-                ]
-              }
-            ],
-            "branch": [
-              {
-                "since": "2026-11-01T21:31:00Z",
-                "ended": "2026-11-01T21:31:35Z",
-                "endedBy": "branch-cut",
-                "to": "implementation",
-                "event": {
-                  "name": "plan-accepted",
-                  "at": "2026-11-01T21:31:00Z"
-                },
-                "detail": "A final OkHttpTransport over OkHttp 5.5.0 built from network-free parts (controlled-header list, redirect decision, failure mapping, capped reader, ExchangeGuard, call deadline, value-only coroutine bridge) with its own daemon dispatcher and pool; the four loopback fixtures and the fake's no-body cap rule; every Level 3 and 4c scenario scripted against mockwebserver3. Seven implementation choices confirmed, among them: Range admitted with identity coding, a 421 delivered as a response, PolicyRefusals.kt's chain walk shared as firstInChain, okhttp-tls in jvmTest only.",
-                "branch": "feat/issue-65-okhttp-transport"
-              }
-            ],
-            "implementation": [
-              {
-                "since": "2026-11-01T21:31:35Z",
-                "ended": "2026-11-01T22:37:24Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "branch-cut",
-                  "at": "2026-11-01T21:31:35Z"
-                },
-                "detail": "Branch confirmed, base 53965c8 is current master. The implementer builds stages S1 to S6 in the worktree; stage S7 (README, CHANGELOG, as-built reconciliation) is the Document step's.",
-                "stages": [
-                  {
-                    "id": "S1",
-                    "name": "TransportControlledHeaders and its component test; commoncheck compile",
-                    "state": "done",
-                    "rows": [
-                      "transport"
-                    ]
-                  },
-                  {
-                    "id": "S2",
-                    "name": "Pure parts: ThrowableSearch, RedirectDecision, FailureMapping, HopRequest, ReceivedResponse, CappedBody, ExchangeGuard, CallDeadline, with Level 2 and 4a tests",
-                    "state": "done",
-                    "rows": [
-                      "transport",
-                      "one-exchange",
-                      "redirects",
-                      "body-read",
-                      "guards",
-                      "failure-mapping"
-                    ]
-                  },
-                  {
-                    "id": "S3",
-                    "name": "TransportClient, HopResponse, CallBridge, OkHttpTransport and factory; apiDump",
-                    "state": "done",
-                    "rows": [
-                      "transport",
-                      "one-exchange",
-                      "redirects",
-                      "body-read",
-                      "guards",
-                      "failure-mapping",
-                      "lifecycle",
-                      "release",
-                      "dispatcher-sizing"
-                    ]
-                  },
-                  {
-                    "id": "S4",
-                    "name": "Fixtures: LoopbackTransports, webtoolsUrl, toMockResponse, enqueue; FakeHttpTransport cap rule",
-                    "state": "done",
-                    "rows": [
-                      "fixtures"
-                    ]
-                  },
-                  {
-                    "id": "S5",
-                    "name": "Level 3 suites against mockwebserver3; okhttp-tls in jvmTest",
-                    "state": "done",
-                    "rows": [
-                      "integration-tests"
-                    ]
-                  },
-                  {
-                    "id": "S6",
-                    "name": "Level 4c suites; verifyJavaFloor; full check; mutations; unaffected-module proofs",
-                    "state": "done",
-                    "rows": [
-                      "nonfunctional-tests",
-                      "release"
-                    ]
-                  }
-                ],
-                "held": true
-              }
-            ],
-            "qa": [
-              {
-                "since": "2026-11-01T23:43:35Z",
-                "ended": "2026-11-02T00:08:52Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-02T00:08:52Z",
-                  "note": "pass 1: changes-requested"
-                },
-                "detail": "Code review PASS: every plan item built, all eight acceptance criteria met, level and sibling interfaces hold. Test findings: HopResponse.settleResponse has no isolated Level 2 test; the hop loop's pre-hop deadline branch (remaining under 1 ms gives Timeout with no Call) is reached by no test at any level; the extracted Throwable.firstInChain has no direct 4a test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite 711 passed, 0 failed, 0 skipped.",
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-02",
-                    "at": "2026-11-02T00:08:52Z",
-                    "findings": {
-                      "test": 4,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 2,
-                      "other": 2
-                    },
-                    "route": "remediation",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html"
-                  }
-                ]
-              },
-              {
-                "since": "2026-11-02T01:45:02Z",
-                "ended": "2026-11-02T02:06:09Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-02T01:45:02Z",
-                  "note": "R2"
-                },
-                "detail": "R2 built exactly as amended: six edits to OkHttpTransport.kt (import, KDoc paragraph, two trailing defaulted constructor parameters, hopCalls, the deadline's time source, hopCalls.newCall). The three deadline cases pass; the ABI dump hash is unchanged and names neither TimeSource nor Call.Factory; LoopbackTransports unchanged; mutations 14-16 each fail their named cases; webtools-http check green (732 jvmTest tests). Per-level: gating 19, component 398, integration 93, deterministic 191, non-functional 31, 0 failed, 0 skipped.",
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-02",
-                    "at": "2026-11-02T02:06:09Z",
-                    "findings": {
-                      "test": 2,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 2,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html"
-                  }
-                ]
-              }
-            ],
-            "remediation": [
-              {
-                "since": "2026-11-02T00:08:52Z",
-                "ended": "2026-11-02T01:45:02Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-02T01:34:38Z",
-                  "note": "R2"
-                },
-                "detail": "Plan amended 2026-11-02 after the test-coverage review: two defaulted parameters trail the internal constructor, a TimeSource for the shared call deadline and a Call.Factory for each hop's call, so a Level 2 test with fake calls and a manual clock reaches the pre-hop deadline check; the ABI dump, the public factory and the fixtures are unchanged. New stage S6a, procedure P13 and mutations 14-16. #68 never passes either parameter.",
-                "remediation": {
-                  "pass": 1,
-                  "route": "re-plan-then-remediation",
-                  "steps": [
-                    {
-                      "name": "Plan amendment: a time-source and call-factory seam on the transport's internal constructor for the pre-hop deadline test",
-                      "state": "done"
-                    },
-                    {
-                      "name": "Fixes independent of the amendment",
-                      "state": "done"
-                    },
-                    {
-                      "name": "The deadline branch's Level 2 test over the seam (stage S6a, procedure P13)",
-                      "state": "done"
-                    },
-                    {
-                      "name": "qa pass 2",
-                      "state": "current"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-02",
-                    "at": "2026-11-02T00:08:52Z",
-                    "findings": {
-                      "test": 4,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 2,
-                      "other": 2
-                    },
-                    "route": "remediation",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html",
-                    "note": "Code review passed: every plan item built, all eight acceptance criteria met, the issue's scope and the sibling interfaces hold. Four test findings, all in the As built rows the fixes touch: HopResponse.settleResponse has no isolated Level 2 component test; no test at any level reaches the hop loop's pre-hop deadline branch (under 1 ms left gives Timeout with no Call); Throwable.firstInChain has no direct Level 4a deterministic test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite: 711 passed, 0 failed, 0 skipped."
-                  }
-                ]
-              },
-              {
-                "since": "2026-11-02T02:06:09Z",
-                "ended": "2026-11-02T02:11:47Z",
-                "endedBy": "document",
-                "to": "document",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-02T02:06:09Z",
-                  "note": "pass 2: changes-requested"
-                },
-                "detail": "All four pass-1 findings verified answered. Two minor test findings: the fixture webtoolsUrl's three refusal branches have no test (a WebtoolsUrlComponentTest is added); receiveHeaders' four pure table cases sit at Level 2 rather than 4a (moved for consistency with pass 1). Code review PASS: the deadline seam is inert at its defaults, the public factory and ABI dump unchanged, every moved assertion preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. Forced run of all five levels: 731 passed, 1 failed, 0 skipped; the one failure is the untouched UrlParseLinearTimeNonFunctionalTest from #62 timing out under parallel task execution, green 31/31 in isolation per its own documented policy.",
-                "remediation": {
-                  "pass": 2,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "WebtoolsUrlComponentTest for the fixture's refusal branches",
-                      "state": "current"
-                    },
-                    {
-                      "name": "receiveHeaders table cases moved to ReceiveHeadersDeterministicTest",
-                      "state": "current"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-02",
-                    "at": "2026-11-02T02:06:09Z",
-                    "findings": {
-                      "test": 2,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 2,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html",
-                    "note": "Code review passed: the deadline seam is inert at its defaults, the public factory and the ABI dump are unchanged, and every moved assertion is preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. All four pass-1 findings verified answered. Two minor test findings, both in the As built rows the fixes touch, fixed on the spot: the fixture `webtoolsUrl`'s three refusal branches have no test (a `WebtoolsUrlComponentTest` is added); `receiveHeaders`' four pure table cases sit at Level 2 rather than 4a (moved, for consistency with pass 1). Suite, all five levels forced: 731 passed, 1 failed, 0 skipped. The one failure is not this change's: #62's untouched `UrlParseLinearTimeNonFunctionalTest` times out under parallel task execution and passes 31/31 in isolation, per its own documented policy; it is being filed as its own issue."
-                  }
-                ]
-              }
-            ],
-            "document": [
-              {
-                "since": "2026-11-02T02:11:47Z",
-                "ended": "2026-11-02T03:05:18Z",
-                "endedBy": "halted",
-                "to": "document",
-                "event": {
-                  "name": "document",
-                  "at": "2026-11-02T02:44:45Z",
-                  "note": "5 of 7 tasks done"
-                },
-                "detail": "README: the webtools-http artifact row names OkHttpTransport (one request per hop, manual redirects, capped decoded body, never a retry) and the fixtures paragraph names LoopbackTransports, webtoolsUrl, toMockResponse and enqueue(fixture); the dashboards pointer and install block untouched. CHANGELOG.md created in the Keep a Changelog layout: Unreleased, Added (the transport and factory; the four fixture helpers), Changed (the fake's cap skipped for HEAD, 1xx, 204, 304). No version section: nothing moved.",
-                "document": {
-                  "tasks": [
-                    {
-                      "id": "documentation-review",
-                      "name": "Documentation review of the change set",
-                      "state": "done"
-                    },
-                    {
-                      "id": "reconcile-documentation",
-                      "name": "Apply the review's findings to KDoc and comments; second review",
-                      "state": "done"
-                    },
-                    {
-                      "id": "dokka-check",
-                      "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
-                      "state": "done"
-                    },
-                    {
-                      "id": "reconcile-plan",
-                      "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
-                      "state": "current"
-                    },
-                    {
-                      "id": "readme-changelog",
-                      "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
-                      "state": "done"
-                    },
-                    {
-                      "id": "state-boards",
-                      "name": "State boards at the code-landing commit",
-                      "state": "todo"
-                    },
-                    {
-                      "id": "prepare-landing",
-                      "name": "Commit the change set, sync with master, no version bump",
-                      "state": "done"
-                    }
-                  ]
-                },
-                "held": true
-              },
-              {
-                "since": "2026-11-02T03:07:30Z",
-                "ended": "2026-11-02T04:16:35Z",
-                "endedBy": "run-restarted",
-                "to": "document",
-                "event": {
-                  "name": "state-boards",
-                  "at": "2026-11-02T04:14:48Z",
-                  "note": "the state boards; 6 of 7 tasks done"
-                },
-                "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
-                "document": {
-                  "tasks": [
-                    {
-                      "id": "documentation-review",
-                      "name": "Documentation review of the change set",
-                      "state": "done"
-                    },
-                    {
-                      "id": "reconcile-documentation",
-                      "name": "Apply the review's findings to KDoc and comments; second review",
-                      "state": "done"
-                    },
-                    {
-                      "id": "dokka-check",
-                      "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
-                      "state": "done"
-                    },
-                    {
-                      "id": "reconcile-plan",
-                      "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
-                      "state": "done"
-                    },
-                    {
-                      "id": "readme-changelog",
-                      "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
-                      "state": "done"
-                    },
-                    {
-                      "id": "state-boards",
-                      "name": "State boards at the code-landing commit",
-                      "state": "current"
-                    },
-                    {
-                      "id": "prepare-landing",
-                      "name": "Commit the change set, sync with master, no version bump",
-                      "state": "done"
-                    }
-                  ]
-                },
-                "outage": "session restart"
-              }
-            ]
-          },
-          "rowNames": {
-            "transport": "`OkHttpTransport`: the factory, the `internal` constructor and the client it builds",
-            "one-exchange": "`ExchangeGuard`: one wire exchange per hop",
-            "redirects": "The redirect loop: one `Call` per hop under one deadline",
-            "body-read": "The suspend bridge and the capped body read",
-            "guards": "The three guard layers applied to the client",
-            "failure-mapping": "The failure mapping and the transport's logging",
-            "lifecycle": "`close()` and the client's own dispatcher and pool",
-            "fixtures": "`LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` in the fixtures",
-            "integration-tests": "Level 3 tests against `mockwebserver3`",
-            "nonfunctional-tests": "Level 4c tests: slow drip, endless chunked body, a redirect chain over the cap",
-            "release": "The ABI dump and the version",
-            "dispatcher-sizing": "Sizing the dispatcher from the budget's `maxBurst`"
-          },
-          "recon": {
-            "interview": {
-              "reconstructed": true,
-              "ended": null,
-              "trail": [],
-              "milestones": []
-            }
-          }
-        },
         "tests": {
           "updated": "2026-11-02T03:16:00Z",
           "added": [
+            {
+              "class": "LoopbackTransportsConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/testing/LoopbackTransportsConsumerGatingTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "OkHttpTransportConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/OkHttpTransportConsumerGatingTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "CallBridgeComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CallBridgeComponentTest.kt",
+              "tests": 6,
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "CallDeadlineComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CallDeadlineComponentTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "CappedBodyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CappedBodyComponentTest.kt",
+              "tests": 8,
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "DispatcherExecutorComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/DispatcherExecutorComponentTest.kt",
+              "tests": 4,
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ExchangeGuardComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/ExchangeGuardComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "one-exchange"
+              ],
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "FailureReportComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/FailureReportComponentTest.kt",
+              "tests": 5,
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "FunctionDnsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FunctionDnsComponentTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "HopRequestComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/HopRequestComponentTest.kt",
+              "tests": 8,
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
             {
               "class": "HopResponseComponentTest",
               "module": "webtools-http",
@@ -3874,51 +3273,70 @@ window.dashboardLive&&window.dashboardLive("plan",
                 "body-read",
                 "one-exchange"
               ],
-              "stage": "R1"
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
-              "class": "ThrowableSearchDeterministicTest",
+              "class": "LoopbackTransportsComponentTest",
               "module": "webtools-http",
-              "testLevel": "4a",
-              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ThrowableSearchDeterministicTest.kt",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/LoopbackTransportsComponentTest.kt",
               "tests": 5,
-              "rows": [
-                "failure-mapping"
-              ],
-              "stage": "R1"
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
-              "class": "RestoredStatusDeterministicTest",
+              "class": "MockWebServerEnqueueComponentTest",
               "module": "webtools-http",
-              "testLevel": "4a",
-              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RestoredStatusDeterministicTest.kt",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/MockWebServerEnqueueComponentTest.kt",
               "tests": 3,
-              "rows": [
-                "one-exchange"
-              ],
-              "stage": "R1"
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
-              "class": "BodyExpectedDeterministicTest",
+              "class": "OkHttpTransportCloseComponentTest",
               "module": "webtools-http",
-              "testLevel": "4a",
-              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyExpectedDeterministicTest.kt",
-              "tests": 2,
-              "rows": [
-                "body-read"
-              ],
-              "stage": "R1"
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportCloseComponentTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
-              "class": "TransportControlledHeadersDeterministicTest",
+              "class": "OkHttpTransportConstructionComponentTest",
               "module": "webtools-http",
-              "testLevel": "4a",
-              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/TransportControlledHeadersDeterministicTest.kt",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportConstructionComponentTest.kt",
               "tests": 5,
-              "rows": [
-                "transport"
-              ],
-              "stage": "R1"
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
               "class": "OkHttpTransportDeadlineComponentTest",
@@ -3930,40 +3348,28 @@ window.dashboardLive&&window.dashboardLive("plan",
                 "transport",
                 "redirects"
               ],
-              "stage": "R2"
+              "stage": "R2",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
-              "class": "WebtoolsUrlComponentTest",
+              "class": "OkHttpTransportPreflightComponentTest",
               "module": "webtools-http",
               "testLevel": "2",
-              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/WebtoolsUrlComponentTest.kt",
-              "tests": 3,
-              "rows": [
-                "fixtures"
-              ]
-            },
-            {
-              "class": "ReceiveHeadersDeterministicTest",
-              "module": "webtools-http",
-              "testLevel": "4a",
-              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ReceiveHeadersDeterministicTest.kt",
-              "tests": 4,
-              "rows": [
-                "body-read"
-              ]
-            }
-          ],
-          "amended": [
-            {
-              "class": "ExchangeGuardComponentTest",
-              "module": "webtools-http",
-              "testLevel": "2",
-              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/ExchangeGuardComponentTest.kt",
-              "tests": 9,
-              "rows": [
-                "one-exchange"
-              ],
-              "stage": "R1"
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportPreflightComponentTest.kt",
+              "tests": 6,
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             },
             {
               "class": "ReceivedResponseComponentTest",
@@ -3974,7 +3380,598 @@ window.dashboardLive&&window.dashboardLive("plan",
               "rows": [
                 "body-read"
               ],
-              "stage": "R1"
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ToMockResponseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/ToMockResponseComponentTest.kt",
+              "tests": 9,
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "TransportClientComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/TransportClientComponentTest.kt",
+              "tests": 6,
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "WebtoolsUrlComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/WebtoolsUrlComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "fixtures"
+              ],
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "BodyCapIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/BodyCapIntegrationTest.kt",
+              "tests": 6,
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "CancellationIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/CancellationIntegrationTest.kt",
+              "tests": 4,
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ControlledHeadersIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ControlledHeadersIntegrationTest.kt",
+              "tests": 4,
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "CrossOriginStripIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/CrossOriginStripIntegrationTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ExchangeCountIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ExchangeCountIntegrationTest.kt",
+              "tests": 6,
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ExchangeGuardStatusIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ExchangeGuardStatusIntegrationTest.kt",
+              "tests": 5,
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ExchangeGuardWireIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ExchangeGuardWireIntegrationTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "FailureLeafIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/FailureLeafIntegrationTest.kt",
+              "tests": 6,
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "FixtureRoundTripIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/FixtureRoundTripIntegrationTest.kt",
+              "tests": 4,
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "HttpsRedirectIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/HttpsRedirectIntegrationTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "JvmExitIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/JvmExitIntegrationTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "MainSafetyIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/MainSafetyIntegrationTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "PolicyEnforcementTransportIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/PolicyEnforcementTransportIntegrationTest.kt",
+              "tests": 4,
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ProxySettingsIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ProxySettingsIntegrationTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ReceivedHeadersIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/ReceivedHeadersIntegrationTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "RedirectFollowingIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/RedirectFollowingIntegrationTest.kt",
+              "tests": 9,
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "RedirectRefusalIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/RedirectRefusalIntegrationTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "SocksProxySettingsIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/SocksProxySettingsIntegrationTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "TlsFailureIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/TlsFailureIntegrationTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "TransportLoggingIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/TransportLoggingIntegrationTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "BodyExpectedDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyExpectedDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "body-read"
+              ],
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "BodyRequiredMethodDifferentialDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyRequiredMethodDifferentialDeterministicTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "FailureMappingDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/FailureMappingDeterministicTest.kt",
+              "tests": 13,
+              "result": {
+                "state": "passed",
+                "passed": 13,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "HeadersForHopDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HeadersForHopDeterministicTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "LoopbackUrlTextDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/testing/LoopbackUrlTextDeterministicTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ReceiveHeadersDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ReceiveHeadersDeterministicTest.kt",
+              "tests": 4,
+              "rows": [
+                "body-read"
+              ],
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "RedirectDecisionDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RedirectDecisionDeterministicTest.kt",
+              "tests": 11,
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "RestoredStatusDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RestoredStatusDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "one-exchange"
+              ],
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "ThrowableSearchDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ThrowableSearchDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "failure-mapping"
+              ],
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "TransportControlledHeadersDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/TransportControlledHeadersDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "transport"
+              ],
+              "stage": "R1",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "UserAgentDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/UserAgentDeterministicTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "EndlessBodyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/EndlessBodyNonFunctionalTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "HostileStatusLineNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/HostileStatusLineNonFunctionalTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "RedirectChainCapNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/RedirectChainCapNonFunctionalTest.kt",
+              "tests": 1,
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "SlowDripNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/SlowDripNonFunctionalTest.kt",
+              "tests": 2,
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "TransportSecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/TransportSecrecyNonFunctionalTest.kt",
+              "tests": 3,
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            }
+          ],
+          "amended": [
+            {
+              "class": "FakeHttpTransportComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FakeHttpTransportComponentTest.kt",
+              "tests": 22,
+              "result": {
+                "state": "passed",
+                "passed": 22,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
             }
           ],
           "relevant": [
@@ -4090,6 +4087,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               }
             }
           },
+          "base": "53965c8",
           "rowNames": {
             "transport": "`OkHttpTransport`: the factory, the `internal` constructor and the client it builds",
             "one-exchange": "`ExchangeGuard`: one wire exchange per hop",
@@ -4164,8 +4162,8 @@ window.dashboardLive&&window.dashboardLive("plan",
             "excerpt": {
               "ref": "architecture.md#632-okhttp-transport-jvm",
               "heading": "6.3.2 OkHttp transport (`jvm/`)",
-              "paragraph": "Responsibility: deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model. · Owns: `OkHttpTransport : HttpTransport`, final, built by a factory taking `userAgent` (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`. Inside: · the client: a new `Dispatcher` (sized from the settings; the facade raises `maxConcurrentRequests` to the budget's `maxBurst` when it builds both, because OkHttp's …",
-              "hash": "122cd4382789"
+              "paragraph": "Responsibility: deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model. · Owns: `OkHttpTransport : HttpTransport`, final, built by a factory taking `userAgent` (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`. Inside: > Corrected 2026-11-02 (#65 as built): the `internal` constructor also takes, after the donor, > the shared deadline's `TimeSource` and the `Call.Factory` of each …",
+              "hash": "2f37108e9a8f"
             }
           },
           {
@@ -4174,8 +4172,8 @@ window.dashboardLive&&window.dashboardLive("plan",
             "excerpt": {
               "ref": "architecture.md#632-okhttp-transport-jvm",
               "heading": "6.3.2 OkHttp transport (`jvm/`)",
-              "paragraph": "Responsibility: deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model. · Owns: `OkHttpTransport : HttpTransport`, final, built by a factory taking `userAgent` (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`. Inside: · the client: a new `Dispatcher` (sized from the settings; the facade raises `maxConcurrentRequests` to the budget's `maxBurst` when it builds both, because OkHttp's …",
-              "hash": "122cd4382789"
+              "paragraph": "Responsibility: deliver one request per hop to the network, read a capped body where cancellation can reach it, and map every outcome to the failure model. · Owns: `OkHttpTransport : HttpTransport`, final, built by a factory taking `userAgent` (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`. Inside: > Corrected 2026-11-02 (#65 as built): the `internal` constructor also takes, after the donor, > the shared deadline's `TimeSource` and the `Call.Factory` of each …",
+              "hash": "2f37108e9a8f"
             }
           },
           {
@@ -4191,8 +4189,54 @@ window.dashboardLive&&window.dashboardLive("plan",
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "landed",
+        "summary": "Landed through PR #88 as e8f0a88 (#65): `webtools-http` gains the final `OkHttpTransport` and its factory, Stable Core, the first thing that applies the outbound-URL policy to a network fetch, with one request per hop, redirects followed by the transport, a capped decoded body and twelve refused request headers, over `internal` parts; the fixtures gain `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)`, and the fake's cap follows the transport's no-body rule. No dependency of either variant changed; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+        "changes": [
+          {
+            "what": "The one-exchange guard hides a `407`, `408`, `421` or `503` by its status, where §6.3.2 has it hide a `503`'s `Retry-After` and lets the counter cover a `421`; every status in 100..599 is then a response, and the counter stays the fail-closed backstop.",
+            "why": "The port requires every status to be a response; §6.3.2 and §7.3 carry dated corrections.",
+            "when": "#65 plan",
+            "ref": "65-okhttp-transport/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "Twelve request headers are refused and a `Range` request is sent with `Accept-Encoding: identity`.",
+            "why": "§6.3.2 is silent on caller-supplied transport headers, and #62's plan left them to this unit; §6.3.2 carries a dated correction.",
+            "when": "#65 plan",
+            "ref": "65-okhttp-transport/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The dispatcher has its own `ExecutorService` with daemon threads, so §6.3.2's \"without `close()` the JVM lingers 60 s\" no longer holds; `close()` keeps its steps.",
+            "why": "A child-JVM test measures it; §6.3.2 carries a dated correction.",
+            "when": "#65 plan",
+            "ref": "65-okhttp-transport/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "`LoopbackTransports` takes a whole `Untrusted` or `Trusted` policy and a resolver function, and `Fixture.toMockResponse` and `MockWebServer.enqueue(fixture)` take a defaulted request method.",
+            "why": "The settings live on the policy as built (#64), and only a response to `HEAD` is written differently; §6.7 carries a dated correction.",
+            "when": "#65 plan",
+            "ref": "65-okhttp-transport/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The permit rule of §6.6 is exact only for `InvalidRequest`: #68 settles the other two failures against what each implies about what was sent.",
+            "why": "`RefusedByPolicy` can follow a sent hop, and `Closed` can end a call whose request already reached the server; §6.6 carries a dated correction.",
+            "when": "#65 plan",
+            "ref": "65-okhttp-transport/consequences.md#4-sibling-units"
+          }
+        ],
+        "commits": [
+          "962bbe3",
+          "dd4097e",
+          "357554a",
+          "300fb67",
+          "db82470",
+          "4d5be37",
+          "1a7174c",
+          "53b4bf4",
+          "d4dfa2c",
+          "f82485e"
+        ],
+        "verified": "qa pass 1 changes requested (4 test findings; 2 minor, 2 other), fixed in a remediation; qa pass 2 changes requested (2 test findings, both minor), fixed in place with no third pass; the run of record 736 tests, 0 failed, 0 skipped.",
+        "link": "65-okhttp-transport/final-implementation.md"
       }
     },
     {
@@ -4205,15 +4249,1300 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 7,
         "slug": "response-cache",
         "issue": 66,
-        "level": 3,
         "blockedBy": [
           63,
           62
         ],
         "versions": "none",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "66-response-cache/",
+        "board": "66-response-cache/dashboard.html",
+        "live": {
+          "step": "document",
+          "since": "2026-11-03T18:33:16Z",
+          "updated": "2026-11-03T19:26:02Z",
+          "detail": "Document: 6 of 6 tasks done; every task done.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "document",
+            "landing",
+            "merge",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-11-03",
+              "at": "2026-11-03T04:48:46Z",
+              "findings": {
+                "test": 7,
+                "code": 0
+              },
+              "severity": {
+                "minor": 5,
+                "other": 2
+              },
+              "route": "remediation",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html",
+              "note": "Code review passed: the implementation is the plan's design as written, the ABI diff is additions only, and all six acceptance criteria are met. Seven test findings, in the As built rows the fixes touch: two uncovered defensive branches in CaffeineResponseCache, each wanting one Level 2 method (`close`: a foreign cancellation of the shared future read as closed; `failure-value`: an Error thrown by the load dispatcher mapped to fatal); six runBlocking methods in LoaderRunnerComponentTest to move under runTest and one test name to reword (`component-tests`); two Level 4a table rows for CacheExpiry and CacheEntry.isFailure (`deterministic-tests`); and the P5 procedure and an acceptance mapping missing from the as-built record (`release`, whose verdict names P5). Suite: 883 passed, 0 failed, 0 skipped."
+            },
+            {
+              "pass": 2,
+              "verdict": "changes-requested",
+              "date": "2026-11-03",
+              "at": "2026-11-03T18:24:12Z",
+              "findings": {
+                "test": 0,
+                "code": 1
+              },
+              "severity": {
+                "minor": 1,
+                "other": 0
+              },
+              "route": "on-the-spot",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html",
+              "note": "Test audit: compliant at every level, and all seven remediations from pass 1 hold. Code review: one minor finding, in the As built row the fix touches (`caffeine-default`, whose verdict logs `DEBUG` once per load end): the load body logs its \"load ended\" line before knowing whether its completion won, so a result a mid-flight `close()` or `invalidate(key)` discards still reads `stored`, and after `close()` a second line follows, against the once-per-load-end rule (plan.md R12, §6.9). The fix logs the line only when the completion wins. Suite: 887 passed, 0 failed, 0 skipped."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-66-response-cache",
+          "event": {
+            "name": "state-boards",
+            "at": "2026-11-03T19:26:02Z",
+            "note": "the state boards; 6 of 6 tasks done"
+          },
+          "stages": [
+            {
+              "id": "S1",
+              "name": "commonMain: Lookup, CacheKey, CachePolicy, CacheStats, LoaderRunner, ResponseCache and Disabled",
+              "state": "done",
+              "rows": [
+                "port",
+                "cache-key",
+                "policy-lookup",
+                "disabled",
+                "failure-value",
+                "component-tests",
+                "deterministic-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "S2",
+              "name": "jvmMain: CacheEntry and CaffeineResponseCache with the Level 1, 2 and 4a tests",
+              "state": "done",
+              "rows": [
+                "caffeine-default",
+                "shared-load",
+                "failure-value",
+                "max-age",
+                "close",
+                "component-tests",
+                "deterministic-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "S3",
+              "name": "Level 3 and Level 4c suites",
+              "state": "done",
+              "rows": [
+                "integration-tests",
+                "nonfunctional-tests"
+              ]
+            }
+          ],
+          "remediation": {
+            "pass": 2,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "Log the load's end only when its completion wins; record the change",
+                "state": "done"
+              }
+            ]
+          },
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applicable: WebTools does not apply Dokka)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+              "raised": "implementation-stage S3",
+              "ref": "final-implementation.md",
+              "resolved": "2026-11-03T18:57:00Z"
+            }
+          ],
+          "history": {
+            "sizing": [
+              {
+                "since": null,
+                "ended": "2026-11-03T02:17:16Z",
+                "endedBy": "sized",
+                "to": "plan"
+              }
+            ],
+            "plan": [
+              {
+                "since": "2026-11-03T02:17:16Z",
+                "ended": "2026-11-03T02:32:02Z",
+                "endedBy": "research-planning",
+                "to": "research",
+                "event": {
+                  "name": "sized",
+                  "at": "2026-11-03T02:17:16Z"
+                },
+                "detail": "Unit 7 of the HTTP client stack: the ResponseCache port, CacheKey, CachePolicy, Lookup, CacheStats and ResponseCache.Disabled in commonMain, and the CaffeineResponseCache default in jvmMain. Working tree clean at e8f0a88; the run works in the main checkout. Next: the detailed implementation plan from architecture.md section 6.4 and section 11.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-03T02:17:16Z"
+                }
+              },
+              {
+                "since": "2026-11-03T03:27:44Z",
+                "ended": "2026-11-03T03:27:44Z",
+                "endedBy": "plan-accepted",
+                "to": "branch",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-03T03:27:44Z"
+                },
+                "detail": "All four choices stand as drafted: the CacheStats fields, invalidate during an in-flight load, maxAge = ZERO served by age, Found weight at least 1.",
+                "plan": {
+                  "state": "writing",
+                  "since": "2026-11-03T03:23:54Z"
+                }
+              }
+            ],
+            "research": [
+              {
+                "since": "2026-11-03T02:32:02Z",
+                "ended": "2026-11-03T03:23:54Z",
+                "endedBy": "researched",
+                "to": "plan",
+                "event": {
+                  "name": "verification-started",
+                  "at": "2026-11-03T02:49:21Z"
+                },
+                "detail": "Research: verifying 2 findings.",
+                "research": {
+                  "phase": "complete",
+                  "drafted": 0,
+                  "since": {
+                    "planning": "2026-11-03T02:32:02Z",
+                    "research": "2026-11-03T02:34:16Z",
+                    "verification": "2026-11-03T02:49:21Z",
+                    "complete": "2026-11-03T03:23:54Z"
+                  }
+                },
+                "questions": [
+                  {
+                    "question": "caffeine-mechanics",
+                    "rows": [
+                      "caffeine-default",
+                      "policy-lookup",
+                      "failure-value",
+                      "close",
+                      "nonfunctional-tests"
+                    ],
+                    "findings": "research/caffeine-mechanics.md",
+                    "state": "complete",
+                    "started": "2026-11-03T02:34:16Z",
+                    "returned": "2026-11-03T02:48:03Z"
+                  },
+                  {
+                    "question": "load-lifecycle",
+                    "rows": [
+                      "shared-load",
+                      "failure-value",
+                      "close",
+                      "component-tests"
+                    ],
+                    "findings": "research/load-lifecycle.md",
+                    "state": "complete",
+                    "started": "2026-11-03T02:34:16Z",
+                    "returned": "2026-11-03T02:47:19Z"
+                  }
+                ]
+              }
+            ],
+            "branch": [
+              {
+                "since": "2026-11-03T03:27:44Z",
+                "ended": "2026-11-03T03:28:38Z",
+                "endedBy": "branch-cut",
+                "to": "implementation",
+                "event": {
+                  "name": "plan-accepted",
+                  "at": "2026-11-03T03:27:44Z"
+                },
+                "detail": "Full implementation plan for the ResponseCache port and the CaffeineResponseCache default: each load runs in the cache's own supervisor scope, every outcome reaches waiters as a value, waiters use asDeferred().await(), close() releases waiters, own counters instead of recordStats(). Interfaces pinned for the call facades (#68).",
+                "branch": "feat/issue-66-response-cache"
+              }
+            ],
+            "implementation": [
+              {
+                "since": "2026-11-03T03:28:38Z",
+                "ended": "2026-11-03T04:23:52Z",
+                "endedBy": "qa-pass",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-03T04:20:35Z",
+                  "note": "S3 reported done; qa next"
+                },
+                "detail": "Five new classes. Procedure P3 (both lifetime-0 removals left out) was detected by the failure-identity test 5 of 5 runs. Procedure P4 (the closed-flag re-check in startLoad left out) was not detected in 5 runs: once the load scope is cancelled a launch completes without running its body and the completion handler settles the future as closed, so the re-check alone opens no hang; recorded for the known gaps. Module check: 883 jvm tests, 0 failed, 0 skipped. Correction to the previous event: componentTest ran 121 tests of the new and amended classes, not 139.",
+                "open": [
+                  {
+                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S3",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "stages": [
+                  {
+                    "id": "S1",
+                    "name": "commonMain: Lookup, CacheKey, CachePolicy, CacheStats, LoaderRunner, ResponseCache and Disabled",
+                    "state": "done",
+                    "rows": [
+                      "port",
+                      "cache-key",
+                      "policy-lookup",
+                      "disabled",
+                      "failure-value",
+                      "component-tests",
+                      "deterministic-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S2",
+                    "name": "jvmMain: CacheEntry and CaffeineResponseCache with the Level 1, 2 and 4a tests",
+                    "state": "done",
+                    "rows": [
+                      "caffeine-default",
+                      "shared-load",
+                      "failure-value",
+                      "max-age",
+                      "close",
+                      "component-tests",
+                      "deterministic-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S3",
+                    "name": "Level 3 and Level 4c suites",
+                    "state": "done",
+                    "rows": [
+                      "integration-tests",
+                      "nonfunctional-tests"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "qa": [
+              {
+                "since": "2026-11-03T04:23:52Z",
+                "ended": "2026-11-03T04:48:46Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-03T04:20:35Z",
+                  "note": "S3 reported done; qa next"
+                },
+                "open": [
+                  {
+                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S3",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-03",
+                    "at": "2026-11-03T04:48:46Z",
+                    "findings": {
+                      "test": 7,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 5,
+                      "other": 2
+                    },
+                    "route": "remediation",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html"
+                  }
+                ]
+              },
+              {
+                "since": "2026-11-03T04:58:24Z",
+                "ended": "2026-11-03T05:12:41Z",
+                "endedBy": "halted",
+                "to": "qa",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-03T04:58:24Z",
+                  "note": "pass 2: running"
+                },
+                "detail": "QA pass 2 running.",
+                "open": [
+                  {
+                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S3",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "running",
+                    "date": "2026-11-03",
+                    "at": "2026-11-03T04:58:24Z",
+                    "findings": {}
+                  }
+                ],
+                "held": true
+              },
+              {
+                "since": "2026-11-03T17:59:54Z",
+                "ended": "2026-11-03T18:24:12Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-03T17:59:54Z",
+                  "note": "pass 2: running"
+                },
+                "detail": "QA pass 2 running.",
+                "open": [
+                  {
+                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S3",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-03",
+                    "at": "2026-11-03T18:24:12Z",
+                    "findings": {
+                      "test": 0,
+                      "code": 1
+                    },
+                    "severity": {
+                      "minor": 1,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html"
+                  }
+                ]
+              }
+            ],
+            "remediation": [
+              {
+                "since": "2026-11-03T04:48:46Z",
+                "ended": "2026-11-03T04:58:24Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-03T04:48:46Z",
+                  "note": "pass 1: changes-requested"
+                },
+                "detail": "Code review PASS: the implementation is the plan's design as written, the ABI diff is additions only, all six acceptance criteria met. Test findings: two uncovered defensive branches in CaffeineResponseCache (a foreign cancellation of the shared future read as closed; an Error thrown by the load dispatcher mapped to fatal), each wanting one Level 2 method; six runBlocking methods in LoaderRunnerComponentTest to move under runTest; one test name to reword; two Level 4a table rows for CacheExpiry and CacheEntry.isFailure; the P5 procedure and an acceptance mapping missing from the as-built record. Suite 883 passed, 0 failed, 0 skipped.",
+                "open": [
+                  {
+                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S3",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "remediation": {
+                  "pass": 1,
+                  "route": "remediation",
+                  "steps": [
+                    {
+                      "name": "Add the two Level 2 methods, move LoaderRunnerComponentTest under runTest, rename the logging test, add the two 4a rows, record P5 and the acceptance mapping",
+                      "state": "done"
+                    },
+                    {
+                      "name": "qa pass 2",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-03",
+                    "at": "2026-11-03T04:48:46Z",
+                    "findings": {
+                      "test": 7,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 5,
+                      "other": 2
+                    },
+                    "route": "remediation",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html",
+                    "note": "Code review passed: the implementation is the plan's design as written, the ABI diff is additions only, and all six acceptance criteria are met. Seven test findings, in the As built rows the fixes touch: two uncovered defensive branches in CaffeineResponseCache, each wanting one Level 2 method (`close`: a foreign cancellation of the shared future read as closed; `failure-value`: an Error thrown by the load dispatcher mapped to fatal); six runBlocking methods in LoaderRunnerComponentTest to move under runTest and one test name to reword (`component-tests`); two Level 4a table rows for CacheExpiry and CacheEntry.isFailure (`deterministic-tests`); and the P5 procedure and an acceptance mapping missing from the as-built record (`release`, whose verdict names P5). Suite: 883 passed, 0 failed, 0 skipped."
+                  }
+                ]
+              },
+              {
+                "since": "2026-11-03T18:24:12Z",
+                "ended": "2026-11-03T18:33:16Z",
+                "endedBy": "document",
+                "to": "document",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-03T18:33:16Z",
+                  "note": "S3"
+                },
+                "detail": "Two Level 2 tests pin the rule in CaffeineResponseCacheLoggingComponentTest (close mid-flight: one closed line, none when the loader finishes; invalidate mid-flight: one found line noted removed, the next call reloads). componentTest 519 tests, 0 failed, 0 skipped; apiCheck passes, the ABI dump unchanged.",
+                "open": [
+                  {
+                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S3",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "remediation": {
+                  "pass": 2,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "Log the load's end only when its completion wins; record the change",
+                      "state": "done"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-03",
+                    "at": "2026-11-03T18:24:12Z",
+                    "findings": {
+                      "test": 0,
+                      "code": 1
+                    },
+                    "severity": {
+                      "minor": 1,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html",
+                    "note": "Test audit: compliant at every level, and all seven remediations from pass 1 hold. Code review: one minor finding, in the As built row the fix touches (`caffeine-default`, whose verdict logs `DEBUG` once per load end): the load body logs its \"load ended\" line before knowing whether its completion won, so a result a mid-flight `close()` or `invalidate(key)` discards still reads `stored`, and after `close()` a second line follows, against the once-per-load-end rule (plan.md R12, §6.9). The fix logs the line only when the completion wins. Suite: 887 passed, 0 failed, 0 skipped."
+                  }
+                ]
+              }
+            ]
+          },
+          "rowNames": {
+            "port": "The `ResponseCache` port: `getOrLoad`, `invalidate`, `invalidateAll`, `stats` and `close`",
+            "cache-key": "`CacheKey<V>`: the endpoint and its canonical parameters",
+            "policy-lookup": "`CachePolicy`, `Lookup` and `CacheStats`",
+            "disabled": "`ResponseCache.Disabled`, the pass-through",
+            "caffeine-default": "`CaffeineResponseCache`: the factory, the builder and the `AsyncCache` behind them",
+            "shared-load": "The shared load: its scope, its start and how waiters wait",
+            "failure-value": "Failures as zero-lifetime values, removed by each waiter",
+            "max-age": "`maxAge`: serving a caller that needs freshness",
+            "close": "`close()` and `HttpFailure.Closed(\"cache\")`",
+            "component-tests": "Level 2 on `VirtualClock`, and the three-clocks proof with the real cache",
+            "integration-tests": "Level 3: one real request for many callers, on the production defaults",
+            "deterministic-tests": "Level 4a: key canonicalisation",
+            "nonfunctional-tests": "Level 4c: the size bound and the 2,000-retry failure-identity check",
+            "release": "The ABI dump and the version"
+          },
+          "recon": {
+            "interview": {
+              "reconstructed": true,
+              "ended": null,
+              "trail": [],
+              "milestones": []
+            }
+          }
+        },
+        "tests": {
+          "base": "826200e",
+          "updated": "2026-11-03T18:33:16Z",
+          "added": [
+            {
+              "class": "ResponseCacheConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/ResponseCacheConsumerGatingTest.kt",
+              "tests": 3,
+              "rows": [
+                "port"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/CaffeineResponseCacheConsumerGatingTest.kt",
+              "tests": 1,
+              "rows": [
+                "caffeine-default"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CacheKeyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/CacheKeyComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "cache-key",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CachePolicyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/CachePolicyComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "policy-lookup",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "LookupComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/LookupComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "policy-lookup",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CacheStatsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/CacheStatsComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "policy-lookup",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "LoaderRunnerComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/LoaderRunnerComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "disabled",
+                "component-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "DisabledResponseCacheComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/DisabledResponseCacheComponentTest.kt",
+              "tests": 10,
+              "rows": [
+                "disabled",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheHitsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheHitsComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheMissTtlComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheMissTtlComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheZeroTtlComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheZeroTtlComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheMaxAgeComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheMaxAgeComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "max-age",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheCoalescingComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheCoalescingComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "shared-load",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheWaiterCancellationComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheWaiterCancellationComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "shared-load",
+                "component-tests",
+                "close"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheFailureComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheFailureComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "failure-value",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheFatalErrorComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheFatalErrorComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "failure-value",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheLoaderCancellationComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheLoaderCancellationComponentTest.kt",
+              "tests": 1,
+              "rows": [
+                "failure-value",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheCloseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheCloseComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "close",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-03T18:33:16Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheInvalidationComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheInvalidationComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-03T18:33:16Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheWeightComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheWeightComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheStatsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheStatsComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheRejectedLoadComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheRejectedLoadComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "failure-value",
+                "component-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheConstructionComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheConstructionComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheLoggingComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheLoggingComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-03T18:33:16Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheCaffeineLogComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheCaffeineLogComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "failure-value",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-03T18:33:16Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheThreeClocksComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CaffeineResponseCacheThreeClocksComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CacheKeyCanonicalFormDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/CacheKeyCanonicalFormDeterministicTest.kt",
+              "tests": 9,
+              "rows": [
+                "cache-key",
+                "deterministic-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "CacheEntryRulesDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/CacheEntryRulesDeterministicTest.kt",
+              "tests": 10,
+              "rows": [
+                "caffeine-default",
+                "max-age",
+                "deterministic-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheLoopbackIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/CaffeineResponseCacheLoopbackIntegrationTest.kt",
+              "tests": 4,
+              "rows": [
+                "integration-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheSizeBoundNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/CaffeineResponseCacheSizeBoundNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "caffeine-default",
+                "nonfunctional-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheFailureIdentityNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/CaffeineResponseCacheFailureIdentityNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "failure-value",
+                "nonfunctional-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheSecrecyNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/CaffeineResponseCacheSecrecyNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "caffeine-default",
+                "cache-key",
+                "policy-lookup",
+                "nonfunctional-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            },
+            {
+              "class": "CaffeineResponseCacheCloseRaceNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/CaffeineResponseCacheCloseRaceNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "close",
+                "nonfunctional-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-03T18:24:12Z"
+              }
+            }
+          ],
+          "amended": [
+            {
+              "class": "WebToolsDslComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WebToolsDslComponentTest.kt",
+              "tests": 1,
+              "rows": [
+                "policy-lookup",
+                "caffeine-default",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            },
+            {
+              "class": "VirtualClockThreeClocksComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/VirtualClockThreeClocksComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 1,
+                "at": "2026-11-03T04:48:46Z"
+              }
+            }
+          ],
+          "relevant": [],
+          "rowNames": {
+            "port": "The `ResponseCache` port: `getOrLoad`, `invalidate`, `invalidateAll`, `stats` and `close`",
+            "cache-key": "`CacheKey<V>`: the endpoint and its canonical parameters",
+            "policy-lookup": "`CachePolicy`, `Lookup` and `CacheStats`",
+            "disabled": "`ResponseCache.Disabled`, the pass-through",
+            "caffeine-default": "`CaffeineResponseCache`: the factory, the builder and the `AsyncCache` behind them",
+            "shared-load": "The shared load: its scope, its start and how waiters wait",
+            "failure-value": "Failures as zero-lifetime values, removed by each waiter",
+            "max-age": "`maxAge`: serving a caller that needs freshness",
+            "close": "`close()` and `HttpFailure.Closed(\"cache\")`",
+            "component-tests": "Level 2 on `VirtualClock`, and the three-clocks proof with the real cache",
+            "integration-tests": "Level 3: one real request for many callers, on the production defaults",
+            "deterministic-tests": "Level 4a: key canonicalisation",
+            "nonfunctional-tests": "Level 4c: the size bound and the 2,000-retry failure-identity check"
+          }
+        }
       },
       "gap": {
         "kind": "missing",
@@ -4275,7 +5604,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#64-response-cache",
               "heading": "6.4 Response cache",
               "paragraph": "Responsibility: one decoded value per key, served to any number of concurrent callers from one load, for a bounded time, with failures never stored. · Owns (`common/`): `ResponseCache : AutoCloseable` (subclass-gated): one suspend `getOrLoad(key, policy, maxAge, loader): Result<Lookup<V>>` (no default on `maxAge`; an overload without it), `invalidate`, `invalidateAll`, `stats()`, `close()`; `CacheKey<V>(endpointId, params)` (phantom-typed; equality over the id and the parameters sorted by name with a stable sort; `toString` prints parameter names only; never a tenant, a header, a credential …",
-              "hash": "872bafe44717"
+              "hash": "ba73f0d1ef35"
             }
           },
           {
@@ -4285,7 +5614,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#64-response-cache",
               "heading": "6.4 Response cache",
               "paragraph": "Responsibility: one decoded value per key, served to any number of concurrent callers from one load, for a bounded time, with failures never stored. · Owns (`common/`): `ResponseCache : AutoCloseable` (subclass-gated): one suspend `getOrLoad(key, policy, maxAge, loader): Result<Lookup<V>>` (no default on `maxAge`; an overload without it), `invalidate`, `invalidateAll`, `stats()`, `close()`; `CacheKey<V>(endpointId, params)` (phantom-typed; equality over the id and the parameters sorted by name with a stable sort; `toString` prints parameter names only; never a tenant, a header, a credential …",
-              "hash": "872bafe44717"
+              "hash": "ba73f0d1ef35"
             }
           }
         ]
@@ -4305,7 +5634,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 8,
         "slug": "call-budget",
         "issue": 67,
-        "level": 3,
         "blockedBy": [
           63,
           62
@@ -4431,7 +5759,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 9,
         "slug": "call-facades",
         "issue": 68,
-        "level": 3,
         "blockedBy": [
           67,
           66,
@@ -4500,7 +5827,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#66-call-facades",
               "heading": "6.6 Call facades",
               "paragraph": "Responsibility: compose cache, budget and transport in the one fixed order — cache, then budget inside the cache loader, then transport — so a hit costs nothing and N coalesced callers cost one permit; and own what they built. · Owns (`common/`): · `Endpoint<T>` (factory `Endpoint(id, decode, configure)` + builder: `name`, `ttl`, `missTtl`, `cost`, `lane`, `misses(statuses)`): the decode function travels with the endpoint because the cache key cannot see it. · `CallSpec` (per call: path segments, query pairs, headers, `method`, body, `lane`, `maxWait`, `maxAge`) and `FetchSpec` (`cost`, …",
-              "hash": "0d2a559001f7"
+              "hash": "e5a96666589f"
             }
           },
           {
@@ -4510,7 +5837,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#66-call-facades",
               "heading": "6.6 Call facades",
               "paragraph": "Responsibility: compose cache, budget and transport in the one fixed order — cache, then budget inside the cache loader, then transport — so a hit costs nothing and N coalesced callers cost one permit; and own what they built. · Owns (`common/`): · `Endpoint<T>` (factory `Endpoint(id, decode, configure)` + builder: `name`, `ttl`, `missTtl`, `cost`, `lane`, `misses(statuses)`): the decode function travels with the endpoint because the cache key cannot see it. · `CallSpec` (per call: path segments, query pairs, headers, `method`, body, `lane`, `maxWait`, `maxAge`) and `FetchSpec` (`cost`, …",
-              "hash": "0d2a559001f7"
+              "hash": "e5a96666589f"
             }
           },
           {
@@ -4540,7 +5867,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 10,
         "slug": "feeds",
         "issue": 69,
-        "level": 3,
         "blockedBy": [
           68,
           63
@@ -4672,7 +5998,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "n": 11,
         "slug": "http-docs",
         "issue": 70,
-        "level": 1,
         "blockedBy": [
           69
         ],
@@ -5041,7 +6366,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       },
       {
         "unit": "okhttp-transport",
-        "basis": "plan",
+        "basis": "as-built",
         "summary": "`webtools-http`, new and unreleased, gains `OkHttpTransport` and its factory, Stable Core: the first thing that applies the outbound-URL policy to a network fetch, with one request per hop, redirects followed by the transport, a capped decoded body and twelve refused request headers. The fixtures gain `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)`, and the fake's cap follows the transport's no-body rule. No dependency of either variant changes and the three existing artifacts do not.",
         "release": {
           "bump": "none",
@@ -5049,8 +6374,36 @@ window.dashboardLive&&window.dashboardLive("plan",
           "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
           "unreleased": true
         },
-        "source": "65-okhttp-transport/consequences.md; 65-okhttp-transport/plan.md",
-        "link": "65-okhttp-transport/consequences.md#1-published-artifacts"
+        "source": "65-okhttp-transport/consequences.md, reconciled with 65-okhttp-transport/final-implementation.md",
+        "link": "65-okhttp-transport/consequences.md#1-published-artifacts",
+        "changes": [
+          {
+            "what": "The `internal` constructor takes two further defaulted parameters, the shared deadline's `TimeSource` and each hop's `Call.Factory`, for the module's own Level 2 test; the call facades (#68) never pass them.",
+            "why": "The plan's amendment of 2026-11-02 (stage S6a); the public factory, the dump and the fixtures do not change.",
+            "when": "#65 S6a",
+            "ref": "65-okhttp-transport/consequences.md#4-sibling-units"
+          },
+          {
+            "what": "`UrlParseLinearTimeNonFunctionalTest`, landed with #62, exceeds its bound while the five level tasks run concurrently; it is WebTools#87.",
+            "why": "It failed in the test-coverage review's forced run and passes on its own.",
+            "when": "#65 test-coverage review",
+            "ref": "65-okhttp-transport/consequences.md#7-follow-ups-this-unit-leaves"
+          }
+        ]
+      },
+      {
+        "unit": "response-cache",
+        "basis": "plan",
+        "summary": "`webtools-http`, new and unreleased, gains the `ResponseCache` port, implementing which needs the opt-in, with its values and `ResponseCache.Disabled`, and the final `CaffeineResponseCache` on the JVM, all Stable Core otherwise: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge` and failures never stored. No dependency is added, the fixtures and the three existing artifacts do not change, and the call facades (#68) are its first callers.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
+          "unreleased": true
+        },
+        "source": "66-response-cache/consequences.md",
+        "link": "66-response-cache/consequences.md#1-published-artifacts",
+        "changes": []
       }
     ],
     "changes": [
@@ -5114,6 +6467,31 @@ window.dashboardLive&&window.dashboardLive("plan",
         "entry": "api.0",
         "system": "webtools-http-url-policy",
         "unit": "url-policy"
+      },
+      {
+        "what": "`webtools-http`'s transport contract is settled as built: a request carrying one of twelve controlled headers fails with `InvalidRequest` when executed, a `407`, `408`, `421` or `503` is delivered once as a response, and the dispatcher's daemon threads let a JVM exit without `close()`.",
+        "why": "#65's consequences §1 and §5 state it; `architecture.md` §6.3.2 and §7.3 carry dated corrections. `webtools-http` is unreleased, so no published consumer is affected.",
+        "when": "#65 landing",
+        "ref": "e8f0a88",
+        "entry": "downstream.1",
+        "system": "webtools-http-transport",
+        "unit": "okhttp-transport"
+      },
+      {
+        "what": "The test fixtures gain `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)`, each loopback factory over a whole policy, and `FakeHttpTransport`'s body cap skips a response to `HEAD` and a `1xx`, `204` or `304`.",
+        "why": "#65's consequences §1 and §5 state it, and `architecture.md` §6.7 carries a dated correction. The fixtures are unreleased, so no published consumer has the old cap.",
+        "when": "#65 landing",
+        "ref": "e8f0a88",
+        "entry": "api.2",
+        "system": "webtools-http-test-fixtures",
+        "unit": "okhttp-transport"
+      },
+      {
+        "what": "`CHANGELOG.md` exists from this landing, so #58 no longer creates it, and the IDE checks of units 3, 4 and 5 no longer wait for this unit's start: they share its check, at the next IntelliJ session.",
+        "why": "`architecture.md` §13 carries a dated correction for the changelog; this document's reconciled §8 and #65's consequences §6 state the rest.",
+        "when": "#65 landing",
+        "ref": "e8f0a88",
+        "unit": "okhttp-transport"
       }
     ],
     "source": "consequences.md",
@@ -5128,6 +6506,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "webtools-http-test-fixtures": "../../dashboards/webtools-http/index.html",
       "webtools-http-url-policy": "../../dashboards/webtools-http/index.html",
       "webtools-http-transport": "../../dashboards/webtools-http/index.html",
+      "webtools-http-cache": "../../dashboards/webtools-http/index.html",
       "webtools": "../../dashboards/index.html"
     }
   }
