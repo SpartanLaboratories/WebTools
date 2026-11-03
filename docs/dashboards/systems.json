@@ -1,12 +1,12 @@
 {
   "repo": "SpartanLaboratories/WebTools",
-  "updated": "2026-11-02",
+  "updated": "2026-11-03",
   "systems": [
     {"slug": "webtools", "name": "WebTools", "kind": "repo", "parent": null, "status": "built",
      "function": "Kotlin internet I/O helpers, published as independent single-concern artifacts (webtools-http new and unreleased) and built by one Gradle build.",
      "paths": ["."], "version": null,
-     "asIs": {"ref": "feat/issue-65-okhttp-transport", "sha": "db82470", "date": "2026-11-02T04:13:24Z"},
-     "lastAmended": {"issue": 65, "sha": "db82470"},
+     "asIs": {"ref": "feat/issue-66-response-cache", "sha": "38483ea", "date": "2026-11-03T18:39:52Z"},
+     "lastAmended": {"issue": 66, "sha": "38483ea"},
      "board": "index.html", "dsl": "workspace.dsl"},
 
     {"slug": "webtools-udp", "name": "webtools-udp", "kind": "system", "parent": "webtools", "status": "built", "visibility": "public",
@@ -45,10 +45,10 @@
                    "units": [{"unit": 3, "slug": "http-core", "subIssue": 62}, {"unit": 10, "slug": "feeds", "subIssue": 69}]}},
 
     {"slug": "webtools-http", "name": "webtools-http", "kind": "supersystem", "parent": "webtools", "status": "planned", "visibility": "internal-org",
-     "function": "A Kotlin Multiplatform suspend HTTP stack. Built: its common core (the request and response types, Url, the failure model and the transport and wall-clock ports), its outbound-URL policies with their internal classifier and JVM guards, the OkHttp transport that enforces them, and its published test fixtures. Planned: response cache, call budget and call facades.",
+     "function": "A Kotlin Multiplatform suspend HTTP stack. Built: its common core (the request and response types, Url, the failure model and the transport and wall-clock ports), its outbound-URL policies with their internal classifier and JVM guards, the OkHttp transport that enforces them, the response cache with its Caffeine default, and its published test fixtures. Planned: call budget and call facades.",
      "paths": ["webtools-http/"], "version": "1.0.0", "published": null, "unreleased": true,
-     "asIs": {"ref": "feat/issue-65-okhttp-transport", "sha": "db82470", "date": "2026-11-02T04:13:24Z"},
-     "lastAmended": {"issue": 65, "sha": "db82470"},
+     "asIs": {"ref": "feat/issue-66-response-cache", "sha": "38483ea", "date": "2026-11-03T18:39:52Z"},
+     "lastAmended": {"issue": 66, "sha": "38483ea"},
      "board": "webtools-http/index.html", "dsl": "webtools-http/workspace.dsl",
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "5, 6.2-6.7", "placement": "webtools-http/ (publishes webtools-http and webtools-http-jvm, 1.0.0)",
                    "units": [{"unit": 3, "slug": "http-core", "subIssue": 62}, {"unit": 4, "slug": "test-support", "subIssue": 63}, {"unit": 5, "slug": "url-policy", "subIssue": 64}, {"unit": 6, "slug": "okhttp-transport", "subIssue": 65}, {"unit": 7, "slug": "response-cache", "subIssue": 66}, {"unit": 8, "slug": "call-budget", "subIssue": 67}, {"unit": 9, "slug": "call-facades", "subIssue": 68}]}},
@@ -87,9 +87,13 @@
      "c4": {"webtools-http/workspace.dsl": "webtools.http.okhttp", "workspace.dsl": "webtools.http.transport"},
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.3.2", "placement": "webtools-http/src/jvmMain",
                    "units": [{"unit": 6, "slug": "okhttp-transport", "subIssue": 65}]}},
-    {"slug": "webtools-http-cache", "name": "response cache", "kind": "system", "parent": "webtools-http", "status": "planned", "core": false,
-     "function": "Serve one decoded value per key to many concurrent callers from one load, for a bounded time, never caching a failure.",
-     "paths": [],
+    {"slug": "webtools-http-cache", "name": "response cache", "kind": "system", "parent": "webtools-http", "status": "built", "core": false,
+     "function": "Serve one decoded value per key to many concurrent callers from one load, for a bounded time, never caching a failure: the ResponseCache port, its values and the pass-through ResponseCache.Disabled in common code, and the CaffeineResponseCache default on the JVM.",
+     "paths": ["webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/ResponseCache.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/CacheKey.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/CachePolicy.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/Lookup.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/CacheStats.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/LoaderRunner.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/CaffeineResponseCache.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/CacheEntry.kt"], "version": "1.0.0", "unreleased": true,
+     "asIs": {"ref": "feat/issue-66-response-cache", "sha": "38483ea", "date": "2026-11-03T18:39:52Z"},
+     "lastAmended": {"issue": 66, "sha": "38483ea"},
+     "board": "webtools-http/index.html", "dsl": "webtools-http/workspace.dsl",
+     "c4": {"webtools-http/workspace.dsl": "webtools.http.cache", "workspace.dsl": "webtools.http.cache"},
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.4", "placement": "webtools-http/src/commonMain (port), jvmMain (Caffeine)",
                    "units": [{"unit": 7, "slug": "response-cache", "subIssue": 66}]}},
     {"slug": "webtools-http-budget", "name": "call budget", "kind": "system", "parent": "webtools-http", "status": "planned", "core": false,
@@ -107,6 +111,11 @@
      "function": "Parse RSS and Atom behind a hardened parser port with a Rome default, and fetch feeds with a caller-owned conditional GET over UrlFetcher.",
      "paths": [],
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.10", "placement": "webtools-feeds/ (publishes webtools-feeds and webtools-feeds-jvm, 1.0.0)",
-                   "units": [{"unit": 10, "slug": "feeds", "subIssue": 69}]}}
+                   "units": [{"unit": 10, "slug": "feeds", "subIssue": 69}]}},
+
+    {"slug": "webtools-common", "name": "webtools-common", "kind": "system", "parent": "webtools", "status": "planned", "visibility": "internal-repo",
+     "function": "Common code shared by the webtools modules: what is universal to the web, such as IP addresses.",
+     "paths": [],
+     "c4": {"workspace.dsl": "webtools.common"}}
   ]
 }

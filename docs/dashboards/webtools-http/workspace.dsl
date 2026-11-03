@@ -1,15 +1,15 @@
 // webtools-http — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http/index.html.
-// As-is at WebTools feat/issue-65-okhttp-transport db82470 (2026-11-02), webtools-http 1.0.0 (new, unreleased): the common core from #62, its check-only js module, the test-fixtures variant from #63, the outbound-URL policies with their internal classifier and JVM guards and the WebToolsDsl marker from #64, and OkHttpTransport with its internal parts and the loopback fixtures from #65. Code is authoritative on any conflict.
-// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.4 to 6.6 and 11). None of them is built; they are drawn dashed.
+// As-is at WebTools feat/issue-66-response-cache 38483ea (2026-11-03), webtools-http 1.0.0 (new, unreleased): the common core from #62, its check-only js module, the test-fixtures variant from #63, the outbound-URL policies with their internal classifier and JVM guards and the WebToolsDsl marker from #64, OkHttpTransport with its internal parts and the loopback fixtures from #65, and the response cache with its Caffeine default from #66. Code is authoritative on any conflict.
+// Elements tagged Planned come from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.5, 6.6 and 11). None of them is built; they are drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
 
     model {
-        consumer = person "Consumer" "A Kotlin service that builds requests, matches the failures and supplies or receives an HttpTransport."
+        consumer = person "Consumer" "A Kotlin service that builds requests, matches the failures, supplies or receives an HttpTransport and loads through a ResponseCache."
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            http = container "webtools-http" "A suspend HTTP stack, built in part: the opt-in marker, the failure model, the request and response types, Url, and the transport and wall-clock ports; the outbound-URL policies with their internal classifier and JVM guards; OkHttpTransport, which enforces a policy on every hop; and its published test-fixtures variant." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
+            http = container "webtools-http" "A suspend HTTP stack, built in part: the opt-in marker, the failure model, the request and response types, Url, and the transport and wall-clock ports; the outbound-URL policies with their internal classifier and JVM guards; OkHttpTransport, which enforces a policy on every hop; the ResponseCache port with its Caffeine default; and its published test-fixtures variant." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
                 // ---- public surface ----
                 marker    = component "ExperimentalForInheritanceWebToolsApi" "The one opt-in marker: @RequiresOptIn(level = ERROR), used only through @SubclassOptInRequired and @OptIn; never removed." "annotation class" "Public"
                 transport = component "HttpTransport" "suspend execute(request): Result<HttpResponse> and an idempotent close(); an eight-point contract. Implementing it needs the opt-in." "interface · AutoCloseable · gated" "Public"
@@ -21,9 +21,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 // ---- internals ----
                 pipeline  = component "URL pipeline" "UrlParsing, UrlHost, UrlEncoding and UrlProblem: trim, scan, scheme, authority, port, host, then path and query; the internal path and query encoders." "internal functions" "Internal"
                 syntax    = component "HttpSyntax" "The shared predicates: the token rule, the value rules, the media type, sanitizeReceivedValue." "internal object" "Internal"
-                log       = component "Log seam" "Log with debug, info and warn, through expect fun logger(name): slf4j in jvmMain. OkHttpTransport and GuardedDns log through it." "internal interface · expect/actual" "Internal"
+                log       = component "Log seam" "Log with debug, info and warn, through expect fun logger(name): slf4j in jvmMain. OkHttpTransport, GuardedDns and CaffeineResponseCache log through it." "internal interface · expect/actual" "Internal"
                 helpers   = component "Helpers" "Result.flatMap, catchNonFatal and expect fun epochMillisNow(): System.currentTimeMillis() in jvmMain." "internal functions · expect/actual" "Internal"
-                dsl       = component "WebToolsDsl" "The DSL marker on the six builders a consumer's lambda receives; a nested block reaches an outer builder only through its label." "annotation class · @DslMarker" "Public"
+                dsl       = component "WebToolsDsl" "The DSL marker on the eight builders a consumer's lambda receives; a nested block reaches an outer builder only through its label." "annotation class · @DslMarker" "Public"
                 // ---- the outbound-URL policy: public configuration values, an internal JVM-free classifier, internal JVM guards ----
                 policy    = component "OutboundUrlPolicy" "Trusted and Untrusted policies as configuration values, with TransportSettings (TrustedDefaults, UntrustedDefaults), CidrBlock and MixedAnswers. Untrusted parameters only add denials. OkHttpTransport applies one to every hop; the planned facades will pre-check a URL." "sealed class · final leaves · builders" "Public"
                 classifier = component "Address classifier" "UrlGuard with HostRules, AddressRanges, StrictIp and GuardRelaxation: pure, JVM-free judgement of a hop, a redirect target, a resolved address and a resolver answer under one policy." "internal · commonMain" "Internal"
@@ -35,8 +35,13 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 client    = component "Transport client" "TransportClient: one OkHttpClient per transport with its own daemon dispatcher, connection pool and timeouts; redirects, retries, authentication, cookies and the cache switched off. ExchangeGuard, its one network interceptor: a second exchange of one hop fails as RetryRefused, and a 407, 408, 421 or 503 is hidden from OkHttp's follow-up logic and delivered once." "internal · jvmMain" "Internal"
                 hops      = component "Hop pipeline" "CallBridge suspends on one enqueued Call; HopRequest, HopResponse, ReceivedResponse, RedirectDecision, CappedBody, CallDeadline and FailureMapping build the hop, settle its response and map its failure; ThrowableSearch is the bounded walk it shares with the policy's refusal markers." "internal · jvmMain" "Internal"
                 controlled = component "TransportControlledHeaders" "The twelve request headers the transport refuses from a caller, JVM-free, so the check module compiles it for js and the facades can refuse the same names." "internal · commonMain" "Internal"
+                // ---- the response cache: the port and its values in common code, the Caffeine default on the JVM ----
+                cache     = component "ResponseCache" "The cache port: getOrLoad, invalidate, invalidateAll, stats and an idempotent close(), under an eleven-point contract: one load per key at a time, failures never stored. Implementing it needs the opt-in; the nested, final ResponseCache.Disabled stores nothing and needs none." "interface · AutoCloseable · gated · commonMain" "Public"
+                cacheValues = component "Cache values" "CacheKey, CachePolicy with its builder and factory, the sealed Lookup (Found, Missing) and CacheStats: immutable; toString() prints names and weights, never a value." "final classes · a sealed pair · commonMain" "Public"
+                loaderRunner = component "Loader runner" "runLoader: the one place that decides what a loader's exception, Error and cancellation mean; ResponseCache.Disabled and the Caffeine default share it." "internal · commonMain" "Internal"
+                caffeine  = component "CaffeineResponseCache" "The supplied ResponseCache, final, built by the factory CaffeineResponseCache { }: one shared future per key, per-entry lifetimes from the load's completion, a weight bound, a per-call maxAge; usable without the opt-in. It owns no thread, timer or pool; loads run in its own scope on loadDispatcher." "final class · factory · builder · jvmMain · caffeine 3.3.1" "Public"
+                cacheEntry = component "Cache entry and rules" "CacheEntry, CacheOutcome, Residency, Storage and CacheExpiry: what a finished load holds, how long it lives, and whether a call may be served it; the rules are pure." "internal · jvmMain · caffeine 3.3.1" "Internal"
                 // ---- planned by Issue #55, not built ----
-                cache     = component "ResponseCache" "The cache port and its Caffeine default." "planned" "Planned"
                 budget    = component "CallBudget" "The budget port, WindowedCallBudget and the rate signals." "planned" "Planned"
                 facades   = component "UpstreamClient · UrlFetcher" "The facades composing cache, budget and transport." "planned" "Planned"
             }
@@ -87,9 +92,25 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.http.hops -> webtools.http.guards "Finds a refusal marker through ThrowableSearch"
         webtools.http.fixtures -> webtools.http.okhttp "Builds the real transport over loopback: LoopbackTransports"
 
+        consumer -> webtools.http.caffeine "Builds it with CaffeineResponseCache { }, then calls getOrLoad, invalidate, stats and close()"
+        consumer -> webtools.http.cacheValues "Builds keys and policies; its loader returns a Lookup"
+        webtools.http.caffeine -> webtools.http.cache "Implements"
+        webtools.http.marker -> webtools.http.cache "Gates implementing it"
+        webtools.http.cache -> webtools.http.cacheValues "Takes a CacheKey and a CachePolicy, returns a Result of a Lookup"
+        webtools.http.cache -> webtools.http.failures "Fails with Closed after close()"
+        webtools.http.cache -> webtools.http.loaderRunner "Disabled runs each loader through"
+        webtools.http.caffeine -> webtools.http.loaderRunner "Runs each load through"
+        webtools.http.caffeine -> webtools.http.cacheEntry "Holds one shared future of an entry per key"
+        webtools.http.caffeine -> webtools.http.log "Logs through: never a value, a parameter value or a message text"
+        webtools.http.loaderRunner -> webtools.http.helpers "Joins the outcome with catchNonFatal and flatMap"
+        webtools.http.cacheEntry -> webtools.http.cacheValues "Reads the policy's lifetimes and the Lookup's weight"
+        webtools.http.dsl -> webtools.http.cacheValues "Marks CachePolicy's builder"
+        webtools.http.dsl -> webtools.http.caffeine "Marks its builder"
+        webtools.check -> webtools.http.loaderRunner "Compiles the port, its values and the runner for js"
+
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
         webtools.http.facades -> webtools.http.classifier "Would pre-check a URL with checkRequest"
-        webtools.http.cache -> webtools.http.clock "Would expire by"
+        webtools.http.facades -> webtools.http.cache "Would load through"
         webtools.http.budget -> webtools.http.failures "Would fail with BudgetExhausted"
         webtools.http.facades -> webtools.http.transport "Would compose with the cache and the budget"
     }
@@ -103,7 +124,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at feat/issue-65-okhttp-transport db82470, its URL policy, OkHttp transport and test fixtures included, with the stack's later units dashed." {
+        component webtools.http "Components" "webtools-http as built at feat/issue-66-response-cache 38483ea, its URL policy, OkHttp transport, response cache and test fixtures included, with the stack's later units dashed." {
             include *
             autoLayout tb
         }
