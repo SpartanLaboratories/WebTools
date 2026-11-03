@@ -13,7 +13,7 @@
 - **Related docs:**
   - [`plan.md`](plan.md);
   - [`research/README.md`](research/README.md);
-  - the systems-level [`../impact.md`](../impact.md).
+  - the systems-level [`../consequences.md`](../consequences.md).
 
 ## 1. Published artifacts
 
@@ -126,7 +126,7 @@ landing moves no published module's version, so there is no release candidate.
 - **KDoc** on every public declaration of `webtools-http`, naming its tier and its contract.
 - **Unchanged:** `docs/webtools-udp-architecture.md` and `docs/webtools-udp-protocol.md`.
 - **Unit 11 writes** `docs/webtools-http-architecture.md`.
-- **`docs/dashboards/`** is brought to the as-built state by the admin team's landing refresh.
+- **`docs/dashboards/`** is brought to the as-built state by the landing's board refresh.
   Nothing in this unit edits it.
 
 ## 3. Adoption
@@ -146,7 +146,7 @@ What the later units build on. [`plan.md`](plan.md) §12 has the signatures.
 - **Unit 4, `test-support` (#63).**
   - **The root project still has no `check` task.** The check module uses `js()` with no
     environment, so the open point "where the publication check attaches" stands as
-    [`../impact.md`](../impact.md) §8 describes it.
+    [`../consequences.md`](../consequences.md) §8 describes it.
   - **The fixtures compilation needs its own opt-in.** It reaches the module's `internal` declarations,
     including `HttpSyntax` for the `.http` parser, but not the module's opt-in, so its source sets opt
     in themselves for the fakes that implement `HttpTransport` and `WallClock`.
@@ -205,7 +205,7 @@ not hold, or are refined:
   - The plugin calls `js()` with no environment. The earlier measurement had run `compileKotlinJs`
     alone.
   - As built, the root project gains no task, and unit 4's open point (where the fixtures-publication
-    check attaches) stands as [`../impact.md`](../impact.md) §8 states it.
+    check attaches) stands as [`../consequences.md`](../consequences.md) §8 states it.
   - The cost is the Kotlin Gradle plugin's "JS Environment Not Selected" warning, printed once per
     configuration-cache miss. If a release makes it an error, the plugin's TestKit `build` test fails,
     and the fallback recorded in the plugin's header applies (§7).

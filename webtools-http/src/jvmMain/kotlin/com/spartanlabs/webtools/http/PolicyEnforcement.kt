@@ -5,8 +5,8 @@ import java.net.Proxy
 import javax.net.SocketFactory
 
 /**
- * The three client settings one policy implies; a `null` means "leave OkHttp's default". The OkHttp transport (#65)
- * applies them to its `OkHttpClient.Builder`.
+ * The three client settings one policy implies; a `null` means "leave OkHttp's default". `OkHttpTransport` applies
+ * them to its `OkHttpClient.Builder` (`newTransportClient`).
  *
  * **Wiring.** `.dns(dns)` always; `.socketFactory(socketFactory)` and `.proxy(proxy)` only when non-null. Preconditions on
  * the client: `retryOnConnectionFailure(false)`, and fast fallback left at its default. The guards act in this order for

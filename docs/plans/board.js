@@ -3,11 +3,11 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-10-26T22:44:14Z",
-  "asOf": "2026-10-26",
+  "generated": "2026-11-03T00:33:36Z",
+  "asOf": "2026-11-03",
   "tree": {
-    "ref": "feat/issue-64-url-policy",
-    "sha": "543bd08"
+    "ref": "feat/issue-65-okhttp-transport",
+    "sha": "db82470"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -51,8 +51,8 @@ window.dashboardLive&&window.dashboardLive("board",
       "name": "OkHttp transport",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-cache",
@@ -144,22 +144,23 @@ window.dashboardLive&&window.dashboardLive("board",
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "4 of 11 units landed; #64 in progress; #65 up next.",
+      "detail": "5 of 11 units landed; #65 in progress; #66 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-10-25T21:42:50Z",
+      "updated": "2026-11-01T17:10:00Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
+      "fixOf": null,
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 4,
+        "landed": 5,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 4,
+        "landed": 5,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -167,19 +168,15 @@ window.dashboardLive&&window.dashboardLive("board",
         "done": false,
         "current": [
           {
-            "issue": 64,
-            "slug": "url-policy",
-            "step": "state-boards"
+            "issue": 65,
+            "slug": "okhttp-transport",
+            "step": "document"
           }
         ],
         "next": {
-          "issue": 65,
-          "slug": "okhttp-transport",
-          "blockedBy": [
-            {
-              "issue": 64
-            }
-          ]
+          "issue": 66,
+          "slug": "response-cache",
+          "blockedBy": []
         }
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
@@ -244,6 +241,7 @@ window.dashboardLive&&window.dashboardLive("board",
       ],
       "qaMax": 3,
       "status": "landed",
+      "fixOf": null,
       "landed": {
         "pr": 74,
         "merge": "1e27071",
@@ -311,6 +309,7 @@ window.dashboardLive&&window.dashboardLive("board",
       ],
       "qaMax": 3,
       "status": "landed",
+      "fixOf": null,
       "landed": {
         "pr": 76,
         "merge": "3949b52",
@@ -365,7 +364,9 @@ window.dashboardLive&&window.dashboardLive("board",
         },
         {
           "issue": 64,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-26T23:17:47Z",
           "hold": "enables"
         },
         {
@@ -405,6 +406,7 @@ window.dashboardLive&&window.dashboardLive("board",
       ],
       "qaMax": 3,
       "status": "landed",
+      "fixOf": null,
       "landed": {
         "pr": 82,
         "merge": "7de8207",
@@ -507,6 +509,7 @@ window.dashboardLive&&window.dashboardLive("board",
       ],
       "qaMax": 3,
       "status": "landed",
+      "fixOf": null,
       "landed": {
         "pr": 84,
         "merge": "4fcc6e0",
@@ -526,7 +529,8 @@ window.dashboardLive&&window.dashboardLive("board",
     {
       "issue": 64,
       "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -543,17 +547,17 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 65,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/64-url-policy/dashboard.html",
       "folder": "55-http-client-stack/64-url-policy/",
-      "branch": "feat/issue-64-url-policy",
+      "branch": null,
       "system": "webtools-http-url-policy",
-      "step": "state-boards",
-      "detail": "Synced with master (unchanged at ad0ae63); no version moves. The state boards are refreshed on the branch at 543bd08.",
-      "since": "2026-10-26T22:14:14Z",
-      "updated": "2026-10-26T22:14:14Z",
+      "step": "landed",
+      "detail": "Merged through PR #86 as 53965c8: the outbound-URL policies, `TransportSettings`, `CidrBlock`, `MixedAnswers` and the `WebToolsDsl` marker in `webtools-http`, over the internal classifier and JVM guards, with the README row; no deviation from the plan; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-10-26T23:28:51Z",
+      "updated": "2026-10-26T23:28:51Z",
       "qa": [
         {
           "pass": 1,
@@ -592,14 +596,20 @@ window.dashboardLive&&window.dashboardLive("board",
         }
       ],
       "qaMax": 3,
-      "status": "building",
-      "landed": null,
+      "status": "landed",
+      "fixOf": null,
+      "landed": {
+        "pr": 86,
+        "merge": "53965c8",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-10-26"
+      },
       "reconciliation": {
-        "state": "partial",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "outbound-URL policy",
       "group": "55",
       "order": 5
@@ -613,8 +623,10 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 64,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-26T23:17:47Z",
+          "build": "clear",
           "locality": "local-repository"
         },
         {
@@ -633,24 +645,63 @@ window.dashboardLive&&window.dashboardLive("board",
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/65-okhttp-transport/dashboard.html",
+      "folder": "55-http-client-stack/65-okhttp-transport/",
+      "branch": "feat/issue-65-okhttp-transport",
       "system": "webtools-http-transport",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [
+      "step": "document",
+      "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
+      "since": "2026-11-03T00:00:03Z",
+      "updated": "2026-11-03T00:33:11Z",
+      "qa": [
         {
-          "issue": 64
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-02",
+          "at": "2026-11-02T00:08:52Z",
+          "findings": {
+            "test": 4,
+            "code": 0
+          },
+          "severity": {
+            "minor": 2,
+            "other": 2
+          },
+          "route": "remediation",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html",
+          "note": "Code review passed: every plan item built, all eight acceptance criteria met, the issue's scope and the sibling interfaces hold. Four test findings, all in the As built rows the fixes touch: HopResponse.settleResponse has no isolated Level 2 component test; no test at any level reaches the hop loop's pre-hop deadline branch (under 1 ms left gives Timeout with no Call); Throwable.firstInChain has no direct Level 4a deterministic test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite: 711 passed, 0 failed, 0 skipped."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-11-02",
+          "at": "2026-11-02T02:06:09Z",
+          "findings": {
+            "test": 2,
+            "code": 0
+          },
+          "severity": {
+            "minor": 2,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html",
+          "note": "Code review passed: the deadline seam is inert at its defaults, the public factory and the ABI dump are unchanged, and every moved assertion is preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. All four pass-1 findings verified answered. Two minor test findings, both in the As built rows the fixes touch, fixed on the spot: the fixture `webtoolsUrl`'s three refusal branches have no test (a `WebtoolsUrlComponentTest` is added); `receiveHeaders`' four pure table cases sit at Level 2 rather than 4a (moved, for consistency with pass 1). Suite, all five levels forced: 731 passed, 1 failed, 0 skipped. The one failure is not this change's: #62's untouched `UrlParseLinearTimeNonFunctionalTest` times out under parallel task execution and passes 31/31 in isolation, per its own documented policy; it is being filed as its own issue.",
+          "inPlace": "fixed"
         }
       ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
+      "landed": null,
+      "reconciliation": {
+        "state": "planned",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "OkHttp transport",
       "group": "55",
       "order": 6
@@ -694,10 +745,12 @@ window.dashboardLive&&window.dashboardLive("board",
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [],
       "systemName": "response cache",
       "group": "55",
       "order": 7
@@ -913,6 +966,7 @@ window.dashboardLive&&window.dashboardLive("board",
       ],
       "qaMax": null,
       "status": "landed",
+      "fixOf": null,
       "landed": {
         "pr": 59,
         "merge": "806ce8e",
@@ -964,7 +1018,8 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 64,
           "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 65,
@@ -1000,6 +1055,15 @@ window.dashboardLive&&window.dashboardLive("board",
     }
   ],
   "unscheduled": [
+    {
+      "issue": 87,
+      "title": "webtools-http: UrlParseLinearTimeNonFunctionalTest exceeds its 100x bound when the level test tasks run in parallel",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-11-02",
+      "system": "webtools-http-core"
+    },
     {
       "issue": 81,
       "title": "webtools-localhook: local authenticated callback server",

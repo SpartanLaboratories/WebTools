@@ -221,6 +221,24 @@ class FakeHttpTransportComponentTest {
     }
 
     @Test
+    fun `the cap follows the transport's no-body rule`() = runTest {
+        val over = HttpHeaders { add("Content-Length", "5000") }
+        val transport = FakeHttpTransport(maxResponseBytes = 10)
+            .on(RequestMatch.request(HttpMethod.Head, "/head"), Step.respond(200, over, "tiny"))
+            .on(RequestMatch.get("/100"), Step.respond(100, over, "x".repeat(11)))
+            .on(RequestMatch.get("/204"), Step.respond(204, over))
+            .on(RequestMatch.get("/304"), Step.respond(304, over, "x".repeat(11)))
+            .on(RequestMatch.get("/200"), Step.respond(200, body = "x".repeat(11)))
+            .on(RequestMatch.get("/404"), Step.respond(404, over, "x".repeat(11)))
+        assertEquals(200, transport.execute(HttpRequest(HttpMethod.Head, url("https://h/head"))).getOrThrow().status)
+        assertEquals(100, transport.execute(get("https://h/100")).getOrThrow().status)
+        assertEquals(204, transport.execute(get("https://h/204")).getOrThrow().status)
+        assertEquals(304, transport.execute(get("https://h/304")).getOrThrow().status)
+        assertIs<TransportFailure.BodyTooLarge>(transport.execute(get("https://h/200")).exceptionOrNull())
+        assertIs<TransportFailure.BodyTooLarge>(transport.execute(get("https://h/404")).exceptionOrNull())
+    }
+
+    @Test
     fun `a negative cap and a stub without steps are refused`() {
         assertFailsWith<IllegalArgumentException> { FakeHttpTransport(maxResponseBytes = -1) }
         assertFailsWith<IllegalArgumentException> { FakeHttpTransport().on(RequestMatch.Any) }

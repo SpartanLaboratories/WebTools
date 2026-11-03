@@ -18,7 +18,7 @@
     [`research/iana-special-purpose-rows.md`](research/iana-special-purpose-rows.md),
     [`research/bypass-vectors.md`](research/bypass-vectors.md) and
     [`research/config-api-shape.md`](research/config-api-shape.md);
-  - the systems-level [`../impact.md`](../impact.md).
+  - the systems-level [`../consequences.md`](../consequences.md).
 
 ## 1. Published artifacts
 

@@ -1,4 +1,6 @@
-# Issue #55 — HTTP client stack (impact)
+# Issue #55 — HTTP client stack (consequences)
+
+> Until #65 landed, this document was `impact.md`.
 
 - **Covers:** `SpartanLaboratories/WebTools#55`, with `#47` folded in as its `java-floor` unit.
 - **Scope:** systems. What each artifact, build file, document and neighbouring issue gains or
@@ -16,7 +18,7 @@
 | `webtools-udp` | Java 11 floor (landed, #76): class files major 55, `org.gradle.jvm.version` 11 in the module metadata (23 on Central). Public API unchanged (`javap -protected` identical, measured); the UDP port lock unchanged. | rides in the unreleased `2.0.0a` (`webtools-udp/build.gradle.kts:116`); Central holds 1.0.0, 1.1.0 and 2.0.0, all Java 23 | JDK 11–22 can load it once it is published. POM identical; metadata identical except the JVM version. `2.0.0a` orders below `2.0.0`, so a graph that also asks for `2.0.0` keeps the Java 23 build unless it pins with `strictly`, as for the other two. This corrects the architecture's §12, which calls `webtools-udp` unaffected. |
 | `webtools-scraping` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As above. `1.0.0a` orders below `1.0.0`, so a graph that also asks for `1.0.0` keeps the Java 23 build unless it pins with `strictly`. The README and the release note say so. |
 | `webtools-browser` | Java 11 floor; no source change. | `1.0.0` → `1.0.0a` | As for `webtools-scraping`. |
-| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. Its test-fixtures variant is built (#63): `VirtualClock`, `FakeHttpTransport`, the `.http` fixtures and the recorder, with the fixtures-publication check that guards their publication. Its outbound-URL policies are built (#64): `OutboundUrlPolicy` (`Trusted`, `Untrusted`), `TransportSettings`, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core, over an `internal` common classifier and `internal` JVM resolver and socket guards; the dump grows by exactly these, and no dependency moves. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. The fixtures variant as built (#63) matches too: the root module's metadata holds `testFixturesApiElements` and `testFixturesRuntimeElements`, each with the capability `io.github.spartanlaboratories:webtools-http-test-fixtures`, `org.gradle.jvm.version` 11 and the one `-test-fixtures.jar` (classes only, major 55); the root POM lists the two test libraries as `compile` and `optional`, and neither the main variants nor the `-jvm` POM lists them. A consumer takes it with `testFixtures(...)`, in Gradle only. |
+| `webtools-http` (new) | The HTTP stack: transport, URL policies, cache, budget, facades, failure model. Kotlin Multiplatform; publishes `webtools-http` and `webtools-http-jvm`, plus a test-fixtures variant (capability `webtools-http-test-fixtures`, a `-test-fixtures.jar`). Its common core is built (#62): the opt-in marker, the failure model, the request and response types, and the `HttpTransport` and `WallClock` ports; its ABI dump `api/webtools-http.api` is committed. Its test-fixtures variant is built (#63): `VirtualClock`, `FakeHttpTransport`, the `.http` fixtures and the recorder, with the fixtures-publication check that guards their publication. Its outbound-URL policies are built (#64): `OutboundUrlPolicy` (`Trusted`, `Untrusted`), `TransportSettings`, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core, over an `internal` common classifier and `internal` JVM resolver and socket guards; the dump grows by exactly these, and no dependency moves. Its supplied transport, `OkHttpTransport`, and the loopback fixtures are built (#65): [`65-okhttp-transport/consequences.md`](65-okhttp-transport/consequences.md) §1. | `1.0.0` | `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); `okhttp-jvm` 5.5.0, `caffeine` 3.3.1 and `slf4j-api` 2.0.13 at runtime only. `okhttp-jvm` 5.5.0 brings a `kotlin-stdlib` 2.2.21 requirement. `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0 appear only on the fixtures variants. The publication as built (#62) matches: the `webtools-http-jvm` POM has `kotlinx-coroutines-core-jvm` 1.10.2 and `kotlin-stdlib` 2.2.0 in `compile` scope and the other three in `runtime` scope, the module metadata's API variant holds only those two, and the class files are major 55, with `org.gradle.jvm.version` 11 on both library variants. The fixtures variant as built (#63) matches too: the root module's metadata holds `testFixturesApiElements` and `testFixturesRuntimeElements`, each with the capability `io.github.spartanlaboratories:webtools-http-test-fixtures`, `org.gradle.jvm.version` 11 and the one `-test-fixtures.jar` (classes only, major 55); the root POM lists the two test libraries as `compile` and `optional`, and neither the main variants nor the `-jvm` POM lists them. A consumer takes it with `testFixtures(...)`, in Gradle only. |
 | `webtools-feeds` (new) | RSS/Atom parser port with the Rome default and a conditional-GET fetcher. Kotlin Multiplatform; publishes `webtools-feeds` and `webtools-feeds-jvm`; no fixtures variant. | `1.0.0` | `webtools-http` and its `api` dependency on the compile classpath; `rome` 2.1.0 and `slf4j-api` at runtime. |
 
 **Not published:** the included `build-logic` build and the check-only modules
@@ -184,9 +186,9 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 | 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 to 5 as built
+## 8. What the later units build on: units 1 to 6 as built
 
-Units 1 to 5 are built.
+Units 1 to 6 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -207,6 +209,10 @@ Units 1 to 5 are built.
   [`64-url-policy/final-implementation.md`](64-url-policy/final-implementation.md). Its contracts for
   the later units are pinned in [`64-url-policy/plan.md`](64-url-policy/plan.md) §12 and summarised in
   [`64-url-policy/impact.md`](64-url-policy/impact.md) §4.
+- **Unit 6, `okhttp-transport` (#65).** Its as-built record is
+  [`65-okhttp-transport/final-implementation.md`](65-okhttp-transport/final-implementation.md). Its
+  contracts for the later units are pinned in [`65-okhttp-transport/plan.md`](65-okhttp-transport/plan.md)
+  §12 and summarised in [`65-okhttp-transport/consequences.md`](65-okhttp-transport/consequences.md) §4.
 
 What they settle for the units still to come:
 
@@ -336,8 +342,8 @@ What they settle for the units still to come:
     evergreen architecture document describes the check module as `js()` with no environment.
 - **The IDE checks unit 3 leaves** (IntelliJ's import of the check module, the gate's error and its
   `@OptIn` quick fix, Quick Documentation) are the maintainer's and still open. They share the trigger
-  of units 4 and 5: the next IntelliJ import, at the latest before unit 6 (#65) starts
-  ([`62-http-core/impact.md`](62-http-core/impact.md) §7).
+  of units 4 to 6: the next IntelliJ session ([`62-http-core/impact.md`](62-http-core/impact.md) §7;
+  [`65-okhttp-transport/consequences.md`](65-okhttp-transport/consequences.md) §8).
 
 **Units 3 `http-core` and 10 `feeds`.**
 - **What the multiplatform plugin carries:**
@@ -421,9 +427,8 @@ What they settle for the units still to come:
     own covers it.
   - **Unit 11 (#70).** It documents the fixtures (the tier, the `.http` format, the recorder workflow,
     the `testFixtures(...)` line, the Gradle-only note) and the check, from unit 4's KDoc and README text.
-- **The IDE checks of units 3 and 4** are the maintainer's: at the next IntelliJ import, and at the
-  latest before unit 6 (#65) starts, with unit 5's
-  ([`63-test-support/impact.md`](63-test-support/impact.md) §7).
+- **The IDE checks of units 3 and 4** are the maintainer's: at the next IntelliJ session, with those of
+  units 5 and 6 ([`63-test-support/impact.md`](63-test-support/impact.md) §7).
 - **The first release.** The check signs the multiplatform publication, adhoc variant included, on every
   run. Only Maven Central's upload and validator meet the fixtures jar first, at `webtools-http`'s first
   release (§7).
@@ -487,9 +492,8 @@ What they settle for the units still to come:
   - **Unit 11 (#70).** It documents the policies (the tier, the numbers, the `extraDeniedRanges`
     statement, `MixedAnswers`) and the builder DSL from unit 5's KDoc, and the README row.
   - **Units 7 and 8 (#66, #67).** Nothing from the policy; any builder of theirs carries `@WebToolsDsl`.
-- **The IDE checks of units 3, 4 and 5** are the maintainer's, in one session: at the next IntelliJ
-  import, and at the latest before unit 6 (#65) starts
-  ([`64-url-policy/impact.md`](64-url-policy/impact.md) §6).
+- **The IDE checks of units 3, 4 and 5** are the maintainer's, together with unit 6's: at the next
+  IntelliJ session ([`64-url-policy/impact.md`](64-url-policy/impact.md) §6).
 - **`architecture.md`** carries dated corrections (2026-10-26) at §6.3.1 (the address table's two rules
   that are not registry rows; the socket guard's own `Socket(Proxy.NO_PROXY)` sockets and the inherited
   `newCall`) and §7.4 (a refusal carries the range class beside the reason).

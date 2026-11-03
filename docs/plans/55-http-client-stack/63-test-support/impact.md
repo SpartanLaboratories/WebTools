@@ -14,7 +14,7 @@
   - [`research/README.md`](research/README.md), with
     [`research/publication-check-wiring.md`](research/publication-check-wiring.md) and
     [`research/publication-check-mechanics.md`](research/publication-check-mechanics.md);
-  - the systems-level [`../impact.md`](../impact.md).
+  - the systems-level [`../consequences.md`](../consequences.md).
 
 ## 1. Published artifacts
 
@@ -164,7 +164,7 @@ Central refused the fixtures jar, an extra adhoc sources variant for it is addit
   - at §6.7, the two `MockWebServer` helpers of the `Fixture` bullet land with unit 6, as §11 says.
 - **Unchanged:** `docs/webtools-udp-architecture.md` and `docs/webtools-udp-protocol.md`. Unit 11 writes
   `docs/webtools-http-architecture.md`.
-- **`docs/dashboards/`** is brought to the as-built state by the admin team's landing refresh; nothing in
+- **`docs/dashboards/`** is brought to the as-built state by the landing's board refresh; nothing in
   this unit edits it.
 
 ## 3. Adoption
@@ -239,7 +239,7 @@ The first three points depart from [`../architecture.md`](../architecture.md), w
     ([`research/publication-check-wiring.md`](research/publication-check-wiring.md) F6).
   - The check hangs off `webtools-http`'s own `check` instead, so `build`, `check` and
     `:webtools-http:check` all run it and the root build keeps only `group` and `version`.
-  - This settles the open point of [`../impact.md`](../impact.md) §7 and §8 ("where the publication check
+  - This settles the open point of [`../consequences.md`](../consequences.md) §7 and §8 ("where the publication check
     attaches").
 - **Signing of the adhoc variant.** §12 lists it as first exercised at the first release. The check signs
   the copy it publishes with a throwaway key and asserts an `.asc` beside every file

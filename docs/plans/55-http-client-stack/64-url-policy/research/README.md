@@ -4,7 +4,7 @@
 (`url-policy`) of the HTTP client stack,
 [#55](https://github.com/SpartanLaboratories/WebTools/issues/55). The systems-level design is
 [`../../architecture.md`](../../architecture.md) (§6.3.1, with §6.2, §6.6, §6.9, §7.3, §9 and §11 unit 5)
-and the systems-level impact [`../../impact.md`](../../impact.md) (§8). This folder researches the
+and the systems-level impact [`../../consequences.md`](../../consequences.md) (§8). This folder researches the
 implementation details that design leaves to the unit and that need evidence from outside this
 repository.
 
@@ -90,7 +90,7 @@ are cited, not researched again.
 - **[`../../research/api-shape-and-failures.md`](../../research/api-shape-and-failures.md).** The
   builder-lambda factory pattern and why defaulted parameters are avoided (F7); output reasons as
   constants classes and consumer-chosen inputs as enums (F5).
-- **[`../62-http-core/research/url-parsing.md`](../62-http-core/research/url-parsing.md).** What `Url`
+- **[`../../62-http-core/research/url-parsing.md`](../../62-http-core/research/url-parsing.md).** What `Url`
   canonicalises and what it leaves for the policy.
 
 The codebase blast radius is small and is surveyed in the plan: the unit adds new files to

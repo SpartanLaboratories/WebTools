@@ -56,6 +56,13 @@ kotlin {
                 implementation("org.slf4j:slf4j-api:2.0.13")
             }
         }
+        jvmTest {
+            dependencies {
+                // OkHttp's TLS test helper: a self-signed certificate and matching SSL contexts for the https-to-http redirect
+                // test and the TLS failure test. A test-only dependency of this module; never a fixtures dependency.
+                implementation("com.squareup.okhttp3:okhttp-tls:5.5.0")
+            }
+        }
     }
 }
 
@@ -128,7 +135,7 @@ publishing.publications.withType<MavenPublication>().configureEach {
 
 dependencies {
     // The module itself (a consumer gets main at the same version), then the fixtures' own libraries.
-    // mockwebserver3 is declared for the loopback factories of a later unit; nothing else is added.
+    // mockwebserver3 serves the loopback factories (LoopbackTransports, webtoolsUrl, toMockResponse, enqueue); nothing else is added.
     "jvmTestFixturesApi"(project(project.path))
     "jvmTestFixturesApi"("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     "jvmTestFixturesApi"("com.squareup.okhttp3:mockwebserver3:5.5.0")

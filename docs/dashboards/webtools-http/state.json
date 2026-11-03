@@ -1,7 +1,7 @@
 {
   "slug": "webtools-http",
   "version": "1.0.0",
-  "asIs": {"ref": "feat/issue-64-url-policy", "sha": "543bd08", "date": "2026-10-26T22:10:15Z"},
-  "lastAmended": {"issue": 64, "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier", "sha": "543bd08"},
-  "written": {"sha": "543bd08"}
+  "asIs": {"ref": "feat/issue-65-okhttp-transport", "sha": "db82470", "date": "2026-11-02T04:13:24Z"},
+  "lastAmended": {"issue": 65, "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories", "sha": "db82470"},
+  "written": {"sha": "db82470"}
 }

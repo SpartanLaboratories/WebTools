@@ -4,11 +4,11 @@ One folder per issue, `docs/plans/<issue>-<slug>/`, nested under its tracking is
 
 ## The work board
 
-[**`index.html`**](index.html) lists every planning and development run in the repository: one row per issue that has a plan board or a `level:` label, grouped by tracking issue in landing order, then the rest by age. Each row shows the run's state and pipeline step, what it is doing now, its qa passes, what it waits on and what it blocks, its branch and its board. The runs being worked on glow. Its Context lists the roadmap and the open issues no roadmap item claims. It is regenerated from every board and the issue tracker each time a change lands, so between landings a run's live state is on its own board, on its branch.
+[**`index.html`**](index.html) lists every planning and development run in the repository: one row per issue that has a plan board or a `level:` label, grouped by tracking issue in landing order, then the rest by age. Each row shows the run's state and pipeline step, what it is doing now, its review passes, what it waits on and what it blocks, its branch and its board. The runs being worked on glow. Its Context lists the roadmap and the open issues no roadmap item claims. It is regenerated from every board and the issue tracker each time a change lands, so between landings a run's live state is on its own board, on its branch.
 
 ## Reading a plan board
 
-A board is `dashboard.html` in the issue's folder, rendered from `plan.json` beside it. Under the header, the **WIP strip** shows where the run is: its step on the pipeline, what it is doing, its qa passes and its blockers, or, once merged, the landing. Below it, the **Timeline** has one row per part of the change and four columns:
+A board is `dashboard.html` in the issue's folder, rendered from `plan.json` beside it. Under the header, the **WIP strip** shows where the run is: its step on the pipeline, what it is doing, its review passes and its blockers, or, once merged, the landing. Below it, the **Timeline** has one row per part of the change and four columns:
 
 1. **Gap** — what was wrong or missing at the baseline commit, with evidence.
 2. **Considered** — every option weighed, each with its verdict: accepted (green), declined (red, with the trade-off that ruled it out), partial or left open (yellow).
@@ -17,15 +17,15 @@ A board is `dashboard.html` in the issue's folder, rendered from `plan.json` bes
 
 The first three columns are written once and never rewritten; the fourth records every difference, so the board reads as history: the plan as it was, beside the change as it is. The cell being worked on glows. A board is a summary with little code: each cell links the Markdown section that holds the detail, `plan.md` for the steps and `final-implementation.md` for the as-built record. The **Decisions** tab lists every option, the **As built** tab every change; click any cell for its detail, or link one as `dashboard.html#<row>.<column>`.
 
-A **tracking board** (a level-4 issue) has one row per unit, each a sub-issue planned and built at its own level on its own board; its **Chain** tab draws the units and what blocks what, and a unit's row links its board once it has one.
+A **tracking board**, the board of an issue that tracks sub-issues, has one row per unit, each a sub-issue planned and built on its own board; its **Chain** tab draws the units and what blocks what, and a unit's row links its board once it has one.
 
-The boards are kept by the presenter agent from the events of each `/resolve-issue` run, with the global `dashboards` skill's plan set (its templates, rules and checks). The system dashboards in [`docs/dashboards/`](../dashboards/index.html) show the repository as built and link these boards.
+The boards are kept up to date from the events of each planning and development run, with the global `dashboards` skill's plan set (its templates, rules and checks). The system dashboards in [`docs/dashboards/`](../dashboards/index.html) show the repository as built and link these boards.
 
 ## Boards
 
 | Issue | Board | Notes |
 |---|---|---|
-| #55 | [`55-http-client-stack/dashboard.html`](55-http-client-stack/dashboard.html) | tracking board: the eleven units of the HTTP client stack in landing order, with `architecture.md`, `impact.md` and the research |
+| #55 | [`55-http-client-stack/dashboard.html`](55-http-client-stack/dashboard.html) | tracking board: the eleven units of the HTTP client stack in landing order, with `architecture.md`, `consequences.md` and the research |
 | #38 | [`38-handshake-empty-name/dashboard.html`](38-handshake-empty-name/dashboard.html) | the malformed `Iam` refusal, written after the fact as the worked example; its `plan.md` and `final-implementation.md` hold the detail |
 
 ## Earlier folders

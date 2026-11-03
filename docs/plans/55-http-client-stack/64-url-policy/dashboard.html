@@ -50,7 +50,7 @@ h1,h2,h3{text-wrap:balance}
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
 /* The header's tools, right of the breadcrumb: the live indicator (plan/RULES.md §3, "Live updates") and the theme switch
    (GUIDANCE.md §1, Themes). The live dot is ink, never a status or accent colour; it pulses while the run is live and changing, and
-   holds still after a quiet spell, while the run waits on the user, when the data cannot be read, and under reduced motion. */
+   holds still after a quiet spell, while the run waits on you, when the data cannot be read, and under reduced motion. */
 .topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:18px}
 .topbar .crumbs{padding-top:0;min-width:0}
 .tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
@@ -149,7 +149,7 @@ h1 a.ghn:hover{border-bottom-color:var(--ink)}
 .wip .key{margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
 /* A tracking board's unit in progress shows its own run, mirrored from its board (unit.live, plan/RULES.md §3): under its "In
    progress" line an accent rule holds the unit's step, its steps, its detail and its qa passes (a yellow rule while the run waits
-   on the user); its as-built cell and card carry a run line. */
+   on you); its as-built cell and card carry a run line. */
 .unitrun .wip-head{font-size:12.5px}
 .unitrun .wip-detail,.unitrun .wip-wait{margin:4px 0 2px}
 /* A tracking board's WIP strip is a set of cards (plan/RULES.md §3): the tracking issue's own phase with the chain's progress,
@@ -255,7 +255,7 @@ h1 a.ghn:hover{border-bottom-color:var(--ink)}
 /* The two accent marks (GUIDANCE.md §1).
    In progress (wip.current): a solid accent ring inside the edge, an interior glow that breathes (~2 s) and a faint accent wash.
    .glow-soft is the same, lighter, for a whole column at work. With reduced motion the interior glow holds still at its middle
-   strength; while the run waits on the user, halted or escalated, it stops (.held: the ring alone).
+   strength; while the run waits on you, halted or escalated, it stops (.held: the ring alone).
    Up next (wip.next, tracking boards): the mild outer glow the in-progress mark used before, held still, never animated, with
    the static UP NEXT tag. It is not work in progress, so it neither breathes nor counts as a glowing cell. */
 @keyframes glow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 28%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 22px 6px color-mix(in srgb,var(--accent) 52%,transparent)}}
@@ -454,7 +454,7 @@ a.more:hover{text-decoration:underline}
 .colhead.glow{border-radius:4px}
 /* Column-level glow (plan/RULES.md §3; GUIDANCE.md §1): a column address in wip.current (a whole column at work: qa, a stage that
    touches no row, research while its rows are unknown) is one glow on the column itself, its band, with an accent wash on its head,
-   never each row's cell lit; held still as the ring alone while the run waits on the user; static under reduced motion. The narrow
+   never each row's cell lit; held still as the ring alone while the run waits on you; static under reduced motion. The narrow
    layout draws no columns, so there each of the column's cells carries it. On the As built tab the glow goes round the cards. */
 .board>.band.glow-soft{background:color-mix(in srgb,var(--accent) 5%,var(--band))}
 .board>.band.held{background:color-mix(in srgb,var(--accent) 3%,var(--band))}
@@ -501,7 +501,7 @@ a.more:hover{text-decoration:underline}
 .rs-planning{--rc:var(--critical)}.rs-researching,.rs-returned{--rc:var(--serious)}.rs-verifying{--rc:var(--warning)}.rs-complete{--rc:var(--good)}
 .key i.ring{background:var(--surface);border:2.5px solid var(--rc);border-radius:4px}
 /* The charging arrow (plan/RULES.md §3, "The charging arrow"): during the plan step, the connector into a Verdict cell whose verdict is
-   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on the user and under
+   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on you and under
    reduced motion, and is the plain line again once the verdict is written. */
 .cell.verdict.charging::before{border-top:0;height:22px;top:calc(50% - 11px);left:calc(-1 * var(--cg) - 9px);width:calc(var(--cg) + 15px);z-index:2;clip-path:polygon(0 26%,64% 26%,64% 0,100% 50%,64% 100%,64% 74%,0 74%);
   background:repeating-linear-gradient(90deg,var(--accent) 0 3px,transparent 3px 5px) 0 0/100% 100% no-repeat,repeating-linear-gradient(90deg,color-mix(in srgb,var(--accent) 32%,transparent) 0 3px,transparent 3px 5px);animation:charge 1.8s steps(8,end) infinite}
@@ -735,8 +735,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
 .cell.glow-soft,.bcard.glow-soft,.colhead.glow-soft{background-color:color-mix(in srgb,var(--accent) 4%,var(--surface))}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.colhead.glow{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 14px 4px color-mix(in srgb,var(--accent) 40%,transparent)}
   .board .cell.colglow{animation:none!important;box-shadow:inset 0 0 0 1.5px var(--accent),inset 0 0 9px 2px color-mix(in srgb,var(--accent) 26%,transparent)}}
-/* Progress notes (plan/RULES.md §3, "The step panel"): each agent's own note of its work, an info card of the step panel; a note not
-   updated for over 20 minutes is muted (its agent may have stopped). */
+/* Progress notes (plan/RULES.md §3, "The step panel"): each running part's own note of its work, an info card of the step panel; a note not
+   updated for over 20 minutes is muted (its writer may have stopped). */
 .wip-facts>span.prog{border-left:3px solid var(--ink-2)}
 .wip-facts>span.prog.stale{opacity:.55}
 .wip-facts>span.prog small{font:11px var(--mono);color:var(--muted)}
@@ -767,7 +767,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   <button class="tab" role="tab" id="t-decisions" aria-controls="p-decisions" aria-selected="false">Decisions</button>
   <button class="tab" role="tab" id="t-built" aria-controls="p-built" aria-selected="false">As built</button>
   <button class="tab" role="tab" id="t-tests" aria-controls="p-tests" aria-selected="false">Tests</button>
-  <button class="tab" role="tab" id="t-impact" aria-controls="p-impact" aria-selected="false">Impact</button>
+  <button class="tab" role="tab" id="t-impact" aria-controls="p-impact" aria-selected="false">Consequences</button>
   <button class="tab" role="tab" id="t-landing-order" aria-controls="p-landing-order" aria-selected="false">Landing Order</button>
   <button class="tab model" role="tab" id="t-source" aria-controls="p-source" aria-selected="false">Source</button>
 </div>
@@ -828,7 +828,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   </section>
 
   <section class="view" role="tabpanel" id="p-impact" aria-labelledby="t-impact" hidden>
-    <h2>Impact: who downstream is affected, and what they must do</h2>
+    <h2>Consequences: who downstream is affected, and what they must do</h2>
     <p class="lede" id="impact-lede"></p>
     <div id="impact-body"></div>
     <div class="key" id="impact-key"></div>
@@ -880,7 +880,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   "title": "Outbound-URL policy",
   "issueTitle": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
   "function": "Nothing in `webtools-http` decides yet which URLs and addresses a fetch may reach: #62 built the refusal vocabulary, `RefusalReason` and `TransportFailure.RefusedByPolicy`, and nothing raises it (#55 architecture §6.3.1). This run adds the closed pair `OutboundUrlPolicy.Trusted` and `Untrusted` with their builders, `TransportSettings` with one default set per policy, `CidrBlock` and `MixedAnswers`, the `internal` common classifier that judges host text and address bytes, and the JVM resolver and socket guards, with their tests. Unit 5 of #55: one subsystem of `webtools-http`, additive, no version moved; wiring the guards into a client is unit 6's.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-10-25T21:42:50Z",
   "parent": {
     "issue": 55,
@@ -892,7 +892,31 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "sha": "4fcc6e0",
     "date": "2026-10-25"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "dd463bc",
+    "merge": "53965c8",
+    "pr": 86,
+    "version": "none moved; webtools-http 1.0.0 new, unreleased",
+    "date": "2026-10-26",
+    "at": "2026-10-26T23:17:45Z",
+    "commits": [
+      {
+        "sha": "9930a32",
+        "at": "2026-10-25T22:20:16Z",
+        "step": "research"
+      },
+      {
+        "sha": "c3d3dc7",
+        "at": "2026-10-25T22:47:34Z",
+        "step": "research"
+      },
+      {
+        "sha": "aa918ea",
+        "at": "2026-10-25T22:51:00Z",
+        "step": "research"
+      }
+    ]
+  },
   "systems": [
     {
       "slug": "webtools-http-url-policy",
@@ -904,10 +928,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     }
   ],
   "wip": {
-    "step": "merge",
-    "since": "2026-10-26T22:45:45Z",
-    "updated": "2026-10-26T22:45:45Z",
-    "detail": "State boards refreshed and stamped at 543bd08; the board commit, the pull request and the merge follow.",
+    "step": "landed",
+    "since": "2026-10-26T23:28:51Z",
+    "updated": "2026-10-26T23:28:51Z",
+    "detail": "Merged through PR #86 as 53965c8: the outbound-URL policies, `TransportSettings`, `CidrBlock`, `MixedAnswers` and the `WebToolsDsl` marker in `webtools-http`, over the internal classifier and JVM guards, with the README row; no deviation from the plan; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
     "steps": [
       "sizing",
       "interview",
@@ -1059,13 +1083,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
         "raised": "qa pass 2",
-        "ref": "../architecture.md"
+        "ref": "../architecture.md",
+        "resolved": "The landing's docs commit 543bd08 reworded the architecture's decomposition to state each unit's scope."
       }
     ],
     "event": {
-      "name": "merge",
-      "at": "2026-10-26T22:45:45Z",
-      "note": "merging"
+      "name": "landed",
+      "at": "2026-10-26T23:28:51Z"
     },
     "history": {
       "sizing": [
@@ -1607,6 +1631,26 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             }
           ]
         }
+      ],
+      "merge": [
+        {
+          "since": "2026-10-26T22:45:45Z",
+          "ended": "2026-10-26T23:28:51Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-10-26T23:28:51Z"
+          },
+          "detail": "Landed in PR #86.",
+          "open": [
+            {
+              "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
+              "raised": "qa pass 2",
+              "ref": "../architecture.md"
+            }
+          ]
+        }
       ]
     },
     "next": null,
@@ -1694,6 +1738,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "date": "2026-10-25",
       "ref": "plan.md",
       "note": "seven stages, S1 to S7, on `feat/issue-64-url-policy`, with two code commits; the design makes #55's architecture §6.3.1 and §7.4 concrete in impact §5: two deny rules outside the IANA registries, sockets on `Proxy.NO_PROXY`, `newCall` inherited, the range class beside the reason. No version moves"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-10-26",
+      "ref": "PR #86",
+      "note": "the research 9930a32 to aa918ea; the policies, settings and classifier fd93ff9 and the JVM guards b46f58a; the `WebToolsDsl` marker bec8615, the review fixes 6b96866, the README row 0d44495, the as-built record 543bd08 and the boards dd463bc; merged as 53965c8. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -1875,6 +1926,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-26",
       "column": "built",
+      "label": "The as-built record and the impact reconciled: no deviation from the plan; plan Amendments 1, 2 and 5 followed and Amendment 3 built as stage S8; #55's architecture carries three dated corrections",
+      "ref": "543bd08"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
       "label": "Landing: the land accepted"
     },
     {
@@ -1886,6 +1943,18 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "date": "2026-10-26",
       "column": "built",
       "label": "Merge: merging it"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
+      "label": "Landed in PR #86, merge 53965c8",
+      "ref": "PR #86"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
+      "label": "Open point settled: the parent architecture's decomposition states each unit's scope (543bd08)",
+      "ref": "543bd08"
     }
   ],
   "rows": [
@@ -2087,7 +2156,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#73-outboundurlpolicykt"
+            "link": "plan.md#73-cmoutboundurlpolicykt"
           }
         ],
         "tests": [
@@ -2097,7 +2166,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "Stable Core from the first release: after 1.0.0 a renamed property, a changed default or a third subclass is a major bump (§10)"
         ],
         "source": "plan.md R1, R3, §6.1, §6.2, §7.3",
-        "link": "plan.md#73-outboundurlpolicykt"
+        "link": "plan.md#73-cmoutboundurlpolicykt"
       }
     },
     {
@@ -2238,7 +2307,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#73-outboundurlpolicykt"
+            "link": "plan.md#73-cmoutboundurlpolicykt"
           },
           {
             "id": "S3",
@@ -2247,7 +2316,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+            "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
           }
         ],
         "tests": [
@@ -2272,7 +2341,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "evidence": [
           "common/HttpHeaders.kt:78 — `Entry.isSensitive`, flagged or a credential name (baseline)",
           "../research/outbound-url-policy.md pitfall 10 — ports; F11 — mixed answers; Consideration 4 — credentials",
-          "../impact.md §8 — units 5 and 6 build the reading of the sensitive flag",
+          "../consequences.md §8 — units 5 and 6 build the reading of the sensitive flag",
           "research/bypass-vectors.md §4 G3, G4 — what no table can close: a network's own NAT64 prefix and a service on the deployer's own public address, which `extraDeniedRanges` is for"
         ],
         "source": "../research/outbound-url-policy.md Considerations 2 to 4; ../architecture.md §6.3.1",
@@ -2446,7 +2515,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/MixedAnswers.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#72-mixedanswerskt-and-cidrblockkt"
+            "link": "plan.md#72-cmmixedanswerskt-and-cmcidrblockkt"
           },
           {
             "id": "S2",
@@ -2455,7 +2524,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#73-outboundurlpolicykt"
+            "link": "plan.md#73-cmoutboundurlpolicykt"
           },
           {
             "id": "S3",
@@ -2464,7 +2533,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+            "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
           }
         ],
         "tests": [
@@ -2640,7 +2709,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#71-transportsettingskt"
+            "link": "plan.md#71-cmtransportsettingskt"
           }
         ],
         "tests": [
@@ -2808,7 +2877,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/AddressRanges.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#76-addressrangeskt"
+            "link": "plan.md#76-cmaddressrangeskt"
           }
         ],
         "tests": [
@@ -2832,7 +2901,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "summary": "`Url` keeps digits-and-dots and hex-looking hosts as written (`127.1`, `0x7f.1`, `2130706433`) for the policy to judge. The JDK reads such forms leniently and libc reads `0177` as octal, so the same text names different machines to different parsers: the bug class of the node `ip`, `netmask` and Python `ipaddress` advisories.",
         "evidence": [
           "common/UrlHost.kt:12 — a name of digits, dots and hex letters passes as written (baseline)",
-          "../impact.md §8 — what unit 3 leaves for unit 5",
+          "../consequences.md §8 — what unit 3 leaves for unit 5",
           "../research/outbound-url-policy.md F3, F10",
           "research/bypass-vectors.md §3.7 — host text that never came through `Url.parse` (`LOCALHOST`, `0X7F.1`, an embedded space or tab) falls through the rules as a name unless they are total on any text"
         ],
@@ -2968,7 +3037,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/StrictIp.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#74-strictipkt"
+            "link": "plan.md#74-cmstrictipkt"
           },
           {
             "id": "S3",
@@ -2977,7 +3046,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/HostRules.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#75-hostruleskt"
+            "link": "plan.md#75-cmhostruleskt"
           }
         ],
         "tests": [
@@ -3148,7 +3217,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+            "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
           }
         ],
         "tests": [
@@ -3156,7 +3225,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ],
         "risks": [],
         "source": "plan.md R5, R7, §6.5, §6.6, §7.7",
-        "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+        "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
       }
     },
     {
@@ -3666,7 +3735,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "summary": "`webtools-http` is new and unreleased at `1.0.0`. Its committed ABI dump, which `apiCheck` holds the build to, records the core's surface and no policy type.",
         "evidence": [
           "webtools-http/api/webtools-http.api — the dump at the baseline, no policy type",
-          "../impact.md §8 — each later unit extends the dump"
+          "../consequences.md §8 — each later unit extends the dump"
         ],
         "source": "../architecture.md §9, §11",
         "link": "../architecture.md#11-decomposition"
@@ -3801,7 +3870,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "summary": "The guards need a client: something must run the per-hop check before every `Call`, install the resolver and socket guards and `Proxy.NO_PROXY` for `Untrusted`, and give the fixtures their loopback factory.",
         "evidence": [
           "../architecture.md §6.3.2 — `OkHttpTransport`, unit 6",
-          "../impact.md §8 — `LoopbackTransports` reserved for unit 6",
+          "../consequences.md §8 — `LoopbackTransports` reserved for unit 6",
           "research/bypass-vectors.md §5 — the vectors that belong to the transport's own tests: redirects into private space, rebinding, process proxies, credentials across an origin change, a `Location` that `HttpUrl.resolve` throws on"
         ],
         "source": "../architecture.md §11",
@@ -3818,8 +3887,42 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         }
       ],
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "as-planned",
+        "statements": [
+          {
+            "text": "No OkHttp transport, redirect loop or failure mapping was built: the unit ships the checks and the enforcement bundle, wires nothing into a client and logs no refusal; nothing is enforced until the transport and the call facades land.",
+            "state": "as-planned",
+            "ref": "impact.md#1-published-artifacts",
+            "excerpt": {
+              "ref": "impact.md#1-published-artifacts",
+              "heading": "1. Published artifacts",
+              "paragraph": "What a consumer of `webtools-http` 1.0.0 gets from this unit:",
+              "hash": "392264c8b8d2"
+            }
+          },
+          {
+            "text": "No loopback test factories and nothing under the fixtures: the fixtures of #63 do not change, and unit 6, #65, adds `LoopbackTransports`.",
+            "state": "as-planned",
+            "ref": "impact.md#4-sibling-units",
+            "excerpt": {
+              "ref": "impact.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts. In short:",
+              "hash": "0d6ab2924248"
+            }
+          },
+          {
+            "text": "Unit 6, #65, takes the wiring as `PolicyEnforcement`'s KDoc states it: `checkRequest` and `admitRedirect` before every `Call`, `UrlGuard.enforcement(baseDns)` on its client, and a failure mapping that checks `policyRefusal()` first and logs the one `WARN`.",
+            "state": "as-planned",
+            "ref": "impact.md#4-sibling-units",
+            "excerpt": {
+              "ref": "impact.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts. In short:",
+              "hash": "0d6ab2924248"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -3865,7 +3968,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     }
   ],
   "impact": {
-    "basis": "plan",
+    "basis": "as-built",
     "summary": "`webtools-http`, new and unreleased, gains the outbound-URL policies `Trusted` and `Untrusted` with their builders and factories, `TransportSettings` with two named default sets, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core; the classifier and the JVM guards stay `internal`. Nothing is enforced until the transport and the call facades land. No dependency is added, the three existing artifacts do not change, and no version moves.",
     "none": null,
     "release": {
@@ -4016,7 +4119,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "entry": "downstream.3"
       }
     ],
-    "source": "impact.md, plan.md",
+    "source": "impact.md, reconciled with final-implementation.md; plan.md",
     "link": "impact.md"
   },
   "tests": {
@@ -5726,8 +5829,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "note": "§6.3.1 the outbound-URL policy, §6.9 the mechanism per type, §7.3 the three guard layers, §9 extension and stability, §10 alternatives, §11 unit 5, §12 risks"
     },
     {
-      "label": "#55 impact",
-      "path": "../impact.md",
+      "label": "#55 consequences",
+      "path": "../consequences.md",
       "note": "§8 what units 1 to 4 as built give this unit"
     },
     {
@@ -5752,6 +5855,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "what": "The `policy-pair` row's Considered column now records the option the plan left open at its acceptance, a public `@DslMarker` (`dsl-marker`, deferred: plan §4, §13 and §14, and the open point raised then), which the board had left out. Its settlement by plan Amendment 3, accepted, is in column 4.",
         "when": "implementation S8, 2026-10-26"
+      },
+      {
+        "what": "The links to plan.md sections whose heading opens with a code span holding a path placeholder (`<cm>`) now carry GitHub's anchor, which keeps the placeholder's letters (73-cmoutboundurlpolicykt); the anchor written before lacked them and opened no section. No statement, verdict or state changed.",
+        "when": "the heading-anchor rule fixed, 2026-11-01"
       }
     ]
   },
@@ -5759,7 +5866,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "47": "../47-java-23-bytecode/dashboard.html",
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
-    "63": "../63-test-support/dashboard.html"
+    "63": "../63-test-support/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",
@@ -5810,6 +5918,7 @@ const ISSUE_BOARDS=new Map();
 const issueBoardsOf=()=>{ const m=new Map([
   ...Object.entries(PLAN.issueBoards&&typeof PLAN.issueBoards==="object"?PLAN.issueBoards:{}).filter(([,b])=>relLink(b)),
   ...(PLAN.parent&&PLAN.parent.issue&&relLink(PLAN.parent.board)?[[String(PLAN.parent.issue),PLAN.parent.board]]:[]),
+  ...(PLAN.fixOf&&PLAN.fixOf.issue&&relLink(PLAN.fixOf.board)?[[String(PLAN.fixOf.issue),PLAN.fixOf.board]]:[]),
   ...(TRACKING?ROWS.filter(r=>r.unit&&r.unit.issue&&relLink(r.unit.board)).map(r=>[String(r.unit.issue),r.unit.board]):[])]);
   m.delete(String(PLAN.issue)); return m; };
 const boardOf=(n,repo)=>!repo||repo===PLAN.repo?ISSUE_BOARDS.get(String(n))||null:null;
@@ -5861,7 +5970,11 @@ function localizeTimes(root){ (root||document).querySelectorAll("time[datetime]"
    board opens the live view first: docs/plans/.live/index.js, the marker board.js --live writes in each checkout of the repository, names
    the live board on this machine; else the committed one, else the words stay plain text. The Markdown a board links opens its rendered
    copy when one is on disk (docs/plans/.live/docs/index.js lists them; embed.js writes them), else the .md itself. */
-let LIVE_WB=null, LIVE_DOCS=null;
+let LIVE_WB=null, LIVE_DOCS=null, LIVE_OPEN=null;
+/* A build output's copy (dashboards-skill/35): an open point's report and a qa pass's test report are build outputs, never committed, so the
+   committed board names them as plain text; apply-event.js copies each when the point is raised (or the pass returns) under the git-ignored
+   docs/plans/.live/open/, whose index.js lists the copies on disk, and on this machine the board links the copy beside the plain text. */
+const liveCopyLink=(copy,label)=>copy&&LIVE_OPEN&&LIVE_OPEN.has(String(copy))?` <a class="livecopy" href="${esc(`${UP}docs/plans/.live/open/${copy}`)}" title="the copy taken when it was recorded, on this machine (never committed)">${esc(label||"its copy")} ↗</a>`:"";
 function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
   sc.onload=()=>{ const v=(window.DASHBOARDS_LIVE||{})[key]; sc.remove(); cb(v==null?null:v); }; sc.onerror=()=>{ sc.remove(); cb(null); }; document.head.appendChild(sc); }
 const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
@@ -5935,13 +6048,16 @@ const inPlaceMark=p=>p&&p.inPlace?`<span class="qamark" title="${esc(INPLACE.des
 /* the legend entries of the marks the passes drew: one per kind, shown as it was drawn */
 const inPlaceKeys=ps=>["fixed","fixing"].map(k=>(ps||[]).find(p=>p&&p.inPlace===k)).filter(Boolean).map(p=>`<span>${inPlaceMark(p)} ${esc(INPLACE.desc[p.inPlace])}</span>`).join("");
 /* A dependency's two states (dashboards-skill/30; plan/RULES.md §5; plan/scripts/lib.js depBuild(), depLocality()). Its build state, in the
-   status colours: blocking (part of the plan, still open), clear (part of the plan, landed or closed), pre-built (not part of the tracking
-   issue, built before its plan started: neutral). Its locality, a neutral ramp from near to far: this repository, this organization, the
+   status colours: blocking (its code not merged), clear (merged), pre-built (outside the plan, built before it started: neutral), dropped
+   (closed as not planned: red; dashboards-skill/35). Its locality, a neutral ramp from near to far: this repository, this organization, the
    parent organization (ORG_PARENT), external and its owner. On a tracking board a unit's dependency on another unit is part of the plan,
-   blocking until that unit lands, then clear, in this repository; one on an issue that is no unit has no build state drawn (the board cannot
+   blocking until that unit lands, then clear (dropped where its tracking board dropped it), in this repository; one on an issue that is no unit has no build state drawn (the board cannot
    tell when it was built). On the WIP strip an entry of wip.blockers shows the states it records (build, locality), else its locality from
    its repository. What this issue does to the issues it holds up: blocks while it is open, enables once it is done. */
-const DEP={blocking:{g:"⊘",label:"blocking",cls:"warning",desc:"part of the plan, still open"},clear:{g:"✓",label:"clear",cls:"good",desc:"part of the plan, landed or closed"},"pre-built":{g:"◼",label:"pre-built",cls:"neutral",desc:"not part of the tracking issue: built before its plan started, relied on without a unit of its own"}};
+/* since dashboards-skill/35 the code is what blocks, not the GitHub issue: blocking while its code is not merged, clear once it is (an issue
+   still open whose pull request merged reads clear), in a plan or not; pre-built outside the plan and merged before it started; dropped,
+   closed as not planned (its code will never arrive); a duplicate takes the state of the issue it duplicates */
+const DEP={blocking:{g:"⊘",label:"blocking",cls:"warning",desc:"its code is not merged yet"},clear:{g:"✓",label:"clear",cls:"good",desc:"its code is merged"},"pre-built":{g:"◼",label:"pre-built",cls:"neutral",desc:"outside the plan, built before it started: the plan's outcome does not apply to it"},dropped:{g:"✕",label:"dropped",cls:"critical",desc:"closed as not planned: its code will never arrive, and the plan needs another look"}};
 const LOC={"local-repository":{g:"⌂",label:"repo",s:1,desc:"this repository"},"local-organization":{g:"◇",label:"org",s:2,desc:"another repository of this organization"},"local-parent-org":{g:"△",label:"parent org",s:3,desc:"a repository of the parent organization"},external:{g:"↗",label:"external",s:4,desc:"outside both organizations, named by its owner"}};
 const HOLD={blocks:{g:"⊘",label:"blocks",cls:"warning",desc:"this issue is still open: it holds these issues up"},enables:{g:"→",label:"enables",cls:"good",desc:"this issue is done: these issues can go ahead"}};
 const ORG_PARENT={SpartanLabsGaming:"SpartanLaboratories"};
@@ -5949,16 +6065,16 @@ function locOf(x){ let l=x&&x.locality; if(l===undefined){ const from=String(PLA
     const known=new Set([...Object.keys(ORG_PARENT),...Object.values(ORG_PARENT)].map(lo)); l=to===from?"local-repository":lo(a)===lo(o)?"local-organization":par&&lo(par)===lo(o)?"local-parent-org":!known.has(lo(o))?`external-${o}`:null; }
   return !l?null:String(l).startsWith("external-")?{k:"external",name:String(l).slice(9)}:LOC[l]?{k:l}:null; }
 const locChip=(L,word)=>`<span class="loc l${LOC[L.k].s}"><i aria-hidden="true">${LOC[L.k].g}</i>${esc(word||(L.k==="external"&&L.name?`external · ${L.name}`:LOC[L.k].label))}</span>`;
-const depPill=x=>{ const d=DEP[x.build], L=locOf(x); return d||L?`<span class="dep-pill"${x.why?` title="${esc(x.why)}"`:""}>${d?pill(d):""}${L?locChip(L):""}</span>`:""; };
+const depPill=x=>{ const d=DEP[x.build], L=locOf(x); return d||L?`<span class="dep-pill"${x.why||x.via?` title="${esc(x.why||`a duplicate: the state of ${x.via}`)}"`:""}>${d?pill(d):""}${L?locChip(L):""}</span>`:""; };
 /* a unit's dependencies and what it holds up, from the unit rows (unit.blockedBy) */
-const unitDeps=r=>(r&&r.unit&&r.unit.blockedBy||[]).map(n=>{ const b=ROWS.find(x=>x.unit&&x.unit.issue===n); return {issue:n,build:b?(unitLanded(b)?"clear":"blocking"):undefined,locality:"local-repository"}; });
+const unitDeps=r=>(r&&r.unit&&r.unit.blockedBy||[]).map(n=>{ const b=ROWS.find(x=>x.unit&&x.unit.issue===n); return {issue:n,build:b?(unitLanded(b)?"clear":(b.asBuilt||{}).state==="dropped"?"dropped":"blocking"):undefined,locality:"local-repository"}; });
 const unitHolds=r=>r&&r.unit&&r.unit.issue?ROWS.filter(x=>x.unit&&(x.unit.blockedBy||[]).includes(r.unit.issue)).map(x=>({issue:x.unit.issue})):[];
 /* the legend entries of the dependency pills a view drew */
 function depKeys(deps,holds){ const ks=[], bs=new Set(deps.map(x=>x.build).filter(k=>DEP[k])), ls=new Set(deps.map(locOf).filter(Boolean).map(L=>L.k)), hs=new Set(holds.filter(k=>HOLD[k]));
   Object.keys(DEP).filter(k=>bs.has(k)).forEach(k=>ks.push(`<span>${pill(DEP[k])} a dependency's build state: ${esc(DEP[k].desc)}</span>`));
   Object.keys(LOC).filter(k=>ls.has(k)).forEach(k=>ks.push(`<span>${locChip({k},k==="external"?"external · name":"")} a dependency's locality: ${esc(LOC[k].desc)}</span>`));
   Object.keys(HOLD).filter(k=>hs.has(k)).forEach(k=>ks.push(`<span>${pill(HOLD[k])} ${esc(HOLD[k].desc)}</span>`)); return ks; }
-const STEP_ORDER=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","landing","state-boards","merge","landed"];
+const STEP_ORDER=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","document","landing","merge","landed"];
 const STEP_SPECIAL={halted:{g:"⏸",label:"Waiting on the user",cls:"halted"},escalated:{g:"⇧",label:"Escalated",cls:"escalated"},cancelled:{g:"✕",label:"Cancelled",cls:"cancelled"},landed:{g:"✓",label:"Landed",cls:"landed"}};
 /* A row's as-built state: the stored one, unless the build is under way (plan/RULES.md §2, "Before the outcome"). While the run is live
    the implementation stages (wip.stages) decide it for every row they touch: a row a current stage touches is in progress; one a done
@@ -6033,7 +6149,7 @@ function sysKey(slugs,cls){ const seen=new Map(); slugs.forEach(sl=>{ const s=sy
   return [...seen.values()].map(v=>`<span><i class="${cls||"sbar"}" style="--c:${v.c}"></i>${esc([...v.names].join(", "))}</span>`).join(""); }
 
 /* ---------- Work in progress: the glowing cells ----------
-   PAUSED: the run waits on the user, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
+   PAUSED: the run waits on you, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
    the glow of the step it stopped in (plan/RULES.md §3, the glow follows the step). */
 /* NOT_STARTED: a board laid before its run starts (a tracking issue's unit, plan/RULES.md §4): no step yet, status planned, nothing glows */
 let NOT_STARTED=false, STEP="", HALTED=false, PAUSED=false, LANDED=false, STOPPED=false, CURRENT=[];
@@ -6044,7 +6160,7 @@ const rowActive=r=>CURRENT.some(a=>{ const p=String(a).split("."); return p[0]==
    A unit in progress carries unit.live: its sub-issue board's run (step, since, updated, detail, steps, waitingOn, resume, qa,
    status, branch) as embed.js mirrored it from that board's plan.json at the last embed of either board. Nobody writes it by
    hand. The board shows it under the WIP strip's "In progress" line, in the unit's as-built cell and card, in the inspector, on
-   its chain node and in the roadmap; while the unit's run waits on the user its mark pauses (the ring alone), as the whole
+   its chain node and in the roadmap; while the unit's run waits on you its mark pauses (the ring alone), as the whole
    board's does while the tracking issue itself is halted. The tracking board's own wip.step is the tracking issue's phase. */
 const RUN={run:{g:"▶",label:"run",cls:"neutral"},halted:{g:"⏸",label:"waiting on the user",cls:"warning"},escalated:{g:"⇧",label:"escalated",cls:"serious"},cancelled:{g:"✕",label:"run cancelled",cls:"critical"}};
 const runOf=r=>TRACKING&&r&&r.unit&&r.unit.live&&typeof r.unit.live==="object"&&rowActive(r)?r.unit.live:null;
@@ -6138,7 +6254,7 @@ function researchFact(w){ const qs=questionsOf(w), R=w&&w.research;
    Beside the WIP strip, the current step broken down from the facts the board records (the events, the documents, the trail): the
    interview's questions, answered or waiting; the research timeline (planning, research, verification) with each question's state and
    the count returned; the plan's writing or re-pass and its verdicts written; the implementation stages, done, current and to come;
-   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on the user, what
+   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on you, what
    it waits on, the panel held still. R is a run: an issue board's own wip (with its verdicts and deviations counted from its rows), or
    a tracking board's unit mirror (unit.live), which carries the same facts (plan/scripts/lib.js panelFacts()). keys collects the legend
    entries the panel drew. */
@@ -6146,7 +6262,7 @@ const OPEN_PT={g:"!",label:"open",cls:"warning"};
 const KEY_OPEN=`<span>${pill(OPEN_PT)} an open point raised during the run, not resolved yet</span>`;
 const IV={answered:{g:"✓",label:"answered",cls:"neutral"},waiting:{g:"?",label:"waiting on the user",cls:"warning"}};
 const STAGE_DOT={done:"done",current:"cur",todo:"todo"};
-const NEXT_STEP={qa:"landing, or remediation if the qa pass requests changes",remediation:"qa, the next pass",landing:"state boards: the pre-merge refresh on the branch","state-boards":"merge","merge":"landed","sub-issues":"boards: creating each unit's board","boards":"landing: the tracking plan's own"};
+const NEXT_STEP={qa:"document, or remediation if the qa pass requests changes",remediation:"qa, the next pass",document:"landing",landing:"merge","state-boards":"merge","merge":"landed","sub-issues":"boards: creating each unit's board","boards":"landing: the tracking plan's own"};
 /* A tracking board's own steps after its architecture (plan/RULES.md §3): "sub-issues", each unit being filed as a sub-issue, then
    "boards", the units' boards created in the board-creation lanes; their progress is counted from the unit rows (a unit's issue, its board),
    never stored. */
@@ -6157,15 +6273,15 @@ function unitProgress(R,o,what){ const units=ROWS.filter(r=>r.unit), done=r=>wha
   const lit=CURRENT.some(a=>/\.units$/.test(String(a)));
   return `<p class="sp-sum">${n} of ${units.length} unit${units.length===1?"":"s"} ${what==="filed"?"filed as sub-issues":"with a board"}</p>`+spList(units.map(r=>{ const d=done(r), cur=!d&&!o.held&&(lit?CURRENT.includes(r.id+".units"):first); if(!d) first=false;
     return spItem(d?"done":cur?"cur":"todo",dotMark,`${esc(r.unit.n!=null?r.unit.n+". ":"")}${r.unit.issue?pair(r.unit.issue,r.name):codeOnly(r.name)}`,d?(what==="filed"?"filed":"board created"):what==="filed"?"to file":r.unit.issue?"its board to create":"its sub-issue first"); })); }
-/* The route the pipeline takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
+/* The route a run takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
    no fallout), fixed on the spot with no new qa pass; otherwise a remediation pass, or a plan re-pass then a remediation pass, and the
    next qa pass (at most three in all). The routes' ids name no role (dashboards-skill/33): "remediation" and "re-plan-then-remediation";
    a board written before reads its older ids through routeKey(). */
 const ROUTE_OLD={"rookie-dev":"remediation","planner-then-rookie-dev":"re-plan-then-remediation"}, routeKey=r=>ROUTE_OLD[r]||r;
-const ROUTE0={"on-the-spot":{label:"fixed on the spot, no new qa pass",next:"landing (no new qa pass)"},"remediation":{label:"a remediation pass, then the next qa pass",next:"qa, the next pass"},"re-plan-then-remediation":{label:"a remediation pass: a plan re-pass, then the fixes, then the next qa pass",next:"qa, the next pass"}};
+const ROUTE0={"on-the-spot":{label:"fixed on the spot, no new qa pass",next:"document (no new qa pass)"},"remediation":{label:"a remediation pass, then the next qa pass",next:"qa, the next pass"},"re-plan-then-remediation":{label:"a remediation pass: a plan re-pass, then the fixes, then the next qa pass",next:"qa, the next pass"}};
 const ROUTE=new Proxy(ROUTE0,{get:(t,k)=>t[routeKey(k)]});
 const stepName=x=>x&&(x.name||x.what)||"";
-function nextStepOf(R,S){ if(S==="remediation"&&R.remediation&&ROUTE[R.remediation.route]) return ROUTE[R.remediation.route].next; if(S==="landing"&&!(Array.isArray(R.steps)&&R.steps.includes("state-boards"))) return "landed"; /* a steps line written before the three landing steps */ if(NEXT_STEP[S]) return NEXT_STEP[S]; const st=R.steps&&R.steps.length?R.steps:STEP_ORDER, i=st.indexOf(S); return i>=0&&i<st.length-1?st[i+1]:""; }
+function nextStepOf(R,S){ if(S==="remediation"&&R.remediation&&ROUTE[R.remediation.route]) return ROUTE[R.remediation.route].next; if(S==="qa"&&Array.isArray(R.steps)&&R.steps.length&&!R.steps.includes("document")) return "landing, or remediation if the qa pass requests changes"; /* an older line */ if(S==="landing"&&Array.isArray(R.steps)&&R.steps.includes("state-boards")) return "state boards: the pre-merge refresh on the branch"; /* dashboards-skill/34's three landing steps */ if(S==="landing"&&!(Array.isArray(R.steps)&&R.steps.includes("merge"))) return "landed"; /* a steps line written before the landing's steps */ if(NEXT_STEP[S]) return NEXT_STEP[S]; const st=R.steps&&R.steps.length?R.steps:STEP_ORDER, i=st.indexOf(S); return i>=0&&i<st.length-1?st[i+1]:""; }
 /* a step's title, as the step panel's heading shows it */
 const stepTitle=s=>!s?"—":s==="qa"?"QA":s==="state-boards"?"State boards":s.charAt(0).toUpperCase()+s.slice(1);
 function spList(items){ return items.length?`<ol class="sp-list">${items.join("")}</ol>`:""; }
@@ -6175,7 +6291,7 @@ function qaBlock(p,keys){ const d=QA[p.verdict]||QA.running, f=p.findings||{}, s
   const kinds=["documentation","test","code"].filter(k=>f[k]!=null).map(k=>`${f[k]} ${k==="documentation"?"doc":k}`).join(" · "), sev=Object.entries(sv).map(([k,n])=>`${n} ${k}`).join(" · ");
   keys.add(`<span>${pill(d)} qa pass verdict</span>`);
   const rt=ROUTE[p.route];
-  return `<div class="sp-pass ${p.verdict==="approved"?"good":p.verdict==="changes-requested"?"critical":"run pend"}"><div class="ph">Pass ${esc(p.pass)} ${pill(d)}${p.date?` <span class="nw">${when(p.date)}</span>`:""}</div>${kinds?`<small>findings by kind: ${esc(kinds)}</small>`:""}${sev?`<small>by severity: ${esc(sev)}</small>`:""}${rt?`<small>route: ${esc(rt.label)}</small>`:""}${p.note?`<small>${rich(p.note)}</small>`:""}</div>`; }
+  return `<div class="sp-pass ${p.verdict==="approved"?"good":p.verdict==="changes-requested"?"critical":"run pend"}"><div class="ph">Pass ${esc(p.pass)} ${pill(d)}${p.date?` <span class="nw">${when(p.date)}</span>`:""}</div>${kinds?`<small>findings by kind: ${esc(kinds)}</small>`:""}${sev?`<small>by severity: ${esc(sev)}</small>`:""}${rt?`<small>route: ${esc(rt.label)}</small>`:""}${p.note?`<small>${rich(p.note)}</small>`:""}${p.report?`<small>the test report: <code>${esc(p.report)}</code> (a build output, not committed)${liveCopyLink(p.reportCopy,"its copy")}</small>`:""}</div>`; }
 const PANEL={
   sizing:R=>`<p>The issue is being sized: its systems and how much planning it takes.</p>${R.detail?`<p>${rich(R.detail)}</p>`:""}`,
   interview:(R,o,keys)=>{ const iv=Array.isArray(R.interview)?R.interview.filter(q=>q&&q.text):[];
@@ -6218,8 +6334,8 @@ const PANEL={
     if(!running){ h+=qaBlock({pass:qa.length+1,verdict:"running"},keys); }
     return h; },
   remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null, route=routeKey(M.route||(last&&last.route)||null), nx=`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`;
-    /* while no sub-step is recorded, the loop the route takes (the pipeline's, when no route is recorded either) */
-    const dflt=route==="on-the-spot"?[{what:`Minor fixes for qa pass ${n||"n"}, made on the spot`,state:"current"},{what:"Landing, with no new qa pass",state:"todo"}]
+    /* while no sub-step is recorded, the loop the route takes (the default, when no route is recorded either) */
+    const dflt=route==="on-the-spot"?[{what:`Minor fixes for qa pass ${n||"n"}, made on the spot`,state:"current"},{what:"The Document step, with no new qa pass",state:"todo"}]
       :route==="re-plan-then-remediation"?[{what:`Plan re-pass for qa pass ${n||"n"}'s findings`,state:"current"},{what:"Fixes",state:"todo"},{what:nx,state:"todo"}]
       :route==="remediation"?[{what:`Fixes for qa pass ${n||"n"}'s findings`,state:"current"},{what:nx,state:"todo"}]
       :[{what:`Fixes for the findings of qa pass ${n||"n"}: the implementer, with a plan re-pass first where the plan itself is wrong`,state:"current"},{what:nx,state:"todo"}];
@@ -6233,11 +6349,23 @@ const PANEL={
     const prev=visitsOf(R,"remediation").filter(V=>V.remediation&&V.remediation.pass!==n);
     if(prev.length) h+=`<p class="sp-sum">Earlier loop${prev.length===1?"":"s"}</p>`+spList(prev.map(V=>spItem("done",dotMark,`Answering qa pass ${esc(V.remediation.pass)}${ROUTE[V.remediation.route]?` · ${esc(ROUTE[V.remediation.route].label)}`:""}`,V.ended?`ended ${when(V.ended)}`:"")));
     return h; },
-  /* the landing in three team-raised steps (plan/RULES.md §4; dashboards-skill/34): "landing", the land accepted and the code, the version
+  /* the landing in three steps (plan/RULES.md §4; dashboards-skill/34): "landing", the land accepted and the code, the version
      bump and the reconciled documents committed on the branch; "state-boards", the pre-merge refresh of the state boards on the branch and
      its board commit; "merge", the pull request merged; "landed" follows the merge. A board whose steps line has "landing" alone (written
      before them) reads its landing as all three. */
-  landing:R=>{ const qa=Array.isArray(R.qa)?R.qa:[], last=qa.length?qa[qa.length-1]:null, acc=!!(R.event&&R.event.name==="landing"), pr=acc&&/PR #(\d+)/.exec(String(R.event.note||"")), split=(R.steps||[]).includes("merge");
+  /* the Document step (plan/RULES.md §3, §4; dashboards-skill/35), between qa and the land: its tasks (wip.document.tasks), done, current
+     (several may run in parallel) and to come, the state boards among them */
+  document:(R,o)=>{ const ts=R.document&&Array.isArray(R.document.tasks)?R.document.tasks.filter(x=>x&&typeof x==="object"):[];
+    let h=`<p>The documents are brought up to the build on the branch: the documentation reviewed and reconciled, the Dokka check, the plan and its consequences reconciled, the README and the CHANGELOG, and the state boards as built.</p>`;
+    /* the last qa pass's test report, a build output: plain text, its copy linked on this machine (dashboards-skill/35) */
+    const lq=(Array.isArray(R.qa)?R.qa:[]).filter(p=>p&&p.report).slice(-1)[0];
+    if(lq) h+=`<p class="sp-when">The test report of qa pass ${esc(lq.pass)}: <code>${esc(lq.report)}</code> (a build output, not committed)${liveCopyLink(lq.reportCopy,"its copy")}</p>`;
+    if(!ts.length) return h+`<p>No task recorded yet.</p>`;
+    const done=ts.filter(x=>x.state==="done").length, cur=ts.filter(x=>x.state==="current").length;
+    h+=`<p class="sp-sum">${done} of ${ts.length} task${ts.length===1?"":"s"} done${cur>1?` · ${cur} in parallel`:""}</p>`;
+    return h+spList(ts.map(x=>spItem(STAGE_DOT[x.state]||"todo",dotMark,`${rich(x.name||x.id||"")}${x.state==="done"?" · done":x.state==="current"?" · in progress":" · to come"}`,""))); },
+  landing:R=>{ const qa=Array.isArray(R.qa)?R.qa:[], last=qa.length?qa[qa.length-1]:null, acc=!!(R.event&&R.event.name==="landing"), pr=acc&&/PR #(\d+)/.exec(String(R.event.note||"")), split=(R.steps||[]).includes("merge"), doc=(R.steps||[]).includes("document");
+    if(doc) return `<p>The documents and the state boards are on the branch; ${acc?`the land is accepted${pr?` (${prlink(pr[1])})`:""}: the branch carries the code, the version bump, the reconciled documents and the state boards`:"the land follows"}; the merge is next.</p>`;
     return `<p>The qa pass approved${last?` (pass ${esc(last.pass)})`:""}; ${split?(acc?`the land is accepted${pr?` (${prlink(pr[1])})`:""}: the branch brought up to date, the code, the version bump and the reconciled documents committed on it`:"the land follows: the branch brought up to date, the code, the version bump and the reconciled documents committed on it"):(acc?`the land is accepted and being merged${pr?` in ${prlink(pr[1])}`:""}, its state boards refreshed on the branch before the merge`:"the land follows: its state boards refreshed on the branch, then the merge")}.</p>`; },
   "state-boards":R=>`<p>The pre-merge refresh: the state boards brought up on the branch as built, stamped at its head, and committed there in one board commit; the merge follows.</p>`,
   merge:R=>{ const pr=R.event&&R.event.name==="merge"&&/PR #(\d+)/.exec(String(R.event.note||"")); return `<p>The pull request${pr?` ${prlink(pr[1])}`:""} is being merged; landed follows the merge.</p>`; },
@@ -6253,7 +6381,7 @@ function stepPanel(R,o){ o=o||{}; const k=R.step||"", held=["halted","escalated"
   h+=(PANEL[S]||PANEL._)(R,opts,keys);
   /* the open points (wip.open, plan/RULES.md §3): raised during the run, shown at every step until resolved; the trail keeps them after */
   const op=(Array.isArray(R.open)?R.open:[]).filter(x=>x&&typeof x==="object"&&typeof x.text==="string"&&x.text.trim()&&!x.resolved);
-  if(op.length){ keys.add(KEY_OPEN); h+=`<div class="sp-open"><p class="sp-sum">${op.length} open point${op.length===1?"":"s"}</p>${spList(op.map(x=>spItem("",pill(OPEN_PT),rich(x.text),[x.raised?`raised at ${esc(x.raised)}`:"",x.ref?refAt(x.ref,"",o.base):""].filter(Boolean).join(" · "))))}</div>`; }
+  if(op.length){ keys.add(KEY_OPEN); h+=`<div class="sp-open"><p class="sp-sum">${op.length} open point${op.length===1?"":"s"}</p>${spList(op.map(x=>spItem("",pill(OPEN_PT),rich(x.text),[x.raised?`raised at ${esc(x.raised)}`:"",x.ref?refAt(x.ref,"",o.base)+liveCopyLink(x.copy,"the report as raised"):""].filter(Boolean).join(" · "))))}</div>`; }
   /* the panel's facts as info cards at its bottom, each a small card, as the unit card's (plan/RULES.md §3): the last event and
      its time, since when the run is at this step (or waits), the step that follows, and where the step has them its branch, its plan
      and the deviations recorded */
@@ -6289,7 +6417,7 @@ const unitBase=r=>r&&r.unit&&relLink(r.unit.board)&&r.unit.board.includes("/")?r
    from the history" (a unit's from its mirror's recon, which embed.js writes from its board). plan/scripts/lib.js finishedSteps(),
    trailStep() and reconstructStep() are the same rules. */
 let SEL=null, PICKS=0;
-const HIST_STEPS=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","sub-issues","boards","landing","state-boards","merge"];
+const HIST_STEPS=["sizing","interview","research","architecture","plan","branch","implementation","qa","remediation","sub-issues","boards","document","landing","state-boards","merge"];
 const histOf=R=>R&&R.history&&typeof R.history==="object"&&!Array.isArray(R.history)?R.history:{};
 const visitsOf=(R,s)=>{ const v=histOf(R)[s]; return Array.isArray(v)?v.filter(x=>x&&typeof x==="object"):[]; };
 const shownOf=R=>R&&["halted","escalated"].includes(R.step)?(R.resume||null):(R&&R.step)||null;
@@ -6299,10 +6427,10 @@ function finishedOf(R,status){ const w=R||{}, steps=Array.isArray(w.steps)&&w.st
   const cur=shownOf(w), i=cur?steps.indexOf(cur):-1;
   return steps.filter((s,j)=>s!=="landed"&&((i>=0&&j<i)||(s!==cur&&Array.isArray(H[s])&&H[s].length>0))); }
 const TRAIL_STEP_WORDS=[["filing the units","sub-issues"],["creating the units","boards"],["the interview","interview"],["interview","interview"],["research","research"],["the architecture","architecture"],["architecture","architecture"],
-  ["the plan","plan"],["plan","plan"],["the branch","branch"],["branch","branch"],["implementation","implementation"],["qa","qa"],["remediation","remediation"],["the landing","landing"],["landing","landing"],["the state boards","state-boards"],["state boards","state-boards"],["the merge","merge"],["merge","merge"],["sizing","sizing"]];
+  ["the plan","plan"],["plan","plan"],["the branch","branch"],["branch","branch"],["implementation","implementation"],["qa","qa"],["remediation","remediation"],["the document step","document"],["document","document"],["the landing","landing"],["landing","landing"],["the state boards","state-boards"],["state boards","state-boards"],["the merge","merge"],["merge","merge"],["sizing","sizing"]];
 const TRAIL_STEP_RE=[[/^(run started|sized|sizing|re-?sized)\b/i,"sizing"],[/^interview/i,"interview"],[/^(research|verification|findings)/i,"research"],[/^architecture/i,"architecture"],
   [/^(\d+ of \d+ units? filed|sub-issues filed)/i,"sub-issues"],[/^\d+ of \d+ unit boards? created/i,"boards"],[/^plan\b/i,"plan"],[/^branch\b/i,"branch"],[/^(S\d+\b|implementation\b|stage\b)/i,"implementation"],
-  [/^qa pass/i,"qa"],[/^remediation/i,"remediation"],[/^state boards\b/i,"state-boards"],[/^merg(?:e|ing)\b/i,"merge"],[/^(landing|landed)\b/i,"landing"]];
+  [/^qa pass/i,"qa"],[/^remediation/i,"remediation"],[/^document\b/i,"document"],[/^state boards\b/i,"state-boards"],[/^merg(?:e|ing)\b/i,"merge"],[/^(landing|landed)\b/i,"landing"]];
 function trailStep(label){ const s=String(label==null?"":label).replace(/`/g,"").replace(/\s+/g," ").trim();
   const m=/^(?:halted|resumed|escalated)\s+(?:at|in|during)\s+(.+)$/i.exec(s);
   if(m){ const t=m[1].toLowerCase(), hit=TRAIL_STEP_WORDS.find(([x])=>t.startsWith(x)); return hit?hit[1]:null; }
@@ -6323,6 +6451,7 @@ function reconStep(P,s){ const w=(P&&P.wip)||{}, R={reconstructed:true,ended:nul
     if(qs.length) R.questions=qs; }
   if(s==="branch"&&typeof P.branch==="string"&&P.branch.trim()) R.branch=P.branch;
   if(s==="implementation"&&ne(w.stages)) R.stages=cp(w.stages);
+  if(s==="document"&&w.document&&ne(w.document.tasks)) R.document=cp(w.document);
   if(s==="qa"||s==="remediation"){ const qa=(Array.isArray(w.qa)?w.qa:[]).filter(p=>p&&(s==="qa"||p.verdict==="changes-requested")); if(qa.length) R.qa=cp(qa); qa.forEach(p=>later(p.at||p.date)); }
   if(["sub-issues","boards"].includes(s)&&(Array.isArray(P.rows)?P.rows:[]).some(r=>r&&r.unit)) R.units=unitCountOf(P,s);
   return R; }
@@ -6351,7 +6480,10 @@ const PAST={
   remediation:(V,o,keys)=>{ const M=V.remediation||{}, p=(Array.isArray(V.qa)?V.qa:[])[0], steps=Array.isArray(M.steps)?M.steps.filter(x=>x&&typeof x==="object"):[];
     let h=`<p class="sp-sum">Answering qa pass ${esc(M.pass||"?")}</p>`; if(ROUTE[M.route]) h+=`<p>Route: ${esc(ROUTE[M.route].label)}.</p>`; if(p) h+=qaBlock(p,keys);
     return h+(steps.length?pastItems(steps,o,keys):`<p>No sub-step was recorded.</p>`); },
-  landing:V=>{ const pr=V.event&&V.event.name==="landing"&&/PR #(\d+)/.exec(String(V.event.note||"")), split=(PLAN.wip&&Array.isArray(PLAN.wip.steps)?PLAN.wip.steps:[]).includes("merge");
+  document:(V,o,keys)=>{ const ts=V.document&&Array.isArray(V.document.tasks)?V.document.tasks.filter(x=>x&&typeof x==="object"):[]; if(!ts.length) return `<p>No task was recorded.</p>`;
+    return `<p class="sp-sum">${ts.filter(x=>x.state==="done").length} of ${ts.length} task${ts.length===1?"":"s"} done</p>`+pastItems(ts,o,keys); },
+  landing:V=>{ const pr=V.event&&V.event.name==="landing"&&/PR #(\d+)/.exec(String(V.event.note||"")), steps=PLAN.wip&&Array.isArray(PLAN.wip.steps)?PLAN.wip.steps:[], split=steps.includes("merge");
+    if(steps.includes("document")) return `<p>The land was accepted${pr?` (${prlink(pr[1])})`:""}: the branch carried the code, the version bump, the reconciled documents and the state boards.</p>`;
     return split?`<p>The qa pass had approved; the land was accepted${pr?` (${prlink(pr[1])})`:""}: the branch brought up to date, the code, the version bump and the reconciled documents committed on it.</p>`:`<p>The qa pass had approved; ${V.event&&V.event.name==="landing"?`the land was accepted${pr?` and merged in ${prlink(pr[1])}`:" and merged"}`:"the merge followed"}.</p>`; },
   "state-boards":V=>`<p>The state boards were brought up on the branch as built, stamped at its head, and committed there before the merge.</p>`,
   merge:V=>{ const pr=V.event&&V.event.name==="merge"&&/PR #(\d+)/.exec(String(V.event.note||"")); return `<p>The pull request${pr?` ${prlink(pr[1])}`:""} was merged.</p>`; },
@@ -6365,7 +6497,7 @@ function visitHtml(S,V,i,n,o,keys){ const grp=(l,v)=>`<span><span class="l">${l}
   h+=(PAST[S]||PAST._)(V,o,keys);
   if(V.detail&&S!=="sizing") h+=`<p>${rich(V.detail)}</p>`;
   const op=(Array.isArray(V.open)?V.open:[]).filter(x=>x&&typeof x.text==="string"&&x.text.trim());
-  if(op.length){ keys.add(KEY_OPEN); h+=`<div class="sp-open"><p class="sp-sum">${op.length} open point${op.length===1?"":"s"} when it ended</p>${spList(op.map(x=>spItem("",pill(OPEN_PT),rich(x.text),[x.raised?`raised at ${esc(x.raised)}`:"",x.ref?refAt(x.ref,"",o.base):""].filter(Boolean).join(" · "))))}</div>`; }
+  if(op.length){ keys.add(KEY_OPEN); h+=`<div class="sp-open"><p class="sp-sum">${op.length} open point${op.length===1?"":"s"} when it ended</p>${spList(op.map(x=>spItem("",pill(OPEN_PT),rich(x.text),[x.raised?`raised at ${esc(x.raised)}`:"",x.ref?refAt(x.ref,"",o.base)+liveCopyLink(x.copy,"the report as raised"):""].filter(Boolean).join(" · "))))}</div>`; }
   const info=[V.event&&V.event.name?grp("last event",`<code>${esc(V.event.name)}</code>${V.event.at?` · <span class="nw">${when(V.event.at)}</span>`:""}`):"",
     V.since?grp("since",`<span class="nw">${when(V.since)}</span>`):"",
     grp(V.held?"ended, waiting on the user":"ended",`<span class="nw">${when(V.ended)}</span>${V.endedBy?` · by <code>${esc(V.endedBy)}</code>`:""}`),
@@ -6449,18 +6581,20 @@ function renderHeader(){
   const chips=[
     TRACKING?chainChip():tag("status",`<b>${esc(statusText)}</b>`,`status ${esc(PLAN.status)}`),
     PLAN.parent&&PLAN.parent.issue?tag("part of",`${ilink(PLAN.parent.issue)}${boardOf(PLAN.parent.issue)?` ${ghlink(PLAN.parent.issue)}`:""}`):"",
+    /* a fix to an earlier plan's work (plan/RULES.md §1; dashboards-skill/35): the landed issue it fixes, its board first */
+    PLAN.fixOf&&PLAN.fixOf.issue?tag("fix to",`${ilink(PLAN.fixOf.issue)}${boardOf(PLAN.fixOf.issue)?` ${ghlink(PLAN.fixOf.issue)}`:""}`):"",
     SHOW_BRANCH?tag("branch",`<b>${esc(PLAN.branch)}</b>`):"",
     tag("baseline",`<b>${esc(b.ref||"")} ${esc(b.sha||"")}</b>${b.date?` · ${when(b.date)}`:""}`),
     a?tag("as built",`<b>${esc(a.ref||"")} ${esc(a.sha||"")}</b>${a.date?` · ${when(a.date)}`:""}${a.pr?` · ${prlink(a.pr)}`:""}`):tag("as built","<b>—</b> · not landed","status planned"),
     a&&a.version?tag("ships as",`<b>${esc(a.version)}</b>`):"",
     /* one entry per system, or per top-level system when several of its parts are on the board */
     sysGroups.length?tag(sysGroups.length===1?"system":"systems",sysGroups.map(([top,ps])=>{ const s=ps[0], one=ps.length===1, nm=one?s.name:top;
-      return `<span class="sysl"><span class="sw" data-sys="${esc(s.slug)}"></span>${one&&boardHref(s)?`<a href="${esc(boardHref(s))}">${esc(nm)}</a>`:esc(nm)}${one?"":` · ${ps.length} parts`}${ps.every(x=>x.status==="planned")?" · planned":""}</span>`; }).join(""),sysGroups.length>2?"wide":""):""].filter(Boolean);
+      return `<span class="sysl"><span class="sw" data-sys="${esc(s.slug)}"></span>${one&&boardHref(s)?`<a href="${esc(boardHref(s))}">${esc(nm)}</a>`:esc(nm)}${one?"":` · ${ps.length} parts`}${ps.every(x=>x.status==="planned")?" · planned":ps.every(x=>x.status==="archived")?" · archived":""}</span>`; }).join(""),sysGroups.length>2?"wide":""):""].filter(Boolean);
   $("#chips").innerHTML=chips.join(""); paint($("#chips"));
 }
 
 /* ---------- The WIP strip (plan/RULES.md §3) ---------- */
-/* o (a unit's run): held (its run waits on the user), still (no mark: the inspector's copy), label (the list's name). */
+/* o (a unit's run): held (its run waits on you), still (no mark: the inspector's copy), label (the list's name). */
 /* pick (a run's finished steps, plan/RULES.md §3, "Finished steps"): { key, R, status }; each finished step's dot is a button that shows it
    in the step panel, the one shown ringed in ink and pressed. */
 function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.held!=null?o.held:PAUSED, done=o.held!=null?false:LANDED;
@@ -6470,14 +6604,14 @@ function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.hel
       return `<li class="${st} pick${sel?" sel":""}"><button type="button" class="stepbtn" data-run="${esc(pk.key)}" data-step="${esc(s)}" aria-pressed="${sel}" aria-label="${esc(s)}: finished; ${sel?"shown in the step panel, press again for now":"show it in the step panel"}">${dot}${esc(s)}</button></li>`; }
     return `<li class="${st}${st==="cur"&&!done&&!o.still?(held?" held":" glow"):""}"${st==="cur"?' aria-current="step"':""}>${dot}${esc(s)}</li>`; }).join("")}</ol>`; }
 /* ---------- Progress notes (plan/RULES.md §3, "The step panel") ----------
-   Every agent of the run's tree writes docs/plans/.live/progress/<issue>/<name>.js in its checkout every 10 minutes it runs, one line
-   setting window.PROGRESS["<name>"] to {agent, issue, started, at, done, left, eta}, and deletes it when it finishes. While the run is
-   live and the board is a local copy, each live poll probes the names the run can have: every agent of the pipeline, researcher-<slug>
-   for each research question, rookie-dev-<stage> for each stage (a missing file is simply no note). Each note is an info card of the
-   step panel: the agent, how long it has run, what is done, what is left, its estimate and when it wrote; a note not updated for over 20
-   minutes is drawn muted. A tracking board probes each unit in progress under the unit's own issue. The note files are named by the
-   pipeline's agents, so the names below are file names only: a note is shown by the work it reports (noteLabel(): "research ·
-   <slug>", "implementation · s2", "code review"), never by the agent's own name (no internal names on a board, dashboards-skill/33). */
+   Every part of the run writes docs/plans/.live/progress/<issue>/<name>.js in its checkout every 10 minutes it runs, one line
+   setting window.PROGRESS["<name>"] to its note (who, issue, times, done, left, estimate), and deletes it when it finishes. While the run is
+   live and the board is a local copy, each live poll probes the names the run can have: one per kind of work, one
+   per research question, one per stage (a missing file is simply no note). Each note is an info card of the
+   step panel: its work, how long it has run, what is done, what is left, its estimate and when it wrote; a note not updated for over 20
+   minutes is drawn muted. A tracking board probes each unit in progress under the unit's own issue. The names below are
+   file names only: a note is shown by the work it reports (noteLabel(): "research ·
+   <slug>", "implementation · s2", "code review"), never by its file's name (no internal names on a board, dashboards-skill/33). */
 const AGENTS=["planner","interviewer","researcher","verifier","architect","plan-writer","rookie-dev","test-inspector","qa","code-reviewer","documentation-reviewer"];
 const NOTE_WORK={planner:"planning",interviewer:"interview",researcher:"research",verifier:"verification",architect:"architecture","plan-writer":"plan writing","rookie-dev":"implementation","test-inspector":"test inspection",qa:"qa","code-reviewer":"code review","documentation-reviewer":"documentation review"};
 const noteLabel=name=>{ const n=String(name||""), b=Object.keys(NOTE_WORK).sort((x,y)=>y.length-x.length).find(k=>n===k||n.startsWith(k+"-")); return b?NOTE_WORK[b]+(n.length>b.length?" · "+n.slice(b.length+1):""):"progress"; };
@@ -6644,7 +6778,7 @@ const isTime=v=>okStamp(v)&&v.length>10;
 /* the kinds of work (GUIDANCE.md §1, "Steps"; dashboards-skill/34): each step's family; a tracking board's filing of its units and laying
    of their boards are planning, its units' runs its build. A step's shade is the share of its family's last end (-b) in its mix with the
    first end (-a): 0 for the family's first step with a line, 100 for its last, 50 for a family of one step. */
-const TL_FAMILIES=[{id:"planning",steps:["sizing","interview","research","architecture","plan","sub-issues","boards"]},{id:"build",steps:["branch","implementation"]},{id:"checking",steps:["qa","remediation"]},{id:"landing",steps:["landing","state-boards","merge"]}];
+const TL_FAMILIES=[{id:"planning",steps:["sizing","interview","research","architecture","plan","sub-issues","boards"]},{id:"build",steps:["branch","implementation"]},{id:"checking",steps:["qa","remediation"]},{id:"landing",steps:["document","landing","state-boards","merge"]}];
 const tlFamily=s=>(TL_FAMILIES.find(f=>f.steps.includes(s))||{id:"other"}).id;
 const tlShade=(k,n)=>n<=1?50:Math.round(100*k/(n-1));
 const tlMix=(f,p)=>`color-mix(in srgb,var(--wk-${f}-b) ${p}%,var(--wk-${f}-a))`;
@@ -6657,7 +6791,7 @@ function timelineTracers(T){ const map=TRACE_STEPS[TRACKING?"tracking":"issue"],
     return {tile,steps,lined:steps.filter(s=>mine.some(v=>v.step===s)),ms:timed.length?timed.reduce((n,v)=>n+v.ms,0):null,approx:timed.some(v=>v.approx),open:mine.some(v=>v.open),visits:mine.length,family:tlFamily(steps[0])}; }); }
 function timelineFamilies(vs){ return [...TL_FAMILIES.map(f=>f.id),"other"].map(id=>{ const steps=[]; (vs||[]).filter(v=>v.family===id).forEach(v=>{ if(!steps.some(x=>x.step===v.step)) steps.push({step:v.step,shade:v.shade}); }); return {id,steps}; }).filter(f=>f.steps.length); }
 /* An approximate bound (asBuilt.approx; plan/RULES.md §2, "The KPI tiles"; dashboards-skill/34), only on a board backfilled on
-   request: where a bound is still unknown, the time the step's update reached the team, drawn "≈" and never read as recorded; passed to a
+   request: where a bound is still unknown, the time the step's update arrived, drawn "≈" and never read as recorded; passed to a
    neighbour; never crossing a recorded bound of its chain (moved onto it, clamped). lib.js approxBounds() is the same rule. */
 const APPROX_SOURCES={arrival:"the time the update reached the team"};
 function approxBounds(seq,A,adj){ const list=(A&&Array.isArray(A.approx)?A.approx:[]).filter(x=>x&&typeof x.step==="string"&&APPROX_SOURCES[x.source]); if(!list.length) return;
@@ -6940,7 +7074,7 @@ function inspectOption(r,o){ if(!o){ inspect(`<div class="kicker">2 · CONSIDERE
 function inspectVerdict(r){ const v=r.verdict||{}, w=verdictOf(r);
   inspect(`<div class="kicker">3 · VERDICT${w?` · ${w==="leave"?"LEAVE AS IS":"BUILD"}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${whereOf(r)}</div>${w&&stmtsOf(v).length?stmtsHtml(r,"verdict"):`<p class="lead">${w?rich(v.summary):"Not yet written."}</p>`}${v.defense?`<p>${rich(v.defense)}</p>`:""}<dl>${v.steps&&v.steps.length?`<dt>Steps</dt><dd><ol class="steps-list">${v.steps.map(s=>`<li><b>${esc(s.id||"·")}</b><span>${rich(s.what||"")}${s.files&&s.files.length?`<span class="files">${s.files.map(esc).join(" · ")}</span>`:""}${s.check?`<span class="check">${rich(s.check)}</span>`:""}${s.link?` ${moreLink(s.link,"in the plan")}`:""}</span></li>`).join("")}</ol></dd>`:""}${v.tests&&v.tests.length?`<dt>Tests</dt><dd>${list(v.tests)}</dd>`:""}${v.leaves&&v.leaves.length?`<dt>Leaves to other units</dt><dd>${list(v.leaves)}</dd>`:""}${v.risks&&v.risks.length?`<dt>Risks and what bounds them</dt><dd>${list(v.risks)}</dd>`:""}${v.source?`<dt>Source</dt><dd>${refHtml(v.source)}</dd>`:""}${v.link?`<dt>Detail</dt><dd>${refHtml(v.link)}</dd>`:""}</dl>`); }
 function inspectBuilt(r){ const b=r.asBuilt||{}, st=stateOf(r), a=PLAN.asBuilt||{}, u=r.unit;
-  inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")} ${esc(STATES[st].desc)}</div>${stmtsOf(b).length?stmtsHtml(r,"built"):`<p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>`}<dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||"")}${u.blockedBy&&u.blockedBy.length?`<br>depends on <span class="deplist">${unitDeps(r).map(x=>`<span>${ilink(x.issue)} ${depPill(x)}</span>`).join("")}</span>`:""}${unitHolds(r).length?`<br>blocks · enables <span class="deplist">${unitHolds(r).map(x=>`<span>${ilink(x.issue)} ${pill(HOLD[unitLanded(r)?"enables":"blocks"])}</span>`).join("")}</span>`:""}${(u.blockedBy||[]).length||unitHolds(r).length?`<div class="key">${depKeys(unitDeps(r),unitHolds(r).length?[unitLanded(r)?"enables":"blocks"]:[]).join("")}</div>`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch&&!unitLanded(r)?`<br>branch <code>${esc(u.branch)}</code>`:""}${u.board?"":`<br>${u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}`}</dd>`:""}${runOf(r)?inspectRun(r):""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
+  inspect(`<div class="kicker">4 · AS BUILT${a.sha?` · AT ${esc(a.sha).toUpperCase()}`:""}</div><div class="name">${esc(r.name)}</div><div class="vis">${badge(st,st==="deferred"&&b.issue?` → ${ilink(b.issue)}`:"")} ${esc(STATES[st].desc)}</div>${stmtsOf(b).length?stmtsHtml(r,"built"):`<p class="lead">${rich(b.summary||(st==="pending"?"Not built yet.":""))}</p>`}<dl>${b.changes&&b.changes.length?`<dt>Changes from the verdict</dt><dd><ol>${b.changes.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}${c.when||c.ref||c.link?`<br><small>${esc(c.when||"")}${c.ref?` · ${refHtml(c.ref)}`:""}${c.link?` · ${refHtml(c.link,"the reason")}`:""}</small>`:""}</li>`).join("")}</ol></dd>`:""}${b.files&&b.files.length?`<dt>Files</dt><dd>${b.files.map(f=>`<code>${esc(f)}</code>`).join("<br>")}</dd>`:""}${b.tests?`<dt>Tests</dt><dd>${rich(b.tests)}</dd>`:""}${b.commits&&b.commits.length?`<dt>Commits</dt><dd>${b.commits.map(c=>refHtml(c)).join(" · ")}</dd>`:""}${b.verified?`<dt>Verified</dt><dd>${rich(b.verified)}</dd>`:""}${b.issue?`<dt>Moved to</dt><dd>${ilink(b.issue)}</dd>`:""}${u?`<dt>Unit</dt><dd>${esc(u.n)}. ${u.issue?pair(u.issue,u.slug||r.id):esc(u.slug||"")}${u.blockedBy&&u.blockedBy.length?`<br>depends on <span class="deplist">${unitDeps(r).map(x=>`<span>${ilink(x.issue)} ${depPill(x)}</span>`).join("")}</span>`:""}${unitHolds(r).length?`<br>blocks · enables <span class="deplist">${unitHolds(r).map(x=>`<span>${ilink(x.issue)} ${pill(HOLD[unitLanded(r)?"enables":"blocks"])}</span>`).join("")}</span>`:""}${(u.blockedBy||[]).length||unitHolds(r).length?`<div class="key">${depKeys(unitDeps(r),unitHolds(r).length?[unitLanded(r)?"enables":"blocks"]:[]).join("")}</div>`:""}${u.versions?`<br>versions: ${rich(u.versions)}`:""}${u.branch&&!unitLanded(r)?`<br>branch <code>${esc(u.branch)}</code>`:""}${u.board?"":`<br>${u.folder?refHtml(u.folder,"its folder"):"no plan folder yet"}`}</dd>`:""}${runOf(r)?inspectRun(r):""}${b.link?`<dt>Detail</dt><dd>${refHtml(b.link)}</dd>`:""}</dl>`); }
 /* the inspector's entry for a unit's run, from its mirror: the pill, its qa passes, the step, its steps (no mark) and its detail */
 function inspectRun(r){ const L=runOf(r);
   return `<dt>Its run now · from its board</dt><dd><div class="run">${runPill(L)}${runAt(L)}${qaShown(L).map(qaPill).join("")}</div>step <b>${esc(L.step||"—")}</b>${L.since?` since ${when(L.since)}`:""}${L.updated?` · updated ${when(L.updated)}`:""}${L.branch?` · branch <code>${esc(L.branch)}</code>`:""}${runBlock(r,true)}</dd>`; }
@@ -7090,7 +7224,7 @@ function impEntry(ref){ const m=/^(downstream|adaptation|api|conversion)\.(\d+)$
 const impChanges=e=>e&&Array.isArray(e.changes)?e.changes.filter(c=>c&&typeof c==="object"):[];
 const isNoChange=c=>!!c&&typeof c==="object"&&c.none===true;
 function impChangeSys(c){ if(c.system&&sysOf(c.system)) return c.system; const e=impEntry(c.entry); return e&&e.key!=="conversion"?impSlug(e.x):""; }
-const goImpLink=(ref,label)=>`<a class="goimp" href="#impact.${esc(ref)}" data-imp="${esc(ref)}" title="Open it on the Impact tab">${label} ›</a>`;
+const goImpLink=(ref,label)=>`<a class="goimp" href="#impact.${esc(ref)}" data-imp="${esc(ref)}" title="Open it on the Consequences tab">${label} ›</a>`;
 /* The impact's reconciliation state (plan/RULES.md §2, Impact), derived here and nowhere else on the board, by the rule the scripts
    share (plan/scripts/lib.js reconciliation()): impact.basis stores "plan" or "as-built" and nothing more. "as-built" when the basis
    is; "partial" (partly reconciled) when the basis is "plan" and an impact.changes entry is recorded or, on a tracking board, a unit
@@ -7115,7 +7249,7 @@ function impactChanges(){
   uChanged.forEach(r=>{ total+=impChanges(uEntries.get(r.id)).length; if(sysOf(r.system)) slugs.push(r.system); else muted=true; });
   const unitName=r=>`${esc(r.unit.n)}. ${r.unit.issue?pair(r.unit.issue,r.name):codeOnly(r.name)}`;
   const card=c=>{ const slug=impChangeSys(c), e=impEntry(c.entry), S=e&&IMP_SECTIONS.find(s=>s.key===e.key), u=TRACKING&&c.unit!=null?units.find(r=>r.id===c.unit):null; if(slug) slugs.push(slug); else muted=true;
-    const meta=[u?unitName(u):"",c.when?esc(c.when):"",c.ref?refHtml(c.ref):"",e?goImpLink(c.entry,`Impact card: ${esc(S.title)} · ${codeOnly(String(S.head(e.x,e.i)||""))}`):""].filter(Boolean);
+    const meta=[u?unitName(u):"",c.when?esc(c.when):"",c.ref?refHtml(c.ref):"",e?goImpLink(c.entry,`Consequences card: ${esc(S.title)} · ${codeOnly(String(S.head(e.x,e.i)||""))}`):""].filter(Boolean);
     return `<div class="bcard ichg" data-sys="${esc(slug)}"><div class="bh"><span class="nm">${rich(c.what||"")}</span></div>${c.why?`<p>${rich(c.why)}</p>`:""}${meta.length?`<div class="meta">${meta.join(" · ")}</div>`:""}</div>`; };
   /* the chip, with the line saying how far the reconciliation has got */
   const line=reconciled?"Reconciled with the build.":R.state==="planned"?"Nothing reconciled yet: changes are recorded here as the work lands.":TRACKING?`So far, with ${R.landed} of ${R.total} unit${R.total===1?"":"s"} landed; the rest is reconciled as the others land.`:"So far, as implementation recorded them; the landing reconciles the rest.";
@@ -7132,7 +7266,7 @@ function impactChanges(){
     if(uChanged.length) h+=`<div class="icards">${uChanged.map(r=>{ const cs=impChanges(uEntries.get(r.id));
       return `<div class="bcard ichg" data-sys="${esc(sysOf(r.system)?r.system:"")}" data-row="${esc(r.id)}"><div class="bh"><span class="nm">${unitName(r)}</span></div><ol class="changes">${cs.map(c=>`<li><b>${rich(c.what||"")}</b>${c.why?` — ${rich(c.why)}`:""}<small>${esc(c.when||"")}${c.ref?`${c.when?" · ":""}${refHtml(c.ref)}`:""}</small></li>`).join("")}</ol><div class="meta">${goImpLink("unit."+r.id,"Impact card: its unit entry")}</div></div>`; }).join("")}</div>`;
     if(uNone.length) h+=`<p class="empty">Reconciled with no change from the planned impact: ${uNone.map(unitName).join("; ")}.</p>`; }
-  return {html:`<div class="isec bimp"><h3>Impact changes from the plan <small>${total}</small></h3><p class="q">How the impact differed from the plan; the Impact tab shows it as it now stands.</p>${h}</div>`,slugs,muted,recon:R,unrecorded:R.unrecorded.length>0};
+  return {html:`<div class="isec bimp"><h3>Consequences: changes from the plan <small>${total}</small></h3><p class="q">How the consequences differed from the plan; the Consequences tab shows them as they now stand.</p>${h}</div>`,slugs,muted,recon:R,unrecorded:R.unrecorded.length>0};
 }
 /* Opens an entry's card on the Impact tab, selected and in view, with its detail in the inspector; "#impact.<entry>" deep-links it. */
 function goImpact(ref){ if(!$("#t-impact")) return; show("t-impact"); try{ history.replaceState(null,"","#impact."+ref); }catch(e){}
@@ -7141,9 +7275,9 @@ function goImpact(ref){ if(!$("#t-impact")) return; show("t-impact"); try{ histo
   c.scrollIntoView({block:"center"}); c.focus({preventScroll:true}); INSPECTED={k:"imp",ref}; inspectImpact(ref); }
 
 /* ---------- Impact (plan/RULES.md §2, "Impact") ----------
-   From plan.json "impact": written at plan acceptance from impact.md (and plan.md where it states API or migration facts), kept up
+   From plan.json "impact": written at plan acceptance from consequences.md (impact.md in an older folder) (and plan.md where it states API or migration facts), kept up
    as the work lands (an implementation stage's deviation, on a tracking board each unit's landing), and reconciled at the landing
-   (a tracking board's at its last unit's) from final-implementation.md and the reconciled impact.md. The tab shows the current best-known impact
+   (a tracking board's at its last unit's) from final-implementation.md and the reconciled consequences.md. The tab shows the current best-known impact
    and no planning information (GUIDANCE.md §1, plan/RULES.md §2): impact.basis is not rendered, and impact.changes is rendered on
    the As built tab (impactChanges(), above), never here; every entry is one solid card, whatever the basis. Four sections: downstream effects, adaptation
    requirements, API changes, conversion steps; a tracking board adds one entry per unit (impact.units), linking the unit's board.
@@ -7208,7 +7342,7 @@ function renderImpact(){
   const effect=impItems("downstream").some(x=>x.effect&&x.effect!=="none")||impItems("api").length||impItems("adaptation").some(x=>x.need==="required");
   const noBump=!TRACKING&&rel&&rel.bump==="none"&&!effect;
   const noneBox=!I||I.none||noBump||!any;
-  if(!I) h+=`<div class="inone"><p class="lead">No downstream impact recorded yet.</p><p>Source: nothing written so far${STEP?` (the run is at ${esc(STEP)})`:""}. This tab is filled from <code>impact.md</code>, and <code>plan.md</code> where it states API or migration facts, when the plan is accepted, and reconciled from <code>final-implementation.md</code> at the landing.</p></div>`;
+  if(!I) h+=`<div class="inone"><p class="lead">No downstream impact recorded yet.</p><p>Source: nothing written so far${STEP?` (the run is at ${esc(STEP)})`:""}. This tab is filled from <code>consequences.md</code>, and <code>plan.md</code> where it states API or migration facts, when the plan is accepted, and reconciled from <code>final-implementation.md</code> at the landing.</p></div>`;
   else if(I.none||noBump||!any) h+=`<div class="inone"><p class="lead">No downstream impact recorded.</p>${I.none?`<p>${rich(I.none)}</p>`:""}${noBump?`<p>No downstream effect, so no version moves: a version moves only when a consumer of a published artifact would see a difference.</p>`:""}<p>Source: ${I.source?refHtml(I.source):"not stated"}.</p></div>`;
   if(I) IMP_SECTIONS.forEach(s=>{ const xs=impItems(s.key);
     h+=`<div class="isec"><h3>${esc(s.title)} <small>${xs.length}</small></h3><p class="q">${esc(s.q)}</p>${xs.length?`<div class="icards">${xs.map((x,i)=>impCard(s.key,x,i)).join("")}</div>`:`<p class="empty">None recorded.</p>`}</div>`; });
@@ -7387,7 +7521,7 @@ tabKeys(stabs,id=>{ showTestsSub(id.replace("t-tests-","")); try{ history.replac
    server push can call it in place of the polling. The header's live indicator says where the view stands: "LIVE · updated n s
    ago" (the dot pulses; the counter restarts at each change), "LIVE · no change for n min" after a quiet spell (the dot still),
    "LIVE · data unavailable" when plan.js cannot be read, and "not live · as of <local time>" for a board whose run is not live. The
-   dot holds still while the run waits on the user. */
+   dot holds still while the run waits on you. */
 const LIVE_POLL_MS=5000, LIVE_QUIET_MS=5*60000;
 const LIVE_LOCAL=location.protocol==="file:"||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const LIVE={json:JSON.stringify(PLAN),last:0,ok:true,got:false,timer:null,tick:null};
@@ -7427,6 +7561,7 @@ function startLive(){ LIVE.last=dataStamp()!=null?Math.min(Date.now(),dataStamp(
   pollProgress();
   /* the live views on this machine: the live repository work board, and the rendered Markdown copies */
   liveMark(`${UP}docs/plans/.live/index.js`,"board",b=>{ if(b){ LIVE_WB=relTo(`${UP}docs/plans/.live/index.js`,String(b)); renderHeader(); renderContext(); } });
+  liveMark(`${UP}docs/plans/.live/open/index.js`,"open",d=>{ if(Array.isArray(d)&&d.length){ LIVE_OPEN=new Set(d.map(String)); renderWip(); } });
   liveMark(`${UP}docs/plans/.live/docs/index.js`,"docs",d=>{ if(Array.isArray(d)){ LIVE_DOCS=new Set(d.map(String)); liveDocs(document.body); } }); }
 
 renderHeader(); renderWip(); renderKpis(); renderBoard(); renderContext();

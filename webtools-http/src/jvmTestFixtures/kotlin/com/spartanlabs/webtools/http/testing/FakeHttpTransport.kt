@@ -6,6 +6,7 @@ import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpResponse
 import com.spartanlabs.webtools.http.HttpTransport
 import com.spartanlabs.webtools.http.TransportFailure
+import com.spartanlabs.webtools.http.bodyExpected
 import com.spartanlabs.webtools.http.flatMap
 import kotlinx.coroutines.delay
 import kotlin.time.TimeMark
@@ -38,8 +39,9 @@ import kotlin.time.TimeSource
  * - **Fidelity:** a respond or fixture step builds `HttpResponse(status, request.url) { headers; body }`;
  *   a lambda step returns its own response. With [maxResponseBytes] set, a response whose declared
  *   `Content-Length` (a non-empty run of digits that parses as a non-negative `Long`, else ignored) or body
- *   is above the cap becomes `Result.failure(TransportFailure.BodyTooLarge(cap, declared))`. After [close]
- *   every call returns `Result.failure(HttpFailure.Closed("transport"))`.
+ *   is above the cap becomes `Result.failure(TransportFailure.BodyTooLarge(cap, declared))`. The cap follows the
+ *   transport's no-body rule: it is not applied to a response to `HEAD` or to a `1xx`, `204` or `304` status. After
+ *   [close] every call returns `Result.failure(HttpFailure.Closed("transport"))`.
  * - **Not mirrored:** URL policy, DNS, TLS, redirects and timeouts belong to the real transport.
  * - **Exceptions** from the consumer's matcher or lambda propagate out of [execute] (a test-authoring
  *   error); they are not wrapped in the `Result`. A matcher that throws leaves the call unrecorded.
@@ -153,11 +155,12 @@ public class FakeHttpTransport(
 
     private suspend fun play(step: Step, request: HttpRequest): Result<HttpResponse> {
         if (step.delay.isPositive()) delay(step.delay)               // virtual under the test scheduler; CancellationException when cancelled
-        return if (isClosed) closedFailure() else step.produce(request).flatMap { capped(it) }
+        return if (isClosed) closedFailure() else step.produce(request).flatMap { capped(request, it) }
     }
 
-    private fun capped(response: HttpResponse): Result<HttpResponse> {
+    private fun capped(request: HttpRequest, response: HttpResponse): Result<HttpResponse> {
         val cap = maxResponseBytes ?: return Result.success(response)
+        if (!bodyExpected(request.method, response.status)) return Result.success(response)     // the transport reads no body here
         val declared = response.headers["Content-Length"]?.let(::declaredLength)
         return if ((declared != null && declared > cap) || response.bodySize > cap) Result.failure(TransportFailure.BodyTooLarge(cap, declared))
         else Result.success(response)

@@ -2,13 +2,13 @@
 
 - **Covers:** `SpartanLaboratories/WebTools#61` — *"Build: move shared configuration into an
   included `build-logic` build with convention plugins and package-selected level tasks"*
-  (work level 3, `type: feature`). Sub-issue of the level-4 tracking issue
+  (`type: feature`). Sub-issue of the tracking issue
   `SpartanLaboratories/WebTools#55` (HTTP client stack).
 - **Architecture:** [`../architecture.md`](../architecture.md), unit 1 `build-logic`
   (§6.1 *Shared build logic*, §8 rows for the root build, level tasks, `settings.gradle.kts`,
   the module build files, `README.md`, `gradle.properties`/`.gitignore` and the `@Tag`
   adoption row, §9 *build-logic plugins and WebToolsBuild*, §10 first alternative, §11 unit 1,
-  §12 KGP risk, §13). Systems-level impact: [`../impact.md`](../impact.md). This unit's
+  §12 KGP risk, §13). Systems-level impact: [`../consequences.md`](../consequences.md). This unit's
   research: [`research/README.md`](research/README.md) with
   [`research/testkit-harness.md`](research/testkit-harness.md) and
   [`research/multiplatform-plugin-wiring.md`](research/multiplatform-plugin-wiring.md).
@@ -32,7 +32,7 @@
   `webtools-browser` stay `1.0.0`. The published POMs, Gradle Module Metadata and jars of the
   three existing modules are unchanged (measured once, §9).
 
-> **Amended after qa pass 1 (2026-10-22).** Amendment 1 completes `build-logic`'s test levels,
+> **Amended after review pass 1 (2026-10-22).** Amendment 1 completes `build-logic`'s test levels,
 > corrects the harness and the documentation, and applies the rule that no procedure runs a test
 > suite of `webtools-udp`, `webtools-scraping` or `webtools-browser`.
 > - **Test levels** (§9). `build-logic` gains:
@@ -350,7 +350,7 @@ all hold — [`research/README.md` § Verification](research/README.md)):
 - Enabling the configuration cache repository-wide (the requirement is compatibility);
   CI, `CONTRIBUTING.md`, `CHANGELOG.md`, tags, releasing and the foojay bump (#58).
 - A `jvm-test-suite` for the TestKit tests; `withDebug(true)`; a dedicated Kotlin/JSON dependency.
-- Updating `docs/dashboards/` (done by the run's presenter step after implementation).
+- Updating `docs/dashboards/` (done by the board refresh after implementation).
 
 ---
 
@@ -1124,7 +1124,7 @@ not `try-catch`; the only `try`-shaped code is the best-effort delete, written a
 | 1 — in-editor | Header comment and `//region` blocks in every script; `// TODO(#47):` on the attribute value and at the JVM plugin's java-floor seam; comments on the ASM pin, on the absent `configure(...)`, on why the attribute is set, on the pinned multiplatform `configure(...)` and on the level tasks' classpath; one clause per setting of the samples' `gradle.properties`; the system-property comments of `build-logic/build.gradle.kts`. |
 | 2 — component / KDoc | KDoc (`@param`, `@return`, `@throws`) on `TestLevel`, `WebToolsBuild` and its public members, and on every public harness class and function in the test sources. A collection is described as read-only, never as immutable, unless it is deeply immutable. |
 | 3 — boundary / integration | `README.md` "Build & test" (§6.11): the package-selection rule, the three plugin ids, what a module's build file adds, `build-logic`'s level tasks and its pre-commit gate, the on-demand nested-build tasks, the first-run network note. The plugin headers: what the Kotlin/JVM plugin leaves to the build JDK until #47, and what a release needs (credentials and signing key by property key only). `NestedBuild`'s KDoc: network, blocking calls with no timeout of their own, the daemon's lifetime. The root `build.gradle.kts` comment. `webtools-udp/build.gradle.kts` header (§6.9). |
-| 4 — architectural | The architecture document and `impact.md` of #55 are unchanged by this unit. `docs/dashboards/` shows `build-logic` as `planned` and still describes the level tasks as selected "by JUnit tag"; the run's presenter step updates it after implementation, so it is **not** a file change of this plan. This issue's `impact.md` and the reconciled `final-implementation.md` land in commit 3 (§12). |
+| 4 — architectural | The architecture document and `impact.md` of #55 are unchanged by this unit. `docs/dashboards/` shows `build-logic` as `planned` and still describes the level tasks as selected "by JUnit tag"; the board refresh after implementation updates it, so it is **not** a file change of this plan. This issue's `impact.md` and the reconciled `final-implementation.md` land in commit 3 (§12). |
 
 README currency: the change adds an included build (`build-logic`), its commands and a build/run
 step, so the same change (commit 2) updates `README.md`.
@@ -1500,7 +1500,7 @@ Windows with JDK 23.
 None of the siblings has landed. Each contract is the architecture's description, stated as
 precisely as this unit's side needs.
 
-**Unit 2 — `java-floor` (#47, level 2).**
+**Unit 2 — `java-floor` (#47, a small fix).**
 
 *What it expects from this unit:*
 - the three plugins in the shape of §6.4–6.7, with the named seams below;
@@ -1639,7 +1639,7 @@ and dump `webtools-feeds/api/webtools-feeds.api`. Its `webtools-feeds-commonchec
 - **Commits.** The working tree holds the finished first version and amendments 1 and 2, so the
   commits are file-granular and no file is split across two commits.
   - Each commit is coherent and leaves the build green.
-  - The commit type is `build:` for the first two. The manager agent makes the final call.
+  - The commit type is `build:` for the first two; the final call is made at commit time.
   - Subject lines carry `(Issue #61)`, as the branch's earlier commits do.
   - **No attribution trailers.**
 
@@ -1670,7 +1670,7 @@ and dump `webtools-feeds/api/webtools-feeds.api`. Its `webtools-feeds-commonchec
 2. Amendment 2 (§17) is applied, and procedure G has rerun warm.
 3. `final-implementation.md` is the reconciled as-built record, and `impact.md` is reconciled with
    it.
-4. The quality gate runs, and it performs the Level-5 pass (§9). Then commits 1, 2 and 3 are made
+4. The pre-merge review runs, and it performs the Level-5 pass (§9). Then commits 1, 2 and 3 are made
    (§12).
 
 **Follow-ups deliberately left:**
@@ -1683,7 +1683,7 @@ and dump `webtools-feeds/api/webtools-feeds.api`. Its `webtools-feeds-commonchec
 - **Dropping the ASM pin** once the floor has landed (optional; it is inert then).
 - **The stale port-lock comment.** `webtools-udp/build.gradle.kts` says "the lock lives here, not in
   the root build", and that comment predates the move. Acceptance 5 keeps the lock's lines
-  byte-identical in this change, so the comment is left for a later level-1 documentation change.
+  byte-identical in this change, so the comment is left for a later comment-only change.
 
 ---
 
@@ -1701,8 +1701,8 @@ and dump `webtools-feeds/api/webtools-feeds.api`. Its `webtools-feeds-commonchec
 - **The `.module` size and checksum lines** are excluded from procedure A's byte comparison
   because they depend on jar timestamps. Their agreement is implied by identical jar entries, not
   asserted.
-- **`docs/dashboards/`** still describes the level tasks as selected "by JUnit tag". The run's
-  presenter step updates it; it is not a file of this plan.
+- **`docs/dashboards/`** still describes the level tasks as selected "by JUnit tag". The
+  landing's board refresh updates it; it is not a file of this plan.
 
 ---
 

@@ -1,4 +1,4 @@
-/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the page for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
+/* plan.js: plan.json as a script, written by plan/scripts/embed.js beside the board for its live view (plan/RULES.md §1). Do not edit: edit plan.json and re-embed. */
 window.dashboardLive&&window.dashboardLive("plan",
 {
   "schema": "plan-board/1",
@@ -1149,7 +1149,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "options": [
         {
           "id": "leave-comment",
-          "name": "Leave it for a later level-1 documentation change",
+          "name": "Leave it for a later documentation-only change",
           "verdict": "accepted",
           "why": "Acceptance 5 keeps every line from the `2.0.0a` note to the end of the file byte-identical.",
           "source": "plan.md §13",
@@ -1208,7 +1208,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     },
     {
       "name": "port-lock-comment",
-      "note": "A level-1 rewording of the port lock's \"not in the root build\" comment."
+      "note": "A comment-only rewording of the port lock's \"not in the root build\" comment."
     }
   ],
   "documents": [

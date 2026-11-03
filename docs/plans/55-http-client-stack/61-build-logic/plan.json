@@ -1147,7 +1147,7 @@
       "options": [
         {
           "id": "leave-comment",
-          "name": "Leave it for a later level-1 documentation change",
+          "name": "Leave it for a later documentation-only change",
           "verdict": "accepted",
           "why": "Acceptance 5 keeps every line from the `2.0.0a` note to the end of the file byte-identical.",
           "source": "plan.md §13",
@@ -1206,7 +1206,7 @@
     },
     {
       "name": "port-lock-comment",
-      "note": "A level-1 rewording of the port lock's \"not in the root build\" comment."
+      "note": "A comment-only rewording of the port lock's \"not in the root build\" comment."
     }
   ],
   "documents": [

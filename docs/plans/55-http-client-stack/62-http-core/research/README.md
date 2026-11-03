@@ -4,7 +4,7 @@
 (`http-core`) of the HTTP client stack,
 [#55](https://github.com/SpartanLaboratories/WebTools/issues/55). The systems-level design is
 [`../../architecture.md`](../../architecture.md) (§6.2, §6.8, §6.9, §9, §11 unit 3) and the
-systems-level impact [`../../impact.md`](../../impact.md). This folder researches the
+systems-level impact [`../../consequences.md`](../../consequences.md). This folder researches the
 implementation details that design leaves to the unit.
 
 ## The work

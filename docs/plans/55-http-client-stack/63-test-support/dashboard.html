@@ -50,7 +50,7 @@ h1,h2,h3{text-wrap:balance}
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
 /* The header's tools, right of the breadcrumb: the live indicator (plan/RULES.md §3, "Live updates") and the theme switch
    (GUIDANCE.md §1, Themes). The live dot is ink, never a status or accent colour; it pulses while the run is live and changing, and
-   holds still after a quiet spell, while the run waits on the user, when the data cannot be read, and under reduced motion. */
+   holds still after a quiet spell, while the run waits on you, when the data cannot be read, and under reduced motion. */
 .topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:18px}
 .topbar .crumbs{padding-top:0;min-width:0}
 .tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
@@ -149,7 +149,7 @@ h1 a.ghn:hover{border-bottom-color:var(--ink)}
 .wip .key{margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
 /* A tracking board's unit in progress shows its own run, mirrored from its board (unit.live, plan/RULES.md §3): under its "In
    progress" line an accent rule holds the unit's step, its steps, its detail and its qa passes (a yellow rule while the run waits
-   on the user); its as-built cell and card carry a run line. */
+   on you); its as-built cell and card carry a run line. */
 .unitrun .wip-head{font-size:12.5px}
 .unitrun .wip-detail,.unitrun .wip-wait{margin:4px 0 2px}
 /* A tracking board's WIP strip is a set of cards (plan/RULES.md §3): the tracking issue's own phase with the chain's progress,
@@ -255,7 +255,7 @@ h1 a.ghn:hover{border-bottom-color:var(--ink)}
 /* The two accent marks (GUIDANCE.md §1).
    In progress (wip.current): a solid accent ring inside the edge, an interior glow that breathes (~2 s) and a faint accent wash.
    .glow-soft is the same, lighter, for a whole column at work. With reduced motion the interior glow holds still at its middle
-   strength; while the run waits on the user, halted or escalated, it stops (.held: the ring alone).
+   strength; while the run waits on you, halted or escalated, it stops (.held: the ring alone).
    Up next (wip.next, tracking boards): the mild outer glow the in-progress mark used before, held still, never animated, with
    the static UP NEXT tag. It is not work in progress, so it neither breathes nor counts as a glowing cell. */
 @keyframes glow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 28%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 22px 6px color-mix(in srgb,var(--accent) 52%,transparent)}}
@@ -454,7 +454,7 @@ a.more:hover{text-decoration:underline}
 .colhead.glow{border-radius:4px}
 /* Column-level glow (plan/RULES.md §3; GUIDANCE.md §1): a column address in wip.current (a whole column at work: qa, a stage that
    touches no row, research while its rows are unknown) is one glow on the column itself, its band, with an accent wash on its head,
-   never each row's cell lit; held still as the ring alone while the run waits on the user; static under reduced motion. The narrow
+   never each row's cell lit; held still as the ring alone while the run waits on you; static under reduced motion. The narrow
    layout draws no columns, so there each of the column's cells carries it. On the As built tab the glow goes round the cards. */
 .board>.band.glow-soft{background:color-mix(in srgb,var(--accent) 5%,var(--band))}
 .board>.band.held{background:color-mix(in srgb,var(--accent) 3%,var(--band))}
@@ -501,7 +501,7 @@ a.more:hover{text-decoration:underline}
 .rs-planning{--rc:var(--critical)}.rs-researching,.rs-returned{--rc:var(--serious)}.rs-verifying{--rc:var(--warning)}.rs-complete{--rc:var(--good)}
 .key i.ring{background:var(--surface);border:2.5px solid var(--rc);border-radius:4px}
 /* The charging arrow (plan/RULES.md §3, "The charging arrow"): during the plan step, the connector into a Verdict cell whose verdict is
-   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on the user and under
+   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on you and under
    reduced motion, and is the plain line again once the verdict is written. */
 .cell.verdict.charging::before{border-top:0;height:22px;top:calc(50% - 11px);left:calc(-1 * var(--cg) - 9px);width:calc(var(--cg) + 15px);z-index:2;clip-path:polygon(0 26%,64% 26%,64% 0,100% 50%,64% 100%,64% 74%,0 74%);
   background:repeating-linear-gradient(90deg,var(--accent) 0 3px,transparent 3px 5px) 0 0/100% 100% no-repeat,repeating-linear-gradient(90deg,color-mix(in srgb,var(--accent) 32%,transparent) 0 3px,transparent 3px 5px);animation:charge 1.8s steps(8,end) infinite}
@@ -735,8 +735,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
 .cell.glow-soft,.bcard.glow-soft,.colhead.glow-soft{background-color:color-mix(in srgb,var(--accent) 4%,var(--surface))}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.colhead.glow{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 14px 4px color-mix(in srgb,var(--accent) 40%,transparent)}
   .board .cell.colglow{animation:none!important;box-shadow:inset 0 0 0 1.5px var(--accent),inset 0 0 9px 2px color-mix(in srgb,var(--accent) 26%,transparent)}}
-/* Progress notes (plan/RULES.md §3, "The step panel"): each agent's own note of its work, an info card of the step panel; a note not
-   updated for over 20 minutes is muted (its agent may have stopped). */
+/* Progress notes (plan/RULES.md §3, "The step panel"): each running part's own note of its work, an info card of the step panel; a note not
+   updated for over 20 minutes is muted (its writer may have stopped). */
 .wip-facts>span.prog{border-left:3px solid var(--ink-2)}
 .wip-facts>span.prog.stale{opacity:.55}
 .wip-facts>span.prog small{font:11px var(--mono);color:var(--muted)}
@@ -1728,7 +1728,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "name": "A hand-built JVM-only `testFixtures` compilation associated with `main`, published as two variants with the capability `webtools-http-test-fixtures` (recipe B)",
           "verdict": "accepted",
           "why": "One coordinate and one version, and the fixtures' own dependencies, `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0, reach only the consumer's test classpath through Maven scope mapping as optional entries. The association lets the fixtures reach `internal` declarations such as `HttpSyntax`. The variants set `TargetJvmVersion` from `JAVA_FLOOR`, which the target's attribute does not reach, and the fixtures jar joins `verifyJavaFloor`.",
-          "source": "../architecture.md §6.7; ../impact.md §8",
+          "source": "../architecture.md §6.7; ../consequences.md §8",
           "link": "../architecture.md#67-published-test-support"
         },
         {
@@ -2245,7 +2245,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/jvmTestFixtures/"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#73-fixtures-time-and-the-fake-"
+            "link": "plan.md#73-fixtures-time-and-the-fake-fx"
           }
         ],
         "tests": [
@@ -2417,7 +2417,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/jvmTest/"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#73-fixtures-time-and-the-fake-"
+            "link": "plan.md#73-fixtures-time-and-the-fake-fx"
           }
         ],
         "tests": [
@@ -2604,7 +2604,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/jvmTest/resources/fixtures/sample/"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#74-fixtures-the-http-format-"
+            "link": "plan.md#74-fixtures-the-http-format-fx"
           }
         ],
         "tests": [
@@ -2777,7 +2777,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "webtools-http/src/jvmTest/"
             ],
             "check": "Procedures P3 and P4",
-            "link": "plan.md#75-fixtures-the-recorder-"
+            "link": "plan.md#75-fixtures-the-recorder-fx"
           }
         ],
         "tests": [
@@ -2965,11 +2965,11 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "summary": "Nothing would notice a Kotlin Gradle plugin or Gradle upgrade changing the experimental publishing behaviour the variant rests on. The architecture wires the check into the root `check`, but the root project has no `check` task: it keeps only `group` and `version`, and #62's check module added none.",
         "evidence": [
           "build.gradle.kts:11-14 — `allprojects { group; version }` only, no `check` (baseline)",
-          "../impact.md §7, §8 — the check is the only guard on the experimental API; where it attaches is open",
+          "../consequences.md §7, §8 — the check is the only guard on the experimental API; where it attaches is open",
           "build-logic/build.gradle.kts:51-72 — the TestKit home lock and the nested-build level tasks a new check reuses (baseline)"
         ],
-        "source": "../architecture.md §6.1, §12; ../impact.md §8",
-        "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-5-as-built"
+        "source": "../architecture.md §6.1, §12; ../consequences.md §8",
+        "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-6-as-built"
       },
       "options": [
         {
@@ -2977,7 +2977,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "name": "A TestKit test in `build-logic`'s own tests that publishes `webtools-http` to a build-local file repository and resolves `testFixtures(...)` once from it and once through `includeBuild`",
           "verdict": "accepted",
           "why": "It asserts the capability, `org.gradle.jvm.version` 11 on both fixtures variants, and that neither main variant lists `kotlinx-coroutines-test` or `mockwebserver3`: exactly the probe that settled the recipe. It reuses the TestKit harness and takes the TestKit home lock, so it never runs beside the other nested builds.",
-          "source": "../architecture.md §6.1; ../impact.md §8",
+          "source": "../architecture.md §6.1; ../consequences.md §8",
           "link": "../architecture.md#61-shared-build-logic--build-logic"
         },
         {
@@ -2985,8 +2985,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "name": "Where it attaches: a root lifecycle `check`, as the architecture's root wiring needs, or the `check` of `webtools-http`, the module whose publication it covers",
           "verdict": "deferred",
           "why": "The architecture's target does not exist: a root `check` changes the root build's shape, and the module's own `check` keeps it beside the publication. #55's impact leaves the choice to this unit's plan.",
-          "source": "../impact.md §8; ../62-http-core/plan.md §12",
-          "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-5-as-built"
+          "source": "../consequences.md §8; ../62-http-core/plan.md §12",
+          "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-6-as-built"
         },
         {
           "id": "root-lifecycle-check",
@@ -3518,7 +3518,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "../architecture.md §12 — Central validation of the fixtures jar, and signing of a KMP publication with an adhoc variant, were not run against the real validator",
           "research/publication-check-mechanics.md F3, F4 — a throwaway key signs every published file, the fixtures jar included (measured); research/README.md, Known gaps — Central's validator is first exercised by the first release"
         ],
-        "source": "../architecture.md §11, §12; ../impact.md §7",
+        "source": "../architecture.md §11, §12; ../consequences.md §7",
         "link": "../architecture.md#12-risks-at-the-systems-level"
       },
       "options": [
@@ -3991,8 +3991,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "note": "§2 current state, §6.1 the publication check, §6.7 published test support, §9 extension and stability, §10 alternatives, §11 unit 4, §12 risks"
     },
     {
-      "label": "#55 impact",
-      "path": "../impact.md",
+      "label": "#55 consequences",
+      "path": "../consequences.md",
       "note": "§7 the open point this unit settles, §8 what units 1 to 3 as built give it and where the publication check may attach"
     },
     {
@@ -4032,6 +4032,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "what": "The publication-check row's Gap and its second option linked #55's impact.md §8 by its old heading, \"units 1 to 3 as built\"; the section was renamed \"units 1 to 4 as built\" with this unit's reconciliation. The two links now name the renamed section; the text is unchanged.",
         "when": "qa pass 2 reconciliation, 2026-10-25"
+      },
+      {
+        "what": "The links to plan.md sections whose heading opens with a code span holding a path placeholder (`<fx>`) now carry GitHub's anchor, which keeps the placeholder's letters (73-fixtures-time-and-the-fake-fx); the anchor written before lacked them and opened no section. No statement, verdict or state changed.",
+        "when": "the heading-anchor rule fixed, 2026-11-01"
       }
     ],
     "departure": "The unit's plan departs from #55's architecture in three decisions (plan.md §13, impact.md §5): the fixtures-publication check hangs off `webtools-http`'s own `check` rather than a root `check` (§6.1, §6.7, §11), since the root project has none and a root one would miss `./gradlew build`; the signing of the multiplatform publication with its adhoc variant is exercised on every run of the check with a throwaway key, leaving only Central's validator to the first release (§12); and `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)`, which §6.7 lists among this unit's types, follow §11 to unit 6. They show in the publication-check, release and contributions-left rows' Considered and Verdict columns, in the publication-check row's settled option, and on #55's tracking board as changes on the test-support unit row. A dated correction to `architecture.md` §6.1 is written with the as-built reconciliation."
@@ -4040,7 +4044,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "47": "../47-java-23-bytecode/dashboard.html",
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
-    "64": "../64-url-policy/dashboard.html"
+    "64": "../64-url-policy/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",
@@ -4707,7 +4712,7 @@ function sysKey(slugs,cls){ const seen=new Map(); slugs.forEach(sl=>{ const s=sy
   return [...seen.values()].map(v=>`<span><i class="${cls||"sbar"}" style="--c:${v.c}"></i>${esc([...v.names].join(", "))}</span>`).join(""); }
 
 /* ---------- Work in progress: the glowing cells ----------
-   PAUSED: the run waits on the user, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
+   PAUSED: the run waits on you, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
    the glow of the step it stopped in (plan/RULES.md §3, the glow follows the step). */
 /* NOT_STARTED: a board laid before its run starts (a tracking issue's unit, plan/RULES.md §4): no step yet, status planned, nothing glows */
 let NOT_STARTED=false, STEP="", HALTED=false, PAUSED=false, LANDED=false, STOPPED=false, CURRENT=[];
@@ -4718,7 +4723,7 @@ const rowActive=r=>CURRENT.some(a=>{ const p=String(a).split("."); return p[0]==
    A unit in progress carries unit.live: its sub-issue board's run (step, since, updated, detail, steps, waitingOn, resume, qa,
    status, branch) as embed.js mirrored it from that board's plan.json at the last embed of either board. Nobody writes it by
    hand. The board shows it under the WIP strip's "In progress" line, in the unit's as-built cell and card, in the inspector, on
-   its chain node and in the roadmap; while the unit's run waits on the user its mark pauses (the ring alone), as the whole
+   its chain node and in the roadmap; while the unit's run waits on you its mark pauses (the ring alone), as the whole
    board's does while the tracking issue itself is halted. The tracking board's own wip.step is the tracking issue's phase. */
 const RUN={run:{g:"▶",label:"run",cls:"neutral"},halted:{g:"⏸",label:"waiting on the user",cls:"warning"},escalated:{g:"⇧",label:"escalated",cls:"serious"},cancelled:{g:"✕",label:"run cancelled",cls:"critical"}};
 const runOf=r=>TRACKING&&r&&r.unit&&r.unit.live&&typeof r.unit.live==="object"&&rowActive(r)?r.unit.live:null;
@@ -4812,7 +4817,7 @@ function researchFact(w){ const qs=questionsOf(w), R=w&&w.research;
    Beside the WIP strip, the current step broken down from the facts the board records (the events, the documents, the trail): the
    interview's questions, answered or waiting; the research timeline (planning, research, verification) with each question's state and
    the count returned; the plan's writing or re-pass and its verdicts written; the implementation stages, done, current and to come;
-   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on the user, what
+   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on you, what
    it waits on, the panel held still. R is a run: an issue board's own wip (with its verdicts and deviations counted from its rows), or
    a tracking board's unit mirror (unit.live), which carries the same facts (plan/scripts/lib.js panelFacts()). keys collects the legend
    entries the panel drew. */
@@ -4831,7 +4836,7 @@ function unitProgress(R,o,what){ const units=ROWS.filter(r=>r.unit), done=r=>wha
   const lit=CURRENT.some(a=>/\.units$/.test(String(a)));
   return `<p class="sp-sum">${n} of ${units.length} unit${units.length===1?"":"s"} ${what==="filed"?"filed as sub-issues":"with a board"}</p>`+spList(units.map(r=>{ const d=done(r), cur=!d&&!o.held&&(lit?CURRENT.includes(r.id+".units"):first); if(!d) first=false;
     return spItem(d?"done":cur?"cur":"todo",dotMark,`${esc(r.unit.n!=null?r.unit.n+". ":"")}${r.unit.issue?pair(r.unit.issue,r.name):codeOnly(r.name)}`,d?(what==="filed"?"filed":"board created"):what==="filed"?"to file":r.unit.issue?"its board to create":"its sub-issue first"); })); }
-/* The route the pipeline takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
+/* The route a run takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
    no fallout), fixed on the spot with no new qa pass; otherwise a remediation pass, or a plan re-pass then a remediation pass, and the
    next qa pass (at most three in all). The routes' ids name no role (dashboards-skill/33): "remediation" and "re-plan-then-remediation";
    a board written before reads its older ids through routeKey(). */
@@ -4892,7 +4897,7 @@ const PANEL={
     if(!running){ h+=qaBlock({pass:qa.length+1,verdict:"running"},keys); }
     return h; },
   remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null, route=routeKey(M.route||(last&&last.route)||null), nx=`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`;
-    /* while no sub-step is recorded, the loop the route takes (the pipeline's, when no route is recorded either) */
+    /* while no sub-step is recorded, the loop the route takes (the default, when no route is recorded either) */
     const dflt=route==="on-the-spot"?[{what:`Minor fixes for qa pass ${n||"n"}, made on the spot`,state:"current"},{what:"Landing, with no new qa pass",state:"todo"}]
       :route==="re-plan-then-remediation"?[{what:`Plan re-pass for qa pass ${n||"n"}'s findings`,state:"current"},{what:"Fixes",state:"todo"},{what:nx,state:"todo"}]
       :route==="remediation"?[{what:`Fixes for qa pass ${n||"n"}'s findings`,state:"current"},{what:nx,state:"todo"}]
@@ -4907,7 +4912,7 @@ const PANEL={
     const prev=visitsOf(R,"remediation").filter(V=>V.remediation&&V.remediation.pass!==n);
     if(prev.length) h+=`<p class="sp-sum">Earlier loop${prev.length===1?"":"s"}</p>`+spList(prev.map(V=>spItem("done",dotMark,`Answering qa pass ${esc(V.remediation.pass)}${ROUTE[V.remediation.route]?` · ${esc(ROUTE[V.remediation.route].label)}`:""}`,V.ended?`ended ${when(V.ended)}`:"")));
     return h; },
-  /* the landing in three team-raised steps (plan/RULES.md §4; dashboards-skill/34): "landing", the land accepted and the code, the version
+  /* the landing in three steps (plan/RULES.md §4; dashboards-skill/34): "landing", the land accepted and the code, the version
      bump and the reconciled documents committed on the branch; "state-boards", the pre-merge refresh of the state boards on the branch and
      its board commit; "merge", the pull request merged; "landed" follows the merge. A board whose steps line has "landing" alone (written
      before them) reads its landing as all three. */
@@ -5134,7 +5139,7 @@ function renderHeader(){
 }
 
 /* ---------- The WIP strip (plan/RULES.md §3) ---------- */
-/* o (a unit's run): held (its run waits on the user), still (no mark: the inspector's copy), label (the list's name). */
+/* o (a unit's run): held (its run waits on you), still (no mark: the inspector's copy), label (the list's name). */
 /* pick (a run's finished steps, plan/RULES.md §3, "Finished steps"): { key, R, status }; each finished step's dot is a button that shows it
    in the step panel, the one shown ringed in ink and pressed. */
 function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.held!=null?o.held:PAUSED, done=o.held!=null?false:LANDED;
@@ -5144,14 +5149,14 @@ function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.hel
       return `<li class="${st} pick${sel?" sel":""}"><button type="button" class="stepbtn" data-run="${esc(pk.key)}" data-step="${esc(s)}" aria-pressed="${sel}" aria-label="${esc(s)}: finished; ${sel?"shown in the step panel, press again for now":"show it in the step panel"}">${dot}${esc(s)}</button></li>`; }
     return `<li class="${st}${st==="cur"&&!done&&!o.still?(held?" held":" glow"):""}"${st==="cur"?' aria-current="step"':""}>${dot}${esc(s)}</li>`; }).join("")}</ol>`; }
 /* ---------- Progress notes (plan/RULES.md §3, "The step panel") ----------
-   Every agent of the run's tree writes docs/plans/.live/progress/<issue>/<name>.js in its checkout every 10 minutes it runs, one line
-   setting window.PROGRESS["<name>"] to {agent, issue, started, at, done, left, eta}, and deletes it when it finishes. While the run is
-   live and the board is a local copy, each live poll probes the names the run can have: every agent of the pipeline, researcher-<slug>
-   for each research question, rookie-dev-<stage> for each stage (a missing file is simply no note). Each note is an info card of the
-   step panel: the agent, how long it has run, what is done, what is left, its estimate and when it wrote; a note not updated for over 20
-   minutes is drawn muted. A tracking board probes each unit in progress under the unit's own issue. The note files are named by the
-   pipeline's agents, so the names below are file names only: a note is shown by the work it reports (noteLabel(): "research ·
-   <slug>", "implementation · s2", "code review"), never by the agent's own name (no internal names on a board, dashboards-skill/33). */
+   Every part of the run writes docs/plans/.live/progress/<issue>/<name>.js in its checkout every 10 minutes it runs, one line
+   setting window.PROGRESS["<name>"] to its note (who, issue, times, done, left, estimate), and deletes it when it finishes. While the run is
+   live and the board is a local copy, each live poll probes the names the run can have: one per kind of work, one
+   per research question, one per stage (a missing file is simply no note). Each note is an info card of the
+   step panel: its work, how long it has run, what is done, what is left, its estimate and when it wrote; a note not updated for over 20
+   minutes is drawn muted. A tracking board probes each unit in progress under the unit's own issue. The names below are
+   file names only: a note is shown by the work it reports (noteLabel(): "research ·
+   <slug>", "implementation · s2", "code review"), never by its file's name (no internal names on a board, dashboards-skill/33). */
 const AGENTS=["planner","interviewer","researcher","verifier","architect","plan-writer","rookie-dev","test-inspector","qa","code-reviewer","documentation-reviewer"];
 const NOTE_WORK={planner:"planning",interviewer:"interview",researcher:"research",verifier:"verification",architect:"architecture","plan-writer":"plan writing","rookie-dev":"implementation","test-inspector":"test inspection",qa:"qa","code-reviewer":"code review","documentation-reviewer":"documentation review"};
 const noteLabel=name=>{ const n=String(name||""), b=Object.keys(NOTE_WORK).sort((x,y)=>y.length-x.length).find(k=>n===k||n.startsWith(k+"-")); return b?NOTE_WORK[b]+(n.length>b.length?" · "+n.slice(b.length+1):""):"progress"; };
@@ -5331,7 +5336,7 @@ function timelineTracers(T){ const map=TRACE_STEPS[TRACKING?"tracking":"issue"],
     return {tile,steps,lined:steps.filter(s=>mine.some(v=>v.step===s)),ms:timed.length?timed.reduce((n,v)=>n+v.ms,0):null,approx:timed.some(v=>v.approx),open:mine.some(v=>v.open),visits:mine.length,family:tlFamily(steps[0])}; }); }
 function timelineFamilies(vs){ return [...TL_FAMILIES.map(f=>f.id),"other"].map(id=>{ const steps=[]; (vs||[]).filter(v=>v.family===id).forEach(v=>{ if(!steps.some(x=>x.step===v.step)) steps.push({step:v.step,shade:v.shade}); }); return {id,steps}; }).filter(f=>f.steps.length); }
 /* An approximate bound (asBuilt.approx; plan/RULES.md §2, "The KPI tiles"; dashboards-skill/34), only on a board backfilled on
-   request: where a bound is still unknown, the time the step's update reached the team, drawn "≈" and never read as recorded; passed to a
+   request: where a bound is still unknown, the time the step's update arrived, drawn "≈" and never read as recorded; passed to a
    neighbour; never crossing a recorded bound of its chain (moved onto it, clamped). lib.js approxBounds() is the same rule. */
 const APPROX_SOURCES={arrival:"the time the update reached the team"};
 function approxBounds(seq,A,adj){ const list=(A&&Array.isArray(A.approx)?A.approx:[]).filter(x=>x&&typeof x.step==="string"&&APPROX_SOURCES[x.source]); if(!list.length) return;
@@ -6061,7 +6066,7 @@ tabKeys(stabs,id=>{ showTestsSub(id.replace("t-tests-","")); try{ history.replac
    server push can call it in place of the polling. The header's live indicator says where the view stands: "LIVE · updated n s
    ago" (the dot pulses; the counter restarts at each change), "LIVE · no change for n min" after a quiet spell (the dot still),
    "LIVE · data unavailable" when plan.js cannot be read, and "not live · as of <local time>" for a board whose run is not live. The
-   dot holds still while the run waits on the user. */
+   dot holds still while the run waits on you. */
 const LIVE_POLL_MS=5000, LIVE_QUIET_MS=5*60000;
 const LIVE_LOCAL=location.protocol==="file:"||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const LIVE={json:JSON.stringify(PLAN),last:0,ok:true,got:false,timer:null,tick:null};

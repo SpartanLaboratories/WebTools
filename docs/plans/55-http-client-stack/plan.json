@@ -56,8 +56,8 @@
       "name": "OkHttp transport",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http/index.html"
     },
     {
       "slug": "webtools-http-cache",
@@ -103,8 +103,8 @@
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-10-25T21:42:50Z",
-    "detail": "4 of 11 units landed; #64 in progress; #65 up next.",
+    "updated": "2026-11-01T17:10:00Z",
+    "detail": "5 of 11 units landed; #65 in progress; #66 up next.",
     "steps": [
       "sizing",
       "interview",
@@ -115,9 +115,9 @@
       "landed"
     ],
     "current": [
-      "url-policy.built"
+      "okhttp-transport.built"
     ],
-    "next": "okhttp-transport",
+    "next": "response-cache",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -283,6 +283,16 @@
       "column": "built",
       "label": "Unit 5, #64, started: sized as one subsystem; unit 5's plan is re-passed against architecture.md §6.3.1 and §11 with units 3 and 4 as built",
       "ref": "#64"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
+      "label": "#64 landed"
+    },
+    {
+      "date": "2026-11-01",
+      "column": "built",
+      "label": "#65 started"
     }
   ],
   "rows": [
@@ -1328,770 +1338,6 @@
         "branch": null,
         "folder": "64-url-policy/",
         "board": "64-url-policy/dashboard.html",
-        "live": {
-          "step": "merge",
-          "since": "2026-10-26T22:45:45Z",
-          "updated": "2026-10-26T22:45:45Z",
-          "detail": "State boards refreshed and stamped at 543bd08; the board commit, the pull request and the merge follow.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "landing",
-            "state-boards",
-            "merge",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-10-26",
-              "at": "2026-10-26T01:09:46Z",
-              "findings": {
-                "documentation": 19,
-                "test": 4,
-                "code": 0
-              },
-              "severity": {
-                "minor": 23,
-                "other": 0
-              },
-              "route": "on-the-spot",
-              "note": "Every plan item and acceptance criterion traced to the code, the public surface exactly the planned Stable Core set, hygiene clean. The findings, all minor: the internal JVM guards (`GuardedDns`, `GuardedSocket`, `GuardedSocketFactory`, `PolicyEnforcement`, the markers) lacked contract tags and the facts a wirer needs (builder wiring, thread, the `DEBUG` line, guard order, the stackless markers); the common helpers (`OutboundUrlPolicy.kt`, `UrlGuard`, `StrictIp`, the test support) carried line comments where KDoc is due; six bit-arithmetic or reserved-name lines (`CidrBlock`, `AddressRanges`, `HostRules`, `UrlGuard`) lacked a comment; one duplicated assertion (`TrustedGuardComponentTest`), one timing bound equal to its timeout (`PolicyEnforcementOkHttpIntegrationTest`) and two dangling cross-references in the as-built record."
-            },
-            {
-              "pass": 2,
-              "verdict": "changes-requested",
-              "date": "2026-10-26",
-              "at": "2026-10-26T22:02:11Z",
-              "findings": {
-                "documentation": 15,
-                "test": 4,
-                "code": 0
-              },
-              "severity": {
-                "minor": 18,
-                "other": 1
-              },
-              "route": "on-the-spot",
-              "note": "Pass 1's fixes confirmed with no regression, and stage S8 checked line for line against the plan: the `WebToolsDsl` marker, the six builders that carry it, both of its tests and the dump's three new lines, with no JavaScript warning once plan Amendment 5 left the retention at its default. Correctness clean and every acceptance criterion met. The findings: KDoc tags on the sibling test fixtures, a boundary paragraph on `GuardedSocket`, four line comments, stale S8 wording in the records, the host-form count reconciled to the 36 forms the parent research's table publishes, and pre-existing wording in the documents the commits carry that states each unit's sizing. 504 tests in 90 classes passed, the change's 36 classes (232 tests) among them."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-64-url-policy",
-          "event": {
-            "name": "merge",
-            "at": "2026-10-26T22:45:45Z",
-            "note": "merging"
-          },
-          "stages": [
-            {
-              "id": "S1",
-              "name": "TransportSettings, StrictIp, CidrBlock",
-              "state": "done",
-              "rows": [
-                "transport-settings",
-                "untrusted",
-                "host-rules",
-                "classifier-tests"
-              ]
-            },
-            {
-              "id": "S2",
-              "name": "Trusted and Untrusted policies",
-              "state": "done",
-              "rows": [
-                "policy-pair",
-                "trusted",
-                "untrusted"
-              ]
-            },
-            {
-              "id": "S3",
-              "name": "classifier and tables",
-              "state": "done",
-              "rows": [
-                "trusted",
-                "untrusted",
-                "address-table",
-                "host-rules",
-                "url-guard",
-                "classifier-tests"
-              ]
-            },
-            {
-              "id": "S4",
-              "name": "ABI dump (first commit point)",
-              "state": "done",
-              "rows": [
-                "release"
-              ]
-            },
-            {
-              "id": "S5",
-              "name": "JVM guards: GuardedDns, GuardedSocketFactory, markers, enforcement bundle",
-              "state": "done",
-              "rows": [
-                "jvm-guards",
-                "jvm-tests"
-              ]
-            },
-            {
-              "id": "S6",
-              "name": "floor guard, check, mechanical rules, mutation checks (second commit point)",
-              "state": "done",
-              "rows": [
-                "classifier-tests",
-                "jvm-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "S7",
-              "name": "README line and acceptance pass",
-              "state": "done",
-              "rows": []
-            },
-            {
-              "id": "S8",
-              "name": "WebToolsDsl marker on the six builders, canary proof, two tests, dump (third commit point)",
-              "state": "done",
-              "rows": [
-                "policy-pair",
-                "transport-settings",
-                "release"
-              ]
-            }
-          ],
-          "remediation": {
-            "pass": 2,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "the 14 documentation items and the advisory test items: KDoc on the sibling fixtures, a GuardedSocket boundary paragraph, four line comments, the records' stale S8 wording, the host-form count reconciled; apiCheck and the level tasks re-run",
-                "state": "done"
-              },
-              {
-                "name": "reword the pre-existing wording that states each unit's sizing or names a role, in every document the commits carry (the architecture's per-unit lines included)",
-                "state": "current"
-              }
-            ]
-          },
-          "open": [
-            {
-              "text": "One IP-literal grammar for the module, or a separate StrictIp beside Url's host parsing",
-              "raised": "the plan re-pass",
-              "resolved": "StrictIp is self-contained and Url's host parsing stays unchanged; an agreement test pins the two to the same literal forms"
-            },
-            {
-              "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
-              "raised": "plan-accepted",
-              "ref": "impact.md",
-              "resolved": "2026-10-26T01:50:38Z"
-            },
-            {
-              "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
-              "raised": "plan-accepted",
-              "ref": "plan.md",
-              "resolved": "2026-10-26T01:50:38Z"
-            },
-            {
-              "text": "Plan §9's CidrBlockParseDeterministicTest lists `/8` and `10.0.0.0/` as shape refusals, while §7.2's parse, as written, answers the address and prefix constants for an empty part; the code stays as §7.2 and the two rows assert only a refusal until the plan is made consistent.",
-              "raised": "implementation-stage S1",
-              "ref": "plan.md",
-              "resolved": "2026-10-25T23:58:10Z"
-            },
-            {
-              "text": "The planned reflection check that GuardedDns declares no newCall method is defeated by a compiler-emitted bridge method; the test asserts the behaviour instead. The plan's row awaits amendment.",
-              "raised": "implementation-stage S5",
-              "ref": "final-implementation.md",
-              "resolved": "2026-10-26T00:30:51Z"
-            },
-            {
-              "text": "The js check compile prints six warnings that annotations cannot be read at runtime on the JavaScript target, one per builder carrying the marker, a consequence of the runtime retention the reflection test needs; the JVM compile prints none. The plan's expectation of a single warning line is amended, or a suppression is specified.",
-              "raised": "implementation-stage S8",
-              "ref": "plan.md",
-              "resolved": "Plan Amendment 5 leaves the marker's retention at its default, which the JVM keeps at runtime, so the reflection test still works and the js compile prints no warning."
-            },
-            {
-              "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
-              "raised": "qa pass 2",
-              "ref": "../architecture.md"
-            }
-          ],
-          "history": {
-            "sizing": [
-              {
-                "since": null,
-                "ended": "2026-10-25T21:42:50Z",
-                "endedBy": "sized",
-                "to": "plan"
-              }
-            ],
-            "plan": [
-              {
-                "since": "2026-10-25T21:42:50Z",
-                "ended": "2026-10-25T22:01:05Z",
-                "endedBy": "research-planning",
-                "to": "research",
-                "event": {
-                  "name": "sized",
-                  "at": "2026-10-25T21:42:50Z"
-                },
-                "detail": "Sized as one subsystem of `webtools-http`, the outbound-URL policy: additive, no version moved; the blocker #62 is closed. Unit 5's plan is re-passed against architecture.md §6.3.1 and §11 with units 3 and 4 as built.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-10-25T21:42:50Z"
-                }
-              },
-              {
-                "since": "2026-10-25T22:50:29Z",
-                "ended": "2026-10-25T23:33:53Z",
-                "endedBy": "plan-accepted",
-                "to": "branch",
-                "event": {
-                  "name": "researched",
-                  "at": "2026-10-25T22:50:29Z"
-                },
-                "detail": "Four questions (IANA special-purpose address rows, the configuration API shape, the published bypass vectors, JVM enforcement) returned and verified: 81 load-bearing claims re-checked at their sources, 80 hold, none fails, one cites the repository itself. The findings and the summary are committed on the branch. Nothing is left open; plan.md is being written.",
-                "plan": {
-                  "state": "writing",
-                  "since": "2026-10-25T22:50:29Z"
-                }
-              }
-            ],
-            "research": [
-              {
-                "since": "2026-10-25T22:01:05Z",
-                "ended": "2026-10-25T22:50:29Z",
-                "endedBy": "researched",
-                "to": "plan",
-                "event": {
-                  "name": "verification-started",
-                  "at": "2026-10-25T22:40:34Z"
-                },
-                "detail": "The sources of 80 load-bearing claims from the four findings files are re-opened.",
-                "research": {
-                  "phase": "complete",
-                  "drafted": 0,
-                  "since": {
-                    "planning": "2026-10-25T22:01:05Z",
-                    "research": "2026-10-25T22:22:42Z",
-                    "verification": "2026-10-25T22:40:34Z",
-                    "complete": "2026-10-25T22:50:29Z"
-                  }
-                },
-                "questions": [
-                  {
-                    "question": "jvm-enforcement",
-                    "rows": [],
-                    "findings": "research/jvm-enforcement.md",
-                    "state": "complete",
-                    "started": "2026-10-25T22:22:42Z",
-                    "returned": "2026-10-25T22:39:55Z"
-                  },
-                  {
-                    "question": "iana-special-purpose-rows",
-                    "rows": [],
-                    "findings": "research/iana-special-purpose-rows.md",
-                    "state": "complete",
-                    "started": "2026-10-25T22:22:42Z",
-                    "returned": "2026-10-25T22:27:23Z"
-                  },
-                  {
-                    "question": "bypass-vectors",
-                    "rows": [],
-                    "findings": "research/bypass-vectors.md",
-                    "state": "complete",
-                    "started": "2026-10-25T22:22:42Z",
-                    "returned": "2026-10-25T22:38:50Z"
-                  },
-                  {
-                    "question": "config-api-shape",
-                    "rows": [],
-                    "findings": "research/config-api-shape.md",
-                    "state": "complete",
-                    "started": "2026-10-25T22:22:42Z",
-                    "returned": "2026-10-25T22:32:35Z"
-                  }
-                ]
-              }
-            ],
-            "branch": [
-              {
-                "since": "2026-10-25T23:33:53Z",
-                "ended": "2026-10-25T23:33:53Z",
-                "endedBy": "branch-cut",
-                "to": "implementation",
-                "event": {
-                  "name": "plan-accepted",
-                  "at": "2026-10-25T23:33:53Z"
-                },
-                "detail": "Seven stages: S1 TransportSettings, StrictIp, CidrBlock; S2 the Trusted and Untrusted policies; S3 the classifier (HostRules, AddressRanges, GuardRelaxation, UrlGuard) and the IANA, control and bypass-vector tables; S4 the ABI dump (first commit point); S5 the JVM guards (GuardedDns overriding lookup only, GuardedSocketFactory on its own Proxy.NO_PROXY sockets, two stackless marker exceptions, the per-policy enforcement bundle); S6 floor guard, check, mechanical rules, six mutation checks (second commit point); S7 README line and the acceptance pass. About 34 test classes across test levels 1, 2, 3 (loopback only), 4a and 4c; no build-file change; UrlHost.kt untouched; nothing added to the fixtures. Design refinements beyond the architecture text, recorded in impact.md §5: two deny rules outside the IANA registry (the Azure platform endpoint 168.63.129.16/32 and ISATAP identifiers in 2000::/3) closing published bypasses; sockets created on Proxy.NO_PROXY; newCall inherited so record-based resolvers cannot bypass the guard; refusals carry a range class for the log line only. No version moves; webtools-http 1.0.0 stays unreleased.",
-                "open": [
-                  {
-                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
-                    "raised": "plan-accepted",
-                    "ref": "impact.md"
-                  },
-                  {
-                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md"
-                  }
-                ],
-                "branch": "feat/issue-64-url-policy"
-              }
-            ],
-            "implementation": [
-              {
-                "since": "2026-10-25T23:33:53Z",
-                "ended": "2026-10-26T00:34:29Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-26T00:30:51Z",
-                  "note": "S6 reported done; S7 current"
-                },
-                "detail": "S6: verifyJavaFloor passes (174 classes in 2 jars at major 55 or below); :webtools-http:check and :webtools-http-commoncheck:check green, jvmTest 88 classes / 500 tests. Mechanical rules all hold. Mutations: a forwarding newCall fails exactly the Amendment 2 set; a plain Socket goes through the fake SOCKS listener and fails the SOCKS test; deleting the Azure row or widening the ISATAP mask fails the controls and the published-vector groups; dropping idleConnectionTtl from equals fails its property test; a loopback early return fails the relaxation test. Plan Amendment 2 (dated 2026-10-25) replaces the declaredMethods check with the behavioural one, so the S5 note is a plan inconsistency, not a deviation. Legacy modules, build-logic, the module build file and the fixtures untouched.",
-                "open": [
-                  {
-                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
-                    "raised": "plan-accepted",
-                    "ref": "impact.md"
-                  },
-                  {
-                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md"
-                  }
-                ],
-                "stages": [
-                  {
-                    "id": "S1",
-                    "name": "TransportSettings, StrictIp, CidrBlock",
-                    "state": "done",
-                    "rows": [
-                      "transport-settings",
-                      "untrusted",
-                      "host-rules",
-                      "classifier-tests"
-                    ]
-                  },
-                  {
-                    "id": "S2",
-                    "name": "Trusted and Untrusted policies",
-                    "state": "done",
-                    "rows": [
-                      "policy-pair",
-                      "trusted",
-                      "untrusted"
-                    ]
-                  },
-                  {
-                    "id": "S3",
-                    "name": "classifier and tables",
-                    "state": "done",
-                    "rows": [
-                      "trusted",
-                      "untrusted",
-                      "address-table",
-                      "host-rules",
-                      "url-guard",
-                      "classifier-tests"
-                    ]
-                  },
-                  {
-                    "id": "S4",
-                    "name": "ABI dump (first commit point)",
-                    "state": "done",
-                    "rows": [
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "S5",
-                    "name": "JVM guards: GuardedDns, GuardedSocketFactory, markers, enforcement bundle",
-                    "state": "done",
-                    "rows": [
-                      "jvm-guards",
-                      "jvm-tests"
-                    ]
-                  },
-                  {
-                    "id": "S6",
-                    "name": "floor guard, check, mechanical rules, mutation checks (second commit point)",
-                    "state": "done",
-                    "rows": [
-                      "classifier-tests",
-                      "jvm-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "S7",
-                    "name": "README line and acceptance pass",
-                    "state": "done",
-                    "rows": []
-                  }
-                ]
-              },
-              {
-                "since": "2026-10-26T01:50:38Z",
-                "ended": "2026-10-26T01:59:36Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-26T01:50:38Z",
-                  "note": "S8 current"
-                },
-                "detail": "Amendment 3 adds WebToolsDsl, a Stable Core @DslMarker annotation on every builder the module hands to a consumer's lambda (the headers, request, response, settings and both policy builders): inside a nested block an outer builder is reachable only through its label. Proof: a throwaway canary of five implicit outer reaches compiles before the marker and fails at each statement after it; a gating test of labelled reaches and a reflection test over the six builders; the dump grows by exactly three lines. Amendment 4 records matchesPrefix as private and the architecture's corrections. The records are reconciled (acceptance criteria 1 to 7 met, 8 pending S8; the two IDE-only checks owned by the maintainer before #65 starts); the parent impact carries unit 5's as-built block; architecture.md carries the three corrections dated 2026-10-26. Commit plan: 3 the marker with plan.md and the research summary, 4 README, 5 the records with the parent impact and the architecture.",
-                "stages": [
-                  {
-                    "id": "S1",
-                    "name": "TransportSettings, StrictIp, CidrBlock",
-                    "state": "done",
-                    "rows": [
-                      "transport-settings",
-                      "untrusted",
-                      "host-rules",
-                      "classifier-tests"
-                    ]
-                  },
-                  {
-                    "id": "S2",
-                    "name": "Trusted and Untrusted policies",
-                    "state": "done",
-                    "rows": [
-                      "policy-pair",
-                      "trusted",
-                      "untrusted"
-                    ]
-                  },
-                  {
-                    "id": "S3",
-                    "name": "classifier and tables",
-                    "state": "done",
-                    "rows": [
-                      "trusted",
-                      "untrusted",
-                      "address-table",
-                      "host-rules",
-                      "url-guard",
-                      "classifier-tests"
-                    ]
-                  },
-                  {
-                    "id": "S4",
-                    "name": "ABI dump (first commit point)",
-                    "state": "done",
-                    "rows": [
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "S5",
-                    "name": "JVM guards: GuardedDns, GuardedSocketFactory, markers, enforcement bundle",
-                    "state": "done",
-                    "rows": [
-                      "jvm-guards",
-                      "jvm-tests"
-                    ]
-                  },
-                  {
-                    "id": "S6",
-                    "name": "floor guard, check, mechanical rules, mutation checks (second commit point)",
-                    "state": "done",
-                    "rows": [
-                      "classifier-tests",
-                      "jvm-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "S7",
-                    "name": "README line and acceptance pass",
-                    "state": "done",
-                    "rows": []
-                  },
-                  {
-                    "id": "S8",
-                    "name": "WebToolsDsl marker on the six builders, canary proof, two tests, dump (third commit point)",
-                    "state": "done",
-                    "rows": []
-                  }
-                ]
-              }
-            ],
-            "qa": [
-              {
-                "since": "2026-10-26T00:34:29Z",
-                "ended": "2026-10-26T01:09:46Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-26T00:34:29Z",
-                  "note": "S7 reported done; qa next"
-                },
-                "detail": "S7: the README's webtools-http row names the outbound-URL policies (one line, CRLF kept). Acceptance pass from the command line: the committed dump re-read against the plan and the tier table; two IDE-only items (Quick Documentation of five declarations; the IntelliJ import check of the js module) recorded as not performed, for the maintainer. All seven acceptance criteria met with measurements in the record. Commits 1 (fd93ff9) and 2 (b46f58a) hold the code; README and the records are uncommitted for commits 3 and 4. Legacy modules, build-logic, the module build file, the fixtures, the check module and UrlHost.kt untouched.",
-                "open": [
-                  {
-                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
-                    "raised": "plan-accepted",
-                    "ref": "impact.md"
-                  },
-                  {
-                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-26",
-                    "at": "2026-10-26T01:09:46Z",
-                    "findings": {
-                      "documentation": 19,
-                      "test": 4,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 23,
-                      "other": 0
-                    },
-                    "route": "on-the-spot"
-                  }
-                ]
-              },
-              {
-                "since": "2026-10-26T01:59:36Z",
-                "ended": "2026-10-26T22:02:11Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-26T01:59:36Z",
-                  "note": "S8 reported done; qa next"
-                },
-                "detail": "S8: WebToolsDsl (a Stable Core DSL marker, runtime retention) on the headers, request, response, settings and both policy builders; the canary's five implicit outer reaches compiled before the marker and each failed after it, with no other file affected; the gating test shows labelled reaches work and the component test finds the marker on all six builders; removing it from one builder fails that test naming it; the dump grows by exactly its three lines; verifyJavaFloor counts 175 classes; both modules' check green, jvmTest 90 classes / 504 tests. Acceptance criterion 8 met. Commit 3 (the marker, its tests, the dump, plan.md) follows the plan's ruling on the js warnings.",
-                "open": [
-                  {
-                    "text": "The js check compile prints six warnings that annotations cannot be read at runtime on the JavaScript target, one per builder carrying the marker, a consequence of the runtime retention the reflection test needs; the JVM compile prints none. The plan's expectation of a single warning line is amended, or a suppression is specified.",
-                    "raised": "implementation-stage S8",
-                    "ref": "plan.md"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-26",
-                    "at": "2026-10-26T22:02:11Z",
-                    "findings": {
-                      "documentation": 15,
-                      "test": 4,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 18,
-                      "other": 1
-                    },
-                    "route": "on-the-spot"
-                  }
-                ]
-              }
-            ],
-            "remediation": [
-              {
-                "since": "2026-10-26T01:09:46Z",
-                "ended": "2026-10-26T01:50:38Z",
-                "endedBy": "implementation-stage",
-                "to": "implementation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-10-26T01:16:18Z",
-                  "note": "qa pass 1 fixes done; reconciliation current"
-                },
-                "detail": "Fixes: the internal JVM seams now state their wiring (which builder methods take which field, the client preconditions, the guard order, that literal hosts never reach the resolver), thread and logging contracts, after-throw behaviour and the stackless markers' consequence, with @property, @param, @return and @throws throughout; the common helpers carry KDoc instead of line comments; six line comments on bit arithmetic and reserved names; one duplicated assertion dropped; the integration timing bound tightened to two seconds; cross-references in the record fixed. 18 code and test files changed, by comments and KDoc apart from the dropped assertion, the tightened bound and `matchesPrefix` made `private` to `CidrBlock.kt` (plan Amendment 4); the dump unchanged; apiCheck, componentTest, integrationTest and deterministicTest green.",
-                "open": [
-                  {
-                    "text": "A public @DslMarker for the module's builders is left open: adopting it before the 1.0.0 release costs consumers nothing, afterwards it tightens their sources; recorded as a follow-up and known gap.",
-                    "raised": "plan-accepted",
-                    "ref": "impact.md"
-                  },
-                  {
-                    "text": "Three dated architecture callouts proposed for §6.3.1 and §7.4 (the two extra deny rules; sockets on Proxy.NO_PROXY and newCall inherited; the transport-to-policy row carrying the range class); applied at reconciliation if approved.",
-                    "raised": "plan-accepted",
-                    "ref": "plan.md"
-                  }
-                ],
-                "remediation": {
-                  "pass": 1,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "KDoc contract sentences and tags on the internal JVM seams and common helpers, six line comments, one stray assertion, one timing bound, two cross-references in the record; apiCheck and the touched level tasks re-run",
-                      "state": "done"
-                    },
-                    {
-                      "name": "as-built reconciliation of the records and the parent impact",
-                      "state": "done"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-26",
-                    "at": "2026-10-26T01:09:46Z",
-                    "findings": {
-                      "documentation": 19,
-                      "test": 4,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 23,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "note": "Every plan item and acceptance criterion traced to the code, the public surface exactly the planned Stable Core set, hygiene clean. The findings, all minor: the internal JVM guards (`GuardedDns`, `GuardedSocket`, `GuardedSocketFactory`, `PolicyEnforcement`, the markers) lacked contract tags and the facts a wirer needs (builder wiring, thread, the `DEBUG` line, guard order, the stackless markers); the common helpers (`OutboundUrlPolicy.kt`, `UrlGuard`, `StrictIp`, the test support) carried line comments where KDoc is due; six bit-arithmetic or reserved-name lines (`CidrBlock`, `AddressRanges`, `HostRules`, `UrlGuard`) lacked a comment; one duplicated assertion (`TrustedGuardComponentTest`), one timing bound equal to its timeout (`PolicyEnforcementOkHttpIntegrationTest`) and two dangling cross-references in the as-built record."
-                  }
-                ]
-              },
-              {
-                "since": "2026-10-26T22:02:11Z",
-                "ended": "2026-10-26T22:11:39Z",
-                "endedBy": "landing",
-                "to": "landing",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-10-26T22:02:11Z",
-                  "note": "pass 2: changes-requested"
-                },
-                "detail": "Pass 1's remediation confirmed complete with no regression; S8 verified line for line against the plan (the marker byte for byte, six annotated builders, both tests, the three dump lines, the canary absent, no JavaScript warnings after Amendment 5 left the retention implicit); correctness clean with every acceptance item met. The documentation items were sibling-fixture tags, one boundary paragraph, four line comments and stale wording in the records; the host-form table publishes 36 forms, now stated as measured.",
-                "open": [
-                  {
-                    "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
-                    "raised": "qa pass 2",
-                    "ref": "../architecture.md"
-                  }
-                ],
-                "remediation": {
-                  "pass": 2,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "the 14 documentation items and the advisory test items: KDoc on the sibling fixtures, a GuardedSocket boundary paragraph, four line comments, the records' stale S8 wording, the host-form count reconciled; apiCheck and the level tasks re-run",
-                      "state": "done"
-                    },
-                    {
-                      "name": "reword the pre-existing wording that states each unit's sizing or names a role, in every document the commits carry (the architecture's per-unit lines included)",
-                      "state": "current"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-10-26",
-                    "at": "2026-10-26T22:02:11Z",
-                    "findings": {
-                      "documentation": 15,
-                      "test": 4,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 18,
-                      "other": 1
-                    },
-                    "route": "on-the-spot",
-                    "note": "Pass 1's fixes confirmed with no regression, and stage S8 checked line for line against the plan: the `WebToolsDsl` marker, the six builders that carry it, both of its tests and the dump's three new lines, with no JavaScript warning once plan Amendment 5 left the retention at its default. Correctness clean and every acceptance criterion met. The findings: KDoc tags on the sibling test fixtures, a boundary paragraph on `GuardedSocket`, four line comments, stale S8 wording in the records, the host-form count reconciled to the 36 forms the parent research's table publishes, and pre-existing wording in the documents the commits carry that states each unit's sizing. 504 tests in 90 classes passed, the change's 36 classes (232 tests) among them."
-                  }
-                ]
-              }
-            ],
-            "landing": [
-              {
-                "since": "2026-10-26T22:11:39Z",
-                "ended": "2026-10-26T22:14:14Z",
-                "endedBy": "state-boards",
-                "to": "state-boards",
-                "event": {
-                  "name": "landing",
-                  "at": "2026-10-26T22:11:39Z",
-                  "note": "land accepted"
-                },
-                "detail": "Landing accepted: sync with master, then the pre-merge state-board refresh and the merge.",
-                "open": [
-                  {
-                    "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
-                    "raised": "qa pass 2",
-                    "ref": "../architecture.md"
-                  }
-                ]
-              }
-            ],
-            "state-boards": [
-              {
-                "since": "2026-10-26T22:14:14Z",
-                "ended": "2026-10-26T22:45:45Z",
-                "endedBy": "merge",
-                "to": "merge",
-                "event": {
-                  "name": "state-boards",
-                  "at": "2026-10-26T22:14:14Z",
-                  "note": "the state boards refreshed on the branch"
-                },
-                "detail": "Synced with master (unchanged at ad0ae63); no version moves. The state boards are refreshed on the branch at 543bd08.",
-                "open": [
-                  {
-                    "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
-                    "raised": "qa pass 2",
-                    "ref": "../architecture.md"
-                  }
-                ]
-              }
-            ]
-          },
-          "rowNames": {
-            "policy-pair": "`OutboundUrlPolicy`, the closed `Trusted`/`Untrusted` pair",
-            "trusted": "`Trusted`: scheme, user-info, pinning and cleartext",
-            "untrusted": "`Untrusted`, with `CidrBlock` and `MixedAnswers`",
-            "transport-settings": "`TransportSettings`, one default set per policy",
-            "address-table": "`AddressRanges`, the IANA deny table",
-            "host-rules": "`StrictIp` and `HostRules`, the host-text rules",
-            "url-guard": "`UrlGuard` and `GuardRelaxation`",
-            "jvm-guards": "`GuardedDns`, `GuardedSocketFactory` and the marker exceptions",
-            "classifier-tests": "The classifier's Level 4a tables",
-            "jvm-tests": "The guards' Level 2 tests and the `jvmTest` gap and differential tests",
-            "release": "The ABI dump and the version"
-          },
-          "recon": {
-            "interview": {
-              "reconstructed": true,
-              "ended": null,
-              "trail": [],
-              "milestones": []
-            }
-          }
-        },
         "tests": {
           "base": "b46f58a",
           "updated": "2026-10-26T22:02:11Z",
@@ -3804,8 +3050,45 @@
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "landed",
+        "summary": "Landed through PR #86 as 53965c8 (#64): `webtools-http` gains the outbound-URL policies `Trusted` and `Untrusted`, `TransportSettings` with its two named default sets, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core, over an `internal` common classifier and `internal` JVM resolver and socket guards. Nothing is enforced until the transport (#65) and the call facades (#68) land. No deviation from the plan; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+        "changes": [
+          {
+            "what": "The address table denies two addresses no IANA registry lists: `168.63.129.16/32`, the Azure platform endpoint, and an ISATAP interface identifier inside `2000::/3`.",
+            "why": "Both close published bypasses of a table built from the registries alone (#64 research, bypass-vectors §4); architecture §6.3.1 carries a dated correction.",
+            "when": "#64 plan",
+            "ref": "64-url-policy/impact.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The socket guard creates its own `Socket(Proxy.NO_PROXY)` sockets, and the resolver guard inherits OkHttp 5.5.0's `Dns.newCall`.",
+            "why": "`proxy(Proxy.NO_PROXY)` on the client leaves a JVM-wide SOCKS setting in force at the socket layer, and a forwarded `newCall` would let a record-capable resolver bypass the guard (#64 research, jvm-enforcement F1, F4); architecture §6.3.1 carries a dated correction.",
+            "when": "#64 plan",
+            "ref": "64-url-policy/impact.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "A refusal carries the range class beside the reason, so the transport's one log line can name it.",
+            "why": "The log line of architecture §6.6 carries the class; §7.4 carries a dated correction.",
+            "when": "#64 plan",
+            "ref": "64-url-policy/impact.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "`WebToolsDsl`, a public DSL marker, marks every builder of `webtools-http`, the three existing ones included, and every later unit's builder carries it.",
+            "why": "Plan Amendment 3 (stage S8) keeps one DSL across the stack; `webtools-http` is unreleased, so no published consumer's lambda changes.",
+            "when": "#64 S8",
+            "ref": "64-url-policy/final-implementation.md#s8--the-webtoolsdsl-marker-plan-amendment-3"
+          }
+        ],
+        "commits": [
+          "fd93ff9",
+          "b46f58a",
+          "bec8615",
+          "6b96866",
+          "0d44495",
+          "543bd08",
+          "dd463bc"
+        ],
+        "verified": "qa pass 1 changes requested (19 documentation, 4 test findings; 23 minor), fixed in place; qa pass 2 changes requested (15 documentation, 4 test; 18 minor, 1 other), fixed in place with no third pass; 504 tests in 90 classes green, the change's 36 classes and 232 tests among them.",
+        "link": "64-url-policy/final-implementation.md"
       }
     },
     {
@@ -3825,8 +3108,995 @@
         ],
         "versions": "none",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "65-okhttp-transport/",
+        "board": "65-okhttp-transport/dashboard.html",
+        "live": {
+          "step": "document",
+          "since": "2026-11-03T00:00:03Z",
+          "updated": "2026-11-03T00:33:11Z",
+          "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "document",
+            "landing",
+            "merge",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-11-02",
+              "at": "2026-11-02T00:08:52Z",
+              "findings": {
+                "test": 4,
+                "code": 0
+              },
+              "severity": {
+                "minor": 2,
+                "other": 2
+              },
+              "route": "remediation",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html",
+              "note": "Code review passed: every plan item built, all eight acceptance criteria met, the issue's scope and the sibling interfaces hold. Four test findings, all in the As built rows the fixes touch: HopResponse.settleResponse has no isolated Level 2 component test; no test at any level reaches the hop loop's pre-hop deadline branch (under 1 ms left gives Timeout with no Call); Throwable.firstInChain has no direct Level 4a deterministic test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite: 711 passed, 0 failed, 0 skipped."
+            },
+            {
+              "pass": 2,
+              "verdict": "changes-requested",
+              "date": "2026-11-02",
+              "at": "2026-11-02T02:06:09Z",
+              "findings": {
+                "test": 2,
+                "code": 0
+              },
+              "severity": {
+                "minor": 2,
+                "other": 0
+              },
+              "route": "on-the-spot",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html",
+              "note": "Code review passed: the deadline seam is inert at its defaults, the public factory and the ABI dump are unchanged, and every moved assertion is preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. All four pass-1 findings verified answered. Two minor test findings, both in the As built rows the fixes touch, fixed on the spot: the fixture `webtoolsUrl`'s three refusal branches have no test (a `WebtoolsUrlComponentTest` is added); `receiveHeaders`' four pure table cases sit at Level 2 rather than 4a (moved, for consistency with pass 1). Suite, all five levels forced: 731 passed, 1 failed, 0 skipped. The one failure is not this change's: #62's untouched `UrlParseLinearTimeNonFunctionalTest` times out under parallel task execution and passes 31/31 in isolation, per its own documented policy; it is being filed as its own issue."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-65-okhttp-transport",
+          "event": {
+            "name": "run-restarted",
+            "at": "2026-11-03T00:33:11Z",
+            "note": "run not running 19 h 43 min: session restart"
+          },
+          "stages": [
+            {
+              "id": "S1",
+              "name": "TransportControlledHeaders and its component test; commoncheck compile",
+              "state": "done",
+              "rows": [
+                "transport"
+              ]
+            },
+            {
+              "id": "S2",
+              "name": "Pure parts with Level 2 and 4a tests",
+              "state": "done",
+              "rows": [
+                "transport",
+                "one-exchange",
+                "redirects",
+                "body-read",
+                "guards",
+                "failure-mapping"
+              ]
+            },
+            {
+              "id": "S3",
+              "name": "TransportClient, HopResponse, CallBridge, OkHttpTransport and factory; apiDump",
+              "state": "done",
+              "rows": [
+                "transport",
+                "one-exchange",
+                "redirects",
+                "body-read",
+                "guards",
+                "failure-mapping",
+                "lifecycle",
+                "release",
+                "dispatcher-sizing"
+              ]
+            },
+            {
+              "id": "S4",
+              "name": "Fixtures and the FakeHttpTransport cap rule",
+              "state": "done",
+              "rows": [
+                "fixtures"
+              ]
+            },
+            {
+              "id": "S5",
+              "name": "Level 3 suites against mockwebserver3",
+              "state": "done",
+              "rows": [
+                "integration-tests"
+              ]
+            },
+            {
+              "id": "S6",
+              "name": "Level 4c suites; verifyJavaFloor; full check; mutations",
+              "state": "done",
+              "rows": [
+                "nonfunctional-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "R1",
+              "name": "Remediation: HopResponseComponentTest, ThrowableSearchDeterministicTest, 4a placement of the table cases",
+              "state": "done",
+              "rows": [
+                "transport",
+                "one-exchange",
+                "body-read",
+                "failure-mapping"
+              ]
+            },
+            {
+              "id": "R2",
+              "name": "Remediation: time-source and call-factory seam on the transport's internal constructor, OkHttpTransportDeadlineComponentTest, procedure P13",
+              "state": "done",
+              "rows": [
+                "transport",
+                "redirects"
+              ]
+            }
+          ],
+          "remediation": {
+            "pass": 2,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "WebtoolsUrlComponentTest for the fixture's refusal branches",
+                "state": "current"
+              },
+              {
+                "name": "receiveHeaders table cases moved to ReceiveHeadersDeterministicTest",
+                "state": "current"
+              }
+            ]
+          },
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review of the change set",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Apply the review's findings to KDoc and comments; second review",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards at the code-landing commit",
+                "state": "current"
+              },
+              {
+                "id": "prepare-landing",
+                "name": "Commit the change set, sync with master, no version bump",
+                "state": "done"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "Close-step-throws case of OkHttpTransportCloseComponentTest not directly testable: the dispatcher is private and no step can be made to throw from outside",
+              "raised": "implement",
+              "resolved": "accepted as a recorded gap; settled at reconciliation in consequences.md"
+            },
+            {
+              "text": "D3 exact-class reading of SocketException in hasBenignCause awaits confirmation",
+              "raised": "implement",
+              "resolved": "confirmed: only a direct java.net.SocketException counts as a benign cause"
+            },
+            {
+              "text": "D2 partial Level 2 coverage and D5 unrun mutation await a decision",
+              "raised": "implement",
+              "resolved": "accepted as recorded deviations; settled at reconciliation"
+            },
+            {
+              "text": "CancellationIntegrationTest 'close during an in-flight call ends it with Closed and every later call is Closed' never runs: its runBlocking body returns the assertion's value",
+              "raised": "document",
+              "resolved": "fixed in this landing: the function is declared Unit; integration becomes 94 tests"
+            },
+            {
+              "text": "Landed #47/#61/#62/#63 plan and impact documents and docs/plans/README.md held pre-existing internal names; reworded (meaning kept) so the document-landing commit passes the scan",
+              "raised": "document",
+              "resolved": "rewordings accepted"
+            }
+          ],
+          "history": {
+            "sizing": [
+              {
+                "since": null,
+                "ended": "2026-11-01T17:10:00Z",
+                "endedBy": "sized",
+                "to": "plan"
+              }
+            ],
+            "plan": [
+              {
+                "since": "2026-11-01T17:10:00Z",
+                "ended": "2026-11-01T17:30:52Z",
+                "endedBy": "halted",
+                "to": "plan",
+                "held": true,
+                "event": {
+                  "name": "sized",
+                  "at": "2026-11-01T17:10:00Z"
+                },
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-01T17:10:00Z"
+                }
+              },
+              {
+                "since": "2026-11-01T17:43:53Z",
+                "ended": "2026-11-01T17:44:30Z",
+                "endedBy": "research-planning",
+                "to": "research",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-01T17:43:53Z"
+                },
+                "detail": "Answers: a request carrying a transport-controlled header (User-Agent, Accept-Encoding, Host, Connection, Content-Length, Transfer-Encoding and the hop-by-hop names) is refused with TransportFailure.InvalidRequest before anything is sent; the published fake skips its body cap for HEAD and for 1xx, 204 and 304, fixed in this unit; CHANGELOG.md is created in this landing with the unit's entry under Unreleased. The IDE checks recorded by #62-#64 do not gate this run. Next: three research questions on mockwebserver3 scenarios, per-hop request headers and OkHttp's exception surface.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-01T17:10:00Z"
+                }
+              },
+              {
+                "since": "2026-11-01T19:03:40Z",
+                "ended": "2026-11-01T21:31:00Z",
+                "endedBy": "plan-accepted",
+                "to": "branch",
+                "event": {
+                  "name": "researched",
+                  "at": "2026-11-01T19:03:40Z"
+                },
+                "detail": "Verification complete: every load-bearing claim holds, five with qualifications that change no conclusion. plan.md and consequences.md are drafted (uncommitted; they ride the first implementation commit). Seven design choices the interview did not spell out are being confirmed before implementation.",
+                "plan": {
+                  "state": "writing",
+                  "since": "2026-11-01T19:03:40Z"
+                }
+              }
+            ],
+            "research": [
+              {
+                "since": "2026-11-01T17:44:30Z",
+                "ended": "2026-11-01T19:03:40Z",
+                "endedBy": "researched",
+                "to": "plan",
+                "event": {
+                  "name": "verification-started",
+                  "at": "2026-11-01T18:14:30Z"
+                },
+                "detail": "Research: verifying 4 findings.",
+                "research": {
+                  "phase": "complete",
+                  "drafted": 0,
+                  "since": {
+                    "planning": "2026-11-01T17:44:30Z",
+                    "research": "2026-11-01T17:48:08Z",
+                    "verification": "2026-11-01T18:14:30Z",
+                    "complete": "2026-11-01T19:03:40Z"
+                  }
+                },
+                "questions": [
+                  {
+                    "question": "loopback-test-mechanics",
+                    "rows": [
+                      "fixtures",
+                      "integration-tests",
+                      "nonfunctional-tests"
+                    ],
+                    "findings": "research/loopback-test-mechanics.md",
+                    "state": "complete",
+                    "started": "2026-11-01T17:48:08Z",
+                    "returned": "2026-11-01T18:10:50Z"
+                  },
+                  {
+                    "question": "transport-controlled-headers",
+                    "rows": [
+                      "transport"
+                    ],
+                    "findings": "research/transport-controlled-headers.md",
+                    "state": "complete",
+                    "started": "2026-11-01T17:48:08Z",
+                    "returned": "2026-11-01T18:01:30Z"
+                  },
+                  {
+                    "question": "redirect-decision-table",
+                    "rows": [
+                      "redirects",
+                      "guards"
+                    ],
+                    "findings": "research/redirect-decision-table.md",
+                    "state": "complete",
+                    "started": "2026-11-01T17:48:08Z",
+                    "returned": "2026-11-01T18:03:50Z"
+                  },
+                  {
+                    "question": "okhttp-failure-surface",
+                    "rows": [
+                      "failure-mapping",
+                      "body-read",
+                      "lifecycle",
+                      "one-exchange"
+                    ],
+                    "findings": "research/okhttp-failure-surface.md",
+                    "state": "complete",
+                    "started": "2026-11-01T17:48:08Z",
+                    "returned": "2026-11-01T18:12:00Z"
+                  }
+                ]
+              }
+            ],
+            "branch": [
+              {
+                "since": "2026-11-01T21:31:00Z",
+                "ended": "2026-11-01T21:31:35Z",
+                "endedBy": "branch-cut",
+                "to": "implementation",
+                "event": {
+                  "name": "plan-accepted",
+                  "at": "2026-11-01T21:31:00Z"
+                },
+                "detail": "A final OkHttpTransport over OkHttp 5.5.0 built from network-free parts (controlled-header list, redirect decision, failure mapping, capped reader, ExchangeGuard, call deadline, value-only coroutine bridge) with its own daemon dispatcher and pool; the four loopback fixtures and the fake's no-body cap rule; every Level 3 and 4c scenario scripted against mockwebserver3. Seven implementation choices confirmed, among them: Range admitted with identity coding, a 421 delivered as a response, PolicyRefusals.kt's chain walk shared as firstInChain, okhttp-tls in jvmTest only.",
+                "branch": "feat/issue-65-okhttp-transport"
+              }
+            ],
+            "implementation": [
+              {
+                "since": "2026-11-01T21:31:35Z",
+                "ended": "2026-11-01T22:37:24Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "branch-cut",
+                  "at": "2026-11-01T21:31:35Z"
+                },
+                "detail": "Branch confirmed, base 53965c8 is current master. The implementer builds stages S1 to S6 in the worktree; stage S7 (README, CHANGELOG, as-built reconciliation) is the Document step's.",
+                "stages": [
+                  {
+                    "id": "S1",
+                    "name": "TransportControlledHeaders and its component test; commoncheck compile",
+                    "state": "done",
+                    "rows": [
+                      "transport"
+                    ]
+                  },
+                  {
+                    "id": "S2",
+                    "name": "Pure parts: ThrowableSearch, RedirectDecision, FailureMapping, HopRequest, ReceivedResponse, CappedBody, ExchangeGuard, CallDeadline, with Level 2 and 4a tests",
+                    "state": "done",
+                    "rows": [
+                      "transport",
+                      "one-exchange",
+                      "redirects",
+                      "body-read",
+                      "guards",
+                      "failure-mapping"
+                    ]
+                  },
+                  {
+                    "id": "S3",
+                    "name": "TransportClient, HopResponse, CallBridge, OkHttpTransport and factory; apiDump",
+                    "state": "done",
+                    "rows": [
+                      "transport",
+                      "one-exchange",
+                      "redirects",
+                      "body-read",
+                      "guards",
+                      "failure-mapping",
+                      "lifecycle",
+                      "release",
+                      "dispatcher-sizing"
+                    ]
+                  },
+                  {
+                    "id": "S4",
+                    "name": "Fixtures: LoopbackTransports, webtoolsUrl, toMockResponse, enqueue; FakeHttpTransport cap rule",
+                    "state": "done",
+                    "rows": [
+                      "fixtures"
+                    ]
+                  },
+                  {
+                    "id": "S5",
+                    "name": "Level 3 suites against mockwebserver3; okhttp-tls in jvmTest",
+                    "state": "done",
+                    "rows": [
+                      "integration-tests"
+                    ]
+                  },
+                  {
+                    "id": "S6",
+                    "name": "Level 4c suites; verifyJavaFloor; full check; mutations; unaffected-module proofs",
+                    "state": "done",
+                    "rows": [
+                      "nonfunctional-tests",
+                      "release"
+                    ]
+                  }
+                ],
+                "held": true
+              }
+            ],
+            "qa": [
+              {
+                "since": "2026-11-01T23:43:35Z",
+                "ended": "2026-11-02T00:08:52Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-02T00:08:52Z",
+                  "note": "pass 1: changes-requested"
+                },
+                "detail": "Code review PASS: every plan item built, all eight acceptance criteria met, level and sibling interfaces hold. Test findings: HopResponse.settleResponse has no isolated Level 2 test; the hop loop's pre-hop deadline branch (remaining under 1 ms gives Timeout with no Call) is reached by no test at any level; the extracted Throwable.firstInChain has no direct 4a test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite 711 passed, 0 failed, 0 skipped.",
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-02",
+                    "at": "2026-11-02T00:08:52Z",
+                    "findings": {
+                      "test": 4,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 2,
+                      "other": 2
+                    },
+                    "route": "remediation",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html"
+                  }
+                ]
+              },
+              {
+                "since": "2026-11-02T01:45:02Z",
+                "ended": "2026-11-02T02:06:09Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-02T01:45:02Z",
+                  "note": "R2"
+                },
+                "detail": "R2 built exactly as amended: six edits to OkHttpTransport.kt (import, KDoc paragraph, two trailing defaulted constructor parameters, hopCalls, the deadline's time source, hopCalls.newCall). The three deadline cases pass; the ABI dump hash is unchanged and names neither TimeSource nor Call.Factory; LoopbackTransports unchanged; mutations 14-16 each fail their named cases; webtools-http check green (732 jvmTest tests). Per-level: gating 19, component 398, integration 93, deterministic 191, non-functional 31, 0 failed, 0 skipped.",
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-02",
+                    "at": "2026-11-02T02:06:09Z",
+                    "findings": {
+                      "test": 2,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 2,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html"
+                  }
+                ]
+              }
+            ],
+            "remediation": [
+              {
+                "since": "2026-11-02T00:08:52Z",
+                "ended": "2026-11-02T01:45:02Z",
+                "endedBy": "implementation-stage",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-02T01:34:38Z",
+                  "note": "R2"
+                },
+                "detail": "Plan amended 2026-11-02 after the test-coverage review: two defaulted parameters trail the internal constructor, a TimeSource for the shared call deadline and a Call.Factory for each hop's call, so a Level 2 test with fake calls and a manual clock reaches the pre-hop deadline check; the ABI dump, the public factory and the fixtures are unchanged. New stage S6a, procedure P13 and mutations 14-16. #68 never passes either parameter.",
+                "remediation": {
+                  "pass": 1,
+                  "route": "re-plan-then-remediation",
+                  "steps": [
+                    {
+                      "name": "Plan amendment: a time-source and call-factory seam on the transport's internal constructor for the pre-hop deadline test",
+                      "state": "done"
+                    },
+                    {
+                      "name": "Fixes independent of the amendment",
+                      "state": "done"
+                    },
+                    {
+                      "name": "The deadline branch's Level 2 test over the seam (stage S6a, procedure P13)",
+                      "state": "done"
+                    },
+                    {
+                      "name": "qa pass 2",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-02",
+                    "at": "2026-11-02T00:08:52Z",
+                    "findings": {
+                      "test": 4,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 2,
+                      "other": 2
+                    },
+                    "route": "remediation",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/65-okhttp-transport/2f43cfc3/tests/index.html",
+                    "note": "Code review passed: every plan item built, all eight acceptance criteria met, the issue's scope and the sibling interfaces hold. Four test findings, all in the As built rows the fixes touch: HopResponse.settleResponse has no isolated Level 2 component test; no test at any level reaches the hop loop's pre-hop deadline branch (under 1 ms left gives Timeout with no Call); Throwable.firstInChain has no direct Level 4a deterministic test (minor); three pure table functions are tested at Level 2 rather than 4a (minor, placement only). Suite: 711 passed, 0 failed, 0 skipped."
+                  }
+                ]
+              },
+              {
+                "since": "2026-11-02T02:06:09Z",
+                "ended": "2026-11-02T02:11:47Z",
+                "endedBy": "document",
+                "to": "document",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-02T02:06:09Z",
+                  "note": "pass 2: changes-requested"
+                },
+                "detail": "All four pass-1 findings verified answered. Two minor test findings: the fixture webtoolsUrl's three refusal branches have no test (a WebtoolsUrlComponentTest is added); receiveHeaders' four pure table cases sit at Level 2 rather than 4a (moved for consistency with pass 1). Code review PASS: the deadline seam is inert at its defaults, the public factory and ABI dump unchanged, every moved assertion preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. Forced run of all five levels: 731 passed, 1 failed, 0 skipped; the one failure is the untouched UrlParseLinearTimeNonFunctionalTest from #62 timing out under parallel task execution, green 31/31 in isolation per its own documented policy.",
+                "remediation": {
+                  "pass": 2,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "WebtoolsUrlComponentTest for the fixture's refusal branches",
+                      "state": "current"
+                    },
+                    {
+                      "name": "receiveHeaders table cases moved to ReceiveHeadersDeterministicTest",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-02",
+                    "at": "2026-11-02T02:06:09Z",
+                    "findings": {
+                      "test": 2,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 2,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/65-okhttp-transport/cefdb082/tests/index.html",
+                    "note": "Code review passed: the deadline seam is inert at its defaults, the public factory and the ABI dump are unchanged, and every moved assertion is preserved; one plan-bookkeeping note (the §9 tables and Acceptance 2 still name the pre-move test homes) goes to the plan's reconciliation. All four pass-1 findings verified answered. Two minor test findings, both in the As built rows the fixes touch, fixed on the spot: the fixture `webtoolsUrl`'s three refusal branches have no test (a `WebtoolsUrlComponentTest` is added); `receiveHeaders`' four pure table cases sit at Level 2 rather than 4a (moved, for consistency with pass 1). Suite, all five levels forced: 731 passed, 1 failed, 0 skipped. The one failure is not this change's: #62's untouched `UrlParseLinearTimeNonFunctionalTest` times out under parallel task execution and passes 31/31 in isolation, per its own documented policy; it is being filed as its own issue."
+                  }
+                ]
+              }
+            ],
+            "document": [
+              {
+                "since": "2026-11-02T02:11:47Z",
+                "ended": "2026-11-02T03:05:18Z",
+                "endedBy": "halted",
+                "to": "document",
+                "event": {
+                  "name": "document",
+                  "at": "2026-11-02T02:44:45Z",
+                  "note": "5 of 7 tasks done"
+                },
+                "detail": "README: the webtools-http artifact row names OkHttpTransport (one request per hop, manual redirects, capped decoded body, never a retry) and the fixtures paragraph names LoopbackTransports, webtoolsUrl, toMockResponse and enqueue(fixture); the dashboards pointer and install block untouched. CHANGELOG.md created in the Keep a Changelog layout: Unreleased, Added (the transport and factory; the four fixture helpers), Changed (the fake's cap skipped for HEAD, 1xx, 204, 304). No version section: nothing moved.",
+                "document": {
+                  "tasks": [
+                    {
+                      "id": "documentation-review",
+                      "name": "Documentation review of the change set",
+                      "state": "done"
+                    },
+                    {
+                      "id": "reconcile-documentation",
+                      "name": "Apply the review's findings to KDoc and comments; second review",
+                      "state": "done"
+                    },
+                    {
+                      "id": "dokka-check",
+                      "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
+                      "state": "done"
+                    },
+                    {
+                      "id": "reconcile-plan",
+                      "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
+                      "state": "current"
+                    },
+                    {
+                      "id": "readme-changelog",
+                      "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
+                      "state": "done"
+                    },
+                    {
+                      "id": "state-boards",
+                      "name": "State boards at the code-landing commit",
+                      "state": "todo"
+                    },
+                    {
+                      "id": "prepare-landing",
+                      "name": "Commit the change set, sync with master, no version bump",
+                      "state": "done"
+                    }
+                  ]
+                },
+                "held": true
+              },
+              {
+                "since": "2026-11-02T03:07:30Z",
+                "ended": "2026-11-02T04:16:35Z",
+                "endedBy": "run-restarted",
+                "to": "document",
+                "event": {
+                  "name": "state-boards",
+                  "at": "2026-11-02T04:14:48Z",
+                  "note": "the state boards; 6 of 7 tasks done"
+                },
+                "detail": "Document: 6 of 7 tasks done; State boards at the code-landing commit current.",
+                "document": {
+                  "tasks": [
+                    {
+                      "id": "documentation-review",
+                      "name": "Documentation review of the change set",
+                      "state": "done"
+                    },
+                    {
+                      "id": "reconcile-documentation",
+                      "name": "Apply the review's findings to KDoc and comments; second review",
+                      "state": "done"
+                    },
+                    {
+                      "id": "dokka-check",
+                      "name": "Dokka check (not applicable: WebTools applies no Dokka plugin)",
+                      "state": "done"
+                    },
+                    {
+                      "id": "reconcile-plan",
+                      "name": "Reconcile final-implementation.md and consequences.md; parent link line; architecture callouts; rename #55's impact.md to consequences.md",
+                      "state": "done"
+                    },
+                    {
+                      "id": "readme-changelog",
+                      "name": "README delta and CHANGELOG.md (new, Unreleased entry)",
+                      "state": "done"
+                    },
+                    {
+                      "id": "state-boards",
+                      "name": "State boards at the code-landing commit",
+                      "state": "current"
+                    },
+                    {
+                      "id": "prepare-landing",
+                      "name": "Commit the change set, sync with master, no version bump",
+                      "state": "done"
+                    }
+                  ]
+                },
+                "outage": "session restart"
+              }
+            ]
+          },
+          "rowNames": {
+            "transport": "`OkHttpTransport`: the factory, the `internal` constructor and the client it builds",
+            "one-exchange": "`ExchangeGuard`: one wire exchange per hop",
+            "redirects": "The redirect loop: one `Call` per hop under one deadline",
+            "body-read": "The suspend bridge and the capped body read",
+            "guards": "The three guard layers applied to the client",
+            "failure-mapping": "The failure mapping and the transport's logging",
+            "lifecycle": "`close()` and the client's own dispatcher and pool",
+            "fixtures": "`LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` in the fixtures",
+            "integration-tests": "Level 3 tests against `mockwebserver3`",
+            "nonfunctional-tests": "Level 4c tests: slow drip, endless chunked body, a redirect chain over the cap",
+            "release": "The ABI dump and the version",
+            "dispatcher-sizing": "Sizing the dispatcher from the budget's `maxBurst`"
+          },
+          "recon": {
+            "interview": {
+              "reconstructed": true,
+              "ended": null,
+              "trail": [],
+              "milestones": []
+            }
+          }
+        },
+        "tests": {
+          "updated": "2026-11-02T03:16:00Z",
+          "added": [
+            {
+              "class": "HopResponseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/HopResponseComponentTest.kt",
+              "tests": 10,
+              "rows": [
+                "transport",
+                "body-read",
+                "one-exchange"
+              ],
+              "stage": "R1"
+            },
+            {
+              "class": "ThrowableSearchDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ThrowableSearchDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "failure-mapping"
+              ],
+              "stage": "R1"
+            },
+            {
+              "class": "RestoredStatusDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RestoredStatusDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "one-exchange"
+              ],
+              "stage": "R1"
+            },
+            {
+              "class": "BodyExpectedDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BodyExpectedDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "body-read"
+              ],
+              "stage": "R1"
+            },
+            {
+              "class": "TransportControlledHeadersDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/TransportControlledHeadersDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "transport"
+              ],
+              "stage": "R1"
+            },
+            {
+              "class": "OkHttpTransportDeadlineComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/OkHttpTransportDeadlineComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "transport",
+                "redirects"
+              ],
+              "stage": "R2"
+            },
+            {
+              "class": "WebtoolsUrlComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/WebtoolsUrlComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "fixtures"
+              ]
+            },
+            {
+              "class": "ReceiveHeadersDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ReceiveHeadersDeterministicTest.kt",
+              "tests": 4,
+              "rows": [
+                "body-read"
+              ]
+            }
+          ],
+          "amended": [
+            {
+              "class": "ExchangeGuardComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/ExchangeGuardComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "one-exchange"
+              ],
+              "stage": "R1"
+            },
+            {
+              "class": "ReceivedResponseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/ReceivedResponseComponentTest.kt",
+              "tests": 1,
+              "rows": [
+                "body-read"
+              ],
+              "stage": "R1"
+            }
+          ],
+          "relevant": [
+            {
+              "class": "gatingTest",
+              "module": "webtools-http",
+              "tests": 19,
+              "result": {
+                "state": "passed",
+                "passed": 19,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "componentTest",
+              "module": "webtools-http",
+              "tests": 397,
+              "result": {
+                "state": "passed",
+                "passed": 397,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "integrationTest",
+              "module": "webtools-http",
+              "tests": 94,
+              "result": {
+                "state": "passed",
+                "passed": 94,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z",
+                "note": "94 after the in-flight close case was made to run (db82470)"
+              }
+            },
+            {
+              "class": "deterministicTest",
+              "module": "webtools-http",
+              "tests": 195,
+              "result": {
+                "state": "passed",
+                "passed": 195,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            },
+            {
+              "class": "nonfunctionalTest",
+              "module": "webtools-http",
+              "tests": 31,
+              "result": {
+                "state": "passed",
+                "passed": 31,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-02T03:16:00Z"
+              }
+            }
+          ],
+          "other": {
+            "byModule": {
+              "webtools-browser": {
+                "1": {
+                  "classes": 1,
+                  "tests": 3
+                },
+                "5": {
+                  "classes": 1,
+                  "tests": 2
+                }
+              },
+              "webtools-scraping": {
+                "2": {
+                  "classes": 1,
+                  "tests": 11
+                }
+              },
+              "webtools-udp": {
+                "1": {
+                  "classes": 19,
+                  "tests": 83
+                },
+                "2": {
+                  "classes": 21,
+                  "tests": 235
+                },
+                "3": {
+                  "classes": 20,
+                  "tests": 117
+                },
+                "5": {
+                  "classes": 1,
+                  "tests": 13
+                },
+                "4a": {
+                  "classes": 9,
+                  "tests": 96
+                },
+                "4b": {
+                  "classes": 11,
+                  "tests": 34
+                },
+                "4c": {
+                  "classes": 11,
+                  "tests": 67
+                }
+              }
+            }
+          },
+          "rowNames": {
+            "transport": "`OkHttpTransport`: the factory, the `internal` constructor and the client it builds",
+            "one-exchange": "`ExchangeGuard`: one wire exchange per hop",
+            "redirects": "The redirect loop: one `Call` per hop under one deadline",
+            "body-read": "The suspend bridge and the capped body read",
+            "failure-mapping": "The failure mapping and the transport's logging",
+            "fixtures": "`LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)` in the fixtures"
+          }
+        }
       },
       "gap": {
         "kind": "missing",
@@ -4522,8 +4792,8 @@
       "note": "requirements, current state, the eleven systems, interactions, alternatives (§10), decomposition (§11), risks, known gaps"
     },
     {
-      "label": "Impact",
-      "path": "impact.md",
+      "label": "Consequences",
+      "path": "consequences.md",
       "note": "published artifacts, blast radius, adoption, follow-ups, the open points each unit inherits (§7)"
     },
     {
@@ -4588,7 +4858,7 @@
         "system": null,
         "effect": "behaviour",
         "summary": "They see only the Java 11 floor: Java 11 bytecode declaring `org.gradle.jvm.version: 11`, loadable on JDK 11 to 22. POMs and public API are unchanged.",
-        "link": "impact.md#1-published-artifacts"
+        "link": "consequences.md#1-published-artifacts"
       },
       {
         "who": "`webtools-http` (new artifact)",
@@ -4596,7 +4866,7 @@
         "system": "webtools-http-core",
         "effect": "additive",
         "summary": "The HTTP stack: transport, URL policies, cache, budget, facades and failure model, with `kotlinx-coroutines-core` as `api` and `okhttp-jvm`, `caffeine` and `slf4j-api` at runtime only; a test-fixtures variant carries the fakes.",
-        "link": "impact.md#1-published-artifacts"
+        "link": "consequences.md#1-published-artifacts"
       },
       {
         "who": "`webtools-feeds` (new artifact)",
@@ -4604,7 +4874,7 @@
         "system": "webtools-feeds",
         "effect": "additive",
         "summary": "An RSS/Atom parser port with the Rome default and a conditional-GET fetcher, built on `webtools-http`.",
-        "link": "impact.md#1-published-artifacts"
+        "link": "consequences.md#1-published-artifacts"
       },
       {
         "who": "BotTools (`SpartanLaboratories/KotlinBottools`)",
@@ -4612,7 +4882,7 @@
         "system": null,
         "effect": "additive",
         "summary": "The first consumer, through an internal adapter. Its release conditions (Java 21 or lower bytecode, Kotlin 2.2.x-readable metadata, no `-SNAPSHOT` dependency) hold for both new artifacts; its adapter building against the Experimental seams lets them graduate.",
-        "link": "impact.md#4-downstream-consumers"
+        "link": "consequences.md#4-downstream-consumers"
       },
       {
         "who": "Repository builds",
@@ -4620,7 +4890,7 @@
         "system": "gradle-build",
         "effect": "behaviour",
         "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, which compile only: their `js` target has no environment, so no test task and no Node.js. It also runs the fixtures-publication check, which unit 4 attached to `webtools-http`'s `check`: 44 to 52 s when one of its inputs changed, `UP-TO-DATE` otherwise; a build that includes WebTools never runs it. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
-        "link": "impact.md#build"
+        "link": "consequences.md#build"
       }
     ],
     "adaptation": [
@@ -4629,7 +4899,7 @@
         "system": null,
         "need": "required",
         "summary": "Move to the lettered versions of all three existing artifacts once they are published (`webtools-udp` 2.0.0a, `webtools-scraping` and `webtools-browser` 1.0.0a), requesting them `strictly` where the graph also asks for the plain release, which orders above them.",
-        "link": "impact.md#1-published-artifacts"
+        "link": "consequences.md#1-published-artifacts"
       },
       {
         "who": "Implementers of the new seams",
@@ -4643,7 +4913,7 @@
         "system": null,
         "need": "none",
         "summary": "Unchanged; moving `Connector`'s fetches onto `webtools-http` is a follow-up after its release.",
-        "link": "impact.md#3-adoption"
+        "link": "consequences.md#3-adoption"
       }
     ],
     "api": [
@@ -4748,16 +5018,37 @@
       },
       {
         "unit": "url-policy",
-        "basis": "plan",
-        "summary": "`webtools-http`, new and unreleased, gains the `Trusted` and `Untrusted` outbound-URL policies, `TransportSettings` with two named default sets, `CidrBlock` and `MixedAnswers`, all Stable Core, with an `internal` classifier and `internal` JVM guards. Nothing is enforced until the transport (#65) and the call facades (#68) land; the three existing artifacts do not change.",
+        "basis": "as-built",
+        "summary": "`webtools-http`, new and unreleased, gains the outbound-URL policies `Trusted` and `Untrusted` with their builders and factories, `TransportSettings` with two named default sets, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core, with an `internal` classifier and `internal` JVM guards. Nothing is enforced until the transport (#65) and the call facades (#68) land; no dependency is added and the three existing artifacts do not change.",
         "release": {
           "bump": "none",
           "version": null,
           "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
           "unreleased": true
         },
-        "source": "64-url-policy/impact.md",
-        "link": "64-url-policy/impact.md#1-published-artifacts"
+        "source": "64-url-policy/impact.md, reconciled with 64-url-policy/final-implementation.md",
+        "link": "64-url-policy/impact.md#1-published-artifacts",
+        "changes": [
+          {
+            "what": "`WebToolsDsl`, the module's DSL marker, joins the public surface, Stable Core, on the six builders, the three existing ones included.",
+            "why": "Plan Amendment 3 (stage S8) settles the marker the plan had left open; the reconciled `impact.md` §1 records it.",
+            "when": "#64 S8",
+            "ref": "64-url-policy/impact.md#1-published-artifacts"
+          }
+        ]
+      },
+      {
+        "unit": "okhttp-transport",
+        "basis": "plan",
+        "summary": "`webtools-http`, new and unreleased, gains `OkHttpTransport` and its factory, Stable Core: the first thing that applies the outbound-URL policy to a network fetch, with one request per hop, redirects followed by the transport, a capped decoded body and twelve refused request headers. The fixtures gain `LoopbackTransports`, `webtoolsUrl`, `toMockResponse` and `enqueue(fixture)`, and the fake's cap follows the transport's no-body rule. No dependency of either variant changes and the three existing artifacts do not.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
+          "unreleased": true
+        },
+        "source": "65-okhttp-transport/consequences.md; 65-okhttp-transport/plan.md",
+        "link": "65-okhttp-transport/consequences.md#1-published-artifacts"
       }
     ],
     "changes": [
@@ -4812,10 +5103,19 @@
         "ref": "4fcc6e0",
         "system": "webtools-http-test-fixtures",
         "unit": "test-support"
+      },
+      {
+        "what": "`WebToolsDsl`, a public DSL marker, joins `webtools-http`'s Stable Core on every builder the module passes to a consumer's lambda: a nested block reaches an outer builder only through its label.",
+        "why": "#64's plan Amendment 3 (stage S8) keeps one DSL across the stack; #55's reconciled `impact.md` §8 states it. `webtools-http` is unreleased, so no published consumer is affected.",
+        "when": "#64 landing",
+        "ref": "53965c8",
+        "entry": "api.0",
+        "system": "webtools-http-url-policy",
+        "unit": "url-policy"
       }
     ],
-    "source": "impact.md",
-    "link": "impact.md#1-published-artifacts"
+    "source": "consequences.md",
+    "link": "consequences.md#1-published-artifacts"
   },
   "links": {
     "workBoard": "../index.html",
@@ -4825,6 +5125,7 @@
       "webtools-http-core": "../../dashboards/webtools-http/index.html",
       "webtools-http-test-fixtures": "../../dashboards/webtools-http/index.html",
       "webtools-http-url-policy": "../../dashboards/webtools-http/index.html",
+      "webtools-http-transport": "../../dashboards/webtools-http/index.html",
       "webtools": "../../dashboards/index.html"
     }
   }

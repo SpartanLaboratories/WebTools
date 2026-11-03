@@ -1,11 +1,11 @@
 # Plan: the Java 11 floor — `WebToolsBuild.JAVA_FLOOR`, the compile settings it drives, and `verifyJavaFloor`
 
 - **Covers:** `SpartanLaboratories/WebTools#47` — *"webtools-udp 2.0.0 ships Java 23 bytecode but README
-  claims JDK 11+"* (work level 2; labels `bug`, `documentation`, `level: 2`). A sub-issue of the level-4
+  claims JDK 11+"* (labels `bug` and `documentation`). A sub-issue of the
   tracking issue `SpartanLaboratories/WebTools#55` (*HTTP client stack*). It blocks
   `SpartanLaboratories/WebTools#62` (`http-core`).
 - **Architecture:** [`../architecture.md`](../architecture.md), unit 2 `java-floor` (§6.1 *Shared build
-  logic*, §11 *Decomposition*, §12 *Risks*). Systems-level impact: [`../impact.md`](../impact.md) §7 and §8.
+  logic*, §11 *Decomposition*, §12 *Risks*). Systems-level impact: [`../consequences.md`](../consequences.md) §7 and §8.
   Unit 1's as-built record: [`../61-build-logic/final-implementation.md`](../61-build-logic/final-implementation.md)
   and [`../61-build-logic/impact.md`](../61-build-logic/impact.md) §4. Research:
   [`research/README.md`](research/README.md) and [`research/java-11-floor.md`](research/java-11-floor.md).
@@ -24,7 +24,7 @@
   - the README: the install line, the Java floor and the build JDK.
 - **Status:** implemented and landed in PR #76. The as-built record is
   [`final-implementation.md`](final-implementation.md) and the impact is [`impact.md`](impact.md). The
-  collapsed blocks below are the plan's versions; the nine qa pass 1 changes to them (seven comments and
+  collapsed blocks below are the plan's versions; the nine review pass 1 changes to them (seven comments and
   KDoc, two tests) are listed in the as-built record.
 - **Versions:** `webtools-udp` stays `2.0.0a` (unreleased); `webtools-scraping` `1.0.0` → `1.0.0a`;
   `webtools-browser` `1.0.0` → `1.0.0a`. Nothing is published.
@@ -768,7 +768,7 @@ abstract class VerifyJavaFloor : DefaultTask() {
 
 **Documentation impact.** KDoc on every new public declaration (component ring), the region comments in the
 two plugins and the module version notes (in-editor ring), the README (outer ring). `docs/dashboards/` still
-draws the floor as planned; the admin team's presenter brings it to the as-built state at landing. Outside
+draws the floor as planned; the landing's board refresh brings it to the as-built state. Outside
 `docs/dashboards/` and `docs/plans/`, no document names the JDK floor.
 
 ## Regression test
@@ -1782,13 +1782,13 @@ Use: `./gradlew --no-configuration-cache -I print-classpath.init.gradle.kts :web
     plugin, so the floor does not reach them.
 - **Follow-ups this leaves.** `jdk11-test-launcher` (run the level tasks on a JDK 11, after #58's foojay
   bump); the release of `2.0.0a`, `1.0.0a` and `1.0.0a` with the install-line move; the parent documents:
-  [`../impact.md`](../impact.md) §8 lists the ASM pin among what the multiplatform plugin carries, and
+  [`../consequences.md`](../consequences.md) §8 lists the ASM pin among what the multiplatform plugin carries, and
   [`../architecture.md`](../architecture.md) §12 calls `webtools-udp` unaffected by the lettered ordering.
 
 ## Version control
 
 - **Branch:** `fix/issue-47-java-floor`, cut from `master` at `36fd879`.
-- **Commits.** The admin team's executor makes the final call. Each commit is coherent and leaves the build
+- **Commits.** The final call is made at commit time. Each commit is coherent and leaves the build
   green; subject lines end `(Issue #47)`; no attribution trailers. Proposed:
   1. `fix: compile every module to the Java 11 floor and guard it with verifyJavaFloor (Issue #47)`: this
      `plan.md`, everything under `build-logic/src/main/` and `build-logic/src/test/`.
@@ -1796,9 +1796,9 @@ Use: `./gradlew --no-configuration-cache -I print-classpath.init.gradle.kts :web
      the three module build files.
   3. `docs: state the Java floor and name the installable versions in the README (Issue #47)`: `README.md`.
   4. At the end of implementation, `docs: record the as-built Java floor (Issue #47)`: this folder's
-     `final-implementation.md`, which the implementer appends to as deviations happen and the planner
-     reconciles.
-- **Never carried in:** any unrelated working-tree change. The working tree also holds the presenter's plan
+     `final-implementation.md`, which the implementer appends to as deviations happen and which is
+     reconciled into the as-built record.
+- **Never carried in:** any unrelated working-tree change. The working tree also holds the plan
   boards (`docs/plans/index.html` and the `dashboard.html` and `plan.json` files of #47, #55 and #61); they
   belong to the dashboards service, not to these commits.
 - **Version moved:** `webtools-scraping` and `webtools-browser` to `1.0.0a` (a fix: a trailing letter);

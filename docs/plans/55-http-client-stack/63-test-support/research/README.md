@@ -4,7 +4,7 @@
 (`test-support`) of the HTTP client stack,
 [#55](https://github.com/SpartanLaboratories/WebTools/issues/55). The systems-level design is
 [`../../architecture.md`](../../architecture.md) (§6.1, §6.7, §9, §11 unit 4) and the
-systems-level impact [`../../impact.md`](../../impact.md) (§7, §8). This folder researches the
+systems-level impact [`../../consequences.md`](../../consequences.md) (§7, §8). This folder researches the
 implementation details that design leaves to the unit and that need evidence from outside this
 repository.
 
@@ -115,7 +115,7 @@ researched again.
   - `-Xexplicit-api=strict` on the fixtures compile task (F5).
   - `@SubclassOptInRequired` binds implementers of a port, not users of a final fake (F4).
   - It answers every question about the fixtures' own types; none is researched again here.
-- **[`../61-build-logic/research/testkit-harness.md`](../61-build-logic/research/testkit-harness.md).**
+- **[`../../61-build-logic/research/testkit-harness.md`](../../61-build-logic/research/testkit-harness.md).**
   - The TestKit harness.
   - Three points about a publication check that were read in source and documentation but never
     run:
