@@ -4,3 +4,5 @@
 *.kts  text eol=lf
 # Recorded HTTP fixtures hold response bodies byte for byte; a line-ending conversion would change their size.
 **/fixtures/**/*.http -text
+# Shell scripts must stay LF or bash (including Git Bash on Windows) fails on the carriage returns.
+*.sh   text eol=lf
