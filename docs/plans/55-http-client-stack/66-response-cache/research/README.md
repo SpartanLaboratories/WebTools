@@ -182,7 +182,7 @@ The codebase blast radius is small and is surveyed directly in the summary below
 Every load-bearing claim was re-opened at its source on 2026-11-03: claims 1 to 24 of
 [`caffeine-mechanics.md`](caffeine-mechanics.md), claims 1 to 25 of [`load-lifecycle.md`](load-lifecycle.md),
 and claims 1 to 19, 27 and 30 of the stack-level [`../../research/response-cache.md`](../../research/response-cache.md),
-which this unit rests on again: 68 claims. **All hold; none fails and none is unclear.** The measured results
+which this unit rests on again: 70 claims. **All hold; none fails and none is unclear.** The measured results
 of the stack-level research are probe output with no source to re-open.
 
 | File | Claims | Result |
