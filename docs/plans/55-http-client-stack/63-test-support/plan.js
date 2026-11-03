@@ -859,7 +859,7 @@ window.dashboardLive&&window.dashboardLive("plan",
           "name": "A hand-built JVM-only `testFixtures` compilation associated with `main`, published as two variants with the capability `webtools-http-test-fixtures` (recipe B)",
           "verdict": "accepted",
           "why": "One coordinate and one version, and the fixtures' own dependencies, `kotlinx-coroutines-test` 1.10.2 and `mockwebserver3` 5.5.0, reach only the consumer's test classpath through Maven scope mapping as optional entries. The association lets the fixtures reach `internal` declarations such as `HttpSyntax`. The variants set `TargetJvmVersion` from `JAVA_FLOOR`, which the target's attribute does not reach, and the fixtures jar joins `verifyJavaFloor`.",
-          "source": "../architecture.md §6.7; ../impact.md §8",
+          "source": "../architecture.md §6.7; ../consequences.md §8",
           "link": "../architecture.md#67-published-test-support"
         },
         {
@@ -1376,7 +1376,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/jvmTestFixtures/"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#73-fixtures-time-and-the-fake-"
+            "link": "plan.md#73-fixtures-time-and-the-fake-fx"
           }
         ],
         "tests": [
@@ -1548,7 +1548,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/jvmTest/"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#73-fixtures-time-and-the-fake-"
+            "link": "plan.md#73-fixtures-time-and-the-fake-fx"
           }
         ],
         "tests": [
@@ -1735,7 +1735,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/jvmTest/resources/fixtures/sample/"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#74-fixtures-the-http-format-"
+            "link": "plan.md#74-fixtures-the-http-format-fx"
           }
         ],
         "tests": [
@@ -1908,7 +1908,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/jvmTest/"
             ],
             "check": "Procedures P3 and P4",
-            "link": "plan.md#75-fixtures-the-recorder-"
+            "link": "plan.md#75-fixtures-the-recorder-fx"
           }
         ],
         "tests": [
@@ -2096,11 +2096,11 @@ window.dashboardLive&&window.dashboardLive("plan",
         "summary": "Nothing would notice a Kotlin Gradle plugin or Gradle upgrade changing the experimental publishing behaviour the variant rests on. The architecture wires the check into the root `check`, but the root project has no `check` task: it keeps only `group` and `version`, and #62's check module added none.",
         "evidence": [
           "build.gradle.kts:11-14 — `allprojects { group; version }` only, no `check` (baseline)",
-          "../impact.md §7, §8 — the check is the only guard on the experimental API; where it attaches is open",
+          "../consequences.md §7, §8 — the check is the only guard on the experimental API; where it attaches is open",
           "build-logic/build.gradle.kts:51-72 — the TestKit home lock and the nested-build level tasks a new check reuses (baseline)"
         ],
-        "source": "../architecture.md §6.1, §12; ../impact.md §8",
-        "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-5-as-built"
+        "source": "../architecture.md §6.1, §12; ../consequences.md §8",
+        "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-6-as-built"
       },
       "options": [
         {
@@ -2108,7 +2108,7 @@ window.dashboardLive&&window.dashboardLive("plan",
           "name": "A TestKit test in `build-logic`'s own tests that publishes `webtools-http` to a build-local file repository and resolves `testFixtures(...)` once from it and once through `includeBuild`",
           "verdict": "accepted",
           "why": "It asserts the capability, `org.gradle.jvm.version` 11 on both fixtures variants, and that neither main variant lists `kotlinx-coroutines-test` or `mockwebserver3`: exactly the probe that settled the recipe. It reuses the TestKit harness and takes the TestKit home lock, so it never runs beside the other nested builds.",
-          "source": "../architecture.md §6.1; ../impact.md §8",
+          "source": "../architecture.md §6.1; ../consequences.md §8",
           "link": "../architecture.md#61-shared-build-logic--build-logic"
         },
         {
@@ -2116,8 +2116,8 @@ window.dashboardLive&&window.dashboardLive("plan",
           "name": "Where it attaches: a root lifecycle `check`, as the architecture's root wiring needs, or the `check` of `webtools-http`, the module whose publication it covers",
           "verdict": "deferred",
           "why": "The architecture's target does not exist: a root `check` changes the root build's shape, and the module's own `check` keeps it beside the publication. #55's impact leaves the choice to this unit's plan.",
-          "source": "../impact.md §8; ../62-http-core/plan.md §12",
-          "link": "../impact.md#8-what-the-later-units-build-on-units-1-to-5-as-built"
+          "source": "../consequences.md §8; ../62-http-core/plan.md §12",
+          "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-6-as-built"
         },
         {
           "id": "root-lifecycle-check",
@@ -2649,7 +2649,7 @@ window.dashboardLive&&window.dashboardLive("plan",
           "../architecture.md §12 — Central validation of the fixtures jar, and signing of a KMP publication with an adhoc variant, were not run against the real validator",
           "research/publication-check-mechanics.md F3, F4 — a throwaway key signs every published file, the fixtures jar included (measured); research/README.md, Known gaps — Central's validator is first exercised by the first release"
         ],
-        "source": "../architecture.md §11, §12; ../impact.md §7",
+        "source": "../architecture.md §11, §12; ../consequences.md §7",
         "link": "../architecture.md#12-risks-at-the-systems-level"
       },
       "options": [
@@ -3122,8 +3122,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       "note": "§2 current state, §6.1 the publication check, §6.7 published test support, §9 extension and stability, §10 alternatives, §11 unit 4, §12 risks"
     },
     {
-      "label": "#55 impact",
-      "path": "../impact.md",
+      "label": "#55 consequences",
+      "path": "../consequences.md",
       "note": "§7 the open point this unit settles, §8 what units 1 to 3 as built give it and where the publication check may attach"
     },
     {
@@ -3163,6 +3163,10 @@ window.dashboardLive&&window.dashboardLive("plan",
       {
         "what": "The publication-check row's Gap and its second option linked #55's impact.md §8 by its old heading, \"units 1 to 3 as built\"; the section was renamed \"units 1 to 4 as built\" with this unit's reconciliation. The two links now name the renamed section; the text is unchanged.",
         "when": "qa pass 2 reconciliation, 2026-10-25"
+      },
+      {
+        "what": "The links to plan.md sections whose heading opens with a code span holding a path placeholder (`<fx>`) now carry GitHub's anchor, which keeps the placeholder's letters (73-fixtures-time-and-the-fake-fx); the anchor written before lacked them and opened no section. No statement, verdict or state changed.",
+        "when": "the heading-anchor rule fixed, 2026-11-01"
       }
     ],
     "departure": "The unit's plan departs from #55's architecture in three decisions (plan.md §13, impact.md §5): the fixtures-publication check hangs off `webtools-http`'s own `check` rather than a root `check` (§6.1, §6.7, §11), since the root project has none and a root one would miss `./gradlew build`; the signing of the multiplatform publication with its adhoc variant is exercised on every run of the check with a throwaway key, leaving only Central's validator to the first release (§12); and `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)`, which §6.7 lists among this unit's types, follow §11 to unit 6. They show in the publication-check, release and contributions-left rows' Considered and Verdict columns, in the publication-check row's settled option, and on #55's tracking board as changes on the test-support unit row. A dated correction to `architecture.md` §6.1 is written with the as-built reconciliation."
@@ -3171,7 +3175,8 @@ window.dashboardLive&&window.dashboardLive("plan",
     "47": "../47-java-23-bytecode/dashboard.html",
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
-    "64": "../64-url-policy/dashboard.html"
+    "64": "../64-url-policy/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

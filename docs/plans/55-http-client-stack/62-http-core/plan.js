@@ -282,7 +282,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-25",
       "column": "verdict",
-      "label": "Halted at the interview: two questions on `Url` parsing and `toString()` wait on the user; the architecture slice re-validated against f72b115 with no drift",
+      "label": "Halted at the interview: two questions on `Url` parsing and `toString()` wait on you; the architecture slice re-validated against f72b115 with no drift",
       "ref": "../architecture.md"
     },
     {
@@ -2887,8 +2887,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       "note": "§2 current state, §6.2 the common core, §6.8 the check-only `js` modules, §6.9 the common-code mechanism per type, §9 extension and stability, §10 alternatives, §11 unit 3"
     },
     {
-      "label": "#55 impact",
-      "path": "../impact.md",
+      "label": "#55 consequences",
+      "path": "../consequences.md",
       "note": "§7 the open point this unit settles: the first compile of the marker, a gated interface, a default naming it and a consumer without the opt-in"
     },
     {
@@ -2912,7 +2912,8 @@ window.dashboardLive&&window.dashboardLive("plan",
     "47": "../47-java-23-bytecode/dashboard.html",
     "61": "../61-build-logic/dashboard.html",
     "63": "../63-test-support/dashboard.html",
-    "64": "../64-url-policy/dashboard.html"
+    "64": "../64-url-policy/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

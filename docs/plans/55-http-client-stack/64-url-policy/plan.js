@@ -11,7 +11,7 @@ window.dashboardLive&&window.dashboardLive("plan",
   "title": "Outbound-URL policy",
   "issueTitle": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
   "function": "Nothing in `webtools-http` decides yet which URLs and addresses a fetch may reach: #62 built the refusal vocabulary, `RefusalReason` and `TransportFailure.RefusedByPolicy`, and nothing raises it (#55 architecture §6.3.1). This run adds the closed pair `OutboundUrlPolicy.Trusted` and `Untrusted` with their builders, `TransportSettings` with one default set per policy, `CidrBlock` and `MixedAnswers`, the `internal` common classifier that judges host text and address bytes, and the JVM resolver and socket guards, with their tests. Unit 5 of #55: one subsystem of `webtools-http`, additive, no version moved; wiring the guards into a client is unit 6's.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-10-25T21:42:50Z",
   "parent": {
     "issue": 55,
@@ -23,7 +23,31 @@ window.dashboardLive&&window.dashboardLive("plan",
     "sha": "4fcc6e0",
     "date": "2026-10-25"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "dd463bc",
+    "merge": "53965c8",
+    "pr": 86,
+    "version": "none moved; webtools-http 1.0.0 new, unreleased",
+    "date": "2026-10-26",
+    "at": "2026-10-26T23:17:45Z",
+    "commits": [
+      {
+        "sha": "9930a32",
+        "at": "2026-10-25T22:20:16Z",
+        "step": "research"
+      },
+      {
+        "sha": "c3d3dc7",
+        "at": "2026-10-25T22:47:34Z",
+        "step": "research"
+      },
+      {
+        "sha": "aa918ea",
+        "at": "2026-10-25T22:51:00Z",
+        "step": "research"
+      }
+    ]
+  },
   "systems": [
     {
       "slug": "webtools-http-url-policy",
@@ -35,10 +59,10 @@ window.dashboardLive&&window.dashboardLive("plan",
     }
   ],
   "wip": {
-    "step": "merge",
-    "since": "2026-10-26T22:45:45Z",
-    "updated": "2026-10-26T22:45:45Z",
-    "detail": "State boards refreshed and stamped at 543bd08; the board commit, the pull request and the merge follow.",
+    "step": "landed",
+    "since": "2026-10-26T23:28:51Z",
+    "updated": "2026-10-26T23:28:51Z",
+    "detail": "Merged through PR #86 as 53965c8: the outbound-URL policies, `TransportSettings`, `CidrBlock`, `MixedAnswers` and the `WebToolsDsl` marker in `webtools-http`, over the internal classifier and JVM guards, with the README row; no deviation from the plan; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
     "steps": [
       "sizing",
       "interview",
@@ -190,13 +214,13 @@ window.dashboardLive&&window.dashboardLive("plan",
       {
         "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
         "raised": "qa pass 2",
-        "ref": "../architecture.md"
+        "ref": "../architecture.md",
+        "resolved": "The landing's docs commit 543bd08 reworded the architecture's decomposition to state each unit's scope."
       }
     ],
     "event": {
-      "name": "merge",
-      "at": "2026-10-26T22:45:45Z",
-      "note": "merging"
+      "name": "landed",
+      "at": "2026-10-26T23:28:51Z"
     },
     "history": {
       "sizing": [
@@ -738,6 +762,26 @@ window.dashboardLive&&window.dashboardLive("plan",
             }
           ]
         }
+      ],
+      "merge": [
+        {
+          "since": "2026-10-26T22:45:45Z",
+          "ended": "2026-10-26T23:28:51Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-10-26T23:28:51Z"
+          },
+          "detail": "Landed in PR #86.",
+          "open": [
+            {
+              "text": "The architecture carries pre-existing wording that states each unit's sizing; since the committed-content rule scans every line of a file a commit carries, those lines are reworded to state each unit's scope instead, in this landing's docs commit.",
+              "raised": "qa pass 2",
+              "ref": "../architecture.md"
+            }
+          ]
+        }
       ]
     },
     "next": null,
@@ -825,6 +869,13 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-10-25",
       "ref": "plan.md",
       "note": "seven stages, S1 to S7, on `feat/issue-64-url-policy`, with two code commits; the design makes #55's architecture §6.3.1 and §7.4 concrete in impact §5: two deny rules outside the IANA registries, sockets on `Proxy.NO_PROXY`, `newCall` inherited, the range class beside the reason. No version moves"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-10-26",
+      "ref": "PR #86",
+      "note": "the research 9930a32 to aa918ea; the policies, settings and classifier fd93ff9 and the JVM guards b46f58a; the `WebToolsDsl` marker bec8615, the review fixes 6b96866, the README row 0d44495, the as-built record 543bd08 and the boards dd463bc; merged as 53965c8. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -1006,6 +1057,12 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-26",
       "column": "built",
+      "label": "The as-built record and the impact reconciled: no deviation from the plan; plan Amendments 1, 2 and 5 followed and Amendment 3 built as stage S8; #55's architecture carries three dated corrections",
+      "ref": "543bd08"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
       "label": "Landing: the land accepted"
     },
     {
@@ -1017,6 +1074,18 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-10-26",
       "column": "built",
       "label": "Merge: merging it"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
+      "label": "Landed in PR #86, merge 53965c8",
+      "ref": "PR #86"
+    },
+    {
+      "date": "2026-10-26",
+      "column": "built",
+      "label": "Open point settled: the parent architecture's decomposition states each unit's scope (543bd08)",
+      "ref": "543bd08"
     }
   ],
   "rows": [
@@ -1218,7 +1287,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#73-outboundurlpolicykt"
+            "link": "plan.md#73-cmoutboundurlpolicykt"
           }
         ],
         "tests": [
@@ -1228,7 +1297,7 @@ window.dashboardLive&&window.dashboardLive("plan",
           "Stable Core from the first release: after 1.0.0 a renamed property, a changed default or a third subclass is a major bump (§10)"
         ],
         "source": "plan.md R1, R3, §6.1, §6.2, §7.3",
-        "link": "plan.md#73-outboundurlpolicykt"
+        "link": "plan.md#73-cmoutboundurlpolicykt"
       }
     },
     {
@@ -1369,7 +1438,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#73-outboundurlpolicykt"
+            "link": "plan.md#73-cmoutboundurlpolicykt"
           },
           {
             "id": "S3",
@@ -1378,7 +1447,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+            "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
           }
         ],
         "tests": [
@@ -1403,7 +1472,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "evidence": [
           "common/HttpHeaders.kt:78 — `Entry.isSensitive`, flagged or a credential name (baseline)",
           "../research/outbound-url-policy.md pitfall 10 — ports; F11 — mixed answers; Consideration 4 — credentials",
-          "../impact.md §8 — units 5 and 6 build the reading of the sensitive flag",
+          "../consequences.md §8 — units 5 and 6 build the reading of the sensitive flag",
           "research/bypass-vectors.md §4 G3, G4 — what no table can close: a network's own NAT64 prefix and a service on the deployer's own public address, which `extraDeniedRanges` is for"
         ],
         "source": "../research/outbound-url-policy.md Considerations 2 to 4; ../architecture.md §6.3.1",
@@ -1577,7 +1646,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/MixedAnswers.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#72-mixedanswerskt-and-cidrblockkt"
+            "link": "plan.md#72-cmmixedanswerskt-and-cmcidrblockkt"
           },
           {
             "id": "S2",
@@ -1586,7 +1655,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#73-outboundurlpolicykt"
+            "link": "plan.md#73-cmoutboundurlpolicykt"
           },
           {
             "id": "S3",
@@ -1595,7 +1664,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+            "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
           }
         ],
         "tests": [
@@ -1771,7 +1840,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#71-transportsettingskt"
+            "link": "plan.md#71-cmtransportsettingskt"
           }
         ],
         "tests": [
@@ -1939,7 +2008,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/AddressRanges.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#76-addressrangeskt"
+            "link": "plan.md#76-cmaddressrangeskt"
           }
         ],
         "tests": [
@@ -1963,7 +2032,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "summary": "`Url` keeps digits-and-dots and hex-looking hosts as written (`127.1`, `0x7f.1`, `2130706433`) for the policy to judge. The JDK reads such forms leniently and libc reads `0177` as octal, so the same text names different machines to different parsers: the bug class of the node `ip`, `netmask` and Python `ipaddress` advisories.",
         "evidence": [
           "common/UrlHost.kt:12 — a name of digits, dots and hex letters passes as written (baseline)",
-          "../impact.md §8 — what unit 3 leaves for unit 5",
+          "../consequences.md §8 — what unit 3 leaves for unit 5",
           "../research/outbound-url-policy.md F3, F10",
           "research/bypass-vectors.md §3.7 — host text that never came through `Url.parse` (`LOCALHOST`, `0X7F.1`, an embedded space or tab) falls through the rules as a name unless they are total on any text"
         ],
@@ -2099,7 +2168,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/StrictIp.kt"
             ],
             "check": "Procedure P2",
-            "link": "plan.md#74-strictipkt"
+            "link": "plan.md#74-cmstrictipkt"
           },
           {
             "id": "S3",
@@ -2108,7 +2177,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/HostRules.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#75-hostruleskt"
+            "link": "plan.md#75-cmhostruleskt"
           }
         ],
         "tests": [
@@ -2279,7 +2348,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"
             ],
             "check": "Procedure P3",
-            "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+            "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
           }
         ],
         "tests": [
@@ -2287,7 +2356,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         ],
         "risks": [],
         "source": "plan.md R5, R7, §6.5, §6.6, §7.7",
-        "link": "plan.md#77-guardrelaxationkt-and-urlguardkt"
+        "link": "plan.md#77-cmguardrelaxationkt-and-cmurlguardkt"
       }
     },
     {
@@ -2797,7 +2866,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "summary": "`webtools-http` is new and unreleased at `1.0.0`. Its committed ABI dump, which `apiCheck` holds the build to, records the core's surface and no policy type.",
         "evidence": [
           "webtools-http/api/webtools-http.api — the dump at the baseline, no policy type",
-          "../impact.md §8 — each later unit extends the dump"
+          "../consequences.md §8 — each later unit extends the dump"
         ],
         "source": "../architecture.md §9, §11",
         "link": "../architecture.md#11-decomposition"
@@ -2932,7 +3001,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "summary": "The guards need a client: something must run the per-hop check before every `Call`, install the resolver and socket guards and `Proxy.NO_PROXY` for `Untrusted`, and give the fixtures their loopback factory.",
         "evidence": [
           "../architecture.md §6.3.2 — `OkHttpTransport`, unit 6",
-          "../impact.md §8 — `LoopbackTransports` reserved for unit 6",
+          "../consequences.md §8 — `LoopbackTransports` reserved for unit 6",
           "research/bypass-vectors.md §5 — the vectors that belong to the transport's own tests: redirects into private space, rebinding, process proxies, credentials across an origin change, a `Location` that `HttpUrl.resolve` throws on"
         ],
         "source": "../architecture.md §11",
@@ -2949,8 +3018,42 @@ window.dashboardLive&&window.dashboardLive("plan",
         }
       ],
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "as-planned",
+        "statements": [
+          {
+            "text": "No OkHttp transport, redirect loop or failure mapping was built: the unit ships the checks and the enforcement bundle, wires nothing into a client and logs no refusal; nothing is enforced until the transport and the call facades land.",
+            "state": "as-planned",
+            "ref": "impact.md#1-published-artifacts",
+            "excerpt": {
+              "ref": "impact.md#1-published-artifacts",
+              "heading": "1. Published artifacts",
+              "paragraph": "What a consumer of `webtools-http` 1.0.0 gets from this unit:",
+              "hash": "392264c8b8d2"
+            }
+          },
+          {
+            "text": "No loopback test factories and nothing under the fixtures: the fixtures of #63 do not change, and unit 6, #65, adds `LoopbackTransports`.",
+            "state": "as-planned",
+            "ref": "impact.md#4-sibling-units",
+            "excerpt": {
+              "ref": "impact.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts. In short:",
+              "hash": "0d6ab2924248"
+            }
+          },
+          {
+            "text": "Unit 6, #65, takes the wiring as `PolicyEnforcement`'s KDoc states it: `checkRequest` and `admitRedirect` before every `Call`, `UrlGuard.enforcement(baseDns)` on its client, and a failure mapping that checks `policyRefusal()` first and logs the one `WARN`.",
+            "state": "as-planned",
+            "ref": "impact.md#4-sibling-units",
+            "excerpt": {
+              "ref": "impact.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts. In short:",
+              "hash": "0d6ab2924248"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -2996,7 +3099,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     }
   ],
   "impact": {
-    "basis": "plan",
+    "basis": "as-built",
     "summary": "`webtools-http`, new and unreleased, gains the outbound-URL policies `Trusted` and `Untrusted` with their builders and factories, `TransportSettings` with two named default sets, `CidrBlock`, `MixedAnswers` and `WebToolsDsl`, the DSL marker on every builder of the module, all Stable Core; the classifier and the JVM guards stay `internal`. Nothing is enforced until the transport and the call facades land. No dependency is added, the three existing artifacts do not change, and no version moves.",
     "none": null,
     "release": {
@@ -3147,7 +3250,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "entry": "downstream.3"
       }
     ],
-    "source": "impact.md, plan.md",
+    "source": "impact.md, reconciled with final-implementation.md; plan.md",
     "link": "impact.md"
   },
   "tests": {
@@ -4857,8 +4960,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       "note": "§6.3.1 the outbound-URL policy, §6.9 the mechanism per type, §7.3 the three guard layers, §9 extension and stability, §10 alternatives, §11 unit 5, §12 risks"
     },
     {
-      "label": "#55 impact",
-      "path": "../impact.md",
+      "label": "#55 consequences",
+      "path": "../consequences.md",
       "note": "§8 what units 1 to 4 as built give this unit"
     },
     {
@@ -4883,6 +4986,10 @@ window.dashboardLive&&window.dashboardLive("plan",
       {
         "what": "The `policy-pair` row's Considered column now records the option the plan left open at its acceptance, a public `@DslMarker` (`dsl-marker`, deferred: plan §4, §13 and §14, and the open point raised then), which the board had left out. Its settlement by plan Amendment 3, accepted, is in column 4.",
         "when": "implementation S8, 2026-10-26"
+      },
+      {
+        "what": "The links to plan.md sections whose heading opens with a code span holding a path placeholder (`<cm>`) now carry GitHub's anchor, which keeps the placeholder's letters (73-cmoutboundurlpolicykt); the anchor written before lacked them and opened no section. No statement, verdict or state changed.",
+        "when": "the heading-anchor rule fixed, 2026-11-01"
       }
     ]
   },
@@ -4890,7 +4997,8 @@ window.dashboardLive&&window.dashboardLive("plan",
     "47": "../47-java-23-bytecode/dashboard.html",
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
-    "63": "../63-test-support/dashboard.html"
+    "63": "../63-test-support/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

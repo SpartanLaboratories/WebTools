@@ -45,7 +45,7 @@ h1,h2,h3{text-wrap:balance}
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
 /* The header's tools, right of the breadcrumb: the live indicator (plan/RULES.md §3, "Live updates") and the theme switch
    (GUIDANCE.md §1, Themes). The live dot is ink, never a status or accent colour; it pulses while the run is live and changing, and
-   holds still after a quiet spell, while the run waits on the user, when the data cannot be read, and under reduced motion. */
+   holds still after a quiet spell, while the run waits on you, when the data cannot be read, and under reduced motion. */
 .topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:18px}
 .topbar .crumbs{padding-top:0;min-width:0}
 .tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
@@ -140,7 +140,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .wip .key{margin-top:8px;padding-top:6px;border-top:1px solid var(--hair)}
 /* A tracking board's unit in progress shows its own run, mirrored from its board (unit.live, plan/RULES.md §3): under its "In
    progress" line an accent rule holds the unit's step, its steps, its detail and its qa passes (a yellow rule while the run waits
-   on the user); its as-built cell and card carry a run line. */
+   on you); its as-built cell and card carry a run line. */
 .unitrun .wip-head{font-size:12.5px}
 .unitrun .wip-detail,.unitrun .wip-wait{margin:4px 0 2px}
 /* A tracking board's WIP strip is a set of bubbles (plan/RULES.md §3): the tracking issue's own phase with the chain's progress,
@@ -229,7 +229,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 /* The two accent marks (GUIDANCE.md §1).
    In progress (wip.current): a solid accent ring inside the edge, an interior glow that breathes (~2 s) and a faint accent wash.
    .glow-soft is the same, lighter, for a whole column at work. With reduced motion the interior glow holds still at its middle
-   strength; while the run waits on the user, halted or escalated, it stops (.held: the ring alone).
+   strength; while the run waits on you, halted or escalated, it stops (.held: the ring alone).
    Up next (wip.next, tracking boards): the mild outer glow the in-progress mark used before, held still, never animated, with
    the static UP NEXT tag. It is not work in progress, so it neither breathes nor counts as a glowing cell. */
 @keyframes glow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 28%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 22px 6px color-mix(in srgb,var(--accent) 52%,transparent)}}
@@ -376,7 +376,7 @@ a.more:hover{text-decoration:underline}
 .colhead.glow{border-radius:4px}
 /* Column-level glow (plan/RULES.md §3; GUIDANCE.md §1): a column address in wip.current (a whole column at work: qa, a stage that
    touches no row, research while its rows are unknown) is one glow on the column itself, its band, with an accent wash on its head,
-   never each row's cell lit; held still as the ring alone while the run waits on the user; static under reduced motion. The narrow
+   never each row's cell lit; held still as the ring alone while the run waits on you; static under reduced motion. The narrow
    layout draws no columns, so there each of the column's cells carries it. On the As built tab the glow goes round the cards. */
 .board>.band.glow-soft{background:color-mix(in srgb,var(--accent) 5%,var(--band))}
 .board>.band.held{background:color-mix(in srgb,var(--accent) 3%,var(--band))}
@@ -422,7 +422,7 @@ a.more:hover{text-decoration:underline}
 .rs-planning{--rc:var(--critical)}.rs-researching,.rs-returned{--rc:var(--serious)}.rs-verifying{--rc:var(--warning)}.rs-complete{--rc:var(--good)}
 .key i.ring{background:var(--surface);border:2.5px solid var(--rc);border-radius:4px}
 /* The charging arrow (plan/RULES.md §3, "The charging arrow"): during the plan step, the connector into a Verdict cell whose verdict is
-   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on the user and under
+   not yet written is a battery of segments that fill left to right; it holds still, filled, while the run waits on you and under
    reduced motion, and is the plain line again once the verdict is written. */
 .cell.verdict.charging::before{border-top:0;height:12px;top:calc(50% - 6px);left:calc(-1 * var(--cg) - 2px);width:calc(var(--cg) + 2px);clip-path:polygon(0 22%,68% 22%,68% 0,100% 50%,68% 100%,68% 78%,0 78%);
   background:repeating-linear-gradient(90deg,var(--accent) 0 2px,transparent 2px 4px) 0 0/100% 100% no-repeat,repeating-linear-gradient(90deg,color-mix(in srgb,var(--accent) 32%,transparent) 0 2px,transparent 2px 4px);animation:charge 1.8s steps(6,end) infinite}
@@ -992,7 +992,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "date": "2026-10-25",
       "column": "verdict",
-      "label": "Halted at the interview: two questions on `Url` parsing and `toString()` wait on the user; the architecture slice re-validated against f72b115 with no drift",
+      "label": "Halted at the interview: two questions on `Url` parsing and `toString()` wait on you; the architecture slice re-validated against f72b115 with no drift",
       "ref": "../architecture.md"
     },
     {
@@ -3597,8 +3597,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "note": "§2 current state, §6.2 the common core, §6.8 the check-only `js` modules, §6.9 the common-code mechanism per type, §9 extension and stability, §10 alternatives, §11 unit 3"
     },
     {
-      "label": "#55 impact",
-      "path": "../impact.md",
+      "label": "#55 consequences",
+      "path": "../consequences.md",
       "note": "§7 the open point this unit settles: the first compile of the marker, a gated interface, a default naming it and a consumer without the opt-in"
     },
     {
@@ -3622,7 +3622,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "47": "../47-java-23-bytecode/dashboard.html",
     "61": "../61-build-logic/dashboard.html",
     "63": "../63-test-support/dashboard.html",
-    "64": "../64-url-policy/dashboard.html"
+    "64": "../64-url-policy/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",
@@ -3806,7 +3807,7 @@ function sysKey(slugs,cls){ const seen=new Map(); slugs.forEach(sl=>{ const s=sy
   return [...seen.values()].map(v=>`<span><i class="${cls||"sbar"}" style="--c:${v.c}"></i>${esc([...v.names].join(", "))}</span>`).join(""); }
 
 /* ---------- Work in progress: the glowing cells ----------
-   PAUSED: the run waits on the user, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
+   PAUSED: the run waits on you, halted or escalated; its in-progress marks stop to the ring alone (GUIDANCE.md §1) and keep
    the glow of the step it stopped in (plan/RULES.md §3, the glow follows the step). */
 let STEP="", HALTED=false, PAUSED=false, LANDED=false, STOPPED=false, CURRENT=[];
 const rowActive=r=>CURRENT.some(a=>a.split(".")[0]===r.id);
@@ -3814,7 +3815,7 @@ const rowActive=r=>CURRENT.some(a=>a.split(".")[0]===r.id);
    A unit in progress carries unit.live: its sub-issue board's run (step, since, updated, detail, steps, waitingOn, resume, qa,
    status, branch) as embed.js mirrored it from that board's plan.json at the last embed of either board. Nobody writes it by
    hand. The page shows it under the WIP strip's "In progress" line, in the unit's as-built cell and card, in the inspector, on
-   its chain node and in the roadmap; while the unit's run waits on the user its mark pauses (the ring alone), as the whole
+   its chain node and in the roadmap; while the unit's run waits on you its mark pauses (the ring alone), as the whole
    board's does while the tracking issue itself is halted. The tracking board's own wip.step is the tracking issue's phase. */
 const RUN={run:{g:"▶",label:"run",cls:"neutral"},halted:{g:"⏸",label:"waiting on the user",cls:"warning"},escalated:{g:"⇧",label:"escalated",cls:"serious"},cancelled:{g:"✕",label:"run cancelled",cls:"critical"}};
 const runOf=r=>TRACKING&&r&&r.unit&&r.unit.live&&typeof r.unit.live==="object"&&rowActive(r)?r.unit.live:null;
@@ -3908,7 +3909,7 @@ function researchFact(w){ const qs=questionsOf(w), R=w&&w.research;
    Beside the WIP strip, the current step broken down from the facts the board records (the events, the documents, the trail): the
    interview's questions, answered or waiting; the research timeline (planning, research, verification) with each question's state and
    the count returned; the plan's writing or re-pass and its verdicts written; the implementation stages, done, current and to come;
-   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on the user, what
+   each qa pass apart, with its verdict and its finding counts; the remediation's sub-steps; and while the run waits on you, what
    it waits on, the panel held still. R is a run: an issue board's own wip (with its verdicts and deviations counted from its rows), or
    a tracking board's unit mirror (unit.live), which carries the same facts (plan/scripts/lib.js panelFacts()). keys collects the legend
    entries the panel drew. */
@@ -3917,7 +3918,7 @@ const KEY_OPEN=`<span>${pill(OPEN_PT)} an open point raised during the run, not 
 const IV={answered:{g:"✓",label:"answered",cls:"neutral"},waiting:{g:"?",label:"waiting on the user",cls:"warning"}};
 const STAGE_DOT={done:"done",current:"cur",todo:"todo"};
 const NEXT_STEP={qa:"landing, or remediation if the qa pass requests changes",remediation:"qa, the next pass",landing:"landed"};
-/* The route the pipeline takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
+/* The route a run takes from a qa pass's findings (wip.qa[].route, wip.remediation.route): every fix minor (easily made,
    no fallout), fixed on the spot with no new qa pass; otherwise a remediation pass, or a plan re-pass then a remediation pass,
    and the next qa pass (at most three in all). */
 const ROUTE={"on-the-spot":{label:"fixed on the spot, no new qa pass",next:"landing (no new qa pass)"},"rookie-dev":{label:"a remediation pass, then the next qa pass",next:"qa, the next pass"},"planner-then-rookie-dev":{label:"a remediation pass: a plan re-pass, then the fixes, then the next qa pass",next:"qa, the next pass"}};
@@ -3974,7 +3975,7 @@ const PANEL={
     if(!running){ h+=qaBlock({pass:qa.length+1,verdict:"running"},keys); }
     return h; },
   remediation:(R,o,keys)=>{ const qa=Array.isArray(R.qa)?R.qa:[], M=R.remediation||{}, last=qa.length?qa[qa.length-1]:null, n=M.pass||(last&&last.pass)||null, route=M.route||(last&&last.route)||null, nx=`qa pass ${n?n+1:"n+1"}${R.qaMax?`, of at most ${R.qaMax}`:""}`;
-    /* while no sub-step is recorded, the loop the route takes (the pipeline's, when no route is recorded either) */
+    /* while no sub-step is recorded, the loop the route takes (the default, when no route is recorded either) */
     const dflt=route==="on-the-spot"?[{what:`Minor fixes for qa pass ${n||"n"}, made on the spot`,state:"current"},{what:"Landing, with no new qa pass",state:"todo"}]
       :route==="planner-then-rookie-dev"?[{what:`Plan re-pass for qa pass ${n||"n"}'s findings`,state:"current"},{what:"Fixes",state:"todo"},{what:nx,state:"todo"}]
       :route==="rookie-dev"?[{what:`Fixes for qa pass ${n||"n"}'s findings`,state:"current"},{what:nx,state:"todo"}]
@@ -4077,7 +4078,7 @@ function renderHeader(){
 }
 
 /* ---------- The WIP strip (plan/RULES.md §3) ---------- */
-/* o (a unit's run): held (its run waits on the user), still (no mark: the inspector's copy), label (the list's name). */
+/* o (a unit's run): held (its run waits on you), still (no mark: the inspector's copy), label (the list's name). */
 function stepsLine(steps,cur,o){ o=o||{}; const i=steps.indexOf(cur), held=o.held!=null?o.held:PAUSED, done=o.held!=null?false:LANDED;
   return `<ol class="steps" aria-label="${esc(o.label||"Pipeline steps")}">${steps.map((s,j)=>{ const st=done||j<i?"done":j===i?"cur":"todo"; return `<li class="${st}${st==="cur"&&!done&&!o.still?(held?" held":" glow"):""}"${st==="cur"?' aria-current="step"':""}><span class="dot" aria-hidden="true"></span>${esc(s)}</li>`; }).join("")}</ol>`; }
 function renderWip(){
@@ -4678,7 +4679,7 @@ tabs.forEach((t,i)=>{ t.addEventListener("click",()=>{ show(t.id); try{ history.
    server push can call it in place of the polling. The header's live indicator says where the view stands: "LIVE · updated n s
    ago" (the dot pulses; the counter restarts at each change), "LIVE · no change for n min" after a quiet spell (the dot still),
    "LIVE · data unavailable" when plan.js cannot be read, and "not live · as of <local time>" for a board whose run is not live. The
-   dot holds still while the run waits on the user. */
+   dot holds still while the run waits on you. */
 const LIVE_POLL_MS=5000, LIVE_QUIET_MS=5*60000;
 const LIVE_LOCAL=location.protocol==="file:"||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const LIVE={json:JSON.stringify(PLAN),last:0,ok:true,got:false,timer:null,tick:null};

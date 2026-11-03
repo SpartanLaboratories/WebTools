@@ -144,7 +144,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     {
       "date": "2026-10-23",
       "column": "considered",
-      "label": "Planner restarted at 00:33Z after an API outage cut it off before it wrote anything; writing `plan.md`"
+      "label": "Plan step restarted at 00:33Z after an API outage cut it off before it wrote anything; writing `plan.md`"
     },
     {
       "date": "2026-10-23",
