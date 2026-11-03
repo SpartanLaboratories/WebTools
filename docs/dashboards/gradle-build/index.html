@@ -409,6 +409,7 @@ footer code{color:var(--ink-2)}
   <div class="chips">
     <span class="chip"><span class="ck">Gradle</span> <b>9.7.1</b></span>
     <span class="chip"><span class="ck">Kotlin Gradle plugin</span> <b>2.2.0</b></span>
+    <span class="chip"><span class="ck">visibility</span> <b>internal · repo</b></span>
     <span class="chip"><span class="ck">Java floor</span> <b>11</b> · class-file major 55</span>
     <span class="chip"><span class="ck">publishes</span> <b>nothing</b> of its own</span>
     <span class="chip" id="chip-asis" hidden></span>
@@ -598,6 +599,7 @@ footer code{color:var(--ink-2)}
       </ul></div>
     <div class="guarantee-card"><h3>On your classpath</h3>
       <ul>
+        <li>Who consumes it: this repository only (visibility internal · repo).</li>
         <li>Nothing from the build itself: <code>build-logic</code> is never published and never on a module's runtime.</li>
         <li>Through the Kotlin plugin it applies, each module's POM carries <code>kotlin-stdlib:2.2.0</code>; each module declares its own <code>api(slf4j-api:2.0.13)</code>.</li>
         <li>What a module ships is Java 11 bytecode whose metadata declares <code>org.gradle.jvm.version</code> 11, and <code>verifyJavaFloor</code> fails it when a runtime dependency holds a class above Java 11, so nothing it brings needs a newer JVM.</li>
@@ -824,7 +826,11 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
 const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
-const boardOf=n=>Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null;
+/* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
+   live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
+   a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
+let LIVE_BOARDS=null;
+const boardOf=n=>(LIVE_BOARDS&&LIVE_BOARDS.get(String(n)))||(Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null);
 /* The repository work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this board when that file exists
    (else null: no link to a file that is not there; check-board.js fails a committed path that is missing), and "live" the live view's
    marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the repository work board opens the live view when
@@ -841,7 +847,15 @@ function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_
   if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Repository work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
   const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed repository work board, as of the last landing":href?"The live repository work board on this machine":"No repository work board in this checkout"; });
   set(W.committed||null);
-  liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); }); }
+  liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); });
+  /* the newest boards: every issue link already drawn is pointed at the newest board, and a title with no board yet gets its link */
+  const bsrc=typeof W.live==="string"&&/index\.js$/.test(W.live)?W.live.replace(/index\.js$/,"boards.js"):null;
+  liveMark(bsrc,"boards",m=>{ if(!m||typeof m!=="object"||Array.isArray(m)) return;
+    LIVE_BOARDS=new Map(Object.entries(m).filter(([,v])=>typeof v==="string"&&v.trim()).map(([k,v])=>[String(k),relTo(bsrc,v)]));
+    document.querySelectorAll("a[title$=\": its issue board\"]").forEach(a=>{ const n=(/^#(\d+):/.exec(a.title)||[])[1], b=n&&LIVE_BOARDS.get(n); if(b) a.href=b; });
+    document.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=LIVE_BOARDS.get(String(n)); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.removeAttribute("target"); a.removeAttribute("rel"); } });
+    document.querySelectorAll("span[data-issue-title]").forEach(t=>{ const n=t.dataset.issueTitle, b=LIVE_BOARDS.get(String(n)); if(!b) return;
+      const a=document.createElement("a"); a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; a.append(...t.childNodes); t.replaceWith(a); }); }); }
 window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
 /* The board's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
    restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
@@ -1278,6 +1292,8 @@ function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type=
 /* ---------- Structure ---------- */
 function renderStructure(){
   const svg=$("#svg-structure"); if(svg.dataset.done) return; svg.dataset.done="1";
+  /* the canvas: 1000 wide, its height recorded on the board (MODEL.structure.h: 612 by default, at most 812; dashboards-skill/35) */
+  const SH=Math.min(812,Math.max(200,Number(MODEL.structure.h)||612)); svg.setAttribute("viewBox",`0 0 1000 ${SH}`);
   /* a neutral band behind a lane (the wire between two sides, say), only where MODEL.structure.band asks for one: [x, y, w, h] */
   const band=MODEL.structure.band; if(Array.isArray(band)&&band.length===4) mk("rect",{x:band[0],y:band[1],width:band[2],height:band[3],rx:6,class:"band"},svg);
   MODEL.structure.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
