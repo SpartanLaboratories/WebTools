@@ -9,7 +9,7 @@
     [`final-implementation.md`](final-implementation.md).
 - **Baseline:** `master` at `36fd879`. The unit landed in PR #76 (merge `3949b52`).
 - **Related docs:** [`plan.md`](plan.md); [`final-implementation.md`](final-implementation.md);
-  [`research/README.md`](research/README.md); the systems-level [`../impact.md`](../impact.md).
+  [`research/README.md`](research/README.md); the systems-level [`../consequences.md`](../consequences.md).
 
 ## 1. Published artifacts
 
@@ -66,11 +66,11 @@ modules the POM differs only in `<version>`, and the `.module` file also in the 
     below the plain one.
   - A "Java floor" section under Build & test holds the build-JDK note.
   - The command list gains `./gradlew verifyJavaFloor`, and the plugin table names the floor and the guard.
-- **`docs/dashboards/`** drew the floor as planned; the presenter's landing refresh (PR #77) brought it to
+- **`docs/dashboards/`** drew the floor as planned; the landing's board refresh (PR #77) brought it to
   the as-built state.
 - **`docs/webtools-udp-architecture.md` and `docs/webtools-udp-protocol.md`** are unchanged. Neither names
   the JDK.
-- **[`../impact.md`](../impact.md)** is reconciled with this unit (§1, §2, §5 to §8).
+- **[`../consequences.md`](../consequences.md)** is reconciled with this unit (§1, §2, §5 to §8).
   [`../architecture.md`](../architecture.md) §12 carries a dated correction of 2026-10-25, made with #62's
   landing; §3 below says which of its sentences does not hold.
 

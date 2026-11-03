@@ -13,7 +13,7 @@
   - [`plan.md`](plan.md);
   - [`final-implementation.md`](final-implementation.md);
   - [`research/README.md`](research/README.md);
-  - the systems-level [`../impact.md`](../impact.md).
+  - the systems-level [`../consequences.md`](../consequences.md).
 
 ## 1. Published artifacts
 
@@ -100,7 +100,7 @@ sees no difference.
     - the KT-78620 deprecation.
   - The harness classes carry KDoc contracts.
 - **`docs/dashboards/`** still describes the root build as registering the level tasks "by JUnit
-  tag" (`workspace.dsl`, `index.html`). The run's presenter step brings it to the as-built state.
+  tag" (`workspace.dsl`, `index.html`). The landing's board refresh brings it to the as-built state.
 - **`docs/webtools-udp-architecture.md` and `docs/webtools-udp-protocol.md`** are unchanged.
 
 ## 3. Adoption
@@ -220,7 +220,7 @@ dump `webtools-feeds/api/webtools-feeds.api`. Its check module applies unit 3's
 - **Running `build-logic`'s tasks in CI**, once #58 brings CI.
 - **The stale port-lock comment.** `webtools-udp/build.gradle.kts:117-118` says the lock lives in
   the module, "not in the root build", wording that predates the move. This unit keeps the lock's
-  lines byte-identical, so a later level-1 documentation change rewords it.
+  lines byte-identical, so a later comment-only change rewords it.
 
 ## 7. Known gaps
 

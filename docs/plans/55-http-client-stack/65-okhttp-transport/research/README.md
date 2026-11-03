@@ -98,15 +98,15 @@ researched again.
 - **[`../../research/test-support-and-time.md`](../../research/test-support-and-time.md).** Real I/O under
   `runTest` (F3). `mockwebserver3` 5.5.0 facts (F6): loopback binding and port 0, non-daemon threads, the
   blocking queue dispatcher, `Content-Length` rewritten from the body, and `@StartStop` needing JUnit 5.13.
-- **[`../64-url-policy/research/jvm-enforcement.md`](../64-url-policy/research/jvm-enforcement.md).** The
+- **[`../../64-url-policy/research/jvm-enforcement.md`](../../64-url-policy/research/jvm-enforcement.md).** The
   resolver and socket guards' hooks (F1 to F6), and how a refusal surfaces through an OkHttp 5.5.0 call,
   the call timeout's disguise included (F8).
-- **[`../64-url-policy/research/bypass-vectors.md`](../64-url-policy/research/bypass-vectors.md) §5.** The
+- **[`../../64-url-policy/research/bypass-vectors.md`](../../64-url-policy/research/bypass-vectors.md) §5.** The
   transport's own vectors, T01 to T08 and T10.
-- **[`../62-http-core/research/header-and-method-validation.md`](../62-http-core/research/header-and-method-validation.md).**
+- **[`../../62-http-core/research/header-and-method-validation.md`](../../62-http-core/research/header-and-method-validation.md).**
   OkHttp's request and response header rules for HTTP/1.1 and HTTP/2, and the JDK client's restricted
   request headers (F12); what `mockwebserver3` can write (F13).
-- **[`../62-http-core/research/url-parsing.md`](../62-http-core/research/url-parsing.md).**
+- **[`../../62-http-core/research/url-parsing.md`](../../62-http-core/research/url-parsing.md).**
   `HttpUrl.resolve` throwing for `//[1:2:3:4:5:6:7::8]/` (F6), and where `Url.parse` is stricter than
   `HttpUrl` (F4, F5).
 
@@ -279,6 +279,12 @@ The qualifications, none of which changes a conclusion:
 **Source movement.** `github.com/square/okhttp` now redirects to `github.com/lysine-dev/okhttp`; the cited
 `parent-5.5.0` URLs still resolve and the tag is intact. OkHttp 5.5.1 changes this area only by one more
 `SSLPeerUnverifiedException` message of the same type.
+
+**Did not hold in the build.** The TLS-to-plain result of [`okhttp-failure-surface.md`](okhttp-failure-surface.md) F1
+(row 6, `SSLHandshakeException: Remote host terminated the handshake`; the same row is in
+[`../../research/http-transport.md`](../../research/http-transport.md) F7) does not extend to a plain listener that
+closes the connection on accept. [`../final-implementation.md`](../final-implementation.md) D4 has what the build
+measured and the deviation it caused.
 
 ## Summary
 

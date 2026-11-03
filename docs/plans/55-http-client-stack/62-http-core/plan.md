@@ -2,14 +2,14 @@
 
 - **Covers:** `SpartanLaboratories/WebTools#62` — *"webtools-http: module skeleton, opt-in marker,
   failure model, request/response types, transport and wall-clock ports, logging seam and the
-  check-only `js` compile"* (work level 3, `type: feature`). Sub-issue of the level-4 tracking
+  check-only `js` compile"* (`type: feature`). Sub-issue of the tracking
   issue `SpartanLaboratories/WebTools#55` (HTTP client stack). Blocked by #61 and #47, both landed.
   Blocks #63, #64, #66 and #67 directly, and through them the rest of the stack.
 - **Architecture:** [`../architecture.md`](../architecture.md), unit 3 `http-core` (§6.2
   *`webtools-http` common core*, §6.8 *Check-only `js` modules*, §6.9 *Common-code mechanism per
   type*, §9 *Extension & stability*, §11 unit 3; also §1 requirements 1, 2, 6, 7 and 9, §6.1
   `webtools.kotlin-common-check`, §6.6 logging rules, §6.11 documentation, §7.4, §8). Systems-level
-  impact: [`../impact.md`](../impact.md) §7 (the open point this unit settles: the first compile
+  impact: [`../consequences.md`](../consequences.md) §7 (the open point this unit settles: the first compile
   proof) and §8 (what units 1 and 2 left, as built).
 - **Research:** [`research/README.md`](research/README.md) with
   [`research/opt-in-gate.md`](research/opt-in-gate.md),
@@ -41,7 +41,7 @@
 - **Baseline:** `master` at `f72b115`. Line references are to it.
 
 Code blocks in this plan are the intended implementation. They were written against the
-research's compiled probes, but the blocks themselves have not been compiled. The executor fixes a
+research's compiled probes, but the blocks themselves have not been compiled. The implementer fixes a
 compile error mechanically, and records any change to a rule (as opposed to a spelling) in
 `final-implementation.md` §2.
 
@@ -54,7 +54,7 @@ compile error mechanically, and records any change to a rule (as opposed to a sp
 >
 > §6.4 and §7.5 are unchanged.
 
-> **Amended after qa pass 1 (2026-10-25).** Amendment 2 records two test-scope positions in §9:
+> **Amended after review pass 1 (2026-10-25).** Amendment 2 records two test-scope positions in §9:
 > - **Level 1.** `webtools-http` has no per-type smoke class at Level 1 beyond the two opt-in consumer
 >   proofs. Its pre-commit gate is `gatingTest componentTest deterministicTest`.
 > - **Level 3.** The `webtools.kotlin-common-check` plugin is not part of `IncludedBuildEndToEndTest`'s
@@ -395,7 +395,7 @@ plugin file. Nothing in the three existing modules references them. The shared f
   in a module build file** whose plugin comes from the included build. The research probe compiled
   exactly this layout ([`opt-in-gate.md`](research/opt-in-gate.md) F5). If one fails to resolve, use
   `getByName("jsMain")` (and likewise) with the same body and record the spelling as a deviation.
-- **The executor's JDK is 17 to 26** (Gradle 9.7.1's range) and the Kotlin 2.2.0 compiler accepts
+- **The build JDK is 17 to 26** (Gradle 9.7.1's range) and the Kotlin 2.2.0 compiler accepts
   `-Xjdk-release=11` on it, as `verifyJavaFloor` already shows for the existing modules.
 - **The research probes' results transfer to the real convention plugin.** The probe used a simplified
   plugin (jvm target, test dependencies); nothing in the real plugin touches opt-ins. The compile proof
@@ -2124,7 +2124,7 @@ file for exactly these:
 | 1 — in-editor | `//region`/`//endregion` blocks in `UrlParsing.kt` (scheme/authority, host/port) and `UrlHost.kt` (name, IPv6); the `js target` and `check` regions of the plugin; the comments in both module build files (the unreleased note, the opt-in warning); no `TODO` left in committed code |
 | 2 — component/KDoc | KDoc (`@param`, `@return`, `@throws`) on every public class, interface, function, property and constructor, naming the tier and the contract (checklist below) |
 | 3 — boundary/protocol | `HttpTransport`'s seven-point contract (the integration surface for a consumer's own transport and for the fakes); `HttpHeaders`/`HttpResponse` KDoc stating what a transport does with entries and statuses the types cannot hold; `Url` KDoc stating that it reads like OkHttp's `HttpUrl`, what it refuses, and that `toString()` carries the query; the failure leaves' constant-message rule; the compile-fail texts of the gate, recorded in `final-implementation.md` §3 |
-| 4 — architecture | `README.md` (below); the build-file and plugin header comments; the `architecture.md` text that this unit's `js()` choice supersedes carries a dated correction of 2026-10-25, at §6.8 with pointers at §6.1 and §2 (§13); `docs/webtools-http-architecture.md` is unit 11's; `docs/dashboards/` is refreshed by the admin team's presenter, not by this change |
+| 4 — architecture | `README.md` (below); the build-file and plugin header comments; the `architecture.md` text that this unit's `js()` choice supersedes carries a dated correction of 2026-10-25, at §6.8 with pointers at §6.1 and §2 (§13); `docs/webtools-http-architecture.md` is unit 11's; `docs/dashboards/` is refreshed by the board refresh at the landing, not by this change |
 
 **KDoc checklist** (each public declaration):
 - first sentence: what it is; second: **tier** (`**Stable Core.**`, or `**Experimental (implement).**` /
@@ -2411,7 +2411,7 @@ needs the network. Record each command's result in `final-implementation.md`.
 
 **P1 — baseline and branch.** `git branch --show-current` is `feat/issue-62-http-core`; `git log --oneline`
 shows only the research commits on top of `f72b115`; `git status --short` shows nothing but plan-board
-files kept by the admin team's presenter (§11). `./gradlew :build-logic:test` passes (the baseline for the edits to `BuildLogicPluginsGatingTest`).
+files kept by the board refresh (§11). `./gradlew :build-logic:test` passes (the baseline for the edits to `BuildLogicPluginsGatingTest`).
 
 **P2 — the plugin (S1).**
 1. `./gradlew :build-logic:test` passes with the new plugin id in the gating list.
@@ -2601,9 +2601,9 @@ forbidden API, so the first four commands drop comment lines with `| grep -vE ':
 
 ## 11. Version control
 
-- **Branch:** `feat/issue-62-http-core`. It exists and holds the research commits; the executor confirms it
+- **Branch:** `feat/issue-62-http-core`. It exists and holds the research commits; the implementer confirms it
   (P1) rather than cutting it again.
-- **Commits.** Each is coherent and leaves the build green. The type and the split are the manager's final call;
+- **Commits.** Each is coherent and leaves the build green. The type and the split are the final call at commit time;
   subject lines carry `(Issue #62)`; **no attribution trailers**.
   1. `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`,
      `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new
@@ -2617,8 +2617,8 @@ forbidden API, so the first four commands drop comment lines with `| grep -vE ':
   4. `docs: record the webtools-http as-built results and impact (Issue #62)` — the reconciled
      `final-implementation.md` and this issue's `impact.md`.
 - **Never carried into these commits:** any plan-board file (`dashboard.html`, `plan.json`, under
-  `docs/plans/`) that the admin team's presenter has changed in the working tree. Those boards are the
-  admin team's to commit. This issue's own board (`62-http-core/dashboard.html`, `62-http-core/plan.json`)
+  `docs/plans/`) that the board refresh has changed in the working tree. Those boards are committed
+  apart from these commits. This issue's own board (`62-http-core/dashboard.html`, `62-http-core/plan.json`)
   is committed by the landing, not by these commits. Also never: IDE files, `build/` directories,
   `kotlin-js-store/`, a `Proof*` or `NegativeCases` file.
 - **No version bump** of any existing module. `webtools-http` `1.0.0` is new and unreleased.

@@ -500,6 +500,10 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   (required, validated) and an `OutboundUrlPolicy`, plus an `internal` constructor (for the
   fixtures) taking the `UrlGuard`/relaxation, a `Dns` and an optional donor `OkHttpClient`.
   Inside:
+  > **Corrected 2026-11-02 (#65 as built):** the `internal` constructor also takes, after the donor,
+  > the shared deadline's `TimeSource` and the `Call.Factory` of each hop's `Call`, both defaulted and
+  > passed only by the module's own Level 2 test; the fixtures and every other caller pass four
+  > arguments, and nothing public changes. See `65-okhttp-transport/consequences.md` §5.
   - the client: a **new** `Dispatcher` (sized from the settings; the facade raises
     `maxConcurrentRequests` to the budget's `maxBurst` when it builds both, because OkHttp's
     queue is invisible to the call timeout and the wait cap) and `ConnectionPool` even when
@@ -511,11 +515,24 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     throws on a second exchange (fail closed, covering `421` and any future re-send path), and
     hiding of `Retry-After` on a `503` from OkHttp's follow-up logic with restoration in the
     response (so the `503` is delivered, once);
+    > **Corrected 2026-11-02 (#65 as built):** the guard hides a `407`, `408`, `421` or `503` by its
+    > status (a placeholder status, and the original in a private header the response conversion
+    > reads back), not a `503`'s `Retry-After`. Each is then delivered once, as the response it is: a
+    > `421` on a coalesced connection is a response rather than `RetryRefused`, and a `407` on a
+    > direct route, for which OkHttp throws, is a response too. The counter stays the fail-closed
+    > backstop. See `65-okhttp-transport/consequences.md` §5.
   - the redirect loop: `UrlGuard.checkHop` before any `Call` (the only check that stops
     IP-literal hosts); one `Call` per hop under one shared deadline; `GET`/`HEAD` only; every
     sensitive-flagged header and the default credential names stripped on a cross-origin hop;
     `https`→`http` refused unless allowed; the `3xx` returned as a response when not followed;
     each hop recorded in `redirectChain` with its status;
+    > **Corrected 2026-11-02 (#65 as built):** before hop 1 the transport refuses, with
+    > `InvalidRequest` and before anything is sent, a request that carries one of twelve headers it
+    > controls (`User-Agent`, `Accept-Encoding`, `Host`, `Connection`, `Content-Length`,
+    > `Transfer-Encoding`, `Keep-Alive`, `Proxy-Connection`, `TE`, `Trailer`, `Upgrade`, `Expect`), and
+    > it sends a `Range` request with `Accept-Encoding: identity`. In the loop, a `Location` it cannot
+    > resolve, or one with a scheme other than `http` or `https`, is `RefusedByPolicy`, and a `300` is
+    > returned, not followed. See `65-okhttp-transport/consequences.md` §5.
   - the exchange: `suspendCancellableCoroutine` with `invokeOnCancellation { call.cancel() }`,
     the capped body read **inside** `Callback.onResponse` (decoded bytes; early refusal on a
     declared length over the cap; no body read for `HEAD`, `1xx`, `204`, `304` or a followed
@@ -525,6 +542,10 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     dispatcher;
   - `close()`: cancel in-flight calls, shut the dispatcher executor down, evict the pool
     (without it the JVM lingers 60 s). Idempotent, non-suspend.
+    > **Corrected 2026-11-02 (#65 as built):** the transport's dispatcher runs on its own
+    > `ExecutorService` with daemon threads, so a forgotten `close()` no longer keeps the JVM alive;
+    > `close()` keeps its steps and stays the supported way to stop. See
+    > `65-okhttp-transport/consequences.md` §5.
 - **Does not own:** retries (never), the policy's rules, logging of headers, bodies, queries
   or OkHttp objects (never).
 
@@ -653,6 +674,12 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   a status in `misses` → `Lookup.Missing`; anything else → `UpstreamError`. Failures are never
   stored; `Missing` is stored for `missTtl`. A coalesced caller with a tighter deadline wraps
   its own call in `withTimeoutOrNull`, which cancels only the waiter.
+  > **Corrected 2026-11-02 (#65 as built):** of the three failures that release the permit, only
+  > `InvalidRequest` always comes before anything is sent. `RefusedByPolicy` can follow a sent hop (a
+  > refused redirect target, or a later hop's resolver or socket refusal), and `Closed` can end a call
+  > whose request already reached the server; `call-facades` (#68) settles its permit handling for
+  > those two against what each transport failure implies about what was sent. See
+  > `65-okhttp-transport/consequences.md` §5.
 - **`UrlFetcher.fetch`**: the policy's per-hop URL check first (a refusal costs nothing and
   reaches neither budget nor transport), then budget, transport, signals, `complete`; every
   status is a response except a throttle, which is `RateLimited` because the budget has
@@ -708,6 +735,9 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     after `close()` and `BodyTooLarge` over a configured cap; mirrors nothing else (policy,
     DNS, TLS, redirects and timeouts are the real transport's job). `RequestMatch` is a
     `fun interface` (a frozen single-method predicate the consumer writes, not a seam).
+    > **Corrected 2026-11-02 (#65 as built):** the cap follows the transport's no-body rule: it is not
+    > applied to a response to `HEAD` or to a `1xx`, `204` or `304`. See
+    > `65-okhttp-transport/consequences.md` §5.
   - `Fixture` / `FixtureLoader` — the `*.http` format (optional `#` provenance lines, a
     status line, headers, a blank line, body bytes verbatim; body-only files by extension),
     about forty lines of hand-written parsing; fixtures load from the consumer's own
@@ -716,6 +746,10 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     > **Corrected 2026-10-25 (#63 as built):** these two helpers land with unit 6 (`okhttp-transport`),
     > as "Contributions from other units" below and §11 say; unit 4's `Fixture` exposes `status`,
     > `headers` and `body()` for them.
+    >
+    > **Corrected 2026-11-02 (#65 as built):** both take a defaulted request method (`GET`), because
+    > only a response to `HEAD` is written differently, and `enqueue(fixture)` refuses a server whose
+    > dispatcher was replaced. See `65-okhttp-transport/consequences.md` §5.
   - `FixtureRecorder` — a decorating `HttpTransport` constructible only from a
     `RecordingGate.Enabled`; `RecordingGate.evaluate(env)` is `Disabled` unless
     `WEBTOOLS_HTTP_RECORD` is set, and `Disabled` whenever any of the twelve CI variables is
@@ -729,6 +763,12 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     `GuardRelaxation.LoopbackForTests` (every other `Untrusted` rule live) or `Trusted` with
     cleartext; `MockWebServer.webtoolsUrl(path)`. Level 3 starts and closes `mockwebserver3`
     by hand under `runBlocking` (real clocks; real I/O under `runTest` is a trap).
+    > **Corrected 2026-11-02 (#65 as built):** the two functions are
+    > `untrusted(userAgent, policy, resolve)` and `trusted(userAgent, policy, resolve)`. Each takes a
+    > whole `OutboundUrlPolicy.Untrusted` or `Trusted`, defaulted, because the settings live on the
+    > policy and the mixed-answer and port tests need the policy itself; the resolver is a function
+    > `(host) -> List<InetAddress>`, last and defaulted to the system resolver. See
+    > `65-okhttp-transport/consequences.md` §5.
   - `RecordingBudgetObserver`, `FakeBudgetStore` — worked examples of the other gated seams.
   - The **fixtures-publication check** in `build-logic` (§6.1).
 - **Contributions from other units.** The variant is owned here; `LoopbackTransports` and the
@@ -971,6 +1011,12 @@ flowchart TD
     RD -->|"else"| OUT["HttpResponse(status, headers, body, url, redirectChain)"]
     RD -->|"IOException family"| MAP["failure mapping → TransportFailure leaf"]
 ```
+
+> **Corrected 2026-11-02 (#65 as built):** `ExchangeGuard` hides a `407`, `408`, `421` or `503` by
+> its status, which the response conversion restores, rather than a `503`'s `Retry-After`; a
+> `Location` the transport cannot resolve, or one with a scheme other than `http` or `https`, is
+> `RefusedByPolicy` with no socket opened, and a `300` is returned. See
+> `65-okhttp-transport/consequences.md` §5.
 
 ### 7.4 Time, dispatchers and ownership
 
@@ -1415,6 +1461,8 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
 - **Whether `RateLimited.retryAfter = max(signals.retryAfter, pausedFor)` is redundant** once
   `complete` has applied the signals is unchecked.
 - **Where the Experimental-to-Supported promotion is recorded** before #58's CHANGELOG exists.
+  > **Corrected 2026-11-02 (#65 as built):** `CHANGELOG.md` exists from #65's landing, in the Keep a
+  > Changelog layout; a promotion is recorded there. See `65-okhttp-transport/consequences.md` §6.
 
 ## 14. Considerations
 

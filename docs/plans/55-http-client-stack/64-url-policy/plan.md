@@ -8,7 +8,7 @@
   *Outbound-URL policy*, §6.3.2 for the seam to the transport, §6.2 for the logging seam and the reason
   vocabularies, §6.6 for the logging rules, §6.9 for the mechanism per type, §7.3 and §7.4 for the guard layers and the
   boundary table, §9 for the tiers, §10 for the alternatives, §12 and §13, and the dated corrections at §2, §6.1, §6.7,
-  §6.8 and §12). Systems-level impact: [`../impact.md`](../impact.md) §7 and §8 (what units 1 to 4 left for this unit,
+  §6.8 and §12). Systems-level impact: [`../consequences.md`](../consequences.md) §7 and §8 (what units 1 to 4 left for this unit,
   as built).
 - **Research:** [`research/README.md`](research/README.md) with [`research/jvm-enforcement.md`](research/jvm-enforcement.md),
   [`research/iana-special-purpose-rows.md`](research/iana-special-purpose-rows.md),

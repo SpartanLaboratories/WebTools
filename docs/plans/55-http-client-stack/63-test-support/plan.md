@@ -1,14 +1,14 @@
 # Plan: `test-support` — the `webtools-http` test-fixtures variant and the fixtures-publication check
 
 - **Covers:** `SpartanLaboratories/WebTools#63` — *"webtools-http: published test-fixtures variant with the
-  fake transport, virtual clock, `.http` fixtures, recorder and the publication check"* (work level 3,
-  `type: feature`). Sub-issue of the level-4 tracking issue `SpartanLaboratories/WebTools#55` (HTTP client
+  fake transport, virtual clock, `.http` fixtures, recorder and the publication check"*
+  (`type: feature`). Sub-issue of the tracking issue `SpartanLaboratories/WebTools#55` (HTTP client
   stack). Blocked by #62, landed. Blocks #65, #66, #67 and #69 directly (units 6, 7, 8 and 10), and through
   them #68 and #70.
 - **Architecture:** [`../architecture.md`](../architecture.md), unit 4 `test-support` (§6.7 *Published test
   support*, §6.1 *Shared build logic* (the fixtures-publication check and `verifyJavaFloor`), §9 *Extension &
   stability*, §11 unit 4, §12 and §13; also §1 requirements 6 and 9). Systems-level impact:
-  [`../impact.md`](../impact.md) §7 (the open point this unit settles: where the publication check attaches)
+  [`../consequences.md`](../consequences.md) §7 (the open point this unit settles: where the publication check attaches)
   and §8 (units 1 to 3 as built).
 - **Research:** [`research/README.md`](research/README.md) with
   [`research/publication-check-wiring.md`](research/publication-check-wiring.md) and
@@ -41,7 +41,7 @@
 
 Code blocks in this plan are the intended implementation. They were written against the research's compiled
 probes and the as-built sources of `webtools-http`, but the blocks themselves have not been compiled. The
-executor fixes a compile error mechanically, and records any change to a rule (as opposed to a spelling) in
+implementer fixes a compile error mechanically, and records any change to a rule (as opposed to a spelling) in
 `final-implementation.md` §2.
 
 > **Amended during implementation (2026-10-25).** Amendment 1 makes §9's secret-scrubbing rows agree with the
@@ -72,7 +72,7 @@ executor fixes a compile error mechanically, and records any change to a rule (a
 >   That only raises the counts.
 > - §6.2, §7.1, R8 and P6.2 say so. `build-logic/src/main` does not change (P11 and the blast radius stand).
 
-> **Amended after qa pass 1 (2026-10-25).** Amendment 3 adds eight test behaviours and records one exclusion.
+> **Amended after review pass 1 (2026-10-25).** Amendment 3 adds eight test behaviours and records one exclusion.
 > - **Added to §9:**
 >   - Level 2, `RedactionComponentTest`: the upper-hex full escape is detected; the form-encoded form is replaced
 >     and its lower-hex variant is detected; an echo escaped only in part is neither replaced nor detected;
@@ -436,7 +436,7 @@ the research commits. Nothing in the three legacy modules references any of it.
 - JUnit extensions, `@StartStop`, `mockwebserver3-junit5`, a conditional-GET `Dispatcher` (BotTools and
   `webtools-feeds` write their own), HAR or WireMock formats, body pattern-scrubbing beyond caller-supplied
   secrets.
-- Editing `docs/dashboards/` (the admin team's presenter does) and `docs/webtools-http-architecture.md`
+- Editing `docs/dashboards/` (the board refresh does) and `docs/webtools-http-architecture.md`
   (unit 11).
 
 ---
@@ -1974,7 +1974,7 @@ Logging: the harness classes log through their existing slf4j loggers (`ModuleSo
 classes log nothing else. Errors: every harness function returns `Result`; the `@BeforeAll` unwraps them with
 `getOrThrow()`, so a broken set-up fails the class with the cause.
 
-**Additions for qa pass 1** (Amendment 3):
+**Additions for review pass 1** (Amendment 3):
 - `JarClasses.kt` gains `fun entries(jar: Path): Result<List<String>>`: the names of the non-directory entries
   of a jar, in order, with the same failure contract as `majors`.
 - `SampleProject.kt` gains `fixturesWiringRoot(rootBuildScript: String)`, which writes the root's
@@ -2001,7 +2001,7 @@ All new test and support files, with their level and behaviours, are listed in �
 | 1 — in-editor | `//region` blocks in the module build file (`test fixtures`, `fixtures-publication check`) and in the larger fixtures files (`HttpMessageCodec`, `FixtureRecorder`); comments in `build-logic/build.gradle.kts` for the helpers and the new dependency; no `TODO` left in committed code |
 | 2 — component/KDoc | KDoc (`@param`, `@return`, `@throws`) on every public class, interface, function, property and constructor of the fixtures, naming the tier (**Stable Core, source compatibility only**), the contract, the thread-safety, the behaviour under virtual time and what `toString()` never prints (checklist below); KDoc on the new harness classes |
 | 3 — boundary/protocol | the `.http` format (the KDoc of `Fixture` and `FixtureLoader` states the grammar, the body-only mapping and the `.gitattributes` line); the recorder's gate, the twelve CI variables, the build-input line for `WEBTOOLS_HTTP_RECORD`, what is written and never written; `FakeHttpTransport`'s script semantics and the `HttpTransport` points it mirrors; the variant's publication contract (capability, `testFixtures(...)`, Gradle-only, version-coupled to `webtools-http`) |
-| 4 — architecture | `README.md` (below); the build-file and header comments; the dated callouts on `architecture.md` §6.1, §6.7 and §12 (§13); `docs/webtools-http-architecture.md` is unit 11's; `docs/dashboards/` is refreshed by the admin team's presenter, not by this change |
+| 4 — architecture | `README.md` (below); the build-file and header comments; the dated callouts on `architecture.md` §6.1, §6.7 and §12 (§13); `docs/webtools-http-architecture.md` is unit 11's; `docs/dashboards/` is refreshed by the board refresh at the landing, not by this change |
 
 **KDoc checklist** (each public declaration of the fixtures):
 - first sentence: what it is; second: **tier** (`**Stable Core, source compatibility only.**`);
@@ -2182,8 +2182,8 @@ Record each command's result in `final-implementation.md` §4 (Measurements), in
 
 **P1 — baseline and branch (before any edit).**
 1. `git branch --show-current` is `feat/issue-63-test-support`; `git log --oneline` shows only the research
-   commits on top of `7de8207`; `git status --short` shows nothing but plan-board files kept by the admin team's
-   presenter (§11).
+   commits on top of `7de8207`; `git status --short` shows nothing but plan-board files kept by the board
+   refresh (§11).
 2. `./gradlew :build-logic:test` passes (the baseline for the harness edits).
 3. `./gradlew :webtools-http:verifyJavaFloor` passes and `webtools-http/build/reports/java-floor/verifyJavaFloor.txt`
    counts one jar (the baseline for S6).
@@ -2407,9 +2407,9 @@ forbidden construct, so each drops comment lines with `| grep -vE ':[0-9]+:[[:sp
 
 ## 11. Version control
 
-- **Branch:** `feat/issue-63-test-support`. It exists and holds the research commits; the executor confirms it
+- **Branch:** `feat/issue-63-test-support`. It exists and holds the research commits; the implementer confirms it
   (P1) rather than cutting it again.
-- **Commits.** Each leaves the build green. The type and the split are the manager's final call; subject lines
+- **Commits.** Each leaves the build green. The type and the split are the final call at commit time; subject lines
   carry `(Issue #63)`; **no attribution trailers**.
   1. `feat: add the webtools-http test-fixtures variant, its fixtures and the fixtures-publication check (Issue #63)`
      — this `plan.md`, `.gitattributes`, `webtools-http/build.gradle.kts`, `webtools-http/src/jvmTestFixtures/**`,
@@ -2422,9 +2422,9 @@ forbidden construct, so each drops comment lines with `| grep -vE ':[0-9]+:[[:sp
      `final-implementation.md`, this issue's `impact.md` and the parent's `impact.md`, and the dated callouts on
      `architecture.md` §6.1, §6.7 and §12 (§13).
 - **Never carried into these commits:** any plan-board file (`dashboard.html`, `plan.js`, `plan.json` under
-  `docs/plans/`) that the admin team's presenter has changed or created in the working tree — the modified boards
-  of `55-http-client-stack/` and `62-http-core/` and the untracked ones of `63-test-support/` are the admin
-  team's to commit (this issue's own board is committed by the landing); also never: IDE files, `build/`
+  `docs/plans/`) that the board refresh has changed or created in the working tree — the modified boards
+  of `55-http-client-stack/` and `62-http-core/` and the untracked ones of `63-test-support/` are committed
+  apart from these commits (this issue's own board is committed by the landing); also never: IDE files, `build/`
   directories, `docs/plans/.live/`, a `Canary.kt`, a scratch composite, the P10 backup.
 - **No version bump** of any module. `webtools-http` `1.0.0` is unreleased.
 - **The land request's notes** must say that `webtools-http` `1.0.0` is **not a release candidate** and stays
