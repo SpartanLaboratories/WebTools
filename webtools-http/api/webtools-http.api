@@ -47,6 +47,37 @@ public final class com/spartanlabs/webtools/http/CacheStats$Companion {
 	public final fun getEmpty ()Lcom/spartanlabs/webtools/http/CacheStats;
 }
 
+public final class com/spartanlabs/webtools/http/CaffeineResponseCache : com/spartanlabs/webtools/http/ResponseCache {
+	public static final field Companion Lcom/spartanlabs/webtools/http/CaffeineResponseCache$Companion;
+	public static final field DEFAULT_MAX_WEIGHT J
+	public fun close ()V
+	public fun getOrLoad-3utLRjc (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getOrLoad-BWLJW6A (Lcom/spartanlabs/webtools/http/CacheKey;Lcom/spartanlabs/webtools/http/CachePolicy;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun invalidate (Lcom/spartanlabs/webtools/http/CacheKey;)V
+	public fun invalidateAll ()V
+	public fun stats ()Lcom/spartanlabs/webtools/http/CacheStats;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCache$Builder {
+	public final fun getLoadDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public final fun getMaintenanceExecutor ()Ljava/util/concurrent/Executor;
+	public final fun getMaxWeight ()J
+	public final fun getTimeSource ()Lkotlin/time/TimeSource;
+	public final fun setLoadDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun setMaintenanceExecutor (Ljava/util/concurrent/Executor;)V
+	public final fun setMaxWeight (J)V
+	public final fun setTimeSource (Lkotlin/time/TimeSource;)V
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCache$Companion {
+}
+
+public final class com/spartanlabs/webtools/http/CaffeineResponseCacheKt {
+	public static final fun CaffeineResponseCache (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
+	public static synthetic fun CaffeineResponseCache$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
+}
+
 public final class com/spartanlabs/webtools/http/CidrBlock {
 	public static final field Companion Lcom/spartanlabs/webtools/http/CidrBlock$Companion;
 	public synthetic fun <init> ([BILkotlin/jvm/internal/DefaultConstructorMarker;)V

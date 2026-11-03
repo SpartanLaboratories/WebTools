@@ -1,6 +1,7 @@
 package com.spartanlabs.testing.component.webtools.http
 
 import com.spartanlabs.webtools.http.CachePolicy
+import com.spartanlabs.webtools.http.CaffeineResponseCache
 import com.spartanlabs.webtools.http.HttpHeaders
 import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpResponse
@@ -25,6 +26,7 @@ class WebToolsDslComponentTest {
         OutboundUrlPolicy.Trusted.Builder::class.java,
         OutboundUrlPolicy.Untrusted.Builder::class.java,
         CachePolicy.Builder::class.java,
+        CaffeineResponseCache.Builder::class.java,
     )
 
     @Test
