@@ -133,8 +133,8 @@ The codebase blast radius is small and is surveyed directly in the summary below
 - **Evidence that settles it.** Caffeine 3.3.1's source at tag `v3.3.1` (`Caffeine`, `AsyncCache`,
   `LocalAsyncCache`, `Async`, `BoundedLocalCache`, `RemovalCause`, `StatsCounter`, `CacheStats`), its
   Javadoc and its wiki pages on eviction, removal and statistics, and its own tests; the statistics
-  vocabulary of comparable caches (Guava's `CacheStats`, Micrometer's cache metrics); small probes run
-  outside the repository.
+  vocabulary of comparable caches (Guava's `CacheStats`, Micrometer's cache metrics). Behaviour that only
+  a run would show is left to the unit's own tests, which the findings name.
 - **Findings file:** [`caffeine-mechanics.md`](caffeine-mechanics.md).
 
 ### 2. How should a load's coroutine start, end and report under kotlinx-coroutines 1.10.2, in production and under `runTest`, so that every waiter receives exactly one outcome?
@@ -173,6 +173,53 @@ The codebase blast radius is small and is surveyed directly in the summary below
 - **Evidence that settles it.** kotlinx-coroutines 1.10.2 source at tag `1.10.2` (`Builders.common.kt`,
   `JobSupport.kt`, `Supervisor.kt`, `CoroutineExceptionHandler.kt` and its JVM implementation,
   `future/Future.kt`) and `kotlinx-coroutines-test` 1.10.2 (`TestScope.kt`, `TestBuilders.kt`, its internal
-  exception collector, `TestCoroutineScheduler`), their KDoc and their own tests; small probes run outside
-  the repository.
+  exception collector, `TestCoroutineScheduler`), their KDoc and their own tests. Behaviour that only a run
+  would show is left to the unit's own tests, which the findings name.
 - **Findings file:** [`load-lifecycle.md`](load-lifecycle.md).
+
+## Verification
+
+Every load-bearing claim was re-opened at its source on 2026-11-03: claims 1 to 24 of
+[`caffeine-mechanics.md`](caffeine-mechanics.md), claims 1 to 25 of [`load-lifecycle.md`](load-lifecycle.md),
+and claims 1 to 19, 27 and 30 of the stack-level [`../../research/response-cache.md`](../../research/response-cache.md),
+which this unit rests on again: 68 claims. **All hold; none fails and none is unclear.** The measured results
+of the stack-level research are probe output with no source to re-open.
+
+| File | Claims | Result |
+|---|---|---|
+| [`caffeine-mechanics.md`](caffeine-mechanics.md) | 1 to 24 | hold |
+| [`load-lifecycle.md`](load-lifecycle.md) | 1 to 25 | hold |
+| [`../../research/response-cache.md`](../../research/response-cache.md) | 1 to 19, 27 and 30 | hold |
+
+Two imprecisions, neither of which changes a conclusion:
+
+- **load-lifecycle 24.** The hash given for Ktor `3.4.0` is the annotated tag object; the commit the tag
+  points to is `bf25bb96eab570d1983279ef81c255bb1c489964`. The quoted code and the tag are right.
+- **caffeine-mechanics F1** (prose, not a numbered claim). In `doComputeIfAbsent`, `notifyEviction` runs
+  before the mapping function; `recordEviction` and `notifyRemoval` run after the `computeIfPresent` block.
+  Claim 16 states only the first and holds.
+
+**Currency.**
+
+- **Caffeine 3.3.1** is the latest release, on Maven Central and on GitHub (2026-10-13). Its release notes
+  change none of the behaviour above.
+- **kotlinx-coroutines 1.11.0** (2026-05-08) is the latest release, and no 1.10.x follows 1.10.2. A consumer's
+  graph may resolve 1.11.0, so the areas the design rests on were compared between the two tags:
+  - `CompletionStage.asDeferred` and `await` are unchanged; the `future { }` KDoc adds that a coroutine
+    cancelled before it starts does not run its code, which agrees with `CoroutineStart.DEFAULT`.
+  - `JobSupport.kt`, `CoroutineStart.kt` and `Deferred.kt` are unchanged; `Supervisor.kt` and `Job.kt` change
+    in KDoc only.
+  - `withTimeout` adds the coroutine's name to the timeout's message; the exception is still a
+    `CancellationException` thrown by a scoped coroutine.
+  - `runTest`'s end-of-body drain, its 60 s default timeout and the exception collector are unchanged;
+    `runTest(dispatchTimeoutMs, ...)` becomes an error-level deprecation and the legacy `migration` test API
+    is removed.
+  - The JVM's last-resort handler now swallows an exception that an `UncaughtExceptionHandler` itself throws.
+    The design never reaches that path.
+
+**Claims about this repository**, checked directly against the code: no build file declares a
+`System.LoggerFinder` provider or a JUL bridge (no `slf4j-jdk-platform-logging`, no `jul-to-slf4j`), so
+Caffeine's `System.Logger` output reaches `java.util.logging` in this module's tests; `CallBridge.kt` resumes
+its continuation exactly once, with a value, from a `finally`; and no JUnit parallel execution is configured
+(no `junit-platform.properties`), so the test module's exception collector serves one test at a time in each
+test JVM.
