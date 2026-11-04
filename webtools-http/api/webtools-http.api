@@ -845,6 +845,47 @@ public final class com/spartanlabs/webtools/http/WindowUtilisation {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/spartanlabs/webtools/http/WindowedCallBudget : com/spartanlabs/webtools/http/CallBudget {
+	public fun acquire-E0qYoyE (ILcom/spartanlabs/webtools/http/Lane;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getMaxBurst ()I
+	public fun toString ()Ljava/lang/String;
+	public fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/WindowedCallBudget$Builder {
+	public final fun getBoundaryGuard-UwyO8pc ()J
+	public final fun getLaneShares ()Ljava/util/Map;
+	public final fun getMaxPause-UwyO8pc ()J
+	public final fun getMaxQueued ()I
+	public final fun getMaxRestoreSkew-UwyO8pc ()J
+	public final fun getObserver ()Lcom/spartanlabs/webtools/http/BudgetObserver;
+	public final fun getPersistAhead ()I
+	public final fun getStore ()Lcom/spartanlabs/webtools/http/BudgetStore;
+	public final fun getStoreRetryInterval-UwyO8pc ()J
+	public final fun getStoreTimeout-UwyO8pc ()J
+	public final fun getTimeSource ()Lkotlin/time/TimeSource;
+	public final fun getWallClock ()Lcom/spartanlabs/webtools/http/WallClock;
+	public final fun setBoundaryGuard-LRDsOJo (J)V
+	public final fun setLaneShares (Ljava/util/Map;)V
+	public final fun setMaxPause-LRDsOJo (J)V
+	public final fun setMaxQueued (I)V
+	public final fun setMaxRestoreSkew-LRDsOJo (J)V
+	public final fun setObserver (Lcom/spartanlabs/webtools/http/BudgetObserver;)V
+	public final fun setPersistAhead (I)V
+	public final fun setStore (Lcom/spartanlabs/webtools/http/BudgetStore;)V
+	public final fun setStoreRetryInterval-LRDsOJo (J)V
+	public final fun setStoreTimeout-LRDsOJo (J)V
+	public final fun setTimeSource (Lkotlin/time/TimeSource;)V
+	public final fun setWallClock (Lcom/spartanlabs/webtools/http/WallClock;)V
+}
+
+public final class com/spartanlabs/webtools/http/WindowedCallBudgetKt {
+	public static final fun WindowedCallBudget (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/WindowedCallBudget;
+	public static synthetic fun WindowedCallBudget$default (Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/WindowedCallBudget;
+}
+
 public final class com/spartanlabs/webtools/http/WithPermitKt {
 	public static final fun withPermit-gwCluXo (Lcom/spartanlabs/webtools/http/CallBudget;ILcom/spartanlabs/webtools/http/Lane;JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

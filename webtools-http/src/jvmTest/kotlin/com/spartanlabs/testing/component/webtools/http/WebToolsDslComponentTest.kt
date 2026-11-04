@@ -6,8 +6,11 @@ import com.spartanlabs.webtools.http.HttpHeaders
 import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpResponse
 import com.spartanlabs.webtools.http.OutboundUrlPolicy
+import com.spartanlabs.webtools.http.RateSignals
+import com.spartanlabs.webtools.http.RateWindow
 import com.spartanlabs.webtools.http.TransportSettings
 import com.spartanlabs.webtools.http.WebToolsDsl
+import com.spartanlabs.webtools.http.WindowedCallBudget
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -27,6 +30,9 @@ class WebToolsDslComponentTest {
         OutboundUrlPolicy.Untrusted.Builder::class.java,
         CachePolicy.Builder::class.java,
         CaffeineResponseCache.Builder::class.java,
+        RateWindow.Builder::class.java,
+        RateSignals.Builder::class.java,
+        WindowedCallBudget.Builder::class.java,
     )
 
     @Test

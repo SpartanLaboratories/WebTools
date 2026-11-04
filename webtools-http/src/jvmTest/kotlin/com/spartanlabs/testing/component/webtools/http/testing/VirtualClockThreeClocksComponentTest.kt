@@ -23,7 +23,8 @@ import kotlin.time.TimeSource
  * whose maintenance runs on `clock.maintenanceExecutor`, a `delay` on `clock.dispatcher`, and a UTC-minute
  * index from `clock.wallClock`, all driven by one `advanceBy`. A plain Caffeine cache keeps the proof of the
  * clock apart from the response cache; `CaffeineResponseCacheThreeClocksComponentTest` proves the same with
- * the real `CaffeineResponseCache`. The control shows why the proof is needed: a cache on
+ * the real `CaffeineResponseCache`, and `WindowedCallBudgetThreeClocksComponentTest` proves the budget's
+ * windows, waits and pauses move with the same clock. The control shows why the proof is needed: a cache on
  * `TimeSource.Monotonic` beside the same virtual clock does not expire, so one clock of three would pass
  * for the wrong reason.
  */

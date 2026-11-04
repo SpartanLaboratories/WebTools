@@ -6,10 +6,11 @@ package com.spartanlabs.webtools.http
  *
  * **Stable Core.** The marker is never removed. It is applied only as the argument of
  * `@SubclassOptInRequired` on the gated ports and failure groups ([HttpTransport], [WallClock],
- * [ResponseCache], [HttpFailure], [TransportFailure] and [UpstreamFailure]) and of `@OptIn` in a consumer
+ * [ResponseCache], [HttpFailure], [TransportFailure], [UpstreamFailure], [CallBudget], [Permit], [RateSignalsReader],
+ * [BudgetStore], [BudgetObserver] and [BudgetEvent]) and of `@OptIn` in a consumer
  * that implements, delegates to or subclasses one of them; it is never applied to a declaration directly.
  * Calling, passing and matching the gated types, and using the supplied implementations (for example
- * [WallClock.System] and [ResponseCache.Disabled]), needs no opt-in. To implement or subclass a gated type, annotate the implementer with
+ * [WallClock.System], [ResponseCache.Disabled], [CallBudget.Unlimited] and [WindowedCallBudget]), needs no opt-in. To implement or subclass a gated type, annotate the implementer with
  * `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`.
  */
 @RequiresOptIn(
