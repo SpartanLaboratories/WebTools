@@ -378,9 +378,9 @@ The repository facts the findings rest on were checked against `master` at `8122
   33 checks on five runs, among them the exact re-planned grant times, a pause moving a waiter later, `close()`
   ending every waiter with a value, a store timeout that is virtual and exact inside `withLock`, and cleanup
   from a cancelled coroutine (F10).
-- **Gaps.** `select` with `onJoin` was not compiled for `js`; the build's `js` compile of the common code
-  establishes it. The cost per wake at `maxQueued` scale is not benchmarked; a Level 4c smoke test with real
-  threads bounds it.
+- **What the build settles.** `select` with `onJoin` was not compiled for `js` here; the build's `js` compile of
+  the common code in `webtools-http-commoncheck` settles it. The cost per wake at `maxQueued` scale was not
+  benchmarked; the unit's Level 4c test with real threads bounds it.
 
 ### `Retry-After` and HTTP dates
 
@@ -426,8 +426,10 @@ The repository facts the findings rest on were checked against `master` at `8122
 - **Options that do not fit.** OkHttp 5.5.0's own `Retry-After` reader ignores dates and is unbounded on
   digits, and its date fallbacks accept trailing text (claims 10 and 11). Extra shapes (`UTC` or offset zones,
   a four-digit RFC 850 year) have no provider that sends them and stay additive.
-- **Gaps.** The Kotlin sketch was not compiled; its Java mirror is what was measured. The
-  `appendValueReduced` behaviour was measured on JDK 23 only; the differential runs on the build JDK.
+- **What the build settles.** The Kotlin sketch was not compiled; its Java mirror is what was measured, and the
+  unit's Level 4a table and `jvmTest` differential establish the Kotlin parser itself. The
+  `appendValueReduced` behaviour was measured on JDK 23 only; the differential runs on the build JDK, which is
+  where the oracle has to hold.
 
 ### The ledger's time model
 
@@ -468,8 +470,11 @@ The repository facts the findings rest on were checked against `master` at `8122
   rule needs none.
 - **Known limit.** A clock set forward by mistake and left uncorrected, or a clock behind at start and stepped
   forward after grants were made, can under-count the provider's day; no reading in common code tells it from
-  a resume from sleep. Comparing the server's `Date` with the wall reading would detect it, and is outside this
-  unit (§7.6 and §8). The `js` monotonic source was not read.
+  a resume from sleep. Comparing the server's `Date` with the wall reading would detect it; that comparison is a
+  follow-up outside this unit, which records the limit with its known gaps (§7.6 and §8).
+- **The `js` monotonic source** was not read. The `js` target compiles the common code and runs nothing, and the
+  ledger makes the elapsed reading non-decreasing and slices every wait, which bounds a source that is not
+  monotonic wherever the code runs.
 
 ### The restore's merge
 
@@ -479,34 +484,24 @@ granted before the restore, and it is what keeps a late restore from under-count
 count that a server reading raised is kept as a floor, so the merge is `max(saved + grantsSinceStart,
 reconciled)`.
 
-### Open trade-offs
+### A backward clock step, and a snapshot stamped ahead
 
-Two choices remain open; each has a recommendation.
-
-1. **A backward wall-clock step across a window boundary**, when the index falls below the highest index the
-   ledger has charged.
-   - (a) **Copy.** The current cell gains the sum of the cells above it, capped at the limit, and the higher
-     cells stay. The provider's day is never under-counted, whichever reading was wrong. When the step corrected
-     a clock that ran ahead, the window the early roll consumed stays refused for its index, so up to one
-     period of calls the provider would have allowed is refused. It is the only variant with no overspend after
-     both a one-hour and a one-year step in the model (`ledger-time.md` F8 and §7.1).
-   - (b) **Move.** The counts move down and the higher cells are emptied. Nothing is refused wrongly after a
-     correction; when the step was the error (the clock was right and is now behind), up to one limit is
-     under-counted.
-   - (c) **Keep only.** Cells stay at their own indices and the lower index counts from its own cell. It is the
-     simplest; a large backward step grants a fresh window, an overspend of up to one limit (the model's
-     one-year case).
-   - Recommendation: (a), for a window that guards a bill; its cost is bounded by one period.
-2. **A snapshot stamped further ahead than `maxRestoreSkew`.**
-   - (a) **Ignore it entirely**, logged and reported in `Restored`. When the clock at start is behind (a host
-     that starts from its hardware clock before it synchronises), the stored day's count is lost and the bill
-     is under-counted.
-   - (b) **Ignore its stamp and its pause, keep its window counts** as cells at their own indices (a future index
-     is read only once the wall clock reaches it), still reported as ignored for skew in `Restored`. It keeps
-     the restart guarantee when the clock at start is behind; a snapshot written by a clock that ran far ahead
-     leaves a future cell that can over-count one far-off window, bounded by the cell cap.
-   - Recommendation: (b), the only option under which a restart never under-counts when the clock at start is
-     behind (`ledger-time.md` §6.4 and §7.2; claim 9).
+- **A backward wall-clock step across a window boundary** (the wall index falls below the highest index the
+  ledger has charged) copies, once per decrease: the current cell gains the sum of the cells above it, capped
+  at the window's limit, and the higher cells stay for when the wall clock reaches them. The provider's day is
+  never under-counted, whichever reading was wrong. When the step corrected a clock that ran ahead, the window
+  the early roll consumed stays refused for its index, so at most one period of calls the provider would have
+  allowed is refused; that bounded refusal is the cost of a window that guards a bill. Copying was the only
+  variant with no overspend after both a one-hour and a one-year step in the model (`ledger-time.md` F8 and
+  §7.1). Moving the counts down instead would under-count by up to one limit when the step itself was the
+  error, and keeping each index's own count without a fold lets a large backward step grant a fresh window.
+- **A snapshot stamped further ahead than `maxRestoreSkew`** has its stamp and its pause ignored, and its window
+  counts kept as cells at their own indices, read once the wall clock reaches them; `Restored` reports the
+  snapshot as ignored for skew. A restart therefore never under-counts when the clock at start is behind (a
+  host that starts from its hardware clock before it synchronises), and a snapshot written by a clock that ran
+  far ahead leaves at most a far-off future cell, bounded by the cell cap. This refines architecture §6.5,
+  which ignores such a snapshot entirely and so would lose the stored day's count when the clock at start is
+  behind (`ledger-time.md` §6.4 and §7.2; claim 9).
 
 ### Codebase blast radius
 
