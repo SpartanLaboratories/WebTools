@@ -181,6 +181,27 @@ public final class com/spartanlabs/webtools/http/CaffeineResponseCacheKt {
 	public static synthetic fun CaffeineResponseCache$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
 }
 
+public abstract interface class com/spartanlabs/webtools/http/CallBudget : java/lang/AutoCloseable {
+	public abstract fun acquire-E0qYoyE (ILcom/spartanlabs/webtools/http/Lane;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/CallBudget$DefaultImpls {
+	public static fun close (Lcom/spartanlabs/webtools/http/CallBudget;)V
+	public static fun flush-IoAF18A (Lcom/spartanlabs/webtools/http/CallBudget;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/CallBudget$Unlimited : com/spartanlabs/webtools/http/CallBudget {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/CallBudget$Unlimited;
+	public fun acquire-E0qYoyE (ILcom/spartanlabs/webtools/http/Lane;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+	public fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class com/spartanlabs/webtools/http/CidrBlock {
 	public static final field Companion Lcom/spartanlabs/webtools/http/CidrBlock$Companion;
 	public synthetic fun <init> ([BILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -468,6 +489,18 @@ public final class com/spartanlabs/webtools/http/PauseSource$Companion {
 	public final fun getResetIn ()Lcom/spartanlabs/webtools/http/PauseSource;
 	public final fun getRetryAfter ()Lcom/spartanlabs/webtools/http/PauseSource;
 	public final fun getSnapshot ()Lcom/spartanlabs/webtools/http/PauseSource;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/Permit {
+	public abstract fun complete (Lcom/spartanlabs/webtools/http/RateSignals;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun complete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCost ()I
+	public abstract fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public abstract fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/Permit$DefaultImpls {
+	public static fun complete (Lcom/spartanlabs/webtools/http/Permit;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/spartanlabs/webtools/http/RateSignals {
@@ -810,5 +843,9 @@ public final class com/spartanlabs/webtools/http/WindowUtilisation {
 	public final fun getWindowStartEpochMillis ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/WithPermitKt {
+	public static final fun withPermit-gwCluXo (Lcom/spartanlabs/webtools/http/CallBudget;ILcom/spartanlabs/webtools/http/Lane;JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
