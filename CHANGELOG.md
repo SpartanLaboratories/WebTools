@@ -25,8 +25,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   a loader's `Error` reaches every waiter, `close()` ends every waiting call with `Closed`, and one `DEBUG` line per
   load end says whether the result was stored or why not. Its `timeSource`, `loadDispatcher` and
   `maintenanceExecutor` are builder properties, so one virtual clock drives it under test.
+- `webtools-http` (unreleased, `1.0.0`): the call budget. The port `CallBudget` (`acquire` with a fail-fast `maxWait`,
+  `utilisation`, `flush`, `close`; implementing it needs the opt-in) with `Permit` (`complete`, `complete(signals)`,
+  `release`), `withPermit`, `CallBudget.Unlimited`, and the vocabulary `Lane`, `RateWindow` (built with
+  `RateWindow(name, published, period) { margin = …; hard = … }`), `RateSignals`, `WindowReading`, `BudgetUtilisation`
+  and `WindowUtilisation`; `RetryAfter.parse` (seconds or any of RFC 9110's three HTTP-date forms) and
+  `RateSignalsReader` with `Standard` (`429`, or `503` with a parseable `Retry-After`); the seams `BudgetStore` with
+  `InMemoryBudgetStore`, `BudgetSnapshot` and `WindowSnapshot`, and `BudgetObserver` with `BudgetObserver.None` and
+  `BudgetEvent` (`Granted`, `Refused`, `Paused`, `HardStop`, `Reconciled`, `StoreFailed`, `Restored`) and its
+  vocabularies `PauseSource` and `StoreOperation`; and `WindowedCallBudget`, the supplied budget, built with
+  `WindowedCallBudget(windows) { }`: epoch-aligned windows with a boundary guard, per-lane held-back floors, first come
+  first served within a lane up to `maxQueued` waiting calls, waits that are refunded and re-planned when a caller is
+  cancelled, pauses from `Retry-After`, `resetIn` or the next boundary, server counts that only raise local usage, a
+  hard window saved write-ahead through its `BudgetStore` and restored once after a restart, a store failure that is
+  reported as `StoreFailed` while grants continue (a store call is bounded by `storeTimeout` and tried again after
+  `storeRetryInterval`; an `Error` the store throws propagates to the caller), a `flush()` that writes the exact
+  counts, with a zero for a hard window whose grants were all released, so a crash after it never under-counts, and a
+  non-suspending `close()` that ends every waiting call with `Closed`. Its `timeSource` and `wallClock` are builder
+  properties, so one virtual clock drives it under test.
 - `webtools-http` test fixtures: `LoopbackTransports.untrusted` and `trusted`, `MockWebServer.webtoolsUrl(path)`,
   `Fixture.toMockResponse(method)` and `MockWebServer.enqueue(fixture, method)`.
+- `webtools-http` test fixtures: `RecordingBudgetObserver` and `FakeBudgetStore`, a scripted `BudgetStore` with
+  `loadDelay` and `saveDelay` in virtual time and failures injected by `failLoads` and `failSaves` (each takes a
+  `times` of at least 1).
 
 ### Changed
 
