@@ -1,13 +1,20 @@
 package com.spartanlabs.testing.gating.webtools.http.testing
 
+import com.spartanlabs.webtools.http.BudgetEvent
+import com.spartanlabs.webtools.http.BudgetObserver
+import com.spartanlabs.webtools.http.BudgetSnapshot
+import com.spartanlabs.webtools.http.BudgetStore
 import com.spartanlabs.webtools.http.HttpMethod
 import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpTransport
+import com.spartanlabs.webtools.http.Lane
 import com.spartanlabs.webtools.http.Url
 import com.spartanlabs.webtools.http.WallClock
+import com.spartanlabs.webtools.http.testing.FakeBudgetStore
 import com.spartanlabs.webtools.http.testing.FakeHttpTransport
 import com.spartanlabs.webtools.http.testing.Fixture
 import com.spartanlabs.webtools.http.testing.FixtureRecorder
+import com.spartanlabs.webtools.http.testing.RecordingBudgetObserver
 import com.spartanlabs.webtools.http.testing.RecordingGate
 import com.spartanlabs.webtools.http.testing.RequestMatch
 import com.spartanlabs.webtools.http.testing.Step
@@ -18,15 +25,18 @@ import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 
 /**
  * Level 1 - the permanent consumer of the fixtures in `jvmTest`, compiled **without any opt-in**: it names
  * `FakeHttpTransport` as an `HttpTransport`, reads `VirtualClock.wallClock` as a `WallClock`, obtains a
- * `RecordingGate.Enabled` from the gate, wraps the fake in a `FixtureRecorder` and loads a `Fixture`. It
- * cannot implement or subclass a gated type, which is the point. Compiling it proves `jvmTest` reaches the
- * fixtures through the association and is still a consumer; its class in `gatingTest`'s result XML proves the
- * level tasks reach the fixtures.
+ * `RecordingGate.Enabled` from the gate, wraps the fake in a `FixtureRecorder`, loads a `Fixture`, holds a
+ * `FakeBudgetStore` as a `BudgetStore` whose `load()` is `Empty` and a `RecordingBudgetObserver` as a
+ * `BudgetObserver` that records one `onEvent`. It cannot implement or subclass a gated type, which is the
+ * point. Compiling it proves `jvmTest` reaches the fixtures through the association and is still a consumer;
+ * its class in `gatingTest`'s result XML proves the level tasks reach the fixtures.
  */
 class FixturesConsumerGatingTest {
 
@@ -63,5 +73,20 @@ class FixturesConsumerGatingTest {
         val fixture = Fixture.parse("HTTP/1.1 200 OK\nContent-Type: text/plain\n\nhello".encodeToByteArray())
         assertEquals(200, fixture.status)
         assertEquals("hello", fixture.bodyText())
+    }
+
+    @Test
+    fun `the fake store is a BudgetStore whose load is Empty`() {
+        val store: BudgetStore = FakeBudgetStore()
+        assertSame(BudgetSnapshot.Empty, runBlocking { store.load() }.getOrThrow())
+    }
+
+    @Test
+    fun `the recording observer is a BudgetObserver that records one onEvent`() {
+        val recording = RecordingBudgetObserver()
+        val observer: BudgetObserver = recording
+        val granted = BudgetEvent.Granted(Lane.Tracker, 1, Duration.ZERO)
+        observer.onEvent(granted)
+        assertEquals(listOf<BudgetEvent>(granted), recording.events)
     }
 }

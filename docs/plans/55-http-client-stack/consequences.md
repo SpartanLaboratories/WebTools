@@ -181,14 +181,14 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 | 3 `http-core` | Settled (#62). The compile proof held in `commonMain`, `jvmMain` and the check module's `jsMain`: a top-level implementer of a gated port compiles with the module's opt-in and fails to compile without it, with the marker's message in the error; a consumer without the opt-in names the gated types, takes `WallClock.System` as a default and constructs every public leaf; eight subclassing declarations give exactly eight errors in `commonTest` and in `jvmTest`, and none with `@OptIn` ([`62-http-core/final-implementation.md`](62-http-core/final-implementation.md) §3). The check module compiles `commonMain` for `js()` with no environment, so the root project gains no task (§8). |
 | 4 `test-support` | Settled (#63). The fixtures-publication check, `:build-logic:fixturesPublicationCheck`, is a dependency of `webtools-http`'s own `check`, declared only when WebTools is the root build: `./gradlew build`, `check` and `:webtools-http:check` run it, and a build that includes WebTools never does. It stays the only guard on the experimental publishing API, and it now signs the multiplatform publication, adhoc variant included, with a throwaway key on every run and asserts a signature beside every published file. Only Maven Central's upload and validator meet the fixtures jar first at the first release ([`63-test-support/impact.md`](63-test-support/impact.md) §1 and §5). |
 | 5 `url-policy` | Settled (#64). The guards below the transport are measured through a real `OkHttpClient` on JDK 23.0.2: a JVM-wide SOCKS setting reaches the default socket factory's sockets even with `proxy(Proxy.NO_PROXY)`, so the socket guard creates its own `Socket(Proxy.NO_PROXY)` sockets; a resolver-guard refusal is the call's exception, unwrapped, and socket-guard refusals reach its `suppressed` list, never as a `ConnectException`; OkHttp 5.5.0's inherited `Dns.newCall` resolves through the guard. Real DNS answers for the bypass catalogue stay unmeasured (architecture §13), and the settings' numbers, the `Untrusted` port set and the reserved names stay judgement defaults ([`64-url-policy/impact.md`](64-url-policy/impact.md) §5 and §8). |
-| 8 `call-budget` | How a `Mutex`-based ledger closes without suspending (the port's non-suspend `close()`). |
+| 8 `call-budget` | Settled (#67). `close()` completes a budget-owned `Job()` latch without suspending or taking the ledger's lock; each waiter races its conflated wake channel against the latch and returns `Closed("budget")` as a value, as every later `acquire` does. Everything but grants and waits keeps working after it: `utilisation()`, the permits' `complete()` and `release()`, and `flush()`, the exact final write ([`67-call-budget/consequences.md`](67-call-budget/consequences.md) §5). |
 | 9 `call-facades` | The generic `Endpoint<T>` factory-over-class resolution; whether `RateLimited.retryAfter` still needs the `max` with the budget's `pausedFor` once `complete` has applied the signals. |
 | 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 to 7 as built
+## 8. What the later units build on: units 1 to 8 as built
 
-Units 1 to 7 are built.
+Units 1 to 8 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -217,6 +217,10 @@ Units 1 to 7 are built.
   [`66-response-cache/final-implementation.md`](66-response-cache/final-implementation.md). Its
   contracts for the later units are pinned in [`66-response-cache/plan.md`](66-response-cache/plan.md)
   §12 and summarised in [`66-response-cache/consequences.md`](66-response-cache/consequences.md) §4.
+- **Unit 8, `call-budget` (#67).** Its as-built record is
+  [`67-call-budget/final-implementation.md`](67-call-budget/final-implementation.md). Its contracts for
+  the later units are pinned in [`67-call-budget/plan.md`](67-call-budget/plan.md) §12 and summarised in
+  [`67-call-budget/consequences.md`](67-call-budget/consequences.md) §4.
 
 What they settle for the units still to come:
 

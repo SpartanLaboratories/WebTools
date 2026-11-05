@@ -617,6 +617,13 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     for a permit that never sent; not `AutoCloseable` because both are suspend); the plain
     `suspend fun withPermit(cost, lane, maxWait, block)` (completes as spent in `finally`
     unless the block did); `CallBudget.Unlimited`;
+    > **Corrected 2026-11-05 (#67 as built):** `utilisation()` suspends: it takes the ledger's lock
+    > and may make the first restore attempt. `close()` completes a budget-owned `Job()` latch,
+    > never cancelled, and takes no lock: every waiting call, every call parked on the lock and
+    > every later `acquire` returns `Closed("budget")` as a value, while a call whose own store call
+    > spans the close may still be granted. `close()` writes nothing; `flush()`, `utilisation()` and
+    > the permits' `complete()` and `release()` keep working after it. See
+    > `67-call-budget/consequences.md` §5.
   - the vocabulary: `Lane(name)` (plain final class, name equality, constants `Interactive`,
     `Tracker`), `RateWindow(name, published, period, margin, hard)` (factory + builder;
     `limit = published - margin`; `period` aligned to multiples since the Unix epoch),
@@ -633,6 +640,13 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     serializer shipped), `BudgetObserver` (plain gated interface; `onEvent(BudgetEvent)`;
     `None` default) with `BudgetEvent` leaves (`Granted`, `Refused`, `Paused`, `HardStop`,
     `Reconciled`, `StoreFailed`);
+    > **Corrected 2026-11-05 (#67 as built):** `BudgetEvent` is an open abstract root, gated like
+    > `HttpFailure` and never `sealed`, with a seventh final leaf, `Restored` (the windows restored,
+    > the windows dropped, and whether the snapshot was ignored for skew); `Paused.source` is a
+    > `PauseSource` and `StoreFailed.operation` a `StoreOperation`, two open constants classes.
+    > Events are delivered after the ledger's lock is released, so an observer may call back into
+    > the budget. `Standard` takes the longest of several `Retry-After` lines and measures a date
+    > against the response's `Date`. See `67-call-budget/consequences.md` §5.
   - the default `WindowedCallBudget`, final, factory + builder over `windows` (required),
     `laneShares` (default `Interactive` 20 %), `boundaryGuard` (1 s), `maxPause` (24 h),
     `maxQueued` (1,000), `persistAhead` (10), `maxRestoreSkew` (5 min), `timeSource`,
@@ -648,9 +662,30 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     and drops stale days, keeps `max(local, saved)` and ignores a snapshot stamped further
     ahead than `maxRestoreSkew` (logged). The budget's one event-emission point both logs
     through the seam and forwards to the observer.
+    > **Corrected 2026-11-05 (#67 as built):** the builder also has `storeTimeout` (2 s), which
+    > bounds each store call, and `storeRetryInterval` (30 s); `maxQueued` applies to each lane and
+    > counts only calls that would wait. The restore runs at the first of `acquire`,
+    > `utilisation()` and `flush()`, and adds the grants made since the start to the stored count,
+    > which equals `max(local, saved)` when nothing was granted before it. A store that fails is
+    > logged and ignored: grants continue from the in-process count, a later `acquire` retries the
+    > restore once `storeRetryInterval` has passed, no write-ahead save is made before a restore
+    > succeeds, and a failed save defers the next by the same interval. A snapshot stamped further
+    > ahead than `maxRestoreSkew` has its stamp and pause ignored but keeps its window counts.
+    > `flush()` writes a zero for a hard period whose persisted mark is above its count, so the next
+    > grant is saved ahead again. While saves succeed, a crash never under-counts the grants made,
+    > save for a grant made after three saves that each outlasted their period; grants made while
+    > saves fail are unsaved, and a count a server reading or a clock step raised is saved with the
+    > next grant or `flush()`. See `67-call-budget/consequences.md` §5 and §8.
 - **Time.** The budget reads elapsed time from the injected `kotlin.time.TimeSource` (shared
   with the cache ticker and, under `runTest`, with `delay`) and wall time from `WallClock`
   (§6.2). It never reads the system clock directly.
+  > **Corrected 2026-11-05 (#67 as built):** the wall clock decides where in the provider's
+  > calendar now is and the `TimeSource` measures every wait; both are read once per lock section,
+  > with no anchor and no clamp. A backward wall-clock step across a boundary copies the counts of
+  > the periods above into the current one, capped at the limit, once per decrease. A forward jump
+  > is trusted: a waiter whose reserved period the wall clock has left behind is re-planned from the
+  > new reading, in arrival order, and each wait is sliced to at most one minute. See
+  > `67-call-budget/consequences.md` §5.
 - **Does not own:** retries (never), the transport's dispatcher (it publishes `maxBurst`;
   the facade sizes), multi-process counting.
 
@@ -1067,7 +1102,7 @@ What crosses each boundary:
 | From → to | Crosses | Kind | Contract |
 |---|---|---|---|
 | facade → `ResponseCache` | `CacheKey`, `CachePolicy`, `maxAge`, a suspend loader | call | one load per key at a time; failures never stored; `Closed` after `close()` (**Corrected 2026-11-03 (#66 as built):** `Closed("cache")`; a negative `maxAge` throws `IllegalArgumentException`; a loader's `Error` is rethrown to every waiter, and its own cancellation is an `IllegalStateException` failure) |
-| cache loader → `CallBudget` | `cost`, `lane`, `maxWait` → `Permit`; `RateSignals` on `complete` | call | fail fast beyond the cap; charged at grant; `complete`/`release` idempotent, `NonCancellable` |
+| cache loader → `CallBudget` | `cost`, `lane`, `maxWait` → `Permit`; `RateSignals` on `complete` | call | fail fast beyond the cap; charged at grant; `complete`/`release` idempotent, `NonCancellable` (**Corrected 2026-11-05 (#67 as built):** a refusal is `BudgetExhausted(wait, reason, window)` and a closed budget `Closed("budget")`, both values; a `cost` below 1 and a negative `maxWait` throw `IllegalArgumentException`; the only cancellation thrown is the caller's own; an `Error` the budget's store throws propagates; see `67-call-budget/consequences.md` §5) |
 | loader → `HttpTransport` | `HttpRequest` → `Result<HttpResponse>` | call | one request per hop; capped body; `304` is a response; cancellation thrown |
 | transport → policy | `UrlGuard.checkHop`/`checkAddress` | call (pure) | a `RefusalReason?` (**Corrected 2026-10-26 (#64 as built):** an internal refusal holding the `RefusalReason` and, for `DeniedAddress`, the range class); no I/O; coarse reasons |
 | transport → OkHttp | `Dns`, `SocketFactory`, network interceptor, `Call` | call, JVM only | nothing OkHttp-typed leaves `jvmMain` |
@@ -1457,6 +1492,11 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   how a `Mutex`-based ledger resumes its waiters without suspending is unit 8's plan to settle
   (a closed flag checked under the lock plus cancellation of the waiters' continuations is
   the obvious shape; unprobed).
+  > **Corrected 2026-11-05 (#67 as built):** settled. `close()` completes a budget-owned `Job()`
+  > latch, never cancelled, which each waiter's `select` races against its own conflated wake
+  > signal; a call parked on the lock sees the latch in its first check. Waiters return
+  > `Closed("budget")` as values, and no `CancellationException` is involved. See
+  > `67-call-budget/consequences.md` §5.
 - **No compile-fail check for the gate exists.** ABI dumps do not record
   `@SubclassOptInRequired`; dropping it from a port passes `apiCheck`. A TestKit snippet
   compiled with and without the opt-in is the candidate; not evaluated.
@@ -1482,6 +1522,11 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   misses by status only); a `missWhen` predicate is additive if BotTools needs it.
 - **Whether `RateLimited.retryAfter = max(signals.retryAfter, pausedFor)` is redundant** once
   `complete` has applied the signals is unchecked.
+  > **Corrected 2026-11-05 (#67 as built):** it is not redundant. After `complete(signals)`,
+  > `utilisation().pausedFor` is at least `min(retryAfter, maxPause)` minus the time elapsed, and
+  > more when another hint or an earlier pause is longer; it is less than `retryAfter` when
+  > `retryAfter` exceeds `maxPause`. Which of the two the failure reports is unit 9's to settle.
+  > See `67-call-budget/consequences.md` §5.
 - **Where the Experimental-to-Supported promotion is recorded** before #58's CHANGELOG exists.
   > **Corrected 2026-11-02 (#65 as built):** `CHANGELOG.md` exists from #65's landing, in the Keep a
   > Changelog layout; a promotion is recorded there. See `65-okhttp-transport/consequences.md` §6.

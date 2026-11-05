@@ -6,9 +6,9 @@ The as-built record of `SpartanLaboratories/WebTools#63`, unit 4 (`test-support`
 repository and for the sibling units is in [`impact.md`](impact.md).
 
 - **Status:** built through stage S8 of the plan ([`plan.md`](plan.md) §5), with plan Amendments 1 to 3 and
-  the fixes of qa passes 1 and 2 applied (§4). This is the final as-built record.
-- **Branch and PR:** `feat/issue-63-test-support`, cut from `master` at `7de8207`, above the research
-  commits, with `master` merged in at `5d98102`; PR TBD (it closes #63).
+  the fixes of review passes 1 and 2 applied (§4). This is the final as-built record.
+- **Branch:** `feat/issue-63-test-support`, cut from `master` at `7de8207`, above the research
+  commits, with `master` merged in at `5d98102`.
 - **Host of the measurements:** the maintainer's Windows 11 host; JDK 23.0.2 (Oracle); Gradle 9.7.1 (wrapper);
   Kotlin Gradle plugin 2.2.0; `core.autocrlf=true`.
 - **Versions moved:** none. `webtools-http` 1.0.0 stays unreleased until #55's stack is complete. It is not a
@@ -115,8 +115,8 @@ the eight added test behaviours with the recorded scope of the environment scrub
 - `readHead`'s refusal of a blank line before the status line, which covered a blank first line only (P3 after
   S3);
 - `Stream.toList()`, a Java 16 API, replaced in a test compiled against the Java 11 API (P4);
-- the minor findings of qa pass 1 and the findings of qa pass 2, among them a Level 3 test that JUnit never
-  discovered because its expression body returned a value (qa pass 2 fixes).
+- the minor findings of review pass 1 and the findings of review pass 2, among them a Level 3 test that JUnit never
+  discovered because its expression body returned a value (review pass 2 fixes).
 
 ## 3. Acceptance
 
@@ -142,12 +142,12 @@ Against plan §1 "Acceptance", from the measurements in §4:
    `FixturesCheckWiringEndToEndTest`) — **met**.
 6. `:build-logic:e2eTest`, `:build-logic:integrationTest` (46) and `:build-logic:nonfunctionalTest` (3) pass
    with the changed harness underneath, one after another (P9). `e2eTest` ran its three classes (17 tests)
-   after Amendment 3 and again after the qa pass 2 fixes, and qa pass 2 ran all four of `build-logic`'s test
+   after Amendment 3 and again after the review pass 2 fixes, and review pass 2 ran all four of `build-logic`'s test
    tasks with `--rerun-tasks`. An `ORG_GRADLE_PROJECT_signingInMemoryKey` exported for the outer build does
    not reach the nested producer (P9) — **met**.
 7. The three mutations of P10 each fail the check (1, 5 and 5 of its ten tests). The module build file was
    restored, and its diff is only the intended change. A fourth mutation, the edge without
-   `gradle.parent == null`, fails the second test of `FixturesCheckWiringEndToEndTest` (qa pass 2 fixes) —
+   `gradle.parent == null`, fails the second test of `FixturesCheckWiringEndToEndTest` (review pass 2 fixes) —
    **met**.
 8. `git diff --stat` is empty for the three existing modules, for `webtools-http/src/commonMain`, `src/jvmMain`
    and `api/`, for `webtools-http-commoncheck` and for `build-logic/src/main` (P11) — **met**.
@@ -160,7 +160,7 @@ Each procedure of the plan records its commands and results here, in the order t
 ### P1 - baseline and branch (2026-10-25)
 
 1. `git branch --show-current` = `feat/issue-63-test-support`; `git log --oneline 7de8207..HEAD` = the three
-   research commits (`eb274e0`, `abdb8c2`, `7cabe98`); `git status --short` shows only the presenter's plan-board
+   research commits (`eb274e0`, `abdb8c2`, `7cabe98`); `git status --short` shows only the plan-board
    files (modified under `55-http-client-stack/` and `62-http-core/`, untracked under `63-test-support/`) and
    this issue's `plan.md`, `impact.md` and `final-implementation.md`.
 2. `./gradlew :build-logic:test` - BUILD SUCCESSFUL in 12s (1 executed, 11 up-to-date).
@@ -326,7 +326,7 @@ was deleted.
 
 ### P11 - the unaffected modules (S8)
 
-On head `5d98102` (master merged into the branch by the admin team): `git diff --stat -- webtools-udp webtools-scraping
+On head `5d98102` (master merged into the branch): `git diff --stat -- webtools-udp webtools-scraping
 webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck
 settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing;
 `git status --short build-logic/src/main` is empty (no plugin changed);
@@ -352,9 +352,9 @@ SUCCESSFUL (a compile, no test).
 - `git status --short` shows no `build/`, `.idea/`, canary, scratch or `.p10` file; the last commit carries no
   attribution trailer.
 
-### qa pass 1, minor fixes (2026-10-25)
+### Review pass 1, minor fixes (2026-10-25)
 
-QA pass 1 (code review PASS, 376/376 green) listed minor findings, all applied: 19 documentation items (the
+Review pass 1 (code review PASS, 376/376 green) listed minor findings, all applied: 19 documentation items (the
 Amendment-1 redaction boundary in the `FixtureRecorder` and `Redaction` KDocs; the `fixturesPublicationCheck`
 header comment; `ThrowawayPgpKey`'s best-effort-cleanup wording and the comments on its cryptographic constants;
 the stale "three" at `TestKitHomeLock`; `METHOD_LIMIT` and the IPv6 re-bracketing in `FixtureFileNames`; the
@@ -370,7 +370,7 @@ failures; `apiCheck`, `verifyJavaFloor`, `:build-logic:fixturesPublicationCheck`
 `./gradlew :build-logic:e2eTest` - BUILD SUCCESSFUL in 1m 37s (`FixturesPublicationEndToEndTest` 10/0,
 `IncludedBuildEndToEndTest` 5/0).
 
-### qa pass 1, Amendment 3 tests (2026-10-25)
+### Review pass 1, Amendment 3 tests (2026-10-25)
 
 Plan Amendment 3 adds eight test behaviours and records one exclusion; implemented as plan §9 reads:
 1. `RedactionComponentTest` +4: the upper-hex full escape is detected; the form-encoded form is replaced and its
@@ -406,9 +406,9 @@ SensitiveNames 7; Level 4c FakeHttpTransportConcurrency 2, FixturesSecrecy 2, Ht
 `fixturesPublicationCheck`: FixturesPublicationEndToEndTest 10/0. No workspace left under
 `build-logic/build/testkit/projects`.
 
-### qa pass 2 fixes (2026-10-25)
+### Review pass 2 fixes (2026-10-25)
 
-QA pass 2 (384/384 green; one non-minor and 25 minor findings). Its items on the source and test files were
+Review pass 2 (384/384 green; one non-minor and 25 minor findings). Its items on the source and test files were
 applied, in 18 files, with no behaviour, API or design change. Its items on the plan documents are settled
 in them: `impact.md` §2 and §8, the flaky-timing bullet of plan §10, and the Level 5 fields of §5 below.
 - **The lost test.** `FixtureRecorderIntegrationTest.nameFor names the file and a bad group is refused at wrap` was
@@ -479,7 +479,7 @@ IntelliJ session and were **not performed**.
      virtual time and what `toString()` never prints.
    - *Why IDE-only:* Quick Documentation is the IDE's rendering of the KDoc.
    - *Meanwhile:* P12's coverage check finds a KDoc block on every public declaration. The documentation
-     reviews of both qa passes read every block against the code, and their findings are fixed (§4).
+     reviews of both review passes read every block against the code, and their findings are fixed (§4).
 4. **The check's published `.module` and POM, read in its workspace** — **done**.
    - *Performer:* the implementer, from the command line on the maintainer's host, 2026-10-25, on the change
      as built above `5d98102`.
@@ -505,7 +505,7 @@ IntelliJ session and were **not performed**.
      response is unexamined. The fixture files and the tests do not depend on it.
 6. **`git status` and `git diff --stat` before each commit: no canary, no `build/`, no IDE file** — **done** on
    the working tree that goes to the landing.
-   - *Performer:* the implementer, at the close of S8 (P12), 2026-10-25. The hygiene checks of both qa passes
+   - *Performer:* the implementer, at the close of S8 (P12), 2026-10-25. The hygiene checks of both review passes
      found the same.
    - *Re-check:* before each commit of the landing, on that commit's tree.
 
@@ -516,7 +516,7 @@ No research claim was contradicted. The claims the implementation leaned on held
   its five, and the root POM keeps the test libraries optional (mechanics F1, F8, F13; P5, P10);
 - the guard: `gradle.parent == null` keeps the check out of a build that includes WebTools, and without it
   such a build schedules `:webtools:build-logic:fixturesPublicationCheck` (wiring F5, F7; the guard mutation in
-  the qa pass 2 fixes);
+  the review pass 2 fixes);
 - the injected plugin classpath reaches the composite consumer's included producer (mechanics F2, F7);
 - signing with a generated throwaway key, and the `ORG_GRADLE_PROJECT_*` scrub (mechanics F3, F4, F5; P9);
 - the assertions catch the faults they exist for (mechanics F10; P10);
@@ -574,4 +574,4 @@ root that does not exist (P6 step 2).
 
 The build closed four of plan §14's gaps: the code blocks compile (P2, P7); the real fixtures' compile time
 is measured, the check taking 44 to 52 s; the workspace is deleted on Windows after each run §4 records (P7,
-and the qa re-runs); and the ill-formed percent-escapes decode exactly as `HttpUrl` decodes them (P3 after S4).
+and the review re-runs); and the ill-formed percent-escapes decode exactly as `HttpUrl` decodes them (P3 after S4).

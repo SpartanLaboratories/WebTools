@@ -10,7 +10,7 @@
   corrections (2026-11-03) for this unit at §6.4 and in §7.4's row for the facade's call to `ResponseCache`.
 - **Baseline:** `master` `e8f0a88`; branch `feat/issue-66-response-cache`, with the research commits `c19db19`, `97beb79`, `879abff` and `826200e`, the code
   commits `e5f1a4c`, `ea167b9` and `d1deae5`, then `38483ea` (`docs: record the response cache as built and correct the research count (Issue #66)`), the
-  code-landing commit; PR TBD (it closes #66).
+  code-landing commit.
 - **Related docs:** [`plan.md`](plan.md) and [`final-implementation.md`](final-implementation.md); [`research/README.md`](research/README.md); the
   systems-level [`../consequences.md`](../consequences.md); the as-built records of the units this one builds on,
   [`../62-http-core/`](../62-http-core/final-implementation.md), [`../63-test-support/`](../63-test-support/final-implementation.md),

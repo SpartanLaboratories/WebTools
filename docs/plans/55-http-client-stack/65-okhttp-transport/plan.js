@@ -4383,7 +4383,8 @@ window.dashboardLive&&window.dashboardLive("plan",
     "62": "../62-http-core/dashboard.html",
     "63": "../63-test-support/dashboard.html",
     "64": "../64-url-policy/dashboard.html",
-    "66": "../66-response-cache/dashboard.html"
+    "66": "../66-response-cache/dashboard.html",
+    "67": "../67-call-budget/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

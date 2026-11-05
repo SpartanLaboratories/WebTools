@@ -22,7 +22,7 @@
 - **Branch:** `feat/issue-64-url-policy` (exists; cut from `master` at `ad0ae63`; holds the research commits).
 - **Commit:** `fd93ff9` (commit 1 of §11): this `plan.md` is committed in the same commit as the first stage of the
   implementation, so `git log --follow` binds the two.
-- **PR:** TBD (the PR closes #64).
+- **PR:** #86 (it closes #64).
 - **What this plans:**
   - the public configuration types of `webtools-http` in the package `com.spartanlabs.webtools.http`:
     `OutboundUrlPolicy` (the sealed pair `Trusted` and `Untrusted`, each with a nested `Builder`, and the factories

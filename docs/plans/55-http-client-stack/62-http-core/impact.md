@@ -9,7 +9,7 @@
   - The file-level detail is in [`plan.md`](plan.md).
   - The as-built record is [`final-implementation.md`](final-implementation.md), and this file is
     reconciled with it.
-- **Baseline:** `master` `f72b115`. Built on branch `feat/issue-62-http-core`; PR TBD (it closes #62).
+- **Baseline:** `master` `f72b115`. Built on branch `feat/issue-62-http-core`.
 - **Related docs:**
   - [`plan.md`](plan.md);
   - [`research/README.md`](research/README.md);

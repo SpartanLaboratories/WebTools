@@ -8,7 +8,7 @@ single-concern artifacts** — depend only on the one you need:
 | `io.github.spartanlaboratories:webtools-udp` | `com.spartanlabs.webtools.udp` | Multi-client UDP connection layer + NAT-traversal handshake | none (slf4j-api only) |
 | `io.github.spartanlaboratories:webtools-scraping` | `com.spartanlabs.webtools.scraping` | `Connector` — open/read a URL line by line, plus one-shot `get` / `skrape` / image `download` | skrapeit, jsoup, unirest |
 | `io.github.spartanlaboratories:webtools-browser` | `com.spartanlabs.webtools.browser` | `WebViewer` — headless-browser screenshots | selenium-java |
-| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency); **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
+| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, the `CallBudget` port with `WindowedCallBudget` (the supplied budget: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from `Retry-After` and reset hints, and a hard window that survives a restart through a `BudgetStore`), `CallBudget.Unlimited`, `RateSignalsReader.Standard` and `RetryAfter.parse`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency); **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover.
@@ -44,9 +44,10 @@ only) holds the package `com.spartanlabs.webtools.http.testing`: `VirtualClock`,
 `RequestMatch`, `Step` and `Unmatched`, `Fixture` and `FixtureLoader` for `.http` fixture files,
 `FixtureRecorder` with `RecordingGate` and `Redaction`, and `LoopbackTransports` (the real `OkHttpTransport`
 over a loopback `mockwebserver3` server, with the policy's rules live), `MockWebServer.webtoolsUrl`,
-`Fixture.toMockResponse` and `MockWebServer.enqueue(fixture)`. `testFixtures(...)` is Gradle-only: a Maven build
-cannot select a variant by capability. The variant adds `kotlinx-coroutines-test` and `mockwebserver3` to the
-test classpath only. Fixture files live in the consumer's own test resources; add
+`Fixture.toMockResponse` and `MockWebServer.enqueue(fixture)`, and `RecordingBudgetObserver` and `FakeBudgetStore`
+(a scripted budget store with failure injection and virtual-time delays). `testFixtures(...)` is Gradle-only: a
+Maven build cannot select a variant by capability. The variant adds `kotlinx-coroutines-test` and `mockwebserver3`
+to the test classpath only. Fixture files live in the consumer's own test resources; add
 `**/fixtures/**/*.http -text` to its `.gitattributes` so a checkout does not rewrite their line endings.
 Recording is off unless `WEBTOOLS_HTTP_RECORD` has a recognised value, and never runs where a CI variable
 (`CI`, `GITHUB_ACTIONS`, ...) is set; a build that records declares the variable as an input of its test tasks,

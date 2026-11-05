@@ -14,7 +14,7 @@
   §6.7, §7.3 and §13.
 - **Baseline:** `master` `53965c8`; branch `feat/issue-65-okhttp-transport`, with the research commits and the
   code commits `962bbe3`, `dd4097e`, `357554a` and `300fb67`, then `db82470` (`test: declare the in-flight close
-  case Unit so JUnit runs it (Issue #65)`), the code-landing commit; PR TBD (it closes #65).
+  case Unit so JUnit runs it (Issue #65)`), the code-landing commit.
 - **Related docs:** [`plan.md`](plan.md) and [`final-implementation.md`](final-implementation.md);
   [`research/README.md`](research/README.md) with its four findings files; the systems-level
   [`../consequences.md`](../consequences.md); the as-built records of the units this one builds on,

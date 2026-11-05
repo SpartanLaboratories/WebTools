@@ -73,8 +73,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       "name": "call budget",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-http-budget/index.html"
     },
     {
       "slug": "webtools-http-facades",
@@ -104,8 +104,8 @@ window.dashboardLive&&window.dashboardLive("plan",
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-11-03T02:17:16Z",
-    "detail": "6 of 11 units landed; #66 in progress; #67 up next.",
+    "updated": "2026-11-03T19:38:03Z",
+    "detail": "7 of 11 units landed; #67 in progress; #68 up next.",
     "steps": [
       "sizing",
       "interview",
@@ -116,9 +116,9 @@ window.dashboardLive&&window.dashboardLive("plan",
       "landed"
     ],
     "current": [
-      "response-cache.built"
+      "call-budget.built"
     ],
-    "next": "call-budget",
+    "next": "call-facades",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -304,6 +304,16 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-03",
       "column": "built",
       "label": "#66 started"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "#66 landed"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "#67 started"
     }
   ],
   "rows": [
@@ -4257,572 +4267,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "branch": null,
         "folder": "66-response-cache/",
         "board": "66-response-cache/dashboard.html",
-        "live": {
-          "step": "document",
-          "since": "2026-11-03T18:33:16Z",
-          "updated": "2026-11-03T19:26:02Z",
-          "detail": "Document: 6 of 6 tasks done; every task done.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "document",
-            "landing",
-            "merge",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-11-03",
-              "at": "2026-11-03T04:48:46Z",
-              "findings": {
-                "test": 7,
-                "code": 0
-              },
-              "severity": {
-                "minor": 5,
-                "other": 2
-              },
-              "route": "remediation",
-              "report": "build/reports/tests/index.html",
-              "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html",
-              "note": "Code review passed: the implementation is the plan's design as written, the ABI diff is additions only, and all six acceptance criteria are met. Seven test findings, in the As built rows the fixes touch: two uncovered defensive branches in CaffeineResponseCache, each wanting one Level 2 method (`close`: a foreign cancellation of the shared future read as closed; `failure-value`: an Error thrown by the load dispatcher mapped to fatal); six runBlocking methods in LoaderRunnerComponentTest to move under runTest and one test name to reword (`component-tests`); two Level 4a table rows for CacheExpiry and CacheEntry.isFailure (`deterministic-tests`); and the P5 procedure and an acceptance mapping missing from the as-built record (`release`, whose verdict names P5). Suite: 883 passed, 0 failed, 0 skipped."
-            },
-            {
-              "pass": 2,
-              "verdict": "changes-requested",
-              "date": "2026-11-03",
-              "at": "2026-11-03T18:24:12Z",
-              "findings": {
-                "test": 0,
-                "code": 1
-              },
-              "severity": {
-                "minor": 1,
-                "other": 0
-              },
-              "route": "on-the-spot",
-              "report": "build/reports/tests/index.html",
-              "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html",
-              "note": "Test audit: compliant at every level, and all seven remediations from pass 1 hold. Code review: one minor finding, in the As built row the fix touches (`caffeine-default`, whose verdict logs `DEBUG` once per load end): the load body logs its \"load ended\" line before knowing whether its completion won, so a result a mid-flight `close()` or `invalidate(key)` discards still reads `stored`, and after `close()` a second line follows, against the once-per-load-end rule (plan.md R12, §6.9). The fix logs the line only when the completion wins. Suite: 887 passed, 0 failed, 0 skipped."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-66-response-cache",
-          "event": {
-            "name": "state-boards",
-            "at": "2026-11-03T19:26:02Z",
-            "note": "the state boards; 6 of 6 tasks done"
-          },
-          "stages": [
-            {
-              "id": "S1",
-              "name": "commonMain: Lookup, CacheKey, CachePolicy, CacheStats, LoaderRunner, ResponseCache and Disabled",
-              "state": "done",
-              "rows": [
-                "port",
-                "cache-key",
-                "policy-lookup",
-                "disabled",
-                "failure-value",
-                "component-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "S2",
-              "name": "jvmMain: CacheEntry and CaffeineResponseCache with the Level 1, 2 and 4a tests",
-              "state": "done",
-              "rows": [
-                "caffeine-default",
-                "shared-load",
-                "failure-value",
-                "max-age",
-                "close",
-                "component-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "S3",
-              "name": "Level 3 and Level 4c suites",
-              "state": "done",
-              "rows": [
-                "integration-tests",
-                "nonfunctional-tests"
-              ]
-            }
-          ],
-          "remediation": {
-            "pass": 2,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "Log the load's end only when its completion wins; record the change",
-                "state": "done"
-              }
-            ]
-          },
-          "document": {
-            "tasks": [
-              {
-                "id": "documentation-review",
-                "name": "Documentation review",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-documentation",
-                "name": "Reconcile documentation",
-                "state": "done"
-              },
-              {
-                "id": "dokka-check",
-                "name": "Dokka check (not applicable: WebTools does not apply Dokka)",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-plan",
-                "name": "Reconcile plan",
-                "state": "done"
-              },
-              {
-                "id": "readme-changelog",
-                "name": "README and CHANGELOG",
-                "state": "done"
-              },
-              {
-                "id": "state-boards",
-                "name": "State boards",
-                "state": "done"
-              }
-            ]
-          },
-          "open": [
-            {
-              "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-              "raised": "implementation-stage S3",
-              "ref": "final-implementation.md",
-              "resolved": "2026-11-03T18:57:00Z"
-            }
-          ],
-          "history": {
-            "sizing": [
-              {
-                "since": null,
-                "ended": "2026-11-03T02:17:16Z",
-                "endedBy": "sized",
-                "to": "plan"
-              }
-            ],
-            "plan": [
-              {
-                "since": "2026-11-03T02:17:16Z",
-                "ended": "2026-11-03T02:32:02Z",
-                "endedBy": "research-planning",
-                "to": "research",
-                "event": {
-                  "name": "sized",
-                  "at": "2026-11-03T02:17:16Z"
-                },
-                "detail": "Unit 7 of the HTTP client stack: the ResponseCache port, CacheKey, CachePolicy, Lookup, CacheStats and ResponseCache.Disabled in commonMain, and the CaffeineResponseCache default in jvmMain. Working tree clean at e8f0a88; the run works in the main checkout. Next: the detailed implementation plan from architecture.md section 6.4 and section 11.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-03T02:17:16Z"
-                }
-              },
-              {
-                "since": "2026-11-03T03:27:44Z",
-                "ended": "2026-11-03T03:27:44Z",
-                "endedBy": "plan-accepted",
-                "to": "branch",
-                "event": {
-                  "name": "resumed",
-                  "at": "2026-11-03T03:27:44Z"
-                },
-                "detail": "All four choices stand as drafted: the CacheStats fields, invalidate during an in-flight load, maxAge = ZERO served by age, Found weight at least 1.",
-                "plan": {
-                  "state": "writing",
-                  "since": "2026-11-03T03:23:54Z"
-                }
-              }
-            ],
-            "research": [
-              {
-                "since": "2026-11-03T02:32:02Z",
-                "ended": "2026-11-03T03:23:54Z",
-                "endedBy": "researched",
-                "to": "plan",
-                "event": {
-                  "name": "verification-started",
-                  "at": "2026-11-03T02:49:21Z"
-                },
-                "detail": "Research: verifying 2 findings.",
-                "research": {
-                  "phase": "complete",
-                  "drafted": 0,
-                  "since": {
-                    "planning": "2026-11-03T02:32:02Z",
-                    "research": "2026-11-03T02:34:16Z",
-                    "verification": "2026-11-03T02:49:21Z",
-                    "complete": "2026-11-03T03:23:54Z"
-                  }
-                },
-                "questions": [
-                  {
-                    "question": "caffeine-mechanics",
-                    "rows": [
-                      "caffeine-default",
-                      "policy-lookup",
-                      "failure-value",
-                      "close",
-                      "nonfunctional-tests"
-                    ],
-                    "findings": "research/caffeine-mechanics.md",
-                    "state": "complete",
-                    "started": "2026-11-03T02:34:16Z",
-                    "returned": "2026-11-03T02:48:03Z"
-                  },
-                  {
-                    "question": "load-lifecycle",
-                    "rows": [
-                      "shared-load",
-                      "failure-value",
-                      "close",
-                      "component-tests"
-                    ],
-                    "findings": "research/load-lifecycle.md",
-                    "state": "complete",
-                    "started": "2026-11-03T02:34:16Z",
-                    "returned": "2026-11-03T02:47:19Z"
-                  }
-                ]
-              }
-            ],
-            "branch": [
-              {
-                "since": "2026-11-03T03:27:44Z",
-                "ended": "2026-11-03T03:28:38Z",
-                "endedBy": "branch-cut",
-                "to": "implementation",
-                "event": {
-                  "name": "plan-accepted",
-                  "at": "2026-11-03T03:27:44Z"
-                },
-                "detail": "Full implementation plan for the ResponseCache port and the CaffeineResponseCache default: each load runs in the cache's own supervisor scope, every outcome reaches waiters as a value, waiters use asDeferred().await(), close() releases waiters, own counters instead of recordStats(). Interfaces pinned for the call facades (#68).",
-                "branch": "feat/issue-66-response-cache"
-              }
-            ],
-            "implementation": [
-              {
-                "since": "2026-11-03T03:28:38Z",
-                "ended": "2026-11-03T04:23:52Z",
-                "endedBy": "qa-pass",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-03T04:20:35Z",
-                  "note": "S3 reported done; qa next"
-                },
-                "detail": "Five new classes. Procedure P3 (both lifetime-0 removals left out) was detected by the failure-identity test 5 of 5 runs. Procedure P4 (the closed-flag re-check in startLoad left out) was not detected in 5 runs: once the load scope is cancelled a launch completes without running its body and the completion handler settles the future as closed, so the re-check alone opens no hang; recorded for the known gaps. Module check: 883 jvm tests, 0 failed, 0 skipped. Correction to the previous event: componentTest ran 121 tests of the new and amended classes, not 139.",
-                "open": [
-                  {
-                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-                    "raised": "implementation-stage S3",
-                    "ref": "final-implementation.md"
-                  }
-                ],
-                "stages": [
-                  {
-                    "id": "S1",
-                    "name": "commonMain: Lookup, CacheKey, CachePolicy, CacheStats, LoaderRunner, ResponseCache and Disabled",
-                    "state": "done",
-                    "rows": [
-                      "port",
-                      "cache-key",
-                      "policy-lookup",
-                      "disabled",
-                      "failure-value",
-                      "component-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "S2",
-                    "name": "jvmMain: CacheEntry and CaffeineResponseCache with the Level 1, 2 and 4a tests",
-                    "state": "done",
-                    "rows": [
-                      "caffeine-default",
-                      "shared-load",
-                      "failure-value",
-                      "max-age",
-                      "close",
-                      "component-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "S3",
-                    "name": "Level 3 and Level 4c suites",
-                    "state": "done",
-                    "rows": [
-                      "integration-tests",
-                      "nonfunctional-tests"
-                    ]
-                  }
-                ]
-              }
-            ],
-            "qa": [
-              {
-                "since": "2026-11-03T04:23:52Z",
-                "ended": "2026-11-03T04:48:46Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-03T04:20:35Z",
-                  "note": "S3 reported done; qa next"
-                },
-                "open": [
-                  {
-                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-                    "raised": "implementation-stage S3",
-                    "ref": "final-implementation.md"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-03",
-                    "at": "2026-11-03T04:48:46Z",
-                    "findings": {
-                      "test": 7,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 5,
-                      "other": 2
-                    },
-                    "route": "remediation",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html"
-                  }
-                ]
-              },
-              {
-                "since": "2026-11-03T04:58:24Z",
-                "ended": "2026-11-03T05:12:41Z",
-                "endedBy": "halted",
-                "to": "qa",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-03T04:58:24Z",
-                  "note": "pass 2: running"
-                },
-                "detail": "QA pass 2 running.",
-                "open": [
-                  {
-                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-                    "raised": "implementation-stage S3",
-                    "ref": "final-implementation.md"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "running",
-                    "date": "2026-11-03",
-                    "at": "2026-11-03T04:58:24Z",
-                    "findings": {}
-                  }
-                ],
-                "held": true
-              },
-              {
-                "since": "2026-11-03T17:59:54Z",
-                "ended": "2026-11-03T18:24:12Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-03T17:59:54Z",
-                  "note": "pass 2: running"
-                },
-                "detail": "QA pass 2 running.",
-                "open": [
-                  {
-                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-                    "raised": "implementation-stage S3",
-                    "ref": "final-implementation.md"
-                  }
-                ],
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-03",
-                    "at": "2026-11-03T18:24:12Z",
-                    "findings": {
-                      "test": 0,
-                      "code": 1
-                    },
-                    "severity": {
-                      "minor": 1,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html"
-                  }
-                ]
-              }
-            ],
-            "remediation": [
-              {
-                "since": "2026-11-03T04:48:46Z",
-                "ended": "2026-11-03T04:58:24Z",
-                "endedBy": "implementation-stage",
-                "to": "qa",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-03T04:48:46Z",
-                  "note": "pass 1: changes-requested"
-                },
-                "detail": "Code review PASS: the implementation is the plan's design as written, the ABI diff is additions only, all six acceptance criteria met. Test findings: two uncovered defensive branches in CaffeineResponseCache (a foreign cancellation of the shared future read as closed; an Error thrown by the load dispatcher mapped to fatal), each wanting one Level 2 method; six runBlocking methods in LoaderRunnerComponentTest to move under runTest; one test name to reword; two Level 4a table rows for CacheExpiry and CacheEntry.isFailure; the P5 procedure and an acceptance mapping missing from the as-built record. Suite 883 passed, 0 failed, 0 skipped.",
-                "open": [
-                  {
-                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-                    "raised": "implementation-stage S3",
-                    "ref": "final-implementation.md"
-                  }
-                ],
-                "remediation": {
-                  "pass": 1,
-                  "route": "remediation",
-                  "steps": [
-                    {
-                      "name": "Add the two Level 2 methods, move LoaderRunnerComponentTest under runTest, rename the logging test, add the two 4a rows, record P5 and the acceptance mapping",
-                      "state": "done"
-                    },
-                    {
-                      "name": "qa pass 2",
-                      "state": "current"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-03",
-                    "at": "2026-11-03T04:48:46Z",
-                    "findings": {
-                      "test": 7,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 5,
-                      "other": 2
-                    },
-                    "route": "remediation",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/66-response-cache/2f43cfc3/tests/index.html",
-                    "note": "Code review passed: the implementation is the plan's design as written, the ABI diff is additions only, and all six acceptance criteria are met. Seven test findings, in the As built rows the fixes touch: two uncovered defensive branches in CaffeineResponseCache, each wanting one Level 2 method (`close`: a foreign cancellation of the shared future read as closed; `failure-value`: an Error thrown by the load dispatcher mapped to fatal); six runBlocking methods in LoaderRunnerComponentTest to move under runTest and one test name to reword (`component-tests`); two Level 4a table rows for CacheExpiry and CacheEntry.isFailure (`deterministic-tests`); and the P5 procedure and an acceptance mapping missing from the as-built record (`release`, whose verdict names P5). Suite: 883 passed, 0 failed, 0 skipped."
-                  }
-                ]
-              },
-              {
-                "since": "2026-11-03T18:24:12Z",
-                "ended": "2026-11-03T18:33:16Z",
-                "endedBy": "document",
-                "to": "document",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-03T18:33:16Z",
-                  "note": "S3"
-                },
-                "detail": "Two Level 2 tests pin the rule in CaffeineResponseCacheLoggingComponentTest (close mid-flight: one closed line, none when the loader finishes; invalidate mid-flight: one found line noted removed, the next call reloads). componentTest 519 tests, 0 failed, 0 skipped; apiCheck passes, the ABI dump unchanged.",
-                "open": [
-                  {
-                    "text": "Procedure P4's mutation (the closed-flag re-check in startLoad removed) is not detected by CaffeineResponseCacheCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
-                    "raised": "implementation-stage S3",
-                    "ref": "final-implementation.md"
-                  }
-                ],
-                "remediation": {
-                  "pass": 2,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "Log the load's end only when its completion wins; record the change",
-                      "state": "done"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 2,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-03",
-                    "at": "2026-11-03T18:24:12Z",
-                    "findings": {
-                      "test": 0,
-                      "code": 1
-                    },
-                    "severity": {
-                      "minor": 1,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/66-response-cache/cefdb082/tests/index.html",
-                    "note": "Test audit: compliant at every level, and all seven remediations from pass 1 hold. Code review: one minor finding, in the As built row the fix touches (`caffeine-default`, whose verdict logs `DEBUG` once per load end): the load body logs its \"load ended\" line before knowing whether its completion won, so a result a mid-flight `close()` or `invalidate(key)` discards still reads `stored`, and after `close()` a second line follows, against the once-per-load-end rule (plan.md R12, §6.9). The fix logs the line only when the completion wins. Suite: 887 passed, 0 failed, 0 skipped."
-                  }
-                ]
-              }
-            ]
-          },
-          "rowNames": {
-            "port": "The `ResponseCache` port: `getOrLoad`, `invalidate`, `invalidateAll`, `stats` and `close`",
-            "cache-key": "`CacheKey<V>`: the endpoint and its canonical parameters",
-            "policy-lookup": "`CachePolicy`, `Lookup` and `CacheStats`",
-            "disabled": "`ResponseCache.Disabled`, the pass-through",
-            "caffeine-default": "`CaffeineResponseCache`: the factory, the builder and the `AsyncCache` behind them",
-            "shared-load": "The shared load: its scope, its start and how waiters wait",
-            "failure-value": "Failures as zero-lifetime values, removed by each waiter",
-            "max-age": "`maxAge`: serving a caller that needs freshness",
-            "close": "`close()` and `HttpFailure.Closed(\"cache\")`",
-            "component-tests": "Level 2 on `VirtualClock`, and the three-clocks proof with the real cache",
-            "integration-tests": "Level 3: one real request for many callers, on the production defaults",
-            "deterministic-tests": "Level 4a: key canonicalisation",
-            "nonfunctional-tests": "Level 4c: the size bound and the 2,000-retry failure-identity check",
-            "release": "The ABI dump and the version"
-          },
-          "recon": {
-            "interview": {
-              "reconstructed": true,
-              "ended": null,
-              "trail": [],
-              "milestones": []
-            }
-          }
-        },
         "tests": {
           "base": "826200e",
           "updated": "2026-11-03T18:33:16Z",
@@ -5620,8 +5064,53 @@ window.dashboardLive&&window.dashboardLive("plan",
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "landed",
+        "summary": "Landed through PR #89 as 8122af7 (#66): `webtools-http` gains the `ResponseCache` port, implementing which needs the opt-in, with `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats` and the pass-through `ResponseCache.Disabled` in common code, and the final `CaffeineResponseCache` and its factory on the JVM, Stable Core: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored, and a `close()` that ends every waiting call with `Closed(\"cache\")`. No dependency of either variant changed; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+        "changes": [
+          {
+            "what": "No `recordStats()`, and one `evictionListener` that counts size removals only, where §6.4 has `recordStats()` and no listeners; the cache keeps its four counts itself.",
+            "why": "Caffeine's `evictionCount` also counts expiry and failure removals, and varies with callback order; §6.4 carries a dated correction.",
+            "when": "#66 plan",
+            "ref": "66-response-cache/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "A fatal `Error` is carried by value like every failure, a loader's own cancellation is an `IllegalStateException` failure, a load coroutine that fails with an `Exception` is a failed outcome, and a completed entry of zero lifetime reads as absent.",
+            "why": "The load's body is total, so the shared future is never completed exceptionally; §6.4 carries a dated correction.",
+            "when": "#66 plan",
+            "ref": "66-response-cache/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "`close()` sets the closed flag, cancels the scope, completes every future still in the map itself and clears the map; the load's body, that sweep with the call's re-check of the flag, and the job's completion handler each complete the shared future, and the first wins.",
+            "why": "§6.4's shape is made concrete against the code as built, and carries a dated correction.",
+            "when": "#66 plan",
+            "ref": "66-response-cache/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "A `Found`'s weight is at least 1, a value heavier than `maxWeight` is never stored, `getOrLoad` checks the caller's cancellation first, a negative `maxAge` throws `IllegalArgumentException`, and `ResponseCache.Disabled.close()` does nothing.",
+            "why": "§6.4 and §7.4's row carry dated corrections.",
+            "when": "#66 plan",
+            "ref": "66-response-cache/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The load-end `DEBUG` line is written once, by the completion that wins, and a stored-kind result whose future an `invalidate` removed during the load reads `not stored: removed before the load ended`.",
+            "why": "The plan's code wrote a second line after a `close()` and said `stored` for a discarded result; §6.4 carries the rule in its dated correction.",
+            "when": "#66 qa pass 2",
+            "ref": "66-response-cache/final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins"
+          }
+        ],
+        "commits": [
+          "e5f1a4c",
+          "ea167b9",
+          "d1deae5",
+          "38483ea",
+          "f1d7a07",
+          "2c4b7ec",
+          "02ae177",
+          "55a2a6e",
+          "33073bf"
+        ],
+        "verified": "qa pass 1 changes requested (7 test findings; 5 minor, 2 other), fixed in a remediation; qa pass 2 changes requested (1 code finding, minor), fixed in place with no third pass; the run of record 889 tests, 0 failed, 0 skipped.",
+        "link": "66-response-cache/final-implementation.md"
       }
     },
     {
@@ -5640,8 +5129,1721 @@ window.dashboardLive&&window.dashboardLive("plan",
         ],
         "versions": "none",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "67-call-budget/",
+        "board": "67-call-budget/dashboard.html",
+        "live": {
+          "step": "document",
+          "since": "2026-11-05T22:43:07Z",
+          "updated": "2026-11-05T23:46:22Z",
+          "detail": "Document: 7 of 7 tasks done; every task done.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "document",
+            "landing",
+            "merge",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-11-04",
+              "at": "2026-11-04T04:27:56Z",
+              "findings": {
+                "test": 2,
+                "code": 1
+              },
+              "severity": {
+                "minor": 2,
+                "other": 1
+              },
+              "route": "remediation",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/67-call-budget/2f43cfc3/tests/index.html",
+              "note": "One code finding (other), in the As built row the fix touches, `hard-stop`, whose verdict holds the write-ahead and the snapshots (plan.md R13, §6.7): in `BudgetLedger`'s `exactSnapshot` and `markPersisted`, after a write-ahead grant is released and `flush()` runs, the exact snapshot omits the emptied hard cell while its persisted mark keeps the write-ahead value, so up to `persistAhead - 1` later grants make no save and a crash under-counts the hard window, against the plan's never-under-count rule; the code is the plan's own, so the fix is also a deviation. Two minor test findings, in `component-tests`, each a Level 2 case to add: the write-ahead retry loop is exercised only for its first iteration (no slow successful save crossing a boundary, no three-attempt cap case), and the 1 ms re-plan deadline tolerance has no edge case. Suite: 1,204 passed, 0 failed, 0 skipped. For the documents: the Level 2 close test with free capacity appears to detect P3's mutation deterministically, to be confirmed with one run; P5 has no record yet."
+            },
+            {
+              "pass": 2,
+              "verdict": "changes-requested",
+              "date": "2026-11-04",
+              "at": "2026-11-04T05:16:24Z",
+              "findings": {
+                "test": 4,
+                "code": 1
+              },
+              "severity": {
+                "minor": 5,
+                "other": 0
+              },
+              "route": "on-the-spot",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/67-call-budget/cefdb082/tests/index.html",
+              "note": "Five minor findings and no other; the fixes are being made in place. Two in the As built row `fixtures`: the code finding, that `FakeBudgetStore`'s `failLoads` and `failSaves` with `times = 0` deliver one failure instead of none, because the count only decides when to disarm and the armed failure is still delivered; a guard settles it, with a case of its own, and as the code is the plan's listing (plan.md §7.17) the fix is also a deviation. And a test finding: `FixturesConsumerGatingTest` names neither `RecordingBudgetObserver` nor `FakeBudgetStore`. The other three are test findings in `component-tests`, each a case to add, resting on another row's verdict: for `close`, a waiter whose own write-ahead save spans `close()`; for `hard-stop`, a store `Error` propagating (plan.md §6.7) and a retried restore whose merge of counts re-plans queued waiters. Looked at with no finding: the D7 fix, a single added condition traced through every snapshot reader, and the restore band, which is plan.md §6.7's contract. Suite: 1,208 passed, 0 failed, 0 skipped."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-67-call-budget",
+          "event": {
+            "name": "document",
+            "at": "2026-11-05T23:46:22Z",
+            "note": "7 of 7 tasks done"
+          },
+          "stages": [
+            {
+              "id": "S1",
+              "name": "commonMain vocabulary, Retry-After parser and seams",
+              "state": "done",
+              "rows": [
+                "vocabulary",
+                "signals-reader",
+                "hard-stop",
+                "observer",
+                "component-tests",
+                "deterministic-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "S2",
+              "name": "CallBudget port, Permit, withPermit and the ledger with its Level 4a tables",
+              "state": "done",
+              "rows": [
+                "port",
+                "permit",
+                "windowed",
+                "lanes",
+                "pauses",
+                "hard-stop",
+                "time",
+                "component-tests",
+                "deterministic-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "S3",
+              "name": "fixtures: RecordingBudgetObserver and FakeBudgetStore",
+              "state": "done",
+              "rows": [
+                "fixtures",
+                "component-tests"
+              ]
+            },
+            {
+              "id": "S4",
+              "name": "WindowedCallBudget with the Level 1 and Level 2 tests",
+              "state": "done",
+              "rows": [
+                "port",
+                "permit",
+                "windowed",
+                "lanes",
+                "pauses",
+                "hard-stop",
+                "observer",
+                "time",
+                "close",
+                "component-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "S5",
+              "name": "Level 3 and Level 4c suites",
+              "state": "done",
+              "rows": [
+                "integration-tests",
+                "nonfunctional-tests"
+              ]
+            }
+          ],
+          "remediation": {
+            "pass": 2,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "Guard times in the fake store with its case and deviation; add the four coverage cases",
+                "state": "done"
+              }
+            ]
+          },
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applicable: WebTools does not apply Dokka)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              },
+              {
+                "id": "document-landing",
+                "name": "Document-landing commit",
+                "state": "done"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "The plan's Level 4c re-plan cost row asserts that the queue's planned instants stay in lane order; no seam exposes a waiter's planned instant, so the assertion is not implemented (deviation D4). To settle: an internal test seam, or the assertion dropped as a known gap.",
+              "raised": "implementation-stage S5",
+              "ref": "final-implementation.md",
+              "resolved": "2026-11-05T23:14:44Z"
+            },
+            {
+              "text": "Procedure P3's mutation (the closing re-check at the top of admitLocked removed) is not detected by WindowedCallBudgetCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+              "raised": "implementation-stage S5",
+              "ref": "final-implementation.md",
+              "resolved": "2026-11-04T04:44:36Z"
+            }
+          ],
+          "history": {
+            "sizing": [
+              {
+                "since": null,
+                "ended": "2026-11-03T19:38:03Z",
+                "endedBy": "sized",
+                "to": "plan"
+              }
+            ],
+            "plan": [
+              {
+                "since": "2026-11-03T19:38:03Z",
+                "ended": "2026-11-03T19:54:16Z",
+                "endedBy": "halted",
+                "to": "plan",
+                "event": {
+                  "name": "sized",
+                  "at": "2026-11-03T19:38:03Z"
+                },
+                "detail": "Unit 8 of the HTTP client stack: the CallBudget port, Permit, withPermit, Lane, RateWindow, RateSignals, WindowReading, RateSignalsReader with Standard, RetryAfter, BudgetStore with InMemoryBudgetStore, the snapshot types, BudgetObserver, BudgetEvent, BudgetUtilisation, CallBudget.Unlimited and WindowedCallBudget, all in commonMain; RecordingBudgetObserver and FakeBudgetStore in the test fixtures. Working tree clean at 8122af7; the run works in the main checkout. Next: the detailed implementation plan from architecture.md sections 6.5, 11 and 13.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-03T19:38:03Z"
+                },
+                "held": true
+              },
+              {
+                "since": "2026-11-03T21:13:42Z",
+                "ended": "2026-11-03T21:15:02Z",
+                "endedBy": "research-planning",
+                "to": "research",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-03T21:13:42Z"
+                },
+                "detail": "Decided: a failed store load at the restore fails open with a bounded retry, saves held back and an additive merge; maxQueued is a cap per lane; after close() everything but grants and waits keeps working, flush() still writes; the one-time restore runs on whichever of acquire, utilisation() and flush() comes first; BudgetEvent gains a Restored leaf beside the six. The nine working assumptions stand as stated. Research on the ledger's waiting and non-suspending close, the HTTP-date and Retry-After grammar, and the wall-clock time model follows.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-03T19:38:03Z"
+                }
+              },
+              {
+                "since": "2026-11-04T00:27:31Z",
+                "ended": "2026-11-04T01:18:42Z",
+                "endedBy": "halted",
+                "to": "plan",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-04T00:27:31Z"
+                },
+                "detail": "Decided: when the wall clock steps back across a window boundary, the current cell gains the sum of the cells above it, capped at the limit, and the higher cells stay (a bounded false refusal is the accepted cost); a restore snapshot stamped beyond maxRestoreSkew keeps its window counts as cells at their own indices and only its stamp and pause are ignored. The research summary's open trade-offs are being closed with these decisions. The plan is drafted next.",
+                "plan": {
+                  "state": "writing",
+                  "since": "2026-11-03T21:54:23Z"
+                },
+                "held": true
+              },
+              {
+                "since": "2026-11-04T01:34:03Z",
+                "ended": "2026-11-04T01:34:03Z",
+                "endedBy": "plan-accepted",
+                "to": "branch",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-04T01:34:03Z"
+                },
+                "detail": "All five choices stand: the event fields, CostExceedsLimit covering a lane's capacity, the snapshot contents, Retry-After: 0 pausing nothing, and arrival order.",
+                "plan": {
+                  "state": "writing",
+                  "since": "2026-11-03T21:54:23Z"
+                }
+              }
+            ],
+            "research": [
+              {
+                "since": "2026-11-03T21:15:02Z",
+                "ended": "2026-11-03T21:54:23Z",
+                "endedBy": "researched",
+                "to": "plan",
+                "event": {
+                  "name": "verification-started",
+                  "at": "2026-11-03T21:39:01Z"
+                },
+                "detail": "76 load-bearing claims re-opened at their sources: 17 from waits-and-close, 25 from retry-after-parsing, 19 from ledger-time, and 15 from the stack-level call-budget findings this unit relies on.",
+                "research": {
+                  "phase": "complete",
+                  "drafted": 0,
+                  "since": {
+                    "planning": "2026-11-03T21:15:02Z",
+                    "research": "2026-11-03T21:17:41Z",
+                    "verification": "2026-11-03T21:39:01Z",
+                    "complete": "2026-11-03T21:54:23Z"
+                  }
+                },
+                "questions": [
+                  {
+                    "question": "waits-and-close",
+                    "rows": [],
+                    "findings": "research/waits-and-close.md",
+                    "state": "complete",
+                    "started": "2026-11-03T21:17:41Z",
+                    "returned": "2026-11-03T21:35:22Z"
+                  },
+                  {
+                    "question": "retry-after-parsing",
+                    "rows": [],
+                    "findings": "research/retry-after-parsing.md",
+                    "state": "complete",
+                    "started": "2026-11-03T21:17:41Z",
+                    "returned": "2026-11-03T21:38:21Z"
+                  },
+                  {
+                    "question": "ledger-time",
+                    "rows": [],
+                    "findings": "research/ledger-time.md",
+                    "state": "complete",
+                    "started": "2026-11-03T21:17:41Z",
+                    "returned": "2026-11-03T21:36:32Z"
+                  }
+                ]
+              }
+            ],
+            "branch": [
+              {
+                "since": "2026-11-04T01:34:03Z",
+                "ended": "2026-11-04T01:35:42Z",
+                "endedBy": "branch-cut",
+                "to": "implementation",
+                "event": {
+                  "name": "plan-accepted",
+                  "at": "2026-11-04T01:34:03Z"
+                },
+                "detail": "Full implementation plan for the CallBudget port and WindowedCallBudget: a pure synchronous ledger (cells, slot search, lane floors, the clock-step fold, restore and snapshots) under a concurrency shell of one Mutex, a close latch and a conflated channel per waiter; the two fixtures RecordingBudgetObserver and FakeBudgetStore. Interfaces pinned for the call facades (#68).",
+                "branch": "feat/issue-67-call-budget"
+              }
+            ],
+            "implementation": [
+              {
+                "since": "2026-11-04T01:35:42Z",
+                "ended": "2026-11-04T04:00:38Z",
+                "endedBy": "qa-pass",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-04T03:30:51Z",
+                  "note": "S5 reported done; qa next"
+                },
+                "detail": "Procedure P3 (the closed-flag re-check at the top of admitLocked removed) was not detected by the close-race class in 5 of 5 runs: a parked call's first step returns Closed anyway, so the re-check saves one admission only; recorded for the known gaps. Procedure P4: re-plan of 1,000 waiters per lane averages 14 to 16 ms per round (bounds 2 s and 250 ms) on a 16-thread host. Module check: 1,204 jvm tests, 0 failed, 0 skipped.",
+                "open": [
+                  {
+                    "text": "The plan's Level 4c re-plan cost row asserts that the queue's planned instants stay in lane order; no seam exposes a waiter's planned instant, so the assertion is not implemented (deviation D4). To settle: an internal test seam, or the assertion dropped as a known gap.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  },
+                  {
+                    "text": "Procedure P3's mutation (the closing re-check at the top of admitLocked removed) is not detected by WindowedCallBudgetCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "stages": [
+                  {
+                    "id": "S1",
+                    "name": "commonMain vocabulary, Retry-After parser and seams",
+                    "state": "done",
+                    "rows": [
+                      "vocabulary",
+                      "signals-reader",
+                      "hard-stop",
+                      "observer",
+                      "component-tests",
+                      "deterministic-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S2",
+                    "name": "CallBudget port, Permit, withPermit and the ledger with its Level 4a tables",
+                    "state": "done",
+                    "rows": [
+                      "port",
+                      "permit",
+                      "windowed",
+                      "lanes",
+                      "pauses",
+                      "hard-stop",
+                      "time",
+                      "component-tests",
+                      "deterministic-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S3",
+                    "name": "fixtures: RecordingBudgetObserver and FakeBudgetStore",
+                    "state": "done",
+                    "rows": [
+                      "fixtures",
+                      "component-tests"
+                    ]
+                  },
+                  {
+                    "id": "S4",
+                    "name": "WindowedCallBudget with the Level 1 and Level 2 tests",
+                    "state": "done",
+                    "rows": [
+                      "port",
+                      "permit",
+                      "windowed",
+                      "lanes",
+                      "pauses",
+                      "hard-stop",
+                      "observer",
+                      "time",
+                      "close",
+                      "component-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "S5",
+                    "name": "Level 3 and Level 4c suites",
+                    "state": "done",
+                    "rows": [
+                      "integration-tests",
+                      "nonfunctional-tests"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "qa": [
+              {
+                "since": "2026-11-04T04:00:38Z",
+                "ended": "2026-11-04T04:27:56Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-04T04:00:38Z",
+                  "note": "pass 1: running"
+                },
+                "detail": "The lane-order assertion of the re-plan cost test stays out: settled as deviation D4 now and as a known gap at the reconcile, so the non-functional-tests row's amended statement is rewritten then.",
+                "open": [
+                  {
+                    "text": "The plan's Level 4c re-plan cost row asserts that the queue's planned instants stay in lane order; no seam exposes a waiter's planned instant, so the assertion is not implemented (deviation D4). To settle: an internal test seam, or the assertion dropped as a known gap.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  },
+                  {
+                    "text": "Procedure P3's mutation (the closing re-check at the top of admitLocked removed) is not detected by WindowedCallBudgetCloseRaceNonFunctionalTest; to be settled as a known gap or a test change.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-04",
+                    "at": "2026-11-04T04:27:56Z",
+                    "findings": {
+                      "test": 2,
+                      "code": 1
+                    },
+                    "severity": {
+                      "minor": 2,
+                      "other": 1
+                    },
+                    "route": "remediation",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/67-call-budget/2f43cfc3/tests/index.html"
+                  }
+                ]
+              },
+              {
+                "since": "2026-11-04T04:44:36Z",
+                "ended": "2026-11-04T05:16:24Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-04T04:44:36Z",
+                  "note": "pass 2: running"
+                },
+                "detail": "QA pass 2 running.",
+                "open": [
+                  {
+                    "text": "The plan's Level 4c re-plan cost row asserts that the queue's planned instants stay in lane order; no seam exposes a waiter's planned instant, so the assertion is not implemented (deviation D4). To settle: an internal test seam, or the assertion dropped as a known gap.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-04",
+                    "at": "2026-11-04T05:16:24Z",
+                    "findings": {
+                      "test": 4,
+                      "code": 1
+                    },
+                    "severity": {
+                      "minor": 5,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/67-call-budget/cefdb082/tests/index.html"
+                  }
+                ]
+              }
+            ],
+            "remediation": [
+              {
+                "since": "2026-11-04T04:27:56Z",
+                "ended": "2026-11-04T04:44:36Z",
+                "endedBy": "qa-pass",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-04T04:44:36Z",
+                  "note": "S5"
+                },
+                "detail": "The persisted-mark reproduction and the new deterministic row failed before the fix and pass after. P3's mutation is detected deterministically by the Level 2 close test's parked-call case (1 of 7 failed under the mutation), so the Level 4c class's blindness is no longer an open gap; the consequences record takes the outcome at the reconcile. P5 performed: tiers, contract points and never-a-value statements hold; three KDoc wordings flagged as unclear for the documentation review. componentTest 743 and deterministicTest 293 tests, 0 failed, 0 skipped; the ABI dump unchanged.",
+                "open": [
+                  {
+                    "text": "The plan's Level 4c re-plan cost row asserts that the queue's planned instants stay in lane order; no seam exposes a waiter's planned instant, so the assertion is not implemented (deviation D4). To settle: an internal test seam, or the assertion dropped as a known gap.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "remediation": {
+                  "pass": 1,
+                  "route": "remediation",
+                  "steps": [
+                    {
+                      "name": "Fix the persisted mark after an exact flush with its Level 2 reproduction, add the two Level 2 edge cases, confirm P3 against the close test, record P5",
+                      "state": "done"
+                    },
+                    {
+                      "name": "qa pass 2",
+                      "state": "current"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-04",
+                    "at": "2026-11-04T04:27:56Z",
+                    "findings": {
+                      "test": 2,
+                      "code": 1
+                    },
+                    "severity": {
+                      "minor": 2,
+                      "other": 1
+                    },
+                    "route": "remediation",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/67-call-budget/2f43cfc3/tests/index.html",
+                    "note": "One code finding (other), in the As built row the fix touches, `hard-stop`, whose verdict holds the write-ahead and the snapshots (plan.md R13, §6.7): in `BudgetLedger`'s `exactSnapshot` and `markPersisted`, after a write-ahead grant is released and `flush()` runs, the exact snapshot omits the emptied hard cell while its persisted mark keeps the write-ahead value, so up to `persistAhead - 1` later grants make no save and a crash under-counts the hard window, against the plan's never-under-count rule; the code is the plan's own, so the fix is also a deviation. Two minor test findings, in `component-tests`, each a Level 2 case to add: the write-ahead retry loop is exercised only for its first iteration (no slow successful save crossing a boundary, no three-attempt cap case), and the 1 ms re-plan deadline tolerance has no edge case. Suite: 1,204 passed, 0 failed, 0 skipped. For the documents: the Level 2 close test with free capacity appears to detect P3's mutation deterministically, to be confirmed with one run; P5 has no record yet."
+                  }
+                ]
+              },
+              {
+                "since": "2026-11-04T05:16:24Z",
+                "ended": "2026-11-04T05:31:02Z",
+                "endedBy": "document",
+                "to": "document",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-04T05:31:02Z",
+                  "note": "1 of 1 remediation sub-steps done"
+                },
+                "detail": "The two fixtures now have consumer gating cases; the close test covers a waiter whose own write-ahead save spans close() (Closed once the save ends) and pins that a call whose save spans a close is still granted, the plan's letter; a store Error propagates and leaves the budget usable; a retried restore that merges counts re-plans the waiters. Observation for the reconcile: a store Error reaches the caller as a stack-trace-recovery copy of the thrown instance, since the store call runs inside withTimeoutOrNull; the contract 'an Error propagates' holds. gatingTest 32 and componentTest 748 tests, 0 failed, 0 skipped; the ABI dump unchanged.",
+                "open": [
+                  {
+                    "text": "The plan's Level 4c re-plan cost row asserts that the queue's planned instants stay in lane order; no seam exposes a waiter's planned instant, so the assertion is not implemented (deviation D4). To settle: an internal test seam, or the assertion dropped as a known gap.",
+                    "raised": "implementation-stage S5",
+                    "ref": "final-implementation.md"
+                  }
+                ],
+                "remediation": {
+                  "pass": 2,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "Guard times in the fake store with its case and deviation; add the four coverage cases",
+                      "state": "done"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 2,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-04",
+                    "at": "2026-11-04T05:16:24Z",
+                    "findings": {
+                      "test": 4,
+                      "code": 1
+                    },
+                    "severity": {
+                      "minor": 5,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/67-call-budget/cefdb082/tests/index.html",
+                    "note": "Five minor findings and no other; the fixes are being made in place. Two in the As built row `fixtures`: the code finding, that `FakeBudgetStore`'s `failLoads` and `failSaves` with `times = 0` deliver one failure instead of none, because the count only decides when to disarm and the armed failure is still delivered; a guard settles it, with a case of its own, and as the code is the plan's listing (plan.md §7.17) the fix is also a deviation. And a test finding: `FixturesConsumerGatingTest` names neither `RecordingBudgetObserver` nor `FakeBudgetStore`. The other three are test findings in `component-tests`, each a case to add, resting on another row's verdict: for `close`, a waiter whose own write-ahead save spans `close()`; for `hard-stop`, a store `Error` propagating (plan.md §6.7) and a retried restore whose merge of counts re-plans queued waiters. Looked at with no finding: the D7 fix, a single added condition traced through every snapshot reader, and the restore band, which is plan.md §6.7's contract. Suite: 1,208 passed, 0 failed, 0 skipped."
+                  }
+                ]
+              }
+            ],
+            "document": [
+              {
+                "since": "2026-11-04T05:31:02Z",
+                "ended": "2026-11-04T05:36:00Z",
+                "endedBy": "run-restarted",
+                "to": "document",
+                "event": {
+                  "name": "document",
+                  "at": "2026-11-05T23:14:44Z",
+                  "note": "5 of 7 tasks done"
+                },
+                "detail": "As-built record final in the form of the earlier units: 81 new files, the ABI dump from 557 to 892 lines, nine deviations, all six acceptance items met, final run of record the module's check at 327164f (1,215 tests in 227 classes, 0 failed, 0 skipped). consequences.md: built at 327164f; the sibling contracts for the call facades as built; follow-ups include rethrowing a store Error's original instance and saving a hard window when a server reading or a clock step raises its count; known gaps include the lane-order assertion left out (D4), the Level 4c close-race class not detecting P3's mutation while the Level 2 close class does, a call whose store call spans close() still being granted, a grant after three outlasting saves proceeding unsaved, a raised count being saved only with the next grant or flush(), and written-ahead units given back staying in the stored count until flush(); every assumption's outcome is recorded (none failed). The parent consequences.md names units 1 to 8 as built and reads unit 8's open point as settled; architecture.md carries seven corrections dated 2026-11-05 at section 6.5, the section 7.4 row and section 13. research/README.md gained three did-not-hold notes.",
+                "document": {
+                  "tasks": [
+                    {
+                      "id": "documentation-review",
+                      "name": "Documentation review",
+                      "state": "done"
+                    },
+                    {
+                      "id": "reconcile-documentation",
+                      "name": "Reconcile documentation",
+                      "state": "done"
+                    },
+                    {
+                      "id": "dokka-check",
+                      "name": "Dokka check (not applicable: WebTools does not apply Dokka)",
+                      "state": "done"
+                    },
+                    {
+                      "id": "reconcile-plan",
+                      "name": "Reconcile plan",
+                      "state": "done"
+                    },
+                    {
+                      "id": "readme-changelog",
+                      "name": "README and CHANGELOG",
+                      "state": "done"
+                    },
+                    {
+                      "id": "state-boards",
+                      "name": "State boards",
+                      "state": "current"
+                    },
+                    {
+                      "id": "document-landing",
+                      "name": "Document-landing commit",
+                      "state": "todo"
+                    }
+                  ]
+                },
+                "outage": "session ended; a new session took the run up"
+              }
+            ]
+          },
+          "rowNames": {
+            "port": "The `CallBudget` port and `CallBudget.Unlimited`",
+            "permit": "`Permit` and `withPermit`",
+            "vocabulary": "`Lane`, `RateWindow`, `RateSignals`, `WindowReading` and `BudgetUtilisation`",
+            "signals-reader": "`RateSignalsReader`, its `Standard` and `RetryAfter`",
+            "windowed": "`WindowedCallBudget`: the ledger and its reservations",
+            "lanes": "Lane shares",
+            "pauses": "Server signals: raising usage and pausing",
+            "hard-stop": "The hard daily stop, `BudgetStore`, `InMemoryBudgetStore` and the snapshots",
+            "observer": "`BudgetObserver`, `BudgetEvent` and the one emission point",
+            "time": "Two clocks: `TimeSource` and `WallClock`",
+            "close": "`close()`, `flush()` and `HttpFailure.Closed(\"budget\")`",
+            "fixtures": "`RecordingBudgetObserver` and `FakeBudgetStore` in the published fixtures",
+            "component-tests": "Level 2 on `VirtualClock`, and the three-clocks proof with the real budget",
+            "integration-tests": "Level 3: the reader against the real transport over loopback",
+            "deterministic-tests": "Level 4a: the HTTP-date table, window arithmetic and a seeded property test",
+            "nonfunctional-tests": "Level 4c: the close race, the re-plan's cost and contention on real threads",
+            "release": "The ABI dump and the version"
+          },
+          "recon": {
+            "interview": {
+              "reconstructed": true,
+              "ended": null,
+              "trail": [],
+              "milestones": []
+            }
+          }
+        },
+        "tests": {
+          "base": "3091e92",
+          "updated": "2026-11-04T05:31:02Z",
+          "added": [
+            {
+              "class": "LaneComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/LaneComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "vocabulary",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "RateWindowComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/RateWindowComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "vocabulary",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "RateSignalsComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/RateSignalsComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "vocabulary",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "RateSignalsReaderStandardComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/RateSignalsReaderStandardComponentTest.kt",
+              "tests": 11,
+              "rows": [
+                "signals-reader",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "BudgetSnapshotComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/BudgetSnapshotComponentTest.kt",
+              "tests": 7,
+              "rows": [
+                "hard-stop",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "BudgetUtilisationComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/BudgetUtilisationComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "vocabulary",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "BudgetEventComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/BudgetEventComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "observer",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "BudgetVocabularyComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/http/BudgetVocabularyComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "observer",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "InMemoryBudgetStoreComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/InMemoryBudgetStoreComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "hard-stop",
+                "component-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "CallBudgetUnlimitedComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/CallBudgetUnlimitedComponentTest.kt",
+              "tests": 7,
+              "rows": [
+                "port",
+                "permit",
+                "component-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "HttpDateDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HttpDateDeterministicTest.kt",
+              "tests": 10,
+              "rows": [
+                "signals-reader",
+                "deterministic-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "RetryAfterDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/RetryAfterDeterministicTest.kt",
+              "tests": 8,
+              "rows": [
+                "signals-reader",
+                "deterministic-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "HttpDateJavaTimeDifferentialDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/HttpDateJavaTimeDifferentialDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "signals-reader",
+                "deterministic-tests"
+              ],
+              "stage": "S1",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "WindowArithmeticDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/WindowArithmeticDeterministicTest.kt",
+              "tests": 8,
+              "rows": [
+                "windowed",
+                "time",
+                "deterministic-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "ShareRoundingDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/ShareRoundingDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "lanes",
+                "deterministic-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "CellFoldDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/CellFoldDeterministicTest.kt",
+              "tests": 9,
+              "rows": [
+                "time",
+                "deterministic-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "PauseDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/PauseDeterministicTest.kt",
+              "tests": 7,
+              "rows": [
+                "pauses",
+                "time",
+                "deterministic-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "BudgetLedgerPlanDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BudgetLedgerPlanDeterministicTest.kt",
+              "tests": 19,
+              "rows": [
+                "windowed",
+                "lanes",
+                "pauses",
+                "hard-stop",
+                "deterministic-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 19,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "BudgetLedgerSnapshotDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BudgetLedgerSnapshotDeterministicTest.kt",
+              "tests": 10,
+              "rows": [
+                "hard-stop",
+                "deterministic-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            },
+            {
+              "class": "BudgetLedgerPropertyDeterministicTest",
+              "module": "webtools-http",
+              "testLevel": "4a",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/http/BudgetLedgerPropertyDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "windowed",
+                "lanes",
+                "hard-stop",
+                "deterministic-tests"
+              ],
+              "stage": "S2",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T02:18:59Z"
+              }
+            },
+            {
+              "class": "RecordingBudgetObserverComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/RecordingBudgetObserverComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "fixtures",
+                "component-tests"
+              ],
+              "stage": "S3",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "FakeBudgetStoreComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/FakeBudgetStoreComponentTest.kt",
+              "tests": 11,
+              "rows": [
+                "fixtures",
+                "component-tests"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T05:31:02Z"
+              }
+            },
+            {
+              "class": "CallBudgetConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/http/CallBudgetConsumerGatingTest.kt",
+              "tests": 5,
+              "rows": [
+                "port",
+                "permit",
+                "vocabulary",
+                "signals-reader",
+                "windowed",
+                "hard-stop",
+                "observer"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/WindowedCallBudgetConsumerGatingTest.kt",
+              "tests": 2,
+              "rows": [
+                "port",
+                "permit",
+                "windowed",
+                "close"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WithPermitComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WithPermitComponentTest.kt",
+              "tests": 10,
+              "rows": [
+                "permit",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetConstructionComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetConstructionComponentTest.kt",
+              "tests": 16,
+              "rows": [
+                "windowed",
+                "lanes",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 16,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetFifoComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetFifoComponentTest.kt",
+              "tests": 10,
+              "rows": [
+                "port",
+                "windowed",
+                "lanes",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetRefundComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetRefundComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "permit",
+                "windowed",
+                "pauses",
+                "component-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetLaneFloorComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetLaneFloorComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "lanes",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetPauseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetPauseComponentTest.kt",
+              "tests": 11,
+              "rows": [
+                "pauses",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 11,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetReconcileComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetReconcileComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "pauses",
+                "hard-stop",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetGuardComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetGuardComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "windowed",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetHardWindowComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetHardWindowComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "hard-stop",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetRestoreComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetRestoreComponentTest.kt",
+              "tests": 12,
+              "rows": [
+                "hard-stop",
+                "close",
+                "component-tests"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 12,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T05:31:02Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetCrashComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetCrashComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "hard-stop",
+                "component-tests"
+              ],
+              "stage": "qa pass 1 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetStoreFailureComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetStoreFailureComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "hard-stop",
+                "observer",
+                "component-tests"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T05:31:02Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetCloseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetCloseComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "close",
+                "component-tests"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T05:31:02Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetCancellationComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetCancellationComponentTest.kt",
+              "tests": 3,
+              "rows": [
+                "permit",
+                "windowed",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetObserverComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetObserverComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "observer",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetLoggingComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetLoggingComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "observer",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetThreeClocksComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetThreeClocksComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "time",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetClockStepComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetClockStepComponentTest.kt",
+              "tests": 9,
+              "rows": [
+                "windowed",
+                "time",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetClockPauseComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WindowedCallBudgetClockPauseComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "pauses",
+                "hard-stop",
+                "time",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:05:26Z"
+              }
+            },
+            {
+              "class": "RateSignalsReaderLoopbackIntegrationTest",
+              "module": "webtools-http",
+              "testLevel": "3",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/http/RateSignalsReaderLoopbackIntegrationTest.kt",
+              "tests": 6,
+              "rows": [
+                "signals-reader",
+                "integration-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetCloseRaceNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/WindowedCallBudgetCloseRaceNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "close",
+                "nonfunctional-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetReplanCostNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/WindowedCallBudgetReplanCostNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "windowed",
+                "nonfunctional-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            },
+            {
+              "class": "WindowedCallBudgetContentionNonFunctionalTest",
+              "module": "webtools-http",
+              "testLevel": "4c",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/http/WindowedCallBudgetContentionNonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "windowed",
+                "nonfunctional-tests"
+              ],
+              "stage": "S5",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "pass": 2,
+                "at": "2026-11-04T05:16:24Z"
+              }
+            }
+          ],
+          "amended": [
+            {
+              "class": "WebToolsDslComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/WebToolsDslComponentTest.kt",
+              "tests": 1,
+              "rows": [
+                "vocabulary",
+                "windowed",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:01:57Z"
+              }
+            },
+            {
+              "class": "VirtualClockThreeClocksComponentTest",
+              "module": "webtools-http",
+              "testLevel": "2",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/http/testing/VirtualClockThreeClocksComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "time",
+                "component-tests"
+              ],
+              "stage": "S4",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T03:02:01Z"
+              }
+            },
+            {
+              "class": "FixturesConsumerGatingTest",
+              "module": "webtools-http",
+              "testLevel": "1",
+              "path": "webtools-http/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/http/testing/FixturesConsumerGatingTest.kt",
+              "tests": 6,
+              "rows": [
+                "fixtures"
+              ],
+              "stage": "qa pass 2 fixes",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-04T05:31:02Z"
+              }
+            }
+          ],
+          "relevant": [],
+          "rowNames": {
+            "port": "The `CallBudget` port and `CallBudget.Unlimited`",
+            "permit": "`Permit` and `withPermit`",
+            "vocabulary": "`Lane`, `RateWindow`, `RateSignals`, `WindowReading` and `BudgetUtilisation`",
+            "signals-reader": "`RateSignalsReader`, its `Standard` and `RetryAfter`",
+            "windowed": "`WindowedCallBudget`: the ledger and its reservations",
+            "lanes": "Lane shares",
+            "pauses": "Server signals: raising usage and pausing",
+            "hard-stop": "The hard daily stop, `BudgetStore`, `InMemoryBudgetStore` and the snapshots",
+            "observer": "`BudgetObserver`, `BudgetEvent` and the one emission point",
+            "time": "Two clocks: `TimeSource` and `WallClock`",
+            "close": "`close()`, `flush()` and `HttpFailure.Closed(\"budget\")`",
+            "fixtures": "`RecordingBudgetObserver` and `FakeBudgetStore` in the published fixtures",
+            "component-tests": "Level 2 on `VirtualClock`, and the three-clocks proof with the real budget",
+            "integration-tests": "Level 3: the reader against the real transport over loopback",
+            "deterministic-tests": "Level 4a: the HTTP-date table, window arithmetic and a seeded property test",
+            "nonfunctional-tests": "Level 4c: the close race, the re-plan's cost and contention on real threads"
+          }
+        }
       },
       "gap": {
         "kind": "missing",
@@ -5709,7 +6911,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#65-call-budget",
               "heading": "6.5 Call budget",
               "paragraph": "Responsibility: grant permits under a provider's clock-aligned windows and lane shares, pause on server signals, and hold a hard daily stop that survives a restart when a store is supplied. · Owns (`common/`, all of it): · the port `CallBudget : AutoCloseable` (subclass-gated): `acquire(cost, lane, maxWait): Result<Permit>` (fails fast with `BudgetExhausted(wait, reason, window)` when the computed wait exceeds the cap; a cancelled wait is refunded), `utilisation(): BudgetUtilisation`, non-suspend `close()` (marks closed; waiters fail with `Closed`), `suspend flush(): Result<Unit>` (exact …",
-              "hash": "7516885e4071"
+              "hash": "3887d7983775"
             }
           },
           {
@@ -5719,7 +6921,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#65-call-budget",
               "heading": "6.5 Call budget",
               "paragraph": "Responsibility: grant permits under a provider's clock-aligned windows and lane shares, pause on server signals, and hold a hard daily stop that survives a restart when a store is supplied. · Owns (`common/`, all of it): · the port `CallBudget : AutoCloseable` (subclass-gated): `acquire(cost, lane, maxWait): Result<Permit>` (fails fast with `BudgetExhausted(wait, reason, window)` when the computed wait exceeds the cap; a cancelled wait is refunded), `utilisation(): BudgetUtilisation`, non-suspend `close()` (marks closed; waiters fail with `Closed`), `suspend flush(): Result<Unit>` (exact …",
-              "hash": "7516885e4071"
+              "hash": "3887d7983775"
             }
           },
           {
@@ -6393,17 +7595,49 @@ window.dashboardLive&&window.dashboardLive("plan",
       },
       {
         "unit": "response-cache",
-        "basis": "plan",
-        "summary": "`webtools-http`, new and unreleased, gains the `ResponseCache` port, implementing which needs the opt-in, with its values and `ResponseCache.Disabled`, and the final `CaffeineResponseCache` on the JVM, all Stable Core otherwise: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge` and failures never stored. No dependency is added, the fixtures and the three existing artifacts do not change, and the call facades (#68) are its first callers.",
+        "basis": "as-built",
+        "summary": "`webtools-http`, new and unreleased, gains the `ResponseCache` port, implementing which needs the opt-in, with its values and `ResponseCache.Disabled`, and the final `CaffeineResponseCache` on the JVM, all Stable Core otherwise: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored and logs without values. No dependency of either variant changes, the fixtures and the three existing artifacts do not, and the call facades (#68) are its first callers.",
         "release": {
           "bump": "none",
           "version": null,
           "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
           "unreleased": true
         },
-        "source": "66-response-cache/consequences.md",
+        "source": "66-response-cache/consequences.md, reconciled with 66-response-cache/final-implementation.md",
         "link": "66-response-cache/consequences.md#1-published-artifacts",
-        "changes": []
+        "changes": [
+          {
+            "what": "One `DEBUG` line per load end is written by the completion that wins, and a stored-kind result whose future an `invalidate` removed during the load reads `not stored: removed before the load ended`.",
+            "why": "The plan's code logged before knowing whether its completion won; no public signature and no line of the dump change.",
+            "when": "#66 qa pass 2",
+            "ref": "66-response-cache/final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins"
+          },
+          {
+            "what": "The port reports nothing per call, so the facade's per-call `DEBUG` line is settled against it, and the call budget's permit, taken in the cache's load coroutine, returns a refusal as a value.",
+            "why": "The plan's §12 contracts hold as written; the reconciliation states what the build shows beyond them.",
+            "when": "#66 as-built reconciliation",
+            "ref": "66-response-cache/consequences.md#4-sibling-units"
+          },
+          {
+            "what": "The known gaps gain that no test fails without the insert-then-check, that the gate on implementers has no automated check, and which completer delivers a rejected dispatch's outcome.",
+            "why": "The reconciliation adds what the build leaves open.",
+            "when": "#66 as-built reconciliation",
+            "ref": "66-response-cache/consequences.md#8-known-gaps"
+          }
+        ]
+      },
+      {
+        "unit": "call-budget",
+        "basis": "plan",
+        "summary": "`webtools-http`, new and unreleased, gains the `CallBudget` port, implementing which needs the opt-in, with `Permit`, `withPermit` and `CallBudget.Unlimited`, its vocabulary, `RetryAfter`, the store and observer seams, and the supplied `WindowedCallBudget`, all in common code and Stable Core otherwise: windows aligned to the provider's boundaries, fair waits that fail fast, pauses from the server, a hard daily stop that survives a restart and a clean close. The fixtures gain two fakes; no dependency changes, the three existing artifacts do not, and the call facades (#68) are its first callers.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "`webtools-http` 1.0.0 stays new and unreleased until #55's stack is complete; no existing version moves",
+          "unreleased": true
+        },
+        "source": "67-call-budget/consequences.md; 67-call-budget/plan.md §7.23, §12",
+        "link": "67-call-budget/consequences.md#1-published-artifacts"
       }
     ],
     "changes": [
@@ -6492,6 +7726,22 @@ window.dashboardLive&&window.dashboardLive("plan",
         "when": "#65 landing",
         "ref": "e8f0a88",
         "unit": "okhttp-transport"
+      },
+      {
+        "what": "`webtools-http`'s cache contract is settled as built: four counts of its own, with `evictions` the size bound's removals only, a `Found`'s weight at least 1 and a heavier value never stored, a negative `maxAge` throwing, a loader's own cancellation an `IllegalStateException` failure, and a `close()` that sweeps the map.",
+        "why": "#66's consequences §5 states it; `architecture.md` §6.4 and §7.4's row carry dated corrections. `webtools-http` is unreleased, so no published consumer is affected.",
+        "when": "#66 landing",
+        "ref": "8122af7",
+        "entry": "downstream.1",
+        "system": "webtools-http-cache",
+        "unit": "response-cache"
+      },
+      {
+        "what": "The call budget's permit runs in the cache's load coroutine, so a cache's `close()` cancels a wait in progress and a refusal the facade must see as `BudgetExhausted` is returned as a value; the port reports nothing per call, so the facade's per-call `DEBUG` line is settled against that.",
+        "why": "#66's consequences §4 states it, for #67 and #68 to build on.",
+        "when": "#66 landing",
+        "ref": "8122af7",
+        "unit": "response-cache"
       }
     ],
     "source": "consequences.md",
@@ -6507,6 +7757,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "webtools-http-url-policy": "../../dashboards/webtools-http/index.html",
       "webtools-http-transport": "../../dashboards/webtools-http/index.html",
       "webtools-http-cache": "../../dashboards/webtools-http/index.html",
+      "webtools-http-budget": "../../dashboards/webtools-http-budget/index.html",
       "webtools": "../../dashboards/index.html"
     }
   }

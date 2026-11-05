@@ -1,3 +1,106 @@
+public abstract class com/spartanlabs/webtools/http/BudgetEvent {
+	protected fun <init> ()V
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$Granted : com/spartanlabs/webtools/http/BudgetEvent {
+	public synthetic fun <init> (Lcom/spartanlabs/webtools/http/Lane;IJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCost ()I
+	public final fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getWaited-UwyO8pc ()J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$HardStop : com/spartanlabs/webtools/http/BudgetEvent {
+	public fun <init> (Ljava/lang/String;J)V
+	public final fun getResetsAtEpochMillis ()J
+	public final fun getWindow ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$Paused : com/spartanlabs/webtools/http/BudgetEvent {
+	public synthetic fun <init> (JJLcom/spartanlabs/webtools/http/PauseSource;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getLength-UwyO8pc ()J
+	public final fun getSource ()Lcom/spartanlabs/webtools/http/PauseSource;
+	public final fun getUntilEpochMillis ()J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$Reconciled : com/spartanlabs/webtools/http/BudgetEvent {
+	public fun <init> (Ljava/lang/String;II)V
+	public final fun getRaisedBy ()I
+	public final fun getServerUsed ()I
+	public final fun getWindow ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$Refused : com/spartanlabs/webtools/http/BudgetEvent {
+	public synthetic fun <init> (Lcom/spartanlabs/webtools/http/Lane;IJLcom/spartanlabs/webtools/http/ExhaustedReason;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCost ()I
+	public final fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getReason ()Lcom/spartanlabs/webtools/http/ExhaustedReason;
+	public final fun getWait-UwyO8pc ()J
+	public final fun getWindow ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$Restored : com/spartanlabs/webtools/http/BudgetEvent {
+	public fun <init> (IIZ)V
+	public final fun getIgnoredForSkew ()Z
+	public final fun getWindowsDropped ()I
+	public final fun getWindowsRestored ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetEvent$StoreFailed : com/spartanlabs/webtools/http/BudgetEvent {
+	public fun <init> (Lcom/spartanlabs/webtools/http/StoreOperation;Ljava/lang/Throwable;)V
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getOperation ()Lcom/spartanlabs/webtools/http/StoreOperation;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/BudgetObserver {
+	public abstract fun onEvent (Lcom/spartanlabs/webtools/http/BudgetEvent;)V
+}
+
+public final class com/spartanlabs/webtools/http/BudgetObserver$None : com/spartanlabs/webtools/http/BudgetObserver {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/BudgetObserver$None;
+	public fun onEvent (Lcom/spartanlabs/webtools/http/BudgetEvent;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetSnapshot {
+	public static final field CURRENT_VERSION I
+	public static final field Companion Lcom/spartanlabs/webtools/http/BudgetSnapshot$Companion;
+	public fun <init> (IJLjava/util/List;J)V
+	public fun <init> (JLjava/util/List;J)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPausedUntilEpochMillis ()J
+	public final fun getTakenAtEpochMillis ()J
+	public final fun getVersion ()I
+	public final fun getWindows ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetSnapshot$Companion {
+	public final fun getEmpty ()Lcom/spartanlabs/webtools/http/BudgetSnapshot;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/BudgetStore {
+	public abstract fun load-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun save-gIAlu-s (Lcom/spartanlabs/webtools/http/BudgetSnapshot;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/BudgetUtilisation {
+	public synthetic fun <init> (Ljava/util/List;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPausedFor-UwyO8pc ()J
+	public final fun getWaiting ()I
+	public final fun getWindows ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/spartanlabs/webtools/http/CacheKey {
 	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
@@ -76,6 +179,27 @@ public final class com/spartanlabs/webtools/http/CaffeineResponseCache$Companion
 public final class com/spartanlabs/webtools/http/CaffeineResponseCacheKt {
 	public static final fun CaffeineResponseCache (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
 	public static synthetic fun CaffeineResponseCache$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/CaffeineResponseCache;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/CallBudget : java/lang/AutoCloseable {
+	public abstract fun acquire-E0qYoyE (ILcom/spartanlabs/webtools/http/Lane;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/CallBudget$DefaultImpls {
+	public static fun close (Lcom/spartanlabs/webtools/http/CallBudget;)V
+	public static fun flush-IoAF18A (Lcom/spartanlabs/webtools/http/CallBudget;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/CallBudget$Unlimited : com/spartanlabs/webtools/http/CallBudget {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/CallBudget$Unlimited;
+	public fun acquire-E0qYoyE (ILcom/spartanlabs/webtools/http/Lane;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+	public fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/spartanlabs/webtools/http/CidrBlock {
@@ -237,6 +361,27 @@ public final class com/spartanlabs/webtools/http/HttpTransport$DefaultImpls {
 	public static fun close (Lcom/spartanlabs/webtools/http/HttpTransport;)V
 }
 
+public final class com/spartanlabs/webtools/http/InMemoryBudgetStore : com/spartanlabs/webtools/http/BudgetStore {
+	public fun <init> ()V
+	public fun load-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun save-gIAlu-s (Lcom/spartanlabs/webtools/http/BudgetSnapshot;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/Lane {
+	public static final field Companion Lcom/spartanlabs/webtools/http/Lane$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/Lane$Companion {
+	public final fun getInteractive ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getTracker ()Lcom/spartanlabs/webtools/http/Lane;
+}
+
 public abstract interface class com/spartanlabs/webtools/http/Lookup {
 }
 
@@ -331,6 +476,94 @@ public final class com/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted$Bui
 	public final fun settings (Lkotlin/jvm/functions/Function1;)V
 }
 
+public final class com/spartanlabs/webtools/http/PauseSource {
+	public static final field Companion Lcom/spartanlabs/webtools/http/PauseSource$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/PauseSource$Companion {
+	public final fun getBoundary ()Lcom/spartanlabs/webtools/http/PauseSource;
+	public final fun getResetIn ()Lcom/spartanlabs/webtools/http/PauseSource;
+	public final fun getRetryAfter ()Lcom/spartanlabs/webtools/http/PauseSource;
+	public final fun getSnapshot ()Lcom/spartanlabs/webtools/http/PauseSource;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/Permit {
+	public abstract fun complete (Lcom/spartanlabs/webtools/http/RateSignals;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun complete (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCost ()I
+	public abstract fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public abstract fun release (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/Permit$DefaultImpls {
+	public static fun complete (Lcom/spartanlabs/webtools/http/Permit;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/RateSignals {
+	public static final field Companion Lcom/spartanlabs/webtools/http/RateSignals$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReadings ()Ljava/util/Map;
+	public final fun getRetryAfter-FghU774 ()Lkotlin/time/Duration;
+	public final fun getThrottled ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/RateSignals$Builder {
+	public final fun getRetryAfter-FghU774 ()Lkotlin/time/Duration;
+	public final fun getThrottled ()Z
+	public final fun reading (Ljava/lang/String;Lcom/spartanlabs/webtools/http/WindowReading;)V
+	public final fun setRetryAfter-BwNAW2A (Lkotlin/time/Duration;)V
+	public final fun setThrottled (Z)V
+}
+
+public final class com/spartanlabs/webtools/http/RateSignals$Companion {
+	public final fun getNone ()Lcom/spartanlabs/webtools/http/RateSignals;
+}
+
+public final class com/spartanlabs/webtools/http/RateSignalsKt {
+	public static final fun RateSignals (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/RateSignals;
+	public static synthetic fun RateSignals$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/RateSignals;
+}
+
+public abstract interface class com/spartanlabs/webtools/http/RateSignalsReader {
+	public abstract fun read (Lcom/spartanlabs/webtools/http/HttpResponse;J)Lcom/spartanlabs/webtools/http/RateSignals;
+}
+
+public final class com/spartanlabs/webtools/http/RateSignalsReader$Standard : com/spartanlabs/webtools/http/RateSignalsReader {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/RateSignalsReader$Standard;
+	public fun read (Lcom/spartanlabs/webtools/http/HttpResponse;J)Lcom/spartanlabs/webtools/http/RateSignals;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/RateWindow {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHard ()Z
+	public final fun getLimit ()I
+	public final fun getMargin ()I
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPeriod-UwyO8pc ()J
+	public final fun getPublished ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/RateWindow$Builder {
+	public final fun getHard ()Z
+	public final fun getMargin ()I
+	public final fun setHard (Z)V
+	public final fun setMargin (I)V
+}
+
+public final class com/spartanlabs/webtools/http/RateWindowKt {
+	public static final fun RateWindow-exY8QGI (Ljava/lang/String;IJLkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/RateWindow;
+	public static synthetic fun RateWindow-exY8QGI$default (Ljava/lang/String;IJLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/RateWindow;
+}
+
 public final class com/spartanlabs/webtools/http/RedirectHop {
 	public fun <init> (Lcom/spartanlabs/webtools/http/Url;I)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -391,6 +624,25 @@ public final class com/spartanlabs/webtools/http/ResponseCache$Disabled : com/sp
 	public fun invalidateAll ()V
 	public fun stats ()Lcom/spartanlabs/webtools/http/CacheStats;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/RetryAfter {
+	public static final field INSTANCE Lcom/spartanlabs/webtools/http/RetryAfter;
+	public final fun parse-0E7RQCE (Ljava/lang/String;JJ)Ljava/lang/Object;
+	public final fun parse-gIAlu-s (Ljava/lang/String;J)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/StoreOperation {
+	public static final field Companion Lcom/spartanlabs/webtools/http/StoreOperation$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/StoreOperation$Companion {
+	public final fun getLoad ()Lcom/spartanlabs/webtools/http/StoreOperation;
+	public final fun getSave ()Lcom/spartanlabs/webtools/http/StoreOperation;
 }
 
 public abstract class com/spartanlabs/webtools/http/TransportFailure : com/spartanlabs/webtools/http/HttpFailure {
@@ -553,5 +805,88 @@ public final class com/spartanlabs/webtools/http/WallClock$System : com/spartanl
 }
 
 public abstract interface annotation class com/spartanlabs/webtools/http/WebToolsDsl : java/lang/annotation/Annotation {
+}
+
+public final class com/spartanlabs/webtools/http/WindowReading {
+	public fun <init> (I)V
+	public synthetic fun <init> (ILkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRemaining ()I
+	public final fun getResetIn-FghU774 ()Lkotlin/time/Duration;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/WindowSnapshot {
+	public fun <init> (Ljava/lang/String;JI)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUsed ()I
+	public final fun getWindow ()Ljava/lang/String;
+	public final fun getWindowStartEpochMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/WindowUtilisation {
+	public fun <init> (Ljava/lang/String;IIIIJJZD)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getElapsedFraction ()D
+	public final fun getFraction ()D
+	public final fun getHard ()Z
+	public final fun getLimit ()I
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPublished ()I
+	public final fun getQueued ()I
+	public final fun getRemaining ()I
+	public final fun getResetsAtEpochMillis ()J
+	public final fun getUsed ()I
+	public final fun getWindowStartEpochMillis ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/WindowedCallBudget : com/spartanlabs/webtools/http/CallBudget {
+	public fun acquire-E0qYoyE (ILcom/spartanlabs/webtools/http/Lane;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun close ()V
+	public fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getMaxBurst ()I
+	public fun toString ()Ljava/lang/String;
+	public fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/WindowedCallBudget$Builder {
+	public final fun getBoundaryGuard-UwyO8pc ()J
+	public final fun getLaneShares ()Ljava/util/Map;
+	public final fun getMaxPause-UwyO8pc ()J
+	public final fun getMaxQueued ()I
+	public final fun getMaxRestoreSkew-UwyO8pc ()J
+	public final fun getObserver ()Lcom/spartanlabs/webtools/http/BudgetObserver;
+	public final fun getPersistAhead ()I
+	public final fun getStore ()Lcom/spartanlabs/webtools/http/BudgetStore;
+	public final fun getStoreRetryInterval-UwyO8pc ()J
+	public final fun getStoreTimeout-UwyO8pc ()J
+	public final fun getTimeSource ()Lkotlin/time/TimeSource;
+	public final fun getWallClock ()Lcom/spartanlabs/webtools/http/WallClock;
+	public final fun setBoundaryGuard-LRDsOJo (J)V
+	public final fun setLaneShares (Ljava/util/Map;)V
+	public final fun setMaxPause-LRDsOJo (J)V
+	public final fun setMaxQueued (I)V
+	public final fun setMaxRestoreSkew-LRDsOJo (J)V
+	public final fun setObserver (Lcom/spartanlabs/webtools/http/BudgetObserver;)V
+	public final fun setPersistAhead (I)V
+	public final fun setStore (Lcom/spartanlabs/webtools/http/BudgetStore;)V
+	public final fun setStoreRetryInterval-LRDsOJo (J)V
+	public final fun setStoreTimeout-LRDsOJo (J)V
+	public final fun setTimeSource (Lkotlin/time/TimeSource;)V
+	public final fun setWallClock (Lcom/spartanlabs/webtools/http/WallClock;)V
+}
+
+public final class com/spartanlabs/webtools/http/WindowedCallBudgetKt {
+	public static final fun WindowedCallBudget (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/WindowedCallBudget;
+	public static synthetic fun WindowedCallBudget$default (Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/WindowedCallBudget;
+}
+
+public final class com/spartanlabs/webtools/http/WithPermitKt {
+	public static final fun withPermit-gwCluXo (Lcom/spartanlabs/webtools/http/CallBudget;ILcom/spartanlabs/webtools/http/Lane;JLkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

@@ -1178,7 +1178,75 @@
       }
     }
   ],
-  "roadmap": null,
+  "roadmap": {
+    "issue": 55,
+    "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
+    "asOf": "2026-11-05",
+    "items": [
+      {
+        "issue": 61,
+        "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 47,
+        "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 62,
+        "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 63,
+        "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 64,
+        "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 65,
+        "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 66,
+        "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
+      },
+      {
+        "issue": 67,
+        "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
+        "state": "OPEN"
+      },
+      {
+        "issue": 68,
+        "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
+        "state": "OPEN"
+      },
+      {
+        "issue": 69,
+        "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
+        "state": "OPEN"
+      },
+      {
+        "issue": 70,
+        "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
+        "state": "OPEN"
+      }
+    ]
+  },
   "followUps": [
     {
       "issue": 47,
@@ -1272,7 +1340,12 @@
   },
   "issueBoards": {
     "47": "../47-java-23-bytecode/dashboard.html",
-    "62": "../62-http-core/dashboard.html"
+    "62": "../62-http-core/dashboard.html",
+    "63": "../63-test-support/dashboard.html",
+    "64": "../64-url-policy/dashboard.html",
+    "65": "../65-okhttp-transport/dashboard.html",
+    "66": "../66-response-cache/dashboard.html",
+    "67": "../67-call-budget/dashboard.html"
   },
   "impact": {
     "basis": "as-built",
@@ -1307,5 +1380,14 @@
     "changes": [],
     "source": "impact.md",
     "link": "impact.md#1-published-artifacts"
+  },
+  "links": {
+    "workBoard": "../../index.html",
+    "repoBoard": "../../../dashboards/index.html",
+    "boards": {
+      "gradle-build": "../../../dashboards/gradle-build/index.html",
+      "webtools-udp": "../../../dashboards/webtools-udp/index.html",
+      "webtools": "../../../dashboards/index.html"
+    }
   }
 }

@@ -14,9 +14,9 @@
   architecture.
 - **Branch:** `feat/issue-66-response-cache` (exists; cut from `master` at `e8f0a88`; holds the four research commits `c19db19`, `97beb79`, `879abff`
   and `826200e`). The implementer confirms it and never re-cuts it.
-- **Commit:** TBD. This `plan.md` is committed **in the same commit as the first stage of the implementation** (commit 1 of §11), so `git log --follow`
+- **Commit:** `e5f1a4c`. This `plan.md` is committed **in the same commit as the first stage of the implementation** (commit 1 of §11), so `git log --follow`
   binds the two.
-- **PR:** TBD (the PR closes #66).
+- **PR:** #89 (it closes #66).
 - **What this plans:**
   - in `webtools-http`'s `commonMain` (package `com.spartanlabs.webtools.http`): the port `ResponseCache` with its nested `ResponseCache.Disabled`; the
     values `CacheKey`, `CachePolicy` (with its builder), `Lookup` (`Found`, `Missing`) and `CacheStats`; and, `internal`, the loader runner both

@@ -10,7 +10,8 @@ package com.spartanlabs.webtools.http
  * **Stable Core.** The marker is never removed, and a builder that carries it keeps it. The module applies it to every
  * builder whose instance it passes to a consumer's lambda as the receiver: [HttpHeaders.Builder], [HttpRequest.Builder],
  * [HttpResponse.Builder], [TransportSettings.Builder], [OutboundUrlPolicy.Trusted.Builder],
- * [OutboundUrlPolicy.Untrusted.Builder], [CachePolicy.Builder] and the JVM's `CaffeineResponseCache.Builder`.
+ * [OutboundUrlPolicy.Untrusted.Builder], [CachePolicy.Builder], [RateWindow.Builder], [RateSignals.Builder],
+ * [WindowedCallBudget.Builder] and the JVM's `CaffeineResponseCache.Builder`.
  */
 // `CaffeineResponseCache.Builder` is named in code font above: `commonMain` cannot link a `jvmMain` type.
 @DslMarker

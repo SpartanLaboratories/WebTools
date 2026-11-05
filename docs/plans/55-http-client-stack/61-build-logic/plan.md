@@ -14,9 +14,9 @@
   [`research/multiplatform-plugin-wiring.md`](research/multiplatform-plugin-wiring.md).
 - **Branch:** `feat/issue-61-build-logic` (exists; cut from `master` at `834ce4a`; holds the
   research commits only).
-- **Commit:** TBD — this `plan.md` is committed in the same commit as the first implementation
+- **Commit:** `c1fa76e` — this `plan.md` is committed in the same commit as the first implementation
   commit (§12), so `git log --follow` binds the two.
-- **PR:** TBD (the PR closes #61).
+- **PR:** #74 (it closes #61).
 - **What this plans:**
   - the new included build `build-logic/`: the `WebToolsBuild` helper and the three precompiled
     script plugins `webtools.published-library`, `webtools.kotlin-jvm-library` and

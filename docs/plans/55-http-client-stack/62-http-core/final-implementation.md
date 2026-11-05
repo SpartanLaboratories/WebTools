@@ -5,10 +5,10 @@ The as-built record of `SpartanLaboratories/WebTools#62`, unit 3 (`http-core`) o
 [`plan.md`](plan.md) and why, and the measurements that show it holds. What the unit changes for
 the repository and for the sibling units is in [`impact.md`](impact.md).
 
-- **Status:** built through stage S7 of the plan (§5), with qa pass 1's 27 minor fixes applied (§5).
+- **Status:** built through stage S7 of the plan (§5), with review pass 1's 27 minor fixes applied (§5).
   This is the final as-built record.
-- **Branch and PR:** `feat/issue-62-http-core`, cut from `master` at `f72b115`, above the research
-  commits; PR TBD (it closes #62).
+- **Branch:** `feat/issue-62-http-core`, cut from `master` at `f72b115`, above the research
+  commits.
 - **Host of the measurements:** the maintainer's Windows 11 host; build JDK 23; Gradle 9.7.1; Kotlin Gradle
   plugin 2.2.0; `core.autocrlf=true`.
 - **Versions moved:** none. `webtools-http` 1.0.0 is new, inherited from the root default, and stays
@@ -172,7 +172,7 @@ The proof's every result equals the plan's expectation (§6.2, §9.2 P3). S3 may
 
 Against plan §1 "Acceptance", from the measurements in §5:
 
-1. `:webtools-http:check` passes: `jvmTest` 131 tests at every level (130 before qa pass 1 added one),
+1. `:webtools-http:check` passes: `jvmTest` 131 tests at every level (130 before review pass 1 added one),
    `apiCheck`, `verifyJavaFloor` — **met**.
 2. `:webtools-http-commoncheck:check` passes; `commonMain` compiles for `js` — **met**.
 3. `:build-logic:test`, `:build-logic:integrationTest` (46), `:build-logic:e2eTest` (5) and
@@ -264,7 +264,7 @@ Mechanical fixes on the way (test code only): a nonsense assertion in `HttpHeade
 the test files rendered printable `\uXXXX` escapes as literal UTF-8 characters, so the `é` had joined
 the identifier. The same rendering had left literal non-ASCII characters in string literals of the
 test and test-support files; control characters and lone surrogates stayed `\uXXXX` escapes. S5 and
-qa pass 1 turned every invisible or look-alike code point back into an escape (below).
+Review pass 1 turned every invisible or look-alike code point back into an escape (below).
 
 ### P4 — the `Url` differential (S4)
 
@@ -310,7 +310,7 @@ A final default run on the restored sources → `BUILD SUCCESSFUL`, the seed-7 s
   - Every invisible or whitespace-like code point was converted back to its escape, so that none hides
     in the source: U+00A0 NBSP, U+2028 LINE SEPARATOR, U+3000 IDEOGRAPHIC SPACE, U+200B ZWSP and
     U+FEFF BOM. U+0085 NEL, every control and every lone surrogate had stayed escaped.
-  - U+212A KELVIN SIGN, a look-alike of `K`, became an escape in qa pass 1. Touched:
+  - U+212A KELVIN SIGN, a look-alike of `K`, became an escape in review pass 1. Touched:
   `HttpSyntaxDeterministicTest` (the `trimOws` NBSP row), `UrlBoundaryDeterministicTest` (the NBSP end
   row), `UrlInputGenerator` (the surrounding-whitespace and Unicode pools) and
   `UrlEncoderDifferentialDeterministicTest` (its pool); each such line carries a short comment naming
@@ -400,7 +400,7 @@ having no JVM jar, makes slightly loose.
 Java 11 floor of every published module's jars, …"; line 60's "three modules" stays as correct history of
 the retired combined artifact. `git diff --stat README.md` → 30 insertions, 15 deletions; still LF.
 
-### qa pass 1 fixes
+### Review pass 1 fixes
 
 Twenty-seven minor fixes, applied on the spot. None changes behaviour or a signature. One adds the
 eighth point of `HttpTransport`'s documented contract (§2, deviation 2).
@@ -473,7 +473,7 @@ IntelliJ session and were **not performed**.
    source; the P9 coverage check confirms every public declaration has a block).
 5. `git status` / `git diff --stat` before the commits: no `Proof*`, no `NegativeCases`, no
    `kotlin-js-store/`, no `build-logic/build/`, no IDE files — **done**: a search of the full untracked
-   list for those names returns nothing. The working tree also holds the admin team's presenter's board
+   list for those names returns nothing. The working tree also holds the work boards'
    files (`dashboard.html`, `plan.json`, `plan.js` under `docs/plans/`), which are not part of this change.
 
 ## 7. Research that didn't hold

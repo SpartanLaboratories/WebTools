@@ -17,9 +17,9 @@
   the `3xx`; the exchange guard hides the four statuses `407`, `408`, `421` and `503` instead of a `503`'s `Retry-After`), this plan is the
   specification.
 - **Branch:** `feat/issue-65-okhttp-transport` (exists; cut from `master` at `53965c8`; holds the three research commits).
-- **Commit:** TBD. This `plan.md` is committed **in the same commit as the first stage of the implementation** (commit 1 of §11), so
+- **Commit:** `962bbe3`. This `plan.md` is committed **in the same commit as the first stage of the implementation** (commit 1 of §11), so
   `git log --follow` binds the two.
-- **PR:** TBD (the PR closes #65).
+- **PR:** #88 (it closes #65).
 - **What this plans:**
   - in `webtools-http`'s `jvmMain` (package `com.spartanlabs.webtools.http`): the public `OkHttpTransport` and its factory
     `OkHttpTransport(userAgent, policy)`; and, `internal`, the client builder, `ExchangeGuard`, the request and response conversion, the
