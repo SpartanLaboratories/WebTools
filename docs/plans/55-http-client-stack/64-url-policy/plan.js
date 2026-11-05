@@ -4998,7 +4998,9 @@ window.dashboardLive&&window.dashboardLive("plan",
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
     "63": "../63-test-support/dashboard.html",
-    "65": "../65-okhttp-transport/dashboard.html"
+    "65": "../65-okhttp-transport/dashboard.html",
+    "66": "../66-response-cache/dashboard.html",
+    "67": "../67-call-budget/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

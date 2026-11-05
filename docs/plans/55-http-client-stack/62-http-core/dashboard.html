@@ -1547,12 +1547,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           {
             "text": "`HttpFailure` and its two groups were built in S2; qa pass 1 worded the message rule into `HttpFailure`'s KDoc.",
             "state": "as-planned",
-            "ref": "final-implementation.md#qa-pass-1-fixes",
+            "ref": "final-implementation.md#review-pass-1-fixes",
             "excerpt": {
-              "ref": "final-implementation.md#qa-pass-1-fixes",
-              "heading": "qa pass 1 fixes",
+              "ref": "final-implementation.md#review-pass-1-fixes",
+              "heading": "Review pass 1 fixes",
               "paragraph": "Twenty-seven minor fixes, applied on the spot. None changes behaviour or a signature. One adds the eighth point of `HttpTransport`'s documented contract (§2, deviation 2). · KDoc and comments in production code: `HttpFailure` class KDoc states the plan's message rule (constant text plus named non-sensitive fields; never free caller text, a header value or a body); `HttpHeaders.Builder.addSensitive` no longer promises the cross-origin strip (it marks the entry; the redirect policy of a later unit reads the flag); `HttpTransport` gained contract point 8 (`execute` is main-safe; the …",
-              "hash": "f6994e06bbcc"
+              "hash": "b040bfb8d879"
             }
           },
           {
@@ -1784,7 +1784,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#6-level-5--the-manual-pass",
               "heading": "6. Level 5 — the manual pass",
               "paragraph": "Procedure P10 of plan §9.2, run from the command line. The three IDE items (1, 2 and 4) need an IntelliJ session and were not performed. · Owner: the maintainer. · Trigger: the next IntelliJ import of the repository after this unit lands, and at the latest before unit 4 (#63) starts. That unit's fixtures compilation adds another source set the IDE must import (`impact.md` §7).",
-              "hash": "f88c0a555fec"
+              "hash": "75a3883e32b9"
             }
           },
           {
@@ -1795,7 +1795,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#p5--the-fast-loop-after-s4",
               "heading": "P5 — the fast loop after S4",
               "paragraph": "`./gradlew :webtools-http:gatingTest :webtools-http:componentTest :webtools-http:deterministicTest :webtools-http:nonfunctionalTest` → `BUILD SUCCESSFUL in 10s`, 0 failures: · `gatingTest`: 5 tests in 2 classes. · `componentTest`: 68 tests in 14 classes (11 `commonTest`, 3 `jvmTest`: `Slf4jLogComponentTest`, `CatchNonFatalComponentTest`, `EpochMillisJvmComponentTest`). · `deterministicTest`: 48 tests in 16 classes (13 `commonTest`, 3 `jvmTest` differentials). · `nonfunctionalTest`: 9 tests in 4 classes.",
-              "hash": "ed90df43bfcb"
+              "hash": "fab3a9cb02a1"
             }
           }
         ]
@@ -2212,7 +2212,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#p5--the-fast-loop-after-s4",
               "heading": "P5 — the fast loop after S4",
               "paragraph": "`./gradlew :webtools-http:gatingTest :webtools-http:componentTest :webtools-http:deterministicTest :webtools-http:nonfunctionalTest` → `BUILD SUCCESSFUL in 10s`, 0 failures: · `gatingTest`: 5 tests in 2 classes. · `componentTest`: 68 tests in 14 classes (11 `commonTest`, 3 `jvmTest`: `Slf4jLogComponentTest`, `CatchNonFatalComponentTest`, `EpochMillisJvmComponentTest`). · `deterministicTest`: 48 tests in 16 classes (13 `commonTest`, 3 `jvmTest` differentials). · `nonfunctionalTest`: 9 tests in 4 classes.",
-              "hash": "ed90df43bfcb"
+              "hash": "fab3a9cb02a1"
             }
           },
           {
@@ -2245,7 +2245,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#p5--the-fast-loop-after-s4",
               "heading": "P5 — the fast loop after S4",
               "paragraph": "`./gradlew :webtools-http:gatingTest :webtools-http:componentTest :webtools-http:deterministicTest :webtools-http:nonfunctionalTest` → `BUILD SUCCESSFUL in 10s`, 0 failures: · `gatingTest`: 5 tests in 2 classes. · `componentTest`: 68 tests in 14 classes (11 `commonTest`, 3 `jvmTest`: `Slf4jLogComponentTest`, `CatchNonFatalComponentTest`, `EpochMillisJvmComponentTest`). · `deterministicTest`: 48 tests in 16 classes (13 `commonTest`, 3 `jvmTest` differentials). · `nonfunctionalTest`: 9 tests in 4 classes.",
-              "hash": "ed90df43bfcb"
+              "hash": "fab3a9cb02a1"
             }
           }
         ]
@@ -2860,7 +2860,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#p5--the-fast-loop-after-s4",
               "heading": "P5 — the fast loop after S4",
               "paragraph": "`./gradlew :webtools-http:gatingTest :webtools-http:componentTest :webtools-http:deterministicTest :webtools-http:nonfunctionalTest` → `BUILD SUCCESSFUL in 10s`, 0 failures: · `gatingTest`: 5 tests in 2 classes. · `componentTest`: 68 tests in 14 classes (11 `commonTest`, 3 `jvmTest`: `Slf4jLogComponentTest`, `CatchNonFatalComponentTest`, `EpochMillisJvmComponentTest`). · `deterministicTest`: 48 tests in 16 classes (13 `commonTest`, 3 `jvmTest` differentials). · `nonfunctionalTest`: 9 tests in 4 classes.",
-              "hash": "ed90df43bfcb"
+              "hash": "fab3a9cb02a1"
             }
           },
           {
@@ -2871,7 +2871,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#p5--the-fast-loop-after-s4",
               "heading": "P5 — the fast loop after S4",
               "paragraph": "`./gradlew :webtools-http:gatingTest :webtools-http:componentTest :webtools-http:deterministicTest :webtools-http:nonfunctionalTest` → `BUILD SUCCESSFUL in 10s`, 0 failures: · `gatingTest`: 5 tests in 2 classes. · `componentTest`: 68 tests in 14 classes (11 `commonTest`, 3 `jvmTest`: `Slf4jLogComponentTest`, `CatchNonFatalComponentTest`, `EpochMillisJvmComponentTest`). · `deterministicTest`: 48 tests in 16 classes (13 `commonTest`, 3 `jvmTest` differentials). · `nonfunctionalTest`: 9 tests in 4 classes.",
-              "hash": "ed90df43bfcb"
+              "hash": "fab3a9cb02a1"
             }
           },
           {
@@ -3075,7 +3075,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "1b522fee71b2"
+              "hash": "e76a4980a649"
             }
           },
           {
@@ -3085,7 +3085,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "1b522fee71b2"
+              "hash": "e76a4980a649"
             }
           },
           {
@@ -3095,7 +3095,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "1b522fee71b2"
+              "hash": "e76a4980a649"
             }
           },
           {
@@ -3105,7 +3105,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "1b522fee71b2"
+              "hash": "e76a4980a649"
             }
           }
         ]
@@ -3165,7 +3165,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#final-implementation-http-core-issue-62",
               "heading": "Final implementation: `http-core` (Issue #62)",
               "paragraph": "The as-built record of `SpartanLaboratories/WebTools#62`, unit 3 (`http-core`) of #55's architecture. It states what was built, where the work departs from `plan.md` and why, and the measurements that show it holds. What the unit changes for the repository and for the sibling units is in `impact.md`.",
-              "hash": "a21f5f12c366"
+              "hash": "b10e52c19725"
             }
           },
           {
@@ -3176,7 +3176,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#final-implementation-http-core-issue-62",
               "heading": "Final implementation: `http-core` (Issue #62)",
               "paragraph": "The as-built record of `SpartanLaboratories/WebTools#62`, unit 3 (`http-core`) of #55's architecture. It states what was built, where the work departs from `plan.md` and why, and the measurements that show it holds. What the unit changes for the repository and for the sibling units is in `impact.md`.",
-              "hash": "a21f5f12c366"
+              "hash": "b10e52c19725"
             }
           }
         ]
@@ -3230,8 +3230,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "excerpt": {
               "ref": "plan.md#11-version-control",
               "heading": "11. Version control",
-              "paragraph": "Branch: `feat/issue-62-http-core`. It exists and holds the research commits; … · Commits. Each is coherent and leaves the build green. …; subject lines carry `(Issue #62)`; no attribution trailers. · `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`, `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new TestKit classes and the `BuildLogicPluginsGatingTest.kt` edit. The plan is in this commit so `git log --follow` binds the two. No module applies the plugin yet, so the build is unchanged for …",
-              "hash": "0bca7759e342"
+              "paragraph": "Branch: `feat/issue-62-http-core`. It exists and holds the research commits; the implementer confirms it (P1) rather than cutting it again. · Commits. Each is coherent and leaves the build green. The type and the split are the final call at commit time; subject lines carry `(Issue #62)`; no attribution trailers. · `build: add the webtools.kotlin-common-check plugin and its TestKit checks (Issue #62)` — this `plan.md`, `build-logic/src/main/kotlin/webtools.kotlin-common-check.gradle.kts`, `SampleProject.kt`, the two new TestKit classes and the `BuildLogicPluginsGatingTest.kt` edit. The plan is …",
+              "hash": "2bd50fe3d2f7"
             }
           }
         ]
@@ -3614,6 +3614,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "what": "The glow is corrected from Considered and Verdict to Considered alone. The glow follows the step: research works on the Considered column, and the Verdict column glows from the moment plan writing starts.",
         "when": "research, 2026-10-25"
+      },
+      {
+        "what": "The failure-model row's as-built reference named final-implementation.md's section \"qa pass 1 fixes\", since renamed \"Review pass 1 fixes\"; it now points there. The statement is unchanged.",
+        "when": "Document step of #67, state boards, 2026-11-05"
       }
     ],
     "departure": "The unit's plan departs from #55's architecture in one decision: the check plugin calls `js()` with no environment in place of `js { nodejs { testTask { enabled = false } } }` (plan.md §13, impact.md §5). It shows in the common-check-plugin row's Considered and Verdict columns and, on #55's tracking board, as a change on the http-core unit row; `architecture.md` is left as written."
@@ -3623,7 +3627,9 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "61": "../61-build-logic/dashboard.html",
     "63": "../63-test-support/dashboard.html",
     "64": "../64-url-policy/dashboard.html",
-    "65": "../65-okhttp-transport/dashboard.html"
+    "65": "../65-okhttp-transport/dashboard.html",
+    "66": "../66-response-cache/dashboard.html",
+    "67": "../67-call-budget/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

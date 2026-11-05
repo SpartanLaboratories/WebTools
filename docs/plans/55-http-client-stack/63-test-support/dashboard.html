@@ -2067,7 +2067,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#5-level-5-the-manual-pass",
               "heading": "5. Level 5: the manual pass",
               "paragraph": "Procedure P13 of plan §9.2. Items 4 and 6 were performed from the command line. Items 1, 2, 3 and 5 need an IntelliJ session and were not performed.",
-              "hash": "b8fdb0c1136e"
+              "hash": "e05853647b31"
             }
           }
         ]
@@ -2567,12 +2567,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           {
             "text": "`FixtureLoader` loads from the consumer's classpath under a `root` parameter (`fixtures` by default); a non-`.http` resource is a body-only fixture, status 200 with `Content-Type` by extension (`contentTypeFor`). Its Level 2 tests assert that `200` since qa pass 1.",
             "state": "as-planned",
-            "ref": "final-implementation.md#qa-pass-1-minor-fixes-2026-10-25",
+            "ref": "final-implementation.md#review-pass-1-minor-fixes-2026-10-25",
             "excerpt": {
-              "ref": "final-implementation.md#qa-pass-1-minor-fixes-2026-10-25",
-              "heading": "qa pass 1, minor fixes (2026-10-25)",
-              "paragraph": "QA pass 1 (code review PASS, 376/376 green) listed minor findings, all applied: 19 documentation items (the Amendment-1 redaction boundary in the `FixtureRecorder` and `Redaction` KDocs; the `fixturesPublicationCheck` header comment; `ThrowawayPgpKey`'s best-effort-cleanup wording and the comments on its cryptographic constants; the stale \"three\" at `TestKitHomeLock`; `METHOD_LIMIT` and the IPv6 re-bracketing in `FixtureFileNames`; the concurrency comment in `VirtualClockComponentTest`; `ResolutionReport.read`'s `@return`; `FixtureLoader`'s `@param classLoader`; \"no NUL\" in `Fixture`'s …",
-              "hash": "0231000db653"
+              "ref": "final-implementation.md#review-pass-1-minor-fixes-2026-10-25",
+              "heading": "Review pass 1, minor fixes (2026-10-25)",
+              "paragraph": "Review pass 1 (code review PASS, 376/376 green) listed minor findings, all applied: 19 documentation items (the Amendment-1 redaction boundary in the `FixtureRecorder` and `Redaction` KDocs; the `fixturesPublicationCheck` header comment; `ThrowawayPgpKey`'s best-effort-cleanup wording and the comments on its cryptographic constants; the stale \"three\" at `TestKitHomeLock`; `METHOD_LIMIT` and the IPv6 re-bracketing in `FixtureFileNames`; the concurrency comment in `VirtualClockComponentTest`; `ResolutionReport.read`'s `@return`; `FixtureLoader`'s `@param classLoader`; \"no NUL\" in `Fixture`'s …",
+              "hash": "f45a7ba17c8d"
             }
           },
           {
@@ -2744,12 +2744,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           {
             "text": "Serialising, scrubbing and the write run in `withContext(Dispatchers.IO)`; the file goes to a temporary file in the target directory, then `ATOMIC_MOVE` (`REPLACE_EXISTING` where that is unsupported), under a name made of the method, the path slug and eight hex digits of a hash over the redacted sorted query, so a rotated key keeps the name. Eight concurrent recordings to one name under `Overwrite` left one complete file and no temporary file (Amendment 3's Level 3 test).",
             "state": "as-planned",
-            "ref": "final-implementation.md#qa-pass-1-amendment-3-tests-2026-10-25",
+            "ref": "final-implementation.md#review-pass-1-amendment-3-tests-2026-10-25",
             "excerpt": {
-              "ref": "final-implementation.md#qa-pass-1-amendment-3-tests-2026-10-25",
-              "heading": "qa pass 1, Amendment 3 tests (2026-10-25)",
+              "ref": "final-implementation.md#review-pass-1-amendment-3-tests-2026-10-25",
+              "heading": "Review pass 1, Amendment 3 tests (2026-10-25)",
               "paragraph": "Plan Amendment 3 adds eight test behaviours and records one exclusion; implemented as plan §9 reads: · `RedactionComponentTest` +4: the upper-hex full escape is detected; the form-encoded form is replaced and its lower-hex variant detected (secret `ab cd/ef`); an echo escaped only in part is neither replaced nor detected (`SECRET%2dCANARY`, bytes unchanged); a secret whose form contains another's is replaced whole, longest first. · `FixtureRecorderIntegrationTest` +1: eight callers released by one `CompletableDeferred` record to one name under `Overwrite`; one complete `same.http`, no …",
-              "hash": "7e592624373f"
+              "hash": "f6c8e0e4374f"
             }
           },
           {
@@ -2969,7 +2969,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "build-logic/build.gradle.kts:51-72 — the TestKit home lock and the nested-build level tasks a new check reuses (baseline)"
         ],
         "source": "../architecture.md §6.1, §12; ../consequences.md §8",
-        "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-6-as-built"
+        "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-8-as-built"
       },
       "options": [
         {
@@ -2986,7 +2986,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           "verdict": "deferred",
           "why": "The architecture's target does not exist: a root `check` changes the root build's shape, and the module's own `check` keeps it beside the publication. #55's impact leaves the choice to this unit's plan.",
           "source": "../consequences.md §8; ../62-http-core/plan.md §12",
-          "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-6-as-built"
+          "link": "../consequences.md#8-what-the-later-units-build-on-units-1-to-8-as-built"
         },
         {
           "id": "root-lifecycle-check",
@@ -3256,7 +3256,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#2-deviations-from-the-plan",
               "heading": "2. Deviations from the plan",
               "paragraph": "One. It changes no rule of the design, and no signature, message or name. Plan Amendments 1 to 3 are part of the plan and were followed: the scrubber's detection boundary, the filter on the floor guard's classpath, and the eight added test behaviours with the recorded scope of the environment scrub.",
-              "hash": "8a5c6db5db09"
+              "hash": "05f5877d5334"
             }
           },
           {
@@ -3277,8 +3277,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "excerpt": {
               "ref": "final-implementation.md#p11---the-unaffected-modules-s8",
               "heading": "P11 - the unaffected modules (S8)",
-              "paragraph": "On head `5d98102` (master merged into the branch …): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
-              "hash": "34391c926593"
+              "paragraph": "On head `5d98102` (master merged into the branch): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
+              "hash": "015a2be883d2"
             }
           }
         ],
@@ -3329,7 +3329,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#9-test-plan",
               "heading": "9. Test plan",
               "paragraph": "Conventions. One test class per file; JUnit 5 through `kotlin.test` (`@Test` from `kotlin.test`, which `kotlin-test-junit5` maps in `jvmTest`); backtick test names; no `@Tag` (the level tasks select by package); no MockK (the fixtures' external calls are a file system and a delegate transport: the former is real in `FixtureRecorderIntegrationTest`, the latter is a `FakeHttpTransport`). Every test of the fixtures sits in `jvmTest` (they are JVM-only). No `@OptIn` anywhere in `jvmTest`, so the tests stay consumers: they use only `runTest` and the scheduler's own …",
-              "hash": "160aa62cc72e"
+              "hash": "53c116c1bae6"
             }
           },
           {
@@ -3339,7 +3339,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#9-test-plan",
               "heading": "9. Test plan",
               "paragraph": "Conventions. One test class per file; JUnit 5 through `kotlin.test` (`@Test` from `kotlin.test`, which `kotlin-test-junit5` maps in `jvmTest`); backtick test names; no `@Tag` (the level tasks select by package); no MockK (the fixtures' external calls are a file system and a delegate transport: the former is real in `FixtureRecorderIntegrationTest`, the latter is a `FakeHttpTransport`). Every test of the fixtures sits in `jvmTest` (they are JVM-only). No `@OptIn` anywhere in `jvmTest`, so the tests stay consumers: they use only `runTest` and the scheduler's own …",
-              "hash": "160aa62cc72e"
+              "hash": "53c116c1bae6"
             }
           },
           {
@@ -3349,7 +3349,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#9-test-plan",
               "heading": "9. Test plan",
               "paragraph": "Conventions. One test class per file; JUnit 5 through `kotlin.test` (`@Test` from `kotlin.test`, which `kotlin-test-junit5` maps in `jvmTest`); backtick test names; no `@Tag` (the level tasks select by package); no MockK (the fixtures' external calls are a file system and a delegate transport: the former is real in `FixtureRecorderIntegrationTest`, the latter is a `FakeHttpTransport`). Every test of the fixtures sits in `jvmTest` (they are JVM-only). No `@OptIn` anywhere in `jvmTest`, so the tests stay consumers: they use only `runTest` and the scheduler's own …",
-              "hash": "160aa62cc72e"
+              "hash": "53c116c1bae6"
             }
           },
           {
@@ -3468,7 +3468,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "48f91a7c6f9d"
+              "hash": "43256aaad857"
             }
           },
           {
@@ -3478,7 +3478,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "48f91a7c6f9d"
+              "hash": "43256aaad857"
             }
           },
           {
@@ -3488,7 +3488,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "48f91a7c6f9d"
+              "hash": "43256aaad857"
             }
           },
           {
@@ -3498,7 +3498,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#8-documentation-impact",
               "heading": "8. Documentation impact",
               "paragraph": "Rings.",
-              "hash": "48f91a7c6f9d"
+              "hash": "43256aaad857"
             }
           }
         ]
@@ -3541,8 +3541,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "excerpt": {
               "ref": "final-implementation.md#p11---the-unaffected-modules-s8",
               "heading": "P11 - the unaffected modules (S8)",
-              "paragraph": "On head `5d98102` (master merged into the branch …): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
-              "hash": "34391c926593"
+              "paragraph": "On head `5d98102` (master merged into the branch): `git diff --stat -- webtools-udp webtools-scraping webtools-browser webtools-http/src/commonMain webtools-http/src/jvmMain webtools-http/api webtools-http-commoncheck settings.gradle.kts build.gradle.kts` is empty and `git status --short` of those paths shows nothing; `git status --short build-logic/src/main` is empty (no plugin changed); `./gradlew :webtools-udp:compileKotlin :webtools-scraping:compileKotlin :webtools-browser:compileKotlin` - BUILD SUCCESSFUL (a compile, no test).",
+              "hash": "015a2be883d2"
             }
           },
           {
@@ -3564,7 +3564,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "final-implementation.md#5-level-5-the-manual-pass",
               "heading": "5. Level 5: the manual pass",
               "paragraph": "Procedure P13 of plan §9.2. Items 4 and 6 were performed from the command line. Items 1, 2, 3 and 5 need an IntelliJ session and were not performed.",
-              "hash": "b8fdb0c1136e"
+              "hash": "e05853647b31"
             }
           },
           {
@@ -3605,8 +3605,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "excerpt": {
               "ref": "plan.md#11-version-control",
               "heading": "11. Version control",
-              "paragraph": "Branch: `feat/issue-63-test-support`. It exists and holds the research commits; … · Commits. Each leaves the build green. …; subject lines carry `(Issue #63)`; no attribution trailers. · `feat: add the webtools-http test-fixtures variant, its fixtures and the fixtures-publication check (Issue #63)` — this `plan.md`, `.gitattributes`, `webtools-http/build.gradle.kts`, `webtools-http/src/jvmTestFixtures/`, the new `webtools-http/src/jvmTest/` files (tests and the sample resources), and every `build-logic/` change (`build.gradle.kts` and the test sources). It is one commit because …",
-              "hash": "1c2c6725c8aa"
+              "paragraph": "Branch: `feat/issue-63-test-support`. It exists and holds the research commits; the implementer confirms it (P1) rather than cutting it again. · Commits. Each leaves the build green. The type and the split are the final call at commit time; subject lines carry `(Issue #63)`; no attribution trailers. · `feat: add the webtools-http test-fixtures variant, its fixtures and the fixtures-publication check (Issue #63)` — this `plan.md`, `.gitattributes`, `webtools-http/build.gradle.kts`, `webtools-http/src/jvmTestFixtures/`, the new `webtools-http/src/jvmTest/` files (tests and the sample …",
+              "hash": "887254966543"
             }
           },
           {
@@ -3734,7 +3734,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#4-non-goals",
               "heading": "4. Non-goals",
               "paragraph": "`LoopbackTransports`, `webtoolsUrl`, `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)` (unit 6, #65); `RecordingBudgetObserver` and `FakeBudgetStore` (unit 8, #67). · The \"three clocks move together\" proof against the real cache and the real budget (re-run in units 7 and 8); this unit proves the clock with a Caffeine cache standing in for the cache unit 7 builds. · Any `FeedParserContract` fixtures; `webtools-feeds` is unit 10's. · Extracting recipe B into `build-logic`: only this module has fixtures in 1.0.0; the extraction waits for a second module (§13). · A sources or …",
-              "hash": "4d5e67ca1ce2"
+              "hash": "55ead84389bc"
             }
           },
           {
@@ -3744,7 +3744,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#4-non-goals",
               "heading": "4. Non-goals",
               "paragraph": "`LoopbackTransports`, `webtoolsUrl`, `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)` (unit 6, #65); `RecordingBudgetObserver` and `FakeBudgetStore` (unit 8, #67). · The \"three clocks move together\" proof against the real cache and the real budget (re-run in units 7 and 8); this unit proves the clock with a Caffeine cache standing in for the cache unit 7 builds. · Any `FeedParserContract` fixtures; `webtools-feeds` is unit 10's. · Extracting recipe B into `build-logic`: only this module has fixtures in 1.0.0; the extraction waits for a second module (§13). · A sources or …",
-              "hash": "4d5e67ca1ce2"
+              "hash": "55ead84389bc"
             }
           },
           {
@@ -3754,7 +3754,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "ref": "plan.md#4-non-goals",
               "heading": "4. Non-goals",
               "paragraph": "`LoopbackTransports`, `webtoolsUrl`, `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)` (unit 6, #65); `RecordingBudgetObserver` and `FakeBudgetStore` (unit 8, #67). · The \"three clocks move together\" proof against the real cache and the real budget (re-run in units 7 and 8); this unit proves the clock with a Caffeine cache standing in for the cache unit 7 builds. · Any `FeedParserContract` fixtures; `webtools-feeds` is unit 10's. · Extracting recipe B into `build-logic`: only this module has fixtures in 1.0.0; the extraction waits for a second module (§13). · A sources or …",
-              "hash": "4d5e67ca1ce2"
+              "hash": "55ead84389bc"
             }
           },
           {
@@ -4036,6 +4036,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "what": "The links to plan.md sections whose heading opens with a code span holding a path placeholder (`<fx>`) now carry GitHub's anchor, which keeps the placeholder's letters (73-fixtures-time-and-the-fake-fx); the anchor written before lacked them and opened no section. No statement, verdict or state changed.",
         "when": "the heading-anchor rule fixed, 2026-11-01"
+      },
+      {
+        "what": "Four references named sections renamed since: final-implementation.md's \"qa pass 1, minor fixes\" and \"qa pass 1, Amendment 3 tests\" are now \"Review pass 1, …\", and #55's consequences.md §8 now covers units 1 to 8. The links point at the renamed sections; the statements are unchanged.",
+        "when": "Document step of #67, state boards, 2026-11-05"
       }
     ],
     "departure": "The unit's plan departs from #55's architecture in three decisions (plan.md §13, impact.md §5): the fixtures-publication check hangs off `webtools-http`'s own `check` rather than a root `check` (§6.1, §6.7, §11), since the root project has none and a root one would miss `./gradlew build`; the signing of the multiplatform publication with its adhoc variant is exercised on every run of the check with a throwaway key, leaving only Central's validator to the first release (§12); and `Fixture.toMockResponse()` and `MockWebServer.enqueue(fixture)`, which §6.7 lists among this unit's types, follow §11 to unit 6. They show in the publication-check, release and contributions-left rows' Considered and Verdict columns, in the publication-check row's settled option, and on #55's tracking board as changes on the test-support unit row. A dated correction to `architecture.md` §6.1 is written with the as-built reconciliation."
@@ -4045,7 +4049,9 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "61": "../61-build-logic/dashboard.html",
     "62": "../62-http-core/dashboard.html",
     "64": "../64-url-policy/dashboard.html",
-    "65": "../65-okhttp-transport/dashboard.html"
+    "65": "../65-okhttp-transport/dashboard.html",
+    "66": "../66-response-cache/dashboard.html",
+    "67": "../67-call-budget/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

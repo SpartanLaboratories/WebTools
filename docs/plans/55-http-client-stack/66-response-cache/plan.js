@@ -10,7 +10,7 @@ window.dashboardLive&&window.dashboardLive("plan",
   "title": "Response cache",
   "issueTitle": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
   "function": "Nothing in `webtools-http` caches yet: #62 built the `Closed` failure and the gated `HttpTransport` port the cache's seam follows, #63 the `VirtualClock`, whose three-clocks proof runs on a stand-in Caffeine cache, and Caffeine 3.3.1 is declared on `jvmMain` with no main source using it (#55 architecture §6.4). This run adds the `ResponseCache` port, `CacheKey`, `CachePolicy`, `Lookup`, `CacheStats` and `ResponseCache.Disabled` in `commonMain` and the `CaffeineResponseCache` default in `jvmMain`, with its tests. Unit 7 of #55: the response cache subsystem of `webtools-http`, additive, no version moved; the loader's content is unit 9's.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-11-03T02:17:16Z",
   "parent": {
     "issue": 55,
@@ -23,7 +23,36 @@ window.dashboardLive&&window.dashboardLive("plan",
     "sha": "e8f0a88",
     "date": "2026-11-03"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "8122af7",
+    "merge": "8122af7",
+    "pr": 89,
+    "date": "2026-11-03",
+    "at": "2026-11-03T19:33:26Z",
+    "commits": [
+      {
+        "sha": "c19db19",
+        "at": "2026-11-03T02:33:46Z",
+        "step": "research"
+      },
+      {
+        "sha": "97beb79",
+        "at": "2026-11-03T02:49:02Z",
+        "step": "research"
+      },
+      {
+        "sha": "879abff",
+        "at": "2026-11-03T02:57:23Z",
+        "step": "research"
+      },
+      {
+        "sha": "826200e",
+        "at": "2026-11-03T02:59:03Z",
+        "step": "research"
+      }
+    ],
+    "version": "none moved; webtools-http 1.0.0 new, unreleased"
+  },
   "systems": [
     {
       "slug": "webtools-http-cache",
@@ -35,10 +64,10 @@ window.dashboardLive&&window.dashboardLive("plan",
     }
   ],
   "wip": {
-    "step": "document",
-    "since": "2026-11-03T18:33:16Z",
-    "updated": "2026-11-03T19:26:02Z",
-    "detail": "Document: 6 of 6 tasks done; every task done.",
+    "step": "landed",
+    "since": "2026-11-03T19:33:26Z",
+    "updated": "2026-11-03T19:33:26Z",
+    "detail": "Merged through PR #89 as 8122af7: the `ResponseCache` port, its values and `ResponseCache.Disabled` in common code and `CaffeineResponseCache` on the JVM; five deviations recorded; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
     "steps": [
       "sizing",
       "interview",
@@ -53,9 +82,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "merge",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "questions": [],
     "research": null,
     "interview": [],
@@ -120,9 +147,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       }
     ],
     "event": {
-      "name": "state-boards",
-      "at": "2026-11-03T19:26:02Z",
-      "note": "the state boards; 6 of 6 tasks done"
+      "name": "landed",
+      "at": "2026-11-03T19:33:26Z"
     },
     "history": {
       "sizing": [
@@ -503,6 +529,81 @@ window.dashboardLive&&window.dashboardLive("plan",
             }
           ]
         }
+      ],
+      "document": [
+        {
+          "since": "2026-11-03T18:33:16Z",
+          "ended": "2026-11-03T19:31:36Z",
+          "endedBy": "landing",
+          "to": "landing",
+          "event": {
+            "name": "state-boards",
+            "at": "2026-11-03T19:26:02Z",
+            "note": "the state boards; 6 of 6 tasks done"
+          },
+          "detail": "Document: 6 of 6 tasks done; every task done.",
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applicable: WebTools does not apply Dokka)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              }
+            ]
+          }
+        }
+      ],
+      "landing": [
+        {
+          "since": "2026-11-03T19:31:36Z",
+          "ended": "2026-11-03T19:33:00Z",
+          "endedBy": "merge",
+          "to": "merge",
+          "event": {
+            "name": "landing",
+            "at": "2026-11-03T19:31:36Z",
+            "note": "land accepted"
+          },
+          "detail": "Landing accepted; the pull request opens next."
+        }
+      ],
+      "merge": [
+        {
+          "since": "2026-11-03T19:33:00Z",
+          "ended": "2026-11-03T19:33:26Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-11-03T19:33:26Z"
+          },
+          "detail": "Landed in PR #89."
+        }
       ]
     },
     "next": null,
@@ -636,6 +737,13 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-03",
       "ref": "plan.md",
       "note": "three implementation stages on `feat/issue-66-response-cache`, S1 to S3, then the documents, in five commits; the design makes #55's architecture §6.4 concrete in plan.md §6.11: four outcomes carried by value, own counters, a sweep at `close()`, a weight of at least 1, a value over the bound delivered and never stored, `Duration.ZERO` served by age. No version moves"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-11-03",
+      "ref": "PR #89",
+      "note": "the research c19db19 to 826200e; the port and its values e5f1a4c, the Caffeine default ea167b9 and the Level 3 and Level 4c suites d1deae5; the as-built record 38483ea, the code-landing commit; the KDoc and test comments f1d7a07, the README and changelog 2c4b7ec, the reconciled documents 02ae177 and the boards 55a2a6e and 33073bf; merged as 8122af7. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -825,6 +933,23 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-03",
       "column": "built",
       "label": "Document: every task done"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Landing: the land accepted"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Merge: merging it in PR #89",
+      "ref": "PR #89"
+    },
+    {
+      "date": "2026-11-03",
+      "column": "built",
+      "label": "Landed in PR #89, merge 8122af7",
+      "ref": "PR #89"
     }
   ],
   "rows": [
@@ -1589,7 +1714,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "link": "plan.md#r9-caffeineresponsecache--storage-and-expiry"
       },
       "asBuilt": {
-        "state": "as-planned",
+        "state": "amended",
         "statements": [
           {
             "text": "`CaffeineResponseCache` is a final class with an `internal` constructor, built by `CaffeineResponseCache { }` over a `@WebToolsDsl` builder of `timeSource`, `maxWeight` (at least 1, 1,000 by default), `loadDispatcher` and `maintenanceExecutor`; its KDoc marks it Stable Core and it needs no opt-in.",
@@ -1616,8 +1741,24 @@ window.dashboardLive&&window.dashboardLive("plan",
             "state": "as-planned"
           },
           {
-            "text": "One logger writes `INFO` on creation and close, `DEBUG` once per load end and `WARN` once for a load coroutine that failed outside its body, with names and class names only, never a value, a parameter value, a header, a credential or a message text.",
-            "state": "as-planned"
+            "text": "One logger writes `INFO` on creation and close, `DEBUG` once per load end and `WARN` once for a load coroutine that failed outside its body, with names and class names only, never a value, a parameter value, a header, a credential or a message text. The load-end line is written only by the `future.complete` that wins, and a stored-kind result whose key no longer maps that future reads `not stored: removed before the load ended`, a new `internal` note; no public signature and no line of the dump changed.",
+            "state": "amended",
+            "ref": "final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins",
+            "excerpt": {
+              "ref": "final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins",
+              "heading": "D4. The load-end `DEBUG` line is written by the completion that wins",
+              "paragraph": "Plan: §7.9's code block: `load()` logs `residency.storage.note` before it returns its entry, and `startLoad` runs `future.complete(load(…))`; only `settle` is guarded by the outcome of `complete`. R12 and §6.9 say `DEBUG` once per load end, \"whether it was stored or why not\", \"logged by whoever completes the shared future\". · As built: · `load()` returns the entry together with its storage reason (a private `Ended` holder, because an entry of lifetime 0 does not say which of the three \"not stored\" notes applies), and the `scope.launch` body in `startLoad` logs the line only when its …",
+              "hash": "1d5640c11a3b"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "what": "The load-end `DEBUG` line is written only when the load body's `future.complete` returns `true`, `load()` returns its entry with its storage reason in a private `Ended` holder, and a stored-kind result whose future is no longer mapped reads `not stored: removed before the load ended`, the new `internal` `Storage.Removed`.",
+            "why": "The plan's code met the once-per-load-end rule only when the body's completion won: after a `close()` that had settled the future it wrote a second line, and after an in-flight `invalidate` it said `stored` for a result that was not stored.",
+            "when": "qa pass 2, the code review",
+            "ref": "final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins",
+            "link": "research/load-lifecycle.md#f6-completion-paths-of-the-shared-future-and-what-can-leave-it-open-documented-inference"
           }
         ]
       }
@@ -2390,7 +2531,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "state": "amended",
         "statements": [
           {
-            "text": "The eighteen `CaffeineResponseCache` classes, 84 tests, hold the port's contract on `VirtualClock`, each interleaving driven with `advanceBy` and asserted on its state through a `Waiter` recording the launched call, never with `join()`; the `maxAge` age edge steps by one millisecond, the clock's finest step.",
+            "text": "The eighteen `CaffeineResponseCache` classes, 84 tests, hold the port's contract on `VirtualClock`, each interleaving driven with `advanceBy` and asserted on its state through a `Waiter` recording the launched call, never with `join()`; the `maxAge` age edge steps by one millisecond, the clock's finest step. `CaffeineResponseCacheWaiterCancellationComponentTest` and `CaffeineResponseCacheRejectedLoadComponentTest` each gained a case §9's tables do not list, `CaffeineResponseCacheLoggingComponentTest` two that pin the load-end line, and `LoaderRunnerComponentTest` runs its plain cases under `runTest`.",
             "state": "amended",
             "ref": "final-implementation.md#2-deviations",
             "excerpt": {
@@ -2414,15 +2555,29 @@ window.dashboardLive&&window.dashboardLive("plan",
             "what": "`Waiter.kt` joined the test support, with `Waiter`, the recorder, and `CoroutineScope.call(...)`, the launcher; the plan lists `CacheTestSupport.kt`, `ParkingDispatcher.kt`, `JulCapture.kt` and `Boom.kt` only.",
             "why": "The Level 2 convention asserts on the completion state and the recorded result, never with `join()`, and recording a launched `getOrLoad` call's result or throwable needs the same few lines in each class, so they live once. No design decision or research finding is affected; the names the test support takes gain these two.",
             "when": "S2",
-            "ref": "final-implementation.md#deviations",
+            "ref": "final-implementation.md#d1-waiterkt-is-added-to-the-test-support",
             "link": "plan.md#712-test-support-new-files-under-webtools-httpsrcjvmtestkotlincomspartanlabstestingsupportwebtoolshttp"
           },
           {
             "what": "The `maxAge` age edge in `CaffeineResponseCacheMaxAgeComponentTest` is one millisecond over, not one nanosecond.",
             "why": "`VirtualClock` moves time through `TestCoroutineScheduler.advanceTimeBy`, which truncates its `Duration` to whole milliseconds, so the clock cannot step by a nanosecond. The exact nanosecond edge is tested on the pure function by `CacheEntryRulesDeterministicTest`; the rule itself is unchanged.",
             "when": "S2",
-            "ref": "final-implementation.md#deviations",
+            "ref": "final-implementation.md#d2-the-maxage-age-edge-at-level-2-is-one-millisecond-not-one-nanosecond",
             "link": "../architecture.md#67-published-test-support"
+          },
+          {
+            "what": "`CaffeineResponseCacheWaiterCancellationComponentTest` gains a shared future cancelled from outside while its waiter is active, which reads as `Closed(\"cache\")`; `CaffeineResponseCacheRejectedLoadComponentTest` gains a `loadDispatcher` whose `dispatch` throws an `Error`; and `LoaderRunnerComponentTest` runs its plain cases under `runTest`, so its `withTimeout(10)` case expires on virtual time.",
+            "why": "The test review found branches of the plan's code that no listed case reached; §9's tables are the minimum each class locks down. No production code changed.",
+            "when": "qa pass 1, the test review",
+            "ref": "final-implementation.md#d3-four-test-classes-cover-more-than-plan-9s-tables-and-loaderrunnercomponenttest-runs-under-runtest",
+            "link": "research/load-lifecycle.md#gaps"
+          },
+          {
+            "what": "`CaffeineResponseCacheLoggingComponentTest` gains two cases, 6 tests where it had 4: a loader that ignores cancellation and finishes after `close()` yields one load-end line, and so does a load whose key is invalidated in flight.",
+            "why": "The class counted the line per load end and passed under both defects of the load-end line; these cases pin the rule of the `caffeine-default` row.",
+            "when": "qa pass 2, the code review",
+            "ref": "final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins",
+            "link": "research/load-lifecycle.md#f6-completion-paths-of-the-shared-future-and-what-can-leave-it-open-documented-inference"
           }
         ]
       }
@@ -2624,15 +2779,31 @@ window.dashboardLive&&window.dashboardLive("plan",
         "link": "plan.md#level-4a--deterministic-deterministictest"
       },
       "asBuilt": {
-        "state": "as-planned",
+        "state": "amended",
         "statements": [
           {
             "text": "`CacheKeyCanonicalFormDeterministicTest`, 9 tests, tables the key's equality, stable sort, case sensitivity and names-only `toString()`, against a hand-written stable reference over 200 seeded random lists.",
             "state": "as-planned"
           },
           {
-            "text": "`CacheEntryRulesDeterministicTest`, 10 tests, tables the lifetime and weight rule and the usability rule over `residencyOf` and `isUsable`, the age edges to the nanosecond and a clock that stepped back included.",
-            "state": "as-planned"
+            "text": "`CacheEntryRulesDeterministicTest`, 10 tests, tables the lifetime and weight rule and the usability rule over `residencyOf` and `isUsable`, the age edges to the nanosecond and a clock that stepped back included, and gained a table over `CacheExpiry` and one over `CacheEntry.isFailure` with the companion's `closed()`, `failed()` and `fatal()`.",
+            "state": "amended",
+            "ref": "final-implementation.md#d3-four-test-classes-cover-more-than-plan-9s-tables-and-loaderrunnercomponenttest-runs-under-runtest",
+            "excerpt": {
+              "ref": "final-implementation.md#d3-four-test-classes-cover-more-than-plan-9s-tables-and-loaderrunnercomponenttest-runs-under-runtest",
+              "heading": "D3. Four test classes cover more than plan §9's tables, and `LoaderRunnerComponentTest` runs under `runTest`",
+              "paragraph": "Plan: §9's Level 2 and Level 4a tables for `CaffeineResponseCacheWaiterCancellationComponentTest`, `CaffeineResponseCacheRejectedLoadComponentTest`, `CacheEntryRulesDeterministicTest` and `LoaderRunnerComponentTest`; §9 names no runner for `LoaderRunnerComponentTest`'s plain cases. · As built, with no production code changed: · `CaffeineResponseCacheWaiterCancellationComponentTest` gains the case Assumption 2 guards: the shared future cancelled from outside (through the `futureOf` seam) while its waiter is active reads as `Closed(\"cache\")`, and the waiter is neither cancelled nor thrown into …",
+              "hash": "1a95074ebf47"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "what": "`CacheEntryRulesDeterministicTest` gains a table over `CacheExpiry` (the precomputed lifetime on create and update, the current duration on read) and one over `CacheEntry.isFailure` with the companion's factories, 10 tests where the plan's tables gave 8.",
+            "why": "The test review found two `internal` members of the plan's §7.8 that no listed case reached; §9's tables are the minimum each class locks down.",
+            "when": "qa pass 1, the test review",
+            "ref": "final-implementation.md#d3-four-test-classes-cover-more-than-plan-9s-tables-and-loaderrunnercomponenttest-runs-under-runtest",
+            "link": "plan.md#level-4a--deterministic-deterministictest"
           }
         ]
       }
@@ -2742,7 +2913,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "link": "plan.md#level-4c--non-functional-nonfunctionaltest"
       },
       "asBuilt": {
-        "state": "as-planned",
+        "state": "amended",
         "statements": [
           {
             "text": "In a green `nonfunctionalTest` run of 35 tests in 19 classes, `CaffeineResponseCacheSizeBoundNonFunctionalTest` had 8 workers insert 20,000 keys of seeded weights 1 to 5 under a `maxWeight` of 100 on real threads, and once `cleanUp()` read stable the weighted size was within the bound, with evictions counted.",
@@ -2764,8 +2935,15 @@ window.dashboardLive&&window.dashboardLive("plan",
             "state": "as-planned"
           },
           {
-            "text": "`CaffeineResponseCacheCloseRaceNonFunctionalTest` raced `close()` against 16 callers on `Dispatchers.Default` over 300 rounds on fresh caches, and every call returned a value or `Closed(\"cache\")` within each round's 10-second bound, never a `CancellationException`.",
-            "state": "as-planned"
+            "text": "`CaffeineResponseCacheCloseRaceNonFunctionalTest` raced `close()` against 16 callers over 300 rounds on fresh caches, the callers and the closer coroutines on `Dispatchers.Default` and not 16 threads, children of one `withTimeout(10.seconds)` per round so that a hang fails at the bound, and every call returned a value or `Closed(\"cache\")`, never a `CancellationException`.",
+            "state": "amended",
+            "ref": "final-implementation.md#d5-the-close-race-tests-callers-and-closer-are-coroutines-on-dispatchersdefault",
+            "excerpt": {
+              "ref": "final-implementation.md#d5-the-close-race-tests-callers-and-closer-are-coroutines-on-dispatchersdefault",
+              "heading": "D5. The close-race test's callers and closer are coroutines on `Dispatchers.Default`",
+              "paragraph": "Plan: §9 Level 4c, `CaffeineResponseCacheCloseRaceNonFunctionalTest`: \"16 threads call `getOrLoad` (loaders that finish quickly or suspend) while another thread closes the cache\"; §9's conventions: Level 3 and 4c use real time under `runBlocking` with a `withTimeout` bound. · As built: each of 300 rounds builds a fresh cache on the production defaults (with `maxWeight = 100`) and starts 16 callers with `async(Dispatchers.Default)` over four keys, with loaders that return at once, suspend 2 ms or suspend until cancelled, and a closer with `launch(Dispatchers.Default)` that waits on the same …",
+              "hash": "753dcdc06d6e"
+            }
           },
           {
             "text": "Procedure P3 left out both lifetime-0 removals and the failure-identity test failed in 5 of 5 runs on a 32-core host, each in round 0. Procedure P4 left out the closed-flag re-check in `startLoad` and the close-race test passed in 5 of 5 runs, so it did not detect the mutation; the as-built record reads this as the cancelled scope's `launch` completing without its body and `invokeOnCompletion` settling the future as closed, a reading not instrumented. Both lines were restored byte for byte. P4's result stands as a known gap, in `consequences.md` §8.",
@@ -2777,6 +2955,15 @@ window.dashboardLive&&window.dashboardLive("plan",
               "paragraph": "Procedure results and runs, in the order they ran. Only `webtools-http`'s own tasks and the check module's `js` compile were run (plan §9.2), no other module's suite.",
               "hash": "6abc2ca5c490"
             }
+          }
+        ],
+        "changes": [
+          {
+            "what": "The close race's callers and closer are coroutines, 16 `async(Dispatchers.Default)` callers over four keys and a `launch(Dispatchers.Default)` closer, where the plan has 16 threads and another thread closing.",
+            "why": "The bound is a coroutine timeout and cancels only coroutines: as its children, a hang fails the round at the bound instead of blocking `runBlocking`. They run in parallel but not necessarily one thread each; the window needs one caller and the closer running at once.",
+            "when": "S3",
+            "ref": "final-implementation.md#d5-the-close-race-tests-callers-and-closer-are-coroutines-on-dispatchersdefault",
+            "link": "research/load-lifecycle.md#level-2-tests-on-virtualclock"
           }
         ]
       }
@@ -2913,8 +3100,67 @@ window.dashboardLive&&window.dashboardLive("plan",
         "link": "plan.md#11-version-control"
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "amended",
+        "summary": "",
+        "statements": [
+          {
+            "text": "No version moved: `webtools-http` stays new and unreleased at `1.0.0`, this landing is not a release candidate, no other module moved, and no build line changed, as `caffeine` 3.3.1 was already on `jvmMain`.",
+            "state": "as-planned",
+            "ref": "consequences.md#1-published-artifacts",
+            "excerpt": {
+              "ref": "consequences.md#1-published-artifacts",
+              "heading": "1. Published artifacts",
+              "paragraph": "What a consumer of `webtools-http` 1.0.0 gets from this unit:",
+              "hash": "327220ac2959"
+            }
+          },
+          {
+            "text": "The ABI dump, regenerated at each code stage, grew from 434 to 557 lines by exactly the classes and members of the plan's §7.16 and holds nothing `internal` and no Caffeine or `CompletableFuture` type; `apiCheck` passes, and Procedure P5 read the KDoc and the dump as a consumer sees them.",
+            "state": "as-planned",
+            "ref": "final-implementation.md#4-measurements",
+            "excerpt": {
+              "ref": "final-implementation.md#4-measurements",
+              "heading": "4. Measurements",
+              "paragraph": "Procedure results and runs, in the order they ran. Only `webtools-http`'s own tasks and the check module's `js` compile were run (plan §9.2), no other module's suite.",
+              "hash": "6abc2ca5c490"
+            }
+          },
+          {
+            "text": "`README.md` names the response cache in the `webtools-http` row, and `CHANGELOG.md` carries one `### Added` entry under `## [Unreleased]`, in `2c4b7ec`.",
+            "state": "as-planned",
+            "ref": "consequences.md#documentation",
+            "excerpt": {
+              "ref": "consequences.md#documentation",
+              "heading": "Documentation",
+              "paragraph": "`README.md`: the `webtools-http` row of the artifacts table names the response cache. · `CHANGELOG.md`: one `### Added` entry under `## [Unreleased]`. · KDoc on every new public declaration states its tier and contract. · `../architecture.md` carries dated corrections (2026-11-03) at §6.4 and in §7.4's row for the points of §5. · `../consequences.md`, the systems-level document, gains one line for this unit, linking to §4. · No other `docs/` change. The evergreen `docs/webtools-http-architecture.md` is #70's.",
+              "hash": "7dc251e4b202"
+            }
+          },
+          {
+            "text": "`architecture.md` carries the dated corrections (2026-11-03) at §6.4 and in its §7.4 row, written in the as-built reconciliation, `02ae177`, with the one line this unit adds to the parent's `consequences.md`.",
+            "state": "as-planned",
+            "ref": "consequences.md#documentation",
+            "excerpt": {
+              "ref": "consequences.md#documentation",
+              "heading": "Documentation",
+              "paragraph": "`README.md`: the `webtools-http` row of the artifacts table names the response cache. · `CHANGELOG.md`: one `### Added` entry under `## [Unreleased]`. · KDoc on every new public declaration states its tier and contract. · `../architecture.md` carries dated corrections (2026-11-03) at §6.4 and in §7.4's row for the points of §5. · `../consequences.md`, the systems-level document, gains one line for this unit, linking to §4. · No other `docs/` change. The evergreen `docs/webtools-http-architecture.md` is #70's.",
+              "hash": "7dc251e4b202"
+            }
+          },
+          {
+            "text": "The five commits of §11 stand on `feat/issue-66-response-cache`, `e5f1a4c`, `ea167b9`, `d1deae5`, `2c4b7ec` and `02ae177`, the first carrying the plan; two more were added, `38483ea` for the as-built record, the code-landing commit, and `f1d7a07` for the KDoc and test comments, and `:webtools-http:check` passed on the final tree.",
+            "state": "amended"
+          }
+        ],
+        "changes": [
+          {
+            "what": "Two commits beyond the plan's five: `38483ea` records the response cache as built and corrects the research count, and `f1d7a07` settles the KDoc and test comments.",
+            "why": "The as-built record stood ahead of the code-landing commit, and the documentation review's wording took a commit of its own; only comment and KDoc lines changed after that commit.",
+            "when": "the Document step",
+            "ref": "38483ea",
+            "link": "plan.md#11-version-control"
+          }
+        ]
       }
     },
     {
@@ -2993,14 +3239,35 @@ window.dashboardLive&&window.dashboardLive("plan",
         "link": "plan.md#12-interfaces-with-sibling-units"
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "as-planned",
+        "summary": "",
+        "statements": [
+          {
+            "text": "Nothing of key assembly, the loader, the classification of misses or `stats()` as `cacheStats()` was built: nothing in the repository calls a `ResponseCache` yet, and #68 is the first caller.",
+            "state": "as-planned",
+            "ref": "consequences.md#4-sibling-units",
+            "excerpt": {
+              "ref": "consequences.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts, and the build holds them as written; the points below are as built. In short:",
+              "hash": "b1dd6d4221b5"
+            }
+          },
+          {
+            "text": "The port pins what the facades rely on: a loader returns failures as values, runs in the cache's scope on `loadDispatcher` and must not wait for a load of its own key.",
+            "state": "as-planned"
+          },
+          {
+            "text": "A negative `maxAge` throws `IllegalArgumentException`, on the first line of `getOrLoad`, so the facade checks `CallSpec.maxAge` first and returns `InvalidRequest` before anything is spent.",
+            "state": "as-planned"
+          }
+        ]
       }
     }
   ],
   "impact": {
-    "basis": "plan",
-    "summary": "`webtools-http`, new and unreleased, gains its response cache: the `ResponseCache` port, implementing which needs the opt-in, with its values and the pass-through `ResponseCache.Disabled` in common code, and the final `CaffeineResponseCache` on the JVM, all Stable Core otherwise. Concurrent callers of one key cost one load, what is stored is bounded by weight, failures are never stored, and `close()` releases every waiter. No dependency of either variant changes, the three existing artifacts do not, and no version moves.",
+    "basis": "as-built",
+    "summary": "`webtools-http`, new and unreleased, gains its response cache: the `ResponseCache` port, implementing which needs the opt-in, with its values and the pass-through `ResponseCache.Disabled` in common code, and the final `CaffeineResponseCache` on the JVM, all Stable Core otherwise. Concurrent callers of one key cost one load, what is stored is bounded by weight, failures are never stored, and `close()` releases every waiter. No dependency of either variant changes, the three existing artifacts do not, and no version moves. None of the build's deviations changes a published artifact or a sibling contract.",
     "none": null,
     "release": {
       "bump": "none",
@@ -3022,7 +3289,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "consumer",
         "system": "webtools-http-cache",
         "effect": "additive",
-        "summary": "One load for any number of concurrent callers of one key, a store bounded by weight with per-entry lifetimes, a per-call `maxAge`, failures never stored, a `close()` that ends every waiting call with `Closed(\"cache\")`, statistics with one meaning each, an explicit opt-out in common code, and a cache that the published `VirtualClock` can drive under test.",
+        "summary": "One load for any number of concurrent callers of one key, a store bounded by weight with per-entry lifetimes, a per-call `maxAge`, failures never stored, a `close()` that ends every waiting call with `Closed(\"cache\")`, statistics with one meaning each, an explicit opt-out in common code, and a cache that the published `VirtualClock` can drive under test. Its logs carry no value: `INFO` on creation and on `close()`, and one `DEBUG` line per load end, written by the completion that wins, with the key's id and parameter names, the outcome and whether it was stored.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -3038,7 +3305,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "repository",
         "system": null,
         "effect": "additive",
-        "summary": "No build file changes, and `./gradlew build` does more work: the new tests, Level 3 with one loopback server and Level 4c on real threads, the fixtures-publication check again, `apiCheck` against the regenerated dump and the `js` compile of the new common files.",
+        "summary": "No build file changes, and `./gradlew build` does more work: the new tests, Level 3 with one loopback server and Level 4c on real threads, the fixtures-publication check again, `apiCheck` against the regenerated dump and the `js` compile of the new common files. The module's five level tasks, 889 tests with these, ran in 11 s together on the build host.",
         "link": "consequences.md#build"
       },
       {
@@ -3046,15 +3313,15 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "system",
         "system": "webtools-http-cache",
         "effect": "additive",
-        "summary": "The call facades (#68) are the first callers and build on the contract the plan pins for them; the docs (#70) document the cache from its KDoc, README row and CHANGELOG entry; the call budget (#67) and the feeds (#69) take nothing from it.",
+        "summary": "The call facades (#68) are the first callers and build on the contract as built; the docs (#70) document the cache from its KDoc, README row and CHANGELOG entry, and its logging for operators; the feeds (#69) take nothing from it, and neither does the call budget (#67), whose permit is taken inside the facade's loader, so a cache's `close()` cancels a wait in progress and a refusal the facade must see as `BudgetExhausted` is returned as a value.",
         "link": "consequences.md#4-sibling-units"
       },
       {
-        "who": "#58, CI and repository practices",
+        "who": "#58, WebTools#87, CI and repository practices",
         "kind": "repository",
         "system": null,
         "effect": "additive",
-        "summary": "Its CI would be the first place these tests run on every change, and the Level 4c failure-identity check needs at least two cores to open the window it guards. This unit's IDE checks join those still open from #62 to #65.",
+        "summary": "Its CI would be the first place these tests run on every change, and the Level 4c failure-identity check needs at least two cores to open the window it guards. This unit's IDE checks join those still open from #62 to #65. Four more Level 4c classes run beside the `UrlParseLinearTimeNonFunctionalTest` flake under concurrent level tasks, WebTools#87, which did not show in this unit's runs.",
         "link": "consequences.md#6-neighbouring-issues"
       }
     ],
@@ -3063,8 +3330,8 @@ window.dashboardLive&&window.dashboardLive("plan",
         "who": "Unit 9, the call facades (#68)",
         "system": "webtools-http-cache",
         "need": "required",
-        "summary": "It builds each key from the endpoint's id and canonical parameters, never a tenant, a header or a credential; checks `CallSpec.maxAge` first, as a negative one throws; returns failures as values from its loader; builds `CaffeineResponseCache` from the client's clock and dispatcher and closes it first of the three components it owns; and returns `stats()` as `cacheStats()`.",
-        "link": "plan.md#12-interfaces-with-sibling-units"
+        "summary": "It builds each key from the endpoint's id and canonical parameters, never a tenant, a header or a credential; checks `CallSpec.maxAge` first, as a negative one throws; returns failures as values from its loader; builds `CaffeineResponseCache` from the client's clock and dispatcher and closes it first of the three components it owns; and returns `stats()` as `cacheStats()`. The port reports nothing per call, so a call cannot tell a hit from a join and only its own loader running says that it started the load; the facade's per-call `DEBUG` line is settled against that, and is in addition to the cache's own logger.",
+        "link": "consequences.md#4-sibling-units"
       },
       {
         "who": "An implementer of `ResponseCache`",
@@ -3140,8 +3407,54 @@ window.dashboardLive&&window.dashboardLive("plan",
       }
     ],
     "conversion": [],
-    "changes": [],
-    "source": "consequences.md; plan.md §1, §7.16, §12",
+    "changes": [
+      {
+        "what": "One `DEBUG` line per load end is written by the completion of the shared future that wins, and a stored-kind result whose future an `invalidate` removed during the load reads `not stored: removed before the load ended`.",
+        "why": "The plan's code logged before knowing whether its completion won. `Storage.Removed` is `internal`: no public signature and no line of the dump change.",
+        "when": "qa pass 2, the code review",
+        "ref": "final-implementation.md#d4-the-load-end-debug-line-is-written-by-the-completion-that-wins",
+        "entry": "downstream.1",
+        "system": "webtools-http-cache"
+      },
+      {
+        "what": "What the call facades (#68) build on gains that the port reports nothing per call, so their per-call `DEBUG` line is settled against it, and that the cache logs on its own logger beside theirs.",
+        "why": "The plan's §12 contracts hold as written; the reconciliation states what the build shows beyond them.",
+        "when": "the as-built reconciliation",
+        "ref": "consequences.md#4-sibling-units",
+        "entry": "adaptation.0",
+        "system": "webtools-http-cache"
+      },
+      {
+        "what": "The call budget (#67) still takes nothing from this unit, but its permit is taken in the cache's load coroutine: a cache's `close()` cancels a wait in progress, and a refusal the facade must see as `BudgetExhausted` is returned as a value.",
+        "why": "A cancellation the budget throws on its own while that coroutine is active reaches the waiters as the `IllegalStateException` failure, not as a budget failure.",
+        "when": "the as-built reconciliation",
+        "ref": "consequences.md#4-sibling-units",
+        "entry": "downstream.4",
+        "system": "webtools-http-cache"
+      },
+      {
+        "what": "The build's added work is measured: the module's five level tasks, 889 tests with this unit's, ran in 11 s together on the build host.",
+        "why": "The planned document named the work and no figure; the run of record gives it.",
+        "when": "the run of record",
+        "ref": "consequences.md#build",
+        "entry": "downstream.3"
+      },
+      {
+        "what": "WebTools#87 joins the neighbouring issues: four more Level 4c classes run beside its `UrlParseLinearTimeNonFunctionalTest` flake, which did not show in this unit's runs.",
+        "why": "The planned document did not name it; the follow-up belongs to that test, not to this change.",
+        "when": "the as-built reconciliation",
+        "ref": "consequences.md#6-neighbouring-issues",
+        "entry": "downstream.5"
+      },
+      {
+        "what": "The known gaps gain what the build leaves open: no test fails without the insert-then-check (Procedure P4), the gate on implementers has no automated check, and no test tells which completer delivers a rejected dispatch's outcome. The follow-ups gain `cache-non-jvm-default`, which the plan's §13 already names.",
+        "why": "The planned gaps held for the unit as planned, and the reconciliation adds what the build leaves open.",
+        "when": "the as-built reconciliation",
+        "ref": "consequences.md#8-known-gaps",
+        "system": "webtools-http-cache"
+      }
+    ],
+    "source": "consequences.md, reconciled with final-implementation.md; plan.md §1, §7.16, §12",
     "link": "consequences.md#1-published-artifacts"
   },
   "tests": {
@@ -3893,7 +4206,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       {
         "issue": 66,
         "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
-        "state": "OPEN"
+        "state": "CLOSED",
+        "stateReason": "COMPLETED"
       },
       {
         "issue": 67,
@@ -3999,6 +4313,10 @@ window.dashboardLive&&window.dashboardLive("plan",
       {
         "what": "Five As built statements referred to sections the reconciled `final-implementation.md` no longer has (`#procedures-run`, `#deviations`, `#runs-stage-3`); they now refer to `#4-measurements` and `#2-deviations`. The `component-tests` row said 80 tests and the `deterministic-tests` row 8, where the final run of record counts 84 and 10, and the `nonfunctional-tests` row called P4's result an open point, settled as a known gap in `consequences.md` §8; the `policy-lookup` row said the builder's KDoc keeps the place for a later `staleFor`, which the reconciled KDoc no longer names. Corrected in place.",
         "when": "reconciled, 2026-11-03"
+      },
+      {
+        "what": "The `component-tests` row's two changes referred to `#deviations`, which the reconciled `final-implementation.md` no longer has; they now refer to its D1 and D2 sections. Corrected in place.",
+        "when": "landed, 2026-11-03"
       }
     ]
   },
@@ -4008,7 +4326,8 @@ window.dashboardLive&&window.dashboardLive("plan",
     "62": "../62-http-core/dashboard.html",
     "63": "../63-test-support/dashboard.html",
     "64": "../64-url-policy/dashboard.html",
-    "65": "../65-okhttp-transport/dashboard.html"
+    "65": "../65-okhttp-transport/dashboard.html",
+    "67": "../67-call-budget/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

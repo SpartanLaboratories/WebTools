@@ -284,11 +284,11 @@ footer code{color:var(--ink-2)}
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-03T19:24:14Z",
-  "asOf": "2026-11-03",
+  "generated": "2026-11-05T23:43:23Z",
+  "asOf": "2026-11-05",
   "tree": {
-    "ref": "master",
-    "sha": "38483ea"
+    "ref": "feat/issue-67-call-budget",
+    "sha": "327164f"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -348,8 +348,8 @@ footer code{color:var(--ink-2)}
       "name": "call budget",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http-budget/index.html"
     },
     {
       "slug": "webtools-http-facades",
@@ -425,9 +425,9 @@ footer code{color:var(--ink-2)}
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "6 of 11 units landed; #66 in progress; #67 up next.",
+      "detail": "7 of 11 units landed; #67 in progress; #68 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-03T02:17:16Z",
+      "updated": "2026-11-03T19:38:03Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -435,13 +435,13 @@ footer code{color:var(--ink-2)}
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 6,
+        "landed": 7,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 6,
+        "landed": 7,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -449,15 +449,19 @@ footer code{color:var(--ink-2)}
         "done": false,
         "current": [
           {
-            "issue": 66,
-            "slug": "response-cache",
+            "issue": 67,
+            "slug": "call-budget",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 67,
-          "slug": "call-budget",
-          "blockedBy": []
+          "issue": 68,
+          "slug": "call-facades",
+          "blockedBy": [
+            {
+              "issue": 67
+            }
+          ]
         }
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
@@ -640,7 +644,9 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 66,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T19:33:28Z",
           "hold": "enables"
         },
         {
@@ -734,7 +740,9 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 66,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T19:33:28Z",
           "hold": "enables"
         },
         {
@@ -1000,7 +1008,8 @@ footer code{color:var(--ink-2)}
     {
       "issue": 66,
       "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -1025,17 +1034,17 @@ footer code{color:var(--ink-2)}
         {
           "issue": 68,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/66-response-cache/dashboard.html",
       "folder": "55-http-client-stack/66-response-cache/",
-      "branch": "feat/issue-66-response-cache",
+      "branch": null,
       "system": "webtools-http-cache",
-      "step": "document",
-      "detail": "Document: 5 of 6 tasks done; State boards current.",
-      "since": "2026-11-03T18:33:16Z",
-      "updated": "2026-11-03T19:10:20Z",
+      "step": "landed",
+      "detail": "Merged through PR #89 as 8122af7: the `ResponseCache` port, its values and `ResponseCache.Disabled` in common code and `CaffeineResponseCache` on the JVM; five deviations recorded; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+      "since": "2026-11-03T19:33:26Z",
+      "updated": "2026-11-03T19:33:26Z",
       "qa": [
         {
           "pass": 1,
@@ -1076,15 +1085,20 @@ footer code{color:var(--ink-2)}
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 89,
+        "merge": "8122af7",
+        "version": "none moved; webtools-http 1.0.0 new, unreleased",
+        "date": "2026-11-03"
+      },
       "reconciliation": {
-        "state": "planned",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "response cache",
       "group": "55",
       "order": 7
@@ -1120,20 +1134,63 @@ footer code{color:var(--ink-2)}
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/67-call-budget/dashboard.html",
+      "folder": "55-http-client-stack/67-call-budget/",
+      "branch": "feat/issue-67-call-budget",
       "system": "webtools-http-budget",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-05T22:43:07Z",
+      "updated": "2026-11-05T23:18:27Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-04",
+          "at": "2026-11-04T04:27:56Z",
+          "findings": {
+            "test": 2,
+            "code": 1
+          },
+          "severity": {
+            "minor": 2,
+            "other": 1
+          },
+          "route": "remediation",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/67-call-budget/2f43cfc3/tests/index.html",
+          "note": "One code finding (other), in the As built row the fix touches, `hard-stop`, whose verdict holds the write-ahead and the snapshots (plan.md R13, §6.7): in `BudgetLedger`'s `exactSnapshot` and `markPersisted`, after a write-ahead grant is released and `flush()` runs, the exact snapshot omits the emptied hard cell while its persisted mark keeps the write-ahead value, so up to `persistAhead - 1` later grants make no save and a crash under-counts the hard window, against the plan's never-under-count rule; the code is the plan's own, so the fix is also a deviation. Two minor test findings, in `component-tests`, each a Level 2 case to add: the write-ahead retry loop is exercised only for its first iteration (no slow successful save crossing a boundary, no three-attempt cap case), and the 1 ms re-plan deadline tolerance has no edge case. Suite: 1,204 passed, 0 failed, 0 skipped. For the documents: the Level 2 close test with free capacity appears to detect P3's mutation deterministically, to be confirmed with one run; P5 has no record yet."
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "date": "2026-11-04",
+          "at": "2026-11-04T05:16:24Z",
+          "findings": {
+            "test": 4,
+            "code": 1
+          },
+          "severity": {
+            "minor": 5,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/67-call-budget/cefdb082/tests/index.html",
+          "note": "Five minor findings and no other; the fixes are being made in place. Two in the As built row `fixtures`: the code finding, that `FakeBudgetStore`'s `failLoads` and `failSaves` with `times = 0` deliver one failure instead of none, because the count only decides when to disarm and the armed failure is still delivered; a guard settles it, with a case of its own, and as the code is the plan's listing (plan.md §7.17) the fix is also a deviation. And a test finding: `FixturesConsumerGatingTest` names neither `RecordingBudgetObserver` nor `FakeBudgetStore`. The other three are test findings in `component-tests`, each a case to add, resting on another row's verdict: for `close`, a waiter whose own write-ahead save spans `close()`; for `hard-stop`, a store `Error` propagating (plan.md §6.7) and a retried restore whose merge of counts re-plans queued waiters. Looked at with no finding: the D7 fix, a single added condition traced through every snapshot reader, and the restore band, which is plan.md §6.7's contract. Suite: 1,208 passed, 0 failed, 0 skipped.",
+          "inPlace": "fixed"
+        }
+      ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
       "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [],
+      "reconciliation": {
+        "state": "planned",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "call budget",
       "group": "55",
       "order": 8
@@ -1153,8 +1210,10 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 66,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-03T19:33:28Z",
+          "build": "clear",
           "locality": "local-repository"
         },
         {
@@ -1181,10 +1240,16 @@ footer code{color:var(--ink-2)}
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [
+        {
+          "issue": 67
+        }
+      ],
       "systemName": "call facades",
       "group": "55",
       "order": 9
@@ -1368,7 +1433,8 @@ footer code{color:var(--ink-2)}
         {
           "issue": 66,
           "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 67,
