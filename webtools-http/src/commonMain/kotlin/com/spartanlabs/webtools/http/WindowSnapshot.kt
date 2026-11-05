@@ -1,14 +1,14 @@
 package com.spartanlabs.webtools.http
 
 /**
- * The count of one hard window in one period: [used] calls in the period that started at [windowStartEpochMillis] (a multiple
+ * The count of one hard window in one period: [used] units charged in the period that started at [windowStartEpochMillis] (a multiple
  * of the window's period since the epoch).
  *
  * **Stable Core.** Equality is on the three properties; `toString()` prints the name and the numbers only.
  *
  * @param window the window's name, as [RateWindow.name] spells it; not blank.
  * @param windowStartEpochMillis the start of the period, in epoch milliseconds.
- * @param used the calls counted in the period; not negative.
+ * @param used the units counted in the period, in cost units; not negative.
  * @throws IllegalArgumentException if [window] is blank or [used] is negative.
  */
 public class WindowSnapshot(
@@ -16,7 +16,7 @@ public class WindowSnapshot(
     public val window: String,
     /** The start of the period, in epoch milliseconds. */
     public val windowStartEpochMillis: Long,
-    /** The calls counted in the period; not negative. */
+    /** The units counted in the period, in cost units; not negative. */
     public val used: Int,
 ) {
     init {

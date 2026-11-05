@@ -4,7 +4,10 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlin.time.Duration
 
+/** The constant message `acquire` throws with for a `cost` below 1; tests assert on its text. */
 internal const val COST_MESSAGE: String = "cost must be at least 1"
+
+/** The constant message `acquire` throws with for a negative `maxWait`; tests assert on its text. */
 internal const val MAX_WAIT_MESSAGE: String = "maxWait must not be negative"
 
 /** The checks `acquire` makes of its arguments, shared by every implementation the module supplies. */

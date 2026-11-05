@@ -1,5 +1,9 @@
 package com.spartanlabs.webtools.http
 
+/**
+ * The most cells one window keeps. Normal use needs only a few (the current period, a guard neighbour, a restored cell ahead, the periods a backward step left above);
+ * 16 bounds the memory of a window whose wall clock jumps around. A cell holding planned units is never dropped for the cap.
+ */
 internal const val MAX_CELLS_PER_WINDOW: Int = 16
 
 /** One window's cells and its arithmetic. [reserves] is each lane's reserved units in this window. */

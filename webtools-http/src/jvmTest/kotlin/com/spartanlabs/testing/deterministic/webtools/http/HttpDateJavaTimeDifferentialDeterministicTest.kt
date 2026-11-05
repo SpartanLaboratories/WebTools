@@ -23,7 +23,7 @@ import kotlin.test.fail
  * edges, hours, minutes, seconds with second 60 at 10 %, a weekday right or wrong, random ASCII case, optional SP/HTAB padding):
  * both accept and agree, or both reject, after the oracle's input is normalised (weekday stripped, padding trimmed, second 60
  * replaced by 59 and a second added to its result). Part 3 - one edit of a printed valid text (delete, insert `x`, replace by a
- * non-letter or `z` where the original is not a letter, truncate) is rejected by both. Part 4 - the coverage floors.
+ * non-letter, or by `z` or `é` where the original is not a letter, truncate) is rejected by both. Part 4 - the coverage floors.
  */
 class HttpDateJavaTimeDifferentialDeterministicTest {
 
@@ -169,6 +169,9 @@ class HttpDateJavaTimeDifferentialDeterministicTest {
     //endregion
 
     //region part 3
+    // What each replacement probes: HTAB (whitespace the grammar allows only around the value) and NUL are controls; `~` is a printable non-letter; `é` is a
+    // non-ASCII letter a lenient `isLetter` would accept; `٠`, `٣` (Arabic-Indic) and `１` (fullwidth) are non-ASCII digits a lenient `isDigit` would accept;
+    // `z` is the one ASCII letter.
     private val replacements: List<Char> = listOf('\t', '~', 'é', '٠', '٣', '\u0000', '１', 'z')
 
     @Test
@@ -194,7 +197,7 @@ class HttpDateJavaTimeDifferentialDeterministicTest {
                 1 -> text.substring(0, position) + "x" + text.substring(position)
                 2 -> {
                     val replacement = replacements[random.nextInt(replacements.size)]
-                    // A letter in place of a letter could spell another valid name, so that edit is excluded (the replacement set is otherwise non-letters).
+                    // A letter in place of a letter could spell another valid name, so that edit is excluded (`z` and `é` are the set's two letters; the rest are non-letters).
                     if (replacement == text[position] || (replacement.isLetter() && text[position].isLetter())) return@repeat
                     text.substring(0, position) + replacement + text.substring(position + 1)
                 }

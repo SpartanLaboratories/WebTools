@@ -3,16 +3,22 @@ package com.spartanlabs.webtools.http
 import kotlin.math.ceil
 import kotlin.time.Duration
 
+/** Absorbs the excess of a floating-point product (`0.07 * 100 = 7.000000000000001`) before the `ceil`, so an exact share is not rounded one unit up. */
 internal const val SHARE_EPSILON: Double = 1e-9
 
-/** A share as reserved units of a window: `ceil`, at least 1 for a positive share; the epsilon keeps `0.2 * 50` from rounding to 11. */
+/** A share as reserved units of a window: `ceil`, at least 1 for a positive share; the epsilon keeps `0.07 * 100` from rounding to 8. */
 internal fun reservedUnits(share: Double, limit: Int): Int = maxOf(1, ceil(share * limit - SHARE_EPSILON).toInt())
 
 /** Where and when a call is planned to be granted, and the cells it charges. [reason] and [window] say what set the slot. */
 internal class Plan(val targetWall: Long, val reason: ExhaustedReason, val window: String?, val charges: List<Charge>)
 
+/** What `reconcile` reports: the window, the count the server reported and how much the local count rose. */
 internal class Raised(val window: String, val serverUsed: Int, val by: Int)
+
+/** One offer for the pause and its source. */
 internal class PauseHint(val lengthMillis: Long, val source: PauseSource)
+
+/** What `restore` merged, dropped and ignored for skew, and the pause it set (`null` when it set none). */
 internal class RestoreOutcome(val restored: Int, val dropped: Int, val ignoredForSkew: Boolean, val pause: Pause?)
 
 /**
@@ -24,7 +30,7 @@ internal class BudgetLedger(windows: List<RateWindow>, laneShares: Map<Lane, Dou
     var pause: Pause? = null
     val maxBurst: Int get() = windows.minOf { it.limit }
 
-    /** Moves every window to [now]; expires the pause. @return whether any window copied its cells. */
+    /** Moves every window to [now] and expires the pause; returns whether any window copied its cells. */
     fun advance(now: LedgerNow): Boolean {
         val folded = windows.fold(false) { acc, w -> w.advance(now.wallMillis) || acc }      // every window is advanced: no short-circuit
         pause = pause?.takeUnless { it.isOver(now) }
@@ -107,6 +113,7 @@ internal class BudgetLedger(windows: List<RateWindow>, laneShares: Map<Lane, Dou
         val own = charges.firstOrNull { it.window == position && it.primary } ?: return null
         if (own.index != w.indexAt(now.wallMillis)) return null                                     // a reading for a rolled window is ignored
         val cell = w.cell(own.index) ?: return null                                                 // a cell the cap or pruning removed reads as rolled
+        // Measured against published, not the enforced limit: the server counts against its own documented limit; the margin is local and the server knows nothing of it.
         val serverUsed = (w.published.toLong() - remaining).coerceIn(0L, w.published.toLong()).toInt()
         val before = cell.effective
         if (serverUsed <= before) return null                                                       // a reading only raises
@@ -136,7 +143,7 @@ internal class BudgetLedger(windows: List<RateWindow>, laneShares: Map<Lane, Dou
         return offers.maxByOrNull { it.lengthMillis }                                                // the first of equal lengths wins
     }
 
-    /** Merges [hint] into the pause in force; @return the pause now in force if it was extended, else `null`. */
+    /** Merges [hint] into the pause in force; returns the pause now in force if it was extended, else `null`. */
     fun extendPause(hint: PauseHint, now: LedgerNow): Pause? {
         val candidate = Pause.of(now, hint.lengthMillis)
         val current = pause

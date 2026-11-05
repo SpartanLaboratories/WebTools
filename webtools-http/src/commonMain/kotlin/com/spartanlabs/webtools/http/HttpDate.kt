@@ -10,6 +10,7 @@ internal enum class HttpDateProblem(val message: String) {
 /** The failure `HttpDate.parse` and `RetryAfter.parse` return; its [problem] is what tests assert on. A message never carries input. */
 internal class HttpDateParseException(val problem: HttpDateProblem) : IllegalArgumentException(problem.message)
 
+/** A `Result.failure` of a [HttpDateParseException] carrying [problem] and its constant message. */
 internal fun <T> httpDateFailure(problem: HttpDateProblem): Result<T> = Result.failure(HttpDateParseException(problem))
 
 /**

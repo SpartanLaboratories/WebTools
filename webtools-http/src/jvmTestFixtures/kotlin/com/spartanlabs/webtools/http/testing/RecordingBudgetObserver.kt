@@ -23,7 +23,11 @@ public class RecordingBudgetObserver(private val onEach: (BudgetEvent) -> Unit =
     /** Every event so far, in the order they arrived; a snapshot. */
     public val events: List<BudgetEvent> get() = recorded.toList()
 
-    /** The recorded events of type [E], in order. */
+    /**
+     * The recorded events of type [E], in order.
+     *
+     * @return the recorded events that are an [E], in arrival order; a snapshot.
+     */
     public inline fun <reified E : BudgetEvent> eventsOf(): List<E> = events.filterIsInstance<E>()
 
     /** Forgets every recorded event. */

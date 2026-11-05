@@ -38,8 +38,9 @@ private const val SENTINEL = "SENTINEL-STORE-MESSAGE-5e2a"
  * `StoreFailed` and a normal grant, never a `CancellationException` to the caller; the caller's own cancellation during a store delay propagates and leaves
  * the ledger unchanged with no waiter behind; a `loadDelay` beyond `storeTimeout` fails the restore the same way; a failing store's exception message
  * appears in no log line, only its class name; a save that outlasts a hard window's period is written again for the cell then current, at most three
- * times, and the grant then proceeds on the fourth cell; a store that throws an `Error` (from `save` or from `load`) propagates the same instance to the
- * caller with no `StoreFailed` event and an unchanged ledger, and the lock is released, so the next `acquire` is granted.
+ * times, and the grant then proceeds on the fourth cell; an `Error` a store throws (from `save` or from `load`) propagates to the caller as the instance
+ * or as its stack-trace-recovery copy (the original as `cause`), never wrapped in a `BudgetStoreFailure`, with no `StoreFailed` event and an unchanged
+ * ledger, and the lock is released, so the next `acquire` is granted.
  */
 class WindowedCallBudgetStoreFailureComponentTest {
 

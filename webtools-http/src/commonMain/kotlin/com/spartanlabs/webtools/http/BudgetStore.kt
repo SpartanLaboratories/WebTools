@@ -1,8 +1,10 @@
 package com.spartanlabs.webtools.http
 
 /**
- * Keeps a [BudgetSnapshot] across runs so a hard window survives a restart. The budget calls [load] once, lazily, and [save]
- * write-ahead and on `flush()`, each under its own lock and bounded by `storeTimeout`.
+ * Keeps a [BudgetSnapshot] across runs so a hard window survives a restart. The budget calls [load] lazily until one succeeds (a
+ * failed load is retried on the budget's schedule), then never again, and [save] write-ahead and on `flush()`, each under its own
+ * lock and bounded by `storeTimeout`. A failure a call returns or an `Exception` it throws is a store failure the budget handles;
+ * an `Error` is never swallowed: it propagates to the budget's caller.
  *
  * **Experimental (implement).** Implementing needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`; [InMemoryBudgetStore]
  * needs none. An implementation **must be cancellable**: the budget bounds each call with `withTimeoutOrNull`, which cannot

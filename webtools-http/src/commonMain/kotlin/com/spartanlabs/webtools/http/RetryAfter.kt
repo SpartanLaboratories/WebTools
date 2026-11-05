@@ -23,17 +23,18 @@ public object RetryAfter {
      *
      * @param value the header value.
      * @param nowEpochMillis the local clock, in epoch milliseconds.
-     * @return the delay, or an `IllegalArgumentException` (`Empty`, `Format` or `Range`) for text that is not a `Retry-After` value.
+     * @return the delay, or an `IllegalArgumentException` whose constant message says whether the value was empty, malformed or
+     *   out of range; it never echoes the value.
      */
     public fun parse(value: String, nowEpochMillis: Long): Result<Duration> = parse(value, nowEpochMillis, nowEpochMillis)
 
     /**
      * Reads [value] against the server's own clock: a date's delay is the date minus [serverDateEpochMillis] (the response's
-     * `Date`), so a skewed local clock cancels out of a pair of server readings. [nowEpochMillis] is not read; the parameter
-     * keeps the signature the stack specifies.
+     * `Date`), so a skewed local clock cancels out of a pair of server readings.
      *
      * @param value the header value.
-     * @param nowEpochMillis the local clock, in epoch milliseconds (unused here).
+     * @param nowEpochMillis the local clock, in epoch milliseconds; not read by this overload (the server's `Date` replaces it),
+     *   accepted so both overloads take the same leading arguments.
      * @param serverDateEpochMillis the response's `Date`, in epoch milliseconds.
      * @return the delay, or an `IllegalArgumentException` for text that is not a `Retry-After` value.
      */

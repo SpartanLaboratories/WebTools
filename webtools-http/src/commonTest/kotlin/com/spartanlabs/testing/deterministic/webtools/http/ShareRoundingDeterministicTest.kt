@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Level 4a - `reservedUnits`: the table (`ceil`, at least 1, the epsilon keeping `0.2 * 50` at 10 and `0.3 * 10` at 3), the seeded
+ * Level 4a - `reservedUnits`: the table (`ceil`, at least 1, the epsilon keeping `0.07 * 100` at 7), the seeded
  * grid properties (at least 1, at most the limit for a share at most 1, non-decreasing in the share), and `capacityFor` for one,
  * two and three lanes.
  */

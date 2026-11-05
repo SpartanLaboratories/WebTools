@@ -27,6 +27,8 @@ internal val MAX_WAIT_SLICE: Duration = 1.minutes
 
 private val budgetLog: Log = logger(BUDGET_LOGGER_NAME)
 private val CAP_TOLERANCE: Duration = 1.milliseconds      // the wall clock has millisecond granularity
+// A save that outlasts the period is planned again onto the cell then current and written ahead for it. Three bounds that loop, so a slow store cannot
+// keep the caller in it forever: after the third save the grant proceeds without a save of its own.
 private const val MAX_WRITE_AHEAD_ATTEMPTS = 3
 private const val BUDGET_COMPONENT = "budget"
 private const val DEFAULT_INTERACTIVE_SHARE = 0.2
@@ -62,10 +64,17 @@ private const val DEFAULT_INTERACTIVE_SHARE = 0.2
  * period) and is saved write-ahead to the [Builder.store] in blocks of [Builder.persistAhead] grants, under the budget's lock and
  * before the grant; a restart restores the stored count at the first `acquire`, `utilisation()` or `flush()` (a stale period is
  * dropped, the current one merged additively, a stamp further ahead than [Builder.maxRestoreSkew] has its stamp and pause
- * ignored but its counts kept). A store that fails is logged and ignored: grants continue from the in-process count and the next
- * attempt waits [Builder.storeRetryInterval]; no save is made before a restore has succeeded. Call [flush] before [close] for the
- * exact final write; `close()` itself writes nothing. A snapshot store is last-writer-wins and does not count one provider across
- * several processes.
+ * ignored but its counts kept). A store that returns a failure or throws an `Exception` is logged and ignored: grants continue
+ * from the in-process count and the next attempt waits [Builder.storeRetryInterval]; no save is made before a restore has
+ * succeeded. Grants made while the store is failing are unsaved: a crash then loses them, and the restart under-counts the window
+ * by up to as many. While saves succeed, a crash never under-counts the grants made, save for a grant made after three saves that
+ * each outlasted their period, which proceeds unsaved; it over-counts by at most `persistAhead - 1` plus any units written ahead and
+ * then given back (a `release()`, or a call cancelled or closed after its save), which stay in the stored count until `flush()`. A
+ * count a server reading or a backward clock step raised is saved with the next grant or `flush()`, not when it is raised. An `Error` the
+ * store throws is not a store failure: it propagates to the caller of the member that made the store call (possibly as a
+ * stack-trace-recovery copy whose `cause` is the original), raises no [BudgetEvent.StoreFailed] and grants nothing; the lock is
+ * released. Call [flush] before [close] for the exact final write; `close()` itself writes nothing. A snapshot store is
+ * last-writer-wins and does not count one provider across several processes.
  *
  * **Time.** The [Builder.wallClock] decides where in the provider's calendar now is (indices, boundaries, the guard, the
  * snapshot's stamp); the [Builder.timeSource] measures every wait and duration. A backward step of the wall clock across a
@@ -123,7 +132,7 @@ public class WindowedCallBudget internal constructor(
     private var saveGateUntil: Duration? = null           // elapsed instant before which no write-ahead save is attempted
     //endregion
 
-    /** The smallest window's enforced limit: the most permits that can be granted at one instant. The facades size the transport's concurrency from it. */
+    /** The smallest window's enforced limit, intended for sizing a transport's concurrency: the most permits grantable at one instant. */
     public val maxBurst: Int = ledger.maxBurst
 
     init {
@@ -364,7 +373,7 @@ public class WindowedCallBudget internal constructor(
         override fun toString(): String = "Permit(lane=${lane.name}, cost=$cost)"
     }
 
-    // The shell of complete and release: NonCancellable, so it takes effect from a cancelled coroutine; the lock wait is bounded by storeTimeout.
+    // The shell of complete and release: NonCancellable, so it takes effect from a cancelled coroutine; a lock holder keeps the lock across a store call for at most storeTimeout (one load and up to three saves in a section).
     private suspend fun settle(body: (LedgerNow, MutableList<BudgetEvent>) -> Unit) {
         withContext(NonCancellable) {
             val events = ArrayList<BudgetEvent>(2)
@@ -550,7 +559,7 @@ public class WindowedCallBudget internal constructor(
         /** The most calls that may wait on each lane; a lane at the cap refuses with `QueueFull`. 1,000 by default; not negative. */
         public var maxQueued: Int = 1_000
 
-        /** A hard window is saved write-ahead in blocks of this many grants. 10 by default; at least 1 (1 saves every grant). A crash over-counts by at most `persistAhead - 1`. */
+        /** A hard window is saved write-ahead in blocks of this many grants. 10 by default; at least 1 (1 saves every grant). While saves succeed, a crash never under-counts the grants made and over-counts by at most `persistAhead - 1` plus any units written ahead and then given back; while the store is failing, grants run unsaved and a crash loses them (the budget's class KDoc states the exceptions). */
         public var persistAhead: Int = 10
 
         /** A snapshot stamped further ahead than this has its stamp and pause ignored (its counts are kept). 5 minutes by default; not negative. */

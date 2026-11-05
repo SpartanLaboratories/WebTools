@@ -1,8 +1,9 @@
 package com.spartanlabs.webtools.http
 
 /**
- * One window's current period. [used] is the count granted plus restored plus server-raised; [queued] is the count reserved for
- * waiters; [remaining] = `max(0, limit - used - queued)`; [fraction] = `used / limit`. A consumer that wants to stretch polling
+ * One window's current period. [used] is the count charged against the window this period, in cost units (a call of cost 3 adds 3), not calls: what was granted in this process, what
+ * was restored from the store, any rise a server reading forced (see [BudgetEvent.Reconciled]) and any count a backward wall-clock step copied into the period; [queued] is the count reserved
+ * for waiters; [remaining] = `max(0, limit - used - queued)`; [fraction] = `used / limit`. A consumer that wants to stretch polling
  * intervals needs the burn ratio, not the raw fraction: **worked example** — 40 of 50 at second 55 of a minute (`fraction` 0.8,
  * `elapsedFraction` 0.92) is slack, 40 of 50 at second 10 (0.8 over 0.17) is not; `fraction / elapsedFraction` is the projected
  * end-of-period usage, and the threshold is the consumer's policy.
@@ -11,7 +12,7 @@ package com.spartanlabs.webtools.http
  * prints them.
  *
  * @param name the window's name; not blank.
- * @param used the count granted plus restored plus server-raised; not negative.
+ * @param used the count charged against the window this period, in cost units; not negative.
  * @param queued the count reserved for waiters; not negative.
  * @param limit the enforced limit; at least 1.
  * @param published the provider's documented limit; at least [limit].
@@ -25,7 +26,7 @@ package com.spartanlabs.webtools.http
 public class WindowUtilisation(
     /** The window's name. */
     public val name: String,
-    /** The count granted plus restored plus server-raised. */
+    /** The count charged against the window this period, in cost units. */
     public val used: Int,
     /** The count reserved for waiters. */
     public val queued: Int,
