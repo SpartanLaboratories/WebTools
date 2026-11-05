@@ -23,7 +23,7 @@
   - the KDoc lists of `ExperimentalForInheritanceWebToolsApi` and `WebToolsDsl`, the builder list of `WebToolsDslComponentTest`, the KDoc of `VirtualClockThreeClocksComponentTest`, the regenerated
     ABI dump, the `README.md` row and fixtures paragraph, and the `CHANGELOG.md` entry;
   - the tests of all of it (Level 1 gating to Level 4c non-functional and a Level 5 UAT manual pass).
-- **Status:** planning only.
+- **Status:** built; the as-built record is [`final-implementation.md`](final-implementation.md).
 - **Version moved:** none. `webtools-http` `1.0.0` stays unreleased and this landing is **not a release candidate**. No existing module moves a version and no build line changes
   (`kotlinx-coroutines-core` 1.10.2 is already the `commonMain` `api` dependency).
 - **Baseline:** `master` at `8122af7` plus the research commits. Line references are to `8122af7` (the code on the branch is identical).

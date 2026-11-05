@@ -316,6 +316,28 @@ The repository facts the findings rest on were checked against `master` at `8122
   `UrlProblem.kt` is the precedent for an `internal` problem enum with constant messages inside an `internal`
   `IllegalArgumentException` subclass.
 
+### Did not hold in the build
+
+Each of these caused no deviation: the built code follows the plan, and
+[`../consequences.md`](../consequences.md) §8 carries what each leaves open. Each was read from the built code at
+`327164f`; no test runs the crash or the lock hold it describes.
+
+- **The write-ahead's over-count bound.** The stack-level probe's "a crash can only over-count by at most
+  `persistAhead - 1`" ([`../../research/call-budget.md`](../../research/call-budget.md) F7) holds only when no
+  unit written ahead is given back. Units written ahead for a permit that is then released, or for a call
+  cancelled after its save or a waiter that returns `Closed` after it, stay in the stored count until a `flush()`
+  writes the exact counts or later grants pass it, so a crash in between over-counts by those units as well; the
+  probe's crashes gave nothing back. `WindowedCallBudgetCrashComponentTest` shows a stored 10 standing for a true
+  count of 0 between a `release()` and a `flush()`.
+- **"The provider's day is never under-counted" across a restart** (Summary, "A backward clock step, and a
+  snapshot stamped ahead"). The copy holds in the process. A count a backward step copied into the current
+  period, like a count a server reading raised, reaches the store only with the next grant's write-ahead or a
+  `flush()`; when the copy fills the period, no grant follows, and a crash restores the period's own lower
+  stored count, since a restarted budget has no earlier reading to fold from.
+- **"Every holder is bounded by `storeTimeout`"** (Summary, "Refunds") bounds each store call. One lock section
+  of the build makes up to one restore `load()` and three write-ahead saves, so a section holds the lock for up
+  to four times `storeTimeout`.
+
 ## Summary
 
 ### Waiting, re-planning, refunds and `close()`
