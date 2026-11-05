@@ -18,9 +18,9 @@
   [`research/header-and-method-validation.md`](research/header-and-method-validation.md).
 - **Branch:** `feat/issue-62-http-core` (exists; cut from `master` at `f72b115`; holds the research
   commits).
-- **Commit:** TBD — this `plan.md` is committed in the same commit as the first implementation
+- **Commit:** `e007cdd` — this `plan.md` is committed in the same commit as the first implementation
   commit (§11), so `git log --follow` binds the two.
-- **PR:** TBD (the PR closes #62).
+- **PR:** #82 (it closes #62).
 - **What this plans:**
   - the new Kotlin Multiplatform module `webtools-http`: build file, the opt-in marker, the failure
     model with both reason vocabularies, `HttpMethod`, `Url`, `HttpHeaders`, `RequestBody`,

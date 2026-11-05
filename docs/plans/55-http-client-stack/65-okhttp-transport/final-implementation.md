@@ -9,7 +9,6 @@ artifacts and the sibling units, and the known gaps and follow-ups it leaves, ar
 - **Branch and commits:** `feat/issue-65-okhttp-transport`, cut from `master` at `53965c8`, with the research commits `0a64484`, `1b9aabf` and `aac2a81` and the
   code commits `962bbe3`, `dd4097e`, `357554a` and `300fb67` (commits 1 to 4 of plan §11), then `db82470` (`test: declare the in-flight close case Unit so
   JUnit runs it (Issue #65)`, D10), the code-landing commit. The `README.md` and `CHANGELOG.md` delta and the reconciled documents are committed after it.
-  PR TBD (it closes #65).
 - **Architecture:** [`../architecture.md`](../architecture.md) carries dated corrections (2026-11-02) for this unit at §6.3.2, §6.6, §6.7, §7.3 and §13;
   [`consequences.md`](consequences.md) §5 states each refinement.
 - **Host of the measurements:** Windows 11, JDK 23.0.2 (launcher and daemon), Gradle 9.7.1, Kotlin 2.2.0, `okhttp-jvm` and `mockwebserver3` 5.5.0. Linux and

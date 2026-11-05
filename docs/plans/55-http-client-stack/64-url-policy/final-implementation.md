@@ -8,8 +8,8 @@ the repository and for the sibling units is in [`impact.md`](impact.md).
 - **Status:** built through stage S8 of [`plan.md`](plan.md) §5, with plan Amendments 1 to 3 and 5 and the fixes of review
   pass 1 (§4); procedures P1 to P12 ran (P11's two IDE items are the maintainer's, §5). Commits 1 and 2 of plan §11 are on the
   branch; commit 3 (S8), 4 (the README row) and 5 (this record) follow.
-- **Branch and PR:** `feat/issue-64-url-policy`, cut from `master` at `ad0ae63`, with the research commits and the
-  implementation commits `fd93ff9` and `b46f58a` (commits 1 and 2 of plan §11) on it; PR TBD (it closes #64).
+- **Branch:** `feat/issue-64-url-policy`, cut from `master` at `ad0ae63`, with the research commits and the
+  implementation commits `fd93ff9` and `b46f58a` (commits 1 and 2 of plan §11) on it.
 - **Architecture:** [`../architecture.md`](../architecture.md) carries three dated corrections (2026-10-26) for this unit,
   at §6.3.1 and §7.4 (plan Amendment 4).
 - **Host of the measurements:** Windows 11, JDK 23.0.2 (the build JDK), Gradle 9.7.1, Kotlin 2.2.0; the maintainer's

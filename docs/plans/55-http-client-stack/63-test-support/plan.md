@@ -17,9 +17,9 @@
   and [`../research/kmp-test-fixtures.md`](../research/kmp-test-fixtures.md).
 - **Branch:** `feat/issue-63-test-support` (exists; cut from `master` at `7de8207`; holds the research
   commits).
-- **Commit:** TBD — this `plan.md` is committed in the same commit as the implementation (§11), so
+- **Commit:** `025b245` — this `plan.md` is committed in the same commit as the implementation (§11), so
   `git log --follow` binds the two.
-- **PR:** TBD (the PR closes #63).
+- **PR:** #84 (it closes #63).
 - **What this plans:**
   - the `testFixtures` compilation of `webtools-http` and its publication as two Gradle Module Metadata
     variants beside a `-test-fixtures.jar` (recipe B), with the fixtures jar and the fixtures' runtime

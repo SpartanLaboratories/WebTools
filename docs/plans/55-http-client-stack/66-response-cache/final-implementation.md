@@ -10,7 +10,7 @@ artifacts and the sibling units, and the known gaps and follow-ups it leaves, ar
   `826200e` and the code commits `e5f1a4c` (stage 1, with this folder's `plan.md` and planned `consequences.md`), `ea167b9` (stage 2) and `d1deae5` (stage 3),
   commits 1 to 3 of plan §11, then `38483ea` (`docs: record the response cache as built and correct the research count (Issue #66)`), the code-landing
   commit. The `README.md` and `CHANGELOG.md` delta of plan §8, the KDoc wording of the documentation review (§5) and the reconciled documents are committed
-  after it. PR TBD (it closes #66).
+  after it.
 - **Architecture:** [`../architecture.md`](../architecture.md) carries dated corrections (2026-11-03) for this unit at §6.4 and in §7.4's row for the
   facade's call to `ResponseCache`; [`consequences.md`](consequences.md) §5 states each refinement.
 - **Host of the measurements:** Windows 11, JDK 23.0.2, Gradle 9.7.1, Kotlin 2.2.0, Caffeine 3.3.1, kotlinx-coroutines 1.10.2, 32 cores. Linux and macOS

@@ -8,7 +8,7 @@
   - The file-level detail is in [`plan.md`](plan.md).
   - The as-built record is [`final-implementation.md`](final-implementation.md); this file agrees with it.
 - **Baseline:** `master` `7de8207`. Built on branch `feat/issue-63-test-support`, with `master` merged in at
-  `5d98102`; PR TBD (it closes #63).
+  `5d98102`.
 - **Related docs:**
   - [`plan.md`](plan.md) and [`final-implementation.md`](final-implementation.md);
   - [`research/README.md`](research/README.md), with

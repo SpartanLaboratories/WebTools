@@ -11,7 +11,7 @@
   this file states its effect. [`../architecture.md`](../architecture.md) carries three dated corrections for this
   unit (plan Amendment 4).
 - **Baseline:** `master` `ad0ae63`; branch `feat/issue-64-url-policy`, with the implementation commits `fd93ff9`
-  and `b46f58a`; PR TBD (it closes #64).
+  and `b46f58a`.
 - **Related docs:**
   - [`plan.md`](plan.md) and [`final-implementation.md`](final-implementation.md);
   - [`research/README.md`](research/README.md), with [`research/jvm-enforcement.md`](research/jvm-enforcement.md),
