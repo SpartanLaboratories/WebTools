@@ -1,0 +1,1512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="template" content="system/template/system.html">
+<title>webtools-http-budget · WebTools</title>
+<script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+/* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → guarantee cards → Context cards → provenance footer.
+   System board template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
+   Colour plan: --server / --client / --wire are the board's three hue slots (its "sides"), --ph-1..3 the ordinal phase ramp
+   (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned, and nothing else: lifelines, returns and frames are solid. */
+:root{
+  --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
+  --line:#dfe4ec; --hair:rgba(14,20,32,.10);
+  --server:#2a78d6; --client:#653184; --wire:#0d7680;
+  --server-soft:#e2edfa; --client-soft:#eae3ee; --wire-soft:#deecee;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --ph-1:#a49bed; --ph-2:#6250d6; --ph-3:#352a91;
+  --on:#0e1420; --dim:.28; --focus:#2a78d6; --rel:#6b7382;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#8a44d8;--wire:#1f8089;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(138,68,216,.20);--wire-soft:rgba(31,128,137,.22);--ph-1:#5546c0;--ph-2:#8a7ee6;--ph-3:#c9c2f7;--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141b;--surface:#171c25;--surface-2:#1f2530;--ink:#eef1f6;--ink-2:#b8c0ce;--muted:#8a93a5;--line:#2a313d;--hair:rgba(255,255,255,.10);--server:#3987e5;--client:#8a44d8;--wire:#1f8089;--server-soft:rgba(57,135,229,.20);--client-soft:rgba(138,68,216,.20);--wire-soft:rgba(31,128,137,.22);--ph-1:#5546c0;--ph-2:#8a7ee6;--ph-3:#c9c2f7;--on:#eef1f6;--focus:#3987e5;--rel:#9aa3b2;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto}
+a{color:inherit}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* header */
+.crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
+.crumbs a{text-decoration:none}
+/* The theme switch (GUIDANCE.md §1, Themes), right of the breadcrumb: the renderer adds it to the header. */
+.systools{float:right;display:flex;gap:6px;align-items:center;margin:14px 0 4px 12px}
+.themebtn{appearance:none;font:600 11px/1 var(--mono);padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.themebtn:hover{color:var(--ink);border-color:var(--ink-2)}
+.crumbs a:hover{text-decoration:underline}
+h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono);overflow-wrap:anywhere}
+.function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.chip{font:12px/1 var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink-2);max-width:100%;overflow-wrap:anywhere}
+.chip b{color:var(--ink);font-weight:600}
+.chip a{text-decoration:none;border-bottom:1px solid var(--line)}
+/* a chip drawn from state.json (renderState()) stays hidden on every layout until it is drawn; one with nothing to say is removed */
+.chip[hidden]{display:none!important}
+/* The header's two halves (GUIDANCE.md §6, "The header"): from 940 px the intro (the title, the issue line, the function) fills the
+   left half and the tags stand in the right half beside it, each a small card with its label over its value, growing to fill its line, a
+   long one across the half (.wide); under 940 px the two stack and the tags wrap as chips, the label before the value. The topbar (the breadcrumb, the
+   live indicator, the theme switch) runs across the top. The same rules on every dashboard type. */
+.issueline{font:12.5px/1.4 var(--mono);color:var(--ink-2);margin:0 0 8px;overflow-wrap:anywhere}
+.issueline a{text-decoration:none;border-bottom:1px solid var(--line)}
+.issueline a:hover{border-bottom-color:var(--ink)}
+.chip .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chip .sysl{display:inline-flex;align-items:center;margin-right:10px;white-space:nowrap}
+.chip .sysl:last-child{margin-right:0}
+@media (min-width:940px){
+  header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;column-gap:28px}
+  header>.topbar{grid-column:1/-1;grid-row:1}
+  header>.crumbs{grid-column:1;grid-row:1}
+  header>.systools{grid-column:2;grid-row:1;justify-self:end;align-self:start;float:none;margin:14px 0 4px}
+  header>h1{grid-column:1;grid-row:2}
+  header>.issueline{grid-column:1;grid-row:3}
+  header>.function{grid-column:1;grid-row:4;max-width:none}
+  header>.chips{grid-column:2;grid-row:2/-1;align-self:start;align-content:flex-start;gap:8px;margin:8px 0 6px}
+  header>.chips>.chip{display:block;flex:1 1 190px;padding:7px 10px 8px;font-size:12.5px;line-height:1.4;border-radius:6px}
+  header>.chips>.chip .ck{display:block;margin:0 0 2px}
+  header>.chips>.chip.wide{flex-basis:100%}
+}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* tabs + stage */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:hover{color:var(--ink)}
+.tab.model::after{content:" DSL";font:10px var(--mono);color:var(--muted);vertical-align:super}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+@media (max-width:940px){.stage{grid-template-columns:minmax(0,1fr)}.inspector{position:static;max-height:none;overflow:visible}}
+.stage>div{min-width:0}
+.view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.view svg{display:block;width:100%;height:auto}
+.view h2{font-size:15px;margin:0 0 4px}
+.lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
+/* the inspector stays in view beside the tab and scrolls inside itself when its entry is taller than the window */
+.inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;max-height:calc(100vh - 24px);overflow:auto}
+.inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
+.inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px}
+.inspector p{margin:0 0 8px;color:var(--ink-2);font-size:13px}
+.inspector dl{margin:0;font-size:12.5px}
+.inspector dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px;margin-top:8px}
+.inspector dd{margin:2px 0 0}
+.inspector dd a{font-family:var(--mono);font-size:12px;text-decoration:none;border-bottom:1px solid var(--line)}
+.inspector dd a:hover{border-bottom-color:var(--ink)}
+.linkbtn{appearance:none;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:12px var(--mono);padding:5px 8px;border-radius:4px;cursor:pointer;text-align:left}
+.linkbtn:hover{border-color:var(--ink)}
+.tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
+.tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
+/* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
+   ending with planned. check-board.js fails a tab without a visible one. */
+.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.key i.pub{background:var(--surface-2)}.key i.std{border-style:dotted}.key i.pln{border-style:dashed;background:none;opacity:.6}
+.key i.srv{border-color:var(--server)}.key i.cli{border-color:var(--client)}.key i.wir{border-color:var(--wire)}
+.key i.pub.srv{background:var(--server-soft)}.key i.pub.cli{background:var(--client-soft)}.key i.pub.wir{background:var(--wire-soft)}
+.key i.con{border-color:var(--ink)}.key i.ext{border-color:var(--muted);background:var(--surface-2)}
+.key i.bs{border-left:4px solid var(--server)}.key i.bc{border-left:4px solid var(--client)}.key i.bw{border-left:4px solid var(--wire)}
+.key i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.key i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.key i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
+.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.ret{position:relative;border-top-width:1px;width:20px}.key i.ln.ret::after{content:"";position:absolute;right:0;top:-4px;width:6px;height:6px;border-top:1.2px solid var(--ink-2);border-right:1.2px solid var(--ink-2);transform:rotate(45deg)}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
+.key i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
+.key i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
+.key i.band{border:0;background:var(--surface-2)}
+.key i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
+.key .pill{align-self:center}
+
+/* structure svg */
+.band{fill:var(--surface-2)}
+.lane{font-size:11px;fill:var(--muted);letter-spacing:.1em;font-family:var(--sans)}
+.note{font-size:10.5px;fill:var(--ink-2);font-family:var(--sans)}
+.node{cursor:pointer}
+.node rect{fill:var(--surface);stroke-width:1.5}
+.node.pub rect{stroke-width:2}
+.node.server rect{stroke:var(--server)}.node.server.pub rect{fill:var(--server-soft)}
+.node.client rect{stroke:var(--client)}.node.client.pub rect{fill:var(--client-soft)}
+.node.wire rect{stroke:var(--wire)}.node.wire.pub rect{fill:var(--wire-soft)}
+.node.standalone rect{stroke:var(--muted);stroke-dasharray:2 3;fill:var(--surface-2)}
+.node.planned{opacity:.6}.node.planned rect{stroke-dasharray:6 4}
+.node.container rect{fill-opacity:.55}
+.node text{fill:var(--ink);font-family:var(--sans)}
+.node .t{font-weight:700;font-size:10.5px}
+.node.container .t{font-size:13px}
+.node .s{font-size:10px;fill:var(--ink-2)}
+.node.chip .t{font-family:var(--mono);font-size:11px}
+.node.chip .s{font-family:var(--mono);font-size:8.5px}
+.node.sel rect{stroke:var(--on);stroke-width:3}
+
+/* datagram flow svg */
+.fnode{cursor:default}
+.fnode rect,.fnode polygon{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.fnode.t rect{fill:var(--surface-2)}
+.fnode rect.stripe,.fnode.on rect.stripe{stroke:none}
+.fnode text{fill:var(--ink);font-size:10.5px;font-family:var(--sans)}
+.fnode .lvl{font-family:var(--mono);font-size:8.5px;fill:var(--muted)}
+.fnode.on rect,.fnode.on polygon{stroke:var(--on);stroke-width:2.5}
+.fnode.off{opacity:var(--dim)}
+.fnode.planned rect,.fnode.planned polygon{stroke-dasharray:6 4}.fnode.planned:not(.off){opacity:.6}
+.fedge{stroke:var(--line);stroke-width:1.5;fill:none}
+.fedge.on{stroke:var(--on);stroke-width:2.5}
+.fedge.off{opacity:var(--dim)}
+.fedge.planned{stroke-dasharray:6 4}
+.flabel{font-size:9.5px;fill:var(--muted);font-family:var(--mono)}
+.flabel.on{fill:var(--ink);font-weight:600}
+.flabel.off{opacity:var(--dim)}
+.outcome{font-size:13px;margin:0 0 10px;padding:8px 10px;border-radius:4px;background:var(--surface-2);border-left:3px solid var(--ink)}
+.outcome code{font-weight:600}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 10px;align-items:center}
+.ctl label{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.06em;max-width:100%}
+/* A segmented control wraps onto a second row at phone width rather than pushing the board sideways. */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:5px;overflow:hidden;max-width:100%}
+.seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:12px/1 var(--mono);padding:7px 9px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button[aria-disabled="true"]{opacity:.35;cursor:default}
+.seg button:hover:not([aria-pressed="true"]):not([aria-disabled="true"]){background:var(--surface-2)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:12px var(--mono);padding:7px 10px;border-radius:5px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* sequence svg */
+.life{stroke:var(--line);stroke-width:1.2}.life.planned{stroke-dasharray:6 4}
+.lh rect{fill:var(--surface-2);stroke:var(--line)}
+.lh.server rect{fill:var(--server-soft);stroke:var(--server)}.lh.client rect{fill:var(--client-soft);stroke:var(--client)}.lh.wire rect{fill:var(--wire-soft);stroke:var(--wire)}
+.lh.consumer rect{fill:var(--surface);stroke:var(--ink)}.lh.external rect{fill:var(--surface-2);stroke:var(--muted)}
+.lh.planned{opacity:.6}.lh.planned rect{stroke-dasharray:6 4}
+.lh text{font-size:10.5px;font-weight:700;fill:var(--ink);font-family:var(--mono)}
+.phase rect{fill:var(--surface-2);opacity:.55}
+.phase text{font-size:9.5px;fill:var(--muted);font-family:var(--mono);letter-spacing:.08em}
+.msg{cursor:pointer}
+.msg line,.msg path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+.msg.ret line{stroke-width:1}
+.msg text{font-size:10px;fill:var(--ink-2);font-family:var(--sans)}
+.msg .lbg{fill:var(--surface);stroke:none}
+.msg .num{font-family:var(--mono);font-size:9px;fill:var(--muted)}
+.msg.cur line,.msg.cur path{stroke:var(--on);stroke-width:2.5}
+.msg.cur text{fill:var(--ink);font-weight:600}
+.msg.future{opacity:.3}
+.msg.planned line,.msg.planned path{stroke-dasharray:6 4}.msg.planned:not(.future){opacity:.6}
+
+/* C4 model tab — rendered from the DSL. A level ladder on the left (C4 is about zooming in), typed element
+   cards whose header colour comes from the DSL's styles block, relationships routed orthogonally in lanes,
+   the scope drawn as a boundary frame, and the dynamic view drawn as the sequence it is. */
+.c4wrap{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+.ladder{display:flex;flex-wrap:wrap;gap:7px;min-width:0}
+.rung{appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:6px;padding:7px 10px;cursor:pointer;display:grid;grid-template-columns:24px 1fr;gap:0 8px;align-items:center;min-width:0;position:relative;flex:1 1 150px;max-width:230px}
+.rung .lv{font:700 13px var(--mono);color:var(--muted);grid-row:span 2;text-align:center}
+.rung .nm{font-weight:700;font-size:12.5px;color:var(--ink)}
+.rung .sc{font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rung:hover{border-color:var(--ink-2)}
+.rung[aria-pressed="true"]{border-color:var(--ink);background:var(--surface-2)}
+.rung[aria-pressed="true"] .lv{color:var(--ink)}
+.rung.sep{margin-left:8px}
+.rung.lvl::after{content:"";position:absolute;right:-8px;top:50%;width:8px;height:2px;background:var(--line)}
+.rung.lvl.last::after{display:none}
+.c4main{min-width:0}
+.c4head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:0 0 8px}
+.c4head .zoom{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;align-self:center}
+.c4head .zoom button{appearance:none;border:0;background:var(--surface);color:var(--ink-2);font:11px var(--mono);padding:5px 9px;cursor:pointer}
+.c4head .zoom button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.c4head .lvl{font:700 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.c4head .ttl{font-weight:700;font-size:14px}
+.c4head .desc{font-size:12.5px;color:var(--ink-2)}
+.c4canvas{border:1px solid var(--line);border-radius:6px;padding:6px;background-color:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1.2px);background-size:22px 22px;overflow-x:auto}
+.c4canvas svg{max-width:none}
+.c4key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
+.c4key span{display:inline-flex;align-items:center;gap:6px}
+.c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
+.c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
+.c4key i.arrow.dashed{border-top-style:dashed}
+.c4key i.frame{background:var(--surface-2);border:1.5px solid var(--line);border-radius:4px}
+.c4el{cursor:pointer}
+.c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.c4el .hdr{stroke:none}
+.c4el text{font-family:var(--sans)}
+.c4el .n{font-weight:700;font-size:12px}
+.c4el .m{font-size:9.5px;font-family:var(--mono);fill:var(--muted)}
+.c4el .d{font-size:10px;fill:var(--ink-2)}
+.c4el .tg{font-size:8.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.04em}
+.c4el.sel .card{stroke:var(--on);stroke-width:2.5}
+.c4el.hl .card{stroke:var(--ink-2);stroke-width:2}
+.c4el.dim{opacity:.3}
+.c4el.planned>.card{stroke-dasharray:6 4}
+.c4rel path{stroke:var(--rel);stroke-width:1.4;fill:none;stroke-linejoin:round}
+.c4rel.dashed path{stroke-dasharray:6 4}
+.c4rel text{font-size:9.5px;fill:var(--ink-2);font-family:var(--sans)}
+.c4rel .lbg{fill:var(--surface);stroke:var(--line);stroke-width:.8}
+.c4rel.dim{opacity:.12}
+.c4rel.hl path{stroke:var(--ink);stroke-width:2.2}
+.c4rel.hl text{fill:var(--ink);font-weight:600}
+.c4rel.hl .lbg{stroke:var(--ink-2)}
+.c4rel.cur path{stroke:var(--on);stroke-width:2.5}
+.c4rel.cur text{fill:var(--ink);font-weight:600}
+.c4rel .num circle{fill:var(--ink);stroke:none}
+.c4rel .num text{fill:var(--bg);font-weight:700;font-size:9.5px;font-family:var(--mono)}
+.c4bound{fill:var(--surface-2);fill-opacity:.45;stroke:var(--line);stroke-width:1.5}
+.c4boundl rect{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.c4boundl text{font:700 10px var(--mono);fill:var(--ink-2)}
+.c4band{font-size:9.5px;font-family:var(--mono);fill:var(--muted);letter-spacing:.14em}
+.c4life{stroke:var(--line);stroke-width:1.2}.c4life.planned{stroke-dasharray:6 4}.c4rel.planned path{stroke-dasharray:6 4}
+pre.dsl{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow-x:auto;color:var(--ink);max-height:70vh}
+pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} pre.dsl .s{color:var(--ink-2)}
+.steps-list{margin:8px 0 0;padding:0;list-style:none;font-size:12.5px}
+.steps-list li{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:4px 0;border-top:1px solid var(--hair);color:var(--ink-2);cursor:pointer}
+.steps-list li b{font-family:var(--mono);color:var(--ink)}
+.steps-list li.on{color:var(--ink)}
+
+/* threads */
+.threads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:700px){.threads{grid-template-columns:1fr}}
+.tside h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 6px}
+.thread{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-left-width:4px;border-radius:4px;margin-bottom:6px;background:var(--surface);cursor:pointer;min-width:0}
+.thread.server{border-left-color:var(--server)}.thread.client{border-left-color:var(--client)}.thread.wire{border-left-color:var(--wire)}
+.thread.planned{border-style:dashed;opacity:.6}
+.thread .n{font:12px var(--mono);font-weight:600}
+.thread .r{grid-column:1/-1;font-size:12px;color:var(--ink-2)}
+.thread.sel{outline:2px solid var(--on)}
+/* When a thread starts: filled = eagerly, outlined = lazily on first use, dotted = only under a condition. Dashed stays free for planned. */
+.pill{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1.5px solid var(--ink-2);color:var(--ink-2);align-self:start;white-space:nowrap}
+.pill.eager{background:var(--ink-2);color:var(--surface)}.pill.cond{border-style:dotted}.pill.planned{border-style:dashed;opacity:.6}
+.scroll{overflow-x:auto}
+.matrix{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;min-width:560px}
+.matrix th,.matrix td{padding:6px 8px;border-top:1px solid var(--hair);text-align:center;vertical-align:top}
+.matrix th{font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix td:first-child{color:var(--ink-2)}
+.matrix .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.matrix tr:hover td{background:var(--surface-2)}
+
+/* lifecycles */
+.lgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.card h3{font-size:13px;margin:0 0 8px}
+.card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.steps li{counter-increment:s;font:12px var(--mono);border:1px solid var(--line);border-radius:4px;padding:5px 8px;background:var(--surface)}
+.steps li::before{content:counter(s) " ";color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th,.tbl td{text-align:left;padding:6px 6px;border-top:1px solid var(--hair);vertical-align:top}
+.tbl td{overflow-wrap:anywhere}
+.tbl th{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+/* Phases (the Lifecycles colour plan): .ph1 start / creation, .ph2 run / steady state, .ph3 stop / teardown. A class sets --ph;
+   a card takes it as its top rule, a callout as its left rule, a step or table row as a left mark, a state box as its stroke. */
+.ph1{--ph:var(--ph-1)}.ph2{--ph:var(--ph-2)}.ph3{--ph:var(--ph-3)}
+.card.ph1,.card.ph2,.card.ph3{border-top:3px solid var(--ph)}
+.steps li.ph1,.steps li.ph2,.steps li.ph3{border-left:3px solid var(--ph)}.steps li.planned{border-style:dashed;opacity:.6}
+.tbl tr.ph1>:first-child,.tbl tr.ph2>:first-child,.tbl tr.ph3>:first-child{border-left:3px solid var(--ph)}
+.callout{border-left:3px solid var(--ph,var(--ink-2));padding:8px 10px;background:var(--surface-2);border-radius:4px;font-size:13px;color:var(--ink-2);margin-top:8px}
+.callout b{color:var(--ink)}
+.states text{font-family:var(--mono);font-size:11px;fill:var(--ink)}
+.states .lab{font-family:var(--sans);font-size:9.5px;fill:var(--muted)}
+.states rect{fill:var(--surface-2);stroke:var(--ink-2);stroke-width:1.5}
+.states rect.ph1,.states rect.ph2,.states rect.ph3{stroke:var(--ph);stroke-width:2;fill:color-mix(in srgb,var(--ph) 14%,var(--surface))}
+.states rect.planned{stroke-dasharray:6 4;opacity:.6}
+.states line,.states path{stroke:var(--ink-2);stroke-width:1.5;fill:none}
+
+/* guarantees — always visible under the tab stage, whatever tab is open; one compact titled guarantee card per guarantee */
+.guarantees{margin-top:20px}
+.guarantees>h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.guarantee-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}
+.guarantee-card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;min-width:0;font-size:12.5px;color:var(--ink-2)}
+.guarantee-card h3{font-size:12.5px;margin:0 0 6px;color:var(--ink)}
+.guarantee-card h3 small{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:11px}
+.guarantee-card ul{margin:0;padding:0 0 0 15px}
+.guarantee-card li{margin:3px 0}
+.guarantee-card p{margin:6px 0 0}
+.guarantee-card code{color:var(--ink)}
+.guarantee-card .gap{color:var(--muted);font-style:italic}
+.guarantee-card .badge{margin-left:2px}
+
+/* Wide desktop (16:9 screens, GUIDANCE.md §6): the board uses most of the window, so the C4 canvas, the thread columns, the
+   lifecycle cards, the Guarantees and the Context get room; a diagram drawn to a fixed aspect grows to at most 1280 px wide, so it
+   is never smaller than in the 1280 px layout and never outgrows the screen, and prose keeps its own measure. At 1500 px and below
+   the board keeps its 1280 px measure and the narrow layouts below 940 and 700 px apply. */
+@media (min-width:1500px){
+  .page{max-width:min(2400px,100%)}
+  .stage{grid-template-columns:minmax(0,1fr) 360px}
+  .view>svg{max-width:1280px}
+  .guarantee-cards{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+}
+
+/* context */
+.context{margin-top:24px}
+.context h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.issues{list-style:none;margin:0;padding:0;font-size:12.5px}
+.issues li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:5px 0;border-top:1px solid var(--hair);align-items:start}
+.issues a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.issues a:hover{color:var(--ink)}
+.badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
+/* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
+.badge.bug::before{content:"▲ ";color:var(--ink-2)}
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+.chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
+.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
+.cbar i{display:block;height:100%;background:var(--good)}
+.key .cbar{width:40px}
+.key i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
+.key i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
+.key i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
+.key .badge{align-self:center}
+/* the Guarantees' and the Context's legends (GUIDANCE.md §2), generated from what each section draws */
+.guarantees>.key,.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
+.badge.planned{border-style:dashed}
+.badge.closed{color:var(--muted)}
+.tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+@media (max-width:520px){.issues li{grid-template-columns:auto 1fr}.issues li>.tags{grid-column:2;justify-content:flex-start}}
+/* roadmap: each item (a tracking issue, or an entry in the repository's roadmap document) with the issues mapped to it */
+.roadmap{list-style:none;margin:0;padding:0;font-size:12.5px}
+.roadmap>li{padding:6px 0;border-top:1px solid var(--hair)}
+.roadmap .ri{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
+.roadmap .ri>span:nth-child(2){font-weight:600;color:var(--ink)}
+.roadmap .ri small{font:400 11px var(--mono);color:var(--muted)}
+.roadmap .ri a{font-family:var(--mono);text-decoration:none;color:var(--ink-2)}
+.roadmap .issues{margin:4px 0 0 14px}
+.roadmap .more{margin:4px 0 0 14px;font-size:12px;color:var(--muted)}
+/* An issue's number and its title are two links (GUIDANCE.md §5): the number opens the GitHub issue, the title its issue board
+   (plain text while it has none, linkIssues() below) */
+.issues span a,.roadmap .ri span a{font-family:inherit;color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+.issues span a:hover,.roadmap .ri span a:hover{border-bottom-color:var(--ink)}
+/* one series (test classes), so one neutral fill: a hue here would read as a side */
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:5px 10px;align-items:center;font-size:12px}
+.bars .lbl{color:var(--ink-2);font-family:var(--mono);font-size:11.5px}
+.bars .trk{height:10px;background:var(--surface-2);border-radius:2px;overflow:hidden;position:relative}
+.bars .fil{position:absolute;left:0;top:0;height:100%;background:var(--ink-2);border-radius:0 4px 4px 0}
+.bars .val{font-variant-numeric:tabular-nums;color:var(--ink)}
+.docs{margin:0;padding:0;list-style:none;font-size:12.5px}
+.docs li{padding:4px 0;border-top:1px solid var(--hair)}
+.docs a{text-decoration:none;border-bottom:1px solid var(--line)}
+.docs a:hover{border-bottom-color:var(--ink)}
+/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+.context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
+.context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+footer code{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* an archived system holds no colour (GUIDANCE.md §1): the board's three sides neutral, the sides told apart by their labels */
+:root:has(.chip[data-sys-status="archived"]){--server:var(--muted);--client:var(--muted);--wire:var(--muted);--server-soft:var(--surface-2);--client-soft:var(--surface-2);--wire-soft:var(--surface-2)}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="crumbs"><a href="../index.html">WebTools</a> › <a href="../webtools-http/index.html">webtools-http</a> › webtools-http-budget</div>
+  <h1>webtools-http-budget</h1>
+  <p class="function">The call budget of the suspend HTTP stack: it grants permits under a provider's rate windows and lane shares, pauses on the server's signals and holds a hard window across a restart. A consumer calls the <code>CallBudget</code> port, or wraps a call in <code>withPermit</code>, and settles each <code>Permit</code> with what the answer said; <code>WindowedCallBudget</code>, the supplied budget, counts epoch-aligned fixed windows with a boundary guard, holds back a floor per lane, queues calls first come first served and fails one fast when its wait would pass <code>maxWait</code>, refunds and re-plans on a cancel or a release, pauses on <code>Retry-After</code> and reset hints, and saves a hard window write-ahead to a <code>BudgetStore</code>; <code>CallBudget.Unlimited</code> grants everything. <code>RateSignalsReader.Standard</code> and <code>RetryAfter.parse</code> read an answer, a <code>BudgetObserver</code> receives every event, and two test fixtures stand in for the store and the observer.</p>
+  <div class="chips">
+    <span class="chip" id="chip-version" hidden></span>
+    <span class="chip"><span class="ck">platform</span> <b>Kotlin Multiplatform</b> · <code>commonMain</code> only · compiled for <code>js</code> by the check module</span>
+    <span class="chip"><span class="ck">ships in</span> <b>webtools-http</b> · its artifact and its test-fixtures variant</span>
+    <span class="chip"><span class="ck">visibility</span> <b>internal · org</b></span>
+    <span class="chip" id="chip-asis" hidden></span>
+    <span class="chip" id="chip-written" hidden></span>
+    <span class="chip model"><span class="ck">C4 model</span> <b>workspace.dsl</b> · <span id="dsl-stats">…</span></span>
+  </div>
+</header>
+
+<section class="kpis" aria-label="Key figures">
+  <div class="kpi"><div class="l">Source</div><div class="v">28 files</div><div class="s">2,382 lines · <code>commonMain</code> 26 (2,231) · <code>jvmTestFixtures</code> 2 (151) · package <code>com.spartanlabs.webtools.http</code></div></div>
+  <div class="kpi"><div class="l">Types</div><div class="v">21 public</div><div class="s">top-level: 19 in <code>commonMain</code>, 2 fixtures; 13 public nested (seven event leaves, three builders, <code>Unlimited</code>, <code>Standard</code>, <code>None</code>) · 15 internal</div></div>
+  <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">no thread, scope or timer: a call waits in its own coroutine; events reach the observer on the thread of the call that made them; <code>close()</code> from any thread</div></div>
+  <div class="kpi"><div class="l">Contracts</div><div class="v">5 gated ports</div><div class="s"><code>CallBudget</code>'s ten points · <code>Permit</code> · <code>RateSignalsReader</code> · <code>BudgetStore</code> · <code>BudgetObserver</code> · the open <code>BudgetEvent</code> · 335 lines of the ABI dump</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">47 classes</div><div class="s">324 tests across 5 testing levels · 18 classes in <code>commonTest</code>, 29 in <code>jvmTest</code>, all run on the JVM</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">3</div><div class="s">its own, landing with this board · 1 planned unit that composes it · 1 docs · 0 unscheduled</div></div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Views">
+  <button class="tab" role="tab" id="t-structure" aria-controls="p-structure" aria-selected="true">Structure</button>
+  <button class="tab model" role="tab" id="t-c4" aria-controls="p-c4" aria-selected="false">C4 model</button>
+  <button class="tab" role="tab" id="t-threads" aria-controls="p-threads" aria-selected="false">Threads</button>
+  <button class="tab" role="tab" id="t-datagrams" aria-controls="p-datagrams" aria-selected="false">Admission</button>
+  <button class="tab" role="tab" id="t-reliable" aria-controls="p-reliable" aria-selected="false">Permit</button>
+  <button class="tab" role="tab" id="t-lifecycles" aria-controls="p-lifecycles" aria-selected="false">Lifecycles</button>
+</div>
+
+<div class="stage">
+<div>
+  <section class="view" role="tabpanel" id="p-structure" aria-labelledby="t-structure">
+    <h2>Component map</h2>
+    <p class="lede">Nesting is ownership. Click a box for its role, files and threads, and its place in the C4 model.</p>
+    <svg id="svg-structure" viewBox="0 0 1000 640" role="img" aria-label="Component map of webtools-http-budget"></svg>
+    <div class="key"><span><i class="pub srv"></i>public · the budget</span><span><i class="srv"></i>internal · the budget</span><span><i class="pub wir"></i>public · the seams</span><span><i class="wir"></i>internal · the seams</span><span><i class="pub cli"></i>public · the test fixtures</span></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
+    <h2>C4 model <small style="font:11px var(--mono);color:var(--muted);font-weight:400">rendered from workspace.dsl at load</small></h2>
+    <p class="lede">Nothing here is drawn by hand. Step down the ladder to zoom in; hover an element to see what it touches.</p>
+    <div class="c4wrap">
+      <nav class="ladder" id="c4-ladder" aria-label="C4 levels"></nav>
+      <div class="c4main">
+        <div class="c4head" id="c4-head"></div>
+        <div class="c4canvas" id="c4-canvas"><svg id="svg-c4" viewBox="0 0 900 300" role="img" aria-label="C4 view"></svg></div>
+        <div class="c4key" id="c4-key"></div>
+        <pre class="dsl" id="dsl-view" hidden></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
+    <h2>Thread inventory</h2>
+    <p class="lede">The budget starts no thread: every row is a caller's. Click one for what runs there.</p>
+    <div class="threads">
+      <div class="tside"><h3>The budget · on its callers</h3>
+        <div class="thread server" data-t="the acquiring coroutine" tabindex="0" role="button"><span class="n">the acquiring coroutine</span><span class="pill eager">the caller's</span><span class="r">the argument checks, the lock section, the lazy restore and a write-ahead save, a grant or a refusal</span></div>
+        <div class="thread server" data-t="a waiting call" tabindex="0" role="button"><span class="n">a waiting call</span><span class="pill cond">only when it waits</span><span class="r">the same coroutine, suspended in <code>select</code> on the close latch and its wake signal, at most one minute a time</span></div>
+        <div class="thread server" data-t="the settling coroutine" tabindex="0" role="button"><span class="n">the settling coroutine</span><span class="pill eager">the caller's</span><span class="r"><code>complete(signals)</code> and <code>release()</code>, under <code>NonCancellable</code>: reconcile, pause, refund, re-plan</span></div>
+        <div class="thread server" data-t="the closing thread" tabindex="0" role="button"><span class="n">the closing thread</span><span class="pill eager">any thread</span><span class="r"><code>close()</code>: completes the latch, takes no lock, never suspends</span></div>
+      </div>
+      <div class="tside"><h3>The seams · where the budget calls them</h3>
+        <div class="thread wire" data-t="the observer's callback" tabindex="0" role="button"><span class="n">the observer's callback</span><span class="pill cond">after each section</span><span class="r"><code>onEvent</code> on the thread of the call that made the events, after the lock is released</span></div>
+        <div class="thread wire" data-t="a store call" tabindex="0" role="button"><span class="n">a store call</span><span class="pill cond">only with a store call due</span><span class="r"><code>load</code> or <code>save</code> on the caller's coroutine, under the lock, bounded by <code>storeTimeout</code>; a blocking store moves its work to its own dispatcher</span></div>
+      </div>
+    </div>
+    <div class="key"><span><i class="bs"></i>the budget</span><span><i class="bw"></i>the seams</span><span><span class="pill eager">the caller's</span>runs where the caller calls</span><span><span class="pill cond">only …</span>only under a condition</span><span><i class="dot"></i>does the work (table below)</span></div>
+    <h2 style="margin-top:16px">Who runs what</h2>
+    <p class="lede"><code>CallBudget</code>'s contract, point 10, lets every member be called concurrently from any thread and coroutine.</p>
+    <div class="scroll"><table class="matrix">
+      <thead><tr><th>Work</th><th>The calling coroutine</th><th>Any thread</th><th>The observer's callback</th><th>A store call</th></tr></thead>
+      <tbody>
+        <tr><td><code>acquire</code>: the argument checks, the lock section, the slot search, a grant or a refusal</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td>A waiting call: its <code>select</code>, then each step section that re-reads its plan</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td>A cancelled wait's refund and the re-plan behind it, under <code>NonCancellable</code></td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td><code>Permit.complete(signals)</code>, <code>release()</code>, <code>utilisation()</code>, <code>flush()</code></td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td><code>close()</code>: the latch alone, no lock, no suspension</td><td></td><td><span class="dot"></span></td><td></td><td></td></tr>
+        <tr><td><code>BudgetObserver.onEvent</code> and the budget's log line for each event, after the lock is released</td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
+        <tr><td><code>BudgetStore.load</code> at the restore, <code>save</code> write-ahead and in <code>flush()</code>, inside the lock section</td><td></td><td></td><td></td><td><span class="dot"></span></td></tr>
+        <tr><td><code>RateSignalsReader.read</code>, <code>RetryAfter.parse</code>, the factories and their builders: called by the consumer, no budget involved</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-datagrams" aria-labelledby="t-datagrams" hidden>
+    <h2>How a call is admitted, waits and is settled</h2>
+    <p class="lede">Pick a variant and its inputs; the steps that settle it light up.</p>
+    <div class="ctl" id="flow-ctl"></div>
+    <p class="outcome" id="outcome"></p>
+    <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Decision paths of acquire, a waiting call and a permit's settlement"></svg>
+    <!-- generated from the flow on screen: its shapes, the outcome levels its ends use (status colours, each with its label), lit and faded, planned -->
+    <div class="key" id="flow-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
+    <h2>One call under a permit</h2>
+    <p class="lede">A consumer wraps one call in <code>withPermit</code>; the provider throttles it. Step through it, or click any message.</p>
+    <div class="ctl">
+      <button class="btn" id="seq-prev">‹ prev</button>
+      <button class="btn" id="seq-next">next ›</button>
+      <button class="btn" id="seq-play" aria-pressed="false">play</button>
+      <span id="seq-pos" style="font:12px var(--mono);color:var(--muted)"></span>
+    </div>
+    <svg id="svg-seq" viewBox="0 0 1000 600" role="img" aria-label="One call under a permit, sequence diagram"></svg>
+    <!-- generated: the lifeline owners present (their side's hue, as on Structure and Threads), the line encodings, planned -->
+    <div class="key" id="seq-key"></div>
+  </section>
+
+  <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
+    <h2>Lifecycles and rules</h2>
+    <p class="lede">A budget's, a permit's and a waiting call's life, the hard window's store, and the rules the budget holds to.</p>
+    <div class="lgrid">
+      <div class="card"><h3>A <code>WindowedCallBudget</code>'s life <small>the supplied budget</small></h3>
+        <ol class="steps"><li class="ph1"><code>WindowedCallBudget(windows) { … }</code> checks every setting and throws <code>IllegalArgumentException</code> naming the property, never a value; one <code>INFO</code> line with the settings' numbers</li><li class="ph2">the first <code>acquire</code>, <code>utilisation()</code> or <code>flush()</code> restores the store's snapshot once: a stale period dropped, the current one merged, a stamp further ahead than <code>maxRestoreSkew</code> keeping its counts only</li><li class="ph2"><code>acquire</code> grants, queues or refuses; permits complete or release</li><li class="ph3"><code>flush()</code> writes the exact counts, and returns the store's failure when it cannot</li><li class="ph3"><code>close()</code>: every waiting call and every later <code>acquire</code> returns <code>Closed("budget")</code>; <code>flush()</code>, <code>utilisation()</code> and the permits keep working</li></ol>
+        <div class="callout"><b><code>close()</code> writes nothing</b> and never closes the store or the observer: call <code>flush()</code> first for the exact final write.</div></div>
+      <div class="card"><h3>A permit's life <small><code>Permit</code></small></h3>
+        <ol class="steps"><li class="ph1">granted: its units are charged now; the budget holds no lock or lease for it</li><li class="ph2"><code>complete(signals)</code>: the request was sent; a reading raises a local count, a throttle extends the pause, and the waiters are re-planned</li><li class="ph3"><code>release()</code>: it was never sent; the units are refunded and every waiter re-planned</li><li class="ph3">a second <code>complete</code> or <code>release</code>, or one after the other, is ignored</li></ol>
+        <div class="callout"><b>Both run under <code>NonCancellable</code></b>, so a cancelled coroutine still settles its permit; <code>withPermit</code> completes it as spent in a <code>finally</code>, and a permit never completed is simply spent.</div></div>
+      <div class="card"><h3>A waiting call <small>first come first served per lane</small></h3>
+        <ol class="steps"><li class="ph1">queued: planned at the earliest slot that fits, never before its lane's last waiter, and its units reserved</li><li class="ph2">it waits on the close latch and its wake signal, at most one minute a time, then re-reads its plan under the lock</li><li class="ph2">a refund ahead of it, a <code>release()</code>, a server reading or a clock step re-plans it; a new wait past its <code>maxWait</code> fails it with <code>BudgetExhausted</code></li><li class="ph3">granted at its slot, or <code>Closed("budget")</code> after <code>close()</code>, or its own cancellation: refunded, and the calls behind it re-planned</li></ol>
+        <div class="callout"><b>A wake is only a hint:</b> every wake re-reads the plan under the lock, so a lost, stale or double wake costs one lock section.</div></div>
+      <div class="card"><h3>The hard window and its store <small><code>BudgetStore</code></small></h3>
+        <ol class="steps"><li class="ph1">one restore, lazily; a failed one is a <code>StoreFailed</code> event, and <code>acquire</code> tries again after <code>storeRetryInterval</code></li><li class="ph2">before a grant passes the persisted mark, a save write-ahead of <code>persistAhead</code> grants, under the lock and before the grant; at most three saves in one section</li><li class="ph2">a full hard window refuses until its boundary, raising <code>HardStop</code> once per period</li><li class="ph3">a failed or timed-out save never advances the mark; grants go on from the in-process count, and the next save waits <code>storeRetryInterval</code></li></ol>
+        <div class="callout"><b>No save before a restore has succeeded,</b> so a budget whose store cannot be read never overwrites what the store holds.</div></div>
+      <div class="card ph2"><h3>Rules the budget holds to</h3>
+        <div class="callout"><b>One lock, events after it.</b> Every field is under one coroutine <code>Mutex</code>, held across a store call for at most <code>storeTimeout</code>; the events of a section reach the observer after the unlock, so an observer may call back into the budget.</div>
+        <div class="callout"><b>Two clocks.</b> The wall clock decides where in the provider's calendar now is (indices, boundaries, the guard, the snapshot's stamp); the time source measures every wait. A backward step across a boundary copies the counts it left into the current period; a forward jump is trusted.</div>
+        <div class="callout"><b>The guard.</b> Within <code>boundaryGuard</code> of a boundary a call is charged to both adjacent periods, so a provider whose clock differs by up to the guard never sees a period over its limit.</div>
+        <div class="callout"><b>Lane floors are never lent.</b> A share is <code>ceil(share × limit)</code> units, at least 1, held back from the other lanes; the default reserves 20 % for <code>Lane.Interactive</code>.</div>
+        <div class="callout"><b>Nothing prints a secret.</b> The budget receives <code>RateSignals</code>, never a response, and logs numbers and class names only; <code>RetryAfter</code>'s failures never echo the value.</div></div>
+    </div>
+    <div class="key"><span><i class="ph1"></i>start · construction, a grant, a queued call</span><span><i class="ph2"></i>run · steady state and its rules</span><span><i class="ph3"></i>stop · close, a release, a call's end</span></div>
+  </section>
+</div>
+
+<aside class="inspector" id="inspector" aria-live="polite">
+  <h2>Inspector</h2>
+  <div id="insp-body"><p>Select a component, C4 element, thread, decision or sequence step to see its details here.</p></div>
+</aside>
+</div>
+
+<section class="guarantees" aria-label="Guarantees">
+  <h2>Guarantees</h2>
+  <div class="guarantee-cards">
+    <div class="guarantee-card"><h3>Failure model</h3>
+      <ul><li><code>acquire</code> returns <code>Result.failure(HttpFailure.BudgetExhausted(wait, reason, window))</code> when the call's wait would pass <code>maxWait</code> (<code>Window</code>, or <code>Paused</code> during a pause), when its lane has <code>maxQueued</code> waiters (<code>QueueFull</code>) or when it can never fit (<code>CostExceedsLimit</code>, <code>wait</code> infinite), charging nothing.</li><li>After <code>close()</code>, <code>acquire</code> and every waiting call return <code>Closed("budget")</code> as a value, never as a cancellation.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> for a <code>cost</code> below 1, a negative <code>maxWait</code> or a setting out of range; the caller's own <code>CancellationException</code>, its wait refunded.</li><li>A store's failure never fails a grant: it is a <code>StoreFailed</code> event and a <code>WARN</code> line with the cause's class name; <code>flush()</code> returns it. An observer's <code>Exception</code> is logged and ignored; an <code>Error</code> propagates.</li><li><code>RetryAfter.parse</code> returns <code>Result.failure(IllegalArgumentException)</code> with a constant message; a <code>RateSignalsReader</code> never throws for bad input.</li></ul></div>
+    <div class="guarantee-card"><h3>Extension points</h3>
+      <ul><li><code>CallBudget</code>, <code>Permit</code>, <code>RateSignalsReader</code>, <code>BudgetStore</code>, <code>BudgetObserver</code> — implement <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; calling and passing them are Stable Core</li><li><code>BudgetEvent</code> — subclass <span class="badge">Experimental</span>, the same marker; its seven leaves are final</li><li><code>CallBudget.Unlimited</code>, <code>RateSignalsReader.Standard</code>, <code>InMemoryBudgetStore</code>, <code>BudgetObserver.None</code> — need no opt-in, and are the seams' worked examples <span class="badge">Stable Core</span></li><li><code>WindowedCallBudget</code> — final, built by its factory; its builder's twelve properties take a consumer's <code>store</code>, <code>observer</code>, <code>timeSource</code> and <code>wallClock</code> <span class="badge">Stable Core</span></li><li><code>Lane</code> takes any name; <code>PauseSource</code> and <code>StoreOperation</code> may gain constants, so a <code>when</code> keeps an <code>else</code> <span class="badge">Stable Core</span></li></ul></div>
+    <div class="guarantee-card"><h3>Test levels <small>47 classes</small></h3>
+      <div class="bars" role="table" aria-label="Test classes per testing level">
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:6%"></span></span><span class="val">2</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">31</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:3%"></span></span><span class="val">1</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:32%"></span></span><span class="val">10</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:10%"></span></span><span class="val">3</span>
+      </div>
+      <p>324 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>: gating 7, component 229, integration 6, deterministic 79, non-functional 3. The eighteen <code>WindowedCallBudget*ComponentTest</code> classes run on virtual time; the integration class reads real <code>429</code>s and <code>503</code>s over loopback; the non-functional ones race <code>close()</code>, re-plan 1,000 waiters per lane and contend 400 coroutines on real threads. The test report: <code>webtools-http/build/reports/tests/</code>. <span class="gap">No L4b e2e or L5 UAT class. The close-race test does not see the loss of the admission's latch re-check, which a component test holds; the window between a waiter's section and its wait has no deterministic seam; real clock steps and the <code>js</code> target are not exercised.</span></p></div>
+    <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
+      <ul><li>Ships in <code>webtools-http</code> <code>1.0.0</code>: new, unreleased, not on Maven Central until the HTTP stack is complete; it moved no version.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code>, 557 to 892 lines with the budget, by <code>apiCheck</code> in <code>check</code>; the common code compiles for <code>js</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code>: dropping the gate from a port passes <code>apiCheck</code>.</span></li><li><code>BudgetSnapshot.CURRENT_VERSION</code> is 1; a snapshot of a version the budget does not know is dropped whole.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
+    <div class="guarantee-card"><h3>Thread safety</h3>
+      <ul><li>Every member of a <code>CallBudget</code> may be called concurrently from any thread and any number of coroutines.</li><li><code>WindowedCallBudget</code>: all state under one coroutine <code>Mutex</code>, never held while the observer runs; <code>close()</code> takes no lock.</li><li>Values (<code>Lane</code>, <code>RateWindow</code>, <code>RateSignals</code>, the readings, the snapshots, the utilisations, the events) are immutable; <code>Unlimited</code>, <code>Standard</code> and <code>None</code> are stateless; <code>InMemoryBudgetStore</code> is safe to share.</li><li>Confined: a builder, reachable only inside its factory's lambda. A <code>RateSignalsReader</code> must be safe for concurrent calls; a <code>BudgetStore</code> must be cancellable.</li></ul></div>
+    <div class="guarantee-card"><h3>Resources to close</h3>
+      <ul><li><code>CallBudget</code> is <code>AutoCloseable</code>: <code>close()</code> is idempotent, non-suspending and never throws; the default and <code>Unlimited</code> do nothing.</li><li><code>WindowedCallBudget.close()</code> ends every waiting call with <code>Closed("budget")</code> and writes nothing: <code>flush()</code> first. It never closes its store or its observer.</li><li>Skipped, nothing leaks: the budget owns no thread, scope or timer; only its waiting calls stay waiting for their slots.</li><li>A <code>Permit</code> is not <code>AutoCloseable</code>: <code>complete()</code> or <code>release()</code> it; one never completed is simply spent.</li></ul></div>
+    <div class="guarantee-card"><h3>On your classpath</h3>
+      <ul><li>Nothing of its own: the budget is part of <code>io.github.spartanlaboratories:webtools-http</code> and added no dependency.</li><li><code>org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2</code> — api, already the module's: the <code>Mutex</code>, the <code>select</code> and the <code>Job</code> latch</li><li>Test classpath only, through <code>testFixtures(…)</code>: <code>RecordingBudgetObserver</code> and <code>FakeBudgetStore</code>. Gradle only.</li><li>Who consumes it: other repositories of this organization only (visibility internal · org).</li></ul></div>
+    <div class="guarantee-card"><h3>Clocks and persistence</h3>
+      <ul><li>Windows start at multiples of their period since the Unix epoch (UTC), so they meet the provider's own boundaries.</li><li>A crash over-counts a hard window by at most <code>persistAhead − 1</code> while saves succeed and nothing written ahead is given back. <span class="gap">Grants made while saves fail run unsaved, and a count a server reading or a backward step raised is saved only with the next grant or <code>flush()</code>.</span></li><li><span class="gap">A clock set forward by mistake and left uncorrected can under-count a hard window; several processes sharing one store or one provider are invisible to a local budget.</span></li></ul></div>
+  </div>
+</section>
+
+<section class="context">
+  <h2>Context</h2>
+  <div class="cards">
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-05</small></h3>
+      <ol class="roadmap">
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="7" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
+          <ul class="issues">
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>unit 8 · this board's system, landing with it</small></span><span class="tags"><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · acquires a permit in the cache's loader</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
+          </ul>
+          <p class="more">8 more of its issues touch other systems: #61 and #47 the build, #62 to #66 the rest of webtools-http, #69 webtools-feeds.</p></li>
+      </ol></div>
+    <div class="card"><h3>Unscheduled issues <small>0 open · 2026-11-05</small></h3>
+      <ul class="issues">
+        <li><span>No open issue outside the roadmap touches the call budget.</span></li>
+      </ul></div>
+    <div class="card"><h3>Plans and documents</h3>
+      <ul class="docs">
+        <li>Issue boards that amended this system: <a data-issue="67">#67</a> call-budget — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
+        <li><a href="../../plans/55-http-client-stack/67-call-budget/plan.md">#67 plan</a> · <a href="../../plans/55-http-client-stack/67-call-budget/final-implementation.md">as built</a> — what was built, the deviations, the measurements · <a href="../../plans/55-http-client-stack/67-call-budget/consequences.md">consequences</a> — the sibling units' contracts, the follow-ups and the known gaps · <a href="../../plans/55-http-client-stack/67-call-budget/research/README.md">research</a></li>
+        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.5 the call budget, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
+        <li><a href="../../../README.md">README</a> — the <code>webtools-http</code> row, which names the budget, and the fixtures paragraph, which names its two fixtures; marked not yet released</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board</li>
+        <li><a data-workboard>Repository work board</a> — every planning and development run in the repository</li>
+      </ul></div>
+  </div>
+</section>
+
+<footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-board template (2026-11-05, the board's first writing at feat/issue-67-call-budget 327164f):
+     None in the template parts: the board's CSS, tab set, script before MODEL and renderer are the template's. What it fills in:
+     1. The core tabs are named for what they show: "Admission" (the decision path: acquire, a waiting call and a permit's settlement, three variants) and "Permit" (the sequence: one call under withPermit).
+     2. The Threads tab says the budget starts no thread and lists its callers' coroutines, the closing thread and where the observer and the store run.
+     3. The three sides are the budget (its port, its supplied budget, its vocabulary and its internal ledger), the seams a consumer supplies or replaces, and the test fixtures.
+     4. An eighth guarantee card, "Clocks and persistence", states the window alignment and the hard window's crash bound with its gaps.
+     Nothing is removed. -->
+</footer>
+</div>
+
+<!-- The board's state. A verbatim copy of state.json beside the board (scripts/embed.js state.json index.html state): its stamp, version and
+     last amendment, which apply-state.js restamps on a feature branch and at the landing (system/RULES.md §10). -->
+<script type="application/json" id="state">
+{
+  "slug": "webtools-http-budget",
+  "version": "1.0.0",
+  "asIs": {"ref": "feat/issue-67-call-budget", "sha": "327164f", "date": "2026-11-04T05:37:48Z"},
+  "lastAmended": {"issue": 67, "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes", "sha": "327164f"},
+  "written": {"sha": "327164f"}
+}
+</script>
+
+<!-- The C4 model. A verbatim copy of workspace.dsl, re-embedded here on every run,
+     and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
+<script type="text/plain" id="dsl">
+// webtools-http-budget — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-budget/index.html.
+// As-is at WebTools feat/issue-67-call-budget 327164f (2026-11-04), the call budget inside webtools-http 1.0.0 (new, unreleased): the CallBudget port with Permit and withPermit, CallBudget.Unlimited, WindowedCallBudget, the rate-signal vocabulary with RetryAfter, the store and observer seams with their defaults, the internal ledger, and two test fixtures. Code is authoritative on any conflict.
+workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
+
+    !identifiers hierarchical
+
+    model {
+        consumer = person "Consumer" "A Kotlin service that declares its provider's windows, acquires a permit before each call, reads the answer's rate signals into the permit and closes the budget it built."
+        provider = softwareSystem "Rate-limited provider" "An HTTP API with documented rate windows: it counts calls, answers 429 or 503 when over, and may send Retry-After and remaining-count headers." "External"
+
+        webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
+            budget = container "webtools-http-budget" "The call budget: grants permits under a provider's rate windows and lane shares, pauses on server signals and holds a hard window across a restart. Ships inside webtools-http; all of it in commonMain, its two fixtures in the test-fixtures variant." "Kotlin Multiplatform · commonMain · webtools-http 1.0.0 unreleased" {
+                // ---- the port ----
+                port      = component "CallBudget" "The port: suspend acquire(cost, lane, maxWait): Result<Permit>, utilisation(), flush() and an idempotent, non-suspending close(), under a ten-point contract. Implementing it needs the opt-in." "interface · AutoCloseable · gated" "Public"
+                permit    = component "Permit" "A granted unit, charged at the grant: complete(signals) when the request was sent, release() when it never was; both idempotent and run under NonCancellable." "interface · gated" "Public"
+                withPermit = component "withPermit" "Acquires, runs the block and completes the permit as spent in a finally unless the block settled it; a refused or closed acquire is returned and the block does not run." "suspend extension function" "Public"
+                unlimited = component "CallBudget.Unlimited" "Grants everything at once; ignores signals and close(); checks its arguments as the supplied budget does. Needs no opt-in." "object" "Public"
+                // ---- the supplied budget and its internals ----
+                windowed  = component "WindowedCallBudget" "The supplied budget, final, built by WindowedCallBudget(windows) { }: epoch-aligned fixed windows with a boundary guard, lane floors, first-come-first-served waits, pauses from server signals and a hard window saved write-ahead to a store. Needs no opt-in." "final class · factory · builder" "Public"
+                admission = component "Admission and waits" "admitLocked, awaitSlot, replan and withdraw over one coroutine Mutex; a waiter selects on the close latch and its conflated wake channel, each wait at most one minute." "internal" "Internal"
+                settle    = component "Permit settlement" "WindowedPermit: complete applies the signals (reconcile a count, extend the pause) and re-plans; release refunds and re-plans; both under NonCancellable." "internal" "Internal"
+                storeCalls = component "Store calls" "One lazy restore, write-ahead saves in blocks of persistAhead and flush()'s exact write, each bounded by storeTimeout; a failure is a StoreFailed event and the grants go on." "internal" "Internal"
+                ledger    = component "BudgetLedger" "The coroutine-free ledger: the slot search, the lane reserves, grants and refunds, reconciliation, the pause, the restore and the snapshots." "internal class" "Internal"
+                cells     = component "WindowLedger · LedgerCell" "One fixed-window ledger per rate window: indices from the epoch, the guard's two-cell charge, the backward-step copy and the cell cap." "internal classes" "Internal"
+                time      = component "LedgerTime" "LedgerClock reads the wall clock and the time source together; LedgerNow and Pause." "internal classes" "Internal"
+                httpDate  = component "HttpDate" "RFC 9110's three HTTP-date forms, with constant-message failures." "internal object" "Internal"
+                // ---- the vocabulary ----
+                vocab     = component "Vocabulary" "Lane, RateWindow, RateSignals, WindowReading, BudgetUtilisation and WindowUtilisation: final values with factories and builders." "final classes" "Public"
+                retryAfter = component "RetryAfter" "parse(value, now) and parse(value, now, serverDate): delay-seconds or an HTTP-date to a Duration, never negative, saturating; a failure's message never echoes the value." "object" "Public"
+                // ---- the seams ----
+                reader    = component "RateSignalsReader" "read(response, nowEpochMillis): RateSignals, never throwing for bad input. Standard reads a 429, and a 503 with a Retry-After that parses." "interface · gated · Standard" "Public"
+                store     = component "BudgetStore" "load() and save(snapshot); must be cancellable; last-writer-wins. InMemoryBudgetStore, the default, survives nothing." "interface · gated · InMemoryBudgetStore" "Public"
+                snapshot  = component "BudgetSnapshot · WindowSnapshot" "What a store keeps: version 1, the stamp, each hard window's count per period and the pause; no serializer." "final classes" "Public"
+                observer  = component "BudgetObserver" "onEvent(event), called after the lock is released, on the producing call's thread; an Exception it throws is logged and ignored. None ignores everything." "interface · gated · None" "Public"
+                events    = component "BudgetEvent" "The open root with seven final leaves (Granted, Refused, Paused, HardStop, Reconciled, StoreFailed, Restored), with the open constants classes PauseSource and StoreOperation." "abstract class · gated · final leaves" "Public"
+                // ---- the test fixtures ----
+                fixtures  = component "Test fixtures" "RecordingBudgetObserver (the events in arrival order) and FakeBudgetStore (scripted failures and delays in virtual time), in webtools-http's test-fixtures variant." "jvmTestFixtures · testFixtures(...)" "Public"
+            }
+            core = container "webtools-http common core" "What the budget uses from the rest of the module: HttpFailure's BudgetExhausted and Closed with ExhaustedReason, HttpResponse, WallClock, the opt-in marker, the DSL marker and the internal Log seam." "Kotlin Multiplatform · commonMain"
+        }
+
+        consumer -> webtools.budget.windowed "Builds it with WindowedCallBudget(windows) { }, then acquires, flushes and closes it"
+        consumer -> webtools.budget.withPermit "Wraps each call in withPermit"
+        consumer -> webtools.budget.vocab "Declares its provider's windows and its lanes"
+        consumer -> webtools.budget.reader "Reads each answer's signals with Standard, or its own reader"
+        consumer -> webtools.budget.permit "Completes it with the signals, or releases it"
+        consumer -> provider "Calls it through a transport, one permit per call"
+        webtools.budget.windowed -> webtools.budget.port "Implements"
+        webtools.budget.unlimited -> webtools.budget.port "Implements"
+        webtools.budget.withPermit -> webtools.budget.port "Acquires through it; completes the permit in a finally"
+        webtools.budget.port -> webtools.budget.permit "Grants"
+        webtools.budget.port -> webtools.core "Fails with BudgetExhausted, or Closed(budget) after close()"
+        webtools.budget.windowed -> webtools.budget.admission "Runs every acquire through"
+        webtools.budget.windowed -> webtools.budget.settle "Settles its permits through"
+        webtools.budget.admission -> webtools.budget.ledger "Plans, reserves and grants on it, under the lock"
+        webtools.budget.settle -> webtools.budget.ledger "Reconciles, pauses and refunds on it"
+        webtools.budget.admission -> webtools.budget.storeCalls "Restores lazily and saves write-ahead through"
+        webtools.budget.storeCalls -> webtools.budget.store "Loads once, saves snapshots, each call bounded by storeTimeout"
+        webtools.budget.store -> webtools.budget.snapshot "Keeps"
+        webtools.budget.windowed -> webtools.budget.observer "Delivers every event after the lock is released"
+        webtools.budget.observer -> webtools.budget.events "Receives"
+        webtools.budget.ledger -> webtools.budget.cells "Keeps one per rate window"
+        webtools.budget.ledger -> webtools.budget.time "Reads now through"
+        webtools.budget.ledger -> webtools.budget.vocab "Reads the windows, the lanes and the signals"
+        webtools.budget.time -> webtools.core "Reads WallClock beside the time source"
+        webtools.budget.reader -> webtools.core "Reads an HttpResponse's status, Retry-After and Date"
+        webtools.budget.reader -> webtools.budget.retryAfter "Parses every Retry-After line with"
+        webtools.budget.reader -> webtools.budget.httpDate "Reads the answer's Date with"
+        webtools.budget.retryAfter -> webtools.budget.httpDate "Reads a date value with"
+        webtools.budget.reader -> webtools.budget.vocab "Returns RateSignals"
+        webtools.budget.windowed -> webtools.core "Logs through the Log seam: numbers and class names only"
+        webtools.budget.fixtures -> webtools.budget.observer "Implements it with RecordingBudgetObserver"
+        webtools.budget.fixtures -> webtools.budget.store "Implements it with FakeBudgetStore"
+        webtools.core -> webtools.budget.port "Its opt-in marker gates implementing the five ports and subclassing BudgetEvent"
+    }
+
+    views {
+        systemContext webtools "Context" "WebTools, the consumer of the call budget and the provider whose windows it keeps." {
+            include *
+            autoLayout lr
+        }
+        container webtools "Containers" "The call budget and the part of webtools-http it uses." {
+            include *
+            autoLayout lr
+        }
+        component webtools.budget "Components" "The call budget as built at feat/issue-67-call-budget 327164f." {
+            include *
+            autoLayout tb
+        }
+        dynamic webtools.budget "Permit" "A consumer wraps one call in withPermit, the provider throttles it, and the budget pauses, as built." {
+            consumer -> webtools.budget.withPermit "withPermit(1, Lane.Tracker, 5.seconds) { permit -> … }"
+            webtools.budget.withPermit -> webtools.budget.port "acquire(cost, lane, maxWait)"
+            webtools.budget.windowed -> webtools.budget.admission "admitLocked: plan the slot, grant now or queue"
+            webtools.budget.admission -> webtools.budget.ledger "plan, then grantDirect: charged at the grant"
+            consumer -> provider "the call, through a transport: 429 with Retry-After: 30"
+            consumer -> webtools.budget.reader "Standard.read(response, now): throttled, retryAfter 30 s"
+            consumer -> webtools.budget.permit "complete(signals)"
+            webtools.budget.settle -> webtools.budget.ledger "extend the pause to 30 s, capped by maxPause; re-plan the waiters"
+            webtools.budget.windowed -> webtools.budget.observer "onEvent(Granted), onEvent(Paused): after the lock is released"
+            autoLayout lr
+        }
+        styles {
+            element "Person"          { shape person  background #08427b color #ffffff }
+            element "Software System" { background #1168bd color #ffffff }
+            element "External"        { background #999999 color #ffffff }
+            element "Container"       { background #438dd5 color #ffffff }
+            element "Component"       { background #85bbf0 color #000000 }
+            element "Internal"        { background #c6dcf5 color #000000 }
+            element "Standalone"      { background #eeeeee color #000000 border dotted }
+            element "Planned"         { background #ffffff color #666666 border dashed opacity 60 }
+        }
+    }
+}
+</script>
+
+<script>
+"use strict";
+/* Times (GUIDANCE.md §6, "Times"): stored as UTC ISO stamps; shown in the viewer's own time zone, with the zone's abbreviation,
+   as a <time> whose datetime and title hold the exact UTC value. A date alone stays a date; a stamp with no zone is shown as written.
+   localizeTimes() formats every <time datetime> the board draws, so a stamp written into hand-made HTML is shown the same way. */
+const STAMP_RE=/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/;
+const utcIso=s=>{ const d=new Date(String(s).replace(" ","T")); return isNaN(d)?null:d.toISOString().replace(/\.000Z$/,"Z"); };
+const LOCAL_FMT={day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZoneName:"short"};
+const when=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s); return u?`<time datetime="${u}" title="${u} (UTC)">${esc(new Date(u).toLocaleString(undefined,LOCAL_FMT))}</time>`:esc(s); };
+const day=v=>{ const s=String(v==null?"":v).trim(), u=STAMP_RE.test(s)&&utcIso(s); return u?`<time datetime="${u}" title="${u} (UTC)">${esc(new Date(u).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}))}</time>`:esc(s); };
+function localizeTimes(root){ (root||document).querySelectorAll("time[datetime]").forEach(t=>{ const u=STAMP_RE.test(t.getAttribute("datetime"))&&utcIso(t.getAttribute("datetime")); if(!u||t.dataset.local) return;
+  t.dataset.local="1"; t.title=`${u} (UTC)`; t.textContent=new Date(u).toLocaleString(undefined,LOCAL_FMT); }); }
+window.addEventListener("DOMContentLoaded",()=>localizeTimes());
+const REPO="https://github.com/SpartanLaboratories/WebTools";
+const SRC=REPO+"/blob/master/webtools-http/src/"; // fill: every d.files entry links under here
+const NS="http://www.w3.org/2000/svg";
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const txt=(p,x,y,lines,cls,anchor,dy)=>{const t=mk("text",{x,y,class:cls||"","text-anchor":anchor||"start"},p);(Array.isArray(lines)?lines:[lines]).forEach((l,i)=>{const s=mk("tspan",{x,dy:i?(dy||12):0},t);s.textContent=l;});return t;};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
+/* Links to an issue and its board (GUIDANCE.md §5; system/RULES.md §6). BOARDS maps an issue's number to its issue board, relative
+   to this board, for every issue the board names whose board is in the repository; it is filled from the folders on disk
+   when the board is written, on its one line, and check-board.js fails an entry whose file is not there. Where an issue's number and
+   its title appear together they are two links: the number opens the GitHub issue (pair(), or a plain href in hand-written HTML)
+   and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
+   the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
+   the hand-written ones at load. */
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+/* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
+   live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
+   a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
+let LIVE_BOARDS=null;
+const boardOf=n=>(LIVE_BOARDS&&LIVE_BOARDS.get(String(n)))||(Object.prototype.hasOwnProperty.call(BOARDS,String(n))?BOARDS[String(n)]:null);
+/* The repository work board (GUIDANCE.md §5; system/RULES.md §6): "committed" is docs/plans/index.html relative to this board when that file exists
+   (else null: no link to a file that is not there; check-board.js fails a committed path that is missing), and "live" the live view's
+   marker, docs/plans/.live/index.js, which board.js --live writes in each checkout. A link to the repository work board opens the live view when
+   its marker loads (the board on this machine), else the committed one, else stays plain text: the hand-written
+   <a data-workboard>repository work board</a>, and the Plans card's line the renderer adds when the board has none. */
+const WORK_BOARD={"committed":"../../plans/index.html","live":"../../plans/.live/index.js"}; // fill: the repository work board relative to this board, on this one line: {"committed": "../../plans/index.html" or null, "live": "../../plans/.live/index.js"}
+/* A live marker (plan/RULES.md §5): a script in the git-ignored docs/plans/.live/ that sets one key of window.DASHBOARDS_LIVE; cb gets
+   its value, or null when the marker is not there (a published copy, another clone, no live view on this machine). */
+function liveMark(src,key,cb){ if(!src){ cb(null); return; } const sc=document.createElement("script"); sc.src=src+(src.includes("?")?"&":"?")+"t="+Date.now();
+  sc.onload=()=>{ const v=(window.DASHBOARDS_LIVE||{})[key]; sc.remove(); cb(v==null?null:v); }; sc.onerror=()=>{ sc.remove(); cb(null); }; document.head.appendChild(sc); }
+const relTo=(base,href)=>/^[a-z][a-z0-9+.-]*:/i.test(href)||href.startsWith("/")?href:base.replace(/[^/]*$/,"")+href;
+function linkWorkBoard(){ const W=WORK_BOARD&&typeof WORK_BOARD==="object"?WORK_BOARD:{};
+  const docs=[...document.querySelectorAll("section.context .docs")].pop();
+  if(docs&&!document.querySelector("a[data-workboard]")){ const li=document.createElement("li"); li.innerHTML='<a data-workboard>Repository work board</a> — every planning and development run in the repository'; docs.appendChild(li); }
+  const set=href=>document.querySelectorAll("a[data-workboard]").forEach(a=>{ if(href) a.href=href; else a.removeAttribute("href"); a.title=href&&href===W.committed?"The committed repository work board, as of the last landing":href?"The live repository work board on this machine":"No repository work board in this checkout"; });
+  set(W.committed||null);
+  liveMark(W.live,"board",b=>{ if(b) set(relTo(W.live,b)); });
+  /* the newest boards: every issue link already drawn is pointed at the newest board, and a title with no board yet gets its link */
+  const bsrc=typeof W.live==="string"&&/index\.js$/.test(W.live)?W.live.replace(/index\.js$/,"boards.js"):null;
+  liveMark(bsrc,"boards",m=>{ if(!m||typeof m!=="object"||Array.isArray(m)) return;
+    LIVE_BOARDS=new Map(Object.entries(m).filter(([,v])=>typeof v==="string"&&v.trim()).map(([k,v])=>[String(k),relTo(bsrc,v)]));
+    document.querySelectorAll("a[title$=\": its issue board\"]").forEach(a=>{ const n=(/^#(\d+):/.exec(a.title)||[])[1], b=n&&LIVE_BOARDS.get(n); if(b) a.href=b; });
+    document.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=LIVE_BOARDS.get(String(n)); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.removeAttribute("target"); a.removeAttribute("rel"); } });
+    document.querySelectorAll("span[data-issue-title]").forEach(t=>{ const n=t.dataset.issueTitle, b=LIVE_BOARDS.get(String(n)); if(!b) return;
+      const a=document.createElement("a"); a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; a.append(...t.childNodes); t.replaceWith(a); }); }); }
+window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
+/* The board's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
+   restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
+const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
+const ghIssue=n=>`${REPO}/issues/${n}`;
+const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
+const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${esc(title)}</a>`:esc(title)}`; };
+function linkIssues(root){ const r=root||document;
+  /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
+     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-board.js (ISSUE TITLE NAMES
+     A WORK LEVEL: #n), never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
+  r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
+  r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its issue board`; else { a.target="_blank"; a.rel="noopener"; } }); }
+window.addEventListener("DOMContentLoaded",()=>linkIssues());
+function inspect(html){ $("#insp-body").innerHTML=html; }
+function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker",{id,viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:color||"var(--ink-2)"},m); const mo=mk("marker",{id:id+"-open",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10",fill:"none",stroke:color||"var(--ink-2)","stroke-width":"1.5"},mo); const mon=mk("marker",{id:id+"-on",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--on)"},mon); }
+
+/* =========================================================================
+   MODEL — the as-built behaviour this board draws (threads, flows, sequence) and the
+   hand-placed component map. Structure also lives in the DSL above; `c4` maps map
+   nodes to their DSL element so the two views cross-reference.
+   ========================================================================= */
+const MODEL = {
+  // The board's colour groups: server = the budget (its port, its supplied budget, its vocabulary and its internal ledger, blue), wire = the
+  // seams a consumer supplies or replaces (teal), client = the test fixtures (purple); the consumer's code, and what lies outside the budget.
+  sides:{server:"the budget · commonMain",client:"the test fixtures · jvmTestFixtures",wire:"the seams · commonMain",consumer:"the consumer's code",external:"outside the budget: the transport, the provider, the common core"},
+  // Map node id → DSL element id.
+  c4:{core:"webtools.budget",port:"webtools.budget.port",permit:"webtools.budget.permit",withPermit:"webtools.budget.withPermit",unlimited:"webtools.budget.unlimited",
+      windowed:"webtools.budget.windowed",builder:"webtools.budget.windowed",admission:"webtools.budget.admission",waits:"webtools.budget.admission",settle:"webtools.budget.settle",storeCalls:"webtools.budget.storeCalls",emit:"webtools.budget.windowed",latch:"webtools.budget.admission",
+      ledgerBox:"webtools.budget.ledger",ledger:"webtools.budget.ledger",cells:"webtools.budget.cells",time:"webtools.budget.time",httpDate:"webtools.budget.httpDate",
+      vocab:"webtools.budget.vocab",lane:"webtools.budget.vocab",rateWindow:"webtools.budget.vocab",rateSignals:"webtools.budget.vocab",reading:"webtools.budget.vocab",util:"webtools.budget.vocab",retryAfter:"webtools.budget.retryAfter",
+      seams:"webtools.budget",reader:"webtools.budget.reader",store:"webtools.budget.store",snapshot:"webtools.budget.snapshot",observer:"webtools.budget.observer",events:"webtools.budget.events",consts:"webtools.budget.events",storeFail:"webtools.budget.storeCalls",
+      fix:"webtools.budget.fixtures",recObs:"webtools.budget.fixtures",fakeStore:"webtools.budget.fixtures"},
+  structure: {
+    h:640,
+    lanes:[["THE BUDGET · commonMain",40,44,"start"],["THE SEAMS · gated ports and their defaults",960,44,"end"],["TEST FIXTURES · jvmTestFixtures",960,452,"end"]],
+    notes:[{x:40,y:612,lines:["From webtools-http's common core, outside this board: HttpFailure.BudgetExhausted and Closed, ExhaustedReason, HttpResponse, WallClock, the opt-in marker, WebToolsDsl and the Log seam."]}],
+    nodes:[
+      {id:"core",side:"server",vis:"pub",container:true,x:40,y:56,w:640,h:532,t:"webtools-http-budget",s:"package com.spartanlabs.webtools.http · explicitApi() · in webtools-http 1.0.0 unreleased",
+        d:{role:"The call budget of the HTTP stack, all of it in commonMain: the port and its permits, the supplied budget, the rate-signal vocabulary and the internal ledger. It adds no dependency and starts no thread; the module's check compiles it for js as well.",vis:"public · part of webtools-http",files:[]}},
+      {id:"port",side:"server",vis:"pub",x:56,y:96,w:170,h:44,t:"CallBudget",s:"acquire · utilisation · flush · close",
+        d:{role:"The port: suspend acquire(cost, lane, maxWait): Result<Permit>, utilisation(), flush() (default: success) and close() (default: nothing). Its KDoc states ten contract points: charged at the grant, fail fast, first come first served within a lane, cancellation refunded, Closed after close() as a value, idempotent permits, utilisation, flush, programmer errors thrown, every member concurrent.",vis:"public · interface · AutoCloseable · Experimental (implement); calling it Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/CallBudget.kt"],threads:["the acquiring coroutine","the closing thread"]}},
+      {id:"permit",side:"server",vis:"pub",x:234,y:96,w:120,h:44,t:"Permit",s:"complete · release",
+        d:{role:"A granted unit: cost and lane, complete() (with RateSignals.None), complete(signals) when the request was sent, release() when it never was. Both are idempotent and run under NonCancellable; a complete after a release, or the reverse, is ignored. Not AutoCloseable: its completion is suspend.",vis:"public · interface · Experimental (implement); calling it Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/Permit.kt"],threads:["the settling coroutine"]}},
+      {id:"withPermit",side:"server",vis:"pub",x:362,y:96,w:136,h:44,t:"withPermit",s:"acquire · block · complete",
+        d:{role:"A plain suspend extension: acquires, runs the block with the permit and completes it as spent in a finally unless the block completed or released it. A refused or closed acquire is returned as the failure and the block does not run; an exception the block throws propagates after the permit is completed. Not inline.",vis:"public · suspend extension function · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WithPermit.kt"],threads:["the acquiring coroutine"]}},
+      {id:"unlimited",side:"server",vis:"pub",x:506,y:96,w:158,h:44,t:"CallBudget.Unlimited",s:"grants everything at once",
+        d:{role:"The budget that grants everything at once: stateless and shared, it ignores signals and close(), flush() succeeds, utilisation() is empty; it checks its arguments as the supplied budget does, and a cancelled caller gets its CancellationException.",vis:"public · object · Stable Core · no opt-in",files:["commonMain/kotlin/com/spartanlabs/webtools/http/CallBudget.kt"],threads:["the acquiring coroutine"]}},
+      {id:"windowed",side:"server",vis:"pub",container:true,x:56,y:152,w:608,h:148,t:"WindowedCallBudget",s:"final · WindowedCallBudget(windows) { } · maxBurst · no opt-in",
+        d:{role:"The supplied CallBudget: an integer ledger of epoch-aligned fixed rate windows with lane floors, first-come-first-served waits, pauses from server signals and a hard window that survives a restart through a BudgetStore. Every member may be called from any thread and coroutine; all state is under one coroutine Mutex. maxBurst is the smallest window's enforced limit, the most permits one instant can grant.",vis:"public · final class over an internal constructor · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["the acquiring coroutine","a waiting call","the settling coroutine","the closing thread"]}},
+      {id:"builder",side:"server",vis:"pub",x:72,y:192,w:150,h:44,t:"Builder",s:"12 properties · defaults",
+        d:{role:"laneShares (Interactive 0.2), boundaryGuard (1 s), maxPause (24 h), maxQueued (1,000 per lane), persistAhead (10), maxRestoreSkew (5 min), storeTimeout (2 s), storeRetryInterval (30 s), timeSource (Monotonic), wallClock (WallClock.System), store (InMemoryBudgetStore), observer (BudgetObserver.None). Checked when the factory builds the budget: a broken value throws IllegalArgumentException naming the property, never a value.",vis:"public · final class · @WebToolsDsl · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"]}},
+      {id:"admission",side:"server",vis:"int",x:230,y:192,w:140,h:44,t:"Admission",s:"admitLocked · grantNow",
+        d:{role:"Under the lock: the closed check, the lazy restore, the capacity check (CostExceedsLimit), the slot search behind the lane's last waiter, a write-ahead save when due (at most three a section), then a grant, a refusal (the wait past maxWait, QueueFull) or a queued waiter with its units reserved.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["the acquiring coroutine"]}},
+      {id:"waits",side:"server",vis:"int",x:378,y:192,w:140,h:44,t:"Waiters",s:"awaitSlot · replan · withdraw",
+        d:{role:"A waiter selects on the close latch and its conflated wake channel, each wait sliced to at most one minute, then re-reads its plan under the lock. A re-plan takes back every later reservation and plans the waiters again in arrival order; one whose new wait passes its cap fails with BudgetExhausted. A cancelled waiter is refunded under NonCancellable and the waiters behind it re-planned.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["a waiting call"]}},
+      {id:"settle",side:"server",vis:"int",x:526,y:192,w:124,h:44,t:"WindowedPermit",s:"settle · applySignals",
+        d:{role:"The supplied budget's permit: complete applies the signals (a reading raises a local count, a throttle extends the pause) and re-plans when anything changed; release refunds the grant and re-plans everyone. Its state is guarded by the budget's lock, so idempotency needs no atomic.",vis:"internal · inner class",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["the settling coroutine"]}},
+      {id:"storeCalls",side:"server",vis:"int",x:72,y:246,w:220,h:44,t:"Store calls",s:"ensureRestored · saveAhead · storeCall",
+        d:{role:"One restore at the first acquire, utilisation() or flush(); a failed one is retried by acquire after storeRetryInterval and by flush() at once. Write-ahead saves of persistAhead grants, flush()'s exact write. Each call is bounded by storeTimeout; a timeout, a dropped result or a cancellation the store leaked is a failure, the caller's own cancellation propagates.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt","commonMain/kotlin/com/spartanlabs/webtools/http/BudgetStoreFailure.kt"],threads:["a store call"]}},
+      {id:"emit",side:"server",vis:"int",x:300,y:246,w:170,h:44,t:"Events after the unlock",s:"emit · logEvent",
+        d:{role:"Each section collects its events and the function that opened it delivers them after the unlock: the Mutex is not reentrant, so an observer calling back into the budget would otherwise deadlock. INFO on creation, close and a restore; WARN on a pause, a hard stop and a store failure (the cause's class name only); DEBUG per refusal and reconciliation; nothing per grant.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["the observer's callback"]}},
+      {id:"latch",side:"server",vis:"int",x:478,y:246,w:172,h:44,t:"Close latch",s:"a completed Job · no lock",
+        d:{role:"close() completes a Job, never cancels it: a waiter that returns Closed is not involved in a CancellationException at all. Thread-safe, idempotent, one winner, no lock and no suspension; INFO closed once.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["the closing thread"]}},
+      {id:"ledgerBox",side:"server",vis:"int",container:true,x:56,y:312,w:608,h:112,t:"Ledger",s:"internal · coroutine-free · read and written under the budget's lock",
+        d:{role:"Plain integer arithmetic with no coroutine in it, so its Level 4a tables call it directly.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetLedger.kt","commonMain/kotlin/com/spartanlabs/webtools/http/WindowLedger.kt","commonMain/kotlin/com/spartanlabs/webtools/http/LedgerCell.kt","commonMain/kotlin/com/spartanlabs/webtools/http/LedgerTime.kt"]}},
+      {id:"ledger",side:"server",vis:"int",x:72,y:350,w:180,h:62,t:"BudgetLedger",s:["slot search · lane reserves","signals · restore · snapshots"],
+        d:{role:"Plans a call's slot (the earliest that fits every window, never before its lane's last waiter), converts lane shares into reserved units (ceil, at least 1), grants, reserves and refunds, raises a count to a server reading, merges a pause hint, restores a snapshot and writes the write-ahead and exact snapshots.",vis:"internal · class",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetLedger.kt"]}},
+      {id:"cells",side:"server",vis:"int",x:260,y:350,w:150,h:62,t:"WindowLedger · LedgerCell",s:["fixed windows · the guard","the copy · the cell cap"],
+        d:{role:"One fixed-window ledger per RateWindow: the period index from the epoch, the two-cell charge within the guard of a boundary, the copy of the periods a backward wall-clock step left, and the cap on the cells kept.",vis:"internal · classes",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowLedger.kt","commonMain/kotlin/com/spartanlabs/webtools/http/LedgerCell.kt"]}},
+      {id:"time",side:"server",vis:"int",x:418,y:350,w:132,h:62,t:"LedgerTime",s:["LedgerClock · LedgerNow","Pause"],
+        d:{role:"LedgerClock reads the wall clock and the time source together into a LedgerNow; Pause holds its end on both clocks.",vis:"internal · classes",files:["commonMain/kotlin/com/spartanlabs/webtools/http/LedgerTime.kt"]}},
+      {id:"httpDate",side:"server",vis:"int",x:558,y:350,w:92,h:62,t:"HttpDate",s:["RFC 9110 dates","three forms"],
+        d:{role:"The HTTP-date parser behind RetryAfter and the reader's Date: IMF-fixdate, RFC 850 and asctime, with constant-message failures (HttpDateProblem).",vis:"internal · object",files:["commonMain/kotlin/com/spartanlabs/webtools/http/HttpDate.kt"]}},
+      {id:"vocab",side:"server",vis:"pub",container:true,x:56,y:436,w:608,h:140,t:"Vocabulary",s:"final values · factories and builders · Stable Core",
+        d:{role:"The values a consumer declares a provider with and reads a budget through: every one immutable, its toString() names and numbers only.",vis:"public · final classes · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/Lane.kt","commonMain/kotlin/com/spartanlabs/webtools/http/RateWindow.kt","commonMain/kotlin/com/spartanlabs/webtools/http/RateSignals.kt","commonMain/kotlin/com/spartanlabs/webtools/http/WindowReading.kt","commonMain/kotlin/com/spartanlabs/webtools/http/BudgetUtilisation.kt","commonMain/kotlin/com/spartanlabs/webtools/http/WindowUtilisation.kt","commonMain/kotlin/com/spartanlabs/webtools/http/RetryAfter.kt"]}},
+      {id:"lane",side:"server",vis:"pub",x:72,y:474,w:100,h:44,t:"Lane",s:"Interactive · Tracker",
+        d:{role:"A class of callers sharing the windows; equality on its name, case-sensitively; Interactive and Tracker are ordinary lanes, not a closed set.",vis:"public · final class · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/Lane.kt"]}},
+      {id:"rateWindow",side:"server",vis:"pub",x:180,y:474,w:150,h:44,t:"RateWindow",s:"published − margin · hard",
+        d:{role:"One provider window: published calls per period, enforced at limit = published − margin; a hard window refuses until its boundary and is saved write-ahead. Built by RateWindow(name, published, period) { margin; hard }.",vis:"public · final class · factory · builder · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/RateWindow.kt"]}},
+      {id:"rateSignals",side:"server",vis:"pub",x:338,y:474,w:150,h:44,t:"RateSignals",s:"throttled · retryAfter · readings",
+        d:{role:"What an answer told the budget: whether it throttled, the wait it asked for and the readings by window name. Built by RateSignals { }; RateSignals.None changes nothing; a reading for a window the budget does not have is ignored.",vis:"public · final class · factory · builder · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/RateSignals.kt"]}},
+      {id:"reading",side:"server",vis:"pub",x:496,y:474,w:154,h:44,t:"WindowReading",s:"remaining · resetIn",
+        d:{role:"What a server said about one window: the calls remaining (negative once over) and, when it said, the time until it resets.",vis:"public · final class · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WindowReading.kt"]}},
+      {id:"util",side:"server",vis:"pub",x:72,y:526,w:258,h:40,t:"BudgetUtilisation · WindowUtilisation",s:"windows · pausedFor · waiting",
+        d:{role:"utilisation()'s reading: each window's current period in declaration order, the pause remaining and the number of waiting calls. Public constructors, so an implementer of the port can build one.",vis:"public · final classes · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetUtilisation.kt","commonMain/kotlin/com/spartanlabs/webtools/http/WindowUtilisation.kt"]}},
+      {id:"retryAfter",side:"server",vis:"pub",x:338,y:526,w:312,h:40,t:"RetryAfter",s:"parse: seconds or an HTTP-date · never negative",
+        d:{role:"parse(value, now) and parse(value, now, serverDate): RFC 9110's grammar with three liberties (any ASCII case, trimmed SP and HTAB, a disagreeing weekday ignored); a number saturates at 9999-12-31T23:59:59Z, a past date is zero; a failure's message is constant and never echoes the value.",vis:"public · object · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/RetryAfter.kt"]}},
+      {id:"seams",side:"wire",vis:"pub",container:true,x:700,y:56,w:260,h:362,t:"Seams",s:"implement with the opt-in · the defaults need none",
+        d:{role:"What a consumer supplies or replaces: how an answer becomes signals, where a hard window survives a restart, and who hears the events. Each gated port has a supplied default that needs no opt-in and doubles as its worked example.",vis:"public · interfaces · Experimental (implement)",files:["commonMain/kotlin/com/spartanlabs/webtools/http/RateSignalsReader.kt","commonMain/kotlin/com/spartanlabs/webtools/http/BudgetStore.kt","commonMain/kotlin/com/spartanlabs/webtools/http/InMemoryBudgetStore.kt","commonMain/kotlin/com/spartanlabs/webtools/http/BudgetSnapshot.kt","commonMain/kotlin/com/spartanlabs/webtools/http/WindowSnapshot.kt","commonMain/kotlin/com/spartanlabs/webtools/http/BudgetObserver.kt","commonMain/kotlin/com/spartanlabs/webtools/http/BudgetEvent.kt","commonMain/kotlin/com/spartanlabs/webtools/http/PauseSource.kt","commonMain/kotlin/com/spartanlabs/webtools/http/StoreOperation.kt"]}},
+      {id:"reader",side:"wire",vis:"pub",x:716,y:94,w:228,h:40,t:"RateSignalsReader · Standard",s:"a 429 · a 503 with Retry-After",
+        d:{role:"read(response, nowEpochMillis): RateSignals, never throwing for bad input, safe for concurrent calls. Standard: a 429 is throttled, a 503 only when a Retry-After parses; the longest of every Retry-After line, a date measured against the answer's Date when it parses; no window readings.",vis:"public · interface · Experimental (implement); Standard Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/RateSignalsReader.kt"]}},
+      {id:"store",side:"wire",vis:"pub",x:716,y:140,w:228,h:40,t:"BudgetStore · InMemoryBudgetStore",s:"load once · save write-ahead",
+        d:{role:"load() and save(snapshot). An implementation must be cancellable (the budget bounds each call with withTimeoutOrNull, which cannot interrupt a blocked thread) and is last-writer-wins. InMemoryBudgetStore, the default, keeps the last snapshot behind a Mutex and survives nothing.",vis:"public · interface · Experimental (implement); InMemoryBudgetStore Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetStore.kt","commonMain/kotlin/com/spartanlabs/webtools/http/InMemoryBudgetStore.kt"],threads:["a store call"]}},
+      {id:"snapshot",side:"wire",vis:"pub",x:716,y:186,w:228,h:40,t:"BudgetSnapshot · WindowSnapshot",s:"version 1 · no serializer",
+        d:{role:"What a store keeps: the layout version, the stamp, one WindowSnapshot per hard window and period start, and the pause's end. Plain values with public constructors; a store chooses its own encoding.",vis:"public · final classes · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetSnapshot.kt","commonMain/kotlin/com/spartanlabs/webtools/http/WindowSnapshot.kt"]}},
+      {id:"observer",side:"wire",vis:"pub",x:716,y:232,w:228,h:40,t:"BudgetObserver · None",s:"after the lock · the caller's thread",
+        d:{role:"onEvent(event): events of one call in order, of concurrent calls interleaved; called after the lock is released, on the thread of the call that made the event, so it may call back into the budget; it should return quickly. An Exception it throws is logged and never fails a grant; an Error propagates.",vis:"public · interface · Experimental (implement); None Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetObserver.kt"],threads:["the observer's callback"]}},
+      {id:"events",side:"wire",vis:"pub",x:716,y:278,w:228,h:40,t:"BudgetEvent",s:"open root · seven final leaves",
+        d:{role:"Granted, Refused, Paused, HardStop, Reconciled, StoreFailed and Restored, each describing itself; no leaf prints a header value, a body, a credential or a store exception's message.",vis:"public · abstract class · Experimental (subclass); its leaves final",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetEvent.kt"]}},
+      {id:"consts",side:"wire",vis:"pub",x:716,y:324,w:228,h:40,t:"PauseSource · StoreOperation",s:"open constants classes",
+        d:{role:"Which hint set a pause (RetryAfter, ResetIn, Boundary, Snapshot) and which store call failed (Load, Save). Equal by name; may gain constants in a feature release, so a when keeps an else.",vis:"public · final classes · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/PauseSource.kt","commonMain/kotlin/com/spartanlabs/webtools/http/StoreOperation.kt"]}},
+      {id:"storeFail",side:"wire",vis:"int",x:716,y:370,w:228,h:36,t:"BudgetStoreFailure",s:"a timeout · a leaked cancellation",
+        d:{role:"The failures the budget itself reports about a store call, with constant messages; a store's own exception keeps its message, which is never logged.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/BudgetStoreFailure.kt"]}},
+      {id:"fix",side:"client",vis:"pub",container:true,x:700,y:464,w:260,h:124,t:"test fixtures",s:"com.spartanlabs.webtools.http.testing · 2 files",
+        d:{role:"Two fixtures in webtools-http's test-fixtures variant, reached with testFixtures(…) on a consumer's test classpath; each opts in for the seam it implements and adds no dependency.",vis:"public · jvmTestFixtures · Stable Core",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RecordingBudgetObserver.kt","jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FakeBudgetStore.kt"]}},
+      {id:"recObs",side:"client",vis:"pub",x:716,y:502,w:228,h:36,t:"RecordingBudgetObserver",s:"the events in arrival order",
+        d:{role:"A BudgetObserver that records every event it receives, in arrival order, for a test to read.",vis:"public · final class",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RecordingBudgetObserver.kt"]}},
+      {id:"fakeStore",side:"client",vis:"pub",x:716,y:544,w:228,h:36,t:"FakeBudgetStore",s:"failures · delays in virtual time",
+        d:{role:"A scripted BudgetStore: failLoads and failSaves, returned or thrown, for a set number of calls (refused below 1), loadDelay and saveDelay in virtual time, a preloaded initial snapshot and the recorded saves.",vis:"public · final class",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FakeBudgetStore.kt"]}}
+    ]
+  },
+  threads:{
+    "the acquiring coroutine":{side:"server",kind:"the caller's coroutine",daemon:false,created:"by the caller: the budget starts nothing",runs:"acquire: the argument checks, the lock section (the lazy restore, a write-ahead save, the slot search), then a grant, a refusal or a queued waiter; withPermit's block runs here too.",sends:[],note:"A cancelled caller gets its CancellationException, even after close(), and never a permit."},
+    "a waiting call":{side:"server",kind:"the caller's coroutine, suspended",daemon:false,created:"when acquire queues the call",runs:"select on the close latch and the waiter's conflated wake channel, each wait at most one minute, then a step section under the lock that grants, fails or sleeps again.",sends:[],note:"Its own cancellation refunds its reservation and re-plans the calls behind it, under NonCancellable."},
+    "the settling coroutine":{side:"server",kind:"the caller's coroutine",daemon:false,created:"by the caller",runs:"Permit.complete(signals) and release(), utilisation() and flush(); complete and release under NonCancellable, so they take effect from a cancelled coroutine.",sends:[],note:""},
+    "the closing thread":{side:"server",kind:"any thread",daemon:false,created:"by the caller",runs:"close(): completes the latch; no lock, no suspension, never throws.",sends:[],note:"Every waiting call wakes on the latch and returns Closed(\"budget\") on its own coroutine."},
+    "the observer's callback":{side:"wire",kind:"the producing call's thread",daemon:false,created:"after each section that made events",runs:"BudgetObserver.onEvent for each event, and the budget's log line for it, after the lock is released.",sends:[],note:"An Exception it throws is caught and logged; an Error propagates."},
+    "a store call":{side:"wire",kind:"the caller's coroutine",daemon:false,created:"when a restore, a write-ahead save or flush() is due",runs:"BudgetStore.load or save inside the lock section, bounded by storeTimeout.",sends:[],note:"withTimeoutOrNull cannot interrupt a blocked thread: a blocking store moves its blocking call to a dispatcher built for it."}
+  },
+  flows:[
+    {id:"acquire",label:"acquire",kicker:"ADMISSION",runsOn:"the acquiring coroutine",foot:"WindowedCallBudget.acquire, as built: the checks before the lock, then one lock section",
+     controls:[{key:"args",label:"Arguments",def:"ok",options:[["ok","valid"],["bad","cost < 1 or maxWait < 0"]]},
+               {key:"caller",label:"Caller",def:"active",options:[["active","active"],["cancelled","already cancelled"]]},
+               {key:"closed",label:"Budget",def:"open",options:[["open","open"],["closed","closed"]]},
+               {key:"cost",label:"Cost",def:"fits",options:[["fits","fits the lane's capacity"],["big","above it"]]},
+               {key:"slot",label:"Its slot",def:"now",options:[["now","free now"],["within","a wait within maxWait"],["beyond","a wait beyond maxWait"]]},
+               {key:"lane",label:"Its lane",def:"empty",options:[["empty","no waiter"],["some","waiters ahead"],["full","maxQueued waiters"]]}],
+     names:{ok:"acquire(cost, lane, maxWait)",bad:"acquire(0, lane, maxWait)"},
+     nodes:{IN:{c:0,r:0,k:"p",t:["acquire(cost,","lane, maxWait)"]},ARGS:{c:1,r:0,k:"d",t:["cost ≥ 1,","maxWait ≥ 0?"]},IAE:{c:1,r:1,k:"t",lvl:"THROWN",t:["IllegalArgument-","Exception"]},
+            ACT:{c:2,r:0,k:"d",t:["caller","active?"]},CE:{c:2,r:1,k:"t",lvl:"THROWN",t:["Cancellation-","Exception"]},
+            CLS:{c:3,r:0,k:"d",t:["closed?"]},CLOSED:{c:3,r:1,k:"t",lvl:"CLOSED",t:["Closed(\"budget\")","as a value"]},
+            LOCK:{c:4,r:0,k:"p",t:["the lock ·","lazy restore"]},CAP:{c:4,r:1,k:"d",t:["fits the lane's","capacity?"]},RCAP:{c:5,r:1,k:"t",lvl:"WARN",t:["BudgetExhausted ·","CostExceedsLimit"]},
+            PLAN:{c:4,r:2,k:"p",t:["plan the slot behind","the lane's last waiter"]},NOW:{c:4,r:3,k:"d",t:["wait 0 and","no waiter?"]},
+            WAL:{c:5,r:3,k:"p",t:["write-ahead","save, if due"]},GRANT:{c:6,r:3,k:"t",lvl:"DELIVER",t:["Permit ·","Granted"]},
+            CAPW:{c:4,r:4,k:"d",t:["wait within","maxWait?"]},RW:{c:5,r:4,k:"t",lvl:"WARN",t:["BudgetExhausted ·","Window or Paused"]},
+            QF:{c:4,r:5,k:"d",t:["lane below","maxQueued?"]},RQ:{c:5,r:5,k:"t",lvl:"WARN",t:["BudgetExhausted ·","QueueFull"]},
+            Q:{c:4,r:6,k:"t",lvl:"WAITS",t:["queued: reserved,","waits its slot"]}},
+     edges:[["IN","ARGS"],["ARGS","IAE","no"],["ARGS","ACT","yes"],["ACT","CE","no"],["ACT","CLS","yes"],["CLS","CLOSED","yes"],["CLS","LOCK","no"],["LOCK","CAP"],["CAP","RCAP","no"],["CAP","PLAN","yes"],
+            ["PLAN","NOW"],["NOW","WAL","yes"],["WAL","GRANT"],["NOW","CAPW","no"],["CAPW","RW","no"],["CAPW","QF","yes"],["QF","RQ","no"],["QF","Q","yes"]],
+     rules(s){ const p=["IN","ARGS"];
+       if(s.args==="bad"){ p.push("IAE"); return {path:p,outcome:"A cost below 1 or a negative maxWait is a programmer error: IllegalArgumentException is thrown before anything else.",irrelevant:["caller","closed","cost","slot","lane"]}; }
+       p.push("ACT"); if(s.caller==="cancelled"){ p.push("CE"); return {path:p,outcome:"An already-cancelled caller gets its CancellationException, even after close(), and never a permit.",irrelevant:["closed","cost","slot","lane"]}; }
+       p.push("CLS"); if(s.closed==="closed"){ p.push("CLOSED"); return {path:p,outcome:"After close(), acquire returns Result.failure(HttpFailure.Closed(\"budget\")) as a value, charging nothing.",irrelevant:["cost","slot","lane"]}; }
+       p.push("LOCK","CAP"); if(s.cost==="big"){ p.push("RCAP"); return {path:p,outcome:"A cost above the window's limit less the other lanes' reserves can never fit: BudgetExhausted with CostExceedsLimit and an infinite wait, and a Refused event.",irrelevant:["slot","lane"]}; }
+       p.push("PLAN","NOW"); if(s.slot==="now"&&s.lane==="empty"){ p.push("WAL","GRANT"); return {path:p,outcome:"Granted at once: the units are charged now, after a write-ahead save when a hard window's persisted mark is due; the Granted event reaches the observer after the unlock.",irrelevant:[]}; }
+       p.push("CAPW"); if(s.slot==="beyond"){ p.push("RW"); return {path:p,outcome:"The wait the call would need passes maxWait: BudgetExhausted carries that wait, the reason (Window, or Paused while a pause is in force) and the window, charging nothing.",irrelevant:["lane"]}; }
+       p.push("QF"); if(s.lane==="full"){ p.push("RQ"); return {path:p,outcome:"Its lane already has maxQueued waiters: BudgetExhausted with QueueFull.",irrelevant:[]}; }
+       p.push("Q"); return {path:p,outcome:"Queued behind its lane's earlier waiters, first come first served: its slot's units are reserved and the call waits in its own coroutine (the waiting call variant).",irrelevant:[]}; }},
+    {id:"wait",label:"a waiting call",kicker:"ADMISSION",runsOn:"a waiting call",foot:"WindowedCallBudget.awaitSlot and its step section, as built",
+     controls:[{key:"what",label:"What happens",def:"slot",options:[["slot","its slot comes"],["earlier","a refund moves it earlier"],["later","a re-plan pushes it past maxWait"],["step","the wall clock leaves its period"],["close","close() is called"],["cancel","the caller is cancelled"]]}],
+     names:{slot:"its slot comes",earlier:"a refund ahead of it",later:"a re-plan past its cap",step:"a clock step across its period",close:"close()",cancel:"the caller's cancellation"},
+     nodes:{W:{c:0,r:0,k:"p",t:["a queued call ·","its own coroutine"]},SEL:{c:1,r:0,k:"d",t:["latch, wake,","or ≤ 1 min?"]},CAN:{c:1,r:1,k:"t",lvl:"THROWN",t:["refund · re-plan","behind · rethrow"]},
+            SECT:{c:2,r:0,k:"p",t:["the lock: read","both clocks"]},FAIL:{c:3,r:0,k:"d",t:["failed by","a re-plan?"]},RF:{c:3,r:1,k:"t",lvl:"WARN",t:["BudgetExhausted ·","the new wait"]},
+            CLO:{c:4,r:0,k:"d",t:["closed?"]},CLOSED:{c:4,r:1,k:"t",lvl:"CLOSED",t:["Closed(\"budget\") ·","units returned"]},
+            DUE:{c:5,r:0,k:"d",t:["slot reached,","no pause?"]},GRANT:{c:5,r:1,k:"t",lvl:"DELIVER",t:["Permit · Granted","with its wait"]},AGAIN:{c:6,r:0,k:"t",lvl:"WAITS",t:["waits again","for its slot"]}},
+     edges:[["W","SEL"],["SEL","CAN","cancelled"],["SEL","SECT","woken"],["SECT","FAIL"],["FAIL","RF","yes"],["FAIL","CLO","no"],["CLO","CLOSED","yes"],["CLO","DUE","no"],["DUE","GRANT","yes"],["DUE","AGAIN","no"]],
+     rules(s){ const p=["W","SEL"];
+       if(s.what==="cancel"){ p.push("CAN"); return {path:p,outcome:"Its own cancellation: under NonCancellable its reservation is refunded and the waiters behind it are re-planned, then the CancellationException propagates.",irrelevant:[]}; }
+       p.push("SECT","FAIL"); if(s.what==="later"){ p.push("RF"); return {path:p,outcome:"A re-plan by another call (a server reading, a pause, a restore) moved its slot past its maxWait: it fails with BudgetExhausted carrying the new wait, and a Refused event.",irrelevant:[]}; }
+       p.push("CLO"); if(s.what==="close"){ p.push("CLOSED"); return {path:p,outcome:"The latch wins a tie: it returns Closed(\"budget\") as a value and its reservation is returned, with no re-plan, as everyone is leaving.",irrelevant:[]}; }
+       p.push("DUE"); if(s.what==="step"){ p.push("AGAIN"); return {path:p,outcome:"A backward step across a boundary copies the counts it left; a forward jump that left its reserved period behind re-plans it from the new reading, and it waits again.",irrelevant:[]}; }
+       p.push("GRANT"); return {path:p,outcome:s.what==="earlier"?"A refund or a release ahead of it re-planned it earlier and sent its wake signal: it re-reads its plan, finds its slot reached and is granted, after a write-ahead save when one is due.":"Its slot came and no pause is in force: it is granted, after a write-ahead save when one is due, and the Granted event carries its wait.",irrelevant:[]}; }},
+    {id:"settle",label:"a permit's end",kicker:"ADMISSION",runsOn:"the settling coroutine",foot:"WindowedPermit.complete and release, under NonCancellable",
+     controls:[{key:"how",label:"The permit",def:"none",options:[["none","complete(RateSignals.None)"],["reading","complete: a reading above the count"],["retry","complete: throttled, Retry-After"],["nohint","complete: throttled, no hint"],["release","release()"],["again","a second complete or release"]]}],
+     names:{none:"complete()",reading:"complete(signals) with a reading",retry:"complete(signals) throttled with Retry-After",nohint:"complete(signals) throttled with no timing hint",release:"release()",again:"a second settlement"},
+     nodes:{P:{c:0,r:0,k:"p",t:["settle · under","NonCancellable"]},OPEN:{c:1,r:0,k:"d",t:["still open?"]},IGN:{c:1,r:1,k:"t",lvl:"IGNORED",t:["no change:","idempotent"]},
+            KIND:{c:2,r:0,k:"d",t:["complete or","release?"]},REF:{c:2,r:1,k:"p",t:["refund","the units"]},RP:{c:2,r:2,k:"t",lvl:"REPLANNED",t:["every waiter","re-planned"]},
+            SIG:{c:3,r:0,k:"d",t:["a reading","or a throttle?"]},NONE:{c:3,r:1,k:"t",lvl:"SPENT",t:["spent as","charged"]},
+            REC:{c:4,r:0,k:"p",t:["raise the count to","the server's"]},PAUSE:{c:5,r:0,k:"d",t:["throttled?"]},RECD:{c:5,r:1,k:"t",lvl:"DEBUG",t:["Reconciled ·","re-plan"]},
+            PSD:{c:6,r:0,k:"t",lvl:"WARN",t:["Paused ·","re-plan"]}},
+     edges:[["P","OPEN"],["OPEN","IGN","no"],["OPEN","KIND","yes"],["KIND","REF","release"],["REF","RP"],["KIND","SIG","complete"],["SIG","NONE","neither"],["SIG","REC","yes"],["REC","PAUSE"],["PAUSE","RECD","no"],["PAUSE","PSD","yes"]],
+     rules(s){ const p=["P","OPEN"];
+       if(s.how==="again"){ p.push("IGN"); return {path:p,outcome:"complete and release are idempotent: a second call, or a complete after a release, changes nothing.",irrelevant:[]}; }
+       p.push("KIND"); if(s.how==="release"){ p.push("REF","RP"); return {path:p,outcome:"The request was never sent: the units are refunded and every waiter is re-planned, each from the ledger as it then stands.",irrelevant:[]}; }
+       p.push("SIG"); if(s.how==="none"){ p.push("NONE"); return {path:p,outcome:"RateSignals.None changes nothing: the units stay spent as charged at the grant.",irrelevant:[]}; }
+       p.push("REC","PAUSE"); if(s.how==="reading"){ p.push("RECD"); return {path:p,outcome:"A reading raises the window's local count to what the server counted, never lowers it; a Reconciled event, a DEBUG line, and the waiters re-planned.",irrelevant:[]}; }
+       p.push("PSD"); return {path:p,outcome:s.how==="retry"?"A throttle pauses every lane until the longest hint, here Retry-After, capped by maxPause; a later hint never shortens it. A Paused event (RetryAfter), a WARN line, and the waiters re-planned.":"A throttle with no timing hint pauses every lane until the next boundary of the exhausted windows (or of the shortest window) plus the guard, capped by maxPause: a Paused event (Boundary), and the waiters re-planned.",irrelevant:[]}; }}
+  ],
+  sequence:{
+    kicker:"PERMIT",
+    lifelines:[{n:"caller",side:"consumer"},{n:"withPermit",side:"server"},{n:"WindowedCallBudget",side:"server"},{n:"ledger",side:"server"},{n:"transport",side:"external"},{n:"RateSignalsReader",side:"wire"},{n:"BudgetObserver",side:"wire"}],
+    phases:[["ACQUIRE",0,4],["THE CALL",5,8],["SETTLE",9,11],["RETURN",12,14]],
+    steps:[
+      {f:0,t:1,l:"withPermit(1, Lane.Tracker, 5.seconds) { … }",n:"The consumer wraps one call; cost 1 on the Tracker lane, waiting at most five seconds."},
+      {f:1,t:2,l:"acquire(1, Tracker, 5 s)",n:"The checks before the lock, then one lock section; the first acquire restores the store's snapshot once."},
+      {f:2,t:3,l:"plan · grantDirect",n:"The slot is free now and the lane has no waiter: the units are charged at once, after a write-ahead save if a hard window's mark is due."},
+      {f:2,t:6,l:"onEvent(Granted)",n:"Delivered after the lock is released, on this call's thread."},
+      {f:2,t:1,l:"Result.success(permit)",ret:true,n:"A permit charged at the grant: the budget holds no lock or lease for it."},
+      {f:1,t:0,l:"block(permit)",n:"withPermit runs the consumer's block with the permit."},
+      {f:0,t:4,l:"execute(request)",n:"The call itself, through any transport; the budget never sees the request or the response."},
+      {f:4,t:0,l:"429 · Retry-After: 30",ret:true,n:"The provider throttles the call."},
+      {f:0,t:5,l:"read(response, now)",n:"A 429 is throttled; every Retry-After line is parsed and the longest wait taken, a date measured against the answer's Date when it parses."},
+      {f:5,t:0,l:"RateSignals(throttled, 30 s)",ret:true,n:"Never throws for bad input: an unparsable value is no hint."},
+      {f:0,t:2,l:"permit.complete(signals)",n:"Under NonCancellable, inside one lock section."},
+      {f:2,t:3,l:"extendPause · replan",n:"Every lane pauses for 30 s, capped by maxPause, and every waiter is re-planned behind the pause."},
+      {f:2,t:6,l:"onEvent(Paused, RetryAfter)",n:"After the unlock; the budget logs one WARN line with the source and the length."},
+      {f:0,t:1,l:"the block's Result",ret:true,n:"The consumer's block returns its own Result."},
+      {f:1,t:0,l:"Result<T> · complete() a no-op",ret:true,n:"The finally completes the permit as spent, a no-op here as the block already completed it."}
+    ]
+  }
+};
+
+/* =========================================================================
+   C4 — a Structurizr DSL reader for the subset this workspace uses (hierarchical
+   identifiers; person / softwareSystem / container / component with tags; relationships;
+   systemContext / container / component / dynamic views; element styles), and renderers
+   that lay the views out by rank. Structurizr Lite would render the same file.
+   ========================================================================= */
+function parseDsl(src){
+  const M={elements:{},order:[],rels:[],views:[],styles:[]}, stack=[];
+  const TYPE={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+  const tok=l=>{const out=[],re=/"([^"]*)"|(\S+)/g;let m;while((m=re.exec(l)))out.push(m[1]!==undefined?{s:m[1]}:{t:m[2]});return out;};
+  const strs=T=>T.filter(x=>x.s!==undefined).map(x=>x.s);
+  const parentEl=()=>{for(let i=stack.length-1;i>=0;i--) if(stack[i].kind==="element") return stack[i].id; return null;};
+  const inBlock=k=>stack.some(f=>f.kind===k);
+  const splitTags=s=>(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+  src.split(/\r?\n/).forEach(raw=>{
+    let line=raw.trim(); if(!line||line.startsWith("//")) return;
+    if(line==="}"){ stack.pop(); return; }
+    const opens=line.endsWith("{"); if(opens) line=line.slice(0,-1).trim();
+    const T=tok(line); if(!T.length){ if(opens) stack.push({kind:"anon"}); return; }
+    const t0=T[0].t;
+    if(["workspace","model","views","styles"].includes(t0)){ if(opens) stack.push({kind:t0}); return; }
+    if(t0==="!identifiers") return;
+    if(inBlock("styles")){ if(t0==="element"){ const props={}, body=T.slice(2).map(x=>x.t!==undefined?x.t:x.s).filter(x=>x!=="{"&&x!=="}"); for(let i=0;i+1<body.length;i+=2) props[body[i]]=body[i+1]; M.styles.push({tag:T[1].s,props}); } return; }
+    if(inBlock("views")){
+      const cur=stack[stack.length-1];
+      if(cur&&cur.kind==="view"&&cur.view.type==="dynamic"&&T.length>=3&&T[1].t==="->"){ cur.view.steps.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:""}); return; }
+      if(["systemContext","container","component","dynamic"].includes(t0)){ const v={type:t0,scope:T[1].t,key:T[2]?T[2].s:t0,desc:T[3]?T[3].s:"",steps:[]}; M.views.push(v); if(opens) stack.push({kind:"view",view:v}); return; }
+      if(opens) stack.push({kind:"anon"}); return;
+    }
+    if(T.length>=3&&T[1].t==="->"){ M.rels.push({from:T[0].t,to:T[2].t,desc:T[3]?T[3].s:"",tech:T[4]?T[4].s:""}); if(opens) stack.push({kind:"anon"}); return; }
+    if(T.length>=3&&T[1].t==="="&&TYPE[T[2].t]){
+      const type=T[2].t, S=strs(T.slice(3)), parent=parentEl(), id=parent?parent+"."+t0:t0;
+      const el={id,ident:t0,type,name:S[0]||t0,desc:S[1]||"",tech:"",tags:[],parent};
+      if(type==="person"||type==="softwareSystem") el.tags=splitTags(S[2]); else { el.tech=S[2]||""; el.tags=splitTags(S[3]); }
+      el.tags=["Element",TYPE[type],...el.tags];
+      M.elements[id]=el; M.order.push(id);
+      if(opens) stack.push({kind:"element",id}); return;
+    }
+    if(opens) stack.push({kind:"anon"});
+  });
+  return M;
+}
+const C4=parseDsl(document.getElementById("dsl").textContent);
+$("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
+
+const el=id=>C4.elements[id];
+/* Planned, from the data (system/RULES.md §2, "Planned parts"): a part tied to a DSL element — a structure node through MODEL.c4 or its
+   own `part`, a thread, a flow node, a lifeline or a sequence step through `part`, a hand-written element through data-part="<element
+   id>" — is planned while that element carries the Planned tag, so apply-state.js marks it built by editing workspace.dsl alone. A
+   literal kind "planned" or planned:true still draws an untied part dashed. */
+const dslPlanned=id=>!!(id&&el(id)&&el(id).tags.includes("Planned"));
+const isPlanned=x=>!!x&&typeof x==="object"&&(x.planned===true||x.kind==="planned"||dslPlanned(x.part));
+function applyParts(root){ (root||document).querySelectorAll("[data-part]").forEach(e=>e.classList.toggle("planned",dslPlanned(e.dataset.part)));
+  document.querySelectorAll(".thread[data-t]").forEach(e=>{ const t=MODEL.threads[e.dataset.t]; if(t&&t.part) e.classList.toggle("planned",isPlanned(t)); }); }
+applyParts();
+function isWithin(id,scope){ let e=el(id); while(e){ if(e.id===scope) return true; e=el(e.parent); } return false; }
+function topOf(id){ let e=el(id); while(e&&e.parent) e=el(e.parent); return e?e.id:id; }
+function childIn(id,scope){ let e=el(id); while(e){ if(e.parent===scope) return e.id; e=el(e.parent); } return null; }
+function styleFor(e){ const st={background:"#dddddd",color:"#000000",border:"solid",shape:"box",opacity:"100"}; e.tags.forEach(tag=>C4.styles.forEach(s=>{ if(s.tag===tag) Object.assign(st,s.props); })); return st; }
+const TYPE_LABEL={person:"Person",softwareSystem:"Software System",container:"Container",component:"Component"};
+const LEVEL={systemContext:["1","System Context"],container:["2","Containers"],component:["3","Components"],dynamic:["⟲","Dynamic"]};
+const fit=(s,n)=>s.length>n?s.slice(0,n-1)+"…":s;
+function wrap(s,maxChars){ const out=[]; let cur=""; s.split(/\s+/).forEach(w=>{ if((cur+" "+w).trim().length>maxChars){ if(cur) out.push(cur); cur=w; } else cur=(cur+" "+w).trim(); }); if(cur) out.push(cur); return out; }
+function edgePoint(box,tx,ty){ const [x,y,w,h]=box,cx=x+w/2,cy=y+h/2,dx=tx-cx,dy=ty-cy; if(!dx&&!dy) return [cx,cy]; const t=Math.min(Math.abs(w/2/(dx||1e-9)),Math.abs(h/2/(dy||1e-9))); return [cx+dx*t,cy+dy*t]; }
+
+/* Which elements a view shows and how the model's relationships map onto them (Structurizr's "include *" with implied relationships). */
+function resolveView(v){
+  let scoped, map;
+  if(v.type==="systemContext"){ scoped=[v.scope]; map=id=>isWithin(id,v.scope)?v.scope:topOf(id); }
+  else if(v.type==="container"){ scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):topOf(id); }
+  else if(v.type==="component"){ const sys=el(v.scope).parent; scoped=C4.order.filter(id=>el(id).parent===v.scope); map=id=>isWithin(id,v.scope)?(id===v.scope?null:childIn(id,v.scope)):(sys&&isWithin(id,sys)?childIn(id,sys):topOf(id)); }
+  else { const ids=[]; v.steps.forEach(s=>{[s.from,s.to].forEach(x=>{ if(!ids.includes(x)) ids.push(x); });}); return {els:ids,scoped:[],rels:v.steps.map((s,i)=>({a:s.from,b:s.to,desc:s.desc,num:i+1})),boundary:null}; }
+  const els=new Set(scoped), rels=[], seen={};
+  C4.rels.forEach(r=>{ const a=map(r.from), b=map(r.to); if(!a||!b||a===b) return; if(!scoped.includes(a)&&!scoped.includes(b)) return; els.add(a); els.add(b); const k=a+">"+b; if(seen[k]){ seen[k].n++; return; } seen[k]={a,b,desc:r.desc,n:1,dashed:el(r.from).tags.includes("Planned")||el(r.to).tags.includes("Planned")}; rels.push(seen[k]); });
+  const s=el(v.scope);
+  return {els:C4.order.filter(id=>els.has(id)),scoped,rels,boundary:v.type==="systemContext"?null:{label:`${s.name} · ${TYPE_LABEL[s.type]}${s.tech?" · "+s.tech:""}`}};
+}
+
+/* Layout: the scoped elements sit inside a boundary frame in bands (public surface / internals / outside the
+   stack), people outside on the left, other systems outside on the right. Internals are ordered by the mean
+   position of the public elements they touch, so most relationships run straight down. Relationships are
+   routed orthogonally through lanes in the gaps between bands, so no line crosses a card. */
+const bandOf=id=>{ const t=el(id).tags; return t.includes("Planned")||t.includes("Standalone")?2:t.includes("Internal")?1:0; };
+const BAND_NAMES={component:["PUBLIC SURFACE","INTERNALS","OUTSIDE THE STACK · PLANNED"],container:["SYSTEMS","INTERNAL","PLANNED"],systemContext:["","",""]};
+function layoutC4(R,vtype){
+  const W=184,H=118,GX=22,GY=20,PAD=18,LANE=12,LABEL=26;
+  const scoped=R.scoped.filter(id=>R.els.includes(id));
+  const left=R.els.filter(id=>!scoped.includes(id)&&el(id).type==="person");
+  const right=R.els.filter(id=>!scoped.includes(id)&&el(id).type!=="person");
+  const raw=[[],[],[]]; scoped.forEach(id=>raw[bandOf(id)].push(id));
+  const idx0={}; raw[0].forEach((id,i)=>idx0[id]=i);
+  const bary=id=>{ const ns=R.rels.filter(r=>r.a===id||r.b===id).map(r=>r.a===id?r.b:r.a).filter(n=>idx0[n]!==undefined).map(n=>idx0[n]); return ns.length?ns.reduce((s,x)=>s+x,0)/ns.length:99; };
+  raw[1].sort((p,q)=>bary(p)-bary(q)||scoped.indexOf(p)-scoped.indexOf(q));
+  const bands=[],names=[]; raw.forEach((b,i)=>{ if(b.length){ bands.push(b); names.push((BAND_NAMES[vtype]||BAND_NAMES.component)[i]); } });
+  const bandIndex={}; bands.forEach((b,i)=>b.forEach(id=>bandIndex[id]=i));
+  const laneCount=new Array(bands.length+1).fill(0);
+  const plans=R.rels.map(r=>{
+    const ia=bandIndex[r.a], ib=bandIndex[r.b], p={r};
+    if(ia===undefined&&ib===undefined){ p.kind="ext"; p.sides=[]; }
+    else if(ia===undefined){ p.kind="fromExt"; p.region=ib; p.sides=[[r.a,"inner"],[r.b,"top"]]; }
+    else if(ib===undefined){ p.kind="toExt"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"inner"]]; }
+    else if(ia===ib){ p.kind="same"; p.below=ia!==0; p.region=ia===0?0:ia+1; const s=p.below?"bottom":"top"; p.sides=[[r.a,s],[r.b,s]]; }
+    else if(ib===ia+1){ p.kind="down"; p.region=ib; p.sides=[[r.a,"bottom"],[r.b,"top"]]; }
+    else if(ib===ia-1){ p.kind="up"; p.region=ia; p.sides=[[r.a,"top"],[r.b,"bottom"]]; }
+    else { p.kind="around"; p.upward=ib<ia; p.region=p.upward?ia:ia+1; p.region2=ib; p.sides=[[r.a,p.upward?"top":"bottom"],[r.b,"top"]]; }
+    if(p.region!==undefined) p.lane=laneCount[p.region]++;
+    if(p.region2!==undefined) p.lane2=laneCount[p.region2]++;
+    return p;
+  });
+  const regionH=laneCount.map(n=>Math.max(36,n*LANE+22));
+  const innerW=Math.max(W,...bands.map(b=>b.length*W+(b.length-1)*GX))+2*GX;
+  const bx0=PAD+(left.length?W+2*GX:0), pos={}, regionY=[], bandBox=[];
+  let y=PAD+(R.boundary?LABEL:0);
+  bands.forEach((b,i)=>{ regionY[i]=y; y+=regionH[i]; const total=b.length*W+(b.length-1)*GX, x0=bx0+(innerW-total)/2; b.forEach((id,k)=>pos[id]=[x0+k*(W+GX),y,W,H]); bandBox[i]=[y,y+H]; y+=H; });
+  regionY[bands.length]=y; y+=regionH[bands.length];
+  const boundary=R.boundary?{x:bx0,y:PAD,w:innerW,h:y-PAD,label:R.boundary.label}:null;
+  const cy0=bands.length?(bandBox[0][0]+bandBox[0][1])/2:y/2;
+  // Clamp the column's start once, not each card: a column taller than the band row would otherwise pin several cards to PAD, one on top of another.
+  const stack=(ids,x)=>{ const tot=ids.length*H+(ids.length-1)*GY, y0=Math.max(PAD,cy0-tot/2); ids.forEach((id,k)=>pos[id]=[x,y0+k*(H+GY),W,H]); };
+  stack(left,PAD); stack(right,bx0+innerW+2*GX);
+  const width=bx0+innerW+(right.length?2*GX+W:0)+PAD;
+  const height=Math.max(y+PAD,...Object.values(pos).map(p=>p[1]+p[3]+PAD));
+  return {pos,width,height,boundary,regionY,bands,names,bandBox,plans,LANE,bx0,innerW,left,right};
+}
+function drawRoutes(svg,L){
+  const slots={}; L.plans.forEach(p=>p.sides.forEach(([id,side])=>{ const k=id+"|"+side; (slots[k]=slots[k]||{n:0,k:0}).n++; }));
+  const take=(id,side)=>{ const s=slots[id+"|"+side]; const off=(s.k-(s.n-1)/2)*16; s.k++; return off; };
+  const P=L.pos, laneY=(rg,l)=>L.regionY[rg]+12+l*L.LANE;
+  const box=id=>{ const [x,y,w,h]=P[id]; return {x,y,w,h,cx:x+w/2,cy:y+h/2,top:y,bottom:y+h,left:x,right:x+w}; };
+  const innerX=id=>L.left.includes(id)?box(id).right:box(id).left;
+  const turnX=(id,lane)=>L.left.includes(id)?L.bx0-10-(lane%4)*6:L.bx0+L.innerW+10+(lane%4)*6;
+  L.plans.forEach(p=>{
+    const r=p.r, A=box(r.a), B=box(r.b); let d, seg;
+    switch(p.kind){
+      case "ext": { const [ax,ay]=edgePoint(P[r.a],B.cx,B.cy),[bx,by]=edgePoint(P[r.b],A.cx,A.cy); d=`M${ax},${ay} L${bx},${by}`; seg=[(ax+bx)/2,(ay+by)/2]; break; }
+      case "same": { const ly=laneY(p.region,p.lane), s=p.below?"bottom":"top", ax=A.cx+take(r.a,s), bx=B.cx+take(r.b,s), ya=p.below?A.bottom:A.top, yb=p.below?B.bottom:B.top; d=`M${ax},${ya} L${ax},${ly} L${bx},${ly} L${bx},${yb}`; seg=[(ax+bx)/2,ly]; break; }
+      case "down": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"bottom"), bx=B.cx+take(r.b,"top"); d=`M${ax},${A.bottom} L${ax},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(ax+bx)/2,ly]; break; }
+      case "up": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), bx=B.cx+take(r.b,"bottom"); d=`M${ax},${A.top} L${ax},${ly} L${bx},${ly} L${bx},${B.bottom}`; seg=[(ax+bx)/2,ly]; break; }
+      case "fromExt": { const ly=laneY(p.region,p.lane), ay=A.cy+take(r.a,"inner"), xi=innerX(r.a), xt=turnX(r.a,p.lane), bx=B.cx+take(r.b,"top"); d=`M${xi},${ay} L${xt},${ay} L${xt},${ly} L${bx},${ly} L${bx},${B.top}`; seg=[(xt+bx)/2,ly]; break; }
+      case "toExt": { const ly=laneY(p.region,p.lane), ax=A.cx+take(r.a,"top"), by=B.cy+take(r.b,"inner"), xt=turnX(r.b,p.lane), xi=innerX(r.b); d=`M${ax},${A.top} L${ax},${ly} L${xt},${ly} L${xt},${by} L${xi},${by}`; seg=[(ax+xt)/2,ly]; break; }
+      case "around": { const l1=laneY(p.region,p.lane), l2=laneY(p.region2,p.lane2), ya=p.upward?A.top:A.bottom, ax=A.cx+take(r.a,p.upward?"top":"bottom"), bx=B.cx+take(r.b,"top"), xs=L.bx0+L.innerW-10; d=`M${ax},${ya} L${ax},${l1} L${xs},${l1} L${xs},${l2} L${bx},${l2} L${bx},${B.top}`; seg=[(bx+xs)/2,l2]; break; }
+    }
+    const g=mk("g",{class:"c4rel"+(r.dashed?" dashed":""),"data-a":r.a,"data-b":r.b},svg);
+    mk("path",{d,"marker-end":"url(#c4arr)"},g);
+    const label=fit(r.desc.split(/[—;:]/)[0].trim(),30), lw=label.length*5.1+12;
+    mk("rect",{class:"lbg",x:seg[0]-lw/2,y:seg[1]-7,width:lw,height:13,rx:6.5},g);
+    txt(g,seg[0],seg[1]+3,label,"","middle");
+  });
+}
+function drawFrame(svg,L){
+  if(L.boundary){ const b=L.boundary; mk("rect",{class:"c4bound",x:b.x,y:b.y,width:b.w,height:b.h,rx:10},svg); const g=mk("g",{class:"c4boundl"},svg); const tw=b.label.length*6.3+18; mk("rect",{x:b.x+12,y:b.y-10,width:tw,height:20,rx:10},g); txt(g,b.x+21,b.y+4,b.label,""); }
+  if(L.bands.length>1) L.bands.forEach((b,i)=>txt(svg,L.bx0+14,L.bandBox[i][0]-6,L.names[i],"c4band"));
+}
+/* One element card: header band in the DSL style's colour with a type glyph (UML component, container, system, person), body in the board's own ink. */
+function glyph(g,type,x,y,color){
+  if(type==="person"){ mk("circle",{cx:x+7,cy:y+4,r:3.2,fill:color},g); mk("path",{d:`M${x+1},${y+14} a6,6 0 0 1 12,0 z`,fill:color},g); }
+  else if(type==="softwareSystem"){ mk("rect",{x:x+1,y:y+1,width:9,height:9,rx:1.5,fill:color,opacity:.55},g); mk("rect",{x:x+4,y:y+4,width:9,height:9,rx:1.5,fill:color},g); }
+  else if(type==="container"){ mk("rect",{x:x+1,y:y+3,width:12,height:10,rx:2,fill:color},g); mk("rect",{x:x+1,y:y+1,width:6,height:3,rx:1,fill:color},g); }
+  else { mk("rect",{x:x+4,y:y+1,width:9,height:12,rx:1.5,fill:color},g); mk("rect",{x:x+1,y:y+3.5,width:6,height:2.5,fill:color},g); mk("rect",{x:x+1,y:y+8,width:6,height:2.5,fill:color},g); }
+}
+function cardEvents(g,id){
+  const go=()=>selectC4(id);
+  g.addEventListener("click",go); g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); go(); } });
+  g.addEventListener("mouseenter",()=>document.querySelectorAll("#svg-c4 .c4rel").forEach(x=>x.classList.toggle("hl",x.dataset.a===id||x.dataset.b===id)));
+  g.addEventListener("mouseleave",()=>document.querySelectorAll("#svg-c4 .c4rel.hl").forEach(x=>x.classList.remove("hl")));
+}
+function drawCard(svg,id,box){
+  const e=el(id), st=styleFor(e), [x,y,w,h]=box, g=mk("g",{class:"c4el"+(e.tags.includes("Planned")?" planned":""),tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
+  const dash=st.border==="dashed"?"6 4":st.border==="dotted"?"2 3":"none";
+  mk("rect",{class:"card",x,y,width:w,height:h,rx:7,"stroke-dasharray":dash},g);
+  mk("path",{class:"hdr",d:`M${x+7},${y} H${x+w-7} a7,7 0 0 1 7,7 V${y+30} H${x} V${y+7} a7,7 0 0 1 7,-7 Z`,fill:st.background},g);
+  glyph(g,e.type,x+10,y+8,st.color);
+  const name=mk("text",{x:x+30,y:y+20,class:"n",fill:st.color},g); name.textContent=fit(e.name,24);
+  txt(g,x+10,y+46,fit(`[${TYPE_LABEL[e.type]}${e.tech?" · "+e.tech:""}]`,38),"m");
+  const room=Math.floor((h-60-16)/12), lines=wrap(e.desc,38).slice(0,Math.max(0,room)); if(lines.length) txt(g,x+10,y+60,lines,"d",null,12);
+  const tags=e.tags.slice(2); if(tags.length) txt(g,x+10,y+h-7,fit(tags.join(" · "),40),"tg");
+  cardEvents(g,id);
+}
+/* The dynamic view is a sequence, so it is drawn as one: the elements as lifelines in order of first appearance, the steps as numbered messages. */
+function renderDynamic(R,svg){
+  const cols=R.els, X=i=>112+i*150, Y0=98, DY=44, H=Y0+R.rels.length*DY+14, W=112+(cols.length-1)*150+112;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  cols.forEach((id,i)=>{ const x=X(i); mk("line",{x1:x,y1:68,x2:x,y2:H-6,class:"c4life"+(el(id).tags.includes("Planned")?" planned":"")},svg); });
+  R.rels.forEach(r=>{
+    const i=cols.indexOf(r.a), j=cols.indexOf(r.b), y=Y0+(r.num-1)*DY, a=X(i), b=X(j), g=mk("g",{class:"c4rel"+(el(r.a).tags.includes("Planned")||el(r.b).tags.includes("Planned")?" planned":""),"data-a":r.a,"data-b":r.b,"data-num":r.num},svg);
+    if(i===j){ mk("path",{d:`M${a},${y-10} L${a+34},${y-10} L${a+34},${y+8} L${a+2},${y+8}`,"marker-end":"url(#c4arr)"},g); txt(g,a+42,y+2,fit(r.desc,40),""); }
+    else { const dir=b>a?1:-1; mk("path",{d:`M${a},${y} L${b-dir*3},${y}`,"marker-end":"url(#c4arr)"},g); const label=fit(r.desc.split(/[—;]/)[0].trim(),44), mx=(a+b)/2, lw=label.length*5.2+12; mk("rect",{class:"lbg",x:mx-lw/2,y:y-18,width:lw,height:14,rx:7},g); txt(g,mx,y-8,label,"","middle"); }
+    const nb=mk("g",{class:"num"},g); mk("circle",{cx:Math.min(a,b)-13,cy:y,r:9},nb); txt(nb,Math.min(a,b)-13,y+3.5,String(r.num),"","middle");
+    g.style.cursor="pointer"; g.addEventListener("click",()=>selectC4Step(r.num));
+  });
+  cols.forEach((id,i)=>{ const e=el(id), st=styleFor(e), x=X(i), g=mk("g",{class:"c4el"+(e.tags.includes("Planned")?" planned":""),tabindex:0,role:"button","data-id":id,"aria-label":e.name,opacity:(+st.opacity||100)/100},svg);
+    mk("rect",{class:"card",x:x-66,y:14,width:132,height:50,rx:6},g);
+    mk("path",{class:"hdr",d:`M${x-60},14 H${x+60} a6,6 0 0 1 6,6 V40 H${x-66} V20 a6,6 0 0 1 6,-6 Z`,fill:st.background},g);
+    glyph(g,e.type,x-60,20,st.color);
+    const n=mk("text",{x:x-42,y:32,class:"n",fill:st.color},g); n.textContent=fit(e.name,15);
+    txt(g,x,56,fit(`[${TYPE_LABEL[e.type]}]`,22),"m","middle");
+    cardEvents(g,id); });
+  return W;
+}
+
+let c4View=null, c4Sel=null, c4Zoom="fit";
+/* fit: the whole view scaled into the panel; 1:1: natural size, scrolling sideways inside the canvas. */
+function applyZoom(){ const svg=$("#svg-c4"); svg.style.width = c4Zoom==="fit" ? "100%" : (c4View&&c4View.width ? c4View.width+"px" : "100%"); document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.z===c4Zoom))); }
+/* The C4 legend, drawn with each view (GUIDANCE.md §2): one swatch per DSL element style this view draws (element kinds, External,
+   Internal, Standalone, Planned), then the line encodings it draws: the planned arrow and the boundary frame only where they are. */
+function c4Key(R){
+  $("#c4-key").innerHTML=C4.styles.filter(s=>s.props.background&&R.els.some(id=>el(id).tags.includes(s.tag))).map(s=>`<span><i${s.tag==="Planned"?' class="pln"':""} style="background:${esc(s.props.background)};border-style:${esc(s.props.border||"solid")};opacity:${(+s.props.opacity||100)/100}"></i>${esc(s.tag)}</span>`).join("")+`<span><i class="arrow"></i>relationship, labelled with its DSL description</span>`+(document.querySelector("#svg-c4 .c4rel.dashed, #svg-c4 .c4rel.planned")?`<span><i class="arrow dashed"></i>to or from a Planned element</span>`:"")+(document.querySelector("#svg-c4 .c4bound")?`<span><i class="frame"></i>boundary: the view's scope</span>`:"");
+}
+function renderC4(vi){
+  const v=C4.views[vi], R=resolveView(v), svg=$("#svg-c4"); c4View={v,R}; c4Sel=null; svg.innerHTML="";
+  const d=mk("defs",{},svg); const m=mk("marker",{id:"c4arr",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"8",markerHeight:"8",orient:"auto-start-reverse"},d); mk("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--rel)"},m);
+  const s=el(v.scope), [lv,lname]=LEVEL[v.type];
+  $("#c4-head").innerHTML=`<span class="lvl">LEVEL ${lv} · ${lname.toUpperCase()}</span><span class="ttl">${esc(s.name)} — ${esc(v.key)}</span><span class="desc">${esc(v.desc||"")}</span><span class="zoom" role="group" aria-label="Zoom"><button data-z="fit">fit</button><button data-z="1">1:1</button></span>`;
+  document.querySelectorAll("#c4-head .zoom button").forEach(b=>b.addEventListener("click",()=>{ c4Zoom=b.dataset.z; applyZoom(); }));
+  if(v.type==="dynamic") c4View.width=renderDynamic(R,svg);
+  else { const L=layoutC4(R,v.type); c4View.width=L.width; svg.setAttribute("viewBox",`0 0 ${L.width} ${L.height}`); drawFrame(svg,L); drawRoutes(svg,L); R.els.forEach(id=>drawCard(svg,id,L.pos[id])); }
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===String(vi))));
+  $("#dsl-view").hidden=true; $("#c4-canvas").hidden=false; $("#c4-head").hidden=false; $("#c4-key").hidden=false;
+  c4Key(R); applyZoom(); inspectC4();
+}
+/* The inspector for what the C4 tab has on screen: the source, else the selected element or dynamic step, else the view itself. */
+function inspectC4(){
+  if(!$("#dsl-view").hidden) return showDsl();
+  const {v,R}=c4View, [lv,lname]=LEVEL[v.type], sel=$("#svg-c4 .c4el.sel"), cur=$("#svg-c4 .c4rel.cur");
+  if(sel) selectC4(sel.dataset.id); else if(cur) selectC4Step(+cur.dataset.num); else if(v.type==="dynamic") c4StepList();
+  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${R.els.length} elements · ${R.rels.length} relationships · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
+}
+function selectC4(id){
+  const e=el(id); c4Sel=id;
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.toggle("sel",g.dataset.id===id); g.classList.remove("dim"); });
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ g.classList.remove("cur"); g.classList.toggle("dim",g.dataset.a!==id&&g.dataset.b!==id); });
+  const out=C4.rels.filter(r=>r.from===id), inn=C4.rels.filter(r=>r.to===id);
+  const mapNode=Object.entries(MODEL.c4).filter(([,c])=>c===id).map(([n])=>n);
+  let html=`<div class="kicker">C4 ELEMENT · ${TYPE_LABEL[e.type].toUpperCase()}</div><div class="name">${esc(e.name)}</div><div class="vis">${esc(e.tech||"")}</div><p>${esc(e.desc)}</p><dl>`;
+  html+=`<dt>Tags</dt><dd>${e.tags.map(t=>`<span class="tchip">${esc(t)}</span>`).join("")}</dd>`;
+  html+=`<dt>Identifier</dt><dd><code>${e.id}</code></dd>`;
+  if(out.length) html+=`<dt>Uses</dt><dd>${out.map(r=>`→ <b>${esc(el(r.to).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(inn.length) html+=`<dt>Used by</dt><dd>${inn.map(r=>`← <b>${esc(el(r.from).name)}</b> — ${esc(r.desc)}`).join("<br>")}</dd>`;
+  if(mapNode.length) html+=`<dt>On the component map</dt><dd><button class="linkbtn" data-node="${mapNode[0]}">${esc(MODEL.structure.nodes.find(n=>n.id===mapNode[0]).t)} → open in Structure</button></dd>`;
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-node]"); if(b) b.addEventListener("click",()=>{ show("t-structure"); selectNode(b.dataset.node); });
+}
+function c4StepList(){
+  const {v}=c4View;
+  inspect(`<div class="kicker">C4 · DYNAMIC VIEW</div><div class="name">${esc(v.key)}</div><div class="vis">${v.steps.length} numbered steps · click one</div><p>${esc(v.desc)}</p><ol class="steps-list" id="c4steps">${v.steps.map((s,i)=>`<li data-step="${i+1}"><b>${i+1}</b><span>${esc(el(s.from).name)} → ${esc(el(s.to).name)}</span></li>`).join("")}</ol>`);
+  document.querySelectorAll("#c4steps li").forEach(li=>li.addEventListener("click",()=>selectC4Step(+li.dataset.step)));
+}
+function selectC4Step(n){
+  const {v}=c4View, s=v.steps[n-1];
+  document.querySelectorAll("#svg-c4 .c4rel").forEach(g=>{ const on=+g.dataset.num===n; g.classList.toggle("cur",on); g.classList.toggle("dim",!on); });
+  document.querySelectorAll("#svg-c4 .c4el").forEach(g=>{ g.classList.remove("sel"); g.classList.toggle("dim",g.dataset.id!==s.from&&g.dataset.id!==s.to); });
+  if(!document.getElementById("c4steps")) c4StepList();
+  document.querySelectorAll("#c4steps li").forEach(li=>li.classList.toggle("on",+li.dataset.step===n));
+  const old=document.getElementById("c4stepnote"); if(old) old.remove();
+  const p=document.createElement("p"); p.id="c4stepnote"; p.innerHTML=`<b>${n}.</b> ${esc(el(s.from).name)} → ${esc(el(s.to).name)}: ${esc(s.desc)}`; $("#insp-body").appendChild(p);
+}
+function showDsl(){
+  document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
+  $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
+  if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
+}
+(function buildLadderAndKey(){
+  const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
+  C4.views.forEach((v,i)=>{ const b=document.createElement("button"); const isLevel=v.type!=="dynamic"; b.className="rung"+(isLevel?" lvl":" sep")+(isLevel&&levels[levels.length-1]===v?" last":""); b.dataset.v=String(i); b.setAttribute("aria-pressed","false"); const [lv,nm]=LEVEL[v.type]; b.innerHTML=`<span class="lv">${lv}</span><span class="nm">${nm}</span><span class="sc">${esc(v.type==="dynamic"?v.key:el(v.scope).name)}</span>`; b.addEventListener("click",()=>renderC4(i)); host.appendChild(b); });
+  const d=document.createElement("button"); d.className="rung sep"; d.dataset.v="dsl"; d.setAttribute("aria-pressed","false"); d.innerHTML=`<span class="lv">{ }</span><span class="nm">Source</span><span class="sc">workspace.dsl</span>`; d.addEventListener("click",showDsl); host.appendChild(d);
+})();
+function openC4(elementId){ show("t-c4"); const vi=C4.views.findIndex(v=>v.type==="component"&&isWithin(elementId,v.scope)); renderC4(vi>=0?vi:0); selectC4(elementId); }
+
+/* ---------- Structure ---------- */
+function renderStructure(){
+  const svg=$("#svg-structure"); if(svg.dataset.done) return; svg.dataset.done="1";
+  /* the canvas: 1000 wide, its height recorded on the board (MODEL.structure.h: 612 by default, at most 812; dashboards-skill/35) */
+  const SH=Math.min(812,Math.max(200,Number(MODEL.structure.h)||612)); svg.setAttribute("viewBox",`0 0 1000 ${SH}`);
+  /* a neutral band behind a lane (the wire between two sides, say), only where MODEL.structure.band asks for one: [x, y, w, h] */
+  const band=MODEL.structure.band; if(Array.isArray(band)&&band.length===4) mk("rect",{x:band[0],y:band[1],width:band[2],height:band[3],rx:6,class:"band"},svg);
+  MODEL.structure.lanes.forEach(([l,x,y,a])=>txt(svg,x,y,l,"lane",a));
+  MODEL.structure.nodes.forEach(n=>{
+    const pl=isPlanned(n)||dslPlanned(MODEL.c4[n.id]);
+    const g=mk("g",{class:`node ${n.side} ${n.vis}${n.container?" container":""}${n.chip?" chip":""}${n.kind&&n.kind!=="planned"?" "+n.kind:""}${pl?" planned":""}`,tabindex:0,role:"button","data-id":n.id,"aria-label":n.t},svg);
+    mk("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:n.chip?17:5},g);
+    const subs=Array.isArray(n.s)?n.s:[n.s];
+    if(n.chip){ txt(g,n.x+n.w/2,n.y+14,n.t,"t","middle"); txt(g,n.x+n.w/2,n.y+26,subs,"s","middle"); }
+    else if(n.container){ txt(g,n.x+10,n.y+18,n.t,"t"); txt(g,n.x+10,n.y+32,subs,"s"); }
+    else { txt(g,n.x+8,n.y+16,n.t,"t"); txt(g,n.x+8,n.y+29,subs,"s",null,11); }
+    const go=()=>selectNode(n.id);
+    g.addEventListener("click",go);
+    g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
+  });
+  MODEL.structure.notes.forEach(nt=>txt(svg,nt.x,nt.y,nt.lines,"note",null,13));
+}
+function selectNode(id){
+  const n=MODEL.structure.nodes.find(x=>x.id===id); if(!n) return;
+  document.querySelectorAll("#svg-structure .node").forEach(g=>g.classList.toggle("sel",g.dataset.id===id));
+  const d=n.d||{}; const sideName=(MODEL.sides||{})[n.side]||n.side||"";
+  let html=`<div class="kicker">${n.chip?"DATAGRAM TAG":"COMPONENT"} · ${sideName.toUpperCase()}</div><div class="name">${esc(n.t)}</div><div class="vis">${esc(d.vis||"")}</div><p>${esc(d.role||"")}</p><dl>`;
+  if(d.files&&d.files.length) html+=`<dt>Source</dt><dd>${d.files.map(flink).join("<br>")}</dd>`;
+  if(d.threads&&d.threads.length) html+=`<dt>Runs on</dt><dd>${d.threads.map(t=>`<span class="tchip ${MODEL.threads[t].side}">${t}</span>`).join("")}</dd>`;
+  const c4id=MODEL.c4[id]; if(c4id&&el(c4id)){ const e=el(c4id); html+=`<dt>In the C4 model</dt><dd><button class="linkbtn" data-c4="${c4id}">${esc(e.name)} · ${e.tags.slice(2).map(esc).join(", ")||"component"} → open</button></dd>`; }
+  inspect(html+"</dl>");
+  const b=$("#insp-body .linkbtn[data-c4]"); if(b) b.addEventListener("click",()=>openC4(b.dataset.c4));
+}
+
+/* ---------- Threads ---------- */
+function selectThread(id){
+  const t=MODEL.threads[id]; if(!t) return;
+  document.querySelectorAll(".thread").forEach(x=>x.classList.toggle("sel",x.dataset.t===id));
+  let html=`<div class="kicker">${esc((t.kind||"thread").toUpperCase())} · ${esc(((MODEL.sides||{})[t.side]||t.side).toUpperCase())}${t.daemon===false?"":" · DAEMON"}</div><div class="name">${id}</div><div class="vis">created ${esc(t.created)}</div><p>${esc(t.runs)}</p><dl>`;
+  if(t.sends.length) html+=`<dt>Puts on the wire</dt><dd>${t.sends.map(esc).join("<br>")}</dd>`;
+  if(t.note) html+=`<dt>Note</dt><dd>${esc(t.note)}</dd>`;
+  inspect(html+"</dl>");
+}
+document.querySelectorAll(".thread").forEach(x=>{ x.addEventListener("click",()=>selectThread(x.dataset.t)); x.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectThread(x.dataset.t); } }); });
+
+/* ---------- Decision path (MODEL.flows) ----------
+   Each flow variant carries its own controls, nodes, edges and a rules(state) function; the board draws the
+   grid, builds the controls, and lights the path the rules return. Nothing here is specific to one system. */
+const CW=138,CH=70,NW=118,NH=50,X0=12,Y0=12;
+const fx=n=>X0+n.c*CW, fy=n=>Y0+n.r*CH;
+// An end's stripe is status-coloured by its level, and always drawn with the level's name beside it.
+const lvlCol=l=>l==="DELIVER"?"var(--good)":l==="WARN"?"var(--serious)":"var(--muted)";
+const flowState={}; let flowVariant=MODEL.flows[0].id;
+const flowOf=()=>MODEL.flows.find(v=>v.id===flowVariant);
+function flowStateFor(v){ if(!flowState[v.id]){ flowState[v.id]={}; v.controls.forEach(c=>flowState[v.id][c.key]=c.def); } return flowState[v.id]; }
+function seg(label,id,options,current){ return `<label>${esc(label)} <span class="seg" id="${id}">${options.map(([v,l])=>`<button data-v="${esc(v)}" aria-pressed="${String(v===current)}">${esc(l)}</button>`).join("")}</span></label>`; }
+function buildFlowControls(){
+  const v=flowOf(), s=flowStateFor(v), host=$("#flow-ctl");
+  host.innerHTML=(MODEL.flows.length>1?seg("Variant","seg-variant",MODEL.flows.map(f=>[f.id,f.label]),v.id):"")+v.controls.map(c=>seg(c.label,"seg-"+c.key,c.options,s[c.key])).join("");
+  if(MODEL.flows.length>1) document.querySelectorAll("#seg-variant button").forEach(b=>b.addEventListener("click",()=>{ flowVariant=b.dataset.v; renderFlow(); }));
+  v.controls.forEach(c=>document.querySelectorAll("#seg-"+c.key+" button").forEach(b=>b.addEventListener("click",()=>{ s[c.key]=b.dataset.v; document.querySelectorAll("#seg-"+c.key+" button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); highlightFlow(); })));
+}
+function renderFlow(){
+  const F=flowOf(), svg=$("#svg-flow"); svg.innerHTML=""; buildFlowControls();
+  arrowDefs(svg,"farr","var(--line)");
+  let maxC=0,maxR=0; Object.values(F.nodes).forEach(n=>{ maxC=Math.max(maxC,n.c); maxR=Math.max(maxR,n.r); });
+  svg.setAttribute("viewBox",`0 0 ${X0*2+(maxC+1)*CW} ${Y0+(maxR+1)*CH+22}`);
+  F.edges.forEach(([a,b,label])=>{
+    const A=F.nodes[a],B=F.nodes[b]; let d, lx, ly, anchor="start";
+    if(A.r===B.r){ d=`M${fx(A)+NW},${fy(A)+NH/2} L${fx(B)},${fy(B)+NH/2}`; lx=(fx(A)+NW+fx(B))/2; ly=fy(A)+NH/2-5; anchor="middle"; }
+    else if(A.c===B.c){ d=`M${fx(A)+NW/2},${fy(A)+NH} L${fx(B)+NW/2},${fy(B)}`; lx=fx(A)+NW/2+6; ly=(fy(A)+NH+fy(B))/2+3; }
+    else { const tx=fx(A)+NW+10, ty=fy(B)+NH/2; d=`M${fx(A)+NW},${fy(A)+NH/2} L${tx},${fy(A)+NH/2} L${tx},${ty} L${fx(B)},${ty}`; lx=tx+4; ly=ty-5; }
+    mk("path",{d,class:"fedge"+(isPlanned(A)||isPlanned(B)?" planned":""),"marker-end":"url(#farr)","data-e":a+">"+b},svg);
+    if(label){ const t=txt(svg,lx,ly,label,"flabel",anchor); t.dataset.e=a+">"+b; }
+  });
+  Object.entries(F.nodes).forEach(([id,n])=>{
+    const x=fx(n),y=fy(n), g=mk("g",{class:"fnode "+n.k+(isPlanned(n)?" planned":""),"data-id":id},svg);
+    if(n.k==="d") mk("polygon",{points:`${x+12},${y} ${x+NW-12},${y} ${x+NW},${y+NH/2} ${x+NW-12},${y+NH} ${x+12},${y+NH} ${x},${y+NH/2}`},g);
+    else mk("rect",{x,y,width:NW,height:NH,rx:n.k==="t"?3:6},g);
+    // The stripe's colour goes in style, not the fill attribute: .fnode.t rect would otherwise repaint it surface-grey.
+    if(n.k==="t"){ mk("rect",{x,y,width:4,height:NH,rx:1,class:"stripe",style:`fill:${lvlCol(n.lvl)}`},g); if(n.lvl) txt(g,x+NW-6,y+10,n.lvl,"lvl","end"); }
+    txt(g,x+NW/2+(n.k==="t"?2:0),y+(n.t.length>1?21:28),n.t,"","middle",12);
+  });
+  if(F.foot) txt(svg,X0,Y0+(maxR+1)*CH+12,F.foot,"flabel");
+  flowKey(F);
+  highlightFlow();
+}
+/* The legend for the flow on screen: its shapes, the outcome levels its ends use (grouped by stripe colour), lit and faded, planned. */
+function flowKey(F){
+  const ends=new Map(); Object.values(F.nodes).filter(n=>n.k==="t").forEach(n=>{ const c=lvlCol(n.lvl), l=ends.get(c)||[]; if(n.lvl&&!l.includes(n.lvl)) l.push(n.lvl); ends.set(c,l); });
+  $("#flow-key").innerHTML=`<span><i class="hex"></i>decision</span><span><i></i>step</span>`+[...ends].map(([c,l])=>`<span><i class="end" style="border-left-color:${c}"></i>ends · ${esc(l.join(" · ")||"outcome")}</span>`).join("")+`<span><i class="ln on"></i>the path these inputs take</span><span><i class="ln off"></i>not taken</span><span><i class="pln"></i>planned, not built</span>`;
+}
+function highlightFlow(){
+  const F=flowOf(), s=flowStateFor(F), res=F.rules(s), set=new Set(res.path), svg=$("#svg-flow"), irr=new Set(res.irrelevant||[]);
+  svg.querySelectorAll(".fnode").forEach(g=>{ const on=set.has(g.dataset.id); g.classList.toggle("on",on); g.classList.toggle("off",!on); });
+  const onEdges=new Set(); for(let i=0;i<res.path.length-1;i++) onEdges.add(res.path[i]+">"+res.path[i+1]);
+  svg.querySelectorAll(".fedge,.flabel").forEach(x=>{ if(!x.dataset.e) return; const on=onEdges.has(x.dataset.e); x.classList.toggle("on",on); x.classList.toggle("off",!on); if(x.classList.contains("fedge")) x.setAttribute("marker-end",on?"url(#farr-on)":"url(#farr)"); });
+  const first=F.controls[0], title=F.names&&F.names[s[first.key]] ? F.names[s[first.key]] : (first.options.find(o=>o[0]===s[first.key])||[,""])[1];
+  const facts=F.controls.slice(1).filter(c=>!irr.has(c.key)).map(c=>`${c.label.toLowerCase()} ${(c.options.find(o=>o[0]===s[c.key])||[,""])[1]}`);
+  $("#outcome").innerHTML=`<code>${esc(title)}</code>${facts.map(f=>" · "+esc(f)).join("")} → ${esc(res.outcome)}`;
+  inspect(`<div class="kicker">${esc(F.kicker||"PATH")} · ${esc(F.label.toUpperCase())}</div><div class="name">${esc(title)}</div><div class="vis">${F.runsOn?"on "+esc(F.runsOn):""}</div><p>${esc(res.outcome)}</p><dl><dt>Path</dt><dd>${res.path.join(" → ")}</dd></dl>`);
+  F.controls.forEach(c=>document.querySelectorAll("#seg-"+c.key+" button").forEach(b=>b.setAttribute("aria-disabled",String(irr.has(c.key)))));
+}
+
+/* ---------- Sequence ---------- */
+const seq={cur:0,timer:null};
+const lane=l=>typeof l==="string"?{n:l}:l;
+function renderSeq(){
+  const svg=$("#svg-seq"); if(svg.dataset.done) return; svg.dataset.done="1";
+  const S=MODEL.sequence, LX=i=>80+i*140, Y0=70, DY=40, H=Y0+S.steps.length*DY+10;
+  svg.setAttribute("viewBox",`0 0 1000 ${H}`);
+  arrowDefs(svg,"sarr2","var(--ink-2)");
+  S.phases.forEach(([label,a,b])=>{ const g=mk("g",{class:"phase"},svg); const y=Y0+a*DY-24, h=(b-a+1)*DY; mk("rect",{x:4,y,width:992,height:h,rx:4},g); txt(g,990,y+11,label,"","end"); });
+  S.lifelines.map(lane).forEach((l,i)=>{ mk("line",{x1:LX(i),y1:40,x2:LX(i),y2:H-4,class:"life"+(isPlanned(l)?" planned":"")},svg); const g=mk("g",{class:"lh"+(l.side?" "+l.side:"")+(isPlanned(l)?" planned":"")},svg); mk("rect",{x:LX(i)-64,y:8,width:128,height:28,rx:4},g); txt(g,LX(i),26,l.n,"","middle"); });
+  S.steps.forEach((s,i)=>{
+    const y=Y0+i*DY, g=mk("g",{class:"msg"+(s.ret?" ret":"")+(isPlanned(s)?" planned":""),"data-i":i,tabindex:0,role:"button","aria-label":`step ${i+1}: ${s.l}`},svg);
+    if(s.self){ const x=LX(s.f); mk("path",{d:`M${x},${y-10} L${x+34},${y-10} L${x+34},${y+8} L${x+2},${y+8}`,"marker-end":"url(#sarr2)"},g); txt(g,x+42,y+2,s.l,""); txt(g,x+42,y-8,`${i+1}`,"num"); }
+    else { const a=LX(s.f), b=LX(s.t), dir=b>a?1:-1; mk("line",{x1:a,y1:y,x2:b-dir*2,y2:y,"marker-end":s.ret?"url(#sarr2-open)":"url(#sarr2)"},g); const mx=(a+b)/2, w=s.l.length*5.3+10; mk("rect",{class:"lbg",x:mx-w/2,y:y-17,width:w,height:14,rx:2},g); txt(g,mx,y-6,s.l,"","middle"); txt(g,Math.min(a,b)-8,y+3,`${i+1}`,"num","end"); }
+    g.addEventListener("click",()=>gotoStep(i)); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); gotoStep(i); } });
+  });
+  seqKey(S);
+  gotoStep(0);
+}
+/* The legend for the sequence: the lifeline owners it shows (each in its side's hue), then the line encodings and planned. */
+function seqKey(S){
+  const sw={server:"pub srv",client:"pub cli",wire:"pub wir",consumer:"con",external:"ext"}, sides=[...new Set(S.lifelines.map(lane).map(l=>l.side).filter(Boolean))];
+  $("#seq-key").innerHTML=sides.map(k=>`<span><i class="${sw[k]||""}"></i>${esc((MODEL.sides||{})[k]||k)}</span>`).join("")+`<span><i class="ln"></i>call or send</span>`+(S.steps.some(s=>s.ret)?`<span><i class="ln ret"></i>return: open head, thin line</span>`:"")+(S.phases.length?`<span><i class="band"></i>phase</span>`:"")+(S.steps.some(isPlanned)||S.lifelines.map(lane).some(isPlanned)?`<span><i class="ln dash pln"></i>planned, not built (dashed, faded)</span>`:"");
+}
+function gotoStep(i){
+  const S=MODEL.sequence, L=S.lifelines.map(lane); seq.cur=(i+S.steps.length)%S.steps.length; const s=S.steps[seq.cur];
+  document.querySelectorAll("#svg-seq .msg").forEach(g=>{ const k=+g.dataset.i; g.classList.toggle("cur",k===seq.cur); g.classList.toggle("future",k>seq.cur); });
+  $("#seq-pos").textContent=`step ${seq.cur+1} of ${S.steps.length}`;
+  inspect(`<div class="kicker">${esc(S.kicker||"SEQUENCE")} · STEP ${seq.cur+1}${isPlanned(s)?" · PLANNED":""}</div><div class="name">${esc(L[s.f].n)} → ${esc(L[s.t].n)}</div><div class="vis">${esc(s.l)}</div><p>${esc(s.n)}</p>`);
+}
+$("#seq-prev").addEventListener("click",()=>gotoStep(seq.cur-1));
+$("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
+$("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
+
+/* ---------- The stamps (state.json) ----------
+   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
+   the board shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the board
+   above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the issue board
+   (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
+function renderState(){
+  const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
+  const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
+  set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
+  const old=document.getElementById("chip-amended"); if(old) old.remove();
+  const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
+  if(!p&&ctx){ p=document.createElement("p"); p.className="amended"; p.id="ctx-amended"; const h2=ctx.querySelector(":scope>h2"); if(h2) h2.after(p); else ctx.prepend(p); }
+  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title)}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
+}
+renderState();
+
+/* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
+   Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
+   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
+   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+function sectionKeys(){
+  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
+    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${m} units landed"><i style="width:${pct}%"></i></span>`; });
+  const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
+    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="key"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
+  const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
+  const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
+  put(G,"guarantees-key",[swatches(G,"swk"),
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
+    has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",
+    has(G,".badge")?`<span><span class="badge">tier</span>a fact: a stability tier, a marker, neutral</span>`:""]);
+  const states=C?[...new Set([...C.querySelectorAll(".tags .badge:not(.bug):not(.planned):not([data-sys])")].map(b=>b.textContent.trim()).filter(t=>/^(open|closed)$/.test(t)))]:[];
+  put(C,"context-key",[swatches(C,"sbar"),
+    states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
+    has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
+    has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
+    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+}
+sectionKeys();
+
+/* ---------- Tabs ---------- */
+const tabs=[...document.querySelectorAll(".tab")];
+const DEFAULT_INSPECT={structure:"<p>Click a component for its role, source files, where it runs and its place in the C4 model.</p>",threads:"<p>Click a row for where it runs and what runs there.</p>",lifecycles:"<p>The lifecycle facts are on the cards themselves, each read from the KDoc and the code.</p>"};
+function show(id){
+  tabs.forEach(t=>{ const on=t.id===id; t.setAttribute("aria-selected",String(on)); t.tabIndex=on?0:-1; document.getElementById(t.getAttribute("aria-controls")).hidden=!on; });
+  const name=id.replace("t-","");
+  if(name==="structure") renderStructure();
+  if(name==="c4" && !c4View) renderC4(C4.views.findIndex(v=>v.type==="component"));
+  if(name==="datagrams") renderFlow();
+  if(name==="reliable") renderSeq();
+  if(name!=="reliable" && seq.timer){ clearInterval(seq.timer); seq.timer=null; $("#seq-play").textContent="play"; $("#seq-play").setAttribute("aria-pressed","false"); }
+  // The inspector follows the tab it lands on: its kept selection, else its default text, else a generic hint, never the last
+  // tab's. renderFlow() above has already written the Decision path's.
+  const node=$("#svg-structure .node.sel"), thread=$("#p-threads .thread.sel");
+  if(name==="structure"&&node) selectNode(node.dataset.id); else if(name==="threads"&&thread) selectThread(thread.dataset.t);
+  else if(name==="c4") inspectC4(); else if(name==="reliable") gotoStep(seq.cur);
+  else if(name!=="datagrams") inspect(DEFAULT_INSPECT[name]||"<p>Select an item on this tab to see its details here.</p>");
+  try{ localStorage.setItem("dash-tab-"+location.pathname,id); }catch(e){}
+}
+tabs.forEach((t,i)=>{ t.addEventListener("click",()=>show(t.id)); });
+/* The tablist's keys (WAI-ARIA tabs; GUIDANCE.md §6): Left and Right move to the previous and next tab, Home and End to the first and the
+   last, each shown at once; only the selected tab is in the Tab order (a roving tabindex), so Tab moves on to the panel. */
+function tabKeys(list,go){ list.forEach((t,i)=>{ t.tabIndex=t.getAttribute("aria-selected")==="true"?0:-1; t.addEventListener("keydown",e=>{ const n=list.length, j={ArrowRight:(i+1)%n,ArrowLeft:(i+n-1)%n,Home:0,End:n-1}[e.key]; if(j==null) return; e.preventDefault(); list[j].focus(); go(list[j].id); }); }); }
+tabKeys(tabs,id=>show(id));
+let start="t-structure";
+try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document.getElementById(s)) start=s; }catch(e){}
+const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
+show(start);
+
+/* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
+   A light/night toggle in the header (the renderer adds it when the board's header has none). Until it is clicked the board follows the
+   system setting; a click picks the other palette and remembers it (localStorage "dashboards-theme", shared by every dashboard of the
+   same origin) across boards and reloads. It only selects one of the two palettes the board defines: :root[data-theme]. The same code
+   runs on every dashboard type. */
+(function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+  let btn=document.getElementById("theme");
+  if(!btn){ const hdr=document.querySelector("header"); if(!hdr) return; const tools=document.createElement("div"); tools.className="tools systools";
+    tools.innerHTML='<button class="themebtn" id="theme" type="button"></button>'; hdr.prepend(tools); btn=document.getElementById("theme"); }
+  const chosen=()=>{ try{ const t=localStorage.getItem(KEY); return t==="light"||t==="dark"?t:null; }catch(e){ return null; } };
+  const now=()=>root.dataset.theme==="dark"||root.dataset.theme==="light"?root.dataset.theme:(mq&&mq.matches?"dark":"light");
+  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.textContent=t==="dark"?"☾ night":"☀ light"; btn.setAttribute("aria-pressed",String(t==="dark"));
+    btn.title=`Theme: ${word}${chosen()?"":", as the system setting"}. Click for ${t==="dark"?"light":"night"}.`; btn.setAttribute("aria-label",`Night theme${chosen()?"":" (follows the system setting until clicked)"}`); };
+  btn.addEventListener("click",()=>{ const t=now()==="dark"?"light":"dark"; root.dataset.theme=t; try{ localStorage.setItem(KEY,t); }catch(e){} label(); });
+  if(mq&&mq.addEventListener) mq.addEventListener("change",label);
+  if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
+  label(); })();
+</script>
+</body>
+</html>
