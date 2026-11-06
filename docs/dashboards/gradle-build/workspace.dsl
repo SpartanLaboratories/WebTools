@@ -1,5 +1,5 @@
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools master 4fcc6e0 (2026-10-25): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, and the fixtures-publication check from #63. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools master 5f221ce (2026-11-05): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, and the fixtures-publication check from #63. The build publishes nothing of its own. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -86,7 +86,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at master 4fcc6e0." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at master 5f221ce." {
             include *
             autoLayout tb
         }
