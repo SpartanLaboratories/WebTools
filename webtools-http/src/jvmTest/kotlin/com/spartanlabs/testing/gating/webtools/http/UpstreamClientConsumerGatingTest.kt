@@ -33,8 +33,8 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Level 1 - the call facades as a consumer uses them, compiled **without any opt-in**: the common factory with a configuration lambda builds a
- * client over a fake transport, a call with every per-call setting returns a found value, and `baseUrl`, `utilisation()`, `cacheStats()` and
- * `flush()` answer; the JVM owning factory with a budget built from windows builds a client that closes twice and refuses a call afterwards;
+ * client over a fake transport, a call with every per-call setting but a body (a `GET` carries none) returns a found value, and `baseUrl`,
+ * `utilisation()`, `cacheStats()` and `flush()` answer; the JVM owning factory with a budget built from windows builds a client that closes twice and refuses a call afterwards;
  * `UrlFetcher("agent") { }` refuses a private address before any socket and closes twice, and the common fetcher factory fetches over a fake
  * transport. No server and no network are involved.
  */
@@ -63,6 +63,7 @@ class UpstreamClientConsumerGatingTest {
                         headers { add("X-Trace", "1") }
                         method = HttpMethod.Get
                         lane = Lane.Tracker
+                        // Reads the value the client seeded (its `defaultMaxWait`, 2 s) and sets it: the property is readable and writable in the lambda.
                         maxWait = maxWait * 2
                         maxAge = 1.minutes
                     }

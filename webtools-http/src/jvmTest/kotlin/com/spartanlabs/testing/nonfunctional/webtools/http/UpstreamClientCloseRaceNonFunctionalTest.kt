@@ -75,11 +75,14 @@ class UpstreamClientCloseRaceNonFunctionalTest {
         val random = Random(68)
         val endpoint = stringEndpoint { ttl = 10.minutes }
         repeat(ROUNDS) { round ->
+            // A pool of the round's own, so its termination below proves nothing of the round is left running; 8 threads for 16 callers, so some
+            // calls start while others are in flight.
             val executor = Executors.newFixedThreadPool(8)
             val pool = executor.asCoroutineDispatcher()
             val fake = FakeHttpTransport().on(RequestMatch.Any, Step.respond(200, body = "x", delay = 5.milliseconds))
             val client = owningClient(
                 fake,
+                // The cache's loads run on the round's pool too, so the termination check covers them.
                 CaffeineResponseCache { loadDispatcher = pool },
                 WindowedCallBudget(listOf(RateWindow("minute", 100, 1.minutes))),
             )
@@ -93,6 +96,7 @@ class UpstreamClientCloseRaceNonFunctionalTest {
                         async(pool) {
                             gate.await()
                             try {
+                                // Four keys between the 16 callers: callers of one key share a load.
                                 client.call(endpoint) { query("k", (index % 4).toString()) }
                             } catch (cancelled: CancellationException) {
                                 currentCoroutineContext().ensureActive()      // the bound's own cancellation passes; anything else is the client's

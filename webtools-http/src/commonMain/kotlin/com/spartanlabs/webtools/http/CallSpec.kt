@@ -48,6 +48,7 @@ public class CallSpec internal constructor(lane: Lane, maxWait: Duration, defaul
      * Several blocks edit the same builder. Per-call headers are **not** part of the cache key: do not use one that changes the answer on a cached endpoint.
      *
      * @param configure the edits; a bad name or value throws `IllegalArgumentException`, which the call turns into an `InvalidRequest`.
+     * @throws IllegalArgumentException if an edit uses an invalid header name or value; inside `call`'s lambda the call returns it as an `InvalidRequest`.
      */
     public fun headers(configure: HttpHeaders.Builder.() -> Unit) { headerBuilder.configure() }
 

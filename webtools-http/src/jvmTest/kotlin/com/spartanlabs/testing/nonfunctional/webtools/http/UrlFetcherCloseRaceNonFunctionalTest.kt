@@ -53,8 +53,9 @@ private const val CLOSERS = 32
  * Level 4c - nothing hangs when `close()` races the fetches of a `UrlFetcher` that owns its transport, and `close()` is safe from any thread, on
  * real time under `runBlocking` with each round bounded to 30 s. Over 50 rounds, 16 fetches of a slow fake transport start together while
  * `close()` runs from another thread at a seeded random point: every fetch returns a `Result`, the response or a `Closed` of the fetcher or the
- * transport, never a thrown cancellation, and the round's thread pool terminates. Over 50 more rounds, 32 threads call `close()` at once while
- * others fetch and read `toString()`: no call throws, the transport is closed exactly once and `closed` is logged exactly once. Probabilistic: it
+ * transport, never a thrown cancellation, and the round's thread pool terminates. Over 50 more rounds, 32 concurrent callers on
+ * `Dispatchers.Default` call `close()` at once while 16 others fetch and read `toString()`: no call throws, the transport is closed exactly once
+ * and `closed` is logged exactly once. Probabilistic: it
  * exercises the window between a fetch's closed check and its send, and the one caller that wins the closed flag, which no deterministic seam
  * reaches.
  */
@@ -64,6 +65,7 @@ class UrlFetcherCloseRaceNonFunctionalTest {
 
     // A fetcher that owns its transport, built the way an owning factory builds one; the budget stays the caller's.
     private fun owningFetcher(transport: HttpTransport, budget: CallBudget): UrlFetcher {
+        // A local under another name, so the configuration's `budget` and the parameter are told apart at a glance.
         val supplied = budget
         val resolved = UrlFetcherConfig().apply { this.budget = supplied }.resolve()
         return UrlFetcher(FetcherParts(transport, UrlGuard(OutboundUrlPolicy.untrusted()), resolved, ownsTransport = true))
@@ -93,6 +95,8 @@ class UrlFetcherCloseRaceNonFunctionalTest {
         // Fixed seed (the issue number) so a failing round is reproducible.
         val random = Random(68)
         repeat(ROUNDS) { round ->
+            // A pool of the round's own, so its termination below proves no fetch of the round is left running; 8 threads for 16 callers, so some
+            // fetches start while others are in flight.
             val executor = Executors.newFixedThreadPool(8)
             val pool = executor.asCoroutineDispatcher()
             val fake = FakeHttpTransport().on(RequestMatch.Any, Step.respond(200, body = "x", delay = 5.milliseconds))

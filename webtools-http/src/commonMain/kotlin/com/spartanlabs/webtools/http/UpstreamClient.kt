@@ -11,14 +11,25 @@ import kotlin.time.TimeSource
  * budget **inside the cache's loader**, then the transport. A hit costs nothing and N coalesced callers cost one permit and one request. **Stable Core.**
  *
  * - **Per call** (`call`): path segments, query pairs, headers, method, body, lane, `maxWait` and `maxAge` (a `CallSpec`); only a `GET` is cached. The key is the endpoint id, the full request path
- *   and the query pairs; never a header, the body, the lane, `maxAge` or a credential. A shared load runs the first caller's request: per-call headers must not change the answer for a cached
- *   endpoint, and a caller with a tighter deadline wraps its own `call` in `withTimeoutOrNull`.
+ *   and the query pairs; never a header (so never a credential sent in one), the body, the lane or `maxAge`. A credential passed as a query pair is part of the key, as every query pair is.
+ *   A shared load runs the first caller's request: per-call headers must not change the answer for a cached endpoint, and a caller with a tighter deadline wraps its own `call` in
+ *   `withTimeoutOrNull`.
  * - **Outcome**: `Found(value)` (stored for `ttl`), `Missing` (a declared miss status, stored for `missTtl`), or a failure, never stored: a throttle is `RateLimited` (no retry), a
  *   `2xx` the decoder rejects is `DecodeFailure`, any other status is `UpstreamError`, and the transport's, budget's and cache's failures pass through. Match the groups you care about and keep an `else`.
- * - **A refusal costs nothing**: an `InvalidRequest` or a policy refusal reaches neither the budget nor the transport and is never cached.
+ * - **What a call spends**: a closed client, an `InvalidRequest` the client raises and the pre-check's policy refusal are decided before the cache: no permit, no request, nothing cached. A hit and a
+ *   caller that joins a load in flight spend nothing, and a budget refusal (`BudgetExhausted`, `Closed("budget")`) sends nothing. Once a permit is granted, a response of any status spends it, and
+ *   only an `InvalidRequest` from the transport gives it back, because only that proves nothing was sent. Every other failure the transport returns (a refusal the transport makes of a redirect
+ *   target or a resolved address included), a cancellation and an `Error` leave the permit spent, so a window that guards a bill is never under-counted.
  * - **Ownership**: the common factory owns only a budget built from `budget(windows)`; the JVM owning factory owns the transport, the cache (unless `cache(...)` was called) and the budget it built.
  *   `close()` closes what the client built, in the order cache, budget, transport, never what it was handed; it is non-suspending, idempotent, never throws and safe from any thread.
  *   Call [flush] before `close()` for the exact final write of a budget with a persistent store; [utilisation], [cacheStats] and [flush] keep working after `close()`.
+ * - **Logging**, under `com.spartanlabs.webtools.http.UpstreamClient`: `INFO` once on creation and once on `close()`; `DEBUG` once per call that passed the pre-check and returned (the endpoint id,
+ *   method, whether this call's loader ran, lane, cost, status, byte count, timings and the outcome's name), for an `InvalidRequest` the client raises (the endpoint id and its rule), for a
+ *   `DecodeFailure` (the endpoint id and the cause's class name) and for a close step that threw; `WARN` for a pre-check refusal, a throttle and a rate-signal reader or `utilisation()` that
+ *   throws. An `InvalidRequest`, a pre-check refusal, a throttle and a `DecodeFailure` are each logged once, where the client creates them (a throttle and a `DecodeFailure` once per load,
+ *   however many callers share it); an `UpstreamError` has no line of its own and shows only as the outcome of the per-call line, and `Closed("client")` is not logged. Never a header value, a
+ *   body, a query string or a decoded value, so never a credential sent in a header or a query pair. A URL is printed with `Url.redacted()`, which shows the path and hides the query, and the
+ *   endpoint id is printed as given: keep credentials out of path segments, the base URL's path and endpoint ids. The cache, the budget and the transport log under their own names.
  *
  * Every member may be called concurrently from any thread and coroutine.
  */
@@ -55,7 +66,8 @@ public class UpstreamClient internal constructor(parts: ClientParts) : AutoClose
      * @param endpoint the endpoint to call.
      * @param configure sets this call's path, query, headers, method, body, lane, `maxWait` and `maxAge`; the defaults when omitted.
      * @return `Found` or `Missing`; otherwise a failure: [HttpFailure.Closed] (`"client"`, or a component's), [TransportFailure.InvalidRequest], [TransportFailure.RefusedByPolicy],
-     *   [HttpFailure.BudgetExhausted], any [TransportFailure], [UpstreamFailure.RateLimited], [UpstreamFailure.UpstreamError], [HttpFailure.DecodeFailure] or the decoder's own [HttpFailure].
+     *   [HttpFailure.BudgetExhausted], any [TransportFailure], [UpstreamFailure.RateLimited], [UpstreamFailure.UpstreamError], [HttpFailure.DecodeFailure] or the decoder's own [HttpFailure];
+     *   an `IllegalStateException` when a cancellation escapes the load while the caller itself is not cancelled (the cache's rule).
      * @throws kotlinx.coroutines.CancellationException if the caller is cancelled (only that caller; a shared load continues for the others).
      * @throws Error if the decoder, the reader, the transport or the budget's store throws one.
      */
@@ -72,6 +84,8 @@ public class UpstreamClient internal constructor(parts: ClientParts) : AutoClose
      * Reads the budget.
      *
      * @return the budget's reading: each window's current period, the pause remaining and the number of waiting calls.
+     * @throws kotlinx.coroutines.CancellationException if the caller is cancelled.
+     * @throws Error if the budget's store throws one (a budget with a store reads it on first use).
      */
     public suspend fun utilisation(): BudgetUtilisation = budget.utilisation()
 
@@ -87,6 +101,7 @@ public class UpstreamClient internal constructor(parts: ClientParts) : AutoClose
      *
      * @return success, or why the write failed; `CallBudget.Unlimited` succeeds.
      * @throws kotlinx.coroutines.CancellationException if the caller is cancelled.
+     * @throws Error if the budget's store throws one.
      */
     public suspend fun flush(): Result<Unit> = budget.flush()
 
@@ -178,8 +193,9 @@ public class UpstreamClient internal constructor(parts: ClientParts) : AutoClose
 }
 
 /**
- * Builds an [UpstreamClient] over a transport the caller owns. **Stable Core.** The client never closes the transport. Without `cache(...)` it uses `ResponseCache.Disabled`, without a budget
- * `CallBudget.Unlimited`; a `budget(windows)` is built and owned. On the JVM, `UpstreamClient(baseUrl, userAgent)` builds and owns the transport, a Caffeine cache and the budget instead.
+ * Builds an [UpstreamClient] over a transport the caller owns. **Stable Core.** The client never closes the transport. The configuration's `policy` is the pre-check's only; the transport
+ * enforces the policy it was built with, so build both from the same policy. Without `cache(...)` it uses `ResponseCache.Disabled`, without a budget `CallBudget.Unlimited`; a
+ * `budget(windows)` is built and owned. On the JVM, `UpstreamClient(baseUrl, userAgent)` builds and owns the transport, a Caffeine cache and the budget instead.
  *
  * @param transport the transport; the caller closes it.
  * @param baseUrl the base URL of the upstream; no query. Every call extends its path.

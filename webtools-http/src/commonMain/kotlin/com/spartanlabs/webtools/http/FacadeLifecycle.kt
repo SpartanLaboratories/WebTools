@@ -16,6 +16,9 @@ internal class Owned(val cache: Boolean, val budget: Boolean, val transport: Boo
 /**
  * Closes each present component in order, each inside [catchNonFatal]; a failure is logged at `DEBUG` with the step name and the exception's class name and the
  * next component still closes. Never throws (an `Error` aside).
+ *
+ * @param steps each step's name and its component, in closing order; a `null` component is skipped.
+ * @param log where a failed step is reported; `null` (a factory cleaning up a refused construction) reports nothing.
  */
 internal fun closeInOrder(steps: List<Pair<String, AutoCloseable?>>, log: Log?) {
     steps.forEach { (name, component) ->

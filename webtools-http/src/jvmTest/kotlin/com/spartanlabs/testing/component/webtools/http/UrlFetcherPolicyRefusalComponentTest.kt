@@ -34,7 +34,7 @@ import kotlin.test.assertTrue
 class UrlFetcherPolicyRefusalComponentTest {
 
     private fun get(url: String, headers: HttpHeaders = HttpHeaders()): HttpRequest {
-        val requestHeaders = headers                  // the builder's own `headers` would shadow the parameter inside its lambda
+        val requestHeaders = headers                  // a local under another name, so the builder's `headers` and the parameter are told apart at a glance
         return HttpRequest(HttpMethod.Get, Url.parse(url).getOrThrow()) { this.headers = requestHeaders }
     }
 

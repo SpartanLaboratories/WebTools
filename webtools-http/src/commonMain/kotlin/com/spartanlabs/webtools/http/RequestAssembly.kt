@@ -16,7 +16,13 @@ internal const val PATH_KEY_NAME: String = "/"
 
 private fun <R> invalid(rule: String, cause: Throwable? = null): Result<R> = Result.failure(TransportFailure.InvalidRequest(rule, cause))
 
-/** Applies the consumer's [configure] to [spec]; a non-fatal exception becomes `InvalidRequest(RULE_SETTINGS)` with that exception as its cause. */
+/**
+ * Applies the consumer's [configure] to [spec]; a non-fatal exception becomes `InvalidRequest(RULE_SETTINGS)` with that exception as its cause.
+ *
+ * @param spec the seeded spec.
+ * @param configure the consumer's lambda.
+ * @return [spec] with the settings applied, or `InvalidRequest(RULE_SETTINGS)`.
+ */
 internal fun <S> applySettings(spec: S, configure: S.() -> Unit): Result<S> =
     catchNonFatal { spec.configure() }.fold(onSuccess = { Result.success(spec) }, onFailure = { invalid(RULE_SETTINGS, it) })
 
@@ -41,7 +47,15 @@ internal fun controlledHeaderFailure(headers: HttpHeaders): TransportFailure.Inv
 /** `Result.success(this)` when [failure] is `null`, else `Result.failure(failure)`. */
 internal fun <S> S.unless(failure: TransportFailure?): Result<S> = failure?.let { Result.failure<S>(it) } ?: Result.success(this)
 
-/** Builds the request; an `IllegalArgumentException` from `HttpRequest(...)` becomes `InvalidRequest(RULE_REQUEST)` with that exception as its cause. */
+/**
+ * Builds the request; an `IllegalArgumentException` from `HttpRequest(...)` becomes `InvalidRequest(RULE_REQUEST)` with that exception as its cause.
+ *
+ * @param method the request method.
+ * @param url the assembled URL.
+ * @param requestHeaders the call's headers.
+ * @param requestBody the body, or `null` for none.
+ * @return the request, or `InvalidRequest(RULE_REQUEST)`.
+ */
 // The parameters are named `requestHeaders` and `requestBody` because inside the builder's lambda `headers` and `body` are the builder's own properties.
 internal fun buildRequest(method: HttpMethod, url: Url, requestHeaders: HttpHeaders, requestBody: RequestBody?): Result<HttpRequest> =
     catchNonFatal { HttpRequest(method, url) { headers = requestHeaders; body = requestBody } }
@@ -53,10 +67,17 @@ internal fun buildRequest(method: HttpMethod, url: Url, requestHeaders: HttpHead
  * segment fails with [RULE_EMPTY_SEGMENT], a `.` or `..` with [RULE_DOT_SEGMENT], an unpaired surrogate with [RULE_SEGMENT_UNICODE] (a segment) or
  * [RULE_QUERY_UNICODE] (a query name or value), and a text that does not parse with [RULE_URL]. The key parameters are the parsed URL's path under
  * [PATH_KEY_NAME], then the encoded pairs in call order.
+ *
+ * @param base the client's base URL; it has no query.
+ * @param segments the raw path segments, in order.
+ * @param query the raw query pairs, in call order.
+ * @return the parsed URL with its key parameters, or an `InvalidRequest` carrying one of the rules above.
  */
 internal fun assembleUrl(base: Url, segments: List<String>, query: List<Pair<String, String>>): Result<AssembledUrl> =
     segments.traverse(::encodeSegment).flatMap { encodedSegments ->
         query.traverse(::encodePair).flatMap { encodedPairs ->
+            // The re-parse cannot reinterpret what the consumer passed: the encoders escape a raw `%` (`%2e` is sent as `%252e`) and every separator (`/`, `?`, `#` in a
+            // segment; `&`, `=`, `#` in a query part), so the only structure in the text is what is written here.
             val baseText = base.toString()
             val withPath = if (encodedSegments.isEmpty()) baseText else baseText.removeSuffix("/") + "/" + encodedSegments.joinToString("/")
             val text = if (encodedPairs.isEmpty()) withPath else withPath + "?" + encodedPairs.joinToString("&") { (name, value) -> "$name=$value" }
@@ -67,6 +88,7 @@ internal fun assembleUrl(base: Url, segments: List<String>, query: List<Pair<Str
         }
     }
 
+// `encodePathSegment` fails for exactly two reasons: a dot segment, otherwise an unpaired surrogate.
 private fun encodeSegment(segment: String): Result<String> =
     if (segment.isEmpty()) invalid(RULE_EMPTY_SEGMENT)
     else encodePathSegment(segment).fold(

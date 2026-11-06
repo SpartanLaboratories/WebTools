@@ -44,8 +44,8 @@ import kotlin.time.Duration.Companion.seconds
  * or empty segment, an unpaired surrogate, a negative `maxWait` or `maxAge`, a header the transport controls, an invalid header name, an exception
  * thrown by the lambda and a body on a `GET` are each `InvalidRequest` with a constant rule, and cost nothing (no transport call, no permit, nothing
  * cached); an absolute URL, a double-slash host form or reserved characters passed as a segment are sent as one encoded segment on the base host
- * (vector T09); an `InvalidRequest` is logged once at `DEBUG` with its rule and no value; of two faults in one call the earlier check decides, in
- * the order `maxWait`, `maxAge`, the URL, a controlled header, the request build, the policy.
+ * (the published bypass of an absolute URL passed as a path argument); an `InvalidRequest` is logged once at `DEBUG` with its rule and no value; of
+ * two faults in one call the earlier check decides, in the order `maxWait`, `maxAge`, the URL, a controlled header, the request build, the policy.
  */
 class UpstreamClientRequestComponentTest {
 

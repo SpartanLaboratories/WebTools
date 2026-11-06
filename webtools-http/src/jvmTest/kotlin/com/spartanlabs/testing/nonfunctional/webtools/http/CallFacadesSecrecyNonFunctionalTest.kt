@@ -45,8 +45,8 @@ private const val SECRET_VALUE = "SECRET-VALUE-8c0a"
  * unmistakable sentinel string, go through `UpstreamClient` (a found value, a cache hit, a declared miss, a decode failure, an upstream error,
  * three kinds of invalid request, a policy refusal, a throttle, an exhausted budget and a close) and through `UrlFetcher` (two responses, three
  * kinds of invalid request, two policy refusals, a throttle, an exhausted budget and a close). Across every log event of the module (formatted
- * message, arguments, throwable), every failure's message and `toString()`, and the `toString()` of the client, the fetcher, the endpoints and
- * the results, no sentinel appears. A failure's `cause` is the consumer's own exception and is not the facades' to redact. Real time under
+ * message, arguments, throwable), every failure's message and `toString()`, and the `toString()` of the client, the fetcher, the decoding
+ * endpoint and the results, no sentinel appears. A failure's `cause` is the consumer's own exception and is not the facades' to redact. Real time under
  * `runBlocking` within 30 s, on the production clocks.
  */
 class CallFacadesSecrecyNonFunctionalTest {
@@ -127,6 +127,7 @@ class CallFacadesSecrecyNonFunctionalTest {
                             assertIs<TransportFailure.InvalidRequest>(record("thrown settings", client.call(decoding) { throw IllegalStateException(SECRET_VALUE) }).exceptionOrNull())
 
                             assertIs<UpstreamFailure.RateLimited>(record("throttle", client.call(decoding) { path("throttled"); query("token", SECRET_QUERY) }).exceptionOrNull())
+                            // The throttle pauses the budget; a call of a new key (so not a cache hit) then reaches it and is exhausted.
                             assertIs<HttpFailure.BudgetExhausted>(record("exhausted", client.call(decoding) { path("ok"); query("token", "$SECRET_QUERY-2") }).exceptionOrNull())
                         } finally {
                             client.close()
@@ -192,6 +193,7 @@ class CallFacadesSecrecyNonFunctionalTest {
                             assertEquals(404, record("not found", fetcher.fetch(get("https://files.example.test/gone?token=$SECRET_QUERY"))).getOrThrow().status)
 
                             assertIs<UpstreamFailure.RateLimited>(record("throttle", fetcher.fetch(get("https://files.example.test/throttled?token=$SECRET_QUERY"))).exceptionOrNull())
+                            // The throttle pauses the budget, so the next fetch is exhausted.
                             assertIs<HttpFailure.BudgetExhausted>(record("exhausted", fetcher.fetch(plain)).exceptionOrNull())
                         } finally {
                             fetcher.close()

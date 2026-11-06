@@ -12,11 +12,18 @@ import kotlin.time.TimeSource
  * GET is its cache.
  *
  * **Every status is the response**, a `304` and a returned `3xx` included, except a throttle (a `429`, or what the configured reader reports as throttled), which is
- * [UpstreamFailure.RateLimited] because the budget has already paused. [RateLimited.retryAfter][UpstreamFailure.RateLimited.retryAfter] is the longer of the server's `Retry-After` and the
- * budget's pause. A refusal by the policy costs nothing: no permit and no call. Nothing is retried.
+ * [UpstreamFailure.RateLimited]: a budget that pauses on a throttle has paused by then (`CallBudget.Unlimited`, the default, never pauses). [RateLimited.retryAfter][UpstreamFailure.RateLimited.retryAfter] is the longer of the server's `Retry-After` and the
+ * budget's pause. A closed fetcher, an invalid fetch (`InvalidRequest`) and the pre-check's policy refusal cost nothing: no permit and no request. Once a permit is granted, a response of any
+ * status spends it, and only an `InvalidRequest` from the transport gives it back; every other failure the transport returns (a refusal the transport makes of a resolved address or a redirect
+ * target included), a cancellation and an `Error` leave it spent, so a window that guards a bill is never under-counted. Nothing is retried.
  *
  * The fetcher closes the transport only when a JVM owning factory (or `LoopbackFetchers`) built it, and never a budget. [close] is non-suspending, idempotent, never throws and safe from any thread;
  * a fetch after it returns `Closed("fetcher")`. Every member may be called concurrently.
+ *
+ * **Logging**, under `com.spartanlabs.webtools.http.UrlFetcher`: `INFO` once on creation and once on `close()`; `DEBUG` once per fetch that passed the pre-check and returned (method, URL, lane,
+ * cost, status, byte count and timings), for an `InvalidRequest` the fetcher raises (its rule) and for a close step that threw; `WARN` for a pre-check refusal, a throttle and a rate-signal
+ * reader or `utilisation()` that throws. Never a header value, a body or a query string, so never a credential sent in a header or a query pair. Every URL is printed with `Url.redacted()`,
+ * which shows the path and hides the query: a secret carried in a URL's path (a webhook token) is printed.
  */
 public class UrlFetcher internal constructor(parts: FetcherParts) : AutoCloseable {
     private val transport: HttpTransport = parts.transport
@@ -48,6 +55,7 @@ public class UrlFetcher internal constructor(parts: FetcherParts) : AutoCloseabl
     public suspend fun fetch(request: HttpRequest, configure: FetchSpec.() -> Unit = {}): Result<HttpResponse> {
         if (closing.isCompleted) return Result.failure(HttpFailure.Closed(FETCHER_COMPONENT))
         val started = timeSource.markNow()
+        // In this order, and nothing is spent before `load`: the spec, its limits and the controlled headers (each an `InvalidRequest`, logged once, here), then the pre-check.
         return applySettings(FetchSpec(defaultMaxWait), configure)
             .flatMap { spec -> spec.unless(fetchLimitFailure(spec.cost, spec.maxWait)) }
             .flatMap { spec -> spec.unless(controlledHeaderFailure(request.headers)) }

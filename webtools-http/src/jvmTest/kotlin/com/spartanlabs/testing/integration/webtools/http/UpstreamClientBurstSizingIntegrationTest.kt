@@ -59,6 +59,7 @@ class UpstreamClientBurstSizingIntegrationTest {
 
     @Test
     fun `a budget burst above the per-host limit puts that many calls in flight at once`() {
+        // No lane floor: the whole window of eight is grantable at one instant, whatever the lane.
         UpstreamClient(baseUrl, "agent") { policy = cleartext(); budget(windows) { laneShares = emptyMap() } }.use { client ->
             val lookups = eightCalls(client)
 
@@ -71,6 +72,7 @@ class UpstreamClientBurstSizingIntegrationTest {
     @Test
     fun `control - an unsized transport holds back the calls beyond the per-host limit`() {
         val transport = fleet.track(LoopbackTransports.trusted("agent", cleartext()))
+        // No lane floor here either, so the budget is the same and only the transport differs.
         UpstreamClient(transport, baseUrl) { policy = cleartext(); budget(windows) { laneShares = emptyMap() } }.use { client ->
             val lookups = eightCalls(client)
 

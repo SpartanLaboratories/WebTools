@@ -85,6 +85,7 @@ public class UpstreamClientConfig internal constructor(private val baseUrl: Url)
      * The pure construction checks, in this order: `defaultMaxWait` is not negative; the base URL has no query; the policy allows the base URL; no default header is one the
      * transport controls; under an `Untrusted` policy no default header is sensitive.
      *
+     * @return the validated configuration.
      * @throws IllegalArgumentException for a refusal; the message is constant and never echoes a value.
      */
     internal fun resolve(): ResolvedClient {
@@ -117,6 +118,7 @@ internal class ResolvedClient(
     /**
      * The client's budget: `Unlimited`, the supplied one, or a `WindowedCallBudget` built now from the windows with the client's clocks, then the consumer's block.
      *
+     * @return the budget and whether the client built, and so owns, it.
      * @throws IllegalArgumentException if the windows or a number in the block are refused by `WindowedCallBudget`.
      */
     fun buildBudget(): BuiltBudget = when (val choice = budgetChoice) {

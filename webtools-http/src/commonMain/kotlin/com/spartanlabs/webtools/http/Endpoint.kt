@@ -19,13 +19,15 @@ import kotlin.time.Duration
  * Equality is identity. `toString()` prints the id, name, ttl, missTtl, cost, the lane's name and the misses, never the decoder.
  *
  * @param T the type of the decoded value.
- * @throws IllegalArgumentException from the constructor (reached through the factory): see [Endpoint].
+ * @throws IllegalArgumentException if the id or name is blank, a duration is negative, `cost` is below 1, or a miss status is outside 100..599 or is `429`; thrown through the factory function
+ *   `Endpoint(id, decode) { … }`, the only way a consumer builds one. The message names the property and never a value.
  */
 // The constructor takes the id, the decoder and every resolved setting (eight parameters), never a list a consumer's call could also
 // satisfy: inside the module, which sees both the constructor and the factory, a same-shaped constructor would win over the factory.
 public class Endpoint<T : Any> internal constructor(
     /** The endpoint's stable id: the cache key's first part and the name in logs. Not blank. */
     public val id: String,
+    /** The decoder; see the class description. Never printed. */
     internal val decode: (HttpResponse) -> Result<T>,
     /** A display name for logs and messages; the [id] by default. Not blank. */
     public val name: String,

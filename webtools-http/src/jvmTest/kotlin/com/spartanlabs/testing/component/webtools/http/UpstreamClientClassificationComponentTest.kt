@@ -63,7 +63,7 @@ class UpstreamClientClassificationComponentTest {
         }
     }
 
-    // An endpoint whose decoder counts its calls and then answers with `decode`.
+    // An endpoint whose decoder counts its calls and then answers with the body as UTF-8 text.
     private fun countingEndpoint(counter: AtomicInteger, configure: Endpoint.Builder.() -> Unit = {}): Endpoint<String> =
         Endpoint("hero", { response: HttpResponse -> counter.incrementAndGet(); Result.success(response.body().decodeToString()) }, configure)
 

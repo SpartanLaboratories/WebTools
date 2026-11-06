@@ -44,6 +44,7 @@ class UpstreamClientPolicyRefusalComponentTest {
     private fun rigged(policy: OutboundUrlPolicy? = OutboundUrlPolicy.untrusted(), block: suspend TestScope.(Rig) -> Unit): TestResult = runTest {
         val clock = virtualClock()
         val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, respondWith(200, "ok"))
+        // A local under another name, so the configuration's `policy` and the parameter are told apart at a glance.
         val chosen = policy
         cacheOn(clock).use { responseCache ->
             budgetOn(clock, minuteWindow(10)).use { real ->

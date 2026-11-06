@@ -23,7 +23,8 @@ import kotlin.test.assertIs
  * Level 4a - the request-assembly table of `assembleUrl`: segments and query pairs encode as `HttpUrl.Builder` encodes them; a base path joins with
  * exactly one slash and is kept as it is without segments; an empty segment, a dot segment and an unpaired surrogate each fail with their constant
  * rule; the key parameters are the parsed path under `/` then the encoded pairs in call order; an absolute URL or a host form passed as a segment
- * stays one encoded segment on the base host (vector T09); each of the ten rules of an invalid request has its constant text.
+ * stays one encoded segment on the base host (the absolute-URL-in-a-path-argument bypass); each of the ten rules of an invalid request has its
+ * constant text.
  */
 class RequestAssemblyDeterministicTest {
 

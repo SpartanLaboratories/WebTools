@@ -175,7 +175,9 @@ client.close()   // closes what the client built (cache, budget, transport), nev
 - **Failures.** `Found` or `Missing` on success. A `429` (or what the client's `rateSignals` reader reports as a
   throttle) is `RateLimited`, whose `retryAfter` is the longer of the server's `Retry-After` and the time the budget
   stays paused; a `2xx` the decoder rejects is `DecodeFailure`; any other status is `UpstreamError`; the budget's refusal is
-  `BudgetExhausted`; the transport's and the policy's are `TransportFailure` leaves. Failures are never cached.
+  `BudgetExhausted`; the transport's and the policy's are `TransportFailure` leaves. Failures are never cached. Once a
+  permit is granted, only an `InvalidRequest` gives it back: every other failure the transport returns, a redirect or
+  an address its policy refuses included, leaves it spent.
 - **Waiting.** A call waits at most `defaultMaxWait` (5 seconds; `CallSpec.maxWait` per call) for a permit, then
   fails with `BudgetExhausted` carrying the wait it would have needed. The worst-case latency of a call is that wait
   plus the transport's call timeout.
@@ -200,7 +202,9 @@ UrlFetcher("my-app/1.0 (+https://example.com/contact)").use { fetcher ->
 `UrlFetcher` uses an `Untrusted` policy (private, loopback and link-local addresses refused, a short list of ports,
 no sensitive header) and has no cache and no decoder. Pass a policy of your own
 (`UrlFetcher(userAgent, OutboundUrlPolicy.untrusted { extraDeniedRanges += … })`) to add your deployment's own denied
-ranges, and `budget = …` in the lambda to share a budget.
+ranges, and `budget = …` in the lambda to share a budget. Over a transport of your own (a `FakeHttpTransport` in a
+test) use the common factory `UrlFetcher(transport, policy) { … }`: `policy` is the pre-check's, the transport
+enforces its own, and the fetcher never closes the transport.
 
 ### Testing
 
@@ -210,7 +214,7 @@ ranges, and `budget = …` in the lambda to share a budget.
 runTest {
     val clock = virtualClock()
     val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.get("/v2/players/7"), Step.respond(200, body = """{"name":"Ada"}"""))
-    UpstreamClient(fake, baseUrl) { timeSource = clock.timeSource; wallClock = clock.wallClock; dispatcher = clock.dispatcher }.use { client ->
+    UpstreamClient(fake, baseUrl) { timeSource = clock.timeSource; wallClock = clock.wallClock }.use { client ->
         assertEquals(Lookup.Found(Player("Ada")), client.call(player) { path("players", "7") }.getOrThrow())
         assertEquals(1, fake.calls.size)
     }

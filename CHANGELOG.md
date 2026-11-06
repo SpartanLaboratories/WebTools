@@ -63,12 +63,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `defaultMaxWait` is 5 seconds; `close()` closes what the client built, in the order cache, budget, transport, and
   `flush()` writes a persistent budget's exact counts. `UrlFetcher` fetches administrator-supplied URLs with the
   policy's pre-check first, a budget (`Unlimited` by default) and no cache: every status is the response except a
-  throttle; on the JVM `UrlFetcher(userAgent)` owns a transport under the `Untrusted` defaults and
-  `UrlFetcher(userAgent, policy)` one under the given policy.
+  throttle; built with `UrlFetcher(transport, policy) { … }`, or on the JVM with `UrlFetcher(userAgent)`, which owns a
+  transport under the `Untrusted` defaults, and `UrlFetcher(userAgent, policy)`, one under the given policy.
   `UpstreamFailure.RateLimited.retryAfter` now means "how long to wait before calling again".
-- `webtools-http` test fixtures: `LoopbackFetchers.untrusted` and `trusted`, a `UrlFetcher` over a loopback
-  `mockwebserver3` server whose pre-check is relaxed for loopback exactly as `LoopbackTransports` relaxes the
-  transport, so every other `Untrusted` rule stays live.
+- `webtools-http` test fixtures: `LoopbackFetchers`, whose `untrusted` and `trusted` each build a `UrlFetcher` for a
+  loopback `mockwebserver3` server; the fetcher owns the matching `LoopbackTransports` transport. `untrusted` relaxes
+  the pre-check for loopback exactly as `LoopbackTransports` relaxes the transport, so every other `Untrusted` rule
+  stays live; `trusted` forces cleartext on in both and relaxes nothing.
 
 ### Changed
 

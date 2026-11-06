@@ -22,6 +22,10 @@ internal class CallDispatch(
      * Takes a permit, sends [request] and settles the permit: a response completes it with the signals read from it, an `InvalidRequest` from the
      * transport releases it, and every other failure, a cancellation and an `Error` leave it spent with no signals.
      *
+     * @param request the request to send; the facade has already checked it.
+     * @param cost the budget units to charge; at least 1.
+     * @param lane the lane to charge.
+     * @param maxWait the longest the call waits for its permit; not negative.
      * @return the response with its signals, or the budget's refusal (`BudgetExhausted`, `Closed("budget")`) or the transport's failure, all as values.
      * @throws IllegalArgumentException if [cost] is below 1 or [maxWait] is negative (the facade has already refused both).
      * @throws kotlinx.coroutines.CancellationException if the caller is cancelled (the permit stays spent).
@@ -50,6 +54,12 @@ internal class CallDispatch(
     /**
      * Builds the throttle failure for [sent]: the utilisation is read once, now (after `complete`), and a throwing `utilisation()` falls back to zero with one `WARN`.
      * Logs the throttle once at `WARN`.
+     *
+     * @param sent the throttled response with its signals; its permit is already completed.
+     * @param subject what the `WARN` line names: the endpoint id (client) or the redacted URL (fetcher).
+     * @return the failure; the one instance every caller of a shared load receives.
+     * @throws kotlinx.coroutines.CancellationException if the caller is cancelled while the budget is read.
+     * @throws Error if the budget's `utilisation()` throws one.
      */
     suspend fun throttleOf(sent: Sent, subject: String): UpstreamFailure.RateLimited {
         // Read after `complete(signals)`, so the pause this throttle started is in the reading; read here, once, so every caller of a shared load

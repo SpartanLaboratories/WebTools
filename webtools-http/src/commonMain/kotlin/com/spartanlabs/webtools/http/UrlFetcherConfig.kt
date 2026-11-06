@@ -35,7 +35,12 @@ public class UrlFetcherConfig internal constructor() {
         public val DEFAULT_MAX_WAIT: Duration = UpstreamClientConfig.DEFAULT_MAX_WAIT
     }
 
-    /** @throws IllegalArgumentException if [defaultMaxWait] is negative. */
+    /**
+     * The pure construction check.
+     *
+     * @return the validated configuration.
+     * @throws IllegalArgumentException if [defaultMaxWait] is negative; the message is constant.
+     */
     internal fun resolve(): ResolvedFetcher {
         require(!defaultMaxWait.isNegative()) { MSG_DEFAULT_MAX_WAIT }
         return ResolvedFetcher(budget, rateSignals, wallClock, timeSource, defaultMaxWait)

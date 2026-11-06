@@ -73,6 +73,7 @@ class UpstreamClientLoopbackIntegrationTest {
         val transport = fleet.track(LoopbackTransports.trusted("agent", policy))
         val responseCache = closing(CaffeineResponseCache())
         val callBudget = closing(WindowedCallBudget(listOf(RateWindow("minute", 60, 1.minutes))))
+        // A local under another name, so the configuration's `policy` and the parameter are told apart at a glance.
         val chosen = policy
         return closing(UpstreamClient(transport, baseUrl) { this.policy = chosen; cache(responseCache); budget(callBudget); configure() })
     }

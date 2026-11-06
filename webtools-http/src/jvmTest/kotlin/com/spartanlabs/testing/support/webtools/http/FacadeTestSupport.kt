@@ -41,6 +41,7 @@ internal fun stringEndpoint(id: String = "hero", configure: Endpoint.Builder.() 
  * @param policy the policy the pre-check applies; `Untrusted` with its defaults when omitted.
  * @param configure the other configuration to set (for example `budget`).
  * @return the fetcher; close it with `use`.
+ * @throws IllegalArgumentException if [configure] sets a negative `defaultMaxWait`.
  */
 internal fun fetcherOn(
     clock: VirtualClock,
@@ -54,7 +55,14 @@ internal fun fetcherOn(
         configure()
     }
 
-/** A step answering [status] with [body] as UTF-8 and [headers]. */
+/**
+ * A step answering [status] with [body] as UTF-8 and [headers].
+ *
+ * @param status the response status.
+ * @param body the response body, encoded as UTF-8; empty by default.
+ * @param headers the response headers; none by default.
+ * @return the step.
+ */
 internal fun respondWith(status: Int, body: String = "", headers: HttpHeaders = HttpHeaders()): Step = Step.respond(status, headers, body)
 
 /**
@@ -74,6 +82,7 @@ internal fun facadeEvents(events: List<ILoggingEvent>, suffix: String): List<ILo
  * @param transport the transport, normally a `FakeHttpTransport`; the client never closes it.
  * @param configure the other configuration to set (for example `cache(...)`, `budget(...)`, `policy`).
  * @return the client; close it with `use`.
+ * @throws IllegalArgumentException for a configuration the common factory refuses, for example an invalid window list.
  */
 internal fun clientOn(clock: VirtualClock, transport: HttpTransport, configure: UpstreamClientConfig.() -> Unit = {}): UpstreamClient =
     UpstreamClient(transport, BASE_URL) {

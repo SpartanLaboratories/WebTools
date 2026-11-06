@@ -13,7 +13,11 @@ internal class CloseLog {
     /** The names appended so far, in order; a snapshot. */
     val names: List<String> get() = entries.toList()
 
-    /** Appends [name]. */
+    /**
+     * Appends [name].
+     *
+     * @param name the component's name.
+     */
     fun add(name: String) {
         entries += name
     }
@@ -21,7 +25,12 @@ internal class CloseLog {
 
 /**
  * A [ResponseCache] that passes every call to [delegate] and, when `close()` runs, appends `cache` to [log], closes the delegate and then throws
- * [failure] when one is configured. The `@OptIn` is the line a consumer's own cache needs.
+ * [failure] when one is configured. The `@OptIn` is the line a consumer's own cache needs. Every `close()` call appends again, so the log shows how
+ * often the component was closed. As safe to share between threads as [delegate]; the log is safe from any thread.
+ *
+ * @param delegate the component every call is passed to.
+ * @param log receives the component's name on each `close()`.
+ * @param failure thrown at the end of each `close()`; none by default.
  */
 @OptIn(ExperimentalForInheritanceWebToolsApi::class)
 internal class LoggedCache(private val delegate: ResponseCache, private val log: CloseLog, private val failure: Exception? = null) : ResponseCache by delegate {
@@ -36,7 +45,12 @@ internal class LoggedCache(private val delegate: ResponseCache, private val log:
 
 /**
  * A [CallBudget] that passes every call to [delegate] and, when `close()` runs, appends `budget` to [log], closes the delegate and then throws
- * [failure] when one is configured.
+ * [failure] when one is configured. Every `close()` call appends again, so the log shows how often the component was closed. As safe to share
+ * between threads as [delegate]; the log is safe from any thread.
+ *
+ * @param delegate the component every call is passed to.
+ * @param log receives the component's name on each `close()`.
+ * @param failure thrown at the end of each `close()`; none by default.
  */
 @OptIn(ExperimentalForInheritanceWebToolsApi::class)
 internal class LoggedBudget(private val delegate: CallBudget, private val log: CloseLog, private val failure: Exception? = null) : CallBudget by delegate {
@@ -51,7 +65,12 @@ internal class LoggedBudget(private val delegate: CallBudget, private val log: C
 
 /**
  * An [HttpTransport] that passes every call to [delegate] and, when `close()` runs, appends `transport` to [log], closes the delegate and then throws
- * [failure] when one is configured.
+ * [failure] when one is configured. Every `close()` call appends again, so the log shows how often the component was closed. As safe to share
+ * between threads as [delegate]; the log is safe from any thread.
+ *
+ * @param delegate the component every call is passed to.
+ * @param log receives the component's name on each `close()`.
+ * @param failure thrown at the end of each `close()`; none by default.
  */
 @OptIn(ExperimentalForInheritanceWebToolsApi::class)
 internal class LoggedTransport(private val delegate: HttpTransport, private val log: CloseLog, private val failure: Exception? = null) : HttpTransport by delegate {
