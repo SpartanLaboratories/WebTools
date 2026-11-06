@@ -81,7 +81,9 @@ class CallFacadesConsumerGatingTest {
 
     @Test
     fun `a configuration lambda for each facade compiles without an opt-in`() {
-        val settings = Settings(
+        // Compiling these four lambdas is the check: a consumer can write and keep each without any opt-in. They are applied to a real client and a
+        // real fetcher in the JVM gating class, where a transport exists.
+        Settings(
             client = {
                 defaultMaxWait = 2.seconds
                 headers = HttpHeaders { addSensitive("Authorization", "Bearer token") }
@@ -109,7 +111,6 @@ class CallFacadesConsumerGatingTest {
             },
         )
 
-        assertEquals(4, listOf(settings.client, settings.fetcher, settings.call, settings.fetch).size)
         assertEquals(5.seconds, UpstreamClientConfig.DEFAULT_MAX_WAIT)
         assertEquals(5.seconds, UrlFetcherConfig.DEFAULT_MAX_WAIT)
     }

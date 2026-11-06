@@ -89,11 +89,13 @@ class UpstreamClientLoopbackIntegrationTest {
         val client = client()
         val endpoint = stringEndpoint { ttl = 10.minutes }
 
-        assertEquals(Lookup.Found("Ada"), call(client, endpoint) { path("players", "7") }.getOrThrow())
-        assertEquals(Lookup.Found("Ada"), call(client, endpoint) { path("players", "7") }.getOrThrow())
+        assertEquals(Lookup.Found("Ada"), call(client, endpoint) { path("players", "7"); query("region", "eu") }.getOrThrow())
+        assertEquals(Lookup.Found("Ada"), call(client, endpoint) { path("players", "7"); query("region", "eu") }.getOrThrow())
 
         assertEquals(1, server.requestCount)
-        assertEquals("/v1/players/7", assertNotNull(server.takeRequest(1, TimeUnit.SECONDS)).url.encodedPath)
+        val received = assertNotNull(server.takeRequest(1, TimeUnit.SECONDS))
+        assertEquals("/v1/players/7", received.url.encodedPath)
+        assertEquals("region=eu", received.url.encodedQuery)
         assertEquals(1L, client.cacheStats().hits)
     }
 

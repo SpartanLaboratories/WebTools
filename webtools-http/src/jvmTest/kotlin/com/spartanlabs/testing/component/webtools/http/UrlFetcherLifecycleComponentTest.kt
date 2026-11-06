@@ -15,12 +15,14 @@ import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpTransport
 import com.spartanlabs.webtools.http.MSG_DEFAULT_MAX_WAIT
 import com.spartanlabs.webtools.http.OutboundUrlPolicy
+import com.spartanlabs.webtools.http.TransportFailure
 import com.spartanlabs.webtools.http.Url
 import com.spartanlabs.webtools.http.UrlFetcher
 import com.spartanlabs.webtools.http.UrlFetcherConfig
 import com.spartanlabs.webtools.http.UrlGuard
 import com.spartanlabs.webtools.http.testing.FakeHttpTransport
 import com.spartanlabs.webtools.http.testing.RequestMatch
+import com.spartanlabs.webtools.http.testing.Step
 import com.spartanlabs.webtools.http.testing.virtualClock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -28,14 +30,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * Level 2 - the lifecycle of `UrlFetcher`: `close()` closes the transport only when the fetcher built it, is idempotent and never throws (a transport
  * whose `close()` throws is logged at `DEBUG` and swallowed); a fetch after it returns `Closed("fetcher")` and reaches nothing; a negative
- * `defaultMaxWait` is refused when the fetcher is built; creation and close each log one `INFO` line; `toString()` names the policy and budget kinds
- * and never a URL; the per-fetch `DEBUG` line carries the redacted URL and never the query.
+ * `defaultMaxWait` is refused when the fetcher is built, by the JVM owning factories before any transport exists; creation and close each log one
+ * `INFO` line; `toString()` names the policy and budget kinds and never a URL; the per-fetch `DEBUG` line carries the redacted URL and never the
+ * query, and dashes for the wait, the status and the size when the transport failed.
  */
 class UrlFetcherLifecycleComponentTest {
 
@@ -100,6 +104,41 @@ class UrlFetcherLifecycleComponentTest {
     fun `a negative defaultMaxWait is refused when built`() {
         val failure = assertFailsWith<IllegalArgumentException> { UrlFetcher(FakeHttpTransport(), policy) { defaultMaxWait = (-1).seconds } }
         assertEquals(MSG_DEFAULT_MAX_WAIT, failure.message)
+    }
+
+    @Test
+    fun `a negative defaultMaxWait through the owning factory builds no transport`() {
+        val events = captureTransportLogs(Level.INFO) {
+            // Should a factory ever return, what it built is closed before the assertion fails.
+            val plain = assertFailsWith<IllegalArgumentException> { UrlFetcher("agent") { defaultMaxWait = (-1).seconds }.close() }
+            assertEquals(MSG_DEFAULT_MAX_WAIT, plain.message)
+            val withPolicy = assertFailsWith<IllegalArgumentException> { UrlFetcher("agent", OutboundUrlPolicy.trusted()) { defaultMaxWait = (-1).seconds }.close() }
+            assertEquals(MSG_DEFAULT_MAX_WAIT, withPolicy.message)
+        }.second
+
+        // The pure check runs first: neither a transport nor a fetcher logged its creation.
+        assertFalse(events.any { it.formattedMessage.startsWith("created") }, events.map { it.loggerName + " " + it.formattedMessage }.toString())
+    }
+
+    @Test
+    fun `a failed fetch logs dashes for the wait, the status and the size`() {
+        val timeout = TransportFailure.Timeout()
+        val events = captureTransportLogs {
+            runTest {
+                val clock = virtualClock()
+                val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, Step.fail(timeout))
+                fetcherOn(clock, fake).use { fetcher ->
+                    assertSame(timeout, fetcher.fetch(HttpRequest(HttpMethod.Get, FETCH_URL)).exceptionOrNull())
+                }
+            }
+        }.second
+
+        val lines = facadeEvents(events, "UrlFetcher")
+        assertEquals(
+            listOf("fetch: method=GET, url=https://files.example.test/a, lane=Interactive, cost=1, waitedMs=-, status=-, bytes=-, elapsedMs=0"),
+            lines.filter { it.level == Level.DEBUG }.map { it.formattedMessage },
+        )
+        assertTrue(lines.none { it.level == Level.WARN }, lines.map { it.formattedMessage }.toString())
     }
 
     @Test

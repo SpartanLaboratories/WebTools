@@ -83,9 +83,9 @@ class UpstreamClientOwningFactoryIntegrationTest {
         val supplied = CaffeineResponseCache()
         try {
             val events = captureTransportLogs(Level.INFO) {
-                val client = UpstreamClient(baseUrl, "agent") { policy = cleartext(); cache(supplied) }
-                assertTrue("owned=[transport]" in client.toString(), client.toString())
-                client.close()
+                UpstreamClient(baseUrl, "agent") { policy = cleartext(); cache(supplied) }.use { client ->
+                    assertTrue("owned=[transport]" in client.toString(), client.toString())
+                }
             }.second
 
             assertEquals(listOf("OkHttpTransport", "UpstreamClient"), events.lines("closed"))
@@ -102,7 +102,8 @@ class UpstreamClientOwningFactoryIntegrationTest {
     @Test
     fun `a refused user agent closes the budget the factory had built`() {
         val events = captureTransportLogs(Level.INFO) {
-            assertFailsWith<IllegalArgumentException> { UpstreamClient(baseUrl, " bad") { policy = cleartext(); budget(windows) } }
+            // Should the factory ever return, what it built is closed before the assertion fails.
+            assertFailsWith<IllegalArgumentException> { UpstreamClient(baseUrl, " bad") { policy = cleartext(); budget(windows) }.close() }
         }.second
 
         assertEquals(listOf("WindowedCallBudget"), events.lines("created"))
@@ -114,7 +115,7 @@ class UpstreamClientOwningFactoryIntegrationTest {
     fun `a refused configuration builds nothing`() {
         val withQuery = server.webtoolsUrl("/v1/?a=1")
         val events = captureTransportLogs(Level.INFO) {
-            assertFailsWith<IllegalArgumentException> { UpstreamClient(withQuery, "agent") { policy = cleartext(); budget(windows) } }
+            assertFailsWith<IllegalArgumentException> { UpstreamClient(withQuery, "agent") { policy = cleartext(); budget(windows) }.close() }
         }.second
 
         assertTrue(events.lines("created").isEmpty(), events.map { it.loggerName + " " + it.formattedMessage }.toString())

@@ -74,6 +74,7 @@ class UpstreamClientConfigComponentTest {
 
     @Test
     fun `a negative defaultMaxWait is refused`() {
+        assertEquals("defaultMaxWait must not be negative", MSG_DEFAULT_MAX_WAIT)        // the text, written out: a reworded constant fails here
         assertEquals(MSG_DEFAULT_MAX_WAIT, refusal { defaultMaxWait = (-1).seconds })
         assertEquals(Duration.ZERO, config { defaultMaxWait = Duration.ZERO }.resolve().defaultMaxWait)
         assertEquals(Duration.INFINITE, config { defaultMaxWait = Duration.INFINITE }.resolve().defaultMaxWait)
@@ -81,12 +82,14 @@ class UpstreamClientConfigComponentTest {
 
     @Test
     fun `a base URL with a query is refused, a bare question mark included`() {
+        assertEquals("baseUrl must not have a query", MSG_BASE_URL_QUERY)
         assertEquals(MSG_BASE_URL_QUERY, refusal(url("https://api.example.test/v1/?a=1")))
         assertEquals(MSG_BASE_URL_QUERY, refusal(url("https://api.example.test/v1/?")))
     }
 
     @Test
     fun `a base URL the policy refuses is refused with the reason name`() {
+        assertEquals("baseUrl is refused by the outbound-URL policy: ", MSG_BASE_URL_REFUSED)
         assertEquals(MSG_BASE_URL_REFUSED + "Scheme", refusal(url("http://api.example.test/")))
         assertEquals(
             MSG_BASE_URL_REFUSED + "HostNotPinned",
@@ -98,6 +101,7 @@ class UpstreamClientConfigComponentTest {
 
     @Test
     fun `a default header the transport controls is refused`() {
+        assertEquals("a default header is invalid: ", MSG_DEFAULT_HEADER)
         val userAgent = MSG_DEFAULT_HEADER + "header User-Agent is controlled by the transport"
         assertEquals(userAgent, refusal { headers = HttpHeaders { add("User-Agent", "mine") } })
         assertEquals(userAgent, refusal { headers = HttpHeaders { addSensitive("User-Agent", "mine") } })
@@ -108,6 +112,7 @@ class UpstreamClientConfigComponentTest {
 
     @Test
     fun `a sensitive default header is refused under Untrusted`() {
+        assertEquals("an Untrusted policy refuses a sensitive default header", MSG_DEFAULT_HEADER_SENSITIVE)
         assertEquals(
             MSG_DEFAULT_HEADER_SENSITIVE,
             refusal { policy = OutboundUrlPolicy.untrusted(); headers = HttpHeaders { addSensitive("X-Key", "v") } },

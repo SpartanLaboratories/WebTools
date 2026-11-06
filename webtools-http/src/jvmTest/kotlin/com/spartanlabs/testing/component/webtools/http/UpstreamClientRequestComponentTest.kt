@@ -11,7 +11,9 @@ import com.spartanlabs.testing.support.webtools.http.facadeEvents
 import com.spartanlabs.testing.support.webtools.http.minuteWindow
 import com.spartanlabs.testing.support.webtools.http.respondWith
 import com.spartanlabs.testing.support.webtools.http.stringEndpoint
+import com.spartanlabs.webtools.http.CallSpec
 import com.spartanlabs.webtools.http.Lookup
+import com.spartanlabs.webtools.http.OutboundUrlPolicy
 import com.spartanlabs.webtools.http.RULE_DOT_SEGMENT
 import com.spartanlabs.webtools.http.RULE_EMPTY_SEGMENT
 import com.spartanlabs.webtools.http.RULE_MAX_AGE
@@ -20,6 +22,7 @@ import com.spartanlabs.webtools.http.RULE_QUERY_UNICODE
 import com.spartanlabs.webtools.http.RULE_REQUEST
 import com.spartanlabs.webtools.http.RULE_SEGMENT_UNICODE
 import com.spartanlabs.webtools.http.RULE_SETTINGS
+import com.spartanlabs.webtools.http.RefusalReason
 import com.spartanlabs.webtools.http.RequestBody
 import com.spartanlabs.webtools.http.TransportFailure
 import com.spartanlabs.webtools.http.UpstreamClient
@@ -41,21 +44,26 @@ import kotlin.time.Duration.Companion.seconds
  * or empty segment, an unpaired surrogate, a negative `maxWait` or `maxAge`, a header the transport controls, an invalid header name, an exception
  * thrown by the lambda and a body on a `GET` are each `InvalidRequest` with a constant rule, and cost nothing (no transport call, no permit, nothing
  * cached); an absolute URL, a double-slash host form or reserved characters passed as a segment are sent as one encoded segment on the base host
- * (vector T09); an `InvalidRequest` is logged once at `DEBUG` with its rule and no value.
+ * (vector T09); an `InvalidRequest` is logged once at `DEBUG` with its rule and no value; of two faults in one call the earlier check decides, in
+ * the order `maxWait`, `maxAge`, the URL, a controlled header, the request build, the policy.
  */
 class UpstreamClientRequestComponentTest {
 
     // What a test needs to drive one client: the fake transport, the recorded budget and the client.
     private class Rig(val fake: FakeHttpTransport, val budget: PermitRecordingBudget, val client: UpstreamClient)
 
-    // A client with a cache on the clock and a recorded budget; the fake answers every request with a 200.
-    private fun rigged(block: suspend TestScope.(Rig) -> Unit): TestResult = runTest {
+    // A client with a cache on the clock and a recorded budget, under `policy` (the client's default when null); the fake answers every request with a 200.
+    private fun rigged(policy: OutboundUrlPolicy? = null, block: suspend TestScope.(Rig) -> Unit): TestResult = runTest {
         val clock = virtualClock()
         val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, respondWith(200, "ok"))
         cacheOn(clock).use { responseCache ->
             budgetOn(clock, minuteWindow(10)).use { real ->
                 val recording = PermitRecordingBudget(real)
-                clientOn(clock, fake) { cache(responseCache); budget(recording) }.use { client -> block(Rig(fake, recording, client)) }
+                clientOn(clock, fake) {
+                    cache(responseCache)
+                    budget(recording)
+                    if (policy != null) this.policy = policy
+                }.use { client -> block(Rig(fake, recording, client)) }
             }
         }
     }
@@ -193,5 +201,29 @@ class UpstreamClientRequestComponentTest {
             lines.filter { it.level == Level.DEBUG }.map { it.formattedMessage },
         )
         assertFalse(lines.any { "SECRET" in it.formattedMessage }, lines.map { it.formattedMessage }.toString())
+    }
+
+    // One row of the order table: a call with two faults, and the rule of the fault whose check runs first.
+    private class OrderRow(val label: String, val rule: String, val configure: CallSpec.() -> Unit)
+
+    @Test
+    fun `the checks before anything is spent run in a fixed order`() = rigged(OutboundUrlPolicy.untrusted()) { rig ->
+        val payload = RequestBody("abc".encodeToByteArray(), "text/plain")
+        val rows = listOf(
+            OrderRow("maxWait before maxAge", RULE_MAX_WAIT) { maxWait = (-1).seconds; maxAge = (-1).seconds },
+            OrderRow("the limits before the URL", RULE_MAX_AGE) { maxAge = (-1).seconds; path("..") },
+            OrderRow("the URL before a controlled header", RULE_DOT_SEGMENT) { path(".."); headers { add("Host", "evil") } },
+            OrderRow("a controlled header before the request build", "header Host is controlled by the transport") {
+                headers { add("Host", "evil") }
+                body = payload
+            },
+            OrderRow("an invalid request before the policy's refusal", RULE_REQUEST) { body = payload; headers { addSensitive("X-Key", "v") } },
+        )
+        rows.forEach { row -> assertEquals(row.rule, invalid(rig.client.call(stringEndpoint(), row.configure)).rule, row.label) }
+
+        // The last row's second fault alone is the policy's refusal, so that row shows the order and not a refusal that never happens.
+        val refused = assertIs<TransportFailure.RefusedByPolicy>(rig.client.call(stringEndpoint()) { headers { addSensitive("X-Key", "v") } }.exceptionOrNull())
+        assertEquals(RefusalReason.SensitiveHeader, refused.reason)
+        assertNothingSpent(rig.fake, rig.budget, rig.client)
     }
 }

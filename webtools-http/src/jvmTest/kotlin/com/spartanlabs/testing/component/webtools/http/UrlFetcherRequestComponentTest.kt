@@ -38,7 +38,8 @@ import kotlin.time.Duration.Companion.seconds
  * Level 2 - what `UrlFetcher.fetch` refuses before anything is spent, and how it waits: a cost below 1, a negative `maxWait`, a header the transport
  * controls and an exception thrown by the lambda are each `InvalidRequest` with a constant rule, no permit and no transport call; a wait longer
  * than `maxWait` comes back as `BudgetExhausted`; the fetcher's `defaultMaxWait` applies when the spec sets none; concurrent fetches of one URL
- * are not coalesced; an `InvalidRequest` is logged once at `DEBUG` on the fetcher's logger with its rule and no header value or query.
+ * are not coalesced; of two faults in one fetch the earlier check decides, in the order cost, `maxWait`, a controlled header, the policy; an
+ * `InvalidRequest` is logged once at `DEBUG` on the fetcher's logger with its rule and no header value or query.
  */
 class UrlFetcherRequestComponentTest {
 
@@ -167,6 +168,31 @@ class UrlFetcherRequestComponentTest {
                 fetches.forEach { assertEquals(200, it.await().getOrThrow().status) }
                 assertEquals(4, fake.calls.size)
                 assertEquals(4, recording.permits.size)
+            }
+        }
+    }
+
+    @Test
+    fun `the checks before anything is spent run in a fixed order`() = runTest {
+        val clock = virtualClock()
+        val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, respondWith(200))
+        val denied = Url.parse("http://10.0.0.5/").getOrThrow()
+        val controlled = HttpRequest(HttpMethod.Get, FETCH_URL) { headers = HttpHeaders { add("User-Agent", "mine") } }
+        val controlledAndDenied = HttpRequest(HttpMethod.Get, denied) { headers = HttpHeaders { add("User-Agent", "mine") } }
+        budgetOn(clock, minuteWindow(10)).use { real ->
+            val recording = PermitRecordingBudget(real)
+            fetcherOn(clock, fake) { budget = recording }.use { fetcher ->
+                // Two faults in one fetch: the earlier check decides. The limits come before a controlled header ...
+                assertEquals(RULE_COST, ruleOf(fetcher.fetch(controlled) { cost = 0 }))
+                assertEquals(RULE_MAX_WAIT, ruleOf(fetcher.fetch(controlled) { maxWait = (-1).seconds }))
+                // ... and an invalid request before the policy's refusal.
+                assertEquals("header User-Agent is controlled by the transport", ruleOf(fetcher.fetch(controlledAndDenied)))
+                assertEquals(RULE_COST, ruleOf(fetcher.fetch(HttpRequest(HttpMethod.Get, denied)) { cost = 0 }))
+
+                // The second fault alone is the policy's refusal, so the rows above show the order and not a refusal that never happens.
+                assertIs<TransportFailure.RefusedByPolicy>(fetcher.fetch(HttpRequest(HttpMethod.Get, denied)).exceptionOrNull())
+                assertTrue(fake.calls.isEmpty())
+                assertTrue(recording.permits.isEmpty())
             }
         }
     }

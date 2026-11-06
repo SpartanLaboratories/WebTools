@@ -90,6 +90,8 @@ class UpstreamClientPolicyRefusalComponentTest {
             lines.filter { it.level == Level.WARN }.map { it.formattedMessage },
         )
         assertFalse(lines.any { "SECRET" in it.formattedMessage }, lines.map { it.formattedMessage }.toString())
+        // A refused call never reaches the cache step, so it has no per-call line.
+        assertFalse(lines.any { it.formattedMessage.startsWith("call:") }, lines.map { it.formattedMessage }.toString())
     }
 
     @Test

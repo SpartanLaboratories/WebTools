@@ -8,11 +8,14 @@ import com.spartanlabs.testing.support.webtools.http.clientOn
 import com.spartanlabs.testing.support.webtools.http.facadeEvents
 import com.spartanlabs.testing.support.webtools.http.respondWith
 import com.spartanlabs.testing.support.webtools.http.stringEndpoint
+import com.spartanlabs.webtools.http.CallBudget
 import com.spartanlabs.webtools.http.Endpoint
+import com.spartanlabs.webtools.http.ExperimentalForInheritanceWebToolsApi
 import com.spartanlabs.webtools.http.HttpHeaders
 import com.spartanlabs.webtools.http.Lookup
 import com.spartanlabs.webtools.http.RULE_DOT_SEGMENT
 import com.spartanlabs.webtools.http.RateWindow
+import com.spartanlabs.webtools.http.TransportFailure
 import com.spartanlabs.webtools.http.testing.FakeHttpTransport
 import com.spartanlabs.webtools.http.testing.RequestMatch
 import com.spartanlabs.webtools.http.testing.Step
@@ -29,8 +32,9 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * Level 2 - what `UpstreamClient` logs on its own logger, captured at `DEBUG`: one `INFO` line on creation (the redacted base URL, the kinds, the
  * ownership and `defaultMaxWait`) and one on `close()` however often it is called; one `DEBUG` line per call (`loaded=true` with the wait, status
- * and size when this call's loader ran, `loaded=false` and dashes for a cache hit); one `WARN` per throttle; one `DEBUG` per `InvalidRequest` (and
- * no per-call line for it) and per `DecodeFailure`; no line carries a header value, a query string, a body, a credential or a decoded value.
+ * and size when this call's loader ran, `loaded=false` and dashes for a cache hit, `outcome=Missing` for a declared miss, dashes for a call whose
+ * transport failed); `budget=custom` for a budget of an anonymous class; one `WARN` per throttle; one `DEBUG` per `InvalidRequest` (and no
+ * per-call line for it) and per `DecodeFailure`; no line carries a header value, a query string, a body, a credential or a decoded value.
  */
 class UpstreamClientLoggingComponentTest {
 
@@ -126,6 +130,50 @@ class UpstreamClientLoggingComponentTest {
             events.at(Level.DEBUG),
         )
         assertFalse(events.any { "secret" in it.formattedMessage })
+    }
+
+    @Test
+    fun `a declared miss logs outcome Missing with its status`() {
+        val events = captured { clock ->
+            val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, respondWith(404))
+            clientOn(clock, fake).use { client -> client.call(stringEndpoint { misses(404) }).getOrThrow() }
+        }
+
+        assertEquals(
+            listOf("call: endpoint=hero, method=GET, loaded=true, lane=Interactive, cost=1, waitedMs=0, status=404, bytes=0, elapsedMs=0, outcome=Missing"),
+            events.at(Level.DEBUG),
+        )
+    }
+
+    @Test
+    fun `a call whose transport fails logs dashes for the wait, the status and the size`() {
+        val events = captured { clock ->
+            val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, Step.fail(TransportFailure.Timeout()))
+            clientOn(clock, fake).use { client -> client.call(stringEndpoint()) }
+        }
+
+        // The loader ran (loaded=true) but nothing came back: no response to take a wait, a status or a size from.
+        assertEquals(
+            listOf("call: endpoint=hero, method=GET, loaded=true, lane=Interactive, cost=1, waitedMs=-, status=-, bytes=-, elapsedMs=0, outcome=Timeout"),
+            events.at(Level.DEBUG),
+        )
+        assertTrue(events.at(Level.WARN).isEmpty(), events.at(Level.WARN).toString())
+    }
+
+    @Test
+    @OptIn(ExperimentalForInheritanceWebToolsApi::class)
+    fun `a client over an anonymous budget logs its kind as custom`() {
+        var text = ""
+        val events = captured { clock ->
+            val anonymous = object : CallBudget by CallBudget.Unlimited {}
+            clientOn(clock, FakeHttpTransport(clock.timeSource)) { budget(anonymous) }.use { client -> text = client.toString() }
+        }
+
+        assertEquals(
+            "created: baseUrl=https://api.example.test/v1/, policy=Trusted, cache=Disabled, budget=custom, owned=[], defaultMaxWait=5s",
+            events.at(Level.INFO).first(),
+        )
+        assertTrue("budget=custom" in text, text)
     }
 
     @Test

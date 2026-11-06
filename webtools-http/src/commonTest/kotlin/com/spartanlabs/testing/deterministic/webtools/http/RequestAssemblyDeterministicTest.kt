@@ -1,10 +1,16 @@
 package com.spartanlabs.testing.deterministic.webtools.http
 
 import com.spartanlabs.webtools.http.AssembledUrl
+import com.spartanlabs.webtools.http.RULE_COST
 import com.spartanlabs.webtools.http.RULE_DOT_SEGMENT
 import com.spartanlabs.webtools.http.RULE_EMPTY_SEGMENT
+import com.spartanlabs.webtools.http.RULE_MAX_AGE
+import com.spartanlabs.webtools.http.RULE_MAX_WAIT
 import com.spartanlabs.webtools.http.RULE_QUERY_UNICODE
+import com.spartanlabs.webtools.http.RULE_REQUEST
 import com.spartanlabs.webtools.http.RULE_SEGMENT_UNICODE
+import com.spartanlabs.webtools.http.RULE_SETTINGS
+import com.spartanlabs.webtools.http.RULE_URL
 import com.spartanlabs.webtools.http.TransportFailure
 import com.spartanlabs.webtools.http.Url
 import com.spartanlabs.webtools.http.assembleUrl
@@ -17,7 +23,7 @@ import kotlin.test.assertIs
  * Level 4a - the request-assembly table of `assembleUrl`: segments and query pairs encode as `HttpUrl.Builder` encodes them; a base path joins with
  * exactly one slash and is kept as it is without segments; an empty segment, a dot segment and an unpaired surrogate each fail with their constant
  * rule; the key parameters are the parsed path under `/` then the encoded pairs in call order; an absolute URL or a host form passed as a segment
- * stays one encoded segment on the base host (vector T09).
+ * stays one encoded segment on the base host (vector T09); each of the ten rules of an invalid request has its constant text.
  */
 class RequestAssemblyDeterministicTest {
 
@@ -30,6 +36,25 @@ class RequestAssemblyDeterministicTest {
 
     private fun ruleOf(segments: List<String>, pairs: List<Pair<String, String>> = emptyList()): String =
         assertIs<TransportFailure.InvalidRequest>(assembleUrl(base, segments, pairs).exceptionOrNull(), "expected a failure for $segments $pairs").rule
+
+    @Test
+    fun `every rule of an invalid request has its constant text`() {
+        // The texts, written out: a reworded or swapped constant fails here.
+        val table = listOf(
+            RULE_SETTINGS to "the call settings could not be applied",
+            RULE_MAX_WAIT to "maxWait must not be negative",
+            RULE_MAX_AGE to "maxAge must not be negative",
+            RULE_COST to "cost must be at least 1",
+            RULE_EMPTY_SEGMENT to "a path segment must not be empty",
+            RULE_DOT_SEGMENT to "a path segment must not be . or ..",
+            RULE_SEGMENT_UNICODE to "a path segment must be valid Unicode",
+            RULE_QUERY_UNICODE to "a query name and value must be valid Unicode",
+            RULE_URL to "the request URL could not be built",
+            RULE_REQUEST to "the request could not be built",
+        )
+        table.forEach { (constant, text) -> assertEquals(text, constant) }
+        assertEquals(10, table.map { it.second }.toSet().size)                  // ten rules, ten different texts
+    }
 
     @Test
     fun `segments and pairs encode like HttpUrl Builder`() {

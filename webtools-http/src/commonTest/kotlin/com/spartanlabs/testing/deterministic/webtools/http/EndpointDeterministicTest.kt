@@ -30,7 +30,14 @@ class EndpointDeterministicTest {
 
     @Test
     fun `validation refuses each bad setting with a constant message naming the property`() {
+        // The texts, written out: a reworded or swapped constant fails here.
         assertEquals("id must not be blank", MSG_ENDPOINT_ID)
+        assertEquals("name must not be blank", MSG_ENDPOINT_NAME)
+        assertEquals("ttl must not be negative", MSG_ENDPOINT_TTL)
+        assertEquals("missTtl must not be negative", MSG_ENDPOINT_MISS_TTL)
+        assertEquals("cost must be at least 1", MSG_ENDPOINT_COST)
+        assertEquals("misses must be statuses in 100..599 other than 429", MSG_ENDPOINT_MISSES)
+
         assertEquals(MSG_ENDPOINT_ID, refusal(id = ""))
         assertEquals(MSG_ENDPOINT_ID, refusal(id = " "))
         assertEquals(MSG_ENDPOINT_NAME, refusal { name = "" })
