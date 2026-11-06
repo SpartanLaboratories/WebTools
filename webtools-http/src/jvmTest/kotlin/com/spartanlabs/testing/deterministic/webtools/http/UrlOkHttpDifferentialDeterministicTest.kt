@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
- * Level 4a - the `Url` versus `HttpUrl` differential (plan §9.1): the whole corpus plus 200,000 generated
+ * Level 4a - the `Url` versus `HttpUrl` differential: the whole corpus plus 200,000 generated
  * inputs (seed 7). For every input, `Url.parse` is not wrapped in `try`, so a throw is a failure; a
  * `Url` failure is allowed (stricter); a `Url` success must agree with `HttpUrl` on scheme, host, port,
  * path and query, carry no user-info, print as `HttpUrl` prints without the fragment, re-parse to an equal
@@ -92,7 +92,7 @@ class UrlOkHttpDifferentialDeterministicTest {
             "bracket=${counts.withBracket} dot=${counts.withDotSegment} query=${counts.withQuery} percent=${counts.withPercent} " +
             "nonAscii=${counts.withNonAscii} rejectedByKind=${counts.rejectedByKind.toSortedMap()}"
         println("UrlOkHttpDifferentialDeterministicTest seed=$seed $summary")
-        // Plan §9.1 coverage floors, stated for 200,000 inputs and scaled linearly with WEBTOOLS_DIFFERENTIAL_INPUTS.
+        // The coverage floors, stated for 200,000 inputs and scaled linearly with WEBTOOLS_DIFFERENTIAL_INPUTS.
         assertTrue(counts.accepted >= inputs * 0.25, "fewer than 25% accepted: $summary")
         assertTrue(counts.withBracket >= 1_000 * scale, "too few accepted inputs with [: $summary")
         assertTrue(counts.withDotSegment >= 1_000 * scale, "too few accepted inputs with a dot segment: $summary")

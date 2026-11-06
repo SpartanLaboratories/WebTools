@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * Level 4a - header values: the container rule (the research table, with the stored trimmed values),
+ * Level 4a - header values: the container rule (a table of fixed rows, with the stored trimmed values),
  * a sweep over U+0000..U+FFFF in `"a" + c + "b"` for the container rule (CR, LF, NUL refused) and for
  * the sendable rule (iff `c == '\t'` or `c in ' '..'~'`), and the `sanitizeReceivedValue` rows.
  */

@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
  * load raises `StoreFailed(Load)`, grants continue, no save is made, no retry inside `storeRetryInterval`, a retry after it that merges additively and
  * resumes the write-ahead; `utilisation()` never retries; `flush()` retries unconditionally, returns the failure and saves nothing while the store is
  * down, then writes the exact counts once healed; `flush()` writes `persisted == effective` and works after `close()`); a retried restore that merges
- * counts re-plans the waiters (plan §6.7: "a restore that merges something re-plans every waiter"). That case gives the waiter a cap, so the re-plan rule
+ * counts re-plans every waiter. That case gives the waiter a cap, so the re-plan rule
  * fails it at the instant of the retry with the wait it would now have, `BudgetExhausted(…, Window, "day")`, which makes the re-plan observable there; a
  * waiter with `maxWait = INFINITE` would be moved to the next midnight instead, observable only a day later.
  */

@@ -9,7 +9,7 @@ import kotlin.test.assertIs
 import kotlin.test.fail
 
 /**
- * Level 4a - the confusion strings of plan §9.1 (host-spoofing, slash, scheme and `xn--` forms) give
+ * Level 4a - the confusion strings of `UrlCorpus.confusion` (host-spoofing, slash, scheme and `xn--` forms) give
  * their expected canonical text or kind.
  */
 class UrlConfusionDeterministicTest {

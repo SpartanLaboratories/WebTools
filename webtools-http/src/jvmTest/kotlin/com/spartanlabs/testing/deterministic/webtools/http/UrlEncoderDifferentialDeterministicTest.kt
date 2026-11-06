@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 /**
- * Level 4a - the encoder differential (plan §9.1): 200,000 strings drawn from all 128 ASCII characters,
+ * Level 4a - the encoder differential: 200,000 strings drawn from all 128 ASCII characters,
  * the Unicode pool, `.`, `..`, `%2e`, `%41` and concatenations. `encodePathSegment(s)` equals the single
  * segment `HttpUrl.Builder().scheme("http").host("h").addPathSegment(s).build().encodedPath` minus its
  * leading `/` (and fails instead for `.`, `..` and an unpaired surrogate); `encodeQueryComponent(s)` equals

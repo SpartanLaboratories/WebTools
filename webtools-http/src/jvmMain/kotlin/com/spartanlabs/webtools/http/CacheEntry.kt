@@ -56,7 +56,8 @@ internal enum class Storage(val note: String) {
 internal class Residency(val lifetimeNanos: Long, val weight: Int, val storage: Storage)
 
 /**
- * The lifetime and weight a finished load is stored with (§6.6 of the plan): pure.
+ * The lifetime and weight a finished load is stored with: a `Found` for the policy's `ttl` at its own weight and a `Missing` for `missTtl` at weight 1;
+ * nothing is stored for a failure, an error or a closed cache, for a lifetime of zero or less, or for a weight above [maxWeight]. Pure.
  *
  * @param outcome the load's outcome.
  * @param policy the policy of the call that started the load.
@@ -81,7 +82,7 @@ private fun residencyFor(ttl: Duration, weight: Int, maxWeight: Long): Residency
 }
 
 /**
- * Whether a completed [entry] may be served to a call with [maxAge] at tick [nowNanos] (§6.6): pure.
+ * Whether a completed [entry] may be served to a call with [maxAge] at tick [nowNanos]: pure.
  *
  * @param entry the completed entry.
  * @param nowNanos the ticker's reading now.

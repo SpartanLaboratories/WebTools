@@ -7,7 +7,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-/** Level 4a - the accepted and refused rows of the research's method table for `HttpMethod.of`. */
+/** Level 4a - a table of accepted and refused method tokens for `HttpMethod.of`. */
 class HttpMethodTokenDeterministicTest {
 
     @Test

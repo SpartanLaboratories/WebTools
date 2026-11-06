@@ -11,8 +11,8 @@ import kotlin.test.assertTrue
 
 /**
  * Level 4a - OkHttp 5.5.0 sends a host that matches `VERIFY_AS_IP_ADDRESS` straight to `InetAddress.getByName` and never
- * to `Dns`; for every such host (the seeded literals of both families, the host forms of the parent research's F1
- * catalogue and every host of `BypassVectors` the regex matches) `HostRules.classify` is never a `Name`: it is a `Literal`
+ * to `Dns`; for every such host (the seeded literals of both families, a catalogue of lenient host
+ * forms and every host of `BypassVectors` the regex matches) `HostRules.classify` is never a `Name`: it is a `Literal`
  * or a `Refused`, so the resolver guard can never be the only layer between such a host and a socket. The converse is not
  * asserted.
  */
@@ -25,7 +25,7 @@ class OkHttpLiteralRegexDeterministicTest {
     private val seed = 7
     private val count = 50_000
 
-    // The host forms of the parent research's F1 table (brackets removed), as OkHttp's HttpUrl prints them where it changes them.
+    // A catalogue of lenient host forms (brackets removed), as OkHttp's HttpUrl prints them where it changes them.
     private val f1HostForms: List<String> = listOf(
         "2130706433", "127.1", "127.0.1", "0", "0.0.0.0", "::", "0177.0.0.1", "0177.0.0.01", "08.0.0.1", "00000127.0.0.1",
         "017700000001", "127.0.0.1.", "0x7f000001", "0x7f.0.0.1", "0x7f.1", "::ffff:127.0.0.1", "::ffff:7f00:1",

@@ -20,7 +20,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 /**
- * Level 2 - the `Untrusted` rules of plan §6.5 through `UrlGuard`, each as a test: the port rule and its two settings;
+ * Level 2 - the `Untrusted` rules through `UrlGuard`, each as a test: the port rule and its two settings;
  * denied and allowed literals with their classes; lenient host forms; reserved names at a label boundary; the policy
  * suffixes; `extraDeniedRanges` on a literal and never on a name; the downgrade rule; `checkRequest`'s sensitive-header
  * rule after the URL; `checkAddress` on the table, an extra block and unusual lengths; the default relaxation.

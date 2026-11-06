@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Level 4a - the 26 non-public addresses of the parent research F7 are all denied by `AddressRanges.deny`: the ten the JDK
+ * Level 4a - the 26 non-public addresses listed below are all denied by `AddressRanges.deny`: the ten the JDK
  * predicates catch and the sixteen they miss. Which of the 26 the predicates (`isAnyLocalAddress`, `isLoopbackAddress`,
  * `isLinkLocalAddress`, `isSiteLocalAddress`, `isMulticastAddress`) flag is recorded as the documentation of the gap; the
  * only JDK-dependent assertion is that the gap exists.

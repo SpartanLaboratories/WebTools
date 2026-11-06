@@ -41,7 +41,7 @@ class HeaderMessageSecrecyNonFunctionalTest {
         val swapped = messageOf { HttpHeaders { add("$canary x", "X-Note") } }
         assertEquals("Header name is not an RFC 9110 token (first offending character at index ${canary.length})", swapped)
         assertFalse(swapped.contains(canary))
-        // The canary is itself a token: once it passes the name rule it may be echoed, as the plan allows.
+        // The canary is itself a token: once it passes the name rule it may be echoed (a name is echoed only after it passed the token rule, a value never).
         val tokenName = messageOf { HttpHeaders { add(canary, "bad\n") } }
         assertEquals("Value of header '$canary' must not contain CR, LF or NUL", tokenName)
     }

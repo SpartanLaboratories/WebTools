@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 /**
- * Level 4a - the `HttpDate` versus `java.time` differential (plan §9, Level 4a): fixed seed 7, `WEBTOOLS_DIFFERENTIAL_INPUTS`
+ * Level 4a - the `HttpDate` versus `java.time` differential: fixed seed 7, `WEBTOOLS_DIFFERENTIAL_INPUTS`
  * raising the count with the coverage floors scaled along. The oracle referees calendar arithmetic and year windows; it is never
  * asked to referee a policy, so the parser's three liberties are normalised out of part 2's comparison rather than excepted in it.
  * The parser is called unwrapped: a throw is a failure. Part 1 - every date the oracle prints for a random second in

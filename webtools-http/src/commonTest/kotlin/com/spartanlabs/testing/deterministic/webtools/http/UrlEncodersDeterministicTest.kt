@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 /**
- * Level 4a - the `internal` encoders over all 128 ASCII characters (the raw sets of plan §6.5),
+ * Level 4a - the `internal` encoders over all 128 ASCII characters (the raw sets the encoders leave unescaped),
  * non-ASCII as upper-case UTF-8, `.` and `..` failing with `DotSegment`, `%2e` becoming `%252e`, `~`
  * becoming `%7E` in a query, and an unpaired surrogate failing with `NotUnicode`.
  */

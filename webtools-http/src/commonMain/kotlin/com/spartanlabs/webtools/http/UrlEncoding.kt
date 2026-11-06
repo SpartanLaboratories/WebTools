@@ -83,7 +83,7 @@ private fun hasUnpairedSurrogate(text: String): Boolean {
     return false
 }
 
-// The complement of what HttpUrl.Builder.addPathSegment encodes (research F16): these characters stay raw.
+// The complement of what HttpUrl.Builder.addPathSegment encodes: these characters stay raw.
 private fun isRawInPathSegment(c: Char): Boolean =
     c in 'A'..'Z' || c in 'a'..'z' || c in '0'..'9' || c in "!\$&'()*+,-.:;=@[]_~"
 

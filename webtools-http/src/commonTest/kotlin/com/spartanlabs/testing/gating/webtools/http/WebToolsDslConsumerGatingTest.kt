@@ -16,7 +16,7 @@ import kotlin.test.assertNull
  * API. Each nested block sets its own receiver; an outer builder is reached through its label (`this@untrusted`,
  * `this@HttpRequest`, ...). What the `WebToolsDsl` marker forbids, an implicit reach from a nested block into an outer
  * builder, is a compile error, which a passing test cannot show; a throwaway canary file showed it once when the marker
- * was added (plan.md §9.2, P12).
+ * was added.
  */
 class WebToolsDslConsumerGatingTest {
 

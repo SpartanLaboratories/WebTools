@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 /**
  * Level 4a - `decodeQueryPairs` against OkHttp 5.5.0's `HttpUrl.queryParameterName` /
  * `queryParameterValue`: a table of hand-picked queries, then a seeded differential (seed 7, 100,000
- * queries built from the plan's pieces; the escapes it draws as pieces are valid UTF-8, and the lone `%` piece
+ * queries built from a fixed list of pieces; the escapes it draws as pieces are valid UTF-8, and the lone `%` piece
  * also forms ill-formed escapes such as `%ab` with its neighbours) and a fixed list of ill-formed escapes compared
  * exactly, which pins the agreed cases. Every input goes through `Url.parse("http://h/?" + q)` and is re-read as an
  * `HttpUrl` from the canonical text, so both sides see the same encoded query.

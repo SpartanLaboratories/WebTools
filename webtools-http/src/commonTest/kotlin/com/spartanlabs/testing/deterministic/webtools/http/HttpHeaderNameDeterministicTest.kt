@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 /**
  * Level 4a - header names: a sweep over U+0000..U+FFFF (a one-character name is accepted by the
- * builder iff it is one of the 77 `tchar`s), the fixed rows of the research, the empty name, and the
+ * builder iff it is one of the 77 `tchar`s), a table of fixed rows, the empty name, and the
  * messages.
  */
 class HttpHeaderNameDeterministicTest {

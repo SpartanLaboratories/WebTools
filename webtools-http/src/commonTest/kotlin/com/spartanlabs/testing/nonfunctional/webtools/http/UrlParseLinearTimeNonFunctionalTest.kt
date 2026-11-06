@@ -10,8 +10,8 @@ import kotlin.time.TimeSource
  * Level 4c - `Url.parse` is linear: inputs of 64k and 1M characters in five shapes (a long path of
  * `/..` segments, a long query, a long host label, a million `%`, a long run of `[`) each parse without
  * an exception, and the time for 16x the length is under 100x the time for 1x (a quadratic parse gives
- * about 256x), after a warm-up parse. A failure on a loaded host is rerun once before it is treated as a
- * defect (plan §10).
+ * about 256x), after a warm-up parse. A failure on a loaded host is rerun once by hand before it is treated
+ * as a defect: the test itself does not retry.
  */
 class UrlParseLinearTimeNonFunctionalTest {
 

@@ -14,7 +14,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 /**
- * Level 2 - the `Trusted` rules of plan §6.5 through `UrlGuard`: the scheme rule and `allowCleartext`; no host, address or
+ * Level 2 - the `Trusted` rules through `UrlGuard`: the scheme rule and `allowCleartext`; no host, address or
  * port rule; pins by exact canonical equality (an IPv6 pin, a mapped literal matching its dotted pin); the downgrade rule
  * and `allowHttpsToHttp`; `checkRequest` never refuses a header; `checkAddress` is always `null`; `judgeAnswer` allows
  * every index.
