@@ -204,6 +204,18 @@ The repository facts the findings rest on were checked against `master` at `5f22
   pair the probe found for a generic `Endpoint` factory.
 - `RateSignals.kt:14-19`: `RateSignals`' `internal` constructor takes three parameters, so its same-named factory, with
   one, never competes with it inside the module.
+
+### Did not hold in the build
+
+No claim verified above failed in the build. One line of the summary below did not hold:
+
+- **Building `Endpoint<T>`**, "so the KDoc and the Level 2 tests carry them": no test carries the `T : Any` bound or the
+  invariance. A test cannot show that a form fails to compile, so `EndpointComponentTest` names the refused
+  `Result<String?>` decoder in a comment only, and a change to the bound or the variance would pass `apiCheck` and every
+  test ([`../consequences.md`](../consequences.md) §8).
+
+The build contradicted nothing else here ([`../final-implementation.md`](../final-implementation.md) §3 and §4).
+
 ## Summary
 
 ### Building `Endpoint<T>`
