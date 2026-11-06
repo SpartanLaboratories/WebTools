@@ -857,6 +857,11 @@ public final class com/spartanlabs/webtools/http/UpstreamClientKt {
 	public static synthetic fun UpstreamClient$default (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UpstreamClient;
 }
 
+public final class com/spartanlabs/webtools/http/UpstreamClientOwningKt {
+	public static final fun UpstreamClient (Lcom/spartanlabs/webtools/http/Url;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/UpstreamClient;
+	public static synthetic fun UpstreamClient$default (Lcom/spartanlabs/webtools/http/Url;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UpstreamClient;
+}
+
 public abstract class com/spartanlabs/webtools/http/UpstreamFailure : com/spartanlabs/webtools/http/HttpFailure {
 	protected fun <init> (ILjava/lang/String;)V
 	public final fun getStatus ()I
@@ -919,6 +924,13 @@ public final class com/spartanlabs/webtools/http/UrlFetcherConfig$Companion {
 public final class com/spartanlabs/webtools/http/UrlFetcherKt {
 	public static final fun UrlFetcher (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/UrlFetcher;
 	public static synthetic fun UrlFetcher$default (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UrlFetcher;
+}
+
+public final class com/spartanlabs/webtools/http/UrlFetcherOwningKt {
+	public static final fun UrlFetcher (Ljava/lang/String;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/UrlFetcher;
+	public static final fun UrlFetcher (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/UrlFetcher;
+	public static synthetic fun UrlFetcher$default (Ljava/lang/String;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UrlFetcher;
+	public static synthetic fun UrlFetcher$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UrlFetcher;
 }
 
 public abstract interface class com/spartanlabs/webtools/http/WallClock {
