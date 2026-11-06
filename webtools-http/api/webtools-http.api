@@ -849,6 +849,36 @@ public final class com/spartanlabs/webtools/http/Url$Companion {
 	public final fun parse-IoAF18A (Ljava/lang/String;)Ljava/lang/Object;
 }
 
+public final class com/spartanlabs/webtools/http/UrlFetcher : java/lang/AutoCloseable {
+	public fun close ()V
+	public final fun fetch-0E7RQCE (Lcom/spartanlabs/webtools/http/HttpRequest;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fetch-0E7RQCE$default (Lcom/spartanlabs/webtools/http/UrlFetcher;Lcom/spartanlabs/webtools/http/HttpRequest;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/UrlFetcherConfig {
+	public static final field Companion Lcom/spartanlabs/webtools/http/UrlFetcherConfig$Companion;
+	public final fun getBudget ()Lcom/spartanlabs/webtools/http/CallBudget;
+	public final fun getDefaultMaxWait-UwyO8pc ()J
+	public final fun getRateSignals ()Lcom/spartanlabs/webtools/http/RateSignalsReader;
+	public final fun getTimeSource ()Lkotlin/time/TimeSource;
+	public final fun getWallClock ()Lcom/spartanlabs/webtools/http/WallClock;
+	public final fun setBudget (Lcom/spartanlabs/webtools/http/CallBudget;)V
+	public final fun setDefaultMaxWait-LRDsOJo (J)V
+	public final fun setRateSignals (Lcom/spartanlabs/webtools/http/RateSignalsReader;)V
+	public final fun setTimeSource (Lkotlin/time/TimeSource;)V
+	public final fun setWallClock (Lcom/spartanlabs/webtools/http/WallClock;)V
+}
+
+public final class com/spartanlabs/webtools/http/UrlFetcherConfig$Companion {
+	public final fun getDEFAULT_MAX_WAIT-UwyO8pc ()J
+}
+
+public final class com/spartanlabs/webtools/http/UrlFetcherKt {
+	public static final fun UrlFetcher (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/UrlFetcher;
+	public static synthetic fun UrlFetcher$default (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UrlFetcher;
+}
+
 public abstract interface class com/spartanlabs/webtools/http/WallClock {
 	public abstract fun nowEpochMillis ()J
 }

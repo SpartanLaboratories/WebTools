@@ -12,6 +12,7 @@ import com.spartanlabs.webtools.http.OutboundUrlPolicy
 import com.spartanlabs.webtools.http.RateSignals
 import com.spartanlabs.webtools.http.RateWindow
 import com.spartanlabs.webtools.http.TransportSettings
+import com.spartanlabs.webtools.http.UrlFetcherConfig
 import com.spartanlabs.webtools.http.WebToolsDsl
 import com.spartanlabs.webtools.http.WindowedCallBudget
 import kotlin.test.Test
@@ -36,6 +37,7 @@ class WebToolsDslComponentTest {
         Endpoint.Builder::class.java,
         CallSpec::class.java,
         FetchSpec::class.java,
+        UrlFetcherConfig::class.java,
         RateWindow.Builder::class.java,
         RateSignals.Builder::class.java,
         WindowedCallBudget.Builder::class.java,
