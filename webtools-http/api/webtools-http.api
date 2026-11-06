@@ -202,6 +202,22 @@ public final class com/spartanlabs/webtools/http/CallBudget$Unlimited : com/spar
 	public fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class com/spartanlabs/webtools/http/CallSpec {
+	public final fun getBody ()Lcom/spartanlabs/webtools/http/RequestBody;
+	public final fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getMaxAge-UwyO8pc ()J
+	public final fun getMaxWait-UwyO8pc ()J
+	public final fun getMethod ()Lcom/spartanlabs/webtools/http/HttpMethod;
+	public final fun headers (Lkotlin/jvm/functions/Function1;)V
+	public final fun path ([Ljava/lang/String;)V
+	public final fun query (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun setBody (Lcom/spartanlabs/webtools/http/RequestBody;)V
+	public final fun setLane (Lcom/spartanlabs/webtools/http/Lane;)V
+	public final fun setMaxAge-LRDsOJo (J)V
+	public final fun setMaxWait-LRDsOJo (J)V
+	public final fun setMethod (Lcom/spartanlabs/webtools/http/HttpMethod;)V
+}
+
 public final class com/spartanlabs/webtools/http/CidrBlock {
 	public static final field Companion Lcom/spartanlabs/webtools/http/CidrBlock$Companion;
 	public synthetic fun <init> ([BILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -212,6 +228,36 @@ public final class com/spartanlabs/webtools/http/CidrBlock {
 
 public final class com/spartanlabs/webtools/http/CidrBlock$Companion {
 	public final fun parse-IoAF18A (Ljava/lang/String;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/Endpoint {
+	public final fun getCost ()I
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getMissTtl-UwyO8pc ()J
+	public final fun getMisses ()Ljava/util/Set;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getTtl-UwyO8pc ()J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/http/Endpoint$Builder {
+	public final fun getCost ()I
+	public final fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getMissTtl-UwyO8pc ()J
+	public final fun getName ()Ljava/lang/String;
+	public final fun getTtl-UwyO8pc ()J
+	public final fun misses ([I)V
+	public final fun setCost (I)V
+	public final fun setLane (Lcom/spartanlabs/webtools/http/Lane;)V
+	public final fun setMissTtl-LRDsOJo (J)V
+	public final fun setName (Ljava/lang/String;)V
+	public final fun setTtl-LRDsOJo (J)V
+}
+
+public final class com/spartanlabs/webtools/http/EndpointKt {
+	public static final fun Endpoint (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/Endpoint;
+	public static synthetic fun Endpoint$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/Endpoint;
 }
 
 public final class com/spartanlabs/webtools/http/ExhaustedReason {
@@ -230,6 +276,15 @@ public final class com/spartanlabs/webtools/http/ExhaustedReason$Companion {
 }
 
 public abstract interface annotation class com/spartanlabs/webtools/http/ExperimentalForInheritanceWebToolsApi : java/lang/annotation/Annotation {
+}
+
+public final class com/spartanlabs/webtools/http/FetchSpec {
+	public final fun getCost ()I
+	public final fun getLane ()Lcom/spartanlabs/webtools/http/Lane;
+	public final fun getMaxWait-UwyO8pc ()J
+	public final fun setCost (I)V
+	public final fun setLane (Lcom/spartanlabs/webtools/http/Lane;)V
+	public final fun setMaxWait-LRDsOJo (J)V
 }
 
 public abstract class com/spartanlabs/webtools/http/HttpFailure : java/lang/Exception {
