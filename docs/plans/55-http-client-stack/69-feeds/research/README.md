@@ -480,18 +480,24 @@ The five findings files answer every question; the detail, the measurements and 
 - **A parser that throws.** Inside the supplied parser, Rome's own runtime exceptions on hostile input are `Malformed`;
   an exception that leaves any parser's `parse` is the fetcher's `DecodeFailure`. Both hold, at different layers.
 
-### What these findings change against the parent design
+### What the design takes from these findings, against the parent design
 
-- **Which statuses are parsed.** [`../../architecture.md`](../../architecture.md) §6.10 parses any `2xx`; these
-  findings parse `200` and `203` only and return every other `2xx` as `UpstreamError`.
-- **A fourth layer of hardening.** §6.10 hardens with the byte cap, the prolog scan and `FeedLimits`'s field and count
-  bounds. The findings add structural limits inside the supplied parser (depth 256, attributes per element 100,
-  elements 100,000, distinct namespace URIs 64), each reported as `LimitExceeded`, without which a 2 MiB document
-  costs minutes of CPU, overflows the stack or grows a JVM-wide cache. They fit either as fixed constants of
-  `RomeFeedParser` or as tightening-only members of `FeedLimits`.
+- **Which statuses are parsed.** [`../../architecture.md`](../../architecture.md) §6.10 parses any `2xx`. The fetcher
+  parses a `200` or a `203` and returns every other `2xx` as `UpstreamError(status)`: a `204` or `205` has no content,
+  a `206` is a fragment, a `226` a delta, and none of them is the feed
+  ([`conditional-get-and-redirects.md`](conditional-get-and-redirects.md) F5).
+- **A fourth layer of hardening: structural limits in the parser.** §6.10 hardens with the byte cap, the prolog scan
+  and `FeedLimits`'s field and count bounds. `FeedLimits` also carries four structural limits, tightening-only like
+  the others: element depth (256), attributes per element (100), elements in the document (100,000) and distinct
+  namespace URIs (64). `RomeFeedParser` enforces them inside its own parser, each failure is `LimitExceeded` with a
+  reason constant of its own, and the hardening contract holds any parser behind the port to them. Without them a
+  2 MiB document costs minutes of CPU, overflows the stack or grows a JVM-wide cache
+  ([`parse-memory.md`](parse-memory.md) F1 to F6; [`rome-adapter.md`](rome-adapter.md) F6, F7).
 - **How the supplied parser drives Rome.** §6.10 names `SyndFeedInput` with `allowDoctypes = false`, a plain
-  `XmlReader`, and three exception mappings; the findings replace these with the private `WireFeedInput` subclass and
-  SAX factory, the encoding recipe and the fuller exception table above, and add `dc:subject` as a category source.
+  `XmlReader` and three exception mappings. `RomeFeedParser` drives Rome through a private `WireFeedInput` subclass
+  with a SAX parser of its own per parse, the three-step `XmlReader` recipe, the exception table above and
+  `dc:subject` as a category source, with no change to the public API ([`rome-adapter.md`](rome-adapter.md)
+  Recommendation).
 - The 2 MiB cap, the two concurrent parses and the 1,000-entry limit stay as they are.
 
 ### Options that do not fit
@@ -503,6 +509,10 @@ The five findings files answer every question; the detail, the measurements and 
   detection are lost, so bare ampersands, `&nbsp;` and ISO-8859-1 feeds fail.
 - A byte-level structural pre-scan: cheap, but it can disagree with the parser about a malformed document, and the
   handler counts exactly.
+- The four structural limits as fixed constants of `RomeFeedParser`: a deployment could not tighten them, and a
+  parser behind the port would not be held to them.
+- Parsing every `2xx` status: an empty `204` reads as a document that is not a feed, a `206` fragment or a `226`
+  delta reads as the whole feed.
 - A heap set on `nonfunctionalTest`, or an in-process allocation bound, as the memory gate (above).
 - A prolog scan that picks one encoding first; searching for the text `<!DOCTYPE`; modelling the repair reader's
   comment grammar.
