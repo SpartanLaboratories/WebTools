@@ -1,7 +1,7 @@
 {
   "slug": "gradle-build",
   "version": null,
-  "asIs": {"ref": "master", "sha": "4fcc6e0", "date": "2026-10-25"},
+  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
   "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "4fcc6e0"},
   "written": {"sha": "4fcc6e0"}
 }

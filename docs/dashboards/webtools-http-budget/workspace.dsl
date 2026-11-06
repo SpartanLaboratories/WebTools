@@ -1,5 +1,5 @@
 // webtools-http-budget — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-budget/index.html.
-// As-is at WebTools feat/issue-67-call-budget 327164f (2026-11-04), the call budget inside webtools-http 1.0.0 (new, unreleased): the CallBudget port with Permit and withPermit, CallBudget.Unlimited, WindowedCallBudget, the rate-signal vocabulary with RetryAfter, the store and observer seams with their defaults, the internal ledger, and two test fixtures. Code is authoritative on any conflict.
+// As-is at WebTools master 5f221ce (2026-11-05), the call budget inside webtools-http 1.0.0 (new, unreleased): the CallBudget port with Permit and withPermit, CallBudget.Unlimited, WindowedCallBudget, the rate-signal vocabulary with RetryAfter, the store and observer seams with their defaults, the internal ledger, and two test fixtures. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -83,7 +83,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.budget "Components" "The call budget as built at feat/issue-67-call-budget 327164f." {
+        component webtools.budget "Components" "The call budget as built at master 5f221ce." {
             include *
             autoLayout tb
         }
