@@ -11,7 +11,7 @@ package com.spartanlabs.webtools.http
  * builder whose instance it passes to a consumer's lambda as the receiver: [HttpHeaders.Builder], [HttpRequest.Builder],
  * [HttpResponse.Builder], [TransportSettings.Builder], [OutboundUrlPolicy.Trusted.Builder],
  * [OutboundUrlPolicy.Untrusted.Builder], [CachePolicy.Builder], [Endpoint.Builder], [CallSpec], [FetchSpec],
- * [UrlFetcherConfig], [RateWindow.Builder], [RateSignals.Builder], [WindowedCallBudget.Builder] and the JVM's
+ * [UpstreamClientConfig], [UrlFetcherConfig], [RateWindow.Builder], [RateSignals.Builder], [WindowedCallBudget.Builder] and the JVM's
  * `CaffeineResponseCache.Builder`.
  */
 // `CaffeineResponseCache.Builder` is named in code font above: `commonMain` cannot link a `jvmMain` type.

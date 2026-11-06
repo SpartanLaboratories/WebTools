@@ -3,6 +3,7 @@ package com.spartanlabs.testing.component.webtools.http
 import com.spartanlabs.webtools.http.CallBudget
 import com.spartanlabs.webtools.http.MSG_DEFAULT_MAX_WAIT
 import com.spartanlabs.webtools.http.RateSignalsReader
+import com.spartanlabs.webtools.http.UpstreamClientConfig
 import com.spartanlabs.webtools.http.UrlFetcherConfig
 import com.spartanlabs.webtools.http.WallClock
 import kotlin.test.Test
@@ -15,7 +16,7 @@ import kotlin.time.TimeSource
 
 /**
  * Level 2 - `UrlFetcherConfig`, driven through its `internal` `resolve()`: the defaults (`CallBudget.Unlimited`, `RateSignalsReader.Standard`,
- * `WallClock.System`, `TimeSource.Monotonic`, a five-second wait); `DEFAULT_MAX_WAIT` is five seconds; a negative `defaultMaxWait` is refused with the
+ * `WallClock.System`, `TimeSource.Monotonic`, a five-second wait); `DEFAULT_MAX_WAIT` is the client's five seconds; a negative `defaultMaxWait` is refused with the
  * constant message and zero is accepted.
  */
 class UrlFetcherConfigComponentTest {
@@ -32,7 +33,7 @@ class UrlFetcherConfigComponentTest {
 
     @Test
     fun `DEFAULT_MAX_WAIT equals the client's`() {
-        // The client's constant joins this comparison with the client's configuration; both are five seconds.
+        assertEquals(UpstreamClientConfig.DEFAULT_MAX_WAIT, UrlFetcherConfig.DEFAULT_MAX_WAIT)
         assertEquals(5.seconds, UrlFetcherConfig.DEFAULT_MAX_WAIT)
         assertEquals(UrlFetcherConfig.DEFAULT_MAX_WAIT, UrlFetcherConfig().defaultMaxWait)
     }

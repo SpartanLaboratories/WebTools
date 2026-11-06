@@ -1,15 +1,21 @@
 package com.spartanlabs.testing.support.webtools.http
 
 import ch.qos.logback.classic.spi.ILoggingEvent
+import com.spartanlabs.webtools.http.CacheStats
 import com.spartanlabs.webtools.http.Endpoint
 import com.spartanlabs.webtools.http.HttpHeaders
 import com.spartanlabs.webtools.http.HttpTransport
 import com.spartanlabs.webtools.http.OutboundUrlPolicy
+import com.spartanlabs.webtools.http.UpstreamClient
+import com.spartanlabs.webtools.http.UpstreamClientConfig
 import com.spartanlabs.webtools.http.Url
 import com.spartanlabs.webtools.http.UrlFetcher
 import com.spartanlabs.webtools.http.UrlFetcherConfig
+import com.spartanlabs.webtools.http.testing.FakeHttpTransport
 import com.spartanlabs.webtools.http.testing.Step
 import com.spartanlabs.webtools.http.testing.VirtualClock
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** The base URL the client tests call against: `https`, a public-looking host and a base path with a trailing slash. */
 internal val BASE_URL: Url = Url.parse("https://api.example.test/v1/").getOrThrow()
@@ -59,3 +65,33 @@ internal fun respondWith(status: Int, body: String = "", headers: HttpHeaders = 
  * @return the events whose logger name ends with [suffix], in order.
  */
 internal fun facadeEvents(events: List<ILoggingEvent>, suffix: String): List<ILoggingEvent> = events.filter { it.loggerName.endsWith(suffix) }
+
+/**
+ * A client over [transport] at [BASE_URL] built by the common factory and driven by [clock]: its `timeSource`, `wallClock` and `dispatcher` are the
+ * clock's, then [configure] runs, so one virtual clock drives a budget built from windows, the signal reader and the per-call figures.
+ *
+ * @param clock the virtual clock of the test.
+ * @param transport the transport, normally a `FakeHttpTransport`; the client never closes it.
+ * @param configure the other configuration to set (for example `cache(...)`, `budget(...)`, `policy`).
+ * @return the client; close it with `use`.
+ */
+internal fun clientOn(clock: VirtualClock, transport: HttpTransport, configure: UpstreamClientConfig.() -> Unit = {}): UpstreamClient =
+    UpstreamClient(transport, BASE_URL) {
+        timeSource = clock.timeSource
+        wallClock = clock.wallClock
+        dispatcher = clock.dispatcher
+        configure()
+    }
+
+/**
+ * Asserts that a refused call cost nothing: the transport received no call, the budget granted no permit and the client's cache counted nothing.
+ *
+ * @param fake the client's transport.
+ * @param budget the recording budget the client charges.
+ * @param client the client under test.
+ */
+internal fun assertNothingSpent(fake: FakeHttpTransport, budget: PermitRecordingBudget, client: UpstreamClient) {
+    assertTrue(fake.calls.isEmpty(), "the transport received ${fake.calls.size} call(s)")
+    assertTrue(budget.permits.isEmpty(), "the budget granted ${budget.permits.size} permit(s)")
+    assertEquals(CacheStats.Empty, client.cacheStats())
+}

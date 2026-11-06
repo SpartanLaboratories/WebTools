@@ -815,6 +815,48 @@ public final class com/spartanlabs/webtools/http/TransportSettingsKt {
 	public static final fun TransportSettings (Lcom/spartanlabs/webtools/http/TransportSettings;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/TransportSettings;
 }
 
+public final class com/spartanlabs/webtools/http/UpstreamClient : java/lang/AutoCloseable {
+	public final fun cacheStats ()Lcom/spartanlabs/webtools/http/CacheStats;
+	public final fun call-0E7RQCE (Lcom/spartanlabs/webtools/http/Endpoint;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun call-0E7RQCE$default (Lcom/spartanlabs/webtools/http/UpstreamClient;Lcom/spartanlabs/webtools/http/Endpoint;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun close ()V
+	public final fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getBaseUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public fun toString ()Ljava/lang/String;
+	public final fun utilisation (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/http/UpstreamClientConfig {
+	public static final field Companion Lcom/spartanlabs/webtools/http/UpstreamClientConfig$Companion;
+	public final fun budget (Lcom/spartanlabs/webtools/http/CallBudget;)V
+	public final fun budget (Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun budget$default (Lcom/spartanlabs/webtools/http/UpstreamClientConfig;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun cache (Lcom/spartanlabs/webtools/http/ResponseCache;)V
+	public final fun getDefaultMaxWait-UwyO8pc ()J
+	public final fun getDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public final fun getHeaders ()Lcom/spartanlabs/webtools/http/HttpHeaders;
+	public final fun getPolicy ()Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;
+	public final fun getRateSignals ()Lcom/spartanlabs/webtools/http/RateSignalsReader;
+	public final fun getTimeSource ()Lkotlin/time/TimeSource;
+	public final fun getWallClock ()Lcom/spartanlabs/webtools/http/WallClock;
+	public final fun setDefaultMaxWait-LRDsOJo (J)V
+	public final fun setDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun setHeaders (Lcom/spartanlabs/webtools/http/HttpHeaders;)V
+	public final fun setPolicy (Lcom/spartanlabs/webtools/http/OutboundUrlPolicy;)V
+	public final fun setRateSignals (Lcom/spartanlabs/webtools/http/RateSignalsReader;)V
+	public final fun setTimeSource (Lkotlin/time/TimeSource;)V
+	public final fun setWallClock (Lcom/spartanlabs/webtools/http/WallClock;)V
+}
+
+public final class com/spartanlabs/webtools/http/UpstreamClientConfig$Companion {
+	public final fun getDEFAULT_MAX_WAIT-UwyO8pc ()J
+}
+
+public final class com/spartanlabs/webtools/http/UpstreamClientKt {
+	public static final fun UpstreamClient (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/http/UpstreamClient;
+	public static synthetic fun UpstreamClient$default (Lcom/spartanlabs/webtools/http/HttpTransport;Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/http/UpstreamClient;
+}
+
 public abstract class com/spartanlabs/webtools/http/UpstreamFailure : com/spartanlabs/webtools/http/HttpFailure {
 	protected fun <init> (ILjava/lang/String;)V
 	public final fun getStatus ()I

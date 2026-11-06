@@ -1,7 +1,6 @@
 package com.spartanlabs.webtools.http
 
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /**
@@ -33,7 +32,7 @@ public class UrlFetcherConfig internal constructor() {
     /** The default of [defaultMaxWait]. */
     public companion object {
         /** 5 seconds (the same value as [UpstreamClientConfig.DEFAULT_MAX_WAIT]). */
-        public val DEFAULT_MAX_WAIT: Duration = 5.seconds
+        public val DEFAULT_MAX_WAIT: Duration = UpstreamClientConfig.DEFAULT_MAX_WAIT
     }
 
     /** @throws IllegalArgumentException if [defaultMaxWait] is negative. */

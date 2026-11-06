@@ -1,8 +1,11 @@
 package com.spartanlabs.testing.component.webtools.http
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.http.FETCH_URL
 import com.spartanlabs.testing.support.webtools.http.PermitRecordingBudget
 import com.spartanlabs.testing.support.webtools.http.budgetOn
+import com.spartanlabs.testing.support.webtools.http.captureTransportLogs
+import com.spartanlabs.testing.support.webtools.http.facadeEvents
 import com.spartanlabs.testing.support.webtools.http.fetcherOn
 import com.spartanlabs.testing.support.webtools.http.minuteWindow
 import com.spartanlabs.testing.support.webtools.http.respondWith
@@ -15,6 +18,7 @@ import com.spartanlabs.webtools.http.RULE_COST
 import com.spartanlabs.webtools.http.RULE_MAX_WAIT
 import com.spartanlabs.webtools.http.RULE_SETTINGS
 import com.spartanlabs.webtools.http.TransportFailure
+import com.spartanlabs.webtools.http.Url
 import com.spartanlabs.webtools.http.testing.FakeHttpTransport
 import com.spartanlabs.webtools.http.testing.RequestMatch
 import com.spartanlabs.webtools.http.testing.Step
@@ -34,7 +38,7 @@ import kotlin.time.Duration.Companion.seconds
  * Level 2 - what `UrlFetcher.fetch` refuses before anything is spent, and how it waits: a cost below 1, a negative `maxWait`, a header the transport
  * controls and an exception thrown by the lambda are each `InvalidRequest` with a constant rule, no permit and no transport call; a wait longer
  * than `maxWait` comes back as `BudgetExhausted`; the fetcher's `defaultMaxWait` applies when the spec sets none; concurrent fetches of one URL
- * are not coalesced.
+ * are not coalesced; an `InvalidRequest` is logged once at `DEBUG` on the fetcher's logger with its rule and no header value or query.
  */
 class UrlFetcherRequestComponentTest {
 
@@ -165,5 +169,31 @@ class UrlFetcherRequestComponentTest {
                 assertEquals(4, recording.permits.size)
             }
         }
+    }
+
+    @Test
+    fun `an InvalidRequest is logged once at DEBUG with its rule and no value`() {
+        val events = captureTransportLogs {
+            runTest {
+                val clock = virtualClock()
+                val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, respondWith(200))
+                val url = Url.parse("https://files.example.test/a?token=SECRET-QUERY").getOrThrow()
+                val controlled = HttpRequest(HttpMethod.Get, url) { headers = HttpHeaders { add("User-Agent", "SECRET-HEADER") } }
+                fetcherOn(clock, fake).use { fetcher ->
+                    assertEquals(RULE_COST, ruleOf(fetcher.fetch(HttpRequest(HttpMethod.Get, url)) { cost = 0 }))
+                    assertEquals("header User-Agent is controlled by the transport", ruleOf(fetcher.fetch(controlled)))
+                    assertTrue(fake.calls.isEmpty())
+                }
+            }
+        }.second
+
+        val lines = facadeEvents(events, "UrlFetcher")
+        assertEquals(
+            listOf("invalid request: rule=$RULE_COST", "invalid request: rule=header User-Agent is controlled by the transport"),
+            lines.filter { it.level == Level.DEBUG }.map { it.formattedMessage },
+        )
+        // Only the creation and close lines beside them: an invalid request has no per-fetch line and no warning.
+        assertEquals(4, lines.size, lines.map { it.formattedMessage }.toString())
+        assertFalse(lines.any { "SECRET" in it.formattedMessage }, lines.map { it.formattedMessage }.toString())
     }
 }

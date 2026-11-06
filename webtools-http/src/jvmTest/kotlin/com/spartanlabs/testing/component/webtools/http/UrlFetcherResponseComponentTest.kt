@@ -1,8 +1,11 @@
 package com.spartanlabs.testing.component.webtools.http
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.http.FETCH_URL
 import com.spartanlabs.testing.support.webtools.http.PermitRecordingBudget
 import com.spartanlabs.testing.support.webtools.http.budgetOn
+import com.spartanlabs.testing.support.webtools.http.captureTransportLogs
+import com.spartanlabs.testing.support.webtools.http.facadeEvents
 import com.spartanlabs.testing.support.webtools.http.fetcherOn
 import com.spartanlabs.testing.support.webtools.http.minuteWindow
 import com.spartanlabs.testing.support.webtools.http.respondWith
@@ -14,6 +17,7 @@ import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpResponse
 import com.spartanlabs.webtools.http.TransportFailure
 import com.spartanlabs.webtools.http.UpstreamFailure
+import com.spartanlabs.webtools.http.Url
 import com.spartanlabs.webtools.http.testing.FakeHttpTransport
 import com.spartanlabs.webtools.http.testing.RequestMatch
 import com.spartanlabs.webtools.http.testing.Step
@@ -21,6 +25,7 @@ import com.spartanlabs.webtools.http.testing.virtualClock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.seconds
@@ -29,7 +34,8 @@ import kotlin.time.Duration.Companion.seconds
  * Level 2 - what `UrlFetcher.fetch` returns for a response, over the fake transport and a recorded budget: every status is the response (a `200`
  * as the very instance the transport produced, a `304` with its headers, a `404`, a `500` and a returned `3xx`), except a throttle, which is
  * `RateLimited` with the longer of `Retry-After` and the budget's pause (a `429`; a `503` only with `Retry-After`); a transport failure is returned
- * with the permit left spent, and an `InvalidRequest` from the transport releases the permit.
+ * with the permit left spent, and an `InvalidRequest` from the transport releases the permit; a throttle is logged once at `WARN` on the fetcher's
+ * logger with the redacted URL, the status and `retryAfter`, and no header value, query or body.
  */
 class UrlFetcherResponseComponentTest {
 
@@ -174,5 +180,29 @@ class UrlFetcherResponseComponentTest {
                 assertEquals(0, real.utilisation().windows.single().used)
             }
         }
+    }
+
+    @Test
+    fun `a throttle is logged once at WARN with the redacted URL, the status and retryAfter`() {
+        val events = captureTransportLogs {
+            runTest {
+                val clock = virtualClock()
+                val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, Step.respond(429, HttpHeaders { add("Retry-After", "30") }, "SECRET-BODY"))
+                val url = Url.parse("https://files.example.test/a?token=SECRET-QUERY").getOrThrow()
+                val traced = HttpRequest(HttpMethod.Get, url) { headers = HttpHeaders { add("X-Trace", "SECRET-HEADER") } }
+                budgetOn(clock, minuteWindow(10)).use { real ->
+                    fetcherOn(clock, fake) { budget = real }.use { fetcher ->
+                        assertIs<UpstreamFailure.RateLimited>(fetcher.fetch(traced).exceptionOrNull())
+                    }
+                }
+            }
+        }.second
+
+        val lines = facadeEvents(events, "UrlFetcher")
+        assertEquals(
+            listOf("throttled: subject=https://files.example.test/a?..., status=429, retryAfter=30s"),
+            lines.filter { it.level == Level.WARN }.map { it.formattedMessage },
+        )
+        assertFalse(lines.any { "SECRET" in it.formattedMessage }, lines.map { it.formattedMessage }.toString())
     }
 }
