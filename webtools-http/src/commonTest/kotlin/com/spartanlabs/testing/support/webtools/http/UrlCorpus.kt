@@ -3,7 +3,7 @@ package com.spartanlabs.testing.support.webtools.http
 import com.spartanlabs.webtools.http.UrlProblem
 
 /**
- * The `Url` corpus: the inputs of the research (`research/url-parsing.md`, "The corpus"), each with its
+ * The `Url` corpus: inputs for `Url.parse`, each with its
  * expected canonical text or `UrlProblem`. Common code, so the Level 4a tables use it without OkHttp and
  * the `jvmTest` differential sees it.
  */
@@ -45,7 +45,7 @@ internal object UrlCorpus {
     private fun bad(input: String, problem: UrlProblem): Case = Case(input, null, problem)
 
     //region accept
-    /** Inputs `Url.parse` accepts, each with its canonical text (research "Must accept" plus plan §9.1's additions). */
+    /** Inputs `Url.parse` accepts, each with its canonical text. */
     val accept: List<Case> = listOf(
         ok("https://api.opendota.com/api/matches/123?api_key=abc123"),
         ok("https://api.opendota.com/api/players/1/matches?limit=20&offset=0&win=1"),
@@ -74,7 +74,7 @@ internal object UrlCorpus {
         ok("https://example.com/.%2e", "https://example.com/"),
         ok("https://example.com//a//b"),
         ok("https://example.com/#only-fragment", "https://example.com/"),
-        // Added by the plan (§9.1).
+        // IPv6 forms, a non-default port for each scheme, a lower-case escape and a `+` in a query.
         ok("http://[::]/"),
         ok("http://[1:2:3:4:5:6:7::]/", "http://[1:2:3:4:5:6:7:0]/"),
         ok("http://[::1.2.3.4]/", "http://[::102:304]/"),
@@ -107,7 +107,7 @@ internal object UrlCorpus {
         bad("http://h/#a${c}b", problem),
     )
 
-    /** Inputs `Url.parse` rejects, each with its kind: the first failing step in plan §6.5's order. */
+    /** Inputs `Url.parse` rejects, each with its kind: the first failing step of the parse (empty text, the character scan, the scheme, user-info, the port, the host). */
     val reject: List<Case> = buildList {
         // Empty
         add(bad("", UrlProblem.Empty))
@@ -157,7 +157,7 @@ internal object UrlCorpus {
     //endregion
 
     //region confusion
-    /** The host-spoofing, slash, scheme and `xn--` confusion strings of plan §9.1, accepted or rejected as §6.5 says. */
+    /** The host-spoofing, slash, scheme and `xn--` confusion strings, each with what `Url.parse` makes of it: its canonical text or the kind of its rejection. */
     val confusion: List<Case> = buildList {
         add(bad("http://evil.example\\@127.0.0.1:80/", UrlProblem.Backslash))
         add(bad("http://127.0.0.1:80\\@evil.example/", UrlProblem.Backslash))
@@ -179,18 +179,18 @@ internal object UrlCorpus {
         add(bad("http://[::1]%25eth0/", UrlProblem.Host))
         listOf("/%2e%2e/", ":0", ":65536", ":80:80").forEach { add(bad(it, UrlProblem.Scheme)) }
         listOf("http://h:0/", "http://h:65536/", "http://h:80:80/").forEach { add(bad(it, UrlProblem.Port)) }
-        // The slash rows of research F2: only "://" is a separator; a backslash is caught by the scan first.
+        // The slash rows: only "://" is a separator; a backslash is caught by the scan first.
         listOf("http:a.com", "http:/a.com", "http:", "httpx://a.com/", "http+x://a.com/", "/x")
             .forEach { add(bad(it, UrlProblem.Scheme)) }
         add(bad("http:\\\\a.com", UrlProblem.Backslash))
         add(bad("http:\\a.com", UrlProblem.Backslash))
-        // An empty authority after "://" fails at the host step, not the scheme step (§6.5 order).
+        // An empty authority after "://" fails at the host step, not the scheme step: "http://" already satisfies the scheme step.
         listOf("http:///a.com", "http:////a.com", "http://").forEach { add(bad(it, UrlProblem.Host)) }
         add(bad("http:///", UrlProblem.Host))
-        // The scheme rows of research F2.
+        // The scheme rows: the scheme and the host are matched in any case and printed in lower case.
         add(ok("HTTP://EXAMPLE.COM/", "http://example.com/"))
         add(ok("HtTpS://Example.Com/", "https://example.com/"))
-        // The xn-- rows of research F5: every label starting xn-- is HostIdn, whatever HttpUrl makes of it.
+        // The xn-- rows: every label starting xn-- is HostIdn, whatever HttpUrl makes of it.
         listOf(
             "xn--n3h.net", "XN--N3H.net", "xn--bcher-kva.example", "xn--ls8h.la", "xn--abc-", "xn--n3h-", "abc.xn--abc-.com",
             "xn--a-", "xn--a", "xn--", "xn--zz", "xn--ab-c", "xn--0.com", "xn---",

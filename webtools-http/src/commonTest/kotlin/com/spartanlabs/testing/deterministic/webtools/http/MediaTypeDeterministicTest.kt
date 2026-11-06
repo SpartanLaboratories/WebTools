@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * Level 4a - the accepted and refused rows of the research's content-type table, with plan Amendment 1
+ * Level 4a - the accepted and refused rows of the content-type table, among them the empty-parameter forms
  * (`text/plain;;`, `text/plain ;`, `text/plain;` and `text/plain ; charset=x` accepted; `text/plain; `
  * refused at index 11), and the failing indices: the offending character, the start of trailing
  * whitespace, or the text length when the text ends too early.

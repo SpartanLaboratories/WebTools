@@ -26,18 +26,20 @@ public abstract class UpstreamFailure protected constructor(
     }
 
     /**
-     * The server throttled the call and said when to retry.
+     * The server throttled the call.
      *
      * **Stable Core.** Created by the call facades only. Message:
      * `The server rate-limited the call (status <status>); retry in <retryAfter>`.
      *
      * @param status the response status, in 100..599.
-     * @param retryAfter how long the server asked the caller to wait; not negative.
+     * @param retryAfter how long to wait before calling again: the longer of the server's `Retry-After` and the time the call budget stays paused because of this and
+     *   earlier throttles, measured when the failure was created. A call made after waiting this long is not refused by the budget's pause, and does not go back to a server
+     *   that asked for more time. Zero when neither the server nor the budget named a wait; the server may still throttle again. Not negative; may exceed the budget's longest pause.
      * @throws IllegalArgumentException if [status] is outside 100..599 or [retryAfter] is negative.
      */
     public class RateLimited internal constructor(
         status: Int,
-        /** How long the server asked the caller to wait. */
+        /** How long to wait before calling again; see the constructor's description. */
         public val retryAfter: Duration,
     ) : UpstreamFailure(status, "The server rate-limited the call (status $status); retry in $retryAfter") {
         init {

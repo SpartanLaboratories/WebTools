@@ -1,11 +1,11 @@
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-05T23:43:23Z",
-  "asOf": "2026-11-05",
+  "generated": "2026-11-06T04:16:11Z",
+  "asOf": "2026-11-06",
   "tree": {
-    "ref": "feat/issue-67-call-budget",
-    "sha": "327164f"
+    "ref": "feat/issue-68-call-facades",
+    "sha": "806b489"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -26,7 +26,7 @@
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-core/index.html"
     },
     {
       "slug": "webtools-http-test-fixtures",
@@ -34,7 +34,7 @@
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-test-fixtures/index.html"
     },
     {
       "slug": "webtools-http-url-policy",
@@ -42,7 +42,7 @@
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-url-policy/index.html"
     },
     {
       "slug": "webtools-http-transport",
@@ -50,7 +50,7 @@
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-transport/index.html"
     },
     {
       "slug": "webtools-http-cache",
@@ -58,7 +58,7 @@
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-cache/index.html"
     },
     {
       "slug": "webtools-http-budget",
@@ -73,8 +73,8 @@
       "name": "call facades",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http-facades/index.html"
     },
     {
       "slug": "webtools-feeds",
@@ -142,9 +142,9 @@
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "7 of 11 units landed; #67 in progress; #68 up next.",
+      "detail": "8 of 11 units landed; #68 in progress; #69 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-03T19:38:03Z",
+      "updated": "2026-11-06T00:17:56Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -152,13 +152,13 @@
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 7,
+        "landed": 8,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 7,
+        "landed": 8,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -166,17 +166,17 @@
         "done": false,
         "current": [
           {
-            "issue": 67,
-            "slug": "call-budget",
+            "issue": 68,
+            "slug": "call-facades",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 68,
-          "slug": "call-facades",
+          "issue": 69,
+          "slug": "feeds",
           "blockedBy": [
             {
-              "issue": 67
+              "issue": 68
             }
           ]
         }
@@ -356,7 +356,9 @@
       "blocks": [
         {
           "issue": 67,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-05T23:52:27Z",
           "hold": "enables"
         },
         {
@@ -452,7 +454,9 @@
         },
         {
           "issue": 67,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-05T23:52:27Z",
           "hold": "enables"
         },
         {
@@ -823,7 +827,8 @@
     {
       "issue": 67,
       "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -848,17 +853,17 @@
         {
           "issue": 68,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/67-call-budget/dashboard.html",
       "folder": "55-http-client-stack/67-call-budget/",
-      "branch": "feat/issue-67-call-budget",
+      "branch": null,
       "system": "webtools-http-budget",
-      "step": "document",
-      "detail": "Document: 5 of 7 tasks done; State boards current.",
-      "since": "2026-11-05T22:43:07Z",
-      "updated": "2026-11-05T23:18:27Z",
+      "step": "landed",
+      "detail": "Landed in PR #90.",
+      "since": "2026-11-05T23:52:26Z",
+      "updated": "2026-11-05T23:52:26Z",
       "qa": [
         {
           "pass": 1,
@@ -899,15 +904,20 @@
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 90,
+        "merge": "5f221ce",
+        "version": null,
+        "date": "2026-11-05"
+      },
       "reconciliation": {
-        "state": "planned",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "call budget",
       "group": "55",
       "order": 8
@@ -921,8 +931,10 @@
       "waitsOn": [
         {
           "issue": 67,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-05T23:52:27Z",
+          "build": "clear",
           "locality": "local-repository"
         },
         {
@@ -949,24 +961,43 @@
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/68-call-facades/dashboard.html",
+      "folder": "55-http-client-stack/68-call-facades/",
+      "branch": "feat/issue-68-call-facades",
       "system": "webtools-http-facades",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-06T03:09:31Z",
+      "updated": "2026-11-06T03:53:14Z",
+      "qa": [
         {
-          "issue": 67
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-06",
+          "at": "2026-11-06T02:52:19Z",
+          "findings": {
+            "test": 16,
+            "code": 2
+          },
+          "severity": {
+            "minor": 18,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "note": "No test failed and no logic defect was found: the permit rules, the retry delay, the cache interplay, the lifecycle, the owning factories, secrecy and the ABI read clean, and the five recorded deviations are accurate. Eighteen minor findings, being fixed in place with no second pass. Sixteen test findings, second-order, in the test rows and in `logging`, `url-fetcher`, `owning-factories` and `loopback-fetchers`: log branches and check orderings the plan did not list; the public owning fetcher factory never carrying a real request; cleanup on a failing path missing in three test classes; message texts pinned only against their own constants; and no close-race or secrecy suite for the fetcher at Level 4c non-functional. Two code findings, in `readme` and `release`: two sentences of the README and the CHANGELOG that are more accurate than the planned text, to be recorded as deviations. Suite: 1,431 passed, 0 failed, 0 skipped in webtools-http's 261 classes, every test level run; apiCheck passed. webtools-udp, webtools-scraping and webtools-browser are untouched and were not run.",
+          "inPlace": "fixed"
         }
       ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
+      "landed": null,
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "call facades",
       "group": "55",
       "order": 9
@@ -1008,10 +1039,16 @@
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [
+        {
+          "issue": 68
+        }
+      ],
       "systemName": "webtools-feeds",
       "group": "55",
       "order": 10
@@ -1156,7 +1193,8 @@
         {
           "issue": 67,
           "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 68,
@@ -1177,6 +1215,24 @@
     }
   ],
   "unscheduled": [
+    {
+      "issue": 93,
+      "title": "webtools-http: `Url.redacted()` shows the path, so a secret carried in a URL's path is logged",
+      "labels": [
+        "enhancement"
+      ],
+      "created": "2026-11-06",
+      "system": "webtools-http-core"
+    },
+    {
+      "issue": 91,
+      "title": "webtools-http: save a hard window when a server reading or a clock step raises its count",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-11-05",
+      "system": "webtools-http-budget"
+    },
     {
       "issue": 87,
       "title": "webtools-http: UrlParseLinearTimeNonFunctionalTest exceeds its 100x bound when the level test tasks run in parallel",

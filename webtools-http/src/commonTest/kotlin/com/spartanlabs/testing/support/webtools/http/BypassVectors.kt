@@ -3,8 +3,8 @@ package com.spartanlabs.testing.support.webtools.http
 import com.spartanlabs.webtools.http.UrlProblem
 
 /**
- * The published SSRF bypass vectors, one data table so nothing is entered twice (`research/bypass-vectors.md` §3 and §4,
- * plus the parent research's F1 host-form catalogue and F10 advisory vectors, by tag). A vector is stage 1 (`Url.parse(text)`
+ * The published SSRF bypass vectors, one data table so nothing is entered twice: the vectors of the sources tagged below, a catalogue
+ * of lenient host forms (rows tagged `F1`) and the vectors of published advisories (rows tagged `F10`). A vector is stage 1 (`Url.parse(text)`
  * must fail with [Vector.problem]) or stage 2 (`Url.parse(text)` succeeds, its `host` is [Vector.host], and an `Untrusted`
  * default guard's `checkHop(url, null)` answers [Vector.outcome], with [Vector.rangeClass] for `DeniedAddress`). An IPv6
  * vector is fed in the printed form unless the row is `spelled` as published. Source tags: PATT = PayloadsAllTheThings
@@ -22,7 +22,7 @@ internal object BypassVectors {
      *
      * @property id the group id (`P01`, `H05`, `D14`, `G1`, `R03`, `N02`, `C01`, ...); repeated across the rows of one group.
      * @property source where it was published (the tags of this file's header), for the reader, never asserted.
-     * @property parent the parent research's catalogue tags this row belongs to, comma-separated (`F1`, `F10`, `F1,F10`), or `null`.
+     * @property parent the catalogue tags this row also belongs to, comma-separated (`F1` the host-form catalogue, `F10` the advisory vectors, `F1,F10`), or `null`.
      * @property text the URL text fed to `Url.parse`.
      * @property problem stage 1: the `UrlProblem` `Url.parse` must fail with; `null` for a stage-2 vector.
      * @property host stage 2: the `Url.host` the parsed URL must print; `null` for a stage-1 vector.
@@ -48,7 +48,7 @@ internal object BypassVectors {
         fun urls(id: String, source: String, parent: String?, outcome: Outcome, rangeClass: String?, host: String, vararg texts: String) =
             texts.forEach { add(Vector(id, source, parent, it, null, host, outcome, rangeClass)) }
 
-        //region stage 1: Url.parse refuses (bypass-vectors.md 3.1)
+        //region stage 1: Url.parse refuses
         refused("P01", "Orange; PATT", null, UrlProblem.UserInfo, "http://foo@evil.com:80@google.com/", "http://foo@127.0.0.1:11211@google.com:80/")
         refused("P02", "Orange; PATT", null, UrlProblem.WhitespaceOrControl, "http://foo@127.0.0.1 @google.com/", "http://1.1.1.1 &@2.2.2.2# @3.3.3.3/")
         refused("P03", "Orange", null, UrlProblem.Port, "http://127.0.0.1:11211:80/")
@@ -82,13 +82,13 @@ internal object BypassVectors {
             "http://[fe80::not-hex]/", "http://[::1/", "http://[::ffff:0177.0.0.1]/", "http://[::ffff:127.1]/", "http://[1:2:3:4:5:6:7::8]/")
         //endregion
 
-        //region stage 2: the port rule (3.1 P20)
+        //region stage 2: the port rule
         listOf(6379, 11211, 25, 22, 2375, 2379).forEach {
             add(Vector("P20", "Orange; PATT; PATT-cloud", null, "http://example.com:$it/", null, "example.com", Outcome.Port, null))
         }
         //endregion
 
-        //region stage 2: HostForm (3.2)
+        //region stage 2: HostForm
         hosts("H01", "PATT; HT; GHSA-r46f-3rpw-hxrv", "F1", Outcome.HostForm, null, "2130706433", "3232235521", "3232235777", "2852039166", "0")
         hosts("H02", "PATT; HT; CVE-2024-29415; node-ip#150", "F1", Outcome.HostForm, null, "127.1", "127.0.1", "127.1.1", "169.254.43518")
         hosts("H03", "HT; CVE-2021-28918; CVE-2021-29418; CVE-2021-29921; CVE-2021-33571; CVE-2026-69192", "F1,F10", Outcome.HostForm, null,
@@ -104,7 +104,7 @@ internal object BypassVectors {
         hosts("H08", "WHATWG", "F1", Outcome.HostForm, null, "example.0x7f", "a.b.1", "localhost.1", "x.0x")
         //endregion
 
-        //region stage 2: DeniedAddress (3.3); the class is the most specific table row's
+        //region stage 2: DeniedAddress; the class is the most specific table row's
         hosts("D01", "PATT; HT", "F1", Outcome.DeniedAddress, "loopback", "127.0.0.1", "127.127.127.127", "127.0.1.3", "127.0.0.0")
         hosts("D02", "PATT; HT; GHSA-j5h6-vqc3-phqh", "F1", Outcome.DeniedAddress, "this-host", "0.0.0.0")
         hosts("D03", "PATT; CVE-2020-28360", "F1", Outcome.DeniedAddress, "private-use", "10.0.0.5", "172.16.0.1", "192.168.1.1", "192.168.0.1")
@@ -157,13 +157,13 @@ internal object BypassVectors {
         hosts("D19", "openclaw", null, Outcome.DeniedAddress, "direct-delegation-as112", "2620:4f:8000::1")
         //endregion
 
-        //region design gaps closed by two rows that are not registry rows (4)
+        //region design gaps closed by two rows that are not registry rows
         urls("G1", "HT-cloud; Microsoft Learn", null, Outcome.DeniedAddress, "azure-wireserver", "168.63.129.16", "http://168.63.129.16/?comp=versions")
         hosts("G2", "openclaw GHSA-8cp7-rp8r-mg77; pydantic-ai GHSA-cg7w-rg45-pc59", null, Outcome.DeniedAddress, "isatap",
             "2a01:4f8:1:1:0:5efe:7f00:1", "2a01:4f8:1:1:200:5efe:7f00:1")
         //endregion
 
-        //region stage 2: ReservedName (3.4)
+        //region stage 2: ReservedName
         hosts("R01", "PATT; HT", "F1", Outcome.ReservedName, null, "localhost", "localhost.", "foo.localhost")
         spelled("R01", "PATT", "F1", Outcome.ReservedName, null, "PayloadsAllTheThings.localhost", "payloadsallthethings.localhost")
         hosts("R02", "PATT", null, Outcome.ReservedName, null, "ip6-localhost", "ip6-loopback")
@@ -171,7 +171,7 @@ internal object BypassVectors {
         hosts("R04", "the rule's own members", null, Outcome.ReservedName, null, "printer.local", "router.home.arpa", "host.localdomain", "intranet")
         //endregion
 
-        //region stage 2: names the resolver guard judges; no earlier rule fires (3.5) and controls (3.6)
+        //region stage 2: names the resolver guard judges (no earlier rule fires), and controls
         hosts("N01", "PATT; HT", null, Outcome.Allowed, null, "localtest.me", "localh.st", "bugbounty.dod.network", "mail.ebc.apple.com", "spoofed.burpcollaborator.net")
         hosts("N02", "PATT; HT; CVE-2026-55526", null, Outcome.Allowed, null, "127.0.0.1.nip.io", "169.254.169.254.nip.io", "company.127.0.0.1.nip.io",
             "customer1.app.localhost.my.company.127.0.0.1.nip.io", "1ynrnhl.xip.io")

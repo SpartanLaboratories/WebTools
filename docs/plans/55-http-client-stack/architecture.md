@@ -511,6 +511,12 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     else's threads); inherited interceptors, cache, cookie jar and authenticators cleared;
     `retryOnConnectionFailure(false)`, `followRedirects(false)`, `followSslRedirects(false)`;
     timeouts from the settings; the policy's `Dns`, `SocketFactory` and proxy choice;
+    > **Corrected 2026-11-06 (#68 as built):** the client's owning factory raises both
+    > `maxConcurrentRequests` and `maxConcurrentRequestsPerHost` to at least the budget's `maxBurst`
+    > whenever its budget is a `WindowedCallBudget`, built or passed in, because a client talks to one
+    > host, where the per-host limit binds. Neither limit is lowered, and there is no ceiling. It
+    > builds the budget before the transport for this. `UrlFetcher` never sizes its transport. See
+    > `68-call-facades/consequences.md` §5.
   - the `ExchangeGuard` network interceptor: a fresh per-hop counter on a `Request` tag that
     throws on a second exchange (fail closed, covering `421` and any future re-send path), and
     hiding of `Retry-After` on a `503` from OkHttp's follow-up logic with restoration in the
@@ -713,10 +719,22 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     holds `budget` (default `Unlimited`), `rateSignals`, `wallClock`, `defaultMaxWait`. No
     endpoint, no decode, no cache: an administrator-supplied URL population is an unbounded
     key space, and a conditional GET is its cache.
+  > **Corrected 2026-11-06 (#68 as built):** `Endpoint<T : Any>` is invariant in `T`, with an
+  > `internal` constructor behind the generic factory. Its builder defaults to the id as `name`, a
+  > zero `ttl`, a `missTtl` of the smaller of `ttl` and 60 s unless one is set, `cost` 1 and the
+  > `Interactive` lane; a miss status is never `429`. `UpstreamClient` also has `flush()`, the exact
+  > final write of a budget with a persistent store, before `close()`. `UrlFetcherConfig` also holds
+  > `timeSource`. Both configurations default `defaultMaxWait` to 5 s. See
+  > `68-call-facades/consequences.md` §5.
 - **Owns (`jvm/`):** the owning factories `UpstreamClient(baseUrl, userAgent) { }` (builds
   and owns an `OkHttpTransport`, a `CaffeineResponseCache` and, when windows are configured, a
   `WindowedCallBudget`; sizes the transport's concurrency to the budget's `maxBurst`) and
   `UrlFetcher(userAgent) { }` (an `Untrusted` `OkHttpTransport`, `Unlimited` budget).
+  > **Corrected 2026-11-06 (#68 as built):** the client's owning factory builds the budget first,
+  > then the transport, then the cache, because the transport's sizing needs the budget's `maxBurst`
+  > (§6.3.2). `UrlFetcher(userAgent, policy) { }` joins `UrlFetcher(userAgent) { }`, for a
+  > deployment that adds its own denied ranges or ports; it builds the transport with the policy's
+  > settings as they are. See `68-call-facades/consequences.md` §5.
 - **The call pipeline** (`UpstreamClient.call`): build the request (a `CallSpec` violation
   returns `InvalidRequest` before anything is spent); for a `GET`, `cache.getOrLoad(CacheKey(endpoint.id,
   canonicalParams), CachePolicy(ttl, missTtl), maxAge) { loader }` where the canonical
@@ -737,6 +755,18 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   > whose request already reached the server; `call-facades` (#68) settles its permit handling for
   > those two against what each transport failure implies about what was sent. See
   > `65-okhttp-transport/consequences.md` §5.
+  >
+  > **Corrected 2026-11-06 (#68 as built):** after building the request the client checks it against
+  > its own policy before the cache, so a refusal by that check costs nothing and caches nothing; the
+  > base URL is checked once, at construction. In both facades the check is `UrlGuard.checkRequest`:
+  > the URL's hop check and, under `Untrusted`, a refusal of any sensitive header. The canonical
+  > parameters are the request's encoded path under the reserved name `/`, then the encoded query
+  > pairs, which `CacheKey` sorts; a credential sent as a query pair is part of the key, as every
+  > pair is. In both facades only the transport's `InvalidRequest`, which always comes before
+  > anything is sent, releases the permit; every other failure the transport returns,
+  > `RefusedByPolicy` and `Closed` included, completes it as spent with no signals, since each can
+  > follow a request the server received. Classification checks a status in `misses` before the
+  > `2xx` decode, so a `204` declared a miss is a miss. See `68-call-facades/consequences.md` §5.
 - **`UrlFetcher.fetch`**: the policy's per-hop URL check first (a refusal costs nothing and
   reaches neither budget nor transport), then budget, transport, signals, `complete`; every
   status is a response except a throttle, which is `RateLimited` because the budget has
@@ -754,6 +784,11 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   redirect hop, per budget refusal; **never** headers, bodies, query strings, credentials,
   resolved addresses, cache-key values or OkHttp objects. The existing modules' habit of
   logging full URLs (`Connector.kt:86`, `:96`) is not followed.
+  > **Corrected 2026-11-06 (#68 as built):** the per-call `DEBUG` line reports `loaded`, whether the
+  > call's own loader ran, in place of hit/miss/joined: the cache port cannot tell a hit from a join.
+  > A policy refusal's `Url.redacted()` shows the path and hides the query, so of a cache key's
+  > parameters only the request path appears in the facades' lines, in the client's refusal line. See
+  > `68-call-facades/consequences.md` §5 and `68-call-facades/final-implementation.md` D14.
 
 ### 6.7 Published test support
 
@@ -831,6 +866,12 @@ Two subsystems with one seam between them: the policy decides, the transport enf
 - **Contributions from other units.** The variant is owned here; `LoopbackTransports` and the
   `MockWebServer` helpers land with the transport unit, and the two budget fakes with the
   budget unit, each into this compilation.
+  > **Corrected 2026-11-06 (#68 as built):** the facades unit adds
+  > `LoopbackFetchers.untrusted(userAgent, policy, resolve, configure)` and `trusted(...)`: a
+  > `UrlFetcher` that owns the matching `LoopbackTransports` transport and pre-checks with the same
+  > policy, relaxed for loopback exactly as the transport is (untrusted) or with cleartext forced on
+  > (trusted), so a consumer's Level 3 test runs `UrlFetcher` against a loopback server. It adds no
+  > dependency. See `68-call-facades/consequences.md` §5.
 - **Does not own:** the consumer's fixture files, `.gitattributes` (a consumer adds
   `**/fixtures/**/*.http -text`; this repository adds the same line for its own `jvmTest`
   resources), the consumer build's `inputs.property` for the record variable (documented).
@@ -1052,6 +1093,15 @@ sequenceDiagram
 per-hop URL check run first so a refusal costs nothing. `FeedFetcher.fetch` sits on
 `UrlFetcher.fetch` and adds the conditional-GET headers before and the parse after.
 
+> **Corrected 2026-11-06 (#68 as built):** after building the request the client checks it against
+> its own policy before the cache, so a refusal by that check costs nothing and caches nothing. In
+> both facades the permit is released only for the transport's `InvalidRequest`; every other failure
+> the transport returns, `RefusedByPolicy` and `Closed` included, completes it as spent with no signals.
+> Classification runs throttled or `429` → `RateLimited`, then a status in `misses` → `Missing`,
+> then `2xx` → decode, then anything else → `UpstreamError`; `RateLimited.retryAfter` is the longer
+> of the server's `Retry-After` and the budget's `pausedFor`, read once after `complete(signals)`.
+> See `68-call-facades/consequences.md` §5.
+
 ### 7.3 Inside the transport: one request per hop, three guard layers
 
 ```mermaid
@@ -1096,6 +1146,12 @@ flowchart LR
     FAC --> TR["OkHttpTransport<br/>owns Dispatcher + ConnectionPool<br/>maxConcurrentRequests ≥ budget.maxBurst"]
     FAC -- "close(): cache, budget, transport — only what it built" --> CACHE & BUDGET & TR
 ```
+
+> **Corrected 2026-11-06 (#68 as built):** the client's owning factory builds the budget, then the
+> transport, then the cache, and raises both `maxConcurrentRequests` and
+> `maxConcurrentRequestsPerHost` to at least `budget.maxBurst` when its budget is a
+> `WindowedCallBudget`; `UrlFetcher`'s transport keeps its policy's settings. See
+> `68-call-facades/consequences.md` §5.
 
 What crosses each boundary:
 
@@ -1440,6 +1496,11 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   default mentioning it and a consumer without opt-in in `commonMain` and `jvmMain` before
   anything else; the generic `Endpoint<T>` factory-over-class resolution is argued from
   non-generic precedents and is checked in unit 9's plan.
+  > **Corrected 2026-11-06 (#68 as built):** settled for `Endpoint<T>`. The invariant class over an
+  > `internal` constructor, with a generic top-level factory, binds every consumer-style call to the
+  > factory and infers `T`, measured on Kotlin 2.2.0 from a separate JVM module, and compiles for
+  > `js`; the module's own tests bind the same way, and the ABI dump records the factory and no
+  > constructor. See `68-call-facades/consequences.md` §5.
 - **OkHttp version alignment.** `okhttp-jvm` 5.5.0 is an ordinary requirement; a consumer's
   newer 5.x wins. The "never re-sends" and the policy guarantees are layered against that:
   the fail-closed `ExchangeGuard` does not depend on which re-send paths exist, and the socket
@@ -1473,6 +1534,9 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   concurrent requests × body cap (16 × 5 MiB for `Trusted` defaults). The transport never
   retries, so stale pooled connections surface as `Io` failures the caller retries on its own
   schedule; the 4 s idle TTL keeps that rare and is a parameter.
+  > **Corrected 2026-11-06 (#68 as built):** a client's OkHttp dispatcher is bounded by the larger of
+  > the settings and its budget's `maxBurst`, with no ceiling, so its worst case is that many
+  > concurrent requests times the body cap. See `68-call-facades/consequences.md` §8.
 - **A shared cache load carries the first caller's lane and wait cap.** An interactive caller
   joining a tracker load bounds its own wait with `withTimeoutOrNull`; the tracker lane uses
   a short `maxWait`. A per-call deadline on `CallSpec` is an additive later feature.
@@ -1527,6 +1591,11 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   > more when another hint or an earlier pause is longer; it is less than `retryAfter` when
   > `retryAfter` exceeds `maxPause`. Which of the two the failure reports is unit 9's to settle.
   > See `67-call-budget/consequences.md` §5.
+  >
+  > **Corrected 2026-11-06 (#68 as built):** settled. `RateLimited.retryAfter` is the longer of the
+  > server's `Retry-After` (zero when it sent none) and the budget's `pausedFor`, read once after
+  > `complete(signals)`, so it can exceed `maxPause`, up to what the server asked. See
+  > `68-call-facades/consequences.md` §5.
 - **Where the Experimental-to-Supported promotion is recorded** before #58's CHANGELOG exists.
   > **Corrected 2026-11-02 (#65 as built):** `CHANGELOG.md` exists from #65's landing, in the Keep a
   > Changelog layout; a promotion is recorded there. See `65-okhttp-transport/consequences.md` §6.

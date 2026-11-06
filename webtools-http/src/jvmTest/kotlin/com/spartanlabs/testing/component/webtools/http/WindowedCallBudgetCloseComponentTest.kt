@@ -34,9 +34,9 @@ import kotlin.time.Duration.Companion.seconds
  * after `close()`, `flush()` writes the exact counts (including permits completed or released after the close), `utilisation()` reads, `complete(signals)`
  * applies its signals and `release()` refunds; `close()` logs once at `INFO`; `close()` from another thread while calls wait ends them all.
  *
- * One case pins the plan's letter rather than a symmetry: a **call** (not a waiter) whose write-ahead save spans a `close()` is still granted, because the
- * admission re-checks the latch only at the top of its section and decides again after the save with a fresh clock, not a fresh latch (plan §7.16,
- * `admitLocked`); the waiter's step does re-check (`stepLocked`). A grant that precedes the close is an admitted outcome (as-built record, D5).
+ * One case pins the code as it is written rather than a symmetry: a **call** (not a waiter) whose write-ahead save spans a `close()` is still granted, because the
+ * admission re-checks the latch only at the top of its section and decides again after the save with a fresh clock, not a fresh latch (the budget's
+ * `admitLocked`); the waiter's step does re-check (`stepLocked`). A grant that precedes the close is an admitted outcome.
  */
 class WindowedCallBudgetCloseComponentTest {
 
@@ -152,8 +152,8 @@ class WindowedCallBudgetCloseComponentTest {
 
     @Test
     fun `a call whose write-ahead save spans a close is still granted`() = runTest {
-        // The plan's letter (plan §7.16, admitLocked): after its save the admission decides again with a fresh clock, not a fresh latch, so the grant is
-        // made. The waiter's step (the case above) re-checks; a grant made before the close is an admitted outcome (as-built record, D5).
+        // `admitLocked` as it is written: after its save the admission decides again with a fresh clock, not a fresh latch, so the grant is
+        // made. The waiter's step (the case above) re-checks; a grant made before the close is an admitted outcome.
         val clock = virtualClock()
         val store = FakeBudgetStore()
         store.saveDelay = 5.seconds

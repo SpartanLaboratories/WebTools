@@ -17,7 +17,7 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 
 /**
- * Level 2 - `GuardRelaxation.LoopbackForTests` exempts exactly plan §6.6's table: the host `localhost`, the loopback
+ * Level 2 - `GuardRelaxation.LoopbackForTests` exempts exactly three things: the host `localhost`, the loopback
  * addresses (a mapped `127.0.0.0/8` included, NAT64 excluded) and the port rule for `localhost`, `127.0.0.1` and `::1`;
  * every other rule stays live, `extraDeniedRanges` and the policy suffixes included. `None` refuses all of the exempt
  * cases; `Trusted` is the same with and without it.

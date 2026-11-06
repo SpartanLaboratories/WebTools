@@ -48,6 +48,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `webtools-http` test fixtures: `RecordingBudgetObserver` and `FakeBudgetStore`, a scripted `BudgetStore` with
   `loadDelay` and `saveDelay` in virtual time and failures injected by `failLoads` and `failSaves` (each takes a
   `times` of at least 1).
+- `webtools-http` (unreleased, `1.0.0`): the call facades. `Endpoint`, declared once with
+  `Endpoint(id, decode) { ttl = …; missTtl = …; cost = …; lane = …; misses(404) }` (the decoder is the second argument;
+  `missTtl` follows `ttl` unless set), and the per-call `CallSpec` and `FetchSpec`. `UpstreamClient` calls the endpoints
+  of one upstream from a base URL: it checks each request against the outbound-URL policy first (a refusal costs
+  nothing), serves a `GET` from the response cache, takes a budget permit inside the cache's loader (so N concurrent
+  callers cost one permit and one request) and sends through the transport. A throttle is `RateLimited` (its
+  `retryAfter` is the longer of the server's `Retry-After` and the budget's pause), a declared miss status is
+  `Lookup.Missing`, a `2xx` the decoder rejects is `DecodeFailure`, any other status is `UpstreamError`, and nothing is
+  ever retried or cached as a failure. Only `InvalidRequest` releases a permit; every other transport failure leaves it
+  spent. Built with `UpstreamClient(transport, baseUrl) { … }`, or on the JVM with
+  `UpstreamClient(baseUrl, userAgent) { … }`, which owns an `OkHttpTransport`, a `CaffeineResponseCache` and the
+  `WindowedCallBudget` of `budget(windows)` and raises OkHttp's concurrency limits to the budget's `maxBurst`;
+  `defaultMaxWait` is 5 seconds; `close()` closes what the client built, in the order cache, budget, transport, and
+  `flush()` writes a persistent budget's exact counts. `UrlFetcher` fetches administrator-supplied URLs with the
+  policy's pre-check first, a budget (`Unlimited` by default) and no cache: every status is the response except a
+  throttle; built with `UrlFetcher(transport, policy) { … }`, or on the JVM with `UrlFetcher(userAgent)`, which owns a
+  transport under the `Untrusted` defaults, and `UrlFetcher(userAgent, policy)`, one under the given policy.
+  `UpstreamFailure.RateLimited.retryAfter` now means "how long to wait before calling again".
+- `webtools-http` test fixtures: `LoopbackFetchers`, whose `untrusted` and `trusted` each build a `UrlFetcher` for a
+  loopback `mockwebserver3` server; the fetcher owns the matching `LoopbackTransports` transport. `untrusted` relaxes
+  the pre-check for loopback exactly as `LoopbackTransports` relaxes the transport, so every other `Untrusted` rule
+  stays live; `trusted` forces cleartext on in both and relaxes nothing.
 
 ### Changed
 

@@ -1,5 +1,5 @@
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65) and its response cache (#66), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
 // Every element tagged Planned but webtools-common comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11) and carries its sub-issue; webtools-common is the registry's, with no plan yet. None of it is built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
@@ -32,8 +32,8 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 feedsCheck = component "webtools-feeds-commoncheck" "Unit 10: compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
             }
 
-            // ---- webtools-http: its common core (#62), its test fixtures (#63), its outbound-URL policy (#64) and its OkHttp transport (#65), its response cache (#66) and its call budget (#67) built, its facades planned by Issue #55 ----
-            http = container "webtools-http" "A suspend HTTP stack: its common core, its outbound-URL policies, its OkHttp transport, its response cache, its call budget and its published test fixtures are built; the facades are planned." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
+            // ---- webtools-http: its common core (#62), its test fixtures (#63), its outbound-URL policy (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), all built ----
+            http = container "webtools-http" "A suspend HTTP stack: its common core, its outbound-URL policies, its OkHttp transport, its response cache, its call budget, the call facades that compose them and its published test fixtures." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased" {
                 core      = component "Common core" "The opt-in marker, the HttpFailure model, Url, HttpHeaders, HttpRequest, HttpResponse, the HttpTransport and WallClock ports, the logging seam." "commonMain + jvmMain"
                 fixtures  = component "Published test fixtures" "The webtools-http-test-fixtures variant: VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader for .http files, the gated, redacting FixtureRecorder and LoopbackTransports, the real transport over a loopback server, on a consumer's test classpath only." "jvmTestFixtures · capability webtools-http-test-fixtures" "Public"
                 policy    = component "Outbound-URL policy" "Trusted and Untrusted policies with TransportSettings, CidrBlock and MixedAnswers; an internal JVM-free address classifier; internal resolver and socket guards, which the OkHttp transport applies to every hop." "commonMain + jvmMain" "Public"
@@ -41,10 +41,10 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 transport = component "OkHttp transport" "OkHttpTransport(userAgent, policy): one request per hop and never a retry, manual redirects judged by the policy, one deadline across every hop, a capped decoded body, failure mapping; its client, guard and bridge internal." "jvmMain · okhttp-jvm 5.5.0" "Public"
                 // built by #66
                 cache     = component "Response cache" "The ResponseCache port, its values and ResponseCache.Disabled in common code, and the CaffeineResponseCache default: one load per key at a time, per-entry lifetimes, a weight bound, a per-call maxAge; failures never stored." "commonMain + jvmMain · caffeine 3.3.1" "Public"
-                // planned by Issue #55: not built
                 // built by #67
                 budget    = component "Call budget" "The CallBudget port with Permit and withPermit, CallBudget.Unlimited and the supplied WindowedCallBudget: epoch-aligned windows with a guard, lane floors, first-come-first-served waits, pauses from server signals and a hard window saved write-ahead; the rate-signal vocabulary with RetryAfter, and the BudgetStore and BudgetObserver seams with their defaults." "commonMain" "Public"
-                facades   = component "Call facades" "UpstreamClient and UrlFetcher, composing cache, then budget inside the loader, then transport." "commonMain + jvmMain" "Planned"
+                // built by #68
+                facades   = component "Call facades" "UpstreamClient calls an upstream's endpoints, each an Endpoint, through the policy's pre-check, the cache, a permit inside the cache's loader and the transport; UrlFetcher fetches administrator-supplied URLs; the JVM owning factories build, size and close what they own; LoopbackFetchers in the fixtures." "commonMain + jvmMain" "Public"
             }
             feeds = container "webtools-feeds" "Unit 10: RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
             common = container "webtools-common" "Common code shared by the webtools modules: what is universal to the web, such as IP addresses." "internal to the repository · planned" "Planned"
@@ -89,23 +89,23 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         consumer -> webtools.http.cache "Builds CaffeineResponseCache { }, calls getOrLoad (1.0.0, not released)"
         webtools.http.cache -> webtools.http.core "Fails with Closed after close(); logs through the seam"
         webtools.gradleBuild.httpCheck -> webtools.http.cache "Compiles its port and values for js"
+        consumer -> webtools.http.facades "Calls endpoints with UpstreamClient, fetches URLs with UrlFetcher (1.0.0, not released)"
+        webtools.http.facades -> webtools.http.policy "Pre-checks every request before anything is spent"
+        webtools.http.facades -> webtools.http.cache "Loads a GET through: cache first"
+        webtools.http.facades -> webtools.http.budget "Takes a permit inside the cache's loader"
+        webtools.http.facades -> webtools.http.transport "Executes each request once; owns an OkHttpTransport on the JVM"
+        webtools.gradleBuild.httpCheck -> webtools.http.facades "Compiles its common code for js"
 
         // ---- planned by Issue #55 (dashed: one end is Planned) ----
         webtools.gradleBuild.buildLogic -> webtools.feeds "Would configure: multiplatform plugin"
         webtools.gradleBuild.feedsCheck -> webtools.feeds "Would compile commonMain for js"
         webtools.gradleBuild.feedsCheck -> webtools.gradleBuild.httpCheck "Would depend on its js output"
         webtools.feeds -> webtools.http.facades "Would fetch through UrlFetcher: api dependency"
-        consumer -> webtools.http.facades "Would call UpstreamClient, UrlFetcher"
         consumer -> webtools.feeds "Would fetch feeds: FeedFetcher"
-        bottools -> webtools.http.facades "Would call through an internal adapter"
         bottools -> webtools.feeds "Would fetch feeds through its adapter"
-        webtools.http.facades -> webtools.http.cache "Would load through: cache first"
-        webtools.http.facades -> webtools.http.budget "Would acquire a permit in the loader"
         consumer -> webtools.http.budget "Builds WindowedCallBudget(windows) { }, acquires and settles permits (1.0.0, not released)"
         webtools.http.budget -> webtools.http.core "Fails with BudgetExhausted, or Closed after close(); reads the wall clock and an HttpResponse; logs through the seam"
         webtools.gradleBuild.httpCheck -> webtools.http.budget "Compiles it for js"
-        webtools.http.facades -> webtools.http.transport "Would execute the request"
-        webtools.http.facades -> webtools.http.policy "Would pre-check a fetched URL"
     }
 
     views {
@@ -117,11 +117,11 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 5f221ce, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 806b489, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 5f221ce: its common core, URL policy, OkHttp transport, response cache, call budget and test fixtures built, its planned parts dashed." {
+        component webtools.http "Http" "webtools-http at 806b489: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
             include *
             autoLayout lr
         }

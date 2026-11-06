@@ -67,7 +67,7 @@ class CaffeineResponseCacheLoopbackIntegrationTest {
 
     private fun request(): HttpRequest = fleet.get(server.webtoolsUrl("/players"))
 
-    /** The loader of the plan: the real transport, its body as the value. */
+    /** A loader over the real transport: the body as the value, whatever the status. */
     private fun bodyLoader(): suspend () -> Result<Lookup<String>> = { transport.execute(request()).map { Lookup.Found(it.body().decodeToString()) } }
 
     /** A loader that answers a `200` with its body and any other status with `UpstreamError`, as a facade would. */

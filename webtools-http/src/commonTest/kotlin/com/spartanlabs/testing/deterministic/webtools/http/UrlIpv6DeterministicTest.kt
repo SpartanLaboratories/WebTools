@@ -10,7 +10,7 @@ import kotlin.test.assertIs
 import kotlin.test.fail
 
 /**
- * Level 4a - the IPv6 table of `research/url-parsing.md` F6: forms, RFC 5952 output, the tie and
+ * Level 4a - the IPv6 table: forms, RFC 5952 output, the tie and
  * single-zero rules, mapped addresses, NAT64 and IPv4-compatible addresses staying IPv6, zones and
  * malformed forms rejected, and `[1:2:3:4:5:6:7::8]` rejected rather than crashing.
  */

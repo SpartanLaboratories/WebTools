@@ -1,5 +1,5 @@
 // webtools-http-core — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-core/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), the common core of webtools-http 1.0.0 (new, unreleased): the opt-in marker, the failure model, the request and response values, Url with its internal parsing pipeline, the transport and wall-clock ports, the DSL marker, the internal logging seam and helpers, and their two JVM actuals. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06), the common core of webtools-http 1.0.0 (new, unreleased): the opt-in marker, the failure model, the request and response values, Url with its internal parsing pipeline, the transport and wall-clock ports, the DSL marker, the internal logging seam and helpers, and their two JVM actuals. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -77,7 +77,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.core "Components" "The common core as built at master 5f221ce." {
+        component webtools.core "Components" "The common core as built at feat/issue-68-call-facades 806b489." {
             include *
             autoLayout tb
         }

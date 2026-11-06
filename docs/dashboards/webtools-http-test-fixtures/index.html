@@ -420,7 +420,7 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs"><a href="../index.html">WebTools</a> › <a href="../webtools-http/index.html">webtools-http</a> › webtools-http-test-fixtures</div>
   <h1>webtools-http-test-fixtures</h1>
-  <p class="function">The published test fixtures of the suspend HTTP stack, so a consumer tests its providers. With no network: a scripted <code>FakeHttpTransport</code> with a call log, one <code>VirtualClock</code> that moves every clock of the stack at once, <code>.http</code> fixtures loaded from the consumer's own classpath, and a gated, redacting <code>FixtureRecorder</code> that writes them from a live transport. Over loopback: <code>LoopbackTransports</code>, the real <code>OkHttpTransport</code> against a local server with every rule of its policy live but loopback, one fixture file serving both. The call budget's two fixtures ride here too. Published as <code>webtools-http</code>'s test-fixtures variant, reached with <code>testFixtures(…)</code> in Gradle, on a test classpath only.</p>
+  <p class="function">The published test fixtures of the suspend HTTP stack, so a consumer tests its providers. With no network: a scripted <code>FakeHttpTransport</code> with a call log, one <code>VirtualClock</code> that moves every clock of the stack at once, <code>.http</code> fixtures loaded from the consumer's own classpath, and a gated, redacting <code>FixtureRecorder</code> that writes them from a live transport. Over loopback: <code>LoopbackTransports</code>, the real <code>OkHttpTransport</code> against a local server with every rule of its policy live but loopback, one fixture file serving both. The call budget's two fixtures ride here too, and the call facades' <code>LoopbackFetchers</code>, a <code>UrlFetcher</code> over the loopback transports. Published as <code>webtools-http</code>'s test-fixtures variant, reached with <code>testFixtures(…)</code> in Gradle, on a test classpath only.</p>
   <div class="chips">
     <span class="chip" id="chip-version" hidden></span>
     <span class="chip"><span class="ck">platform</span> <b>JVM</b> · <code>jvmTestFixtures</code>, associated with main · Java 11 bytecode</span>
@@ -434,12 +434,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">26 files</div><div class="s">2,003 lines · 24 of its own (1,848) and the call budget's 2 (155) · package <code>com.spartanlabs.webtools.http.testing</code></div></div>
-  <div class="kpi"><div class="l">Types</div><div class="v">21 public</div><div class="s">15 top-level of its own · 4 nested: the gate's two states, <code>Unmatched</code>'s two · the budget's 2 · 7 internal · 4 public extension functions</div></div>
+  <div class="kpi"><div class="l">Source</div><div class="v">27 files</div><div class="s">2,062 lines · 24 of its own (1,848), the call budget's 2 (155) and the call facades' 1 (59) · package <code>com.spartanlabs.webtools.http.testing</code></div></div>
+  <div class="kpi"><div class="l">Types</div><div class="v">22 public</div><div class="s">15 top-level of its own · 4 nested: the gate's two states, <code>Unmatched</code>'s two · the budget's 2 · the facades' 1 · 7 internal · 4 public extension functions</div></div>
   <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">the test's scheduler drives the clock and the fake; the recorder writes on <code>Dispatchers.IO</code>; over loopback the transport's own pool</div></div>
   <div class="kpi"><div class="l">Contracts</div><div class="v">5 implementers</div><div class="s">of gated ports, each with its own opt-in: the fake, the recorder's decorator, the virtual wall clock, the budget's store and observer · 2 published variants</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">27 classes</div><div class="s">189 tests across 5 testing levels, in <code>jvmTest</code> · 2 of them, 19 tests, the budget's fixtures · the publication checked at L4b by the build</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">1</div><div class="s">1 docs · 0 unscheduled</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">29 classes</div><div class="s">197 tests across 5 testing levels, in <code>jvmTest</code> · 2 of them, 19 tests, the budget's fixtures · 2, 8 tests, the facades' · the publication checked at L4b by the build</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">2</div><div class="s">1 landing with this board · 1 docs · 0 unscheduled</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -457,7 +457,7 @@ footer code{color:var(--ink-2)}
     <h2>Component map</h2>
     <p class="lede">Nesting is ownership. Click a box for its role, files and threads, and its place in the C4 model.</p>
     <svg id="svg-structure" viewBox="0 0 1000 470" role="img" aria-label="Component map of webtools-http-test-fixtures"></svg>
-    <div class="key"><span><i class="pub cli"></i>public · no network: the clock, the fake, the files, the recorder</span><span><i class="cli"></i>internal · their codec and helpers</span><span><i class="pub wir"></i>public · over loopback</span><span><i class="wir"></i>internal · its resolver</span><span><i class="pub srv"></i>public · the call budget's fixtures</span></div>
+    <div class="key"><span><i class="pub cli"></i>public · no network: the clock, the fake, the files, the recorder</span><span><i class="cli"></i>internal · their codec and helpers</span><span><i class="pub wir"></i>public · over loopback: the transport and a fetcher</span><span><i class="wir"></i>internal · its resolver</span><span><i class="pub srv"></i>public · the call budget's fixtures</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
@@ -538,7 +538,7 @@ footer code{color:var(--ink-2)}
         <ol class="steps"><li class="ph1"><code>RecordingGate.evaluate()</code>: off unless <code>WEBTOOLS_HTTP_RECORD</code> allows it; refused when any of twelve CI variables is set</li><li class="ph1"><code>FixtureRecorder(directory, gate)</code> takes only <code>RecordingGate.Enabled</code></li><li class="ph2"><code>wrap(live, group)</code>: each successful response is redacted, scrubbed of the supplied secrets and written; no request header is written</li><li class="ph2">a file in which a secret's form survives is refused, listed in <code>refused</code>, never written</li><li class="ph3">the wrapper's <code>close()</code> closes the live transport</li></ol>
         <div class="callout"><b>Replay:</b> <code>Step.fixture(FixtureLoader().load("group/name.http"))</code> reads it back from the consumer's own classpath; a consumer marks <code>**/fixtures/**/*.http</code> <code>-text</code> in its <code>.gitattributes</code>.</div></div>
       <div class="card"><h3>A loopback test <small>the real transport, no outside network</small></h3>
-        <ol class="steps"><li class="ph1"><code>MockWebServer</code> started on <code>127.0.0.1</code>; <code>LoopbackTransports.untrusted(userAgent, policy, resolve)</code> or <code>trusted(…)</code> builds the real transport</li><li class="ph1"><code>server.enqueue(fixture, method)</code> serves the same <code>.http</code> file the fake replays, written by <code>toMockResponse</code></li><li class="ph2"><code>execute(HttpRequest(HttpMethod.Get, server.webtoolsUrl("/x")))</code>: every rule of the policy stays live but the loopback host, addresses and their port rule</li><li class="ph3">the test closes the transport and the server</li></ol>
+        <ol class="steps"><li class="ph1"><code>MockWebServer</code> started on <code>127.0.0.1</code>; <code>LoopbackTransports.untrusted(userAgent, policy, resolve)</code> or <code>trusted(…)</code> builds the real transport</li><li class="ph1"><code>server.enqueue(fixture, method)</code> serves the same <code>.http</code> file the fake replays, written by <code>toMockResponse</code></li><li class="ph2"><code>execute(HttpRequest(HttpMethod.Get, server.webtoolsUrl("/x")))</code>: every rule of the policy stays live but the loopback host, addresses and their port rule</li><li class="ph2">or <code>LoopbackFetchers.untrusted(userAgent)</code> or <code>trusted(…)</code>: a <code>UrlFetcher</code> over the same transports, its pre-check relaxed for loopback exactly as the transport is</li><li class="ph3">the test closes the transport, or the fetcher that owns it, and the server</li></ol>
         <div class="callout"><b>Not a production switch:</b> the relaxation is reached only from the fixtures, on a consumer's test classpath; nothing here is reachable from the main artifact.</div></div>
       <div class="card ph2"><h3>Rules the fixtures hold to</h3>
         <div class="callout"><b>A fake mirrors the contract, not the network.</b> The fake keeps the transport's body cap and no-body rule and its <code>close()</code>; URL policy, DNS, TLS, redirects, controlled headers and timeouts are the real transport's, which the loopback factories exercise.</div>
@@ -559,24 +559,24 @@ footer code{color:var(--ink-2)}
   <h2>Guarantees</h2>
   <div class="guarantee-cards">
     <div class="guarantee-card"><h3>Failure model</h3>
-      <ul><li>The fake returns its scripted <code>Result</code>, <code>BodyTooLarge</code> over its cap and <code>Closed</code> after <code>close()</code>, and throws <code>UnmatchedRequestError</code>, an <code>Error</code>, for a request no stub matches, unless <code>Unmatched.Respond</code> is set.</li><li><code>FixtureLoader.load</code> throws <code>FixtureError</code> naming the resource and line, never a value.</li><li>The recorder never fails a call: an I/O failure or a surviving secret lands in <code>refused</code>; recording off is a <code>RecordingGate.Disabled</code> that says why.</li><li>The loopback factories refuse an unstarted or non-loopback server.</li></ul></div>
+      <ul><li>The fake returns its scripted <code>Result</code>, <code>BodyTooLarge</code> over its cap and <code>Closed</code> after <code>close()</code>, and throws <code>UnmatchedRequestError</code>, an <code>Error</code>, for a request no stub matches, unless <code>Unmatched.Respond</code> is set.</li><li><code>FixtureLoader.load</code> throws <code>FixtureError</code> naming the resource and line, never a value.</li><li>The recorder never fails a call: an I/O failure or a surviving secret lands in <code>refused</code>; recording off is a <code>RecordingGate.Disabled</code> that says why.</li><li>The loopback factories refuse an unstarted or non-loopback server; <code>LoopbackFetchers</code> refuses a <code>userAgent</code> the public factory refuses or a negative <code>defaultMaxWait</code> with <code>IllegalArgumentException</code>, nothing left open.</li></ul></div>
     <div class="guarantee-card"><h3>Extension points</h3>
-      <ul><li>Every class final; <code>RecordingGate</code> and <code>Unmatched</code> sealed; <code>RequestMatch</code> a frozen single-method predicate, a <code>fun interface</code> a test writes as a lambda, not a seam <span class="badge">Stable Core</span></li><li><code>FakeHttpTransport</code> and the recorder's decorator are the worked examples of implementing <code>HttpTransport</code> with the opt-in, <code>VirtualClock</code>'s wall clock of <code>WallClock</code>, and the budget's two fixtures of <code>BudgetStore</code> and <code>BudgetObserver</code></li><li><code>LoopbackTransports</code>, <code>webtoolsUrl</code>, <code>toMockResponse</code> and <code>enqueue(fixture)</code> are the way to the real transport over loopback <span class="badge">Stable Core</span></li><li>Source compatibility only: no ABI dump covers the variant</li></ul></div>
-    <div class="guarantee-card"><h3>Test levels <small>27 classes</small></h3>
+      <ul><li>Every class final; <code>RecordingGate</code> and <code>Unmatched</code> sealed; <code>RequestMatch</code> a frozen single-method predicate, a <code>fun interface</code> a test writes as a lambda, not a seam <span class="badge">Stable Core</span></li><li><code>FakeHttpTransport</code> and the recorder's decorator are the worked examples of implementing <code>HttpTransport</code> with the opt-in, <code>VirtualClock</code>'s wall clock of <code>WallClock</code>, and the budget's two fixtures of <code>BudgetStore</code> and <code>BudgetObserver</code></li><li><code>LoopbackTransports</code>, <code>webtoolsUrl</code>, <code>toMockResponse</code> and <code>enqueue(fixture)</code> are the way to the real transport over loopback, and <code>LoopbackFetchers</code> to a <code>UrlFetcher</code> over it <span class="badge">Stable Core</span></li><li>Source compatibility only: no ABI dump covers the variant</li></ul></div>
+    <div class="guarantee-card"><h3>Test levels <small>29 classes</small></h3>
       <div class="bars" role="table" aria-label="Test classes per testing level">
-        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:13%"></span></span><span class="val">2</span>
-        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">15</span>
-        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:7%"></span></span><span class="val">1</span>
-        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:40%"></span></span><span class="val">6</span>
-        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:20%"></span></span><span class="val">3</span>
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:19%"></span></span><span class="val">3</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">16</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:6%"></span></span><span class="val">1</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:38%"></span></span><span class="val">6</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:19%"></span></span><span class="val">3</span>
       </div>
-      <p>189 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http.testing</code>, in <code>jvmTest</code>, which reaches the fixtures through its association: gating 7, component 124, integration 16, deterministic 36, non-functional 6; two component classes, 19 tests, are the budget's fixtures', which its board counts too. The publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. The test report: <code>webtools-http/build/reports/tests/</code>. <span class="gap">No L5 UAT class; four IDE items of the manual L5 pass were not performed.</span></p></div>
+      <p>197 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http.testing</code>, in <code>jvmTest</code>, which reaches the fixtures through its association: gating 9, component 130, integration 16, deterministic 36, non-functional 6; two component classes, 19 tests, are the budget's fixtures', and a gating and a component class, 8 tests, the facades' <code>LoopbackFetchers</code>', which their boards count too. The publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. The test report: <code>webtools-http/build/reports/tests/</code>. <span class="gap">No L5 UAT class; four IDE items of the manual L5 pass were not performed.</span></p></div>
     <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
       <ul><li>Rides in <code>webtools-http</code> <code>1.0.0</code> as capability <code>webtools-http-test-fixtures</code>, released and versioned with the module: new, unreleased.</li><li>No dump covers it; <code>fixturesPublicationCheck</code> asserts its two variants, their dependencies, a signature beside every published file and its resolution from three build shapes. Its jar and runtime classpath join <code>verifyJavaFloor</code>.</li><li>Stable Core with source compatibility only: a change that breaks a consumer's source waits for a major.</li></ul></div>
     <div class="guarantee-card"><h3>Thread safety</h3>
-      <ul><li><code>FakeHttpTransport</code> and <code>FixtureRecorder</code> are safe to share, each behind one lock never held across a suspension, their lists snapshots.</li><li><code>FixtureLoader</code> is stateless.</li><li><code>VirtualClock</code>'s readings are safe from any thread; <code>advanceBy</code> is for the test's thread only.</li></ul></div>
+      <ul><li><code>FakeHttpTransport</code> and <code>FixtureRecorder</code> are safe to share, each behind one lock never held across a suspension, their lists snapshots.</li><li><code>FixtureLoader</code> and <code>LoopbackFetchers</code> are stateless; a fetcher <code>LoopbackFetchers</code> returns is safe to share.</li><li><code>VirtualClock</code>'s readings are safe from any thread; <code>advanceBy</code> is for the test's thread only.</li></ul></div>
     <div class="guarantee-card"><h3>Resources to close</h3>
-      <ul><li><code>FakeHttpTransport.close()</code> is idempotent, and every later call returns <code>Closed</code>; the recorder's wrapper closes its delegate.</li><li><code>FixtureRecorder</code> holds no open file: each write goes to a temporary file moved into place.</li><li>Over loopback the test closes the transport the factory built, and its server.</li></ul></div>
+      <ul><li><code>FakeHttpTransport.close()</code> is idempotent, and every later call returns <code>Closed</code>; the recorder's wrapper closes its delegate.</li><li><code>FixtureRecorder</code> holds no open file: each write goes to a temporary file moved into place.</li><li>Over loopback the test closes the transport the factory built, or the fetcher <code>LoopbackFetchers</code> built, which owns its transport and closes it, never a budget set in its lambda; and its server.</li></ul></div>
     <div class="guarantee-card"><h3>On your classpath</h3>
       <ul><li>Test classpath only, through <code>testImplementation(testFixtures("io.github.spartanlaboratories:webtools-http:&lt;version&gt;"))</code>: the <code>-test-fixtures.jar</code>, <code>webtools-http</code> itself at the same version, <code>kotlinx-coroutines-test</code> 1.10.2 and <code>mockwebserver3</code> 5.5.0, all api of the variant.</li><li>Optional in the root POM and on neither main variant. Gradle only: a Maven build cannot select the variant.</li><li>Who consumes it: other repositories of this organization only (visibility internal · org).</li></ul></div>
   </div>
@@ -585,28 +585,29 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-05</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-06</small></h3>
       <ol class="roadmap">
         <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="8" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · this board's system · landed in 4fcc6e0</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a><span><a data-board="65">webtools-http: <code>OkHttpTransport</code> with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories</a> <small>unit 6 · added the loopback factories and the fake's no-body rule · landed in e8f0a88</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>unit 8 · added the budget's two fixtures · landed in 5f221ce</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · added <code>LoopbackFetchers</code> · landing with this board</small></span><span class="tags"><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
           </ul>
-          <p class="more">7 more of its issues touch other systems: #61 and #47 the build, #62 the common core, #64 the URL policy, #66 the cache, #68 the call facades, #69 webtools-feeds.</p></li>
+          <p class="more">6 more of its issues touch other systems: #61 and #47 the build, #62 the common core, #64 the URL policy, #66 the cache, #69 webtools-feeds.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>0 open · 2026-11-05</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>0 open · 2026-11-06</small></h3>
       <ul class="issues">
         <li><span>No open issue outside the roadmap touches the test fixtures.</span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Issue boards that amended this system: <a data-issue="63">#63</a> test-support — gap, options, verdict and as built · <a data-issue="65">#65</a> okhttp-transport — the loopback factories · <a data-issue="67">#67</a> call-budget — the budget's two fixtures · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
+        <li>Issue boards that amended this system: <a data-issue="63">#63</a> test-support — gap, options, verdict and as built · <a data-issue="65">#65</a> okhttp-transport — the loopback factories · <a data-issue="67">#67</a> call-budget — the budget's two fixtures · <a data-issue="68">#68</a> call-facades — <code>LoopbackFetchers</code> · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
         <li><a href="../../plans/55-http-client-stack/63-test-support/plan.md">#63 plan</a> · <a href="../../plans/55-http-client-stack/63-test-support/final-implementation.md">as built</a> — every measurement, the manual pass and the known gaps · <a href="../../plans/55-http-client-stack/63-test-support/impact.md">impact</a> — the published variant, what the later units add to it · <a href="../../plans/55-http-client-stack/63-test-support/research/README.md">research</a></li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.7 the published test support, §9 extension and stability · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
         <li><a href="../../../README.md">README</a> — the <code>testFixtures(…)</code> install line, the fixtures paragraph with the loopback fixtures, and its <code>.gitattributes</code> line, marked not yet released</li>
-        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board · what it fakes and builds: the <a href="../webtools-http-core/index.html">common core</a>, the <a href="../webtools-http-transport/index.html">OkHttp transport</a>, the <a href="../webtools-http-budget/index.html">call budget</a> · its publication check: the <a href="../gradle-build/index.html">Gradle build</a> board</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board · what it fakes and builds: the <a href="../webtools-http-core/index.html">common core</a>, the <a href="../webtools-http-transport/index.html">OkHttp transport</a>, the <a href="../webtools-http-budget/index.html">call budget</a>, the <a href="../webtools-http-facades/index.html">call facades</a> · its publication check: the <a href="../gradle-build/index.html">Gradle build</a> board</li>
         <li><a data-workboard>Repository work board</a> — every planning and development run in the repository</li>
       </ul></div>
   </div>
@@ -616,8 +617,8 @@ footer code{color:var(--ink-2)}
      None in the template parts: the board's CSS, tab set, script before MODEL and renderer are the template's. What it fills in:
      1. The core tabs are named for what they show: "Fake and gate" (the decision path: FakeHttpTransport.execute and RecordingGate.evaluate, two variants) and "A test" (the sequence: a test with no network).
      2. The Threads tab says the fixtures start no thread and lists the test's scheduler, the caller's thread, Dispatchers.IO and, over loopback, the transport's own pool.
-     3. The three sides are the no-network fixtures, the loopback factories, and the call budget's two fixtures.
-     Nothing is removed. -->
+     3. The three sides are the no-network fixtures, the loopback factories with the call facades' LoopbackFetchers, and the call budget's two fixtures.
+     Nothing is removed. Refreshed at feat/issue-68-call-facades 806b489 (2026-11-06): the call facades' LoopbackFetchers drawn in the variant, the figures, tests, Guarantees and Context read again. -->
 </footer>
 </div>
 
@@ -627,9 +628,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-http-test-fixtures",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 67, "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes", "sha": "327164f"},
-  "written": {"sha": "5f221ce"}
+  "asIs": {"ref": "feat/issue-68-call-facades", "sha": "806b489", "date": "2026-11-06T03:11:15Z"},
+  "lastAmended": {"issue": 68, "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport", "sha": "806b489"},
+  "written": {"sha": "806b489"}
 }
 </script>
 
@@ -637,7 +638,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http-test-fixtures — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-test-fixtures/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), webtools-http 1.0.0's published test-fixtures variant (new, unreleased): VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader, the gated, redacting FixtureRecorder, the loopback factories, and the call budget's two fixtures. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06), webtools-http 1.0.0's published test-fixtures variant (new, unreleased): VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader, the gated, redacting FixtureRecorder, the loopback factories, the call budget's two fixtures and the call facades' LoopbackFetchers. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -654,11 +655,13 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 codec    = component "HttpMessageCodec" "The .http codec: a strict UTF-8 head, the body verbatim, each fault a FixtureError naming the origin and line, never a value." "internal object" "Internal"
                 recorder = component "FixtureRecorder" "Records a live transport's successful responses as .http files, behind RecordingGate: redacted, scrubbed of supplied secrets, refused when a secret survives, written atomically." "final class · internal decorator" "Public"
                 loopback = component "Loopback factories" "LoopbackTransports with MockWebServer.webtoolsUrl, Fixture.toMockResponse and MockWebServer.enqueue(fixture): the real OkHttpTransport over a loopback server with the policy's rules live." "object · extension functions" "Public"
+                facadesFx = component "The call facades' fixture" "LoopbackFetchers: untrusted and trusted, a UrlFetcher over the loopback transports, its pre-check relaxed for loopback exactly as the transport is." "object" "Public"
                 budgetFx = component "The call budget's fixtures" "RecordingBudgetObserver and FakeBudgetStore: the events in arrival order, and a scripted store with failures and delays in virtual time." "final classes" "Public"
             }
             core      = container "webtools-http-core" "HttpTransport, WallClock, the request and response values and HttpSyntax, reached through the association." "commonMain"
             okhttp    = container "webtools-http-transport" "OkHttpTransport, built over loopback through its internal constructor." "jvmMain · okhttp-jvm 5.5.0"
             policy    = container "webtools-http-url-policy" "The policy whose rules stay live over loopback, with its internal loopback relaxation." "commonMain · jvmMain"
+            facades   = container "webtools-http-facades" "UrlFetcher, which LoopbackFetchers builds over a loopback transport." "commonMain"
             budget    = container "webtools-http-budget" "The call budget, whose store and observer seams the budget's fixtures implement." "commonMain"
             build     = container "Gradle build" "fixturesPublicationCheck, in webtools-http's check: the two variants, their dependencies, a signature beside every published file, resolution from three build shapes." "build-logic" "Internal"
         }
@@ -669,6 +672,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         consumer -> webtools.fixtures.recorder "Records fixtures from a live transport, behind the gate"
         consumer -> webtools.fixtures.loopback "Builds the real transport over a loopback server"
         consumer -> webtools.fixtures.budgetFx "Records the budget's events; scripts its store"
+        consumer -> webtools.fixtures.facadesFx "Fetches over a loopback server with LoopbackFetchers"
         webtools.fixtures.fake -> webtools.core "Implements HttpTransport; builds HttpResponses"
         webtools.fixtures.clock -> webtools.core "Implements WallClock"
         webtools.fixtures.fake -> webtools.fixtures.clock "Delays each step in virtual time"
@@ -683,6 +687,8 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.fixtures.loopback -> server "Enqueues responses; addresses it as an IP literal"
         webtools.okhttp -> server "Fetches over loopback"
         webtools.fixtures.budgetFx -> webtools.budget "Implements BudgetObserver and BudgetStore"
+        webtools.fixtures.facadesFx -> webtools.fixtures.loopback "Builds its transport with LoopbackTransports"
+        webtools.fixtures.facadesFx -> webtools.facades "Builds a UrlFetcher, its pre-check relaxed as the transport is"
         webtools.build -> webtools.fixtures "Checks its publication"
     }
 
@@ -695,7 +701,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.fixtures "Components" "The test fixtures as built at master 5f221ce." {
+        component webtools.fixtures "Components" "The test fixtures as built at feat/issue-68-call-facades 806b489." {
             include *
             autoLayout tb
         }
@@ -749,7 +755,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html","68":"../../plans/55-http-client-stack/68-call-facades/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -805,13 +811,13 @@ function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker"
 const MODEL = {
   // The board's colour groups: client = the no-network fixtures (purple), wire = the loopback factories (teal), server = the call budget's two
   // fixtures, which ride in the same variant (blue); the consumer's tests, and what lies outside the fixtures (the stack they fake or build, a server).
-  sides:{server:"the call budget's fixtures",client:"no network · the clock, the fake, the files, the recorder",wire:"over loopback · the real transport",consumer:"the consumer's tests",external:"outside the fixtures: the stack they fake or build, a loopback server"},
+  sides:{server:"the call budget's fixtures",client:"no network · the clock, the fake, the files, the recorder",wire:"over loopback · the real transport and a fetcher",consumer:"the consumer's tests",external:"outside the fixtures: the stack they fake or build, a loopback server"},
   // Map node id → DSL element id.
   c4:{noNet:"webtools.fixtures",fClock:"webtools.fixtures.clock",fFake:"webtools.fixtures.fake",fMatch:"webtools.fixtures.fake",fFiles:"webtools.fixtures.files",fCodec:"webtools.fixtures.codec",fRec:"webtools.fixtures.recorder",fRed:"webtools.fixtures.recorder",fScrub:"webtools.fixtures.recorder",
-      loop:"webtools.fixtures.loopback",fLoop:"webtools.fixtures.loopback",fUrls:"webtools.fixtures.loopback",fDns:"webtools.fixtures.loopback",budgetBox:"webtools.fixtures.budgetFx",recObs:"webtools.fixtures.budgetFx",fakeStore:"webtools.fixtures.budgetFx"},
+      loop:"webtools.fixtures.loopback",fLoop:"webtools.fixtures.loopback",fUrls:"webtools.fixtures.loopback",fDns:"webtools.fixtures.loopback",budgetBox:"webtools.fixtures.budgetFx",recObs:"webtools.fixtures.budgetFx",fakeStore:"webtools.fixtures.budgetFx",facadesBox:"webtools.fixtures.facadesFx",loopFetch:"webtools.fixtures.facadesFx"},
   structure: {
     h:460,
-    lanes:[["NO NETWORK · jvmTestFixtures",40,44,"start"],["OVER LOOPBACK",960,44,"end"],["THE CALL BUDGET'S FIXTURES",40,290,"start"]],
+    lanes:[["NO NETWORK · jvmTestFixtures",40,44,"start"],["OVER LOOPBACK",960,44,"end"],["THE CALL BUDGET'S FIXTURES",40,290,"start"],["THE CALL FACADES' FIXTURE",960,290,"end"]],
     notes:[{x:40,y:414,lines:["Published as webtools-http's test-fixtures variant (capability webtools-http-test-fixtures): a JVM-only compilation associated with main, so it reaches main's internals;","the module's own jvmTest is associated with it. The Gradle build's fixturesPublicationCheck checks the publication, in the module's check."]}],
     nodes:[
       {id:"noNet",side:"client",vis:"pub",container:true,x:40,y:56,w:620,h:218,t:"No network",s:"package com.spartanlabs.webtools.http.testing · -Xexplicit-api=strict",
@@ -840,12 +846,16 @@ const MODEL = {
         d:{role:"MockWebServer.webtoolsUrl(path) writes the server's address as an IP literal, refusing an unstarted or non-loopback server; Fixture.toMockResponse(method) and MockWebServer.enqueue(fixture, method) serve the same .http file the fake replays, the framing decided by the status and the method.",vis:"public · extension functions · Stable Core",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/MockWebServerUrls.kt","jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FixtureMockResponses.kt"]}},
       {id:"fDns",side:"wire",vis:"int",x:694,y:216,w:252,h:44,t:"FunctionDns",s:"answers a name from a function",
         d:{role:"An okhttp3.Dns that answers a name from a function: the resolve argument of the loopback factories.",vis:"internal · class",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FunctionDns.kt"],threads:["OkHttpTransport's dispatcher"]}},
-      {id:"budgetBox",side:"server",vis:"pub",container:true,x:40,y:302,w:920,h:86,t:"The call budget's fixtures",s:"in this variant · on the call budget's board too",
+      {id:"budgetBox",side:"server",vis:"pub",container:true,x:40,y:302,w:600,h:86,t:"The call budget's fixtures",s:"in this variant · on the call budget's board too",
         d:{role:"Two fixtures for the call budget's seams, added with the budget: each opts in for the seam it implements and adds no dependency. The call budget's board draws them with its parts.",vis:"public · Stable Core",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RecordingBudgetObserver.kt","jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FakeBudgetStore.kt"]}},
-      {id:"recObs",side:"server",vis:"pub",x:56,y:340,w:440,h:36,t:"RecordingBudgetObserver",s:"the events in arrival order",
+      {id:"recObs",side:"server",vis:"pub",x:56,y:340,w:280,h:36,t:"RecordingBudgetObserver",s:"the events in arrival order",
         d:{role:"A BudgetObserver that records every event it receives, in arrival order, for a test to read.",vis:"public · final class",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/RecordingBudgetObserver.kt"]}},
-      {id:"fakeStore",side:"server",vis:"pub",x:504,y:340,w:440,h:36,t:"FakeBudgetStore",s:"scripted failures · delays in virtual time",
-        d:{role:"A scripted BudgetStore: failLoads and failSaves, returned or thrown, for a set number of calls, loadDelay and saveDelay in virtual time, a preloaded initial snapshot and the recorded saves.",vis:"public · final class",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FakeBudgetStore.kt"]}}
+      {id:"fakeStore",side:"server",vis:"pub",x:344,y:340,w:280,h:36,t:"FakeBudgetStore",s:"scripted failures · delays in virtual time",
+        d:{role:"A scripted BudgetStore: failLoads and failSaves, returned or thrown, for a set number of calls, loadDelay and saveDelay in virtual time, a preloaded initial snapshot and the recorded saves.",vis:"public · final class",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/FakeBudgetStore.kt"]}},
+      {id:"facadesBox",side:"wire",vis:"pub",container:true,x:660,y:302,w:300,h:86,t:"The call facades' fixture",s:"in this variant · on the call facades' board too",
+        d:{role:"A fixture for the call facades, added with them: a UrlFetcher over the loopback transports, for a consumer's L3 integration tests. The call facades' board draws it with their parts.",vis:"public · Stable Core (source compatibility only)",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/LoopbackFetchers.kt"]}},
+      {id:"loopFetch",side:"wire",vis:"pub",x:676,y:340,w:268,h:36,t:"LoopbackFetchers",s:"untrusted · trusted: a UrlFetcher over loopback",
+        d:{role:"untrusted(userAgent, policy, resolve, configure) builds LoopbackTransports.untrusted and pre-checks with the same policy relaxed for loopback exactly as the transport is, so every other Untrusted rule is live in both; trusted(…) forces cleartext on and keeps every other property of the policy, pinned hosts included. The fetcher owns its transport; a budget set in configure stays the caller's. Stateless; the fetcher is safe to share.",vis:"public · object · Stable Core (source compatibility only)",files:["jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/LoopbackFetchers.kt"],threads:["OkHttpTransport's dispatcher"]}}
     ]
   },
   threads:{

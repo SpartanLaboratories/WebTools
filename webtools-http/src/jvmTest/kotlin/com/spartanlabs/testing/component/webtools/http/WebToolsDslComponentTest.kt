@@ -2,6 +2,9 @@ package com.spartanlabs.testing.component.webtools.http
 
 import com.spartanlabs.webtools.http.CachePolicy
 import com.spartanlabs.webtools.http.CaffeineResponseCache
+import com.spartanlabs.webtools.http.CallSpec
+import com.spartanlabs.webtools.http.Endpoint
+import com.spartanlabs.webtools.http.FetchSpec
 import com.spartanlabs.webtools.http.HttpHeaders
 import com.spartanlabs.webtools.http.HttpRequest
 import com.spartanlabs.webtools.http.HttpResponse
@@ -9,6 +12,8 @@ import com.spartanlabs.webtools.http.OutboundUrlPolicy
 import com.spartanlabs.webtools.http.RateSignals
 import com.spartanlabs.webtools.http.RateWindow
 import com.spartanlabs.webtools.http.TransportSettings
+import com.spartanlabs.webtools.http.UpstreamClientConfig
+import com.spartanlabs.webtools.http.UrlFetcherConfig
 import com.spartanlabs.webtools.http.WebToolsDsl
 import com.spartanlabs.webtools.http.WindowedCallBudget
 import kotlin.test.Test
@@ -30,6 +35,11 @@ class WebToolsDslComponentTest {
         OutboundUrlPolicy.Untrusted.Builder::class.java,
         CachePolicy.Builder::class.java,
         CaffeineResponseCache.Builder::class.java,
+        Endpoint.Builder::class.java,
+        CallSpec::class.java,
+        FetchSpec::class.java,
+        UpstreamClientConfig::class.java,
+        UrlFetcherConfig::class.java,
         RateWindow.Builder::class.java,
         RateSignals.Builder::class.java,
         WindowedCallBudget.Builder::class.java,

@@ -3,7 +3,7 @@ package com.spartanlabs.testing.support.webtools.http
 import kotlin.random.Random
 
 /**
- * Generates `Url.parse` inputs from a seeded `kotlin.random.Random` (plan §9.1): about 70% structured
+ * Generates `Url.parse` inputs from a seeded `kotlin.random.Random`: about 70% structured
  * (half clean, half hostile), 20% mutations of corpus strings, 10% raw random text. Seeds: 7 for the
  * differential, 11 for the garbage test. A failure message prints the seed and the input, so a
  * disagreement is reproducible.

@@ -8,7 +8,7 @@ single-concern artifacts** — depend only on the one you need:
 | `io.github.spartanlaboratories:webtools-udp` | `com.spartanlabs.webtools.udp` | Multi-client UDP connection layer + NAT-traversal handshake | none (slf4j-api only) |
 | `io.github.spartanlaboratories:webtools-scraping` | `com.spartanlabs.webtools.scraping` | `Connector` — open/read a URL line by line, plus one-shot `get` / `skrape` / image `download` | skrapeit, jsoup, unirest |
 | `io.github.spartanlaboratories:webtools-browser` | `com.spartanlabs.webtools.browser` | `WebViewer` — headless-browser screenshots | selenium-java |
-| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, the `CallBudget` port with `WindowedCallBudget` (the supplied budget: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from `Retry-After` and reset hints, and a hard window that survives a restart through a `BudgetStore`), `CallBudget.Unlimited`, `RateSignalsReader.Standard` and `RetryAfter.parse`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency); **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
+| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, the `CallBudget` port with `WindowedCallBudget` (the supplied budget: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from `Retry-After` and reset hints, and a hard window that survives a restart through a `BudgetStore`), `CallBudget.Unlimited`, `RateSignalsReader.Standard` and `RetryAfter.parse`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency), and the call facades `UpstreamClient` (declared `Endpoint`s, a cache, a budget and a transport composed in one fixed order, with an owning JVM factory) and `UrlFetcher` (administrator-supplied URLs checked against the policy first); **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover.
@@ -44,7 +44,8 @@ only) holds the package `com.spartanlabs.webtools.http.testing`: `VirtualClock`,
 `RequestMatch`, `Step` and `Unmatched`, `Fixture` and `FixtureLoader` for `.http` fixture files,
 `FixtureRecorder` with `RecordingGate` and `Redaction`, and `LoopbackTransports` (the real `OkHttpTransport`
 over a loopback `mockwebserver3` server, with the policy's rules live), `MockWebServer.webtoolsUrl`,
-`Fixture.toMockResponse` and `MockWebServer.enqueue(fixture)`, and `RecordingBudgetObserver` and `FakeBudgetStore`
+`Fixture.toMockResponse` and `MockWebServer.enqueue(fixture)`, `LoopbackFetchers` (a `UrlFetcher` over a loopback
+server with the policy's rules live), and `RecordingBudgetObserver` and `FakeBudgetStore`
 (a scripted budget store with failure injection and virtual-time delays). `testFixtures(...)` is Gradle-only: a
 Maven build cannot select a variant by capability. The variant adds `kotlinx-coroutines-test` and `mockwebserver3`
 to the test classpath only. Fixture files live in the consumer's own test resources; add
@@ -123,6 +124,106 @@ every other public type — is **Stable Core**: breaking changes only in a major
 | Type | Purpose |
 |------|---------|
 | `WebViewer` | Headless-Chrome screenshot utility — `screenshot(url)` returns a `Result<BufferedImage>`, `getPage(url)` a `Result<File>`. Driver provisioned by Selenium Manager. |
+
+## HTTP client stack
+
+`webtools-http` (not yet released) composes a response cache, a call budget and a transport behind two facades.
+**`UpstreamClient`** calls the endpoints of one upstream API; **`UrlFetcher`** fetches URLs an administrator
+supplies. Both are `AutoCloseable`, both return `kotlin.Result`, and neither ever retries: a throttle, a transport
+failure and a `5xx` are each returned once.
+
+### Calling an upstream
+
+```kotlin
+val client = UpstreamClient(Url.parse("https://api.example.com/v2/").getOrThrow(), "my-app/1.0 (+https://example.com/contact)") {
+    headers = HttpHeaders { addSensitive("Authorization", "Bearer $token") }      // default headers; credentials are never printed
+    budget(listOf(RateWindow("minute", 60, 1.minutes) { margin = 10 }))              // built and owned by the client
+}
+
+// Declare each call once: a stable id, a decoder, how long to keep the answer, which status means "nothing there".
+val player = Endpoint("player", ::decodePlayer) {
+    ttl = 10.minutes
+    misses(404)
+}
+
+val result: Result<Lookup<Player>> = client.call(player) {
+    path("players", id)              // raw segments; each is encoded, so "a/b" stays one segment
+    query("region", "eu")
+    maxAge = 1.minutes               // accept a cached answer no older than this
+}
+
+result.fold(
+    onSuccess = { lookup -> when (lookup) { is Lookup.Found -> show(lookup.value); Lookup.Missing -> showNotFound() } },
+    onFailure = { failure -> when (failure) {
+        is UpstreamFailure.RateLimited -> backOff(failure.retryAfter)        // wait this long, then call
+        is HttpFailure.BudgetExhausted -> backOff(failure.wait)
+        else -> report(failure)                                              // keep an else: new failure types may be added
+    } },
+)
+
+client.flush()   // the exact final write of a budget with a persistent store
+client.close()   // closes what the client built (cache, budget, transport), never what it was handed
+```
+
+- **Order.** Every call is checked against the outbound-URL policy first (a refusal costs nothing), then looked up
+  in the cache; only a miss reaches the budget, and only a granted permit reaches the transport. A hit costs nothing,
+  and N concurrent callers of one key cost one permit and one request. Only `GET` is cached.
+- **Endpoints.** The id names the endpoint in the cache key and in logs; give each endpoint its own id. The decoder
+  is the second argument (never the trailing lambda); it sees only the responses classified for decoding and must not
+  capture per-call data. `ttl` defaults to zero (in-flight calls coalesce, nothing is stored); `missTtl` defaults to
+  the smaller of `ttl` and 60 seconds; `cost` defaults to 1 and `lane` to `Lane.Interactive`.
+- **Failures.** `Found` or `Missing` on success. A `429` (or what the client's `rateSignals` reader reports as a
+  throttle) is `RateLimited`, whose `retryAfter` is the longer of the server's `Retry-After` and the time the budget
+  stays paused; a `2xx` the decoder rejects is `DecodeFailure`; any other status is `UpstreamError`; the budget's refusal is
+  `BudgetExhausted`; the transport's and the policy's are `TransportFailure` leaves. Failures are never cached. Once a
+  permit is granted, only an `InvalidRequest` gives it back: every other failure the transport returns, a redirect or
+  an address its policy refuses included, leaves it spent.
+- **Waiting.** A call waits at most `defaultMaxWait` (5 seconds; `CallSpec.maxWait` per call) for a permit, then
+  fails with `BudgetExhausted` carrying the wait it would have needed. The worst-case latency of a call is that wait
+  plus the transport's call timeout.
+- **The default policy** is `Trusted`, pinned to the base URL's host, `https` only. Pass
+  `policy = OutboundUrlPolicy.trusted { … }` to change it. The JVM factory raises OkHttp's concurrency limits to the
+  budget's burst so a granted permit never queues in OkHttp; pass your own transport to the common factory
+  `UpstreamClient(transport, baseUrl) { … }` to size it yourself.
+- **Your own cache or budget.** `cache(CaffeineResponseCache { maxWeight = 5_000 })` and `budget(myBudget)` are
+  caller-owned: the client never closes them.
+
+### Fetching administrator-supplied URLs
+
+```kotlin
+UrlFetcher("my-app/1.0 (+https://example.com/contact)").use { fetcher ->
+    fetcher.fetch(HttpRequest(HttpMethod.Get, url)) { lane = Lane.Tracker }.fold(
+        onSuccess = { response -> handle(response) },      // every status, a 304 included, is a response
+        onFailure = { failure -> report(failure) },        // RefusedByPolicy, RateLimited, BudgetExhausted, a transport failure …
+    )
+}
+```
+
+`UrlFetcher` uses an `Untrusted` policy (private, loopback and link-local addresses refused, a short list of ports,
+no sensitive header) and has no cache and no decoder. Pass a policy of your own
+(`UrlFetcher(userAgent, OutboundUrlPolicy.untrusted { extraDeniedRanges += … })`) to add your deployment's own denied
+ranges, and `budget = …` in the lambda to share a budget. Over a transport of your own (a `FakeHttpTransport` in a
+test) use the common factory `UrlFetcher(transport, policy) { … }`: `policy` is the pre-check's, the transport
+enforces its own, and the fetcher never closes the transport.
+
+### Testing
+
+`FakeHttpTransport`, `VirtualClock` and `LoopbackFetchers` (all in `testFixtures`) cover the stack without a network:
+
+```kotlin
+runTest {
+    val clock = virtualClock()
+    val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.get("/v2/players/7"), Step.respond(200, body = """{"name":"Ada"}"""))
+    UpstreamClient(fake, baseUrl) { timeSource = clock.timeSource; wallClock = clock.wallClock }.use { client ->
+        assertEquals(Lookup.Found(Player("Ada")), client.call(player) { path("players", "7") }.getOrThrow())
+        assertEquals(1, fake.calls.size)
+    }
+}
+```
+
+For a real exchange over loopback, start a `mockwebserver3.MockWebServer` on `127.0.0.1` and use
+`LoopbackFetchers.untrusted("test")` (a `UrlFetcher` with every `Untrusted` rule live except the loopback ones) or
+`LoopbackTransports.trusted(…)` with the common `UpstreamClient` factory.
 
 ## UDP transport protocol
 

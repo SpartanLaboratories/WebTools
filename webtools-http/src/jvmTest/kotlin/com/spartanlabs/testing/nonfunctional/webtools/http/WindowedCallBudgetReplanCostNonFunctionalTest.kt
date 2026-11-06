@@ -33,8 +33,7 @@ private val MEAN_BOUND: Duration = 250.milliseconds
  * and 2 `Interactive` grants, the default shares' split), then 1,000 waiters are queued on each of the two lanes with `maxWait = INFINITE`
  * (the default `maxQueued`), launched one at a time on a single-threaded dispatcher so the arrival order is the launch order; then 20 rounds
  * each cancel the head waiter (the earliest arrival still waiting) and wait until `utilisation().waiting` has fallen by one, timing the round.
- * Every round ends inside 2 s and the mean inside 250 ms (generous bounds; the numbers are in the failure message and recorded in the as-built
- * record); afterwards no waiter is lost: every call that was not cancelled is still waiting or holds a permit, and `waiting` equals the count
+ * Every round ends inside 2 s and the mean inside 250 ms (generous bounds; the numbers are in the failure message); afterwards no waiter is lost: every call that was not cancelled is still waiting or holds a permit, and `waiting` equals the count
  * still running. The bound is on the measured wall time, so a run on a loaded host is rerun once before it is treated as a defect. Real time
  * under `runBlocking`, bounded to 60 s.
  */

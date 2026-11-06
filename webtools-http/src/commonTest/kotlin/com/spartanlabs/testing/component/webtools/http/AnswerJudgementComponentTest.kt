@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 /**
- * Level 2 - `UrlGuard.judgeAnswer` (plan §6.5): `Reject` refuses at the first denied address wherever it sits; `DropDenied`
+ * Level 2 - `UrlGuard.judgeAnswer`: `Reject` refuses at the first denied address wherever it sits; `DropDenied`
  * keeps the allowed indices in order and refuses with the first refusal when none is left; an all-allowed answer is every
  * index under both modes; an empty answer is `Allowed([])` everywhere; `Trusted` allows a private answer whole; an
  * unusual-length address is denied and dropped; IPv6 answers behave the same.

@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 /**
  * Level 4a - the `.http` codec as input-to-output mappings: byte-exact round trips, CRLF heads, comments,
- * the status-line forms, every refusal of the plan's table with its line number, the header-after-status
+ * the status-line forms, every refusal of the test's table with its line number, the header-after-status
  * rule, the reason table, and that no error message echoes a value.
  */
 class HttpMessageCodecDeterministicTest {
