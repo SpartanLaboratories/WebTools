@@ -237,3 +237,299 @@ CHANGELOG and `.gitattributes`) and is surveyed directly in the summary below.
   Rome's `XmlReader` and of the JDK's XML entity scanner; OWASP's XXE guidance; published DOCTYPE and
   encoding bypasses of XML parsers.
 - **Findings file:** [`prolog-scan.md`](prolog-scan.md).
+
+## Verification
+
+### Outside-world claims
+
+Every load-bearing claim of the five findings files was re-opened at its source (the named tag, commit, page or
+specification) on 2026-11-06.
+
+**117 claims: 116 hold and 1 holds in part; none fails and none is unclear.**
+
+| Findings file | Claims | Result |
+|---|---|---|
+| [`conditional-get-and-redirects.md`](conditional-get-and-redirects.md) | 31 | 30 hold; claim 23 holds in part |
+| [`entry-identity-and-links.md`](entry-identity-and-links.md) | 29 | all hold |
+| [`parse-memory.md`](parse-memory.md) | 15 | all hold; claim 9 with a location note |
+| [`prolog-scan.md`](prolog-scan.md) | 20 | all hold |
+| [`rome-adapter.md`](rome-adapter.md) | 22 | all hold |
+
+- **The claim that holds in part.** `conditional-get-and-redirects.md` claim 23 (Liferea moves a subscription on a
+  `301` or `308` hop): the quoted condition shortened its last operand. At `364b2ea`, `src/subscription.c` reads
+  `subscription->updateJob->request->source`, under the comment "update the subscription URL on permanent redirects".
+  The meaning is unchanged, and the quote in the findings file now matches the source.
+- **Location notes.** `parse-memory.md` claim 9: the ancestor walk (`p = p.getParent()`) is in `Element.java`, the
+  call to it in `ContentList.java`; the findings file now cites both. Every other quote is verbatim at the cited
+  location, apart from line wraps, hyphenation at line breaks and escaped characters.
+
+### Codebase facts
+
+The repository facts the findings rest on were checked against `master` at `0374c8d`:
+
+- `HttpRequest.kt:27` requires every header value to be sendable, and `HttpSyntax.kt:29` defines sendable as HTAB or
+  U+0020 to U+007E (`conditional-get-and-redirects.md` F6).
+- `RedirectDecision.kt:21` follows `301 302 303 307 308`; `:92-94` keeps a request's headers on a same-origin hop and
+  drops only the sensitive entries on a cross-origin one (F14).
+- `TransportSettings.kt:21`: `allowHttpsToHttp` is false in both default sets (F11).
+- `HttpHeaders.kt:33`: `get` returns the last value of a name; `getAll` returns every value (F4).
+- `ChildJvm.kt:31-41` starts its child with `java.home` and `java.class.path`, discards its output, waits 20 s and
+  destroys the child on timeout (`parse-memory.md`, the gate).
+- `floorDiv` and `encodeToByteArray` are already used in `webtools-http`'s common code (`HttpDate.kt`,
+  `WindowLedger.kt`, `UrlEncoding.kt`), which its check module compiles for `js` (`entry-identity-and-links.md` F8).
+- No test task in the repository sets `maxHeapSize` or `jvmArgs`, and the multiplatform plugin's `jvmTest` task and
+  `test` alias run every level in one worker (`webtools.kotlin-multiplatform-library.gradle.kts`) (`parse-memory.md`
+  F8).
+
+### Earlier findings that do not hold as stated
+
+- [`../../research/feed-parsing.md`](../../research/feed-parsing.md) F7 and its claim 5 give Rome's `XmlReader`
+  order as mark, then header charset, then XML declaration. The quoted Javadoc is accurate, but the code lets the
+  declaration win in lenient mode, the mode the supplied parser needs (`rome-adapter.md` F4 and claim 6;
+  `prolog-scan.md` F1). The design here follows the code.
+
+## Summary
+
+The five findings files answer every question; the detail, the measurements and the sources are in each file.
+
+### The supplied parser: how `RomeFeedParser` drives Rome 2.1.0
+
+- **Construction.** Rome is driven through a private subclass of `WireFeedInput` whose protected
+  `createSAXBuilder()` returns Rome's public `SAXBuilder` over a SAX factory of the parser's own
+  (`SAXParserFactory.newDefaultInstance()`, created per build, namespace-aware, not validating). Rome's four
+  hardening features are set on it directly, so a provider that does not recognise one fails the build instead of
+  silently skipping it; entity expansion is off and the entity resolver returns nothing. The JDK's processing limits
+  are set as parser properties under their URL names (`http://www.oracle.com/xml/jaxp/properties/maxElementDepth`
+  and `.../elementAttributeLimit`): the `jdk.xml.*` spellings are not recognised by the JDK 11 parser, which then
+  fails every document. The document goes in through `build(Reader)` over an `XmlReader`, so Rome's ampersand and
+  entity repair and its encoding detection apply, and the result is wrapped with `SyndFeedImpl(wireFeed, false)`.
+  Everything is created per `parse` call; nothing static is read or written
+  ([`rome-adapter.md`](rome-adapter.md) F1 to F3, F11).
+- **Why not `SyndFeedInput`, and why not Rome's own builder.** `SyndFeedInput` keeps its `WireFeedInput` private, so
+  no limit can be set through it. Rome's own `createSAXBuilder()` uses JDOM's process-wide SAX factory: from JDK 22 a
+  JAXP limit set on one parser of that factory stays on it for every later JDOM parse in the JVM, concurrent builds
+  race (2,806 wrong outcomes in 6,400), and with Xerces on the class path every document fails
+  ([`rome-adapter.md`](rome-adapter.md) F2; [`parse-memory.md`](parse-memory.md) F7).
+- **Encoding.** `XmlReader` runs inside a three-step recipe: ASCII white space before the first `<` is dropped; input
+  that starts with a UTF-16 mark or the UTF-16 `<?` pattern uses the constructor that ignores the header; anything
+  else uses the header-aware constructor with `UTF-8` as the default, retried once without the header when the
+  header names a charset the JDK does not know. The plain constructor fails or corrupts 7 of 26 encoding vectors; the
+  recipe passes all 26 on JDK 23 and JDK 11. In Rome's lenient mode the XML declaration wins over the mark and the
+  header ([`rome-adapter.md`](rome-adapter.md) F4).
+- **Failures.** Mapped by type and by the JDK's documented error code, never by message:
+  - a limit code in the cause chain (`JAXP00010006` depth, `JAXP00010002` attributes, and the parser's own element
+    and namespace counts below) is `LimitExceeded`; a `StackOverflowError` is `LimitExceeded` too, as a backstop;
+  - the DOCTYPE feature named in the chain (Rome's second lock firing) is `Refused`;
+  - exactly `IllegalArgumentException("Invalid document")`, the class and not a subclass, is `NotAFeed`;
+  - every other `ParsingFeedException`, any `IOException` from `XmlReader`, any other `IllegalArgumentException`
+    (a `NumberFormatException` from `<cloud port="abc">` escapes Rome unwrapped and carries document text) and any
+    other runtime exception from the Rome region is `Malformed`, with no cause or message kept;
+  - `OutOfMemoryError` and other errors are not caught; an exception from the module's own conversion code leaves
+    `parse`, and the fetcher reports it as `DecodeFailure`.
+  ([`rome-adapter.md`](rome-adapter.md) F5.)
+- **Mapping.** Rome trims nothing; an empty guid or id comes back as `""`; a permalink guid is copied into the entry
+  link even when it is not a URL; an Atom 1.0 feed's `getLink()` is its own `rel="self"` URL, so the site link is the
+  first alternate of `getLinks()`; relative links and `xml:base` are never resolved, and only the Atom feed and entry
+  wire beans carry an `xml:base`; `dc:subject` reaches only the entry's `DCModule`, never `getCategories()`; an
+  enclosure length is 0 when absent or unparseable and a negative one passes through; `DateParser` misreads some
+  inputs into absurd years. The conversion owns each of these, per field and format as tabled in
+  [`rome-adapter.md`](rome-adapter.md) F9 and F10.
+- **Quiet and stateless.** Rome logs nothing on this path. `Atom10Parser.setResolveURIs`,
+  `XmlReader.setDefaultEncoding` and `ConfigurableClassLoader.setClassLoader` are JVM-global and never called. One
+  parser instance is safe from any number of threads because every call builds its own objects
+  ([`rome-adapter.md`](rome-adapter.md) F11).
+
+### Parse cost, structural limits and the fixed-heap gate
+
+- **Unguarded cost at the defaults** (2 MiB cap, two concurrent parses). A hostile, DOCTYPE-free 2 MiB document needs
+  54 to 168 MB of heap for one parse and 102 to 318 MB for two; a realistic 1.4 MB feed needs 7 MB. CPU and stack
+  are worse: JDOM's builder is quadratic in nesting depth (a 299,572-level document parses in 653 s, and a parse
+  cannot be cancelled), 10,000 attributes per element (the JDK's default limit) cost about 5 s and 1.7 GB of
+  allocation, and markup nested 1,800 to 4,400 levels deep inside an RSS `<description>` or an Atom `xhtml` text
+  overflows a 1 MB stack, the band depending on JIT state ([`parse-memory.md`](parse-memory.md) F1 to F4;
+  [`rome-adapter.md`](rome-adapter.md) F6, F7).
+- **Four structural limits remove it.** Element depth 256 and attributes per element 100, as JDK properties on the
+  parser's own SAX factory, and a counting `SAXHandler` (set through `setSAXHandlerFactory`) with an element cap of
+  100,000 and a cap of 64 distinct namespace URIs. With them every hostile shape is rejected in 45 to 160 ms, the
+  worst accepted shape needs 43 MB for two parses (144 MB for eight), and realistic feeds are unaffected. The real
+  feeds sampled nest at most 6 levels and carry at most 10 attributes per element and 11 distinct namespace URIs. A
+  byte-level structural pre-scan is not needed: the handler counts what the parser actually builds, in the same pass
+  ([`parse-memory.md`](parse-memory.md) F5, F10; [`rome-adapter.md`](rome-adapter.md) F6, F7).
+- **JDOM's namespace cache.** `org.jdom2.Namespace` keeps every distinct namespace URI it sees in a static map for the
+  life of the JVM (about 290 bytes each; 44 MB per hostile 2 MiB document, 174 MB after four with fresh URIs). The
+  64-URI cap stops such a document in 7 to 12 ms and bounds the growth to 64 entries per hostile document; it counts
+  distinct URIs, not declarations, because a real feed repeated one declaration 507 times
+  ([`parse-memory.md`](parse-memory.md) F6).
+- **Deployment heap.** With the limits, about 128 MB of headroom covers the default two concurrent parses; without
+  them, about 640 MB. The figure scales with the number of parses running at once in the process, which is the sum
+  of every fetcher's `maxConcurrentParses` ([`parse-memory.md`](parse-memory.md), Recommendation).
+- **The gate.** Each hostile case runs in a child JVM started as `webtools-http`'s `ChildJvm` support starts its child,
+  with `-Xmx128m` and `-XX:+ExitOnOutOfMemoryError`, running two parses at once through the module's real parse path
+  and printing one result line per parse; the test asserts the exit code, the result kinds and a 30 s bound that
+  detects a hang. 128 MB is three times the worst accepted shape, and the unguarded `<item/>` and Atom `<entry/>`
+  floods exit with the out-of-memory code at that heap in 12 of 12 runs, so the gate catches the regression it
+  exists for. A fixed heap on `nonfunctionalTest` alone leaves `jvmTest` and the `test` alias, which run every class
+  in one 512 MB worker, ungated; an allocation bound measures garbage, not heap safety
+  ([`parse-memory.md`](parse-memory.md) F8, F9).
+
+### The DOCTYPE prolog scan
+
+- **Three readings, no chosen encoding.** Rome's lenient `XmlReader` lets the declaration beat the mark and the header,
+  ignores a UTF-16 mark under `text/*` types or no header, and consumes a second mark on its `text/html` retry, so a
+  scan that first picks an encoding by RFC 7303 or XML Appendix F order is bypassed. The scan skips the whole leading
+  run of marks, walks the prolog in three readings at once (ASCII-compatible bytes, UTF-16BE units, UTF-16LE units)
+  and returns the worst outcome ([`prolog-scan.md`](prolog-scan.md) F1, F2).
+- **What it refuses.** UCS-4 and UTF-32 marks and prefixes, the EBCDIC prefix `4C 6F A7 94`, any encoding name in the
+  header or a declaration-shaped start that is not on a short allowlist (UTF-8, US-ASCII, ISO-8859-N, windows-125x,
+  KOI8, Shift_JIS and windows-31j, EUC-KR, GBK, GB2312, Big5, the UTF-16 family, and EUC-JP and GB18030 under a
+  stricter rule), and a prolog longer than 64 KiB per reading. The JDK's UTF-16 decoder drops the unit after an
+  unpaired surrogate and its EUC-JP and GB18030 decoders drop the byte after a malformed lead byte, which lets a
+  comment end for a scan but not for the parser; a reading that would report no DOCTYPE after reading such a sequence
+  is refused instead ([`prolog-scan.md`](prolog-scan.md) F5).
+- **The walk.** White space, processing instructions and comments are skipped; `<!DOCTYPE` in any case gives a
+  DOCTYPE, `html` as its name a web page; `<!` followed by any other letter is a DOCTYPE; the first start tag ends the
+  walk, an `html` root being a web page; a `--` inside a comment, or a comment or processing instruction that never
+  ends, is ill-formed, because Rome's repair reader closes comments differently from the specification.
+- **Outcomes.** No DOCTYPE: parsing proceeds. A web page: `NotAFeed(Html)`. A DOCTYPE, or a prolog that cannot be
+  read identically to the parser: `Refused`, with a constant message. Ill-formed: `Malformed`. No parser runs on any
+  outcome but the first. A 2 MiB body scans in under 0.25 ms; the longest prolog in 70 fetched documents was
+  149 bytes.
+- **Evidence.** A pure-Kotlin implementation compiled for the JVM and as a Kotlin/JS klib on Kotlin 2.2.0 gives the
+  expected outcome for all 125 vectors of the catalogue, and a seeded differential against the real Rome and JDK
+  pipeline (1.8 million general cases, 0.8 million targeted 16-bit cases, six `XmlReader` constructor shapes) found no
+  document whose DOCTYPE reached the parser while the scan reported none ([`prolog-scan.md`](prolog-scan.md),
+  Recommendation and vector catalogue).
+
+### Entry identity, links and text
+
+- **Identity, frozen.** An entry's id is (1) its guid or Atom id trimmed of ASCII white space, when non-empty and at
+  most `maxIdChars`; else (2) its link exactly as written (trimmed of control characters and spaces at the ends, with
+  no white space, control character or backslash inside, and no scheme or an `http`/`https` one), when at most
+  `maxIdChars`; else (3) a digest. `isPermaLink` plays no part, and nothing is case-folded, normalised or resolved, so
+  the id does not change when a document moves (RFC 4287 §4.2.6) ([`entry-identity-and-links.md`](entry-identity-and-links.md)
+  F1, F2).
+- **The digest.** SHA-256, in pure Kotlin, over a length-prefixed message: the domain string
+  `webtools-feeds/entry-id/1`, then the first present of title, summary-or-content and first enclosure URL (each
+  trimmed, cut to 4,096 UTF-16 units without splitting a surrogate pair, unpaired surrogates replaced by U+FFFD so the
+  JVM and `js` encoders agree), then the published date in whole epoch seconds. The id is `webtools-feeds:v1:` plus
+  the first 16 bytes as 32 lower-case hex digits; an entry with nothing at all is kept with the constant id of the
+  domain string. Fourteen vectors, reproduced by an independent implementation, pin it
+  ([`entry-identity-and-links.md`](entry-identity-and-links.md) F7, Recommendation).
+- **Links.** Control characters and spaces are trimmed at the ends; the length is checked before any scan; any
+  remaining control character, white space or backslash, any user-info, and any scheme but `http`/`https` gives null;
+  a relative reference resolves by RFC 3986 §5.2 (strict) against the response's final URL, with the Atom feed's and
+  entry's `xml:base` applied in turn, and gives null without a valid base; a fragment and the percent-encoding are kept
+  as written. The rule reproduces 39 of the 42 rows of RFC 3986 §5.4; the other three (`g:h`, `http:g`, the empty
+  reference) are null by rule. A link Rome derived from a permalink guid is used only if it is already absolute
+  ([`entry-identity-and-links.md`](entry-identity-and-links.md) F5, F6).
+- **Text.** Text fields are trimmed of ASCII white space, blank is absent, and truncation at `maxTextChars` never
+  splits a surrogate pair. Categories are trimmed, blanks and exact duplicates dropped, then capped; enclosures with no
+  usable URL or a repeated one are dropped, then capped, and a length of 0 or less is unknown
+  ([`entry-identity-and-links.md`](entry-identity-and-links.md) F9).
+- **Default numbers.** `maxIdChars` 2,048; `maxLinkChars` 8,000 (RFC 9110's interoperability floor for URIs);
+  `maxTextChars` 262,144 (the largest text in a 57-feed sample is 174,346 characters, and 65,536 would truncate two
+  of the 57); `maxCategoriesPerEntry` 32; `maxEnclosuresPerEntry` 8. A default can only be tightened, so the generous
+  side is the safe one; `maxIdChars` is part of the frozen identity
+  ([`entry-identity-and-links.md`](entry-identity-and-links.md) F4, Recommendation).
+
+### Conditional GET and redirects
+
+- **Request.** `If-None-Match` and `If-Modified-Since` are sent together whenever each is known, exactly as stored,
+  with `Accept: application/atom+xml, application/rss+xml, application/rdf+xml;q=0.9, application/xml;q=0.8,
+  text/xml;q=0.8, */*;q=0.1` (no `application/feed+json`, since the parser reads XML)
+  ([`conditional-get-and-redirects.md`](conditional-get-and-redirects.md) F1, F13).
+- **Validators.** A stored value is kept only if, trimmed of SP and HTAB, it is non-empty, at most 256 characters
+  (ETag) or 64 (Last-Modified), made only of U+0020 to U+007E, and, for the ETag, not `*`; otherwise it is null, never
+  truncated. The character rule is a correctness rule: the stack's `HttpRequest` refuses any other header character,
+  so a stored non-ASCII tag would fail every later fetch of that feed. A `200` replaces both validators; a `304`
+  replaces each one it carries (an unusable one becomes null) and keeps the others; a header that appears more than
+  once counts as absent (F2 to F7).
+- **Statuses.** `200` and `203` are parsed; a `304` to a request that carried a validator is `NotModified` and to one
+  that carried none `UpstreamError(304)`; every other `2xx` is `UpstreamError`, because none is a complete
+  representation for a plain `GET` (`204` and `205` have no content, `206` answers only a range request, `226` only a
+  request with `A-IM`) (F5).
+- **Permanent moves.** `permanentlyMovedTo` is the target of the last hop in the leading run of `301`/`308` hops,
+  reported with `Fetched` and with `NotModified`, never for a chain that ends in an error, and never when it equals the
+  requested URL; host and scheme are not filtered. A `302` at the head keeps the original URL canonical (RFC 9110
+  §15.4.3); SimplePie, and so FreshRSS, apply exactly this rule (F9 to F11).
+- **Shape.** `FeedFetch` is a sealed interface declaring `validators`, `finalUrl` and `permanentlyMovedTo`, with final
+  `Fetched` and `NotModified` leaves, as the stack's `Lookup` is shaped (F15).
+- **The transport as built** sends both conditional headers on every hop, cross-origin included (neither is
+  controlled nor sensitive), so validators from one final server can reach another after a redirect changes; a caller
+  that sees `finalUrl` change drops its validators. `allowHttpsToHttp` is off by default, so an `https` feed that
+  redirects through `http` is refused (F14, F11).
+
+### Where the findings differ, and which view holds
+
+- **JDK property names.** The URL spellings hold: `jdk.xml.maxElementDepth` and `jdk.xml.elementAttributeLimit` are
+  not recognised by the JDK 11 parser (measured on 11.0.32.1), while the URL forms work on 11, 17, 21 and 23
+  ([`rome-adapter.md`](rome-adapter.md) F3; [`parse-memory.md`](parse-memory.md) uses the `jdk.xml.*` names on JDK 23).
+- **How the builder is isolated.** Both isolate the limits from JDOM's shared factory. A builder of the parser's own
+  that sets Rome's features directly ([`rome-adapter.md`](rome-adapter.md)) holds over calling Rome's builder and then
+  replacing its reader factory ([`parse-memory.md`](parse-memory.md) F7): it never touches the shared factory, and a
+  provider without the DOCTYPE feature fails the build rather than being skipped.
+- **Stack thresholds.** The two measurements (an overflow at 2,000 levels, and survival at 2,000 with an overflow at
+  5,000) both fall inside the JIT-dependent band of 1,800 to 4,400 levels on a 1 MB stack; under a depth limit of
+  256 the point is moot ([`parse-memory.md`](parse-memory.md) F4).
+- **`xml:base`.** Rome resolves nothing and exposes `xml:base` only on the Atom feed and entry wire beans, which the
+  parser holds before it converts them; the link rule applies those two and no other placement (none occurs in the
+  sample) ([`entry-identity-and-links.md`](entry-identity-and-links.md) F5; [`rome-adapter.md`](rome-adapter.md) F10).
+- **`XmlReader`'s order.** [`../../research/feed-parsing.md`](../../research/feed-parsing.md) F7 gives Rome's order as
+  mark, then header, then declaration, as its Javadoc says; that holds in strict mode only. The parser runs lenient,
+  where the declaration wins, and both the encoding recipe and the prolog scan are built for that order.
+- **A parser that throws.** Inside the supplied parser, Rome's own runtime exceptions on hostile input are `Malformed`;
+  an exception that leaves any parser's `parse` is the fetcher's `DecodeFailure`. Both hold, at different layers.
+
+### What these findings change against the parent design
+
+- **Which statuses are parsed.** [`../../architecture.md`](../../architecture.md) §6.10 parses any `2xx`; these
+  findings parse `200` and `203` only and return every other `2xx` as `UpstreamError`.
+- **A fourth layer of hardening.** §6.10 hardens with the byte cap, the prolog scan and `FeedLimits`'s field and count
+  bounds. The findings add structural limits inside the supplied parser (depth 256, attributes per element 100,
+  elements 100,000, distinct namespace URIs 64), each reported as `LimitExceeded`, without which a 2 MiB document
+  costs minutes of CPU, overflows the stack or grows a JVM-wide cache. They fit either as fixed constants of
+  `RomeFeedParser` or as tightening-only members of `FeedLimits`.
+- **How the supplied parser drives Rome.** §6.10 names `SyndFeedInput` with `allowDoctypes = false`, a plain
+  `XmlReader`, and three exception mappings; the findings replace these with the private `WireFeedInput` subclass and
+  SAX factory, the encoding recipe and the fuller exception table above, and add `dc:subject` as a category source.
+- The 2 MiB cap, the two concurrent parses and the 1,000-entry limit stay as they are.
+
+### Options that do not fit
+
+- `SyndFeedInput` unchanged: no limit can be set without JVM-wide system properties, which reach the host
+  application's own XML parsing.
+- Rome's own builder with limits added: the limits leak to every JDOM parse in the JVM from JDK 22 and race.
+- Building the JDOM document separately and handing it to `WireFeedInput.build(Document)`: Rome's repair and encoding
+  detection are lost, so bare ampersands, `&nbsp;` and ISO-8859-1 feeds fail.
+- A byte-level structural pre-scan: cheap, but it can disagree with the parser about a malformed document, and the
+  handler counts exactly.
+- A heap set on `nonfunctionalTest`, or an in-process allocation bound, as the memory gate (above).
+- A prolog scan that picks one encoding first; searching for the text `<!DOCTYPE`; modelling the repair reader's
+  comment grammar.
+- A 64-bit non-cryptographic digest (collidable inside a feed), undelimited concatenation of fields (a title `ab`
+  hashes as a title `a` followed by a field `b`), a random fallback id (changes on every parse), case folding or
+  Unicode normalisation of ids.
+- Storing validators as received, truncating them, or reformatting `Last-Modified`.
+- Adopting a move only when every hop is permanent (under-reports `A -301-> B -302-> C`), or from any permanent hop
+  (adopts a temporary target).
+
+### The codebase blast radius
+
+Surveyed directly against `master` at `0374c8d`:
+
+- **New:** the module `webtools-feeds/` (build file, `commonMain`, `jvmMain`, `jvmTest` with its resources and its own
+  `logback-test.xml`, the ABI dump `api/webtools-feeds.api`) and the check module `webtools-feeds-commoncheck/`, which
+  compiles the feeds `commonMain` for `js` against `webtools-http-commoncheck`, declares
+  `kotlinx-coroutines-core` 1.10.2 itself (the http check module declares it as `implementation`), opts in to the
+  stack's marker on `commonMain` and `jsMain`, and holds a `js` actual for every `expect` of the feeds module.
+- **Changed:** `settings.gradle.kts` (the two modules join the `include` line); `README.md` (the artifacts table, the
+  install snippet and the Maven `-jvm` note, a feeds how-to after the HTTP client stack section, the module list and
+  the check-module line of "Build & test", the `kotlin-multiplatform-library` row of the shared build logic table);
+  `CHANGELOG.md` (an `Added` entry under `Unreleased`); `.gitattributes` (byte-exact feed documents under the feeds
+  test resources, such as UTF-16 and ISO-8859-1 fixtures, need a `-text` line of their own: the existing line covers
+  `*.http` files only).
+- **Unchanged:** `webtools-http` and its check module. Everything the feeds module needs from them is public
+  (`UrlFetcher` and its factories, `FetchSpec`, `HttpRequest`, `HttpHeaders`, `Url`, `UpstreamError`,
+  `DecodeFailure`, `Closed`, the opt-in marker, the published fixtures); the `internal` helpers the module needs
+  (the logging seam and its slf4j actual, the non-fatal catch) are copied, as `internal` stops at the module.
+- **Nothing to adopt:** no code in the repository parses or fetches feeds.
