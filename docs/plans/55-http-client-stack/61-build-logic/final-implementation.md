@@ -371,7 +371,7 @@ for byte. What departs from the plan's first version, and where each case stands
 
 ## 5. Level 5 — the manual pass
 
-The Level-5 pass is narrowed to the following, and qa pass 2 performs it:
+The Level-5 pass is narrowed to the following; it was run on the tree as built and passed:
 1. Read the README's "Build & test" section against the actual layout.
 2. Run `./gradlew :build-logic:test`, then
    `./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest`.
@@ -409,10 +409,10 @@ The Level-5 pass is narrowed to the following, and qa pass 2 performs it:
   harmless either way.
 - **Not exercised:** JDKs other than Oracle 23, Linux, and IntelliJ import of `build-logic`.
 
-## 8. qa pass 2 — minor fixes
+## 8. Wording and one test beyond the plan's first text
 
-qa pass 2 passed the code review and the narrowed Level-5 pass and requested six minor fixes (five
-wording, one test, no production code). They were applied on the spot; there is no third pass.
+Six additions to the plan's first text are in the tree: five of wording and one test, none in
+production code. The narrowed Level-5 pass of §5 passed on this tree.
 
 1. `PomFile.parse`: a comment above the `disallow-doctype-decl` feature, as `TestReports` has, and
    its `@return` names the DOCTYPE case.
@@ -431,7 +431,7 @@ wording, one test, no production code). They were applied on the spot; there is 
    `ConfigurationCacheReuseNonFunctionalTest`'s. Listed in plan.md §9 Level 4c and in the table of
    §1; `nonfunctionalTest` runs 2 tests, the TestKit levels 34, and `build-logic` 49 in all.
 
-Test result, after the fixes:
+Test result, with these in:
 - `./gradlew :build-logic:test --rerun`: BUILD SUCCESSFUL, 15 tests, 0 failed.
 - `./gradlew :build-logic:nonfunctionalTest --rerun`: BUILD SUCCESSFUL, 2 tests, 0 failed
   (`ConfigurationCacheReuseNonFunctionalTest` 16.8 s, `JvmConfigurationCacheReuseNonFunctionalTest`
@@ -441,9 +441,8 @@ No module test task ran.
 
 ### Deviations
 
-- Items 1 and 2 change `PomFile.kt` and `NestedBuild.kt` without a mirror in the plan, as the fix
-  list asked, so those two files now differ from the §16.14 and §16.10 blocks by the comment lines
-  above. §2's "byte for byte" holds for every other replaced or created file.
+- Items 1 and 2 change `PomFile.kt` and `NestedBuild.kt` without a mirror in the plan, so those two
+  files differ from the §16.14 and §16.10 blocks by the comment lines above. §2's "byte for byte" holds for every other replaced or created file.
 - `JvmConfigurationCacheReuseNonFunctionalTest.kt` has no §16 block; §9 describes it.
 - The texts items 3 and 5 change appear in §6.6 and §6.11 only, not in the find/replace pairs of
   §16.4 and §16.7, so each of those sections gained a third pair, and its "Two edits" opening became

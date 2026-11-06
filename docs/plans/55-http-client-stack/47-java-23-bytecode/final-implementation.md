@@ -93,7 +93,7 @@ All in `build-logic`, as the plan lists them. The counts are those of the merged
 | Level | Class | Tests |
 |---|---|---|
 | 2 | `JavaFloorScanComponentTest` (new) | 18 |
-| 2 | `VerifyJavaFloorComponentTest` (new, from qa pass 1) | 7 |
+| 2 | `VerifyJavaFloorComponentTest` (new, not in the plan's list) | 7 |
 | 2 | `RegisterVerifyJavaFloorComponentTest` (new) | 4 |
 | 4a | `WebToolsBuildJavaFloorDeterministicTest` (new) | 3 |
 | 3 | `PublishedJvmVersionAttributeIntegrationTest` (`expectedJvmVersion` is the literal `11`) | 2 |
@@ -112,17 +112,16 @@ unchanged.
 
 None from the plan's letter. The plan's 8 new files and 12 diffs were applied to a clean `36fd879`
 export and compared with the merged tree: every file the plan touches is identical except the five
-that qa pass 1 changed (§3), and one test class (`VerifyJavaFloorComponentTest`) that the plan does not
-list. So the plan's collapsed blocks are the versions before qa pass 1; the tree is authoritative for
-the nine changes below. `README.md` kept its CRLF working-tree line endings; the Kotlin and Gradle files
-are LF.
+that §3 lists, and one test class (`VerifyJavaFloorComponentTest`) that the plan does not list. So the
+plan's collapsed blocks lack the nine additions below; the tree is authoritative for them. `README.md`
+kept its CRLF working-tree line endings; the Kotlin and Gradle files are LF.
 
-## 3. qa pass 1 — minor fixes
+## 3. Documentation and tests beyond the plan's blocks
 
-Applied by the implementer on 2026-10-22, on `fix/issue-47-java-floor` (7 documentation, 2 test). No
-production logic changed, only comments, KDoc, the README and tests.
+Built on 2026-10-22, on `fix/issue-47-java-floor`: nine additions to the plan's blocks (7 documentation,
+2 test). They change no production logic, only comments, KDoc, the README and tests.
 
-### Doc fixes (`build-logic/src/main/kotlin/`)
+### Documentation (`build-logic/src/main/kotlin/`)
 
 1. `JavaFloorScan.kt`, `data class FloorScan` KDoc: added "Immutable: a scan is a value, and [plus] returns a new one."
 2. `JavaFloorScan.kt`, `FloorScan.plus` KDoc: kept the sentence; added `@param other` and `@return`.
@@ -137,7 +136,7 @@ production logic changed, only comments, KDoc, the README and tests.
 7. `VerifyJavaFloor.kt`, `moduleMetadata`: line comment on `@get:PathSensitive(PathSensitivity.NAME_ONLY)`:
    content plus file name is enough, the directory only serves the failure label.
 
-### Test fixes
+### Tests
 
 8. New `VerifyJavaFloorComponentTest` (Level 2, `com.spartanlabs.testing.component.webtools.buildlogic`):
    a `ProjectBuilder` project whose project dir is the `@TempDir` (so the report lands inside it; the
@@ -152,7 +151,7 @@ production logic changed, only comments, KDoc, the README and tests.
    `declares org.gradle.jvm.version nothing, not 11`: the scan reads a non-number as absent. The test pins
    that wording; production code was not changed. See §8.
 
-After the fixes, `./gradlew :build-logic:test --rerun`: `BUILD SUCCESSFUL in 10s`, 47 tests, 0 failures:
+With these in, `./gradlew :build-logic:test --rerun`: `BUILD SUCCESSFUL in 10s`, 47 tests, 0 failures:
 `JavaFloorScanComponentTest` 18 (was 16), `VerifyJavaFloorComponentTest` 7 (new),
 `RegisterLevelTasksComponentTest` 7, `RegisterVerifyJavaFloorComponentTest` 4,
 `WebToolsBuildJavaFloorDeterministicTest` 3, `WebToolsBuildLevelsDeterministicTest` 6,
