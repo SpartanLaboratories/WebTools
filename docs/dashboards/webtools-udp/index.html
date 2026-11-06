@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="template" content="system/template/system.html">
 <title>webtools-udp model</title>
-<script>/* the theme switch's choice (GUIDANCE.md §1, Themes), applied before the first paint; none chosen: the system setting */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>/* the theme switch's choice (GUIDANCE.md §1, Themes) and the inspector switch's (§6, "The inspector switch"), applied before the first paint; none chosen: the system setting, the inspector shown */try{var t=localStorage.getItem("dashboards-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;if(localStorage.getItem("dashboards-inspector")==="hidden")document.documentElement.dataset.inspector="hidden"}catch(e){}</script>
 <style>
 /* Layout: header band → KPI strip → tabbed stage with a sticky side inspector → guarantee cards → Context cards → provenance footer.
    System board template (dashboards skill, system set: system/RULES.md): the C4 tab is rendered at load from the Structurizr DSL embedded below.
@@ -36,10 +36,21 @@ h1,h2,h3{text-wrap:balance}
 /* header */
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px;overflow-wrap:anywhere}
 .crumbs a{text-decoration:none}
-/* The theme switch (GUIDANCE.md §1, Themes), right of the breadcrumb: the renderer adds it to the header. */
+/* The header's tools right of the breadcrumb: the inspector switch and the theme switch (GUIDANCE.md §6, §12), which the renderer adds to the header. */
 .systools{float:right;display:flex;gap:6px;align-items:center;margin:14px 0 4px 12px}
-.themebtn{appearance:none;font:600 11px/1 var(--mono);padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
-.themebtn:hover{color:var(--ink);border-color:var(--ink-2)}
+/* The header's switches (GUIDANCE.md §12, "Switch"): a track with a knob that slides to the side of the state shown, a real toggle
+   (role="switch", aria-checked) in the boards' neutrals, never the accent or a status colour. The theme switch's ends are ☀ light and
+   ☾ night, its knob at the palette shown; the inspector switch's knob stands right, its track filled, while the inspector is shown. The
+   knob slides in a short transition, and jumps under reduced motion. */
+.switch{appearance:none;display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--mono);padding:3px 7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.switch:hover{color:var(--ink);border-color:var(--ink-2)}
+.switch-track{position:relative;flex:none;width:28px;height:16px;border:1px solid var(--ink-2);border-radius:8px;background:var(--surface-2);transition:background-color .18s ease}
+.switch-knob{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ink-2);transition:transform .18s ease}
+.switch[aria-checked="true"] .switch-track{background:color-mix(in srgb,var(--ink-2) 35%,var(--surface))}
+.switch[aria-checked="true"] .switch-knob{transform:translateX(12px);background:var(--ink)}
+.switch-end{font-size:12px;color:var(--muted)}
+.switch[aria-checked="false"] .switch-end.off,.switch[aria-checked="true"] .switch-end.on{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.switch-track,.switch-knob{transition:none}}
 .crumbs a:hover{text-decoration:underline}
 h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono);overflow-wrap:anywhere}
 .function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
@@ -95,6 +106,9 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
 /* the inspector stays in view beside the tab and scrolls inside itself when its entry is taller than the window */
 .inspector{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;max-height:calc(100vh - 24px);overflow:auto}
+/* The inspector switch (GUIDANCE.md §6, "The inspector switch"): hidden, the inspector leaves the stage and the tab takes its width */
+:root[data-inspector="hidden"] .stage{grid-template-columns:minmax(0,1fr)}
+:root[data-inspector="hidden"] .inspector{display:none}
 .inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
 .inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
 .inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
@@ -685,7 +699,7 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-udp",
   "version": "2.0.0a",
-  "asIs": {"ref": "master", "sha": "7de8207", "date": "2026-10-25T11:51:40Z"},
+  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
   "lastAmended": {"issue": 47, "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+", "sha": "e249f52"},
   "written": {"sha": "7de8207"}
 }
@@ -696,7 +710,7 @@ footer code{color:var(--ink-2)}
 <script type="text/plain" id="dsl">
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools master 7de8207 (2026-10-25), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
+// As-is at WebTools master 5f221ce (2026-11-05), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -787,7 +801,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at master 7de8207; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at master 5f221ce; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }
@@ -1420,10 +1434,11 @@ function renderFlow(){
   flowKey(F);
   highlightFlow();
 }
-/* The legend for the flow on screen: its shapes, the outcome levels its ends use (grouped by stripe colour), lit and faded, planned. */
+/* The legend for the flow on screen: its shapes, the outcome levels its ends use (grouped by stripe colour), lit and faded, and planned
+   only where a node is (an edge is drawn planned only beside a planned node). */
 function flowKey(F){
   const ends=new Map(); Object.values(F.nodes).filter(n=>n.k==="t").forEach(n=>{ const c=lvlCol(n.lvl), l=ends.get(c)||[]; if(n.lvl&&!l.includes(n.lvl)) l.push(n.lvl); ends.set(c,l); });
-  $("#flow-key").innerHTML=`<span><i class="hex"></i>decision</span><span><i></i>step</span>`+[...ends].map(([c,l])=>`<span><i class="end" style="border-left-color:${c}"></i>ends · ${esc(l.join(" · ")||"outcome")}</span>`).join("")+`<span><i class="ln on"></i>the path these inputs take</span><span><i class="ln off"></i>not taken</span><span><i class="pln"></i>planned, not built</span>`;
+  $("#flow-key").innerHTML=`<span><i class="hex"></i>decision</span><span><i></i>step</span>`+[...ends].map(([c,l])=>`<span><i class="end" style="border-left-color:${c}"></i>ends · ${esc(l.join(" · ")||"outcome")}</span>`).join("")+`<span><i class="ln on"></i>the path these inputs take</span><span><i class="ln off"></i>not taken</span>`+(Object.values(F.nodes).some(isPlanned)?`<span><i class="pln"></i>planned, not built</span>`:"");
 }
 function highlightFlow(){
   const F=flowOf(), s=flowStateFor(F), res=F.rules(s), set=new Set(res.path), svg=$("#svg-flow"), irr=new Set(res.irrelevant||[]);
@@ -1545,22 +1560,46 @@ try{ const s=localStorage.getItem("dash-tab-"+location.pathname); if(s&&document
 const hash=location.hash.replace("#",""); if(hash&&document.getElementById("t-"+hash)) start="t-"+hash;
 show(start);
 
-/* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
-   A light/night toggle in the header (the renderer adds it when the board's header has none). Until it is clicked the board follows the
-   system setting; a click picks the other palette and remembers it (localStorage "dashboards-theme", shared by every dashboard of the
-   same origin) across boards and reloads. It only selects one of the two palettes the board defines: :root[data-theme]. The same code
-   runs on every dashboard type. */
+/* ---------- The theme switch (GUIDANCE.md §1, Themes; §12, "Switch") ----------
+   A switch in the header (the renderer adds it when the board's header has none): ☀ light at its left end, ☾ night at its right, the
+   knob at the palette shown (aria-checked while night). Until it is clicked the board follows the system setting; a click picks the
+   other palette and remembers it (localStorage "dashboards-theme", shared by every dashboard of the same origin) across boards and
+   reloads. It only selects one of the two palettes the board defines: :root[data-theme]. The same code runs on every dashboard type. */
 (function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
   let btn=document.getElementById("theme");
   if(!btn){ const hdr=document.querySelector("header"); if(!hdr) return; const tools=document.createElement("div"); tools.className="tools systools";
-    tools.innerHTML='<button class="themebtn" id="theme" type="button"></button>'; hdr.prepend(tools); btn=document.getElementById("theme"); }
+    tools.innerHTML='<button class="switch" id="theme" type="button" role="switch" aria-checked="false"></button>'; hdr.prepend(tools); btn=document.getElementById("theme"); }
+  btn.className="switch"; btn.type="button"; btn.setAttribute("role","switch"); btn.removeAttribute("aria-pressed");
+  if(!btn.querySelector(".switch-track")) btn.innerHTML='<span class="switch-end off" aria-hidden="true">☀</span><span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span><span class="switch-end on" aria-hidden="true">☾</span>';
   const chosen=()=>{ try{ const t=localStorage.getItem(KEY); return t==="light"||t==="dark"?t:null; }catch(e){ return null; } };
   const now=()=>root.dataset.theme==="dark"||root.dataset.theme==="light"?root.dataset.theme:(mq&&mq.matches?"dark":"light");
-  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.textContent=t==="dark"?"☾ night":"☀ light"; btn.setAttribute("aria-pressed",String(t==="dark"));
+  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.setAttribute("aria-checked",String(t==="dark"));
     btn.title=`Theme: ${word}${chosen()?"":", as the system setting"}. Click for ${t==="dark"?"light":"night"}.`; btn.setAttribute("aria-label",`Night theme${chosen()?"":" (follows the system setting until clicked)"}`); };
   btn.addEventListener("click",()=>{ const t=now()==="dark"?"light":"dark"; root.dataset.theme=t; try{ localStorage.setItem(KEY,t); }catch(e){} label(); });
   if(mq&&mq.addEventListener) mq.addEventListener("change",label);
   if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
+  label(); })();
+/* ---------- The inspector switch (GUIDANCE.md §6, "The inspector switch"; §12, "Switch") ----------
+   A switch in the header, left of the theme switch, that shows or hides the inspector (aria-checked while shown). Shown when a board
+   opens until hidden; the choice is remembered across boards and reloads (localStorage "dashboards-inspector", shared by every dashboard
+   of the same origin, applied in the head before the first paint, and again here for a board whose head predates it). Hidden, the tab
+   takes the inspector's width. An item clicked, or pressed with Enter or Space, while the inspector is hidden shows it and flips the
+   switch: whatever that gesture writes into the inspector, a tab or a switch aside, brings it back. */
+(function inspectorSwitch(){ const KEY="dashboards-inspector", root=document.documentElement, ins=document.getElementById("inspector");
+  if(!ins) return;
+  let sw=document.getElementById("inspector-switch");
+  if(!sw){ const th=document.getElementById("theme"); if(!th||!th.parentElement) return; sw=document.createElement("button"); sw.id="inspector-switch"; th.parentElement.insertBefore(sw,th); }
+  sw.className="switch"; sw.type="button"; sw.setAttribute("role","switch"); sw.setAttribute("aria-controls","inspector");
+  if(!sw.querySelector(".switch-track")) sw.innerHTML='<span class="switch-word">inspector</span><span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>';
+  try{ if(localStorage.getItem(KEY)==="hidden") root.dataset.inspector="hidden"; }catch(e){}
+  const shown=()=>root.dataset.inspector!=="hidden";
+  const label=()=>{ const s=shown(); sw.setAttribute("aria-checked",String(s)); sw.title=s?"Inspector shown. Click to hide it.":"Inspector hidden. Click to show it, or click an item."; };
+  const set=s=>{ if(s) delete root.dataset.inspector; else root.dataset.inspector="hidden"; try{ localStorage.setItem(KEY,s?"shown":"hidden"); }catch(e){} label(); window.dispatchEvent(new Event("resize")); };
+  sw.addEventListener("click",()=>set(!shown()));
+  let gesture=null;
+  const mark=e=>{ if(e.type==="keydown"&&e.key!=="Enter"&&e.key!==" ") return; gesture=e.target; setTimeout(()=>{ gesture=null; },0); };
+  document.addEventListener("click",mark,true); document.addEventListener("keydown",mark,true);
+  if(window.MutationObserver) new MutationObserver(()=>{ const g=gesture; if(!g||shown()||!g.closest||g.closest('[role="tab"],[role="switch"]')) return; set(true); }).observe(ins,{childList:true,subtree:true,characterData:true});
   label(); })();
 </script>
 </body>
