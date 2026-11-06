@@ -420,12 +420,12 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs"><a href="../index.html">WebTools</a> › webtools-http</div>
   <h1>webtools-http</h1>
-  <p class="function">A suspend HTTP stack for Kotlin, built in part, and the board that binds its parts: each has a board of its own. The common core speaks the stack's vocabulary: the request and response values, a canonical <code>Url</code>, a typed failure model returned inside <code>Result</code>, and the transport and wall-clock ports. The outbound-URL policy decides, from parameters that can only tighten, whether each hop and each resolved address may be fetched. The OkHttp transport delivers one request per hop under that policy. The response cache serves one load to many callers and never stores a failure. The call budget grants permits under a provider's rate windows. The published test fixtures let a consumer test its providers with no network, or with the real transport over loopback. The call facades that compose cache, budget and transport are the stack's later unit, drawn dashed.</p>
+  <p class="function">A suspend HTTP stack for Kotlin, and the board that binds its parts: each has a board of its own. The common core speaks the stack's vocabulary: the request and response values, a canonical <code>Url</code>, a typed failure model returned inside <code>Result</code>, and the transport and wall-clock ports. The outbound-URL policy decides, from parameters that can only tighten, whether each hop and each resolved address may be fetched. The OkHttp transport delivers one request per hop under that policy. The response cache serves one load to many callers and never stores a failure. The call budget grants permits under a provider's rate windows. The call facades compose them: <code>UpstreamClient</code> calls an upstream's endpoints through the policy's pre-check, the cache and a permit taken inside the cache's loader, and <code>UrlFetcher</code> fetches the URLs an administrator supplies. The published test fixtures let a consumer test its providers with no network, or with the real transport over loopback.</p>
   <div class="chips">
     <span class="chip" id="chip-version" hidden></span>
     <span class="chip"><span class="ck">platform</span> <b>Kotlin Multiplatform</b> · <code>jvm()</code> · Java 11 bytecode</span>
     <span class="chip"><span class="ck">check-only target</span> <b>js</b> · <code>webtools-http-commoncheck</code></span>
-    <span class="chip wide"><span class="ck">parts</span> <a href="../webtools-http-core/index.html">common core</a> · <a href="../webtools-http-url-policy/index.html">URL policy</a> · <a href="../webtools-http-transport/index.html">OkHttp transport</a> · <a href="../webtools-http-cache/index.html">response cache</a> · <a href="../webtools-http-budget/index.html">call budget</a> · <a href="../webtools-http-test-fixtures/index.html">test fixtures</a></span>
+    <span class="chip wide"><span class="ck">parts</span> <a href="../webtools-http-core/index.html">common core</a> · <a href="../webtools-http-url-policy/index.html">URL policy</a> · <a href="../webtools-http-transport/index.html">OkHttp transport</a> · <a href="../webtools-http-cache/index.html">response cache</a> · <a href="../webtools-http-budget/index.html">call budget</a> · <a href="../webtools-http-facades/index.html">call facades</a> · <a href="../webtools-http-test-fixtures/index.html">test fixtures</a></span>
     <span class="chip"><span class="ck">visibility</span> <b>internal · org</b></span>
     <span class="chip" id="chip-asis" hidden></span>
     <span class="chip" id="chip-written" hidden></span>
@@ -434,12 +434,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">115 files</div><div class="s">8,999 lines · commonMain 67 · jvmMain 21 · jvmTestFixtures 26 · the check module's jsMain 1</div></div>
-  <div class="kpi"><div class="l">Parts</div><div class="v">6 built</div><div class="s">each on its own board: the core 27 files · the policy 14 · the transport 13 · the cache 8 · the budget 28 · the fixtures 24 · 1 planned</div></div>
-  <div class="kpi"><div class="l">Types</div><div class="v">63 public</div><div class="s">top-level: 46 in the main variant · 17 in the fixtures · two flat packages</div></div>
-  <div class="kpi"><div class="l">Threads</div><div class="v">1 daemon pool</div><div class="s">per <code>OkHttpTransport</code>, on demand; the cache and the budget own none; every other call runs on the caller's thread or coroutine</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">227 classes</div><div class="s">1,215 tests across 5 testing levels, on the JVM · the core 38 · the policy 34 · the transport 50 · the cache 33 · the budget 47 · the fixtures 25</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">5</div><div class="s">1 planned unit · 1 docs · 3 unscheduled</div></div>
+  <div class="kpi"><div class="l">Source</div><div class="v">131 files</div><div class="s">10,083 lines · commonMain 79 · jvmMain 24 · jvmTestFixtures 27 · the check module's jsMain 1</div></div>
+  <div class="kpi"><div class="l">Parts</div><div class="v">7 built</div><div class="s">each on its own board: the core 27 files · the policy 14 · the transport 13 · the cache 8 · the budget 28 · the facades 16 · the fixtures 24</div></div>
+  <div class="kpi"><div class="l">Types</div><div class="v">71 public</div><div class="s">top-level: 53 in the main variant · 18 in the fixtures · two flat packages</div></div>
+  <div class="kpi"><div class="l">Threads</div><div class="v">1 daemon pool</div><div class="s">per <code>OkHttpTransport</code>, on demand; the cache, the budget and the facades own none; every other call runs on the caller's thread or coroutine</div></div>
+  <div class="kpi"><div class="l">Tests</div><div class="v">263 classes</div><div class="s">1,447 tests across 5 testing levels, on the JVM · the core 38 · the policy 34 · the transport 50 · the cache 33 · the budget 47 · the facades 36 · the fixtures 25</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">6</div><div class="s">1 landing with this board · 1 docs · 4 unscheduled</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -457,7 +457,7 @@ footer code{color:var(--ink-2)}
     <h2>Component map</h2>
     <p class="lede">One box per part; each part's own board, linked in the header, draws its components. Click a box.</p>
     <svg id="svg-structure" viewBox="0 0 1000 470" role="img" aria-label="Component map of webtools-http"></svg>
-    <div class="key"><span><i class="pub srv"></i>public · common code first: the core, the policy, the cache, the budget</span><span><i class="pub cli"></i>public · JVM only: the transport, the test fixtures</span><span><i class="wir"></i>internal · check-only js module</span><span><i class="pln"></i>planned, not built</span></div>
+    <div class="key"><span><i class="pub srv"></i>public · common code first: the core, the policy, the cache, the budget, the facades</span><span><i class="pub cli"></i>public · JVM only: the transport, the test fixtures</span><span><i class="wir"></i>internal · check-only js module</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
@@ -476,10 +476,10 @@ footer code{color:var(--ink-2)}
 
   <section class="view" role="tabpanel" id="p-threads" aria-labelledby="t-threads" hidden>
     <h2>Thread inventory</h2>
-    <p class="lede">Only <code>OkHttpTransport</code> starts threads; the cache and the budget run where they are told. Click a row.</p>
+    <p class="lede">Only <code>OkHttpTransport</code> starts threads; the cache, the budget and the facades run where they are told. Click a row.</p>
     <div class="threads">
       <div class="tside"><h3>Common code · on the caller</h3>
-        <div class="thread server" data-t="caller's thread or coroutine" tabindex="0" role="button"><span class="n">caller's thread or coroutine</span><span class="pill eager">the caller's</span><span class="r">parsing, the factories, the policies, the clock read; the entry into every suspend call</span></div>
+        <div class="thread server" data-t="caller's thread or coroutine" tabindex="0" role="button"><span class="n">caller's thread or coroutine</span><span class="pill eager">the caller's</span><span class="r">parsing, the factories, the policies, the clock read; the entry into every suspend call, a facade's call and fetch</span></div>
         <div class="thread server" data-t="a call waiting on the budget" tabindex="0" role="button"><span class="n">a call waiting on the budget</span><span class="pill cond">only when it waits</span><span class="r">the caller's own coroutine, suspended on the close latch and its wake signal</span></div>
       </div>
       <div class="tside"><h3>Test fixtures · in a consumer's tests</h3>
@@ -505,6 +505,7 @@ footer code{color:var(--ink-2)}
         <tr><td>OkHttp transport: the preflight and the suspension; every blocking step and the body read</td><td><span class="dot"></span></td><td></td><td><span class="dot"></span></td><td></td></tr>
         <tr><td>Response cache: the claim and the await; each loader and Caffeine's maintenance</td><td><span class="dot"></span></td><td></td><td></td><td><span class="dot"></span></td></tr>
         <tr><td>Call budget: <code>acquire</code>, a waiting call, a permit's settlement, the store and the observer</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td>Call facades: a call's checks, the pre-check and the cache's await, a fetch; a call's loader in the cache's load scope; an owned transport's request</td><td><span class="dot"></span></td><td></td><td><span class="dot"></span></td><td><span class="dot"></span></td></tr>
         <tr><td>Test fixtures: the fake and the files; the virtual clock; the recorder's write; a loopback call</td><td><span class="dot"></span></td><td><span class="dot"></span></td><td><span class="dot"></span></td><td></td></tr>
       </tbody>
     </table></div>
@@ -548,13 +549,16 @@ footer code{color:var(--ink-2)}
       <div class="card"><h3>A budget's life <small><a href="../webtools-http-budget/index.html">the call budget's board</a></small></h3>
         <ol class="steps"><li class="ph1"><code>WindowedCallBudget(windows) { }</code>; the store restored once, lazily</li><li class="ph2"><code>acquire</code> grants, queues first come first served or refuses with <code>BudgetExhausted</code>; a permit is completed with the answer's signals or released</li><li class="ph3"><code>flush()</code> writes the exact counts; <code>close()</code> writes nothing and ends every waiting call with <code>Closed("budget")</code></li></ol>
         <div class="callout"><b>No thread of its own:</b> a call waits in its own coroutine.</div></div>
+      <div class="card"><h3>A facade's life <small><a href="../webtools-http-facades/index.html">the call facades' board</a></small></h3>
+        <ol class="steps"><li class="ph1"><code>UpstreamClient(baseUrl, userAgent) { }</code> builds the budget, a transport sized to it and a Caffeine cache; <code>UrlFetcher(userAgent) { }</code> an <code>Untrusted</code> transport</li><li class="ph2"><code>call(endpoint) { }</code>: the checks and the pre-check, then the cache, a permit inside its loader and one request; <code>fetch(request) { }</code>: the pre-check, a permit and one request</li><li class="ph3"><code>close()</code>: what the facade built, in the order cache, budget, transport; then <code>Closed("client")</code> or <code>Closed("fetcher")</code></li></ol>
+        <div class="callout"><b>Nothing the facade refuses costs anything:</b> a granted permit is spent by any response, and given back only for the transport's <code>InvalidRequest</code>.</div></div>
       <div class="card"><h3>A test with the fixtures <small><a href="../webtools-http-test-fixtures/index.html">the test fixtures' board</a></small></h3>
         <ol class="steps"><li class="ph1"><code>runTest { val clock = virtualClock() }</code>, a <code>FakeHttpTransport</code> with its stubs, or <code>LoopbackTransports</code> over a local server</li><li class="ph2">calls answered by the stubs, or by the real transport with the policy live but loopback</li><li class="ph3"><code>close()</code>; recorded fixtures written only behind the gate</li></ol>
         <div class="callout"><b>Test classpath only:</b> nothing in the fixtures is reachable from the main artifact.</div></div>
       <div class="card ph2"><h3>Rules the module holds to</h3>
         <div class="callout"><b>Values are immutable,</b> and nothing prints a secret: a <code>toString()</code>, a log line or a failure's message names, counts and sizes, never a header value, a body, a credential, an address or a cached value.</div>
-        <div class="callout"><b>Common code stays common.</b> <code>webtools-http-commoncheck</code> compiles <code>commonMain</code> for <code>js</code> in <code>check</code>: the core, the policy's classifier, the cache's port and the call budget.</div>
-        <div class="callout"><b>One opt-in marker, one DSL marker.</b> Implementing a gated port or subclassing a failure group needs <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; <code>@WebToolsDsl</code> marks the eleven builders a consumer's lambda receives.</div></div>
+        <div class="callout"><b>Common code stays common.</b> <code>webtools-http-commoncheck</code> compiles <code>commonMain</code> for <code>js</code> in <code>check</code>: the core, the policy's classifier, the cache's port, the call budget and the call facades.</div>
+        <div class="callout"><b>One opt-in marker, one DSL marker.</b> Implementing a gated port or subclassing a failure group needs <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>; <code>@WebToolsDsl</code> marks the sixteen builders a consumer's lambda receives.</div></div>
     </div>
     <div class="key"><span><i class="ph1"></i>start · construction</span><span><i class="ph2"></i>run · steady state and its rules</span><span><i class="ph3"></i>stop · close</span></div>
   </section>
@@ -570,24 +574,24 @@ footer code{color:var(--ink-2)}
   <h2>Guarantees</h2>
   <div class="guarantee-cards">
     <div class="guarantee-card"><h3>Failure model</h3>
-      <ul><li>Every part returns the core's <code>HttpFailure</code> inside <code>Result</code>: a <code>TransportFailure</code> leaf from the transport, <code>RefusedByPolicy</code> for the policy, a loader's failure or <code>Closed("cache")</code> from the cache, <code>BudgetExhausted</code> or <code>Closed("budget")</code> from the budget.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> from a factory given a broken developer-written value; cancellation.</li><li>Retried inside: nothing; a transport sends one request per hop.</li><li>Each part's own board states the rest, leaf by leaf.</li></ul></div>
+      <ul><li>Every part returns the core's <code>HttpFailure</code> inside <code>Result</code>: a <code>TransportFailure</code> leaf from the transport, <code>RefusedByPolicy</code> for the policy, a loader's failure or <code>Closed("cache")</code> from the cache, <code>BudgetExhausted</code> or <code>Closed("budget")</code> from the budget; the facades pass these through and add <code>RateLimited</code>, <code>UpstreamError</code> and <code>DecodeFailure</code>, <code>Found</code> and <code>Missing</code> inside <code>Lookup</code>, and <code>Closed("client")</code> or <code>Closed("fetcher")</code>.</li><li>Thrown, not returned: <code>IllegalArgumentException</code> from a factory given a broken developer-written value; cancellation.</li><li>Retried inside: nothing; a transport sends one request per hop, and a facade returns a throttle as <code>RateLimited</code>.</li><li>Each part's own board states the rest, leaf by leaf.</li></ul></div>
     <div class="guarantee-card"><h3>Extension points</h3>
-      <ul><li>Twelve gated types — implement or subclass <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>: the core's five, the cache's port and the budget's six; calling, passing and matching them are Stable Core</li><li>The supplied implementations need no opt-in: <code>OkHttpTransport</code>, <code>CaffeineResponseCache</code> and <code>ResponseCache.Disabled</code>, <code>WindowedCallBudget</code> and <code>CallBudget.Unlimited</code>, <code>WallClock.System</code> <span class="badge">Stable Core</span></li><li>The policy is data, and its classifier and guards are internal <span class="badge">Stable Core</span></li><li>The test fixtures are Stable Core with source compatibility only; five of them are the worked examples of the gated ports</li></ul></div>
-    <div class="guarantee-card"><h3>Test levels <small>227 classes</small></h3>
+      <ul><li>Twelve gated types — implement or subclass <span class="badge">Experimental</span> behind <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>: the core's five, the cache's port and the budget's six; calling, passing and matching them are Stable Core</li><li>The supplied implementations need no opt-in: <code>OkHttpTransport</code>, <code>CaffeineResponseCache</code> and <code>ResponseCache.Disabled</code>, <code>WindowedCallBudget</code> and <code>CallBudget.Unlimited</code>, <code>WallClock.System</code>; the facades are final and add no seam <span class="badge">Stable Core</span></li><li>The policy is data, and its classifier and guards are internal <span class="badge">Stable Core</span></li><li>The test fixtures are Stable Core with source compatibility only; five of them are the worked examples of the gated ports</li></ul></div>
+    <div class="guarantee-card"><h3>Test levels <small>263 classes</small></h3>
       <div class="bars" role="table" aria-label="Test classes per testing level">
-        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:10%"></span></span><span class="val">11</span>
-        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">112</span>
-        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:23%"></span></span><span class="val">26</span>
-        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:50%"></span></span><span class="val">56</span>
-        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:20%"></span></span><span class="val">22</span>
+        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:11%"></span></span><span class="val">14</span>
+        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">133</span>
+        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:23%"></span></span><span class="val">30</span>
+        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:45%"></span></span><span class="val">60</span>
+        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:20%"></span></span><span class="val">26</span>
       </div>
-      <p>1,215 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM: gating 32, component 748, integration 104, deterministic 293, non-functional 38. Each part's board breaks its share down. No L4b e2e or L5 UAT class here: the fixtures' publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. The test report: <code>webtools-http/build/reports/tests/</code>. <span class="gap">On <code>js</code> the code is compiled, never tested; items of each part's manual L5 pass were not performed; the transport and the cache are measured only on Windows 11 with JDK 23.0.2 on loopback. Four classes set JVM-wide properties or <code>System.err</code> and run isolated.</span></p></div>
+      <p>1,447 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM: gating 40, component 920, integration 124, deterministic 317, non-functional 46. Each part's board breaks its share down. No L4b e2e or L5 UAT class here: the fixtures' publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. The test report: <code>webtools-http/build/reports/tests/</code>. <span class="gap">On <code>js</code> the code is compiled, never tested; items of each part's manual L5 pass were not performed; the transport, the cache and the facades are measured only on Windows 11 with JDK 23.0.2 on loopback. Four classes set JVM-wide properties or <code>System.err</code> and run isolated.</span></p></div>
     <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
-      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (892 lines, the call budget the last addition) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code> or <code>sealed</code>.</span></li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>); no dump covers it, and <code>fixturesPublicationCheck</code> asserts its publication.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
+      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (1,031 lines, the call facades the last addition) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code> or <code>sealed</code>.</span></li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>); no dump covers it, and <code>fixturesPublicationCheck</code> asserts its publication.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
     <div class="guarantee-card"><h3>Thread safety</h3>
-      <ul><li>Every value type is immutable; every port may be called concurrently, as its contract states.</li><li><code>OkHttpTransport</code> is safe to share and main-safe; <code>CaffeineResponseCache</code> and <code>WindowedCallBudget</code> take any number of concurrent callers; the policy's classifier and guards are stateless.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li></ul></div>
+      <ul><li>Every value type is immutable; every port may be called concurrently, as its contract states.</li><li><code>OkHttpTransport</code> is safe to share and main-safe; <code>CaffeineResponseCache</code>, <code>WindowedCallBudget</code>, <code>UpstreamClient</code> and <code>UrlFetcher</code> take any number of concurrent callers; the policy's classifier and guards are stateless.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li></ul></div>
     <div class="guarantee-card"><h3>Resources to close</h3>
-      <ul><li><code>OkHttpTransport</code>, <code>CaffeineResponseCache</code> and <code>WindowedCallBudget</code> are <code>AutoCloseable</code>: each <code>close()</code> is idempotent, non-suspending and never throws; the budget's writes nothing, so <code>flush()</code> comes first.</li><li>Skipped, nothing keeps the JVM alive: the transport's threads are daemons gone after 60 s idle; the cache and the budget own no thread.</li><li>No other type holds a resource, a policy included.</li></ul></div>
+      <ul><li><code>OkHttpTransport</code>, <code>CaffeineResponseCache</code> and <code>WindowedCallBudget</code> are <code>AutoCloseable</code>: each <code>close()</code> is idempotent, non-suspending and never throws; the budget's writes nothing, so <code>flush()</code> comes first.</li><li>Skipped, nothing keeps the JVM alive: the transport's threads are daemons gone after 60 s idle; the cache and the budget own no thread.</li><li><code>UpstreamClient</code> and <code>UrlFetcher</code> are <code>AutoCloseable</code> too: each closes only what it built, in the order cache, budget, transport, never what it was handed.</li><li>No other type holds a resource, a policy included.</li></ul></div>
     <div class="guarantee-card"><h3>On your classpath</h3>
       <ul><li><code>org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2</code> — api: a suspend API's runtime</li><li><code>kotlin-stdlib</code> 2.2.0 in compile scope; <code>okhttp-jvm</code> lifts it to 2.2.21 or newer at runtime</li><li>Runtime only: <code>okhttp-jvm</code> 5.5.0 (the transport and the policy's guards), <code>caffeine</code> 3.3.1 (the cache), <code>slf4j-api</code> 2.0.13 (the core's logging seam); no slf4j backend ships</li><li>Test classpath only, through <code>testFixtures(…)</code>: the <code>-test-fixtures.jar</code>, <code>kotlinx-coroutines-test</code> 1.10.2 and <code>mockwebserver3</code> 5.5.0. Gradle only.</li><li>Who consumes it: other repositories of this organization only (visibility internal · org).</li></ul></div>
   </div>
@@ -596,7 +600,7 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-05</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-06</small></h3>
       <ol class="roadmap">
         <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="8" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
@@ -606,23 +610,24 @@ footer code{color:var(--ink-2)}
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a><span><a data-board="65">webtools-http: <code>OkHttpTransport</code> with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories</a> <small>unit 6 · landed in e8f0a88: the <a href="../webtools-http-transport/index.html">OkHttp transport</a> and the loopback fixtures</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/66" target="_blank" rel="noopener">#66</a><span><a data-board="66">webtools-http: <code>ResponseCache</code> port and <code>CaffeineResponseCache</code> default</a> <small>unit 7 · landed in 8122af7: the <a href="../webtools-http-cache/index.html">response cache</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>unit 8 · landed in 5f221ce: the <a href="../webtools-http-budget/index.html">call budget</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · the <a href="../webtools-http-facades/index.html">call facades</a>, landing with this board</small></span><span class="tags"><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
           </ul>
           <p class="more">3 more of its issues touch other systems: #61 and #47 the build, #69 webtools-feeds.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>3 open · 2026-11-05</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>4 open · 2026-11-06</small></h3>
       <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/93" target="_blank" rel="noopener">#93</a><span><a data-board="93">webtools-http: <code>Url.redacted()</code> shows the path, so a secret carried in a URL's path is logged</a> <small>the common core's redaction, which the transport's and the facades' log lines use</small></span><span class="tags"><span class="badge">enhancement</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/91" target="_blank" rel="noopener">#91</a><span><a data-board="91">webtools-http: save a hard window when a server reading or a clock step raises its count</a> <small>the call budget</small></span><span class="tags"><span class="badge bug">▲ bug</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/87" target="_blank" rel="noopener">#87</a><span><a data-board="87">webtools-http: UrlParseLinearTimeNonFunctionalTest exceeds its 100x bound when the level test tasks run in parallel</a> <small>the common core: one failure in a forced concurrent run; it passes on its own</small></span><span class="tags"><span class="badge bug">▲ bug</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>the first CI to run <code>apiCheck</code> and the differentials, which must keep the four isolated classes isolated and needs a JDK for the child-JVM test; the release waits on it</small></span><span class="tags"><span class="badge">docs · enhancement</span><span class="badge">open</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>The parts' own boards: <a href="../webtools-http-core/index.html">webtools-http-core</a> · <a href="../webtools-http-url-policy/index.html">webtools-http-url-policy</a> · <a href="../webtools-http-transport/index.html">webtools-http-transport</a> · <a href="../webtools-http-cache/index.html">webtools-http-cache</a> · <a href="../webtools-http-budget/index.html">webtools-http-budget</a> · <a href="../webtools-http-test-fixtures/index.html">webtools-http-test-fixtures</a>, each with its plan, as-built record and consequences</li>
-        <li>Issue boards that amended this system: <a data-issue="67">#67</a> call-budget · <a data-issue="66">#66</a> response-cache · <a data-issue="65">#65</a> okhttp-transport · <a data-issue="64">#64</a> url-policy · <a data-issue="63">#63</a> test-support · <a data-issue="62">#62</a> http-core · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
-        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 to §6.5 and §6.7 the parts built, §6.6 the planned facades, §6.8 the check-only js modules, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
-        <li><a href="../../../README.md">README</a> — the artifact row, which names <code>OkHttpTransport</code>, the response cache, the call budget and the outbound-URL policies, and the install lines, the <code>testFixtures(…)</code> line among them, marked not yet released; "Build &amp; test"</li>
+        <li>The parts' own boards: <a href="../webtools-http-core/index.html">webtools-http-core</a> · <a href="../webtools-http-url-policy/index.html">webtools-http-url-policy</a> · <a href="../webtools-http-transport/index.html">webtools-http-transport</a> · <a href="../webtools-http-cache/index.html">webtools-http-cache</a> · <a href="../webtools-http-budget/index.html">webtools-http-budget</a> · <a href="../webtools-http-facades/index.html">webtools-http-facades</a> · <a href="../webtools-http-test-fixtures/index.html">webtools-http-test-fixtures</a>, each with its plan, as-built record and consequences</li>
+        <li>Issue boards that amended this system: <a data-issue="68">#68</a> call-facades · <a data-issue="67">#67</a> call-budget · <a data-issue="66">#66</a> response-cache · <a data-issue="65">#65</a> okhttp-transport · <a data-issue="64">#64</a> url-policy · <a data-issue="63">#63</a> test-support · <a data-issue="62">#62</a> http-core · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
+        <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 to §6.7 the parts built, §6.8 the check-only js modules, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
+        <li><a href="../../../README.md">README</a> — the artifact row, which names the call facades, <code>OkHttpTransport</code>, the response cache, the call budget and the outbound-URL policies, its "HTTP client stack" section, and the install lines, the <code>testFixtures(…)</code> line among them, marked not yet released; "Build &amp; test"</li>
         <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the build it is made with: the <a href="../gradle-build/index.html">Gradle build</a> board</li>
         <li><a data-workboard>Repository work board</a> — every planning and development run in the repository</li>
       </ul></div>
@@ -633,12 +638,14 @@ footer code{color:var(--ink-2)}
      None in the template parts: the page's CSS, tab set, script before MODEL and renderer are the template's. What it fills in:
      1. The core tabs are named for what they show: "Choose a part" (the decision path: which part a consumer reaches for) and "Request" (the sequence through the core, the policy and the transport).
      2. The Threads tab lists the threads of every part, one group per part that has its own.
-     3. The stack's later unit, the call facades, is drawn as a planned (dashed) component.
+     3. The call facades, the stack's last part, were drawn as a planned (dashed) component until they were built.
      4. The header carries a "parts" tag linking each part's own board.
      Nothing is removed. Earlier refreshes (#63, #64, #65, #66, #67) drew each part on this board in full as it landed.
      Reshaped at master 5f221ce (2026-11-05), when its six built parts got boards of their own: spliced onto the current system template (the theme and inspector switches);
      the board now binds them, one box, one C4 component and one Lifecycles card per part, linking each part's board, its Guarantees module-wide; the parts' components,
-     decision paths and their details are on their own boards. -->
+     decision paths and their details are on their own boards.
+     Refreshed at feat/issue-68-call-facades 806b489 (2026-11-06): the call facades drawn built, one box, one C4 component and one Lifecycles card linking their own board; the decision path's
+     third-party and known-upstream ends now name UrlFetcher and UpstreamClient; the figures, Guarantees and Context read again from the code. -->
 </footer>
 </div>
 
@@ -647,9 +654,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-http",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 67, "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes", "sha": "327164f"},
-  "written": {"sha": "5f221ce"}
+  "asIs": {"ref": "feat/issue-68-call-facades", "sha": "806b489", "date": "2026-11-06T03:11:15Z"},
+  "lastAmended": {"issue": 68, "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport", "sha": "806b489"},
+  "written": {"sha": "806b489"}
 }
 </script>
 
@@ -657,26 +664,24 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), webtools-http 1.0.0 (new, unreleased), drawn as the parts it binds, one component each: the common core, the outbound-URL policy, the OkHttp transport, the response cache, the call budget and the published test fixtures, each with its own board and model under docs/dashboards/<part>/, and its check-only js module. Code is authoritative on any conflict.
-// The element tagged Planned comes from Issue #55's architecture (docs/plans/55-http-client-stack/architecture.md, sections 6.6 and 11). It is not built; it is drawn dashed.
+// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06), webtools-http 1.0.0 (new, unreleased), drawn as the parts it binds, one component each: the common core, the outbound-URL policy, the OkHttp transport, the response cache, the call budget, the call facades and the published test fixtures, each with its own board and model under docs/dashboards/<part>/, and its check-only js module. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
 
     model {
-        consumer = person "Consumer" "A Kotlin service that builds requests and policies, sends through OkHttpTransport, loads through a ResponseCache, acquires permits from a CallBudget and tests its providers with the published fixtures."
+        consumer = person "Consumer" "A Kotlin service that calls an upstream through UpstreamClient and fetches administrator-supplied URLs through UrlFetcher, or composes the parts itself: requests and policies, OkHttpTransport, a ResponseCache and a CallBudget; and tests its providers with the published fixtures."
         web = softwareSystem "Servers" "The HTTP servers a request and its redirects reach." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            http = container "webtools-http" "A suspend HTTP stack, built in part: its common core, its outbound-URL policies, the OkHttp transport, the response cache, the call budget and its published test-fixtures variant; the call facades are planned." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
+            http = container "webtools-http" "A suspend HTTP stack: its common core, its outbound-URL policies, the OkHttp transport, the response cache, the call budget, the call facades that compose them and its published test-fixtures variant." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased" {
                 core     = component "webtools-http-core" "The common core: the opt-in marker, the failure model, the request and response values, Url, the transport and wall-clock ports, the DSL marker, the logging seam and helpers. Its own board: webtools-http-core." "commonMain · two jvmMain actuals" "Public"
                 policy   = component "webtools-http-url-policy" "The outbound-URL policies Trusted and Untrusted with TransportSettings, an internal JVM-free classifier and internal JVM resolver and socket guards. Its own board: webtools-http-url-policy." "commonMain values and classifier · jvmMain guards" "Public"
                 okhttp   = component "webtools-http-transport" "OkHttpTransport, the supplied HttpTransport: one request per hop and never a retry, manual redirects judged by the policy, one deadline, a capped decoded body. Its own board: webtools-http-transport." "jvmMain · okhttp-jvm 5.5.0" "Public"
                 cache    = component "webtools-http-cache" "The ResponseCache port with ResponseCache.Disabled and the CaffeineResponseCache default: one load per key at a time, failures never stored. Its own board: webtools-http-cache." "commonMain port · jvmMain · caffeine 3.3.1" "Public"
                 budget   = component "webtools-http-budget" "The CallBudget port with WindowedCallBudget: permits under a provider's rate windows and lane shares, pauses on server signals, a hard window across a restart. Its own board: webtools-http-budget." "commonMain" "Public"
                 fixtures = component "webtools-http-test-fixtures" "The published test-fixtures variant: VirtualClock, FakeHttpTransport, .http fixtures, the gated recorder, the loopback factories and the budget's two fixtures. Its own board: webtools-http-test-fixtures." "jvmTestFixtures · testFixtures(...) · test classpath only" "Public"
-                // ---- planned by Issue #55, not built ----
-                facades  = component "UpstreamClient · UrlFetcher" "The facades composing cache, budget and transport." "planned" "Planned"
+                facades  = component "webtools-http-facades" "The call facades: UpstreamClient calls an upstream's endpoints through the policy's pre-check, the cache and the budget inside the cache's loader; UrlFetcher fetches administrator-supplied URLs; the JVM owning factories build, size and close what they own. Its own board: webtools-http-facades." "commonMain · three jvmMain owning factories · LoopbackFetchers in the fixtures" "Public"
             }
             check = container "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js with a no-op Log and Date.now(), so a JVM API in common code is a compile error. Unpublished; a part of the Gradle build." "Kotlin/JS klib · check only" "Internal"
         }
@@ -697,13 +702,15 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.http.fixtures -> webtools.http.okhttp "Builds the real transport over loopback"
         webtools.http.fixtures -> webtools.http.policy "Relaxes loopback only, for tests"
         webtools.http.fixtures -> webtools.http.budget "Implements its store and observer"
+        webtools.http.fixtures -> webtools.http.facades "Builds a UrlFetcher over loopback with LoopbackFetchers"
+        consumer -> webtools.http.facades "Calls endpoints with UpstreamClient, fetches URLs with UrlFetcher"
         webtools.check -> webtools.http "Compiles its commonMain for js, through a relative srcDir"
 
-        // ---- planned by Issue #55 (dashed: one end is Planned) ----
-        webtools.http.facades -> webtools.http.policy "Would pre-check a URL with checkRequest"
-        webtools.http.facades -> webtools.http.cache "Would load through"
-        webtools.http.facades -> webtools.http.okhttp "Would execute the request"
-        webtools.http.facades -> webtools.http.budget "Would acquire a permit in the cache's loader"
+        webtools.http.facades -> webtools.http.policy "Pre-checks every request with checkRequest before anything is spent"
+        webtools.http.facades -> webtools.http.cache "Loads a GET through getOrLoad; builds and owns CaffeineResponseCache on the JVM"
+        webtools.http.facades -> webtools.http.budget "Takes one permit per load inside the cache's loader; builds and owns WindowedCallBudget from windows"
+        webtools.http.facades -> webtools.http.okhttp "Executes each request once; builds, sizes and owns OkHttpTransport on the JVM"
+        webtools.http.facades -> webtools.http.core "Returns Result<Lookup<T>> or HttpResponse with the failure model's leaves"
     }
 
     views {
@@ -715,7 +722,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at master 5f221ce, one component per part, each with its own board, and its planned facades dashed." {
+        component webtools.http "Components" "webtools-http as built at feat/issue-68-call-facades 806b489, one component per part, each with its own board." {
             include *
             autoLayout tb
         }
@@ -770,7 +777,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","66":"../../plans/55-http-client-stack/66-response-cache/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","66":"../../plans/55-http-client-stack/66-response-cache/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html","68":"../../plans/55-http-client-stack/68-call-facades/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -826,7 +833,7 @@ function arrowDefs(svg,id,color){ const d=mk("defs",{},svg); const m=mk("marker"
 const MODEL = {
   // The board's colour groups: server = the parts that are common code first, the core, the policy, the cache and the budget (blue);
   // client = the JVM-only parts, the transport and the test fixtures (purple); wire = the check-only js module (teal); the consumer's code, and a server outside the module.
-  sides:{server:"common code first: the core, the policy, the cache, the budget",client:"JVM only: the transport, the test fixtures",wire:"check-only js module",consumer:"the consumer's code",external:"a server, outside the module"},
+  sides:{server:"common code first: the core, the policy, the cache, the budget, the facades",client:"JVM only: the transport, the test fixtures",wire:"check-only js module",consumer:"the consumer's code",external:"a server, outside the module"},
   // Map node id → DSL element id.
   c4:{http:"webtools.http",core:"webtools.http.core",policy:"webtools.http.policy",okhttp:"webtools.http.okhttp",cache:"webtools.http.cache",budget:"webtools.http.budget",fixtures:"webtools.http.fixtures",facades:"webtools.http.facades",check:"webtools.check"},
   structure: {
@@ -848,8 +855,8 @@ const MODEL = {
         d:{role:"Grants permits under a provider's rate windows and lane shares, pauses on the server's signals and holds a hard window across a restart, all in common code; two fixtures ride in the test-fixtures variant. Its own board: webtools-http-budget.",vis:"public · implementing a port Experimental; the supplied budgets Stable Core",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/CallBudget.kt","src/commonMain/kotlin/com/spartanlabs/webtools/http/WindowedCallBudget.kt"],threads:["a call waiting on the budget"]}},
       {id:"fixtures",side:"client",vis:"pub",x:356,y:280,w:288,h:88,t:"webtools-http-test-fixtures",s:["VirtualClock · FakeHttpTransport","fixtures · the gated recorder","the loopback factories","24 files of its own · its own board"],
         d:{role:"A JVM-only testFixtures compilation associated with main, published as the variants testFixturesApiElements and testFixturesRuntimeElements beside a -test-fixtures.jar, capability webtools-http-test-fixtures. A consumer writes testImplementation(testFixtures(\"io.github.spartanlaboratories:webtools-http:<version>\")), in Gradle only. Its own board: webtools-http-test-fixtures.",vis:"public · test-fixtures variant · Stable Core (source compatibility only)",files:["src/jvmTestFixtures/kotlin/com/spartanlabs/webtools/http/testing/"],threads:["the test's scheduler","Dispatchers.IO"]}},
-      {id:"facades",side:"server",vis:"pub",x:656,y:280,w:288,h:88,t:"UpstreamClient · UrlFetcher",s:["the call facades","composing cache, budget and transport","not built"],
-        d:{role:"Planned: the facades composing cache, budget and transport, which will pre-check a URL against its policy and acquire a permit inside the cache's loader. Not built.",vis:"planned",files:[]}},
+      {id:"facades",side:"server",vis:"pub",x:656,y:280,w:288,h:88,t:"webtools-http-facades",s:["UpstreamClient · Endpoint · UrlFetcher","the pre-check, the cache, a permit, the transport","JVM owning factories · LoopbackFetchers","16 files · its own board"],
+        d:{role:"Composes the policy's pre-check, the response cache, the call budget inside the cache's loader and the transport, in that order, and owns what it built. UpstreamClient calls an upstream's endpoints, each declared once as an Endpoint; UrlFetcher fetches administrator-supplied URLs. The JVM owning factories build, size and close the transport, a Caffeine cache and a windowed budget. Every type final, Stable Core, no opt-in. Its own board: webtools-http-facades.",vis:"public · final types · Stable Core",files:["src/commonMain/kotlin/com/spartanlabs/webtools/http/UpstreamClient.kt","src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlFetcher.kt","src/jvmMain/kotlin/com/spartanlabs/webtools/http/UpstreamClientOwning.kt"],threads:["caller's thread or coroutine","the cache's load scope","OkHttpTransport's dispatcher"]}},
       {id:"check",side:"wire",vis:"int",x:40,y:400,w:920,h:40,t:"webtools-http-commoncheck",s:"unpublished · compiles commonMain for js in check, with a no-op Log and Date.now(), so a JVM API in common code is a compile error · a part of the Gradle build",
         d:{role:"A sibling module on webtools.kotlin-common-check: it adds ../webtools-http/src/commonMain/kotlin as a source directory, opts in on commonMain and jsMain, and compiles in check. It publishes nothing and runs no test; js() has no environment, so no Node.js.",vis:"internal · module",files:["../webtools-http-commoncheck/build.gradle.kts"]}}
     ]
@@ -864,31 +871,31 @@ const MODEL = {
     "the cache's maintenanceExecutor":{side:"client",kind:"only for maintenance",daemon:true,created:"never by the cache: the Executor its builder names, ForkJoinPool.commonPool() by default",runs:"Caffeine's expiry and size eviction.",sends:[],note:"The cache never shuts it down."}
   },
   flows:[
-    {id:"choose",label:"which part",kicker:"CHOOSE A PART",runsOn:"a consumer's design, not a thread",foot:"each part is usable on its own today; the call facades that compose them are planned",
-     controls:[{key:"need",label:"The code needs",def:"untrusted",options:[["values","values, URLs and failures"],["untrusted","to fetch a URL a third party supplies"],["trusted","to call a known upstream"],["cache","one load for many callers"],["budget","to keep a provider's rate windows"],["fake","tests with no network"],["loop","tests over loopback"],["compose","all of it composed"]]}],
-     names:{values:"values only",untrusted:"a third party's URL",trusted:"a known upstream",cache:"one load, many callers",budget:"rate windows",fake:"tests, no network",loop:"tests, loopback",compose:"composed"},
+    {id:"choose",label:"which part",kicker:"CHOOSE A PART",runsOn:"a consumer's design, not a thread",foot:"the call facades compose the parts; each part is usable on its own too",
+     controls:[{key:"need",label:"The code needs",def:"untrusted",options:[["values","values, URLs and failures"],["untrusted","to fetch a URL a third party supplies"],["trusted","to call a known upstream"],["cache","one load for many callers"],["budget","to keep a provider's rate windows"],["fake","tests with no network"],["loop","tests over loopback"],["compose","to send requests itself"]]}],
+     names:{values:"values only",untrusted:"a third party's URL",trusted:"a known upstream",cache:"one load, many callers",budget:"rate windows",fake:"tests, no network",loop:"tests, loopback",compose:"its own composition"},
      nodes:{
       Q:{c:0,r:3,k:"d",t:["what does the","code need?"]},
       CORE:{c:1,r:0,k:"t",lvl:"DELIVER",t:["the common core:","Url · values · Result"]},
       SEND:{c:1,r:1,k:"d",t:["who supplies","the URL?"]},
-      UNT:{c:2,r:1,k:"t",lvl:"DELIVER",t:["OkHttpTransport","+ an Untrusted policy"]},
-      TRU:{c:2,r:2,k:"t",lvl:"DELIVER",t:["OkHttpTransport","+ a Trusted policy"]},
+      UNT:{c:2,r:1,k:"t",lvl:"DELIVER",t:["UrlFetcher(userAgent)","Untrusted defaults"]},
+      TRU:{c:2,r:2,k:"t",lvl:"DELIVER",t:["UpstreamClient","+ its Endpoints"]},
       CACHE:{c:1,r:3,k:"t",lvl:"DELIVER",t:["the response cache:","CaffeineResponseCache"]},
       BUD:{c:1,r:4,k:"t",lvl:"DELIVER",t:["the call budget:","WindowedCallBudget"]},
       TEST:{c:1,r:5,k:"d",t:["real I/O over","loopback?"]},
       FAKE:{c:2,r:5,k:"t",lvl:"DELIVER",t:["FakeHttpTransport","+ VirtualClock"]},
       LOOP:{c:2,r:6,k:"t",lvl:"DELIVER",t:["LoopbackTransports","+ a local server"]},
-      FAC:{c:1,r:6,k:"t",lvl:"LATER",t:["the call facades","not built"],part:"webtools.http.facades"}},
-     edges:[["Q","CORE","values"],["Q","SEND","fetch"],["SEND","UNT","a third party"],["SEND","TRU","a known upstream"],["Q","CACHE","cache"],["Q","BUD","rate"],["Q","TEST","tests"],["TEST","FAKE","no"],["TEST","LOOP","yes"],["Q","FAC","composed"]],
+      FAC:{c:1,r:6,k:"t",lvl:"DELIVER",t:["OkHttpTransport","+ a policy"]}},
+     edges:[["Q","CORE","values"],["Q","SEND","fetch"],["SEND","UNT","a third party"],["SEND","TRU","a known upstream"],["Q","CACHE","cache"],["Q","BUD","rate"],["Q","TEST","tests"],["TEST","FAKE","no"],["TEST","LOOP","yes"],["Q","FAC","itself"]],
      rules(s){ const R=(path,outcome)=>({path,outcome,irrelevant:[]});
        if(s.need==="values") return R(["Q","CORE"],"The common core alone: Url.parse, the request and response factories, the failure model inside Result, and the HttpTransport and WallClock ports to call, or to implement with the opt-in. Its board: webtools-http-core.");
-       if(s.need==="untrusted") return R(["Q","SEND","UNT"],"OkHttpTransport(userAgent, OutboundUrlPolicy.untrusted { }): reserved names, special-purpose addresses and other ports refused on every hop and every resolved address, no proxy, the Untrusted defaults' tighter caps. The boards: webtools-http-transport and webtools-http-url-policy.");
-       if(s.need==="trusted") return R(["Q","SEND","TRU"],"OkHttpTransport(userAgent, OutboundUrlPolicy.trusted { }): https only unless cleartext is allowed, optional pinned hosts, the base resolver and OkHttp's proxy selection. The boards: webtools-http-transport and webtools-http-url-policy.");
+       if(s.need==="untrusted") return R(["Q","SEND","UNT"],"UrlFetcher(userAgent) { }: the Untrusted policy's pre-check before anything is spent, an owned OkHttpTransport that refuses reserved names, special-purpose addresses and other ports on every hop and every resolved address, a budget if one is set, and every status but a throttle as the response. The boards: webtools-http-facades, webtools-http-transport and webtools-http-url-policy.");
+       if(s.need==="trusted") return R(["Q","SEND","TRU"],"UpstreamClient(baseUrl, userAgent) { }: each endpoint declared once with Endpoint(id, decode) { }, a Trusted policy pinned to the base URL's host, a Caffeine cache, a windowed budget from budget(windows), and Found, Missing or a typed failure from call(endpoint) { }. Its board: webtools-http-facades.");
        if(s.need==="cache") return R(["Q","CACHE"],"CaffeineResponseCache { }: one load per key at a time, per-entry lifetimes, a weight bound and a per-call maxAge; ResponseCache.Disabled where no cache is wanted. Its board: webtools-http-cache.");
        if(s.need==="budget") return R(["Q","BUD"],"WindowedCallBudget(windows) { }: permits under the provider's windows and lane shares, pauses on Retry-After, a hard window saved write-ahead; withPermit around each call. Its board: webtools-http-budget.");
        if(s.need==="fake") return R(["Q","TEST","FAKE"],"testFixtures(...): a scripted FakeHttpTransport and one VirtualClock for every clock, with .http fixtures from the consumer's own classpath. Its board: webtools-http-test-fixtures.");
        if(s.need==="loop") return R(["Q","TEST","LOOP"],"LoopbackTransports with a MockWebServer: the real transport with every rule of the policy live but loopback, one fixture file serving the fake and the server. Its board: webtools-http-test-fixtures.");
-       return R(["Q","FAC"],"Planned: UpstreamClient and UrlFetcher will compose the cache, the budget and the transport. Until then a consumer composes the parts itself."); }}
+       return R(["Q","FAC"],"OkHttpTransport(userAgent, policy) with an Untrusted or Trusted policy: one request per hop and never a retry, with the cache and the budget composed by the consumer's own code. The boards: webtools-http-transport and webtools-http-url-policy."); }}
   ],
   sequence:{
     kicker:"REQUEST",

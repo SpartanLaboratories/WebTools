@@ -10,7 +10,7 @@ window.dashboardLive&&window.dashboardLive("plan",
   "title": "Call budget",
   "issueTitle": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
   "function": "Nothing in `webtools-http` limits its calls yet: #62 built the `BudgetExhausted` failure and `ExhaustedReason` with nothing to return them, and the `WallClock` the budget reads; #63 built the `VirtualClock` its tests run on. OpenDota and Open-Meteo count in fixed wall-clock windows and count refused requests, and a greedy token bucket let 119 calls into one server minute against 60 (#55 architecture §2, §6.5). This run adds the `CallBudget` port, its permits and rate-signal vocabulary, the store and observer seams, `CallBudget.Unlimited` and the `WindowedCallBudget` default in `commonMain`, with two fakes in the fixtures and its tests. Unit 8 of #55: the call budget subsystem of `webtools-http`, additive, no version moved; reading signals from a real response is unit 9's.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-11-03T19:38:03Z",
   "parent": {
     "issue": 55,
@@ -23,7 +23,35 @@ window.dashboardLive&&window.dashboardLive("plan",
     "sha": "8122af7",
     "date": "2026-11-03"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "5f221ce",
+    "merge": "5f221ce",
+    "pr": 90,
+    "date": "2026-11-05",
+    "at": "2026-11-05T23:52:26Z",
+    "commits": [
+      {
+        "sha": "1ec2d92",
+        "at": "2026-11-03T21:18:07Z",
+        "step": "research"
+      },
+      {
+        "sha": "f956731",
+        "at": "2026-11-03T21:39:26Z",
+        "step": "research"
+      },
+      {
+        "sha": "8f5d057",
+        "at": "2026-11-03T21:54:21Z",
+        "step": "research"
+      },
+      {
+        "sha": "3091e92",
+        "at": "2026-11-04T00:29:50Z",
+        "step": "research"
+      }
+    ]
+  },
   "systems": [
     {
       "slug": "webtools-http-budget",
@@ -35,10 +63,10 @@ window.dashboardLive&&window.dashboardLive("plan",
     }
   ],
   "wip": {
-    "step": "document",
-    "since": "2026-11-05T22:43:07Z",
-    "updated": "2026-11-05T23:46:22Z",
-    "detail": "Document: 7 of 7 tasks done; every task done.",
+    "step": "landed",
+    "since": "2026-11-05T23:52:26Z",
+    "updated": "2026-11-05T23:52:26Z",
+    "detail": "Landed in PR #90.",
     "steps": [
       "sizing",
       "interview",
@@ -53,9 +81,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "merge",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "questions": [],
     "research": null,
     "interview": [],
@@ -154,9 +180,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       }
     ],
     "event": {
-      "name": "document",
-      "at": "2026-11-05T23:46:22Z",
-      "note": "7 of 7 tasks done"
+      "name": "landed",
+      "at": "2026-11-05T23:52:26Z"
     },
     "history": {
       "sizing": [
@@ -630,6 +655,84 @@ window.dashboardLive&&window.dashboardLive("plan",
             ]
           },
           "outage": "session ended; a new session took the run up"
+        },
+        {
+          "since": "2026-11-05T22:43:07Z",
+          "ended": "2026-11-05T23:50:52Z",
+          "endedBy": "landing",
+          "to": "landing",
+          "event": {
+            "name": "document",
+            "at": "2026-11-05T23:46:22Z",
+            "note": "7 of 7 tasks done"
+          },
+          "detail": "Document: 7 of 7 tasks done; every task done.",
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applicable: WebTools does not apply Dokka)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              },
+              {
+                "id": "document-landing",
+                "name": "Document-landing commit",
+                "state": "done"
+              }
+            ]
+          }
+        }
+      ],
+      "landing": [
+        {
+          "since": "2026-11-05T23:50:52Z",
+          "ended": "2026-11-05T23:52:10Z",
+          "endedBy": "merge",
+          "to": "merge",
+          "event": {
+            "name": "landing",
+            "at": "2026-11-05T23:50:52Z",
+            "note": "land accepted"
+          },
+          "detail": "Landing: the land accepted; the branch carries the code, the version bump, the reconciled documents and the state boards."
+        }
+      ],
+      "merge": [
+        {
+          "since": "2026-11-05T23:52:10Z",
+          "ended": "2026-11-05T23:52:26Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-11-05T23:52:26Z"
+          },
+          "detail": "Landed in PR #90."
         }
       ]
     },
@@ -783,6 +886,13 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-04",
       "ref": "plan.md",
       "note": "five implementation stages on `feat/issue-67-call-budget`, S1 to S5, then the README and CHANGELOG and the as-built record, in seven commits. The design is a pure, synchronous ledger under a shell of one `Mutex`, a close latch and a conflated channel per waiter, and makes #55's architecture §6.5 concrete in plan.md §6.11. No version moves"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-11-05",
+      "ref": "PR #90",
+      "note": "the research 1ec2d92 to 3091e92; the vocabulary, `Retry-After` parser and seams ff55cb8, the port, `Permit`, `withPermit` and the ledger ec776c7, the two fixtures c0a1c57, `WindowedCallBudget` 64a9a03 and the Level 3 and Level 4c suites 327164f, the code-landing commit; the KDoc and test comments 4012f73, the README and changelog 19c689b, the as-built record and consequences affc5f1 and the boards d10110a and e682443; merged as 5f221ce. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -1000,6 +1110,23 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-05",
       "column": "built",
       "label": "Document: every task done"
+    },
+    {
+      "date": "2026-11-05",
+      "column": "built",
+      "label": "Landing: the land accepted"
+    },
+    {
+      "date": "2026-11-05",
+      "column": "built",
+      "label": "Merge: merging it in PR #90",
+      "ref": "PR #90"
+    },
+    {
+      "date": "2026-11-05",
+      "column": "built",
+      "label": "Landed in PR #90, merge 5f221ce",
+      "ref": "PR #90"
     }
   ],
   "rows": [
@@ -4064,8 +4191,54 @@ window.dashboardLive&&window.dashboardLive("plan",
         }
       ],
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "as-planned",
+        "summary": "",
+        "statements": [
+          {
+            "text": "Nothing of acquiring inside the cache's loader, releasing or completing by failure kind, reading signals from a real response or sizing the dispatcher is built: nothing in the repository acquires a permit yet, and the call facades (#68) are the first callers.",
+            "state": "as-planned",
+            "ref": "consequences.md#3-adoption",
+            "excerpt": {
+              "ref": "consequences.md#3-adoption",
+              "heading": "3. Adoption",
+              "paragraph": "No existing class budgets calls, so nothing is moved onto the budget. Its first users are the call facades (#68). · `VirtualClockThreeClocksComponentTest` keeps its plain Caffeine cache. It proves the virtual clock apart from the stack's components; the new `WindowedCallBudgetThreeClocksComponentTest` proves the same with the real budget beside the real cache. · `WallClock`'s contract (\"its reading may step backwards\") has its first consumer that depends on it: the budget's clock rules are written against it.",
+              "hash": "b65e3d4bb001"
+            }
+          },
+          {
+            "text": "`WindowedCallBudget.maxBurst`, the smallest window's enforced limit, is published as the most permits granted at one instant, for #68 to size the transport's concurrency.",
+            "state": "as-planned",
+            "ref": "consequences.md#4-sibling-units",
+            "excerpt": {
+              "ref": "consequences.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts, and the build holds them as written; the points below are as built. In short:",
+              "hash": "72a80b0c9ec1"
+            }
+          },
+          {
+            "text": "`close()` is non-suspending and idempotent, second in the client's closing order; it writes nothing, so a client-owned budget's exact final write is a `flush()` before it, and a permit granted just after it returns is completed or released as usual.",
+            "state": "as-planned",
+            "ref": "consequences.md#4-sibling-units",
+            "excerpt": {
+              "ref": "consequences.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts, and the build holds them as written; the points below are as built. In short:",
+              "hash": "72a80b0c9ec1"
+            }
+          },
+          {
+            "text": "`RateLimited.retryAfter = max(signals.retryAfter, pausedFor)` is not redundant as built, since the pause in force can be shorter or longer than `retryAfter`; which of the two the failure reports stays #68's to settle.",
+            "state": "as-planned",
+            "ref": "consequences.md#4-sibling-units",
+            "excerpt": {
+              "ref": "consequences.md#4-sibling-units",
+              "heading": "4. Sibling units",
+              "paragraph": "`plan.md` §12 has the exact contracts, and the build holds them as written; the points below are as built. In short:",
+              "hash": "72a80b0c9ec1"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -4147,8 +4320,43 @@ window.dashboardLive&&window.dashboardLive("plan",
         }
       ],
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "as-planned",
+        "summary": "",
+        "statements": [
+          {
+            "text": "Multi-process counting, a file-backed or shared-counter `BudgetStore` and a serializer for `BudgetSnapshot` are not built: a snapshot store is last-writer-wins, and the first two stand as a follow-up.",
+            "state": "as-planned",
+            "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+            "excerpt": {
+              "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+              "heading": "7. Follow-ups this unit leaves",
+              "paragraph": "Each is still open. `plan.md` §13 names the first eight and §4 holds them out of this unit; the last two come from the build, each against the plan section it would refine.",
+              "hash": "ab03fe72d0e6"
+            }
+          },
+          {
+            "text": "Calendar-month windows and per-window and fractional costs are not modelled, each a follow-up, and header-declared rules are a known gap: a reading for a window name the budget does not have is ignored.",
+            "state": "as-planned",
+            "ref": "consequences.md#8-known-gaps",
+            "excerpt": {
+              "ref": "consequences.md#8-known-gaps",
+              "heading": "8. Known gaps",
+              "paragraph": "The close-race test does not see the loss of the admission's latch re-check. With the re-check at the top of `admitLocked` removed, `WindowedCallBudgetCloseRaceNonFunctionalTest` passed in 5 of 5 runs (P3, `final-implementation.md` §4): on its 1-per-minute window a call parked on the lock is queued once the window's unit is taken, and its first step section returns `Closed` anyway, so the mutation changes no outcome the class can see. The re-check is held on virtual time by `WindowedCallBudgetCloseComponentTest`, whose parked-call case fails without it. · The window between a waiter's section …",
+              "hash": "c72293fbe887"
+            }
+          },
+          {
+            "text": "The five gated seams stay Experimental, moving to `@SupportedExtension` once BotTools' adapter has built against them, a follow-up recorded in `CHANGELOG.md` when it happens.",
+            "state": "as-planned",
+            "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+            "excerpt": {
+              "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+              "heading": "7. Follow-ups this unit leaves",
+              "paragraph": "Each is still open. `plan.md` §13 names the first eight and §4 holds them out of this unit; the last two come from the build, each against the plan section it would refine.",
+              "hash": "ab03fe72d0e6"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -4194,7 +4402,7 @@ window.dashboardLive&&window.dashboardLive("plan",
     }
   ],
   "impact": {
-    "basis": "plan",
+    "basis": "as-built",
     "summary": "`webtools-http`, new and unreleased, gains the call budget, all of it common code: the `CallBudget` port with `CallBudget.Unlimited`, `Permit` and `withPermit`, its vocabulary, `RetryAfter`, the store and observer seams, and the supplied `WindowedCallBudget`. Implementing a gated port or subclassing `BudgetEvent` needs the opt-in, and everything else is Stable Core. The fixtures gain two fakes. No dependency changes, the three existing artifacts do not, no version moves, and the call facades (#68) are its first callers.",
     "none": null,
     "release": {
@@ -4209,7 +4417,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "artifact",
         "system": "webtools-http-budget",
         "effect": "additive",
-        "summary": "The main variants gain the call budget in common code, and the ABI dump grows by exactly the classes of plan.md §7.23. The test-fixtures variant gains `RecordingBudgetObserver` and `FakeBudgetStore` and no dependency. No dependency of either main variant changes, as `kotlinx-coroutines-core` 1.10.2 was already an `api` dependency.",
+        "summary": "The main variants gain the call budget in common code, and the ABI dump grows by exactly the classes of plan.md §7.23, from 557 to 892 lines. The test-fixtures variant gains `RecordingBudgetObserver` and `FakeBudgetStore`, whose `failLoads` and `failSaves` refuse a `times` below 1, and no dependency. No dependency of either main variant changes, as `kotlinx-coroutines-core` 1.10.2 was already an `api` dependency.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -4217,7 +4425,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "consumer",
         "system": "webtools-http-budget",
         "effect": "additive",
-        "summary": "Permits under a provider's own windows with a boundary guard, fair waiting that fails fast, pauses from the server, a hard daily stop that survives a restart, a clean close that ends every waiting call with `Closed(\"budget\")`, an observer and logs without secrets, and clock behaviour that holds a bill. `timeSource` and `wallClock` are builder properties, so the published `VirtualClock` drives the budget under test.",
+        "summary": "Permits under a provider's own windows with a boundary guard, fair waiting that fails fast, pauses from the server, a hard daily stop that survives a restart while saves succeed, with `flush()` writing the exact counts, a clean close that ends every waiting call with `Closed(\"budget\")`, an observer and logs without secrets, and clock behaviour that holds a bill. `timeSource` and `wallClock` are builder properties, so the published `VirtualClock` drives the budget under test. The known gaps an operator meets are in consequences.md §8.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -4233,7 +4441,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "system",
         "system": null,
         "effect": "none",
-        "summary": "Nothing changes for it. Its loader rules hold: a refusal and `Closed` are values, and the only `CancellationException` the budget throws is its caller's own.",
+        "summary": "Nothing changes for it. Its loader rules hold: a refusal and `Closed` are values, the only `CancellationException` the budget throws is its caller's own, and a store's `Error` reaches the loader as an `Error`, which the cache rethrows to every caller of the load.",
         "link": "consequences.md#4-sibling-units"
       },
       {
@@ -4250,7 +4458,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "who": "Unit 9, the call facades (#68)",
         "system": "webtools-http-budget",
         "need": "required",
-        "summary": "It calls `acquire` inside the cache's loader, where a refusal and a closed budget are values and a `cost` below 1 or a negative `maxWait` throw, so it validates a call's settings first. It calls `permit.release()` for a request never sent and `complete(signals)` otherwise, reads signals with `RateSignalsReader.Standard` or a per-provider reader, sizes the transport's concurrency from `maxBurst`, and closes second, after a `flush()` for the exact final write of a budget it owns.",
+        "summary": "It calls `acquire` inside the cache's loader, where a refusal and a closed budget are values and a `cost` below 1 or a negative `maxWait` throw, so it validates a call's settings first; an `Error` the budget's store throws propagates out of `acquire`, possibly as a stack-trace-recovery copy whose `cause` is the original. It calls `permit.release()` for a request never sent and `complete(signals)` otherwise, a permit granted just after `close()` returns included, reads signals with `RateSignalsReader.Standard` or a per-provider reader, sizes the transport's concurrency from `maxBurst`, and closes second, after a `flush()` for the exact final write of a budget it owns.",
         "link": "consequences.md#4-sibling-units"
       },
       {
@@ -4271,7 +4479,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "who": "Unit 11, the documentation (#70)",
         "system": "webtools-http-budget",
         "need": "none",
-        "summary": "It documents the budget from this unit's KDoc, README row and CHANGELOG entries, including the clock rules and their limit for operators.",
+        "summary": "It documents the budget from this unit's KDoc, README row and CHANGELOG entries: the clock rules and their limit, what a failing store and a store's `Error` do, and the known gaps an operator meets.",
         "link": "consequences.md#4-sibling-units"
       }
     ],
@@ -4358,8 +4566,49 @@ window.dashboardLive&&window.dashboardLive("plan",
       }
     ],
     "conversion": [],
-    "changes": [],
-    "source": "consequences.md; plan.md §1, §7.23, §12",
+    "changes": [
+      {
+        "entry": "downstream.0",
+        "system": "webtools-http-budget",
+        "what": "`FakeBudgetStore.failLoads` and `failSaves` in the published fixtures refuse a `times` below 1 with `IllegalArgumentException`, where the plan's listing armed any count.",
+        "why": "`times = 0` delivered one failure instead of none; a script of zero failures is `heal()`, so the fixture refuses it rather than deliver one, and states the contract in its KDoc.",
+        "when": "qa pass 2 fixes",
+        "ref": "final-implementation.md#d8-fakebudgetstorefailloads-and-failsaves-refuse-a-times-below-1"
+      },
+      {
+        "entry": "downstream.1",
+        "system": "webtools-http-budget",
+        "what": "The hard daily stop keeps a crash from under-counting only while saves succeed, and `flush()` also writes a zero row for a period whose grants were all released; a call inside its admission section when `close()` runs may still be granted.",
+        "why": "The build found the limits of the planned write-ahead and close: a grant after three saves that each outlast their period, grants made while saves fail and a count a server reading or a clock step raised run unsaved, and the admission re-checks the latch only at the top of its section. The zero row (D7) keeps the bound for released grants; the rest are known gaps, two with follow-ups.",
+        "when": "#67 landing",
+        "ref": "consequences.md#8-known-gaps"
+      },
+      {
+        "entry": "downstream.3",
+        "system": null,
+        "what": "A store's `Error` reaches the response cache's loader as an `Error`, which the cache rethrows to every caller of the load; nothing changes for the cache.",
+        "why": "The build settled what a store's `Error` does: it propagates to the caller of the member that made the store call and is never a store failure.",
+        "when": "#67 landing",
+        "ref": "consequences.md#4-sibling-units"
+      },
+      {
+        "entry": "adaptation.0",
+        "system": "webtools-http-budget",
+        "what": "The call facades also meet a store's `Error` propagating out of `acquire`, possibly as a stack-trace-recovery copy whose `cause` is the original, and complete or release a permit granted just after `close()` returns.",
+        "why": "An `Error` crosses `withTimeoutOrNull`, so with stack-trace recovery on the caller receives a copy (a follow-up rethrows the instance); the admission's latch check at the top of its section lets a call whose store call spans a `close()` be granted.",
+        "when": "#67 landing",
+        "ref": "consequences.md#4-sibling-units"
+      },
+      {
+        "entry": "adaptation.3",
+        "system": "webtools-http-budget",
+        "what": "The documentation unit also documents what a failing store and a store's `Error` do, and the known gaps an operator meets.",
+        "why": "The known gaps the build leaves are an operator's to know, so the evergreen documentation carries them beside the clock rules.",
+        "when": "#67 landing",
+        "ref": "consequences.md#4-sibling-units"
+      }
+    ],
+    "source": "consequences.md; final-implementation.md §1, §2",
     "link": "consequences.md#1-published-artifacts"
   },
   "tests": {
@@ -5502,7 +5751,8 @@ window.dashboardLive&&window.dashboardLive("plan",
     "63": "../63-test-support/dashboard.html",
     "64": "../64-url-policy/dashboard.html",
     "65": "../65-okhttp-transport/dashboard.html",
-    "66": "../66-response-cache/dashboard.html"
+    "66": "../66-response-cache/dashboard.html",
+    "68": "../68-call-facades/dashboard.html"
   },
   "links": {
     "workBoard": "../../index.html",

@@ -58,8 +58,19 @@ code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
 .livechip.off .ld{background:none;border:1.5px solid var(--muted)}
 .livechip.na .ld{background:var(--muted)}
 @keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
-.themebtn{appearance:none;font:600 11px/1 var(--mono);padding:5px 9px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
-.themebtn:hover{color:var(--ink);border-color:var(--ink-2)}
+/* The header's switches (GUIDANCE.md §12, "Switch"): a track with a knob that slides to the side of the state shown, a real toggle
+   (role="switch", aria-checked) in the boards' neutrals, never the accent or a status colour. The theme switch's ends are ☀ light and
+   ☾ night, its knob at the palette shown. The
+   knob slides in a short transition, and jumps under reduced motion. */
+.switch{appearance:none;display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--mono);padding:3px 7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.switch:hover{color:var(--ink);border-color:var(--ink-2)}
+.switch-track{position:relative;flex:none;width:28px;height:16px;border:1px solid var(--ink-2);border-radius:8px;background:var(--surface-2);transition:background-color .18s ease}
+.switch-knob{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--ink-2);transition:transform .18s ease}
+.switch[aria-checked="true"] .switch-track{background:color-mix(in srgb,var(--ink-2) 35%,var(--surface))}
+.switch[aria-checked="true"] .switch-knob{transform:translateX(12px);background:var(--ink)}
+.switch-end{font-size:12px;color:var(--muted)}
+.switch[aria-checked="false"] .switch-end.off,.switch[aria-checked="true"] .switch-end.on{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.switch-track,.switch-knob{transition:none}}
 @media (prefers-reduced-motion:reduce){.livechip .ld{animation:none!important}}
 h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)}
 .function{color:var(--ink-2);margin:0 0 10px;max-width:78ch;font-size:15px}
@@ -251,7 +262,7 @@ footer code{color:var(--ink-2)}
 <body>
 <div class="page">
 <header>
-  <div class="topbar"><div class="crumbs" id="crumbs"></div><div class="tools"><span class="livechip" id="live"></span><button class="themebtn" id="theme" type="button"></button></div></div>
+  <div class="topbar"><div class="crumbs" id="crumbs"></div><div class="tools"><span class="livechip" id="live"></span><button class="switch" id="theme" type="button" role="switch" aria-checked="false"></button></div></div>
   <h1>Repository work board</h1>
   <p class="function" id="function"></p>
   <div class="chips" id="chips"></div>
@@ -284,11 +295,11 @@ footer code{color:var(--ink-2)}
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-05T23:43:23Z",
-  "asOf": "2026-11-05",
+  "generated": "2026-11-06T04:16:11Z",
+  "asOf": "2026-11-06",
   "tree": {
-    "ref": "feat/issue-67-call-budget",
-    "sha": "327164f"
+    "ref": "feat/issue-68-call-facades",
+    "sha": "806b489"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -309,7 +320,7 @@ footer code{color:var(--ink-2)}
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-core/index.html"
     },
     {
       "slug": "webtools-http-test-fixtures",
@@ -317,7 +328,7 @@ footer code{color:var(--ink-2)}
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-test-fixtures/index.html"
     },
     {
       "slug": "webtools-http-url-policy",
@@ -325,7 +336,7 @@ footer code{color:var(--ink-2)}
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-url-policy/index.html"
     },
     {
       "slug": "webtools-http-transport",
@@ -333,7 +344,7 @@ footer code{color:var(--ink-2)}
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-transport/index.html"
     },
     {
       "slug": "webtools-http-cache",
@@ -341,7 +352,7 @@ footer code{color:var(--ink-2)}
       "slot": 5,
       "top": "webtools-http",
       "status": "built",
-      "board": "docs/dashboards/webtools-http/index.html"
+      "board": "docs/dashboards/webtools-http-cache/index.html"
     },
     {
       "slug": "webtools-http-budget",
@@ -356,8 +367,8 @@ footer code{color:var(--ink-2)}
       "name": "call facades",
       "slot": 5,
       "top": "webtools-http",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-http-facades/index.html"
     },
     {
       "slug": "webtools-feeds",
@@ -425,9 +436,9 @@ footer code{color:var(--ink-2)}
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "7 of 11 units landed; #67 in progress; #68 up next.",
+      "detail": "8 of 11 units landed; #68 in progress; #69 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-03T19:38:03Z",
+      "updated": "2026-11-06T00:17:56Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -435,13 +446,13 @@ footer code{color:var(--ink-2)}
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 7,
+        "landed": 8,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 7,
+        "landed": 8,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -449,17 +460,17 @@ footer code{color:var(--ink-2)}
         "done": false,
         "current": [
           {
-            "issue": 67,
-            "slug": "call-budget",
+            "issue": 68,
+            "slug": "call-facades",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 68,
-          "slug": "call-facades",
+          "issue": 69,
+          "slug": "feeds",
           "blockedBy": [
             {
-              "issue": 67
+              "issue": 68
             }
           ]
         }
@@ -639,7 +650,9 @@ footer code{color:var(--ink-2)}
       "blocks": [
         {
           "issue": 67,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-05T23:52:27Z",
           "hold": "enables"
         },
         {
@@ -735,7 +748,9 @@ footer code{color:var(--ink-2)}
         },
         {
           "issue": 67,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-05T23:52:27Z",
           "hold": "enables"
         },
         {
@@ -1106,7 +1121,8 @@ footer code{color:var(--ink-2)}
     {
       "issue": 67,
       "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -1131,17 +1147,17 @@ footer code{color:var(--ink-2)}
         {
           "issue": 68,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/67-call-budget/dashboard.html",
       "folder": "55-http-client-stack/67-call-budget/",
-      "branch": "feat/issue-67-call-budget",
+      "branch": null,
       "system": "webtools-http-budget",
-      "step": "document",
-      "detail": "Document: 5 of 7 tasks done; State boards current.",
-      "since": "2026-11-05T22:43:07Z",
-      "updated": "2026-11-05T23:18:27Z",
+      "step": "landed",
+      "detail": "Landed in PR #90.",
+      "since": "2026-11-05T23:52:26Z",
+      "updated": "2026-11-05T23:52:26Z",
       "qa": [
         {
           "pass": 1,
@@ -1182,15 +1198,20 @@ footer code{color:var(--ink-2)}
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 90,
+        "merge": "5f221ce",
+        "version": null,
+        "date": "2026-11-05"
+      },
       "reconciliation": {
-        "state": "planned",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "call budget",
       "group": "55",
       "order": 8
@@ -1204,8 +1225,10 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 67,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-05T23:52:27Z",
+          "build": "clear",
           "locality": "local-repository"
         },
         {
@@ -1232,24 +1255,43 @@ footer code{color:var(--ink-2)}
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/68-call-facades/dashboard.html",
+      "folder": "55-http-client-stack/68-call-facades/",
+      "branch": "feat/issue-68-call-facades",
       "system": "webtools-http-facades",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-06T03:09:31Z",
+      "updated": "2026-11-06T03:53:14Z",
+      "qa": [
         {
-          "issue": 67
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-06",
+          "at": "2026-11-06T02:52:19Z",
+          "findings": {
+            "test": 16,
+            "code": 2
+          },
+          "severity": {
+            "minor": 18,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "note": "No test failed and no logic defect was found: the permit rules, the retry delay, the cache interplay, the lifecycle, the owning factories, secrecy and the ABI read clean, and the five recorded deviations are accurate. Eighteen minor findings, being fixed in place with no second pass. Sixteen test findings, second-order, in the test rows and in `logging`, `url-fetcher`, `owning-factories` and `loopback-fetchers`: log branches and check orderings the plan did not list; the public owning fetcher factory never carrying a real request; cleanup on a failing path missing in three test classes; message texts pinned only against their own constants; and no close-race or secrecy suite for the fetcher at Level 4c non-functional. Two code findings, in `readme` and `release`: two sentences of the README and the CHANGELOG that are more accurate than the planned text, to be recorded as deviations. Suite: 1,431 passed, 0 failed, 0 skipped in webtools-http's 261 classes, every test level run; apiCheck passed. webtools-udp, webtools-scraping and webtools-browser are untouched and were not run.",
+          "inPlace": "fixed"
         }
       ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
+      "landed": null,
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "call facades",
       "group": "55",
       "order": 9
@@ -1291,10 +1333,16 @@ footer code{color:var(--ink-2)}
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [
+        {
+          "issue": 68
+        }
+      ],
       "systemName": "webtools-feeds",
       "group": "55",
       "order": 10
@@ -1439,7 +1487,8 @@ footer code{color:var(--ink-2)}
         {
           "issue": 67,
           "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 68,
@@ -1460,6 +1509,24 @@ footer code{color:var(--ink-2)}
     }
   ],
   "unscheduled": [
+    {
+      "issue": 93,
+      "title": "webtools-http: `Url.redacted()` shows the path, so a secret carried in a URL's path is logged",
+      "labels": [
+        "enhancement"
+      ],
+      "created": "2026-11-06",
+      "system": "webtools-http-core"
+    },
+    {
+      "issue": 91,
+      "title": "webtools-http: save a hard window when a server reading or a clock step raises its count",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-11-05",
+      "system": "webtools-http-budget"
+    },
     {
       "issue": 87,
       "title": "webtools-http: UrlParseLinearTimeNonFunctionalTest exceeds its 100x bound when the level test tasks run in parallel",
@@ -1766,15 +1833,19 @@ function render(){
   $("#source-view").textContent=JSON.stringify(B,(k,v)=>k==="level"?undefined:v,2); /* a work level is never shown (GUIDANCE.md §4) */
   $("#source-key").innerHTML=`<span>this copy is replaced on every <code>board.js</code> run</span>`;
 }
-/* ---------- The theme switch (GUIDANCE.md §1, Themes) ----------
-   A light/night toggle in the header. Until it is clicked the board follows the system setting; a click picks the other palette and
-   remembers it (localStorage "dashboards-theme", shared by every dashboard of the same origin) across boards and reloads. It only
-   selects one of the two palettes the board defines: :root[data-theme]. The same code runs on every dashboard type. */
-(function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, btn=document.getElementById("theme"), mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+/* ---------- The theme switch (GUIDANCE.md §1, Themes; §12, "Switch") ----------
+   A switch in the header: ☀ light at its left end, ☾ night at its right, the knob at the palette shown (aria-checked while night).
+   Until it is clicked the board follows the system setting; a click picks the other palette and remembers it (localStorage
+   "dashboards-theme", shared by every dashboard of the same origin) across boards and reloads. It only selects one of the two palettes
+   the board defines: :root[data-theme]. The same code runs on every dashboard type. */
+(function themeSwitch(){ const KEY="dashboards-theme", root=document.documentElement, mq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+  let btn=document.getElementById("theme");
   if(!btn) return;
+  btn.className="switch"; btn.type="button"; btn.setAttribute("role","switch"); btn.removeAttribute("aria-pressed");
+  if(!btn.querySelector(".switch-track")) btn.innerHTML='<span class="switch-end off" aria-hidden="true">☀</span><span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span><span class="switch-end on" aria-hidden="true">☾</span>';
   const chosen=()=>{ try{ const t=localStorage.getItem(KEY); return t==="light"||t==="dark"?t:null; }catch(e){ return null; } };
   const now=()=>root.dataset.theme==="dark"||root.dataset.theme==="light"?root.dataset.theme:(mq&&mq.matches?"dark":"light");
-  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.textContent=t==="dark"?"☾ night":"☀ light"; btn.setAttribute("aria-pressed",String(t==="dark"));
+  const label=()=>{ const t=now(), word=t==="dark"?"night":"light"; btn.setAttribute("aria-checked",String(t==="dark"));
     btn.title=`Theme: ${word}${chosen()?"":", as the system setting"}. Click for ${t==="dark"?"light":"night"}.`; btn.setAttribute("aria-label",`Night theme${chosen()?"":" (follows the system setting until clicked)"}`); };
   btn.addEventListener("click",()=>{ const t=now()==="dark"?"light":"dark"; root.dataset.theme=t; try{ localStorage.setItem(KEY,t); }catch(e){} label(); });
   if(mq&&mq.addEventListener) mq.addEventListener("change",label);

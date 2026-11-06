@@ -436,9 +436,9 @@ footer code{color:var(--ink-2)}
   <div class="kpi"><div class="l">Source</div><div class="v">27 files</div><div class="s">1,702 lines · <code>commonMain</code> 25 (1,685) · <code>jvmMain</code> 2 (17) · package <code>com.spartanlabs.webtools.http</code></div></div>
   <div class="kpi"><div class="l">Types</div><div class="v">37 public</div><div class="s">16 top-level · 21 nested: eleven transport leaves, two upstream leaves, three direct leaves, three builders, <code>HttpHeaders.Entry</code>, <code>WallClock.System</code> · 9 internal or private</div></div>
   <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">everything runs on the caller's thread or coroutine; a transport moves its blocking I/O off it, as the port's contract says</div></div>
-  <div class="kpi"><div class="l">Contracts</div><div class="v">5 gated types</div><div class="s"><code>HttpTransport</code>'s eight points · <code>WallClock</code> · <code>HttpFailure</code>, <code>TransportFailure</code>, <code>UpstreamFailure</code> · 1 opt-in marker · 1 DSL marker on 11 builders</div></div>
+  <div class="kpi"><div class="l">Contracts</div><div class="v">5 gated types</div><div class="s"><code>HttpTransport</code>'s eight points · <code>WallClock</code> · <code>HttpFailure</code>, <code>TransportFailure</code>, <code>UpstreamFailure</code> · 1 opt-in marker · 1 DSL marker on 16 builders</div></div>
   <div class="kpi"><div class="l">Tests</div><div class="v">38 classes</div><div class="s">135 tests across 4 testing levels · 30 classes in <code>commonTest</code>, 8 in <code>jvmTest</code>, all run on the JVM</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">3</div><div class="s">1 planned unit that builds on it · 1 docs · 1 unscheduled</div></div>
+  <div class="kpi"><div class="l">Open issues</div><div class="v">4</div><div class="s">1 landing with this board · 1 docs · 2 unscheduled</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -582,28 +582,29 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-05</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-06</small></h3>
       <ol class="roadmap">
         <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="8" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span><a data-board="62">webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile</a> <small>unit 3 · this board's system · landed in 7de8207</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/64" target="_blank" rel="noopener">#64</a><span><a data-board="64">webtools-http: outbound-URL policies <code>Trusted</code>/<code>Untrusted</code>, <code>TransportSettings</code> and the common address classifier</a> <small>unit 5 · added <code>WebToolsDsl</code> and marked the builders · landed in 53965c8</small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · creates <code>RateLimited</code> and uses the internal encoders</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · creates <code>RateLimited</code> and uses the internal encoders; reworded <code>RateLimited</code>'s KDoc and the DSL marker's list · landing with this board</small></span><span class="tags"><span class="badge">open</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
           </ul>
           <p class="more">7 more of its issues touch other systems: #61 and #47 the build, #63 the test fixtures, #65 the transport, #66 the cache, #67 the call budget, #69 webtools-feeds.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-11-05</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>2 open · 2026-11-06</small></h3>
       <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/93" target="_blank" rel="noopener">#93</a><span><a data-board="93">webtools-http: <code>Url.redacted()</code> shows the path, so a secret carried in a URL's path is logged</a> <small><code>Url.redacted()</code> hides the query and shows the path; the transport's and the facades' lines print through it</small></span><span class="tags"><span class="badge">enhancement</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/87" target="_blank" rel="noopener">#87</a><span><a data-board="87">webtools-http: UrlParseLinearTimeNonFunctionalTest exceeds its 100x bound when the level test tasks run in parallel</a> <small>one failure in a forced concurrent run; it passes on its own</small></span><span class="tags"><span class="badge bug">▲ bug</span><span class="badge">open</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Issue boards that amended this system: <a data-issue="62">#62</a> http-core — gap, options, verdict and as built · <a data-issue="64">#64</a> url-policy — the DSL marker · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
+        <li>Issue boards that amended this system: <a data-issue="62">#62</a> http-core — gap, options, verdict and as built · <a data-issue="64">#64</a> url-policy — the DSL marker · <a data-issue="68">#68</a> call-facades — <code>RateLimited</code>'s KDoc and the DSL marker's list · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
         <li><a href="../../plans/55-http-client-stack/62-http-core/plan.md">#62 plan</a> · <a href="../../plans/55-http-client-stack/62-http-core/final-implementation.md">as built</a> — the compile proof, the differentials, every measurement · <a href="../../plans/55-http-client-stack/62-http-core/impact.md">impact</a> — what the later units build on · <a href="../../plans/55-http-client-stack/62-http-core/research/README.md">research</a></li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 the common core, §6.9 the mechanism per type, §9 extension and stability · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
         <li><a href="../../../README.md">README</a> — the <code>webtools-http</code> row and its install lines, marked not yet released</li>
-        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board · the parts built on it: <a href="../webtools-http-url-policy/index.html">URL policy</a>, <a href="../webtools-http-transport/index.html">OkHttp transport</a>, <a href="../webtools-http-cache/index.html">response cache</a>, <a href="../webtools-http-budget/index.html">call budget</a>, <a href="../webtools-http-test-fixtures/index.html">test fixtures</a> · its check module: the <a href="../gradle-build/index.html">Gradle build</a> board</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board · the parts built on it: <a href="../webtools-http-url-policy/index.html">URL policy</a>, <a href="../webtools-http-transport/index.html">OkHttp transport</a>, <a href="../webtools-http-cache/index.html">response cache</a>, <a href="../webtools-http-budget/index.html">call budget</a>, <a href="../webtools-http-facades/index.html">call facades</a>, <a href="../webtools-http-test-fixtures/index.html">test fixtures</a> · its check module: the <a href="../gradle-build/index.html">Gradle build</a> board</li>
         <li><a data-workboard>Repository work board</a> — every planning and development run in the repository</li>
       </ul></div>
   </div>
@@ -614,7 +615,7 @@ footer code{color:var(--ink-2)}
      1. The core tabs are named for what they show: "Parse and build" (the decision path: Url.parse and the HttpRequest factory, two variants) and "Request" (the sequence: a request through the transport port).
      2. The Threads tab says the core starts no thread and lists the caller's thread and an implementation's own threads.
      3. The three sides are the core's values, failures and Url with their internals, the seams and markers, and the two JVM actuals.
-     Nothing is removed. -->
+     Nothing is removed. Refreshed at feat/issue-68-call-facades 806b489 (2026-11-06): RateLimited's producer and its retryAfter, the encoders' user and the DSL marker's sixteen builders, after the call facades changed only KDoc here; #68 and #93 in the Context. -->
 </footer>
 </div>
 
@@ -624,9 +625,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-http-core",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 64, "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier", "sha": "543bd08"},
-  "written": {"sha": "5f221ce"}
+  "asIs": {"ref": "feat/issue-68-call-facades", "sha": "806b489", "date": "2026-11-06T03:11:15Z"},
+  "lastAmended": {"issue": 68, "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport", "sha": "806b489"},
+  "written": {"sha": "806b489"}
 }
 </script>
 
@@ -634,7 +635,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http-core — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-core/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), the common core of webtools-http 1.0.0 (new, unreleased): the opt-in marker, the failure model, the request and response values, Url with its internal parsing pipeline, the transport and wall-clock ports, the DSL marker, the internal logging seam and helpers, and their two JVM actuals. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06), the common core of webtools-http 1.0.0 (new, unreleased): the opt-in marker, the failure model, the request and response values, Url with its internal parsing pipeline, the transport and wall-clock ports, the DSL marker, the internal logging seam and helpers, and their two JVM actuals. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -712,7 +713,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.core "Components" "The common core as built at master 5f221ce." {
+        component webtools.core "Components" "The common core as built at feat/issue-68-call-facades 806b489." {
             include *
             autoLayout tb
         }
@@ -768,7 +769,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","68":"../../plans/55-http-client-stack/68-call-facades/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -844,7 +845,7 @@ const MODEL = {
       {id:"tf",side:"server",vis:"pub",x:72,y:136,w:284,h:68,t:"TransportFailure",s:["11 final leaves: Timeout · ConnectFailed","DnsFailed · TlsFailed · Protocol · Io","InvalidRequest · RefusedByPolicy · 3 more"],
         d:{role:"What a transport reports: a gated group with eleven final leaves, each with a public constructor a seam implementer can call. RefusedByPolicy carries a RefusalReason; BodyTooLarge its limit and declared size; TooManyRedirects its limit; RetryRefused a refused second exchange.",vis:"public · abstract class · Experimental (subclass)",files:["commonMain/kotlin/com/spartanlabs/webtools/http/TransportFailure.kt"]}},
       {id:"uf",side:"server",vis:"pub",x:364,y:136,w:148,h:68,t:"UpstreamFailure",s:["status · RateLimited","UpstreamError"],
-        d:{role:"What the server answered: RateLimited(status, retryAfter), whose constructor is internal because only the planned facades create it, and UpstreamError(status, headers, body), which keeps headers and body as copies and never prints them.",vis:"public · abstract class · Experimental (subclass)",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UpstreamFailure.kt"]}},
+        d:{role:"What the server answered: RateLimited(status, retryAfter), whose constructor is internal because only the call facades create it, its retryAfter the longer of the server's Retry-After and the time the budget stays paused, measured when the failure was created, zero when neither named a wait; and UpstreamError(status, headers, body), which keeps headers and body as copies and never prints them.",vis:"public · abstract class · Experimental (subclass)",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UpstreamFailure.kt"]}},
       {id:"leaves",side:"server",vis:"pub",x:520,y:136,w:132,h:68,t:"Direct leaves",s:["Closed","BudgetExhausted","DecodeFailure"],
         d:{role:"Final leaves of HttpFailure itself: Closed(component) after a component is closed, BudgetExhausted(wait, reason, window) with an ExhaustedReason, DecodeFailure(cause).",vis:"public · final classes · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/HttpFailure.kt"]}},
       {id:"req",side:"server",vis:"pub",x:56,y:232,w:148,h:46,t:"HttpRequest",s:["factory · Builder","identity equality"],
@@ -868,7 +869,7 @@ const MODEL = {
       {id:"host",side:"server",vis:"int",x:264,y:372,w:130,h:38,t:"UrlHost",s:"names · IPv6 · RFC 5952",
         d:{role:"Host canonicalisation: a name in a-z 0-9 - _ . within the DNS length rules and with no xn-- label, or a bracketed IPv6 literal printed in RFC 5952 form; digits-and-dots hosts stay as written.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlHost.kt"]}},
       {id:"enc",side:"server",vis:"int",x:402,y:372,w:130,h:38,t:"UrlEncoding",s:"path · query · encoders",
-        d:{role:"The path and query canonicalisers with HttpUrl's encode sets, and the internal encodePathSegment and encodeQueryComponent the planned facades will use.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlEncoding.kt"]}},
+        d:{role:"The path and query canonicalisers with HttpUrl's encode sets, and the internal encodePathSegment and encodeQueryComponent the call facades assemble a call's URL with.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlEncoding.kt"]}},
       {id:"problem",side:"server",vis:"int",x:540,y:372,w:112,h:38,t:"UrlProblem",s:"11 kinds",
         d:{role:"The kinds of failure and their constant messages, carried by the internal UrlParseException that tests read.",vis:"internal",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlProblem.kt"]}},
       {id:"syntax",side:"server",vis:"int",x:56,y:432,w:150,h:48,t:"HttpSyntax",s:["token · value rules","media type · sanitiser"],
@@ -888,7 +889,7 @@ const MODEL = {
       {id:"clock",side:"wire",vis:"pub",x:704,y:178,w:242,h:36,t:"WallClock · System",s:"nowEpochMillis · may step backwards",
         d:{role:"Wall-clock milliseconds since the epoch; may step backwards. WallClock.System, nested, final and stateless, reads epochMillisNow() and needs no opt-in. An implementation must be safe for concurrent calls and cheap; the call budget reads it beside its time source, and the fixtures' VirtualClock implements it.",vis:"public · interface · Experimental (implement); System Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WallClock.kt"],threads:["the caller's thread or coroutine"]}},
       {id:"dsl",side:"wire",vis:"pub",x:704,y:220,w:242,h:36,t:"WebToolsDsl",s:"@DslMarker on the 11 builders",
-        d:{role:"The module's DSL marker, on the header, request and response builders here and on the settings, policy, cache-policy, Caffeine-cache, rate-window, rate-signals and windowed-budget builders of the other parts: inside a nested block only the innermost builder is an implicit receiver, and an outer one is reached through its label. Its retention is the default, RUNTIME on the JVM.",vis:"public · annotation class · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WebToolsDsl.kt"]}},
+        d:{role:"The module's DSL marker, on the header, request and response builders here and on the settings, policy, cache-policy, Caffeine-cache, rate-window, rate-signals and windowed-budget builders of the other parts and the endpoint, call, fetch, client and fetcher builders of the call facades, sixteen in all: inside a nested block only the innermost builder is an implicit receiver, and an outer one is reached through its label. Its retention is the default, RUNTIME on the JVM.",vis:"public · annotation class · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/WebToolsDsl.kt"]}},
       {id:"jvm",side:"client",vis:"int",container:true,x:690,y:302,w:270,h:96,t:"jvmMain",s:"the core's two JVM actuals",
         d:{role:"The jvm() target's actuals of the core's two expect declarations, compiled to Java 11 bytecode.",vis:"internal · source set",files:["jvmMain/kotlin/com/spartanlabs/webtools/http/Log.jvm.kt","jvmMain/kotlin/com/spartanlabs/webtools/http/EpochMillis.jvm.kt"]}},
       {id:"logJvm",side:"client",vis:"int",x:704,y:340,w:116,h:42,t:"Log.jvm.kt",s:"slf4j",

@@ -1,5 +1,5 @@
 // webtools-http-test-fixtures — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-test-fixtures/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), webtools-http 1.0.0's published test-fixtures variant (new, unreleased): VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader, the gated, redacting FixtureRecorder, the loopback factories, and the call budget's two fixtures. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06), webtools-http 1.0.0's published test-fixtures variant (new, unreleased): VirtualClock, the scripted FakeHttpTransport, Fixture and FixtureLoader, the gated, redacting FixtureRecorder, the loopback factories, the call budget's two fixtures and the call facades' LoopbackFetchers. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -16,11 +16,13 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 codec    = component "HttpMessageCodec" "The .http codec: a strict UTF-8 head, the body verbatim, each fault a FixtureError naming the origin and line, never a value." "internal object" "Internal"
                 recorder = component "FixtureRecorder" "Records a live transport's successful responses as .http files, behind RecordingGate: redacted, scrubbed of supplied secrets, refused when a secret survives, written atomically." "final class · internal decorator" "Public"
                 loopback = component "Loopback factories" "LoopbackTransports with MockWebServer.webtoolsUrl, Fixture.toMockResponse and MockWebServer.enqueue(fixture): the real OkHttpTransport over a loopback server with the policy's rules live." "object · extension functions" "Public"
+                facadesFx = component "The call facades' fixture" "LoopbackFetchers: untrusted and trusted, a UrlFetcher over the loopback transports, its pre-check relaxed for loopback exactly as the transport is." "object" "Public"
                 budgetFx = component "The call budget's fixtures" "RecordingBudgetObserver and FakeBudgetStore: the events in arrival order, and a scripted store with failures and delays in virtual time." "final classes" "Public"
             }
             core      = container "webtools-http-core" "HttpTransport, WallClock, the request and response values and HttpSyntax, reached through the association." "commonMain"
             okhttp    = container "webtools-http-transport" "OkHttpTransport, built over loopback through its internal constructor." "jvmMain · okhttp-jvm 5.5.0"
             policy    = container "webtools-http-url-policy" "The policy whose rules stay live over loopback, with its internal loopback relaxation." "commonMain · jvmMain"
+            facades   = container "webtools-http-facades" "UrlFetcher, which LoopbackFetchers builds over a loopback transport." "commonMain"
             budget    = container "webtools-http-budget" "The call budget, whose store and observer seams the budget's fixtures implement." "commonMain"
             build     = container "Gradle build" "fixturesPublicationCheck, in webtools-http's check: the two variants, their dependencies, a signature beside every published file, resolution from three build shapes." "build-logic" "Internal"
         }
@@ -31,6 +33,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         consumer -> webtools.fixtures.recorder "Records fixtures from a live transport, behind the gate"
         consumer -> webtools.fixtures.loopback "Builds the real transport over a loopback server"
         consumer -> webtools.fixtures.budgetFx "Records the budget's events; scripts its store"
+        consumer -> webtools.fixtures.facadesFx "Fetches over a loopback server with LoopbackFetchers"
         webtools.fixtures.fake -> webtools.core "Implements HttpTransport; builds HttpResponses"
         webtools.fixtures.clock -> webtools.core "Implements WallClock"
         webtools.fixtures.fake -> webtools.fixtures.clock "Delays each step in virtual time"
@@ -45,6 +48,8 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.fixtures.loopback -> server "Enqueues responses; addresses it as an IP literal"
         webtools.okhttp -> server "Fetches over loopback"
         webtools.fixtures.budgetFx -> webtools.budget "Implements BudgetObserver and BudgetStore"
+        webtools.fixtures.facadesFx -> webtools.fixtures.loopback "Builds its transport with LoopbackTransports"
+        webtools.fixtures.facadesFx -> webtools.facades "Builds a UrlFetcher, its pre-check relaxed as the transport is"
         webtools.build -> webtools.fixtures "Checks its publication"
     }
 
@@ -57,7 +62,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.fixtures "Components" "The test fixtures as built at master 5f221ce." {
+        component webtools.fixtures "Components" "The test fixtures as built at feat/issue-68-call-facades 806b489." {
             include *
             autoLayout tb
         }
