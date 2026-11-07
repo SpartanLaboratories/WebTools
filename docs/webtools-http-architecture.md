@@ -9,8 +9,22 @@ is the protocol, so there is no separate wire document. Code and KDoc are
 authoritative on any conflict with this document.
 
 History (decision records, not current fact):
-[design](plans/55-http-client-stack/architecture.md); the plan and the as-built
-record of each system sit in their own folders beside it.
+[design](plans/55-http-client-stack/architecture.md) (its §7.1 to §7.4 diagrams are superseded by §2
+and §4, §4.1, §5.3, and §7 and §8 below) · the plan and as-built record of each part:
+[build logic](plans/55-http-client-stack/61-build-logic/) ·
+[Java floor](plans/55-http-client-stack/47-java-23-bytecode/) ·
+[core](plans/55-http-client-stack/62-http-core/) ·
+[test support](plans/55-http-client-stack/63-test-support/) ·
+[URL policy](plans/55-http-client-stack/64-url-policy/) ·
+[transport](plans/55-http-client-stack/65-okhttp-transport/) ·
+[response cache](plans/55-http-client-stack/66-response-cache/) ·
+[call budget](plans/55-http-client-stack/67-call-budget/) ·
+[call facades](plans/55-http-client-stack/68-call-facades/) ·
+[feeds](plans/55-http-client-stack/69-feeds/).
+
+C4 model: the state boards [`dashboards/webtools-http/`](dashboards/webtools-http/index.html)
+and [`dashboards/webtools-feeds/`](dashboards/webtools-feeds/index.html) render
+it from their `workspace.dsl`.
 
 ## 1. Scope & audience
 
@@ -115,6 +129,7 @@ flowchart TB
         PRE["policy pre-check<br/>UrlGuard.checkRequest"]
         RC["ResponseCache port<br/>CaffeineResponseCache (JVM), Disabled"]
         CB["CallBudget port<br/>WindowedCallBudget, Unlimited"]
+        SP["send path<br/>in the loader or the caller's coroutine"]
         RS["RateSignalsReader<br/>Standard"]
         TR["HttpTransport port<br/>OkHttpTransport (JVM)"]
         POL["OutboundUrlPolicy<br/>Trusted, Untrusted + TransportSettings"]
@@ -124,12 +139,12 @@ flowchart TB
     UC --> PRE
     UF --> PRE
     UC -->|"GET only"| RC
-    RC -->|"loader"| CB
-    UC -->|"non-GET"| CB
-    UF --> CB
-    CB -->|"granted permit"| TR
-    TR --> RS
-    RS -->|"complete(signals)"| CB
+    RC -->|"loader"| SP
+    UC -->|"non-GET"| SP
+    UF --> SP
+    SP -->|"acquire, then release or complete(signals)"| CB
+    SP -->|"execute(request)"| TR
+    SP -->|"read(response)"| RS
     POL -.-> PRE
     POL -.-> TR
 ```
@@ -146,6 +161,7 @@ sequenceDiagram
     participant C as caller
     participant UC as UpstreamClient
     participant RC as ResponseCache
+    participant L as loader and send path
     participant CB as CallBudget
     participant T as HttpTransport
     participant R as RateSignalsReader
@@ -158,27 +174,36 @@ sequenceDiagram
         alt live entry no older than maxAge
             RC-->>UC: Found or Missing, no permit, no request (a hit ends here)
         else miss, stale or zero ttl (one load per key, joiners share it)
-            RC->>CB: acquire(cost, lane, maxWait), in the cache's load scope
+            RC->>L: run the loader (in the cache load scope for CaffeineResponseCache)
         end
     else any other method
-        UC->>CB: acquire(cost, lane, maxWait), in the caller's coroutine
+        UC->>L: run the loader in the caller coroutine
     end
+    L->>CB: acquire(cost, lane, maxWait)
     alt wait over maxWait, queue full or cost over the limit
-        CB-->>UC: BudgetExhausted(wait, reason, window), nothing sent
+        CB-->>L: BudgetExhausted(wait, reason, window), nothing sent
     else granted (charged now)
-        CB-->>T: Permit, then execute(request)
+        CB-->>L: Permit
+        L->>T: execute(request)
+        T-->>L: a Result of HttpResponse
         alt InvalidRequest from the transport
-            T-->>CB: permit.release()
+            L->>CB: permit.release()
         else any other failure, a cancellation or an Error
-            T-->>CB: permit stays spent, no signals
+            Note over L,CB: the permit stays spent, no signals
         else a response of any status
-            T->>R: read(response, wallClock.nowEpochMillis())
-            R-->>CB: permit.complete(signals): pause, reconcile
+            L->>R: read(response, wallClock.nowEpochMillis())
+            R-->>L: RateSignals
+            L->>CB: permit.complete(signals): pause, reconcile
         end
-        UC->>UC: throttled or 429: RateLimited<br/>status in misses: Missing<br/>2xx: decode to Found, or DecodeFailure<br/>else UpstreamError
+        L->>L: throttled or 429: RateLimited<br/>status in misses: Missing<br/>2xx: decode to Found, or DecodeFailure<br/>else UpstreamError
     end
+    L-->>UC: the outcome, through the cache for a GET
     UC-->>C: a Result of Lookup (a failure is never stored, Missing is stored for missTtl)
 ```
+
+`L` is not a thread: it is the client's loader code with the facades' shared
+send path, run in the cache's load scope for a `GET` through
+`CaffeineResponseCache` and in the caller's coroutine otherwise (§7). The transport never sees a permit or the reader.
 
 - **The key** is the endpoint id, the request's encoded path and its query
   pairs; never a header (so never a credential sent in one), the body, the lane
@@ -426,10 +451,39 @@ The stack owns few threads. Every call that sends a request or may wait is
 `FeedParser.parse` is a plain, CPU-bound call that `FeedFetcher` runs on
 `parseDispatcher`.
 
+```mermaid
+sequenceDiagram
+    participant C as caller coroutine
+    participant L as webtools-http-cache-load scope on loadDispatcher
+    participant D as webtools-http-dispatcher-n thread
+    participant P as parseDispatcher
+
+    C->>L: getOrLoad of a cached GET: the first caller launches the load
+    Note over C: every caller awaits the shared future (asDeferred().await())
+    L->>L: budget acquire: a timed suspension (withTimeoutOrNull and select), no thread held
+    L->>D: one okhttp3.Call per hop, enqueued inside suspendCancellableCoroutine
+    D->>D: DNS (through GuardedDns under Untrusted), connect (through GuardedSocket under Untrusted), TLS, the write
+    D->>D: callback: the capped body read
+    D-->>L: resumes the loader with the hop outcome
+    L-->>C: completes the shared future, every waiter resumes
+    opt FeedFetcher.fetch (its UrlFetcher fetch ran in C, no cache)
+        C->>P: the parse, under a permit of maxConcurrentParses
+        Note over P: FeedParser.parse runs to its end, it cannot be cancelled
+        P-->>C: a Feed, a FeedFailure or a DecodeFailure, then the permit is returned
+    end
+    Note over C,L: a caller cancelled while waiting cancels only its own await, the load runs on
+    Note over L,D: cancelling the coroutine that awaits a hop cancels its Call (invokeOnCancellation), which stops the read
+    Note over C,D: close(): the cache cancels its load scope, the transport cancels every call in flight
+```
+
+A non-`GET` `call`, every `fetch` and a cached `GET` through
+`ResponseCache.Disabled` run the loader's steps in the caller's coroutine
+instead of `L`, so there the caller's own cancellation cancels the `Call`.
+
 | Context | Created | Runs |
 |---|---|---|
-| the caller's coroutine | — | every facade's checks and the wait for a result; a non-`GET` `call`'s and every `fetch`'s budget wait (the budget owns no scope, thread or timer: a wait is a `delay` in the waiting coroutine) |
-| `webtools-http-dispatcher-<n>` | per `OkHttpTransport`, its own `ThreadPoolExecutor` (OkHttp's default shape, idle threads end after 60 s), daemon threads, at most `maxConcurrentRequests` busy | DNS through `GuardedDns`, connect, TLS, the write, the capped body read inside the callback |
+| the caller's coroutine | — | every facade's checks and the wait for a result; a non-`GET` `call`'s, a `GET` through `ResponseCache.Disabled`'s and every `fetch`'s budget wait (the budget owns no scope, thread or timer: a wait is a timed suspension in the waiting coroutine, at most one minute per slice, woken early by a re-plan or `close()`) |
+| `webtools-http-dispatcher-<n>` | per `OkHttpTransport`, its own `ThreadPoolExecutor` (OkHttp's default shape, idle threads end after 60 s), daemon threads, at most `maxConcurrentRequests` busy | DNS (through `GuardedDns` under `Untrusted`), connect (through `GuardedSocket` under `Untrusted`), TLS, the write, the capped body read inside the callback |
 | the cache's load scope (`webtools-http-cache-load`) | per `CaffeineResponseCache`, on `loadDispatcher` (`Dispatchers.Default` by default) | every loader of a cached `GET`, so its budget wait and its transport call; the caller only awaits, and its cancellation cancels only itself |
 | `maintenanceExecutor` | the caller's (`ForkJoinPool.commonPool()` by default); never shut down by the cache | Caffeine's maintenance |
 | `parseDispatcher` | the caller's (`Dispatchers.Default` by default) | `FeedParser.parse`, at most `maxConcurrentParses` (2) at once per fetcher; a parse cannot be cancelled, so a cancelled caller returns when its parse ends |
@@ -459,7 +513,7 @@ Time:
 - `UpstreamClientConfig` passes its `timeSource` and `wallClock` to the budget
   it builds, its `timeSource` and `dispatcher` to the cache it builds, and its
   `wallClock` to the signal reader, so one `VirtualClock` drives the cache, the
-  budget and `delay` together under test. The transport's shared deadline reads
+  budget's waits and `delay` together under test. The transport's shared deadline reads
   `TimeSource.Monotonic`; the real transport runs on real time only.
 
 ## 8. Lifecycles and closing
@@ -530,9 +584,9 @@ and `UpstreamClient` lines and printed by the `toString()` of `HttpRequest`,
 
 - **Supported Extension.** Nothing carries `@SupportedExtension` yet. A seam
   graduates to it in a feature release once a consumer has built against it,
-  and the promotion is recorded in the CHANGELOG. The release that graduates
-  `FeedParser` also publishes its two contract classes (§11) as a test-fixtures
-  variant of `webtools-feeds`.
+  and the promotion is recorded in the CHANGELOG. The conformance and
+  hardening contracts (§11.2) are `jvmTest` classes of `webtools-feeds` and are
+  not published.
 - **Closed sets** are `sealed` only where the closed set is the contract:
   `OutboundUrlPolicy`, `Lookup`, `FeedFetch` (and `RecordingGate` and
   `Unmatched` in the fixtures); a `when` over one needs no `else`. `MixedAnswers` and `RecordMode`

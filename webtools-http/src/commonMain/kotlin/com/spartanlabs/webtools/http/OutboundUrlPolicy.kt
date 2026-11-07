@@ -87,12 +87,13 @@ public sealed class OutboundUrlPolicy {
 
     //region Untrusted
     /**
-     * The policy for a URL a third party supplied. Per hop it refuses a lenient or malformed host form, a reserved name, a
-     * denied IP literal and a port outside [allowedPorts]; for every resolved address and every connect it refuses a denied
+     * The policy for a URL a third party supplied. Per hop it refuses a lenient or malformed host form, a single-label name, a
+     * reserved name, a denied IP literal and a port outside [allowedPorts]; for every resolved address and every connect it refuses a denied
      * address; it never uses a proxy; and it refuses a request that carries a sensitive header (`Authorization`,
      * `Proxy-Authorization`, `Cookie`, `Set-Cookie` or any header added as sensitive).
      *
-     * **Stable Core.** No parameter admits an address or name the tables deny: [extraDeniedRanges] and
+     * **Stable Core.** No parameter admits an address or name the built-in tables deny (the special-purpose address table
+     * and the reserved names): [extraDeniedRanges] and
      * [extraDeniedHostSuffixes] add denials, [allowedPorts] sets the port list (`null` admits any port), and [mixedAnswers]
      * chooses between refusing a mixed answer and using its allowed addresses. Equality is on every property. `toString()` prints the port
      * set and the number of denied ranges and suffixes, never their values.

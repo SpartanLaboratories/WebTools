@@ -153,8 +153,8 @@ For `suspend` calls, timeouts and size caps, an outbound-URL policy, response ca
 
 **API stability.** Everything a consumer calls, passes, configures or matches is **Stable Core**,
 the supplied implementations (`OkHttpTransport`, `CaffeineResponseCache`, `WindowedCallBudget`,
-`RateSignalsReader.Standard`, …) included: none of them needs an opt-in. Implementing or subclassing
-a seam (`HttpTransport`, `ResponseCache`, `CallBudget`, `Permit`, `RateSignalsReader`, `BudgetStore`,
+`RateSignalsReader.Standard`, …) included: none of them needs an opt-in. Implementing, delegating to or
+subclassing a seam (`HttpTransport`, `ResponseCache`, `CallBudget`, `Permit`, `RateSignalsReader`, `BudgetStore`,
 `BudgetObserver`, `BudgetEvent`, `WallClock`, and the failure groups `HttpFailure`, `TransportFailure`
 and `UpstreamFailure`) is **Experimental**: it needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`
 and may change in a minor release. A seam graduates to `@SupportedExtension` in a feature release once a
@@ -172,10 +172,10 @@ one of them. The test fixtures are Stable Core with source compatibility only.
 | `FeedValidators` / `FeedLimits` | The `ETag` and `Last-Modified` pair the caller stores between polls; the bounds a parser applies, which can only be tightened. |
 | `FeedFailure` | `NotAFeed`, `Malformed`, `Refused` and `LimitExceeded`, under `HttpFailure`. |
 
-**API stability.** Everything a consumer calls, passes or matches is **Stable Core**, `RomeFeedParser`
-included. Implementing `FeedParser` or subclassing `FeedFailure` is **Experimental**, under
-`webtools-http`'s opt-in marker. `FeedFailure`'s leaves and its reasons (`NotAFeedReason`,
-`FeedRefusal`, `FeedLimit`) may gain members in a feature release; keep an `else` branch.
+**API stability.** Everything a consumer calls, passes, configures or matches is **Stable Core**,
+`RomeFeedParser` included. Implementing `FeedParser` or subclassing `FeedFailure` is **Experimental**, under
+`webtools-http`'s opt-in marker. `FeedFailure` may gain leaves, and its reason vocabularies (`NotAFeedReason`,
+`FeedRefusal`, `FeedLimit`) may gain members, in a feature release; keep an `else` branch.
 
 ## HTTP client stack
 
@@ -183,8 +183,9 @@ included. Implementing `FeedParser` or subclassing `FeedFailure` is **Experiment
 **`UpstreamClient`** calls the endpoints of one upstream API; **`UrlFetcher`** fetches URLs an administrator
 supplies. Both are `AutoCloseable`, both return `kotlin.Result`, and neither ever retries: a throttle, a transport
 failure and a `5xx` are each returned once. [`docs/webtools-http-architecture.md`](docs/webtools-http-architecture.md)
-describes the stack as built: its components, the call path, where each outbound-URL check runs, the failure model,
-the threads, ownership and closing, and what is logged.
+describes the stack as built, `webtools-feeds` included: its components, the call path, where each outbound-URL
+check runs, the failure model, the threads, ownership and closing, what is logged, the stability tiers, the test
+support and the known limitations.
 
 ### Calling an upstream
 
@@ -242,7 +243,7 @@ client.close()   // closes what the client built (cache, budget, transport), nev
 - **Your own cache or budget.** `cache(CaffeineResponseCache { maxWeight = 5_000 })` and `budget(myBudget)` are
   caller-owned: the client never closes them.
 - **Logging.** Each component logs under its own class name in `com.spartanlabs.webtools.http` (`UpstreamClient`,
-  `UrlFetcher`, `OkHttpTransport`, `CaffeineResponseCache`, `WindowedCallBudget`), never a header value, a body, a
+  `UrlFetcher`, `OkHttpTransport`, `CaffeineResponseCache`, `WindowedCallBudget`, and `GuardedDns` at `DEBUG`), never a header value, a body, a
   query string or a decoded value. A URL is printed with `Url.redacted()`, which hides the query and shows the path,
   and an endpoint id is printed as given: keep credentials out of path segments, the base URL's path and endpoint ids
   ([#93](https://github.com/SpartanLaboratories/WebTools/issues/93)).
@@ -251,7 +252,7 @@ client.close()   // closes what the client built (cache, budget, transport), nev
 
 `OutboundUrlPolicy` is a closed pair. `Trusted`, for an upstream you chose, checks the scheme (`https` only unless
 `allowCleartext`), optionally pins hosts and filters no address. `Untrusted`, for a URL a third party supplied, also
-refuses lenient host forms (`127.1`, `2130706433`), reserved names (`localhost`, `internal`, …), private, loopback,
+refuses lenient host forms (`127.1`, `2130706433`), single-label names, reserved names (`localhost`, `internal`, …), private, loopback,
 link-local and other special-purpose addresses, whether written as a literal or resolved from a name, ports other
 than 80, 443, 8080 and 8443, and any request carrying a sensitive header; it never uses a proxy. Its parameters can
 never admit a denied address or name (`extraDeniedRanges` and `extraDeniedHostSuffixes` add denials; `allowedPorts`
@@ -300,7 +301,8 @@ For a real exchange over loopback, start a `mockwebserver3.MockWebServer` on `12
 ## Feeds
 
 `webtools-feeds` (not yet released) parses RSS and Atom behind a hardened port and fetches feeds with a **stateless conditional GET** over `UrlFetcher`. It keeps no state: you store the validators it returns and
-hand them back on the next poll.
+hand them back on the next poll. [`docs/webtools-http-architecture.md`](docs/webtools-http-architecture.md) describes the
+fetch path and the hardening layers (§4.5) and the module's known limitations (§13).
 
 ```kotlin
 FeedFetcher.untrusted("my-app/1.0 (+https://example.com/contact)").use { fetcher ->

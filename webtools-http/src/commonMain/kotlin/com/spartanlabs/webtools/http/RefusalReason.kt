@@ -26,10 +26,17 @@ public class RefusalReason private constructor(
         /** The URL carries user-info. */
         public val UserInfo: RefusalReason = RefusalReason("UserInfo")
 
-        /** The host's form (a lenient or malformed IP literal such as `127.1`, an empty label, a last label that is a number, ...) is not allowed. */
+        /**
+         * The host's form (a lenient or malformed IP literal such as `127.1`, an empty label, a last label that is a number, ...) is not
+         * allowed. Also the reason for a redirect target that cannot be resolved or parsed, other than for its scheme, user-info or port:
+         * the only `HostForm` a `Trusted` policy returns.
+         */
         public val HostForm: RefusalReason = RefusalReason("HostForm")
 
-        /** The host is a reserved or special-use name. */
+        /**
+         * The host is a single label, a reserved or special-use name (`localhost`, `local`, `internal`, `home.arpa`, `localdomain`) or a
+         * subdomain of one, or one of the policy's `extraDeniedHostSuffixes` or a subdomain of one.
+         */
         public val ReservedName: RefusalReason = RefusalReason("ReservedName")
 
         /** The host, or the address it resolved to, is in a denied range. */
