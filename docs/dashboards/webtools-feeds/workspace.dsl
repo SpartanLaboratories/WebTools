@@ -1,5 +1,5 @@
 // webtools-feeds — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-feeds/index.html.
-// As-is at WebTools feat/issue-69-feeds 25678cf (2026-11-07), webtools-feeds 1.0.0 (new, unreleased): the FeedParser port with FeedInput and FeedLimits, the model, the FeedFailure group and its reasons, FeedValidators, FeedFetch and FeedFetcher with its common and two JVM owning factories, and RomeFeedParser over Rome 2.1.0, with their internals. Code is authoritative on any conflict.
+// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), webtools-feeds 1.0.0 (new, unreleased): the FeedParser port with FeedInput and FeedLimits, the model, the FeedFailure group and its reasons, FeedValidators, FeedFetch and FeedFetcher with its common and two JVM owning factories, and RomeFeedParser over Rome 2.1.0, with their internals. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -78,7 +78,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.feeds "Components" "webtools-feeds as built at feat/issue-69-feeds 25678cf." {
+        component webtools.feeds "Components" "webtools-feeds as built at docs/issue-70-http-architecture-docs 45aa548." {
             include *
             autoLayout tb
         }

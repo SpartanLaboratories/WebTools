@@ -826,7 +826,7 @@ footer code{color:var(--ink-2)}
   <div class="cards">
     <div class="card"><h3>Roadmap <small>1 item · 11 issues · 2026-11-07</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · sub-issues in landing order · 9 of 11 landed</small></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · sub-issues in landing order · 10 of 11 landed</small></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a data-board="61">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>landed in 1e27071</small></span><span class="tags"><span class="badge" data-sys="gradle-build">build</span><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a data-board="47">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>java-floor; all three artifacts · landed in 3949b52</small></span><span class="tags"><span class="badge" data-sys="gradle-build">build</span><span class="badge bug">bug</span><span class="badge">closed</span></span></li>
@@ -837,10 +837,10 @@ footer code{color:var(--ink-2)}
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/66" target="_blank" rel="noopener">#66</a><span><a data-board="66">webtools-http: <code>ResponseCache</code> port and <code>CaffeineResponseCache</code> default</a> <small>response-cache · landed in 8122af7</small></span><span class="tags"><span class="badge" data-sys="webtools-http">http</span><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>call-budget · landed in 5f221ce</small></span><span class="tags"><span class="badge" data-sys="webtools-http">http</span><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>call-facades · landed in 0374c8d</small></span><span class="tags"><span class="badge" data-sys="webtools-http">http</span><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>feeds · lands with this board</small></span><span class="tags"><span class="badge" data-sys="webtools-feeds">feeds</span><span class="badge">open</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span>Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>feeds · landed in 20d4546</small></span><span class="tags"><span class="badge" data-sys="webtools-feeds">feeds</span><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>the architecture document and the README · lands with this board</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
           </ul>
-          <p class="more">Landing order 61 → 47 → 62 → 63 → {64 → 65, 66, 67} → 68 → 69 → 70 (architecture §11); #61, #47 and #62 to #68 have landed; #69 lands with this board.</p></li>
+          <p class="more">Landing order 61 → 47 → 62 → 63 → {64 → 65, 66, 67} → 68 → 69 → 70 (architecture §11); #61, #47 and #62 to #69 have landed; #70 lands with this board.</p></li>
       </ol></div>
     <div class="card"><h3>Unscheduled issues <small>16 open · 2026-11-07</small></h3>
       <ul class="issues">
@@ -865,6 +865,7 @@ footer code{color:var(--ink-2)}
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
         <li><a href="../plans/55-http-client-stack/architecture.md">#55 architecture</a> · <a href="../plans/55-http-client-stack/consequences.md">consequences</a> — the planned systems drawn dashed here, and the decomposition into #61, #47, #62–#70</li>
+        <li><a href="../webtools-http-architecture.md">webtools-http architecture</a> — the HTTP stack as built, <code>webtools-http</code> and <code>webtools-feeds</code>: modules, components, the call path, where each outbound-URL check runs, the failure model, threads, closing, logging, stability tiers, test support, known limitations</li>
         <li><a href="../webtools-udp-architecture.md">webtools-udp architecture</a> — components, threads, locks, lifecycles · <a href="../webtools-udp-protocol.md">protocol</a> — the wire reference</li>
         <li><a href="../plans/15-split-into-three-modules/">#15 split into three modules</a> — the plan that made the three artifacts and the Gradle build as it stands</li>
         <li>System boards: <a href="webtools-udp/index.html">webtools-udp</a> · <a href="webtools-http/index.html">webtools-http</a>, which binds its parts: <a href="webtools-http-core/index.html">webtools-http-core</a>, the common core · <a href="webtools-http-url-policy/index.html">webtools-http-url-policy</a>, the outbound-URL policy · <a href="webtools-http-transport/index.html">webtools-http-transport</a>, the OkHttp transport · <a href="webtools-http-cache/index.html">webtools-http-cache</a>, the response cache · <a href="webtools-http-budget/index.html">webtools-http-budget</a>, the call budget · <a href="webtools-http-facades/index.html">webtools-http-facades</a>, the call facades · <a href="webtools-http-test-fixtures/index.html">webtools-http-test-fixtures</a>, the published test fixtures · <a href="webtools-feeds/index.html">webtools-feeds</a> · <a href="gradle-build/index.html">Gradle build</a></li>
@@ -881,7 +882,7 @@ footer code{color:var(--ink-2)}
      5. An eighth Guarantees guarantee card, "Process-wide effects", and three optional tabs (Dependencies, Environment, Trust boundaries) add content; nothing is removed.
      Declared in the head (meta template-divergence), one each: item 4 and the three optional tabs of item 5. The eighth guarantee card is a hand-written panel, so it is not a template divergence.
      Dropped because the template now carries them: items 1 and 3, the Systems tab's grouping and its planned cards' units, placement and versions (the Systems renderer promoted to the template), and earlier the solid "Internal" style, the stack() column-start fix, the non-link card for a built system without a board, the C4 tab's inspector, the times helpers, the footer form, solid lifelines, returns and frames, the header halves with labelled tags, the BOARDS links and one-line ledes.
-     Spliced onto the current supersystem template on feat/issue-65-okhttp-transport at db82470 (2026-11-02): the splice left the script before MODEL as it was (one conflict in the Systems renderer), so it was taken whole from the template, its board-filled lines kept. The OkHttp transport is drawn built (#65); the registry's visibility recorded, webtools-scraping and webtools-browser archived, their Guarantees rows faded and tagged. Spliced onto the current supersystem template on feat/issue-66-response-cache at 38483ea (2026-11-03), its divergences kept: an archived system holds no colour. The response cache is drawn built on every tab; webtools-common, a planned system with no plan yet, joins the registry last and takes the first freed colour, with a dashed box, a dashed C4 container and a planned row in each guarantee card, Environment and Trust boundaries. Refreshed at master 5f221ce (2026-11-05): spliced onto the current supersystem template, its divergences kept (the theme and inspector switches); the six built parts of webtools-http open their own boards from the registry; #67 landed, #91 unscheduled, in the Context. Refreshed at feat/issue-68-call-facades 806b489 (2026-11-06): the call facades drawn built on every tab, with a board of their own and a Trust boundaries row; webtools-http whole; the decision path's webtools-http end solid; #68 linked to its board and #93 unscheduled, in the Context. Refreshed at feat/issue-69-feeds 25678cf (2026-11-07): spliced onto the current supersystem template, its divergences kept; webtools-feeds drawn built on every tab, with a board of its own, a thread column, rows in every guarantee card, Environment and Trust boundaries, and its two edges on Dependencies (the scraping and browser libraries moved left to make room); the Dependencies and Lifecycles legends name "planned" only while a planned item is drawn; #68 landed and #69 linked to its board, in the Context. --></footer>
+     Spliced onto the current supersystem template on feat/issue-65-okhttp-transport at db82470 (2026-11-02): the splice left the script before MODEL as it was (one conflict in the Systems renderer), so it was taken whole from the template, its board-filled lines kept. The OkHttp transport is drawn built (#65); the registry's visibility recorded, webtools-scraping and webtools-browser archived, their Guarantees rows faded and tagged. Spliced onto the current supersystem template on feat/issue-66-response-cache at 38483ea (2026-11-03), its divergences kept: an archived system holds no colour. The response cache is drawn built on every tab; webtools-common, a planned system with no plan yet, joins the registry last and takes the first freed colour, with a dashed box, a dashed C4 container and a planned row in each guarantee card, Environment and Trust boundaries. Refreshed at master 5f221ce (2026-11-05): spliced onto the current supersystem template, its divergences kept (the theme and inspector switches); the six built parts of webtools-http open their own boards from the registry; #67 landed, #91 unscheduled, in the Context. Refreshed at feat/issue-68-call-facades 806b489 (2026-11-06): the call facades drawn built on every tab, with a board of their own and a Trust boundaries row; webtools-http whole; the decision path's webtools-http end solid; #68 linked to its board and #93 unscheduled, in the Context. Refreshed at feat/issue-69-feeds 25678cf (2026-11-07): spliced onto the current supersystem template, its divergences kept; webtools-feeds drawn built on every tab, with a board of its own, a thread column, rows in every guarantee card, Environment and Trust boundaries, and its two edges on Dependencies (the scraping and browser libraries moved left to make room); the Dependencies and Lifecycles legends name "planned" only while a planned item is drawn; #68 landed and #69 linked to its board, in the Context. Refreshed at docs/issue-70-http-architecture-docs 45aa548 (2026-11-07): the URL policy's registry function worded as the code's KDoc states its parameters (no parameter admits what the built-in tables deny); #69 landed and #70 lands with this board, in the Context; the webtools-http architecture document linked. --></footer>
 </div>
 
 <!-- The board's state. A verbatim copy of state.json beside the board (scripts/embed.js state.json index.html state). -->
@@ -889,9 +890,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools",
   "version": null,
-  "asIs": {"ref": "feat/issue-69-feeds", "sha": "25678cf", "date": "2026-11-07T01:46:03Z"},
-  "lastAmended": {"issue": 69, "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`", "sha": "25678cf"},
-  "written": {"sha": "25678cf"}
+  "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
+  "lastAmended": {"issue": 70, "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections", "sha": "45aa548"},
+  "written": {"sha": "45aa548"}
 }
 </script>
 
@@ -904,8 +905,8 @@ footer code{color:var(--ink-2)}
     {"slug": "webtools", "name": "WebTools", "kind": "repo", "parent": null, "status": "built",
      "function": "Kotlin internet I/O helpers, published as independent single-concern artifacts (webtools-http new and unreleased) and built by one Gradle build.",
      "paths": ["."], "version": null,
-     "asIs": {"ref": "feat/issue-69-feeds", "sha": "25678cf", "date": "2026-11-07T01:46:03Z"},
-     "lastAmended": {"issue": 69, "sha": "25678cf"},
+     "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
+     "lastAmended": {"issue": 70, "sha": "45aa548"},
      "board": "index.html", "dsl": "workspace.dsl"},
 
     {"slug": "webtools-udp", "name": "webtools-udp", "kind": "system", "parent": "webtools", "status": "built", "visibility": "public",
@@ -946,8 +947,8 @@ footer code{color:var(--ink-2)}
     {"slug": "webtools-http", "name": "webtools-http", "kind": "supersystem", "parent": "webtools", "status": "built", "visibility": "internal-org",
      "function": "A Kotlin Multiplatform suspend HTTP stack. Built: its common core (the request and response types, Url, the failure model and the transport and wall-clock ports), its outbound-URL policies with their internal classifier and JVM guards, the OkHttp transport that enforces them, the response cache with its Caffeine default, the call budget with its windowed default, the call facades UpstreamClient and UrlFetcher that compose them, and its published test fixtures.",
      "paths": ["webtools-http/"], "version": "1.0.0", "published": null, "unreleased": true,
-     "asIs": {"ref": "feat/issue-68-call-facades", "sha": "806b489", "date": "2026-11-06T03:11:15Z"},
-     "lastAmended": {"issue": 68, "sha": "806b489"},
+     "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
+     "lastAmended": {"issue": 70, "sha": "45aa548", "note": "documentation and KDoc only: docs/webtools-http-architecture.md, the README, and the KDoc of OutboundUrlPolicy and RefusalReason; its last code change is #68 at 806b489"},
      "board": "webtools-http/index.html", "dsl": "webtools-http/workspace.dsl",
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "5, 6.2-6.7", "placement": "webtools-http/ (publishes webtools-http and webtools-http-jvm, 1.0.0)",
                    "units": [{"unit": 3, "slug": "http-core", "subIssue": 62}, {"unit": 4, "slug": "test-support", "subIssue": 63}, {"unit": 5, "slug": "url-policy", "subIssue": 64}, {"unit": 6, "slug": "okhttp-transport", "subIssue": 65}, {"unit": 7, "slug": "response-cache", "subIssue": 66}, {"unit": 8, "slug": "call-budget", "subIssue": 67}, {"unit": 9, "slug": "call-facades", "subIssue": 68}]}},
@@ -970,10 +971,10 @@ footer code{color:var(--ink-2)}
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.7", "placement": "webtools-http/src/jvmTestFixtures (capability webtools-http-test-fixtures)",
                    "units": [{"unit": 4, "slug": "test-support", "subIssue": 63}]}},
     {"slug": "webtools-http-url-policy", "name": "outbound-URL policy", "kind": "system", "parent": "webtools-http", "status": "built", "core": true,
-     "function": "Decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten: the Trusted and Untrusted policies with their TransportSettings, CidrBlock and MixedAnswers, an internal JVM-free classifier, and internal JVM resolver and socket guards, which the OkHttp transport applies to every hop.",
+     "function": "Decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that never admit what the built-in tables deny: the Trusted and Untrusted policies with their TransportSettings, CidrBlock and MixedAnswers, an internal JVM-free classifier, and internal JVM resolver and socket guards, which the OkHttp transport applies to every hop.",
      "paths": ["webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/CidrBlock.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/MixedAnswers.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/HostRules.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/AddressRanges.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/StrictIp.kt", "webtools-http/src/commonMain/kotlin/com/spartanlabs/webtools/http/GuardRelaxation.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/PolicyEnforcement.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/GuardedDns.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/GuardedSocket.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/GuardedSocketFactory.kt", "webtools-http/src/jvmMain/kotlin/com/spartanlabs/webtools/http/PolicyRefusals.kt"], "version": "1.0.0", "unreleased": true,
-     "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-     "lastAmended": {"issue": 65, "sha": "db82470"},
+     "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
+     "lastAmended": {"issue": 70, "sha": "45aa548", "note": "KDoc only: the Untrusted parameters' contract in OutboundUrlPolicy (no parameter admits what the built-in tables deny); its last code change is #65 at db82470"},
      "board": "webtools-http-url-policy/index.html", "dsl": "webtools-http-url-policy/workspace.dsl",
      "c4": {"webtools-http/workspace.dsl": "webtools.http.policy", "workspace.dsl": "webtools.http.policy"},
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.3.1", "placement": "webtools-http/src/commonMain (policy, classifier), jvmMain (enforcement)",
@@ -1021,7 +1022,7 @@ footer code{color:var(--ink-2)}
      "board": "webtools-feeds/index.html", "dsl": "webtools-feeds/workspace.dsl",
      "c4": {"workspace.dsl": "webtools.feeds"},
      "plannedBy": {"issue": 55, "architecture": "docs/plans/55-http-client-stack/architecture.md", "section": "6.10", "placement": "webtools-feeds/ (publishes webtools-feeds and webtools-feeds-jvm, 1.0.0)",
-                   "units": [{"unit": 10, "slug": "feeds", "subIssue": 69}]}, "asIs": {"ref": "feat/issue-69-feeds", "sha": "25678cf", "date": "2026-11-07T01:46:03Z"}, "lastAmended": {"issue": 69, "sha": "25678cf"}},
+                   "units": [{"unit": 10, "slug": "feeds", "subIssue": 69}]}, "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"}, "lastAmended": {"issue": 70, "sha": "45aa548", "note": "documentation only: docs/webtools-http-architecture.md describes it and the README links it; its last code change is #69 at 25678cf"}},
 
     {"slug": "webtools-common", "name": "webtools-common", "kind": "system", "parent": "webtools", "status": "planned", "visibility": "internal-repo",
      "function": "Common code shared by the webtools modules: what is universal to the web, such as IP addresses.",
@@ -1034,7 +1035,7 @@ footer code{color:var(--ink-2)}
 <!-- A verbatim copy of workspace.dsl (scripts/embed.js … dsl). -->
 <script type="text/plain" id="dsl">
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools feat/issue-69-feeds 25678cf (2026-11-07): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), and webtools-feeds 1.0.0 (#69), new and unreleased, each with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
+// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), and webtools-feeds 1.0.0 (#69), new and unreleased, each with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
 // The one element tagged Planned, webtools-common, is the registry's, with no plan yet. It is not built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
@@ -1150,11 +1151,11 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 25678cf, with build-logic, the Java floor and the two check-only js modules." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 45aa548, with build-logic, the Java floor and the two check-only js modules." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 25678cf: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
+        component webtools.http "Http" "webtools-http at 45aa548: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
             include *
             autoLayout lr
         }

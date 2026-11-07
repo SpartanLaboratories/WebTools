@@ -1,5 +1,5 @@
 // webtools-http-url-policy — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-url-policy/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), the outbound-URL policy inside webtools-http 1.0.0 (new, unreleased): the Trusted and Untrusted policies with TransportSettings, CidrBlock and MixedAnswers, the internal JVM-free classifier, and the internal JVM resolver and socket guards that OkHttpTransport applies. Code is authoritative on any conflict.
+// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), the outbound-URL policy inside webtools-http 1.0.0 (new, unreleased): the Trusted and Untrusted policies with TransportSettings, CidrBlock and MixedAnswers, the internal JVM-free classifier, and the internal JVM resolver and socket guards that OkHttpTransport applies. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -9,7 +9,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         web = softwareSystem "Resolvers and servers" "The system resolver and the hosts a URL names, local, private and public." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            policy = container "webtools-http-url-policy" "Decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten. Public configuration values; an internal classifier in commonMain; internal guards in jvmMain." "Kotlin Multiplatform · commonMain, jvmMain · webtools-http 1.0.0 unreleased" {
+            policy = container "webtools-http-url-policy" "Decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters that never admit an address or name the built-in tables deny. Public configuration values; an internal classifier in commonMain; internal guards in jvmMain." "Kotlin Multiplatform · commonMain, jvmMain · webtools-http 1.0.0 unreleased" {
                 // ---- public configuration values ----
                 policies  = component "OutboundUrlPolicy" "A sealed policy with two final leaves, Trusted and Untrusted, built with trusted { } and untrusted { } or their from(...) forms; every value validated when the block ends. Value equality; toString() prints counts, never a host." "sealed class · final leaves · builders" "Public"
                 settings  = component "TransportSettings" "The ten transport settings a policy carries, with TrustedDefaults and UntrustedDefaults; TransportSettings(from) { } derives and validates." "final class · factory · builder" "Public"
@@ -29,6 +29,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             }
             core      = container "webtools-http-core" "What the policy uses from the common core: Url, RefusalReason, the WebToolsDsl marker and the Log seam." "commonMain"
             okhttp    = container "webtools-http-transport" "OkHttpTransport: applies a policy to every hop, judges the request and every redirect target, and returns a refusal as TransportFailure.RefusedByPolicy." "jvmMain · okhttp-jvm 5.5.0"
+            facades   = container "webtools-http-facades" "UpstreamClient and UrlFetcher: pre-check every request with the policy before the cache and the budget; their JVM owning factories hand it to the transport they build." "commonMain · jvmMain owning factories"
             fixtures  = container "webtools-http-test-fixtures" "LoopbackTransports: the real transport with the loopback relaxation, for a consumer's tests." "jvmTestFixtures · test classpath only"
             check     = container "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js, the classifier included, so it stays JVM-free. Unpublished; a part of the Gradle build." "Kotlin/JS klib · check only" "Internal"
         }
@@ -59,6 +60,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.okhttp -> webtools.policy.guard "Judges the request and every redirect target before any socket"
         webtools.okhttp -> webtools.policy.enforce "Applies it to its client"
         webtools.okhttp -> webtools.policy.refusals "Finds a refusal through policyRefusal()"
+        webtools.facades -> webtools.policy.guard "Pre-checks every request with checkRequest, before the cache and the budget"
         webtools.fixtures -> webtools.policy.relax "Builds the loopback transport with LoopbackForTests"
         webtools.check -> webtools.policy "Compiles its common part for js"
     }
@@ -72,7 +74,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.policy "Components" "The outbound-URL policy as built at master 5f221ce." {
+        component webtools.policy "Components" "The outbound-URL policy as built at docs/issue-70-http-architecture-docs 45aa548." {
             include *
             autoLayout tb
         }

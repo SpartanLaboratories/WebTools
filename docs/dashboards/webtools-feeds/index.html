@@ -446,12 +446,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi-tile"><div class="l">Source</div><div class="v">39 files</div><div class="s">2,373 lines · <code>commonMain</code> 30 (2,016) · <code>jvmMain</code> 9 (357) · the check module's <code>js</code> actuals 1 (17) · package <code>com.spartanlabs.webtools.feeds</code></div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">39 files</div><div class="s">2,477 lines · <code>commonMain</code> 30 (2,085) · <code>jvmMain</code> 9 (375) · the check module's <code>js</code> actuals 1 (17) · package <code>com.spartanlabs.webtools.feeds</code></div></div>
   <div class="kpi-tile"><div class="l">Types</div><div class="v">15 public</div><div class="s">14 in <code>commonMain</code>, 1 in <code>jvmMain</code>; 8 factory functions; 4 builders, 4 failure leaves, 2 fetch leaves nested · 16 internal or private</div></div>
   <div class="kpi-tile"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">a fetch runs on its caller's coroutine, a parse on <code>parseDispatcher</code>; the owned transport's daemon pool is the transport's; <code>close()</code> from any thread</div></div>
   <div class="kpi-tile"><div class="l">Public API</div><div class="v">321 dump lines</div><div class="s">38 classes in <code>api/webtools-feeds.api</code> · no constructor of the model, the limits, the configuration or the fetcher · 2 seams gated Experimental</div></div>
   <div class="kpi-tile"><div class="l">Tests</div><div class="v">50 classes</div><div class="s">328 tests across 5 testing levels · 23 classes in <code>commonTest</code>, 27 in <code>jvmTest</code>, all run on the JVM</div></div>
-  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">4</div><div class="s">1 landing with this board · 1 docs unit · 2 unscheduled</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">3</div><div class="s">1 docs unit, landing with this board · 2 unscheduled</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -610,10 +610,10 @@ footer code{color:var(--ink-2)}
   <div class="cards">
     <div class="card"><h3>Roadmap <small>1 item · 2026-11-07</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="9" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="10" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>unit 10 · this board's system, landing with it</small></span><span class="tags"><span class="badge">open</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · documents the feeds section</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>unit 10 · this board's system · landed in 20d4546</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · documents the fetch path, the hardening layers and the module's limitations in the stack's architecture document, landing with this board</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
           </ul>
           <p class="more">9 more of its issues touch other systems: #61 and #47 the build, #62 the common core, #63 the test fixtures, #64 the URL policy, #65 the transport, #66 the cache, #67 the call budget, #68 the call facades.</p></li>
       </ol></div>
@@ -626,6 +626,7 @@ footer code{color:var(--ink-2)}
       <ul class="docs">
         <li>Issue boards that amended this system: <a data-issue="69">#69</a> feeds — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
         <li><a href="../../plans/55-http-client-stack/69-feeds/plan.md">#69 plan</a> · <a href="../../plans/55-http-client-stack/69-feeds/final-implementation.md">as built</a> — what was built, the deviations, the measurements · <a href="../../plans/55-http-client-stack/69-feeds/consequences.md">consequences</a> — the published artifact, the follow-ups and the known gaps · <a href="../../plans/55-http-client-stack/69-feeds/research/README.md">research</a></li>
+        <li><a href="../../webtools-http-architecture.md">webtools-http architecture</a> — the stack as built, this module included: §4.5 the fetch path and the four hardening layers, §6 the failure model, §7 the parse on <code>parseDispatcher</code>, §8 closing, §9 logging, §13 the known limitations</li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.10 feeds, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
         <li><a href="../../../README.md">README</a> — the <code>webtools-feeds</code> row, the install line and the "Feeds" section; marked not yet released</li>
         <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · what it composes: <code>UrlFetcher</code> on the <a href="../webtools-http-facades/index.html">call facades</a> board, inside <a href="../webtools-http/index.html">webtools-http</a> · its check module on the <a href="../gradle-build/index.html">Gradle build</a> board</li>
@@ -640,7 +641,9 @@ footer code{color:var(--ink-2)}
      2. The Threads tab says the module starts no thread and lists the fetching coroutine, the closing thread, the parse's two possible threads and an owned transport's dispatcher.
      3. The three sides are FeedFetcher with its configuration, factories, outcome and validators; RomeFeedParser with the prolog scan and the Rome adapter; and the port and the model the two share.
      4. Two more guarantee cards: "Hardening and memory" states what is refused and bounded and the heap figure, with the limits' and the JDK 11 gaps; "Logging and secrets" states the logger and what is never printed, with the path gap.
-     Nothing is removed. -->
+     Nothing is removed.
+     Refreshed at docs/issue-70-http-architecture-docs 45aa548 (2026-11-07): the source lines recounted (KDoc and comments since the first writing), the Context
+     brought to the tracker, the stack's architecture document linked. -->
 </footer>
 </div>
 
@@ -650,9 +653,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-feeds",
   "version": "1.0.0",
-  "asIs": {"ref": "feat/issue-69-feeds", "sha": "25678cf", "date": "2026-11-07T01:46:03Z"},
-  "lastAmended": {"issue": 69, "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`", "sha": "25678cf"},
-  "written": {"sha": "25678cf"}
+  "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
+  "lastAmended": {"issue": 70, "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections", "sha": "45aa548"},
+  "written": {"sha": "45aa548"}
 }
 </script>
 
@@ -660,7 +663,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-feeds — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-feeds/index.html.
-// As-is at WebTools feat/issue-69-feeds 25678cf (2026-11-07), webtools-feeds 1.0.0 (new, unreleased): the FeedParser port with FeedInput and FeedLimits, the model, the FeedFailure group and its reasons, FeedValidators, FeedFetch and FeedFetcher with its common and two JVM owning factories, and RomeFeedParser over Rome 2.1.0, with their internals. Code is authoritative on any conflict.
+// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), webtools-feeds 1.0.0 (new, unreleased): the FeedParser port with FeedInput and FeedLimits, the model, the FeedFailure group and its reasons, FeedValidators, FeedFetch and FeedFetcher with its common and two JVM owning factories, and RomeFeedParser over Rome 2.1.0, with their internals. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -739,7 +742,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.feeds "Components" "webtools-feeds as built at feat/issue-69-feeds 25678cf." {
+        component webtools.feeds "Components" "webtools-feeds as built at docs/issue-70-http-architecture-docs 45aa548." {
             include *
             autoLayout tb
         }
