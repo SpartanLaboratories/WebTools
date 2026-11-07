@@ -10,7 +10,7 @@ window.dashboardLive&&window.dashboardLive("plan",
   "title": "HTTP client stack",
   "issueTitle": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
   "function": "BotTools needs a suspend HTTP stack: a transport, an outbound-URL guard, a response cache, a call budget and test fakes. This tracking issue designs it as a new Kotlin Multiplatform module `webtools-http`, a feeds module `webtools-feeds` on top of it, the shared `build-logic` with the Java 11 floor that folds in #47, and their documentation, and builds it as eleven units, each a sub-issue planned and built on its own board.",
-  "status": "building",
+  "status": "built",
   "parent": null,
   "branch": "feat/issue-55-http-client-stack",
   "baseline": {
@@ -18,7 +18,13 @@ window.dashboardLive&&window.dashboardLive("plan",
     "sha": "806ce8e",
     "date": "2026-10-20"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "c40ff34",
+    "merge": "c40ff34",
+    "pr": 97,
+    "date": "2026-11-07",
+    "at": "2026-11-07T04:23:32Z"
+  },
   "systems": [
     {
       "slug": "gradle-build",
@@ -102,10 +108,10 @@ window.dashboardLive&&window.dashboardLive("plan",
     }
   ],
   "wip": {
-    "step": "implementation",
-    "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-11-07T04:18:55Z",
-    "detail": "10 of 11 units landed; #70 complete, awaiting its landing.",
+    "step": "landed",
+    "since": "2026-11-07T04:23:32Z",
+    "updated": "2026-11-07T04:48:56Z",
+    "detail": "Landed: 11 of 11 units, the last #70 in PR #97.",
     "steps": [
       "sizing",
       "interview",
@@ -115,9 +121,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "implementation",
       "landed"
     ],
-    "current": [
-      "http-docs.built"
-    ],
+    "current": [],
     "next": null,
     "qa": [],
     "qaMax": 3,
@@ -141,6 +145,22 @@ window.dashboardLive&&window.dashboardLive("plan",
       "merge": "834ce4a",
       "version": null,
       "date": "2026-10-21"
+    },
+    "event": {
+      "name": "landed",
+      "at": "2026-11-07T04:48:56Z",
+      "note": "#70, its last unit, landed in PR #97"
+    },
+    "history": {
+      "implementation": [
+        {
+          "since": "2026-10-22T21:58:56Z",
+          "ended": "2026-11-07T04:23:32Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "detail": "11 of 11 units landed."
+        }
+      ]
     }
   },
   "milestones": [
@@ -164,6 +184,13 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-10-21",
       "ref": "PR #60",
       "note": "the plan-only docs PR merged as 834ce4a; #61 and #62 to #70 filed and #47 re-parented, with blocked-by links in landing order"
+    },
+    {
+      "column": "built",
+      "label": "Every unit landed",
+      "date": "2026-11-07",
+      "ref": "PR #97",
+      "note": "the eleven units landed through their own pull requests, the last, #70, merged as c40ff34; the tracking plan moved no version, and `webtools-http` and `webtools-feeds` 1.0.0 are built and not yet released"
     }
   ],
   "trail": [
@@ -344,6 +371,17 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-07",
       "column": "built",
       "label": "#70 complete: the review approved"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "#70 landed"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "Landed: every unit, the last #70 in PR #97, merge c40ff34",
+      "ref": "PR #97"
     }
   ],
   "rows": [
@@ -3070,7 +3108,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#631-outbound-url-policy-common-plus-jvm-enforcement",
               "heading": "6.3.1 Outbound-URL policy (`common/`, plus `jvm/` enforcement)",
               "paragraph": "Responsibility: decide, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten. · Owns: · `OutboundUrlPolicy`, a sealed pair (the closed set is the contract): `Trusted` (optional `pinnedHosts`; `allowCleartext = false`; no address filtering, no name or port rule) and `Untrusted` (`allowedPorts` default `{80, 443, 8080, 8443}`, `null` for any; `extraDeniedRanges`; `extraDeniedHostSuffixes`; `mixedAnswers` default `Reject`). Each is built by a factory with a builder (`OutboundUrlPolicy.trusted { }`, `untrusted { }`) and carries its …",
-              "hash": "c2efdc00f29c"
+              "hash": "51d1e716b10e"
             }
           },
           {
@@ -10129,7 +10167,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#66-call-facades",
               "heading": "6.6 Call facades",
               "paragraph": "Responsibility: compose cache, budget and transport in the one fixed order — cache, then budget inside the cache loader, then transport — so a hit costs nothing and N coalesced callers cost one permit; and own what they built. · Owns (`common/`): · `Endpoint<T>` (factory `Endpoint(id, decode, configure)` + builder: `name`, `ttl`, `missTtl`, `cost`, `lane`, `misses(statuses)`): the decode function travels with the endpoint because the cache key cannot see it. · `CallSpec` (per call: path segments, query pairs, headers, `method`, body, `lane`, `maxWait`, `maxAge`) and `FetchSpec` (`cost`, …",
-              "hash": "3c1768ebbcad"
+              "hash": "6ec85634dcf1"
             }
           },
           {
@@ -10139,7 +10177,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#66-call-facades",
               "heading": "6.6 Call facades",
               "paragraph": "Responsibility: compose cache, budget and transport in the one fixed order — cache, then budget inside the cache loader, then transport — so a hit costs nothing and N coalesced callers cost one permit; and own what they built. · Owns (`common/`): · `Endpoint<T>` (factory `Endpoint(id, decode, configure)` + builder: `name`, `ttl`, `missTtl`, `cost`, `lane`, `misses(statuses)`): the decode function travels with the endpoint because the cache key cannot see it. · `CallSpec` (per call: path segments, query pairs, headers, `method`, body, `lane`, `maxWait`, `maxAge`) and `FetchSpec` (`cost`, …",
-              "hash": "3c1768ebbcad"
+              "hash": "6ec85634dcf1"
             }
           },
           {
@@ -11426,8 +11464,10 @@ window.dashboardLive&&window.dashboardLive("plan",
         ]
       },
       "asBuilt": {
-        "state": "complete",
-        "summary": "#70's run: the review approved; it is not merged yet."
+        "state": "landed",
+        "summary": "Landed through PR #97 as c40ff34 (#70): `docs/webtools-http-architecture.md` is new, the evergreen description of the stack as built, `webtools-feeds` included: its modules and component map, how the systems compose on a call, where each outbound-URL check runs, the failure model, threads and time, lifecycles and closing, logging, the stability tiers, the test support, the platform reach and the known limitations. The README's final pass adds the `webtools-http` and `webtools-feeds` component tables with their stability notes, the `suspend` note, the outbound-URL policies, the logging rule and the test-layout paragraph, and points the HTTP client stack and Feeds sections at the document. KDoc wording only in `OutboundUrlPolicy` and `RefusalReason`; no executable line changed, no version moved and nothing was released.",
+        "merge": "c40ff34",
+        "pr": 97
       }
     }
   ],
@@ -11537,13 +11577,13 @@ window.dashboardLive&&window.dashboardLive("plan",
     ]
   },
   "impact": {
-    "basis": "plan",
-    "summary": "Two new Kotlin Multiplatform artifacts, `webtools-http` and `webtools-feeds` 1.0.0, add a suspend HTTP stack and a feed parser for BotTools, with a published test-fixtures variant. The three existing artifacts change only by the Java 11 floor, and no existing source or public API changes. The tracking plan moves no version itself; each unit's release is its own.",
+    "basis": "as-built",
+    "summary": "Two new Kotlin Multiplatform artifacts, `webtools-http` and `webtools-feeds` 1.0.0, built and not yet released, add a suspend HTTP stack and a feed parser for BotTools, with a published test-fixtures variant. The three existing artifacts change only by the Java 11 floor, and no existing source or public API changes. The tracking plan moves no version itself; each unit's release is its own.",
     "none": null,
     "release": {
       "bump": "none",
       "version": null,
-      "note": "`java-floor` is the only unit that moves an existing artifact's version; the two new modules stay unreleased at 1.0.0 until the last unit lands"
+      "note": "`java-floor` is the only unit that moved an existing artifact's version (`1.0.0a` and `2.0.0a`, set in the build and not published); `webtools-http` and `webtools-feeds` stand at 1.0.0, not yet released"
     },
     "downstream": [
       {
@@ -11551,7 +11591,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "consumer",
         "system": null,
         "effect": "behaviour",
-        "summary": "They see only the Java 11 floor: Java 11 bytecode declaring `org.gradle.jvm.version: 11`, loadable on JDK 11 to 22. POMs and public API are unchanged.",
+        "summary": "They see only the Java 11 floor: Java 11 bytecode declaring `org.gradle.jvm.version: 11`, loadable on JDK 11 to 22 once the lettered versions are published. POMs and public API are unchanged.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -11559,7 +11599,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "artifact",
         "system": "webtools-http-core",
         "effect": "additive",
-        "summary": "The HTTP stack: transport, URL policies, cache, budget, facades and failure model, with `kotlinx-coroutines-core` as `api` and `okhttp-jvm`, `caffeine` and `slf4j-api` at runtime only; a test-fixtures variant carries the fakes.",
+        "summary": "The HTTP stack: transport, URL policies, cache, budget, facades and failure model, with `kotlinx-coroutines-core` as `api` and `okhttp-jvm`, `caffeine` and `slf4j-api` at runtime only; `okhttp-jvm` lifts `kotlin-stdlib` to 2.2.21 or newer. A test-fixtures variant, capability `webtools-http-test-fixtures`, carries the fakes, taken with `testFixtures(...)` in Gradle only.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -11567,8 +11607,8 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "artifact",
         "system": "webtools-feeds",
         "effect": "additive",
-        "summary": "An RSS/Atom parser port with the Rome default and a conditional-GET fetcher, built on `webtools-http`.",
-        "link": "consequences.md#1-published-artifacts"
+        "summary": "An RSS/Atom parser port with the hardened Rome default and a conditional-GET fetcher, built on `webtools-http`: `webtools-http` as `api`, and at runtime Rome 2.1.0 with `rome-utils` and `jdom2`, and `slf4j-api`.",
+        "link": "69-feeds/consequences.md#1-published-artifacts"
       },
       {
         "who": "BotTools (`SpartanLaboratories/KotlinBottools`)",
@@ -11583,7 +11623,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "kind": "operator",
         "system": "gradle-build",
         "effect": "behaviour",
-        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, which compile only: their `js` target has no environment, so no test task and no Node.js. It also runs the fixtures-publication check, which unit 4 attached to `webtools-http`'s `check`: 44 to 52 s when one of its inputs changed, `UP-TO-DATE` otherwise; a build that includes WebTools never runs it. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another.",
+        "summary": "`./gradlew build` adds `verifyJavaFloor` on every published module, `apiCheck` on the new modules and the check-only JS compiles, which compile only: their `js` target has no environment, so no test task and no Node.js. It also runs the fixtures-publication check, which unit 4 attached to `webtools-http`'s `check`: 44 to 52 s when one of its inputs changed, `UP-TO-DATE` otherwise; a build that includes WebTools never runs it. `build-logic`'s own level tests are not part of it: `:build-logic:test` is its pre-commit gate, and its TestKit tasks run on demand, one after another. Until CI exists, these guards run only on a developer's build.",
         "link": "consequences.md#build"
       }
     ],
@@ -11616,7 +11656,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "system": "webtools-http-core",
         "change": "added",
         "tier": "stable-core",
-        "summary": "Final classes built by factory and builder; no public `data class` and no defaulted parameters on Stable Core functions.",
+        "summary": "Final classes built by factory and builder; no public `data class` and no defaulted parameters on Stable Core functions. Every builder passed to a consumer's lambda carries the `WebToolsDsl` marker, and the supplied implementations need no opt-in.",
         "link": "architecture.md#9-extension--stability"
       },
       {
@@ -11632,7 +11672,7 @@ window.dashboardLive&&window.dashboardLive("plan",
         "system": "webtools-http-test-fixtures",
         "change": "added",
         "tier": "stable-core",
-        "summary": "Stable Core with source compatibility only: no ABI dump covers the fixtures jar.",
+        "summary": "Stable Core with source compatibility only: no ABI dump covers the fixtures jar. Beside the fakes and the `.http` fixtures they carry the loopback helpers and the budget fakes.",
         "link": "architecture.md#9-extension--stability"
       },
       {
@@ -11889,6 +11929,17 @@ window.dashboardLive&&window.dashboardLive("plan",
             "ref": "69-feeds/consequences.md#4-sibling-units"
           }
         ]
+      },
+      {
+        "unit": "http-docs",
+        "basis": "as-built",
+        "summary": "Documentation only: the new evergreen `docs/webtools-http-architecture.md` and the README's final pass over `webtools-http` and `webtools-feeds`, with KDoc wording in `OutboundUrlPolicy` and `RefusalReason`. No executable line, artifact, dependency or version changes, and nothing was released.",
+        "release": {
+          "bump": "none",
+          "version": null
+        },
+        "source": "PR #97, merged as c40ff34",
+        "link": "../../webtools-http-architecture.md"
       }
     ],
     "changes": [
@@ -12041,9 +12092,16 @@ window.dashboardLive&&window.dashboardLive("plan",
         "ref": "20d4546",
         "what": "Unit 10's open point is settled: the feeds check module compiles the feeds `commonMain` for `js` against the http check module's output, with no source fallback, and Rome's DOM, bounded by the structural limits, passes every memory-loading case of the fixed-heap Level 4c suite at `-Xmx128m` with two concurrent parses, each in a child JVM.",
         "why": "#69's consequences §5 states it, the initiative's consequences §7 marks unit 10's row settled, and `architecture.md` §3, §12 and §13 carry dated corrections."
+      },
+      {
+        "unit": "http-docs",
+        "when": "#70 landing",
+        "none": true,
+        "why": "Documentation only, as planned: the evergreen architecture document and the README's final pass describe the stack as built, and the KDoc wording it corrects changes no executable line.",
+        "ref": "c40ff34"
       }
     ],
-    "source": "consequences.md",
+    "source": "consequences.md, with each unit's as-built record",
     "link": "consequences.md#1-published-artifacts"
   },
   "links": {
