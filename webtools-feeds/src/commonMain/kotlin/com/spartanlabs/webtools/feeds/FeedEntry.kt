@@ -6,20 +6,25 @@ import com.spartanlabs.webtools.http.WebToolsDsl
  * One entry of a feed. **Stable Core.** Built with `FeedEntry(id) { title = …; link = … }`, by `RomeFeedParser` and
  * by a parser of your own.
  *
- * - [id]: never blank. The guid or Atom id, else the entry's link as written, else a digest
- *   `webtools-feeds:v1:<32 hex digits>` of its title, summary or content, enclosure URL and published date. The rule
- *   is frozen: an id you stored stays the same for the same entry across releases, and does not change when the
- *   feed moves host or protocol. An entry with nothing to hash has the constant digest of nothing, so several can
- *   share an id.
- * - [link]: an absolute `http` or `https` link with its fragment kept, else `null`. `Url` is not used: it drops
+ * **What every entry guarantees** (the factory enforces it, whichever parser built the entry):
+ * - [id] is never blank.
+ * - [link], when present, is a canonical absolute `http` or `https` link with its fragment kept. `Url` is not used: it drops
  *   fragments and refuses non-ASCII hosts.
- * - [summary] and [content]: **untrusted markup** (HTML, XHTML or text, the format does not say); sanitise before
- *   rendering.
- * - [publishedAtEpochMillis] and [updatedAtEpochMillis]: `null` when absent, unparseable or outside the years 1 to
- *   9999. Never use them to decide whether an entry is new: use [id].
+ * - every enclosure has a canonical absolute URL and a [FeedEnclosure.lengthBytes] that is `null` or positive.
  *
- * Equality is on every field. `toString()` prints counts and presence, never text, and links as scheme, host and
- * port.
+ * Whichever parser built the entry, treat [summary] and [content] as **untrusted markup** (HTML, XHTML or text, the format
+ * does not say) and sanitise them before rendering.
+ *
+ * **As `RomeFeedParser` builds it** (a parser of your own guarantees only the invariants above):
+ * - [id] is the guid or Atom id, else the entry's link as written, else a digest `webtools-feeds:v1:<32 hex digits>` of its
+ *   title, summary or content, enclosure URL and published date. The rule is frozen: an id you stored stays the same for the
+ *   same entry across releases, and does not change when the feed moves host or protocol. An entry with nothing to hash has
+ *   the constant digest of nothing, so several can share an id.
+ * - [publishedAtEpochMillis] and [updatedAtEpochMillis] are `null` when absent, unparseable or outside the years 1 to 9999.
+ * - [categories] hold no exact duplicates; [enclosures] hold no two with the same URL.
+ *
+ * Never use the dates to decide whether an entry is new: use [id]. Equality is on every field. `toString()` prints counts and
+ * presence, never text, and links as scheme, host and port.
  */
 public class FeedEntry internal constructor(
     /** The entry's identity; never blank. */
@@ -118,5 +123,10 @@ public fun FeedEntry(id: String, configure: FeedEntry.Builder.() -> Unit = {}): 
     return FeedEntry(id, b.title, link, b.summary, b.content, b.author, b.publishedAtEpochMillis, b.updatedAtEpochMillis, b.categories, b.enclosures)
 }
 
-// "present" or "none", for the toString of the model: never the value.
+/**
+ * What the model's `toString()` prints for an optional field: `present` or `none`, never the value.
+ *
+ * @param value the field's value.
+ * @return `none` when [value] is `null`, else `present`.
+ */
 internal fun presence(value: Any?): String = if (value == null) "none" else "present"

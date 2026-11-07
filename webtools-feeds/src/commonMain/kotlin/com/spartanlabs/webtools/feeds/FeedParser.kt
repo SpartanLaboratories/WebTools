@@ -15,7 +15,7 @@ import com.spartanlabs.webtools.http.ExperimentalForInheritanceWebToolsApi
  *   reported by the fetcher as `HttpFailure.DecodeFailure`;
  * - **refuse every DOCTYPE**, in any encoding the document could be read in, before it reads further
  *   (`FeedFailure.Refused`), and never resolve an external entity, DTD, include or schema location;
- * - **honour every [FeedLimits] member**: exceeding `maxEntries`, `maxDepth`, `maxAttributesPerElement`,
+ * - **honour every member of the [FeedLimits] the implementation was built with**: exceeding `maxEntries`, `maxDepth`, `maxAttributesPerElement`,
  *   `maxElements` or `maxNamespaceUris` fails with `LimitExceeded`; the text, id, link, category and enclosure
  *   limits truncate, fall back or drop;
  * - build every [Feed], [FeedEntry] and [FeedEnclosure] through their factories, with absolute `http`/`https` links

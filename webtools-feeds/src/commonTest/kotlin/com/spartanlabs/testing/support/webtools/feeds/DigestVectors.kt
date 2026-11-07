@@ -11,7 +11,7 @@ class DigestVector(
     val expectedId: String,
 )
 
-/** The fourteen digest vectors, reproduced by an independent implementation of the specification. */
+/** The fourteen digest vectors, reproduced by an independent implementation of the message layout `digestId` documents. */
 object DigestVectors {
     private const val P = "webtools-feeds:v1:"
 

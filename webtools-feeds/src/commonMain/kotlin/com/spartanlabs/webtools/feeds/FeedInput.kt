@@ -4,7 +4,8 @@ import com.spartanlabs.webtools.http.Url
 
 /**
  * One document for a [FeedParser]. **Stable Core.** The bytes are copied in and read back as copies. `toString()`
- * prints the size and whether a content type and a base URL are present, never the content.
+ * prints the document's size, whether a content type is present and the base URL as scheme, host and port; never the
+ * content, the content type's value or a path.
  *
  * @param document the response body as received.
  * @param contentType the response's `Content-Type` header value, or `null`.

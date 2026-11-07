@@ -23,11 +23,15 @@ import com.spartanlabs.webtools.feeds.UndecodableReason.WideOrEbcdicPrefix
 internal class PrologVector(val id: String, val bytes: ByteArray, val contentType: String?, val expected: PrologScanResult)
 
 /**
- * The 135-row catalogue of the prolog scan: the N, D, H, M and U rows of the research, with N17, N18, N20 and N21 at their
- * `Empty`/`NotMarkup` expectation, and the E rows. Documents are built from the recipe parts; the long rows are generated.
+ * The 135-row catalogue of the prolog scan, by family: N, documents with no DOCTYPE (N17 empty, N18, N20 and N21 not markup);
+ * D, documents with a DOCTYPE or another markup declaration; H, web pages; M, ill-formed prologs; U, prologs that cannot be read
+ * the way the parser reads them; E, edge cases of empty and non-markup bodies and the size bound. Documents are built from the
+ * recipe parts below; the long rows are generated.
  */
 internal object PrologVectors {
+    //language=XML
     const val RSS_ROOT: String = "<rss version=\"2.0\"><channel><title>t</title></channel></rss>"
+    //language=XML
     const val ATOM_ROOT: String = "<feed xmlns=\"http://www.w3.org/2005/Atom\"><title>t</title></feed>"
     const val DOCTYPE: String = "<!DOCTYPE rss SYSTEM \"http://127.0.0.1:1/x.dtd\">"
     const val DECLARATION: String = "<?xml version=\"1.0\"?>"

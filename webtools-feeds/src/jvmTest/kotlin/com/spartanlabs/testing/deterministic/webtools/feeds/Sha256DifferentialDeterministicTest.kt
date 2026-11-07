@@ -12,8 +12,8 @@ import kotlin.test.assertEquals
 
 /**
  * Level 4a - the pure-Kotlin SHA-256 against the JDK's `MessageDigest`: every message length 0 to 2048 and 1,000 seeded random
- * messages agree; `digestId` equals an id recomputed with `MessageDigest` over the specification's message for 1,000 seeded
- * random entries.
+ * messages agree; `digestId` equals an id recomputed with `MessageDigest` over the message layout `digestId` documents, for
+ * 1,000 seeded random entries.
  */
 class Sha256DifferentialDeterministicTest {
 
@@ -47,7 +47,7 @@ class Sha256DifferentialDeterministicTest {
         }
     }
 
-    // The specification's message, built independently of the module's code: domain, then "\n" + tag + length + ":" + value.
+    // The message layout `digestId` documents, built independently of the module's code: domain, then "\n" + tag + length + ":" + value.
     private fun reference(title: String?, summary: String?, content: String?, enclosure: String?, published: Long?): String {
         fun field(v: String?): String? {
             if (v == null) return null

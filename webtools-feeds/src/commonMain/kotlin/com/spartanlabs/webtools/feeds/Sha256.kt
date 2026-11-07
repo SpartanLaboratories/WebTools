@@ -19,6 +19,7 @@ private fun rotr(x: Int, n: Int): Int = (x ushr n) or (x shl (32 - n))
 
 /** The SHA-256 digest of [message]: 32 bytes. */
 internal fun sha256(message: ByteArray): ByteArray {
+    // The initial hash value: the first 32 bits of the fractional parts of the square roots of the first 8 primes.
     val h = intArrayOf(
         0x6a09e667, 0xbb67ae85.toInt(), 0x3c6ef372, 0xa54ff53a.toInt(),
         0x510e527f, 0x9b05688c.toInt(), 0x1f83d9ab, 0x5be0cd19,

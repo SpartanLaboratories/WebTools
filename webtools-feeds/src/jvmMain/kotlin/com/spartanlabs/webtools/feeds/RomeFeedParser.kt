@@ -10,9 +10,17 @@ package com.spartanlabs.webtools.feeds
  * namespace URIs, all from [limits]; then the conversion under the remaining [FeedLimits]. Rome's ampersand and entity
  * repair and its encoding detection apply. Documents with XML-illegal control characters are `Malformed`.
  *
- * Immutable and thread-safe: every [parse] creates its own reader, input, builder and SAX parser, and reads and writes
- * no static state of Rome, JDOM or the JDK. It logs nothing. A parse is CPU-bound and cannot be cancelled. Needs about
- * 128 MB of heap headroom for two concurrent parses of the largest document an `Untrusted` transport admits (2 MiB).
+ * How it builds each [FeedEntry]: the id is the guid or Atom id, else the entry's link as written, else the frozen
+ * `webtools-feeds:v1:` digest; text is trimmed and cut at `maxTextChars`; links are resolved against [FeedInput.baseUrl] (the
+ * response URL when `FeedFetcher` calls it) and the Atom `xml:base` values, and are `null` when not absolute `http`/`https`; dates are `null` when unparseable or outside
+ * the years 1 to 9999; categories are trimmed, exact duplicates dropped and capped; enclosures with an unusable URL are dropped,
+ * repeated URLs dropped and the rest capped, and a length of zero or less is unknown.
+ *
+ * Immutable and thread-safe: every [parse] creates its own reader, input, builder and SAX parser, and sets no process-wide
+ * configuration of Rome, JDOM or the JDK (no shared SAX factory, no system property, no default changed). The one shared
+ * state a parse grows is JDOM's process-wide namespace cache, by at most `maxNamespaceUris` new URIs per document. It logs nothing of its own; Rome itself logs rarely, under `com.rometools.*`
+ * loggers. A parse is CPU-bound and cannot be cancelled. Needs about 128 MB of heap headroom for two concurrent parses of the
+ * largest document an `Untrusted` transport admits (2 MiB).
  *
  * @param limits the bounds to apply.
  */

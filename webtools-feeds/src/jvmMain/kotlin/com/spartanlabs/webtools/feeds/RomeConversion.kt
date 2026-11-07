@@ -8,6 +8,7 @@ import com.rometools.rome.feed.synd.SyndFeed
 import com.rometools.rome.feed.synd.SyndFeedImpl
 import com.spartanlabs.webtools.http.Url
 
+//region reading with Rome
 /** What Rome read: the wire bean (for the Atom `xml:base` values) and its synthetic view. Nothing on either is cloned, printed or compared. */
 internal class RomeRead(val wire: WireFeed, val feed: SyndFeed)
 
@@ -20,6 +21,9 @@ internal fun readWithRome(document: ByteArray, contentType: String?, limits: Fee
         }
     }
 
+//endregion
+
+//region the feed
 /**
  * `LimitExceeded(Entries)` when the document holds more entries than [FeedLimits.maxEntries], before any is converted;
  * otherwise the feed. A throw out of here is a defect of this module, not of the document.
@@ -53,6 +57,9 @@ private fun feedLinkRaw(feed: SyndFeed): String? =
     if (feed.feedType.orEmpty().startsWith("atom")) feed.links.orEmpty().firstOrNull { it.rel == null || it.rel == "alternate" }?.href
     else feed.link
 
+//endregion
+
+//region entries and enclosures
 private fun SyndEntry.toFeedEntry(entryBase: String?, limits: FeedLimits): FeedEntry {
     val guid = uri
     val rawLink = link
@@ -91,3 +98,4 @@ private fun SyndEnclosure.toFeedEnclosure(entryBase: String?, limits: FeedLimits
         lengthBytes = lengthValue
     }
 }
+//endregion

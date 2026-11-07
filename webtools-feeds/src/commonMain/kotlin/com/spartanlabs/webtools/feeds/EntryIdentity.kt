@@ -43,8 +43,13 @@ internal fun replaceLoneSurrogates(s: String): String {
     }
 }
 
-// A digest field: trimmed of ASCII white space, absent when empty, cut to DIGEST_FIELD_CHARS without leaving a high
-// surrogate at the cut (not trimmed again), lone surrogates replaced.
+/**
+ * One field of the digest message: [v] trimmed of ASCII white space, cut to [DIGEST_FIELD_CHARS] UTF-16 units without leaving a
+ * high surrogate at the cut (the cut text is not trimmed again), with unpaired surrogates replaced by U+FFFD.
+ *
+ * @param v the field's raw text, or `null`.
+ * @return the field as the digest hashes it, or `null` when [v] is absent or nothing but ASCII white space.
+ */
 internal fun digestText(v: String?): String? {
     if (v == null) return null
     val t = trimAscii(v)

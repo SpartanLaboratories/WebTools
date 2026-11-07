@@ -17,6 +17,7 @@ import kotlin.test.assertSame
  */
 class FeedInputComponentTest {
 
+    //language=XML
     private val document = "<rss>BODY-SENTINEL</rss>".encodeToByteArray()
 
     @Test

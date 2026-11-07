@@ -46,12 +46,20 @@ import kotlin.time.TimeSource
  * `parseDispatcher`; a parse cannot be cancelled, so a cancelled caller returns when its parse finishes.
  *
  * **Lifecycle.** [close] is non-suspending, idempotent, never throws and closes only a `UrlFetcher` this fetcher built (the
- * owning factories); every member may be called concurrently; a fetch after [close] returns `Closed("feed fetcher")`.
+ * owning factories); every member may be called concurrently; a fetch after [close] returns `Closed("feed fetcher")`. Closing a
+ * fetcher that owns its `UrlFetcher` closes the transport under it, which cancels every request still on the network: each such
+ * fetch returns `Closed("transport")`. A fetch racing [close] may also return the composed fetcher's `Closed("fetcher")`, so
+ * match `HttpFailure.Closed` rather than one component name. Closing a fetcher over a `UrlFetcher` you own leaves requests in
+ * flight alone; a parse already running is never interrupted.
  *
- * **Logging**, under `com.spartanlabs.webtools.feeds.FeedFetcher`: `INFO` on creation and on close, one `DEBUG` line per
- * fetch, a `WARN` for a refused document. Every URL this module prints is scheme, host and port only. **The [UrlFetcher] it
- * composes, and the transport under it, print a URL with `Url.redacted()`, which hides the query and shows the path, so a
- * secret carried in a feed URL's path appears in their lines.**
+ * **Logging**, under `com.spartanlabs.webtools.feeds.FeedFetcher`: `INFO` once on creation and once on close; one `DEBUG` line
+ * per fetch that returns a `Result` (none for a fetch after [close], a cancelled fetch or one that throws), with the outcome, the status, the byte and entry
+ * counts and the times; a `WARN` for a refused document; a `DEBUG` line when closing an owned `UrlFetcher` fails. Every URL this
+ * module prints is scheme, host and port only. **The [UrlFetcher] it composes, and the transport under it, print a URL with
+ * `Url.redacted()`, which hides the query and shows the path, so a secret carried in a feed URL's path appears in their lines.**
+ *
+ * **`toString()`** names the parser's kind, `maxConcurrentParses`, whether the fetcher owns its `UrlFetcher` and whether it is
+ * closed; it never prints a URL.
  *
  * **Heap.** About 128 MB of headroom covers the default two concurrent parses of one fetcher; the figure grows with the sum of
  * every fetcher's `maxConcurrentParses` in the process.
@@ -80,6 +88,8 @@ public class FeedFetcher internal constructor(parts: FeedFetcherParts) : AutoClo
      * @param url the feed's URL.
      * @param configure sets the cost, lane and `maxWait` of this fetch, passed to `UrlFetcher.fetch`.
      * @return [FeedFetch.Fetched], or a failure (see the class description).
+     * @throws kotlinx.coroutines.CancellationException if the caller is cancelled (a parse already running is not interrupted).
+     * @throws Error if a component throws one.
      */
     public suspend fun fetch(url: Url, configure: FetchSpec.() -> Unit = {}): Result<FeedFetch> = fetch(url, FeedValidators.None, configure)
 

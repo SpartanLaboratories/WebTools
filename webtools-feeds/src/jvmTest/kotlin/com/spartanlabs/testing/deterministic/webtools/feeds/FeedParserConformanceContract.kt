@@ -46,9 +46,11 @@ abstract class FeedParserConformanceContract {
     private fun entry(text: String, limits: FeedLimits = FeedLimits.Defaults) = feed(text, limits).entries.single()
 
     private fun rss(items: String, channel: String = "<title>t</title>", namespaces: String = ""): String =
+        //language=XML
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\"$namespaces><channel>$channel$items</channel></rss>"
     private fun item(body: String) = "<item>$body</item>"
     private fun atom(entries: String, head: String = "<title>t</title>", attributes: String = ""): String =
+        //language=XML
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"$attributes>$head$entries</feed>"
     private fun atomEntry(body: String, attributes: String = "") = "<entry$attributes><id>urn:e</id>$body</entry>"
 

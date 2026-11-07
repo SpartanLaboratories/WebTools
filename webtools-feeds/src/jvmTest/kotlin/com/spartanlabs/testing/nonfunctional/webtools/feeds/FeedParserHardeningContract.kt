@@ -133,6 +133,7 @@ abstract class FeedParserHardeningContract {
 
     @Test
     fun `links, xml base and enclosures that point at the loopback server are not requested`() = withServer { server, loopback ->
+        //language=XML
         val atom = "<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:base=\"$loopback\"><title>t</title><link href=\"${loopback}page\"/>" +
             "<entry><id>urn:e</id><title>e</title><link href=\"e/1\"/><link rel=\"enclosure\" href=\"${loopback}a.mp3\" length=\"5\"/></entry></feed>"
         val feed = parse(atom, "application/atom+xml").getOrThrow()

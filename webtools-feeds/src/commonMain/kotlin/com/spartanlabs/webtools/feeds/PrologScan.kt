@@ -32,10 +32,18 @@ internal enum class UndecodableReason { WideOrEbcdicPrefix, UnlistedEncodingName
  * Stateless and total: [scan] never throws and makes at most three passes over at most [MAX_PROLOG_BYTES].
  */
 internal object PrologScan {
+    /**
+     * How many bytes of the document the prolog may take: 64 KiB. A run of byte-order marks, or a prolog (white space, comments,
+     * processing instructions, the declaration) that does not end within it, is `Undecodable(PrologTooLong)`, reported as
+     * `FeedRefusal.PrologTooLong`.
+     */
     const val MAX_PROLOG_BYTES: Int = 64 * 1024
     private const val DECLARATION_WINDOW_BYTES = 4096
 
     /**
+     * Reads what comes before the root element of [body] in three ways (ASCII-compatible bytes, UTF-16BE, UTF-16LE) and returns
+     * what it found: whether a parser may run, and if not, why.
+     *
      * @param body the document as received.
      * @param contentType the response's `Content-Type` value, read only for `charset=` names, or `null`.
      * @return the worst outcome of the three readings, or, when no reading reaches markup, the byte reading's
@@ -99,6 +107,8 @@ internal object PrologScan {
         b.matches(0, 0x00, 0x00, 0xFE, 0xFF) || b.matches(0, 0xFF, 0xFE, 0x00, 0x00) ||
             b.matches(0, 0x00, 0x00, 0xFF, 0xFE) || b.matches(0, 0xFE, 0xFF, 0x00, 0x00)
 
+    // `<` as the first UCS-4 unit in each of the four byte orders (1234, 4321, 2143, 3412), and `4C 6F A7 94`, which is
+    // `<?xm` in EBCDIC: encodings none of the three readings can decode.
     private fun startsWideOrEbcdic(b: ByteArray, at: Int): Boolean =
         b.matches(at, 0, 0, 0, 0x3C) || b.matches(at, 0x3C, 0, 0, 0) || b.matches(at, 0, 0, 0x3C, 0) ||
             b.matches(at, 0, 0x3C, 0, 0) || b.matches(at, 0x4C, 0x6F, 0xA7, 0x94)
@@ -111,6 +121,10 @@ internal object PrologScan {
     //endregion
 
     //region encoding names
+    // Every `charset=` anywhere in the header value counts, not only the media type's parameter: Rome's `XmlReader` takes the
+    // first match of its case-sensitive `charset=` pattern, which may sit inside another parameter's quoted value, or be a
+    // later charset parameter when an earlier one is spelled `Charset=` and so skipped. A name that any reading of the header
+    // could pick must therefore be on the list.
     private fun contentTypeCharsets(contentType: String?): List<String> {
         if (contentType == null) return emptyList()
         val out = mutableListOf<String>()
@@ -157,6 +171,7 @@ internal object PrologScan {
         }
     }
 
+    // Java's regex `\s`: the white space Rome's `XmlReader` allows around `=` in the pattern it reads `encoding=` with.
     private fun isRegexSpace(c: Char) = c == ' ' || c == '\t' || c == '\n' || c == '\u000B' || c == '\u000C' || c == '\r'
 
     private enum class Listing { Safe, SwallowProne, Unlisted }
@@ -251,6 +266,8 @@ internal object PrologScan {
         val end = minOf(u.size, limit)
         val capped = u.size > limit
         val tooLong = PrologScanResult.Undecodable(UndecodableReason.PrologTooLong)
+        // A defensive skip: the leading run of byte-order marks was already removed byte-wise before the readings start, so unit 0
+        // of a 16-bit reading is never U+FEFF in either byte order there; the skip keeps the walk right for any other start.
         var i = if (u.reading.stride == 2 && end > 0 && u[0] == 0xFEFF) 1 else 0
         while (true) {
             // Running out of units with the prolog unfinished: too long when the bound cut the read, else nothing but
@@ -284,6 +301,9 @@ internal object PrologScan {
                         }
                         return if (name.toString().equals("html", ignoreCase = true)) PrologScanResult.HtmlDocument else PrologScanResult.Doctype
                     } else {
+                        // `<!` and a letter opens a markup declaration (`<!ENTITY`, `<!ELEMENT`, `<!ATTLIST`, a misspelt DOCTYPE),
+                        // which belongs in a DTD and is refused like one. Anything else after `<!` (`<![CDATA[`, a stray `<!`)
+                        // cannot declare entities; the parser rejects it as malformed, so no DOCTYPE is found here.
                         val c2 = if (i + 2 < end) u[i + 2] else -1
                         return if (c2 in 'a'.code..'z'.code || c2 in 'A'.code..'Z'.code) PrologScanResult.Doctype else PrologScanResult.NoDoctype
                     }

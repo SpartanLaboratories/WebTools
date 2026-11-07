@@ -92,6 +92,7 @@ class FeedFetcherLoggingComponentTest {
     @Test
     fun `a Refused document logs one WARN and every other failure only the DEBUG line`() = runTest {
         val clock = virtualClock()
+        //language=XML
         val doctype = "<?xml version=\"1.0\"?><!DOCTYPE rss SYSTEM \"http://127.0.0.1:1/x.dtd\"><rss version=\"2.0\"><channel><title>SENTINEL</title></channel></rss>"
         val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.Any, respondWith(200, doctype))
         fetcherOn(clock, fake).use { fetcher ->

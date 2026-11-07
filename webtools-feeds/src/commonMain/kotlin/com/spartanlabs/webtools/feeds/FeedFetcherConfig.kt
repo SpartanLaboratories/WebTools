@@ -35,7 +35,13 @@ public class FeedFetcherConfig internal constructor() {
         public const val DEFAULT_ACCEPT: String = "application/atom+xml, application/rss+xml, application/rdf+xml;q=0.9, application/xml;q=0.8, text/xml;q=0.8, */*;q=0.1"
     }
 
-    /** @throws IllegalArgumentException if [maxConcurrentParses] is below 1 (`MSG_MAX_CONCURRENT_PARSES`) or [accept] is blank or not a sendable header value (`MSG_ACCEPT`). */
+    /**
+     * Checks the configuration and freezes it for a fetcher.
+     *
+     * @return the checked values.
+     * @throws IllegalArgumentException if [maxConcurrentParses] is below 1 (`MSG_MAX_CONCURRENT_PARSES`) or [accept] is blank or not a
+     *   sendable header value (`MSG_ACCEPT`).
+     */
     internal fun resolve(): ResolvedFeedFetcher {
         require(maxConcurrentParses >= 1) { MSG_MAX_CONCURRENT_PARSES }
         require(isSendableNonBlank(accept)) { MSG_ACCEPT }
@@ -49,7 +55,12 @@ internal class ResolvedFeedFetcher(val parser: FeedParser, val parseDispatcher: 
 /** What a fetcher is made of; the factories build one, so no consumer-shaped constructor exists. */
 internal class FeedFetcherParts(val urlFetcher: UrlFetcher, val resolved: ResolvedFeedFetcher, val ownsUrlFetcher: Boolean)
 
-// The value trimmed of SP and HTAB is not empty and every character is HTAB or U+0020 to U+007E: the rule HttpRequest enforces,
-// which this module cannot call.
+/**
+ * Whether [value] can be sent as a header value and is not blank: trimmed of SP and HTAB it is not empty, and every character is
+ * HTAB or U+0020 to U+007E. The rule `HttpRequest` enforces, which this module cannot call.
+ *
+ * @param value the header value.
+ * @return `true` when the value is sendable and not blank.
+ */
 internal fun isSendableNonBlank(value: String): Boolean =
     value.trim { it == ' ' || it == '\t' }.isNotEmpty() && value.all { it == '\t' || it in ' '..'~' }

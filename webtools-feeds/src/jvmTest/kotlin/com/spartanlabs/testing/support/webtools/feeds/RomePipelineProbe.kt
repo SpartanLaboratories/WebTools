@@ -13,8 +13,9 @@ enum class PipelineOutcome { ReachesDoctype, Parses, Error }
 
 /**
  * The real pipeline the prolog scan must stay ahead of: each of seven `XmlReader` constructor shapes feeds
- * `HardenedWireFeedInput` (DOCTYPE ban on). The six shapes of the research plus the raw three-argument form the module's
- * recipe uses. "Reaches DOCTYPE" is Rome's own lock firing (`Refused(Doctype)` after the mapping); any other exception is
+ * `HardenedWireFeedInput` (DOCTYPE ban on). The shapes cover the header-aware constructor lenient and strict, the header-less
+ * constructor lenient and strict, the header-aware pair again with `UTF-8` as the default encoding, and the header-less lenient form with
+ * `UTF-8` that the module's recipe uses for UTF-16 input and for a header charset the JDK does not know. "Reaches DOCTYPE" is Rome's own lock firing (`Refused(Doctype)` after the mapping); any other exception is
  * an error.
  */
 object RomePipelineProbe {

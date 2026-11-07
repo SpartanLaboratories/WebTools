@@ -20,7 +20,9 @@ import kotlin.test.assertTrue
  */
 class RomeFeedParserComponentTest {
 
+    //language=XML
     private val minimal = "<rss version=\"2.0\"><channel><title>t</title><item><title>one</title><link>https://x.test/1</link></item></channel></rss>"
+    //language=XML
     private val twoItems = "<rss version=\"2.0\"><channel><title>t</title><item><guid>a</guid></item><item><guid>b</guid></item></channel></rss>"
 
     @Test

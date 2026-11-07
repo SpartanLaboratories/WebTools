@@ -42,6 +42,7 @@ class FeedFetcherSecrecyNonFunctionalTest {
 
     private val url = Url.parse("https://feeds.example.test/PATH-SENTINEL/feed.xml?token=QUERY-SENTINEL").getOrThrow()
     private val validators = FeedValidators("\"TAG-SENTINEL\"", "Fri, 06 Nov 2026 04:25:27 GMT")
+    //language=XML
     private val body = "<?xml version=\"1.0\"?><rss version=\"2.0\"><channel><title>TITLE-SENTINEL</title><item><guid>GUID-SENTINEL</guid><title>ITEM-SENTINEL</title></item></channel></rss>"
     private val headers = HttpHeaders { add("Content-Type", "application/rss+xml"); add("ETag", "\"TAG-SENTINEL\""); add("Last-Modified", "Fri, 06 Nov 2026 04:25:27 GMT") }
 
