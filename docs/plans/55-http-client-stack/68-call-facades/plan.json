@@ -8,7 +8,7 @@
   "title": "Call facades",
   "issueTitle": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
   "function": "Nothing in `webtools-http` composes its parts yet: the transport (#65), the response cache (#66) and the call budget (#67) each stand alone, and the order they run in decides what a policy refusal, a throttle or a decode failure costs a caller (#55 architecture §6.6, §7.2). This run adds the two facades that compose them. `UpstreamClient` serves an `Endpoint<T>` of one trusted upstream through the cache, then the budget inside the cache's loader, then the transport, so a hit costs nothing and coalesced callers share one permit; `UrlFetcher` serves administrator-supplied URLs with a policy pre-check that costs nothing, and no cache. With them come `CallSpec` and `FetchSpec`, the configs, the common factories, and the JVM owning factories that build, size and close what they own; Level 2 component tests on the fake transport, a Level 3 integration call over loopback and the README how-to. Unit 9 of #55: the call facades subsystem of `webtools-http`, additive, no version moved; the feeds module is unit 10's.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-11-05T23:56:38Z",
   "parent": {
     "issue": 55,
@@ -21,7 +21,25 @@
     "sha": "5f221ce",
     "date": "2026-11-05"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "0374c8d",
+    "merge": "0374c8d",
+    "pr": 95,
+    "date": "2026-11-06",
+    "at": "2026-11-06T04:22:18Z",
+    "commits": [
+      {
+        "sha": "98f7eb7",
+        "at": "2026-11-06T00:40:09Z",
+        "step": "research"
+      },
+      {
+        "sha": "3d9d9ff",
+        "at": "2026-11-06T00:40:12Z",
+        "step": "research"
+      }
+    ]
+  },
   "systems": [
     {
       "slug": "webtools-http-facades",
@@ -33,10 +51,10 @@
     }
   ],
   "wip": {
-    "step": "document",
-    "since": "2026-11-06T03:09:31Z",
-    "updated": "2026-11-06T04:17:26Z",
-    "detail": "Document: 7 of 7 tasks done; every task done.",
+    "step": "landed",
+    "since": "2026-11-06T04:22:18Z",
+    "updated": "2026-11-06T04:22:18Z",
+    "detail": "Landed in PR #95.",
     "steps": [
       "sizing",
       "interview",
@@ -51,9 +69,7 @@
       "merge",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "questions": [],
     "research": null,
     "interview": [],
@@ -155,9 +171,8 @@
     },
     "open": [],
     "event": {
-      "name": "document",
-      "at": "2026-11-06T04:17:26Z",
-      "note": "7 of 7 tasks done"
+      "name": "landed",
+      "at": "2026-11-06T04:22:18Z"
     },
     "history": {
       "sizing": [
@@ -280,7 +295,7 @@
           "event": {
             "name": "implementation-stage",
             "at": "2026-11-06T02:20:20Z",
-            "note": "stage-5 reported done; qa next"
+            "note": "stage-5 reported done; Quality Review next"
           },
           "detail": "Stage 5 built with no deviation: the two non-functional suites (concurrent calls and a close racing calls), the README how-to and the CHANGELOG entries. The manual pass read every new type's KDoc and ran the README's snippets against a loopback server: all compile and behave as the section says. The module's final check passes: 1,431 tests in 261 classes, none failed or skipped, which is the planned 1,429 plus the two tests of D5. The module's diff touches webtools-http, the README, the CHANGELOG and the plan folder only.",
           "stages": [
@@ -442,6 +457,87 @@
             }
           ]
         }
+      ],
+      "document": [
+        {
+          "since": "2026-11-06T03:09:31Z",
+          "ended": "2026-11-06T04:20:56Z",
+          "endedBy": "landing",
+          "to": "landing",
+          "event": {
+            "name": "document",
+            "at": "2026-11-06T04:17:26Z",
+            "note": "7 of 7 tasks done"
+          },
+          "detail": "Document: 7 of 7 tasks done; every task done.",
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              },
+              {
+                "id": "document-landing",
+                "name": "Document commit",
+                "state": "done"
+              }
+            ]
+          }
+        }
+      ],
+      "landing": [
+        {
+          "since": "2026-11-06T04:20:56Z",
+          "ended": "2026-11-06T04:22:10Z",
+          "endedBy": "merge",
+          "to": "merge",
+          "event": {
+            "name": "landing",
+            "at": "2026-11-06T04:20:56Z",
+            "note": "land accepted"
+          },
+          "detail": "Landing: the land accepted; the branch carries the code, the version bump, the reconciled documents and the state boards."
+        }
+      ],
+      "merge": [
+        {
+          "since": "2026-11-06T04:22:10Z",
+          "ended": "2026-11-06T04:22:18Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "merge",
+            "at": "2026-11-06T04:22:10Z",
+            "note": "merging PR #95"
+          },
+          "detail": "Merge: merging it in PR #95."
+        }
       ]
     },
     "next": null,
@@ -505,7 +601,7 @@
         },
         {
           "id": "document-landing",
-          "name": "Document-landing commit",
+          "name": "Document commit",
           "state": "done"
         }
       ]
@@ -546,6 +642,13 @@
       "date": "2026-11-06",
       "ref": "plan.md",
       "note": "five implementation stages on `feat/issue-68-call-facades`, then the README and CHANGELOG and the as-built record, in seven commits. The facades are a composition of the landed ports, every new type final and Stable Core with no seam added, and §6.11 makes #55's architecture §6.6 concrete in twelve refinements. 34 new test classes, 214 tests, from Level 1 gating to Level 4c non-functional. No version moves"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-11-06",
+      "ref": "PR #95",
+      "note": "the research 98f7eb7 and 3d9d9ff; `Endpoint`, `CallSpec` and `FetchSpec` ac3b61d, `UrlFetcher` and the shared call internals 0985772, `UpstreamClient` ab7cbbd, the owning factories, the transport sizing and `LoopbackFetchers` df7481a, the non-functional suites 391b2d9, the README and CHANGELOG f413a47, the strengthened suites 80b1c13 and the sync with `master` 806b489, the code-landing commit; the KDoc 748ee96 and b2f904b, the as-built record and consequences 341e8a3, the Java floor and build logic records 60e593a and the boards 375d2e9; merged as 0374c8d. No version moved; `webtools-http` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -627,7 +730,7 @@
     {
       "date": "2026-11-06",
       "column": "built",
-      "label": "Implementation done (5 stages); qa next"
+      "label": "Implementation done (5 stages); Quality Review next"
     },
     {
       "date": "2026-11-06",
@@ -642,7 +745,7 @@
     {
       "date": "2026-11-06",
       "column": "built",
-      "label": "Remediation for Quality Review 1: 4 sub-steps done; every sub-step done"
+      "label": "Correction: 4 sub-steps done; every sub-step done"
     },
     {
       "date": "2026-11-06",
@@ -672,12 +775,29 @@
     {
       "date": "2026-11-06",
       "column": "built",
-      "label": "Document: Document-landing commit current"
+      "label": "Document: Document commit current"
     },
     {
       "date": "2026-11-06",
       "column": "built",
       "label": "Document: every task done"
+    },
+    {
+      "date": "2026-11-06",
+      "column": "built",
+      "label": "Landing: the land accepted"
+    },
+    {
+      "date": "2026-11-06",
+      "column": "built",
+      "label": "Merge: merging it in PR #95",
+      "ref": "PR #95"
+    },
+    {
+      "date": "2026-11-06",
+      "column": "built",
+      "label": "Landed in PR #95, merge 0374c8d",
+      "ref": "PR #95"
     }
   ],
   "rows": [

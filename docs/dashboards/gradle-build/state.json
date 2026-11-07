@@ -1,7 +1,7 @@
 {
   "slug": "gradle-build",
   "version": null,
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "4fcc6e0"},
-  "written": {"sha": "4fcc6e0"}
+  "asIs": {"ref": "feat/issue-69-feeds", "sha": "25678cf", "date": "2026-11-07T01:46:03Z"},
+  "lastAmended": {"issue": 69, "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`", "sha": "25678cf"},
+  "written": {"sha": "25678cf"}
 }

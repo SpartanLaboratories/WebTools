@@ -1,6 +1,6 @@
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools feat/issue-68-call-facades 806b489 (2026-11-06): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), new and unreleased, with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
-// Every element tagged Planned but webtools-common comes from Issue #55 (docs/plans/55-http-client-stack/architecture.md, sections 6 and 11) and carries its sub-issue; webtools-common is the registry's, with no plan yet. None of it is built; it is drawn dashed.
+// As-is at WebTools feat/issue-69-feeds 25678cf (2026-11-07): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), and webtools-feeds 1.0.0 (#69), new and unreleased, each with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
+// The one element tagged Planned, webtools-common, is the registry's, with no plan yet. It is not built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -20,16 +20,15 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a (unreleased; Central 1.0.0) · Java 11 bytecode"
             browser  = container "webtools-browser" "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a (unreleased; Central 1.0.0) · Java 11 bytecode"
 
-            // ---- built: the Gradle build (registry slug build), unpublished; its planned parts are dashed ----
+            // ---- built: the Gradle build (registry slug build), unpublished ----
             gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal" {
-                settings = component "settings.gradle.kts" "Includes build-logic through pluginManagement, applies foojay-resolver-convention 0.8.0, includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http, :webtools-http-commoncheck." "Gradle Kotlin DSL" "Internal"
+                settings = component "settings.gradle.kts" "Includes build-logic through pluginManagement, applies foojay-resolver-convention 0.8.0, includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http, :webtools-http-commoncheck, :webtools-feeds, :webtools-feeds-commoncheck." "Gradle Kotlin DSL" "Internal"
                 root     = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 wrapper  = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
                 buildLogic = component "build-logic" "Included build: webtools.published-library, webtools.kotlin-jvm-library, webtools.kotlin-multiplatform-library, webtools.kotlin-common-check, WebToolsBuild with the package-selected level tasks, and its own TestKit tests." "Gradle included build · unpublished" "Internal"
                 floor      = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11 sets jvmTarget, -Xjdk-release and the Java compatibility in both library plugins; verifyJavaFloor, in every module's check, fails on a class above Java 11 bytecode or a variant declaring another JVM version." "build-logic · Kotlin" "Internal"
                 httpCheck  = component "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js() with no environment, so a JVM API in common code is a compile error." "Kotlin/JS compile only · unpublished" "Internal"
-                // planned by Issue #55: not built
-                feedsCheck = component "webtools-feeds-commoncheck" "Unit 10: compiles webtools-feeds' commonMain for js." "Kotlin/JS compile only · unpublished" "Planned"
+                feedsCheck = component "webtools-feeds-commoncheck" "Compiles webtools-feeds' commonMain for js() with no environment, with webtools-http-commoncheck's js output for the http types and its own js actuals." "Kotlin/JS compile only · unpublished" "Internal"
             }
 
             // ---- webtools-http: its common core (#62), its test fixtures (#63), its outbound-URL policy (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), all built ----
@@ -46,7 +45,8 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
                 // built by #68
                 facades   = component "Call facades" "UpstreamClient calls an upstream's endpoints, each an Endpoint, through the policy's pre-check, the cache, a permit inside the cache's loader and the transport; UrlFetcher fetches administrator-supplied URLs; the JVM owning factories build, size and close what they own; LoopbackFetchers in the fixtures." "commonMain + jvmMain" "Public"
             }
-            feeds = container "webtools-feeds" "Unit 10: RSS and Atom parsing behind a FeedParser port with a Rome 2.1.0 default, and a conditional-GET FeedFetcher over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 planned" "Planned"
+            // ---- webtools-feeds (#69), built ----
+            feeds = container "webtools-feeds" "RSS and Atom behind the FeedParser port with RomeFeedParser, the hardened Rome 2.1.0 parser, as its default, and FeedFetcher, a stateless conditional GET over UrlFetcher." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased"
             common = container "webtools-common" "Common code shared by the webtools modules: what is universal to the web, such as IP addresses." "internal to the repository · planned" "Planned"
         }
 
@@ -95,33 +95,31 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.http.facades -> webtools.http.budget "Takes a permit inside the cache's loader"
         webtools.http.facades -> webtools.http.transport "Executes each request once; owns an OkHttpTransport on the JVM"
         webtools.gradleBuild.httpCheck -> webtools.http.facades "Compiles its common code for js"
-
-        // ---- planned by Issue #55 (dashed: one end is Planned) ----
-        webtools.gradleBuild.buildLogic -> webtools.feeds "Would configure: multiplatform plugin"
-        webtools.gradleBuild.feedsCheck -> webtools.feeds "Would compile commonMain for js"
-        webtools.gradleBuild.feedsCheck -> webtools.gradleBuild.httpCheck "Would depend on its js output"
-        webtools.feeds -> webtools.http.facades "Would fetch through UrlFetcher: api dependency"
-        consumer -> webtools.feeds "Would fetch feeds: FeedFetcher"
-        bottools -> webtools.feeds "Would fetch feeds through its adapter"
+        webtools.gradleBuild.buildLogic -> webtools.feeds "Configures: webtools.kotlin-multiplatform-library, applied by id"
+        webtools.gradleBuild.buildLogic -> webtools.gradleBuild.feedsCheck "Configures: webtools.kotlin-common-check, applied by id"
+        webtools.gradleBuild.feedsCheck -> webtools.feeds "Compiles its commonMain for js"
+        webtools.gradleBuild.feedsCheck -> webtools.gradleBuild.httpCheck "Depends on its js output for the http types"
+        webtools.feeds -> webtools.http.facades "Fetches through UrlFetcher; webtools-http is an api dependency"
+        consumer -> webtools.feeds "Fetches feeds with FeedFetcher, parses with RomeFeedParser (1.0.0, not released)"
         consumer -> webtools.http.budget "Builds WindowedCallBudget(windows) { }, acquires and settles permits (1.0.0, not released)"
         webtools.http.budget -> webtools.http.core "Fails with BudgetExhausted, or Closed after close(); reads the wall clock and an HttpResponse; logs through the seam"
         webtools.gradleBuild.httpCheck -> webtools.http.budget "Compiles it for js"
     }
 
     views {
-        systemContext webtools "Context" "WebTools, who uses it and what it talks to. Dashed lines lead to planned elements." {
+        systemContext webtools "Context" "WebTools, who uses it and what it talks to." {
             include *
             autoLayout lr
         }
-        container webtools "Containers" "The built modules, the Gradle build that configures them, and the planned systems (dashed)." {
+        container webtools "Containers" "The built modules, the Gradle build that configures them, and the planned system (dashed)." {
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 806b489, with build-logic, the Java floor and the common check, and its planned part (dashed): webtools-feeds' check module." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 25678cf, with build-logic, the Java floor and the two check-only js modules." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 806b489: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
+        component webtools.http "Http" "webtools-http at 25678cf: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
             include *
             autoLayout lr
         }

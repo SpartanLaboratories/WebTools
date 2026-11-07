@@ -30,7 +30,12 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .page{max-width:1280px;margin:0 auto}
 a{color:inherit}
-code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--hair);padding:1px 4px;border-radius:3px}
+/* the code label (GUIDANCE.md §12, "Code"; dashboards-skill/42): every inline code drawn as a label of its own,
+   in both themes, at normal weight inside bold text; inside a chip, a pill or a tile (a label or a figure already: each class carries
+   its type word) it stays plain mono text */
+:is(b,strong,.name,.nm,dt,th) code{font-weight:400}
+:is([class*="chip"],[class*="pill"],[class*="tile"]) code{background:none;border:0;padding:0;border-radius:0}
 h1,h2,h3{text-wrap:balance}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
@@ -87,10 +92,10 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
-.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
-.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi-tile{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi-tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi-tile .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi-tile .s{font-size:12px;color:var(--ink-2);margin-top:2px}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -111,6 +116,14 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 :root[data-inspector="hidden"] .stage{grid-template-columns:minmax(0,1fr)}
 :root[data-inspector="hidden"] .inspector{display:none}
 .inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+/* The inspector's head (GUIDANCE.md §6, "The inspector switch"): its heading, and at its right the Hide button, an eye struck through and
+   the word "Hide", which hides the inspector as the header's inspector switch does; a button in the boards' neutrals, never the accent or
+   a status colour, its focus ring the boards' own */
+.inspector .insp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.inspector .insp-head h2{margin:0}
+.hide-button{appearance:none;display:inline-flex;align-items:center;gap:4px;flex:none;font:600 11px/1 var(--mono);padding:3px 7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.hide-button:hover{color:var(--ink);border-color:var(--ink-2)}
+.hide-button svg{flex:none;width:14px;height:14px}
 .inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
 .inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
 .inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px}
@@ -124,23 +137,23 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .linkbtn:hover{border-color:var(--ink)}
 .tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
 .tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
-/* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
+/* Legends. Every tab carries one .legend (the C4 tab's is .c4-legend): its colour grouping, then its line and shape encodings,
    ending with planned. check-board.js fails a tab without a visible one. */
-.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
-.key span{display:inline-flex;align-items:center;gap:6px}
-.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
-.key i.pub{background:var(--surface-2)}.key i.std{border-style:dotted}.key i.pln{border-style:dashed;background:none;opacity:.6}
-.key i.srv{border-color:var(--server)}.key i.cli{border-color:var(--client)}.key i.wir{border-color:var(--wire)}
-.key i.pub.srv{background:var(--server-soft)}.key i.pub.cli{background:var(--client-soft)}.key i.pub.wir{background:var(--wire-soft)}
-.key i.con{border-color:var(--ink)}.key i.ext{border-color:var(--muted);background:var(--surface-2)}
-.key i.bs{border-left:4px solid var(--server)}.key i.bc{border-left:4px solid var(--client)}.key i.bw{border-left:4px solid var(--wire)}
-.key i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.key i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.key i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
-.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.ret{position:relative;border-top-width:1px;width:20px}.key i.ln.ret::after{content:"";position:absolute;right:0;top:-4px;width:6px;height:6px;border-top:1.2px solid var(--ink-2);border-right:1.2px solid var(--ink-2);transform:rotate(45deg)}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
-.key i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
-.key i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
-.key i.band{border:0;background:var(--surface-2)}
-.key i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
-.key .pill{align-self:center}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.legend i.pub{background:var(--surface-2)}.legend i.std{border-style:dotted}.legend i.pln{border-style:dashed;background:none;opacity:.6}
+.legend i.srv{border-color:var(--server)}.legend i.cli{border-color:var(--client)}.legend i.wir{border-color:var(--wire)}
+.legend i.pub.srv{background:var(--server-soft)}.legend i.pub.cli{background:var(--client-soft)}.legend i.pub.wir{background:var(--wire-soft)}
+.legend i.con{border-color:var(--ink)}.legend i.ext{border-color:var(--muted);background:var(--surface-2)}
+.legend i.bs{border-left:4px solid var(--server)}.legend i.bc{border-left:4px solid var(--client)}.legend i.bw{border-left:4px solid var(--wire)}
+.legend i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.legend i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.legend i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
+.legend i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.legend i.ln.dash{border-top-style:dashed}.legend i.ln.ret{position:relative;border-top-width:1px;width:20px}.legend i.ln.ret::after{content:"";position:absolute;right:0;top:-4px;width:6px;height:6px;border-top:1.2px solid var(--ink-2);border-right:1.2px solid var(--ink-2);transform:rotate(45deg)}.legend i.ln.on{border-top:2.5px solid var(--on)}.legend i.ln.off{border-top-color:var(--line)}
+.legend i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
+.legend i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
+.legend i.band{border:0;background:var(--surface-2)}
+.legend i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
+.legend .pill{align-self:center}
 
 /* structure svg */
 .band{fill:var(--surface-2)}
@@ -240,12 +253,12 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .c4head .desc{font-size:12.5px;color:var(--ink-2)}
 .c4canvas{border:1px solid var(--line);border-radius:6px;padding:6px;background-color:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1.2px);background-size:22px 22px;overflow-x:auto}
 .c4canvas svg{max-width:none}
-.c4key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
-.c4key span{display:inline-flex;align-items:center;gap:6px}
-.c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
-.c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
-.c4key i.arrow.dashed{border-top-style:dashed}
-.c4key i.frame{background:var(--surface-2);border:1.5px solid var(--line);border-radius:4px}
+.c4-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
+.c4-legend span{display:inline-flex;align-items:center;gap:6px}
+.c4-legend i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
+.c4-legend i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
+.c4-legend i.arrow.dashed{border-top-style:dashed}
+.c4-legend i.frame{background:var(--surface-2);border:1.5px solid var(--line);border-radius:4px}
 .c4el{cursor:pointer}
 .c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
 .c4el .hdr{stroke:none}
@@ -371,13 +384,13 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
 .cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
 .cbar i{display:block;height:100%;background:var(--good)}
-.key .cbar{width:40px}
-.key i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
-.key i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
-.key i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
-.key .badge{align-self:center}
+.legend .cbar{width:40px}
+.legend i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
+.legend i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
+.legend i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
+.legend .badge{align-self:center}
 /* the Guarantees' and the Context's legends (GUIDANCE.md §2), generated from what each section draws */
-.guarantees>.key,.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
+.guarantees>.legend,.context>.legend{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .badge.planned{border-style:dashed}
 .badge.closed{color:var(--muted)}
 .tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
@@ -435,12 +448,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">12 files</div><div class="s">857 lines · the build scripts and build-logic's main sources; wrapper excluded</div></div>
-  <div class="kpi"><div class="l">Plugins</div><div class="v">4 ids</div><div class="s">webtools.* · applied by id, with no version in any script</div></div>
-  <div class="kpi"><div class="l">Processes</div><div class="v">3 kinds</div><div class="s">Gradle daemon · test JVMs · TestKit daemon · 2 one-at-a-time locks</div></div>
-  <div class="kpi"><div class="l">Tasks per module</div><div class="v">7 + 1</div><div class="s">gatingTest … uatTest, by package, not in check · verifyJavaFloor, in check · webtools-http's check adds the fixtures check</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">22 classes</div><div class="s">113 tests · 6 of 7 levels · build-logic's own</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">2</div><div class="s">1 planned unit · 1 enhancement</div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">12 files</div><div class="s">857 lines · the build scripts and build-logic's main sources; wrapper excluded</div></div>
+  <div class="kpi-tile"><div class="l">Plugins</div><div class="v">4 ids</div><div class="s">webtools.* · applied by id, with no version in any script</div></div>
+  <div class="kpi-tile"><div class="l">Processes</div><div class="v">3 kinds</div><div class="s">Gradle daemon · test JVMs · TestKit daemon · 2 one-at-a-time locks</div></div>
+  <div class="kpi-tile"><div class="l">Tasks per module</div><div class="v">7 + 1</div><div class="s">gatingTest … uatTest, by package, not in check · verifyJavaFloor, in check · webtools-http's check adds the fixtures check</div></div>
+  <div class="kpi-tile"><div class="l">Tests</div><div class="v">22 classes</div><div class="s">113 tests · 6 of 7 levels · build-logic's own</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">2</div><div class="s">1 landing with this board · 1 enhancement</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -458,7 +471,7 @@ footer code{color:var(--ink-2)}
     <h2>Component map</h2>
     <p class="lede">Nesting is ownership; the module build files on the left apply the plugins. Click a box for its role and files.</p>
     <svg id="svg-structure" viewBox="0 0 1000 612" role="img" aria-label="Component map of the Gradle build"></svg>
-    <div class="key"><span><i class="pub cli"></i>used by a module · repository build scripts</span><span><i class="cli"></i>internal · repository build scripts</span><span><i class="pub srv"></i>used by a module · build-logic</span><span><i class="srv"></i>internal · build-logic</span><span><i class="pub wir"></i>used by a module · shared</span><span><i class="wir"></i>internal · build-logic's tests</span></div>
+    <div class="legend"><span><i class="pub cli"></i>used by a module · repository build scripts</span><span><i class="cli"></i>internal · repository build scripts</span><span><i class="pub srv"></i>used by a module · build-logic</span><span><i class="srv"></i>internal · build-logic</span><span><i class="pub wir"></i>used by a module · shared</span><span><i class="wir"></i>internal · build-logic's tests</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
@@ -469,7 +482,7 @@ footer code{color:var(--ink-2)}
       <div class="c4main">
         <div class="c4head" id="c4-head"></div>
         <div class="c4canvas" id="c4-canvas"><svg id="svg-c4" viewBox="0 0 900 300" role="img" aria-label="C4 view"></svg></div>
-        <div class="c4key" id="c4-key"></div>
+        <div class="c4-legend" id="c4-key"></div>
         <pre class="dsl" id="dsl-view" hidden></pre>
       </div>
     </div>
@@ -490,13 +503,13 @@ footer code{color:var(--ink-2)}
         <div class="thread wire" data-t="testKitHomeLock" tabindex="0" role="button"><span class="n">testKitHomeLock</span><span class="pill cond">nested-build tasks</span><span class="r">build service, one permit: integrationTest, e2eTest, nonfunctionalTest, fixturesPublicationCheck, one at a time</span></div>
       </div>
     </div>
-    <div class="key"><span><i class="bc"></i>repository build · ./gradlew</span><span><i class="bw"></i>build-logic's tests · nested builds</span><span><span class="pill eager">./gradlew</span>started by every run</span><span><span class="pill lazy">per …</span>started when a task needs it</span><span><span class="pill cond">only …</span>only under a condition</span><span><i class="dot"></i>runs that work (table below)</span></div>
+    <div class="legend"><span><i class="bc"></i>repository build · ./gradlew</span><span><i class="bw"></i>build-logic's tests · nested builds</span><span><span class="pill eager">./gradlew</span>started by every run</span><span><span class="pill lazy">per …</span>started when a task needs it</span><span><span class="pill cond">only …</span>only under a condition</span><span><i class="dot"></i>runs that work (table below)</span></div>
     <h2 style="margin-top:16px">Which process runs what</h2>
     <p class="lede">Read from the build scripts, <code>NestedBuild</code> and the samples' <code>gradle.properties</code>.</p>
     <div class="scroll"><table class="matrix">
       <thead><tr><th>Work</th><th>Gradle daemon</th><th>Module test JVM</th><th>build-logic test JVM</th><th>TestKit daemon</th></tr></thead>
       <tbody>
-        <tr><td>Configuring the settings, build-logic and the five modules</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
+        <tr><td>Configuring the settings, build-logic and the seven modules</td><td><span class="dot"></span></td><td></td><td></td><td></td></tr>
         <tr><td>A module's <code>test</code> or level task (its test bodies)</td><td></td><td><span class="dot"></span></td><td></td><td></td></tr>
         <tr><td><code>:build-logic:test</code>, <code>gatingTest</code>, <code>componentTest</code>, <code>deterministicTest</code></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
         <tr><td>The TestKit test classes of <code>integrationTest</code>, <code>e2eTest</code>, <code>nonfunctionalTest</code> and <code>fixturesPublicationCheck</code></td><td></td><td></td><td><span class="dot"></span></td><td></td></tr>
@@ -513,7 +526,7 @@ footer code{color:var(--ink-2)}
     <div class="ctl" id="flow-ctl"></div>
     <p class="outcome" id="outcome"></p>
     <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Test selection decision path"></svg>
-    <div class="key" id="flow-key"></div>
+    <div class="legend" id="flow-key"></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
@@ -526,7 +539,7 @@ footer code{color:var(--ink-2)}
       <span id="seq-pos" style="font:12px var(--mono);color:var(--muted)"></span>
     </div>
     <svg id="svg-seq" viewBox="0 0 1000 600" role="img" aria-label="Module configuration sequence diagram"></svg>
-    <div class="key" id="seq-key"></div>
+    <div class="legend" id="seq-key"></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
@@ -534,7 +547,7 @@ footer code{color:var(--ink-2)}
     <p class="lede">The order a build configures in, the path from source to a release, the TestKit home's life, and the rules the scripts hold to.</p>
     <div class="lgrid">
       <div class="card ph1"><h3>Configuration order <small>every <code>./gradlew</code> run</small></h3>
-        <ol class="steps"><li>wrapper starts Gradle 9.7.1</li><li>settings: <code>includeBuild("build-logic")</code>, first</li><li>foojay 0.8.0 · include 5 modules</li><li>root: <code>allprojects</code> group, version 1.0.0</li><li>a module requests its plugin: build-logic compiles, then is cached</li><li>the plugin applies Kotlin at <code>JAVA_FLOOR</code> 11, publishing, test dependencies</li><li><code>registerVerifyJavaFloor</code>, into <code>check</code></li><li><code>registerLevelTasks</code>: 7 tasks, lazily</li><li>the module's own lines: dependencies, coordinates, POM</li></ol>
+        <ol class="steps"><li>wrapper starts Gradle 9.7.1</li><li>settings: <code>includeBuild("build-logic")</code>, first</li><li>foojay 0.8.0 · include 7 modules</li><li>root: <code>allprojects</code> group, version 1.0.0</li><li>a module requests its plugin: build-logic compiles, then is cached</li><li>the plugin applies Kotlin at <code>JAVA_FLOOR</code> 11, publishing, test dependencies</li><li><code>registerVerifyJavaFloor</code>, into <code>check</code></li><li><code>registerLevelTasks</code>: 7 tasks, lazily</li><li>the module's own lines: dependencies, coordinates, POM</li></ol>
         <div class="callout"><b>Versions live in one file.</b> Kotlin 2.2.0, vanniktech 0.36.0 and binary-compatibility-validator 0.18.2 are plugin markers at literal versions in <code>build-logic/build.gradle.kts</code>; the scripts apply plugins by id, and Gradle forbids versions there.</div></div>
       <div class="card"><h3>Source to release <small>the path every module takes</small></h3>
         <ol class="steps"><li class="ph2">compile to Java 11 bytecode on the build JDK</li><li class="ph2">test: every class</li><li class="ph2">check: verifyJavaFloor; webtools-http's adds fixturesPublicationCheck</li><li class="ph2">gatingTest … uatTest, on demand</li><li class="ph3">signAllPublications</li><li class="ph3">publishToMavenCentral</li></ol>
@@ -553,7 +566,7 @@ footer code{color:var(--ink-2)}
         <div class="callout"><b>The check-only <code>js</code> compile has no environment.</b> <code>webtools.kotlin-common-check</code> calls <code>js()</code> with no <code>nodejs()</code> or <code>browser()</code>, so the target has no test task, nothing downloads Node.js or Yarn, no <code>kotlin-js-store/</code> is written and the root project gains no task; the cost is one "JS Environment Not Selected" warning per configuration-cache miss. <code>check</code> depends on <code>compileKotlinJs</code>.</div>
         <div class="callout"><b>The fixtures check runs only in WebTools' own build.</b> <code>webtools-http</code>'s <code>check</code> depends on <code>:build-logic:fixturesPublicationCheck</code> only when <code>gradle.parent == null</code> and <code>build-logic</code> is included, so <code>./gradlew build</code>, <code>check</code> and <code>:webtools-http:check</code> run it and a build that includes WebTools never does. Its inputs are the module's build file, its <code>commonMain</code>, <code>jvmMain</code> and <code>jvmTestFixtures</code> trees and the root build file: 44 to 52 s when one changed, <code>UP-TO-DATE</code> otherwise.</div></div>
     </div>
-    <div class="key"><span><i class="ph1"></i>configure · creation</span><span><i class="ph2"></i>build and verify · the rules that hold</span><span><i class="ph3"></i>release · teardown</span></div>
+    <div class="legend"><span><i class="ph1"></i>configure · creation</span><span><i class="ph2"></i>build and verify · the rules that hold</span><span><i class="ph3"></i>release · teardown</span></div>
   </section>
 </div>
 
@@ -576,7 +589,7 @@ footer code{color:var(--ink-2)}
       </ul></div>
     <div class="guarantee-card"><h3>Extension points</h3>
       <ul>
-        <li>For a module's build file: the plugin ids <code>webtools.kotlin-jvm-library</code> (three modules), <code>webtools.kotlin-multiplatform-library</code> (<code>webtools-http</code>), <code>webtools.kotlin-common-check</code> (<code>webtools-http-commoncheck</code>), <code>webtools.published-library</code>.</li>
+        <li>For a module's build file: the plugin ids <code>webtools.kotlin-jvm-library</code> (three modules), <code>webtools.kotlin-multiplatform-library</code> (<code>webtools-http</code>, <code>webtools-feeds</code>), <code>webtools.kotlin-common-check</code> (<code>webtools-http-commoncheck</code>, <code>webtools-feeds-commoncheck</code>), <code>webtools.published-library</code>.</li>
         <li><code>WebToolsBuild</code>, a public object in the default package: <code>LEVELS</code>, <code>LEVEL_PACKAGE_ROOT</code>, <code>registerLevelTasks</code>, <code>JAVA_FLOOR</code>, <code>classFileMajor</code>, <code>registerVerifyJavaFloor</code>, readable from any module script.</li>
         <li>A module that publishes another jar adds it to its <code>verifyJavaFloor</code> task's <code>jars</code> (the <code>VerifyJavaFloor</code> task type is public).</li>
         <li>A module adds its own dependencies, coordinates, POM name and description, and anything that is its alone (webtools-udp's version and port lock; a multiplatform module's opt-in as a language setting of its main source sets). A check module adds the sibling's <code>commonMain</code> as a relative <code>srcDir</code> and its <code>js</code> actuals.</li>
@@ -635,33 +648,34 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-10-25</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-07</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue · 4 of 11 units landed</small></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="9" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a data-board="61">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>unit 1 · landed in 1e27071</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a data-board="47">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>unit 2 · landed in 3949b52: the Java floor and <code>verifyJavaFloor</code></small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span><a data-board="62">webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile</a> <small>unit 3 · landed in 7de8207: <code>webtools.kotlin-common-check</code> and the first multiplatform module</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · landed in 4fcc6e0: <code>fixturesPublicationCheck</code> on this harness; the fixtures jar in <code>verifyJavaFloor</code></small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>unit 10 · applies the multiplatform plugin; its check module the common-check plugin</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>unit 10 · lands with this board: webtools-feeds applies the multiplatform plugin, its check module the common-check plugin</small></span><span class="tags"><span class="badge">open</span></span></li>
           </ul>
-          <p class="more">6 more of its issues (#64–#68, #70) touch webtools-http and the documentation only.</p></li>
+          <p class="more">6 more of its issues touch other systems: #64 to #68 webtools-http, #70 the documentation.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-10-25</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>1 open · 2026-11-07</small></h3>
       <ul class="issues">
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span>Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</span><span class="tags"><span class="badge">docs · enhancement</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Plan boards that amended this system: <a data-issue="63">#63</a> the fixtures-publication check · <a data-issue="62">#62</a> the common-check plugin · <a data-issue="47">#47</a> the Java 11 floor · <a data-issue="61">#61</a> build-logic — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>Issue boards that amended this system: <a data-issue="69">#69</a> the feeds modules in the settings · <a data-issue="63">#63</a> the fixtures-publication check · <a data-issue="62">#62</a> the common-check plugin · <a data-issue="47">#47</a> the Java 11 floor · <a data-issue="61">#61</a> build-logic — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order · all runs on the <a data-workboard>repository work board</a></li>
+        <li><a href="../../plans/55-http-client-stack/69-feeds/plan.md">#69 plan</a> · <a href="../../plans/55-http-client-stack/69-feeds/final-implementation.md">as built</a> — the <code>js</code> compile of the feeds common code, the hardening gate's child JVMs · <a href="../../plans/55-http-client-stack/69-feeds/consequences.md">consequences</a> — what <code>build</code> does more</li>
         <li><a href="../../plans/55-http-client-stack/63-test-support/plan.md">#63 plan</a> · <a href="../../plans/55-http-client-stack/63-test-support/final-implementation.md">as built</a> — the check's runs, its mutations, the harness changed underneath · <a href="../../plans/55-http-client-stack/63-test-support/impact.md">impact</a> — what <code>build</code> does more · <a href="../../plans/55-http-client-stack/63-test-support/research/publication-check-wiring.md">research</a> — where the check attaches, and <a href="../../plans/55-http-client-stack/63-test-support/research/publication-check-mechanics.md">how it publishes and signs</a></li>
         <li><a href="../../plans/55-http-client-stack/62-http-core/plan.md">#62 plan</a> · <a href="../../plans/55-http-client-stack/62-http-core/final-implementation.md">as built</a> — the compile proof, the plugin's TestKit runs · <a href="../../plans/55-http-client-stack/62-http-core/impact.md">impact</a> — what the build does more · <a href="../../plans/55-http-client-stack/62-http-core/research/common-check-plugin.md">research</a> — the <code>js</code> target's form</li>
-        <li><a href="../../plans/55-http-client-stack/47-java-23-bytecode/plan.md">#47 plan</a> · <a href="../../plans/55-http-client-stack/47-java-23-bytecode/final-implementation.md">as built</a> — the regression test before and after, the guard's reports, qa pass 1's fixes · <a href="../../plans/55-http-client-stack/47-java-23-bytecode/research/README.md">research</a> — the Java 11 floor</li>
+        <li><a href="../../plans/55-http-client-stack/47-java-23-bytecode/plan.md">#47 plan</a> · <a href="../../plans/55-http-client-stack/47-java-23-bytecode/final-implementation.md">as built</a> — the regression test before and after, the guard's reports and fixes · <a href="../../plans/55-http-client-stack/47-java-23-bytecode/research/README.md">research</a> — the Java 11 floor</li>
         <li><a href="../../plans/55-http-client-stack/61-build-logic/plan.md">#61 plan</a> · <a href="../../plans/55-http-client-stack/61-build-logic/final-implementation.md">as built</a> — every measurement · <a href="../../plans/55-http-client-stack/61-build-logic/impact.md">impact</a> — what units 2, 3, 4 and 10 build on · <a href="../../plans/55-http-client-stack/61-build-logic/research/README.md">research</a></li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.1 shared build logic, §6.8 the check-only js modules, §11 the decomposition</li>
         <li><a href="../../../README.md">README</a> — "Build &amp; test", "Java floor" and "Shared build logic": the commands, the floor and its guard, the package rule, the plugin ids</li>
         <li><a href="../../plans/15-split-into-three-modules/plan.md">#15 split into three modules</a> — the plan that made the three artifacts and the build as it stood before #61</li>
-        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the modules built with it: <a href="../webtools-udp/index.html">webtools-udp</a>, <a href="../webtools-http/index.html">webtools-http</a>, and on the <a href="../index.html">repository state board</a> webtools-scraping and webtools-browser</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the modules built with it: <a href="../webtools-udp/index.html">webtools-udp</a>, <a href="../webtools-http/index.html">webtools-http</a>, <a href="../webtools-feeds/index.html">webtools-feeds</a>, and on the <a href="../index.html">repository state board</a> webtools-scraping and webtools-browser</li>
       </ul></div>
   </div>
 </section>
@@ -687,9 +701,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "gradle-build",
   "version": null,
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 63, "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check", "sha": "4fcc6e0"},
-  "written": {"sha": "4fcc6e0"}
+  "asIs": {"ref": "feat/issue-69-feeds", "sha": "25678cf", "date": "2026-11-07T01:46:03Z"},
+  "lastAmended": {"issue": 69, "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`", "sha": "25678cf"},
+  "written": {"sha": "25678cf"}
 }
 </script>
 
@@ -697,7 +711,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, and the fixtures-publication check from #63. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-69-feeds 25678cf (2026-11-07): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, the fixtures-publication check from #63, and webtools-feeds with its check module from #69 in the settings. The build publishes nothing of its own. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -711,25 +725,26 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.0a and its UDP-port lock." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode"
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot helpers. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
             browser  = container "webtools-browser" "WebViewer: headless-Chrome screenshots. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
+            feeds    = container "webtools-feeds" "RSS and Atom behind a hardened parser port and a conditional-GET fetcher. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets, webtools-http as api, Rome 2.1.0 and slf4j-api as jvmMain implementation, and webtools-http's test fixtures for its jvm tests." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased"
             http     = container "webtools-http" "The HTTP stack's common core and its test fixtures. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets, declares the test-fixtures variant (recipe B) with its jar in verifyJavaFloor, and makes check depend on fixturesPublicationCheck when WebTools is the root build; 1.0.0 from the root default, unreleased." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased"
 
             gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal" {
                 // ---- what a module build script may use: the plugin ids and WebToolsBuild ----
                 published = component "webtools.published-library" "Applies vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM. Never calls configure(...)." "precompiled script plugin" "Public"
                 jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; compiles to the Java floor (jvmTarget, -Xjdk-release, Java compatibility) and puts verifyJavaFloor in check; test dependencies, JUnit Platform, the seven level tasks over the test source set." "precompiled script plugin" "Public"
-                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. webtools-http applies it." "precompiled script plugin" "Public"
+                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. webtools-http and webtools-feeds apply it." "precompiled script plugin" "Public"
                 commonCheck = component "webtools.kotlin-common-check" "The multiplatform plugin with js() and no environment, mavenCentral() of its own, check wired to compileKotlinJs; no publishing, no Java floor. No test task, no Node.js, no root task." "precompiled script plugin" "Public"
                 levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks; JAVA_FLOOR = 11, classFileMajor and registerVerifyJavaFloor." "Kotlin object · default package" "Public"
                 floor     = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
 
                 // ---- internals ----
                 wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
-                settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, applies foojay-resolver-convention 0.8.0, includes the three modules." "Gradle Kotlin DSL" "Internal"
+                settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, applies foojay-resolver-convention 0.8.0, includes the seven modules: webtools-udp, webtools-scraping, webtools-browser, webtools-http, webtools-http-commoncheck, webtools-feeds and webtools-feeds-commoncheck." "Gradle Kotlin DSL" "Internal"
                 root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
                 logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, fixturesPublicationCheck, the testKitHomeLock build service, and the helpers configureNestedBuilds and copiesWebToolsHttp; bcpg-jdk18on 1.86 for its tests' throwaway signing key." "Gradle included build · unpublished" "Internal"
                 harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses, ModuleSource, ResolutionReport, ThrowawayPgpKey: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests; every nested build runs with ORG_GRADLE_PROJECT_* removed from its environment." "test sources · Gradle TestKit" "Internal"
                 fixturesCheck = component "fixturesPublicationCheck" "A Level 4b Test task selecting FixturesPublicationEndToEndTest: publishes a copy of webtools-http, signed with a throwaway key, to a file repository in its workspace, and resolves testFixtures(...) from a file repository, through a composite and from an in-build multiplatform module, in ten tests. Not part of build-logic's own check." "Test task · Gradle TestKit" "Internal"
-                jsCheck    = component "check-only js modules" "webtools-http-commoncheck compiles webtools-http's commonMain for js with two js actuals, publishing nothing, so a JVM API in common code is a compile error. webtools-feeds-commoncheck is planned." "unpublished module · Kotlin/JS klib" "Internal"
+                jsCheck    = component "check-only js modules" "webtools-http-commoncheck and webtools-feeds-commoncheck compile their module's commonMain for js with their own js actuals, publishing nothing, so a JVM API in common code is a compile error; the feeds one takes the http one's js output for the http types." "unpublished module · Kotlin/JS klib" "Internal"
             }
         }
 
@@ -768,6 +783,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.gradleBuild.root -> webtools.http "Sets group and the version 1.0.0 it keeps"
         webtools.gradleBuild.commonCheck -> webtools.gradleBuild.jsCheck "Configures: applied by id in its plugins block"
         webtools.gradleBuild.jsCheck -> webtools.http "Compiles its commonMain for js, through a relative srcDir"
+        webtools.gradleBuild.kmpLib -> webtools.feeds "Configures: applied by id in its plugins block"
+        webtools.gradleBuild.root -> webtools.feeds "Sets group and the version 1.0.0 it keeps"
+        webtools.gradleBuild.jsCheck -> webtools.feeds "Compiles its commonMain for js, through a relative srcDir"
         webtools.gradleBuild.harness -> webtools.gradleBuild.commonCheck "Applies it to generated projects through TestKit"
         webtools.gradleBuild.logicBuild -> webtools.gradleBuild.fixturesCheck "Registers it, on testKitHomeLock, with the module's files as inputs"
         webtools.http -> webtools.gradleBuild.fixturesCheck "check depends on it, only when WebTools is the root build"
@@ -780,11 +798,11 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        container webtools "Containers" "The four published modules and the Gradle build that configures them." {
+        container webtools "Containers" "The five published modules and the Gradle build that configures them." {
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at master 5f221ce." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at feat/issue-69-feeds 25678cf." {
             include *
             autoLayout tb
         }
@@ -841,7 +859,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","69":"../../plans/55-http-client-stack/69-feeds/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -909,8 +927,8 @@ const MODEL = {
     nodes:[
       {id:"wrapper",side:"client",vis:"int",x:40,y:56,w:180,h:56,t:"Gradle wrapper",s:["Gradle 9.7.1","gradlew · gradle.properties"],
         d:{role:"gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1. gradle.properties sets only kotlin.code.style=official. The repository has no CI: a maintainer runs the wrapper.",vis:"internal · build script",files:["gradle/wrapper/gradle-wrapper.properties","gradle.properties"],threads:["Gradle daemon"],issues:[58]}},
-      {id:"settings",side:"client",vis:"int",x:236,y:56,w:180,h:56,t:"settings.gradle.kts",s:["includeBuild(build-logic) first","foojay 0.8.0 · 5 modules"],
-        d:{role:"Its first statement is pluginManagement { includeBuild(\"build-logic\") }, so the convention plugins resolve by id. It applies foojay-resolver-convention 0.8.0, names the root project WebTools and includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http and :webtools-http-commoncheck.",vis:"internal · build script",files:["settings.gradle.kts"],threads:["Gradle daemon"],issues:[58]}},
+      {id:"settings",side:"client",vis:"int",x:236,y:56,w:180,h:56,t:"settings.gradle.kts",s:["includeBuild(build-logic) first","foojay 0.8.0 · 7 modules"],
+        d:{role:"Its first statement is pluginManagement { includeBuild(\"build-logic\") }, so the convention plugins resolve by id. It applies foojay-resolver-convention 0.8.0, names the root project WebTools and includes :webtools-udp, :webtools-scraping, :webtools-browser, :webtools-http, :webtools-http-commoncheck, :webtools-feeds and :webtools-feeds-commoncheck.",vis:"internal · build script",files:["settings.gradle.kts"],threads:["Gradle daemon"],issues:[58]}},
       {id:"root",side:"client",vis:"int",x:40,y:128,w:376,h:50,t:"build.gradle.kts (root)",s:["allprojects { group; version 1.0.0 } · no plugins, no subprojects, no tasks"],
         d:{role:"Keeps only allprojects { group = \"io.github.spartanlaboratories\"; version = \"1.0.0\" }, under a comment that points at build-logic and the README; every module now overrides the version in its own file. It applies no plugin, so the root project has no build, check or test task of its own; ./gradlew build runs each module's.",vis:"internal · build script",files:["build.gradle.kts"],threads:["Gradle daemon"],issues:[]}},
       {id:"modules",side:"client",vis:"int",container:true,x:40,y:196,w:376,h:186,t:"Module build files",s:"each module's own · applies a plugin by id",
@@ -921,8 +939,8 @@ const MODEL = {
         d:{role:"Adds skrapeit 1.1.5, jsoup 1.15.4 and unirest-java 1.4.9 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with a note: the bug fix after 1.0.0 that carries the Java floor. Gradle orders 1.0.0a below 1.0.0, so a consumer that also asks for 1.0.0 requests 1.0.0a strictly.",vis:"owned by webtools-scraping",files:["webtools-scraping/build.gradle.kts"],threads:["Gradle daemon"]}},
       {id:"brB",side:"client",vis:"int",x:56,y:336,w:344,h:40,t:"webtools-browser/build.gradle.kts",s:"jvm plugin · api slf4j · 1.0.0a · selenium-java",
         d:{role:"Adds selenium-java 4.48.0 as implementation, and version = \"1.0.0a\" over the root's 1.0.0, with the same note as webtools-scraping: the bug fix after 1.0.0 that carries the Java floor.",vis:"owned by webtools-browser",files:["webtools-browser/build.gradle.kts"],threads:["Gradle daemon"]}},
-      {id:"jsCheck",side:"client",vis:"int",x:40,y:396,w:376,h:44,t:"webtools-http · webtools-http-commoncheck",s:"multiplatform library with test fixtures · its check-only js compile",
-        d:{role:"webtools-http applies id(\"webtools.kotlin-multiplatform-library\") with explicitApi(), coroutines as api and OkHttp, Caffeine and slf4j as jvmMain implementation, and its opt-in as a language setting of commonMain and jvmMain. Its own file declares the test-fixtures variant (a testFixtures compilation associated with main, its jar and two published variants), adds the jar and the fixtures' existing runtime entries to verifyJavaFloor, and makes check depend on :build-logic:fixturesPublicationCheck when WebTools is the root build and includes build-logic. webtools-http-commoncheck applies id(\"webtools.kotlin-common-check\"), adds ../webtools-http/src/commonMain/kotlin as a srcDir, opts in on commonMain and jsMain and holds the js actuals: an unpublished module that makes a JVM API in common code a compile error. webtools-feeds and its check module are planned.",vis:"owned by each module",files:["webtools-http/build.gradle.kts","webtools-http-commoncheck/build.gradle.kts"],threads:["Gradle daemon"],issues:[69]}},
+      {id:"jsCheck",side:"client",vis:"int",x:40,y:396,w:376,h:44,t:"webtools-http · webtools-feeds · their check modules",s:"multiplatform libraries · their check-only js compiles",
+        d:{role:"webtools-http applies id(\"webtools.kotlin-multiplatform-library\") with explicitApi(), coroutines as api and OkHttp, Caffeine and slf4j as jvmMain implementation, and its opt-in as a language setting of commonMain and jvmMain. Its own file declares the test-fixtures variant (a testFixtures compilation associated with main, its jar and two published variants), adds the jar and the fixtures' existing runtime entries to verifyJavaFloor, and makes check depend on :build-logic:fixturesPublicationCheck when WebTools is the root build and includes build-logic. webtools-http-commoncheck applies id(\"webtools.kotlin-common-check\"), adds ../webtools-http/src/commonMain/kotlin as a srcDir, opts in on commonMain and jsMain and holds the js actuals: an unpublished module that makes a JVM API in common code a compile error. webtools-feeds applies the same plugin with explicitApi(), webtools-http as api in commonMain, Rome 2.1.0 and slf4j-api as jvmMain implementation, the opt-in as a language setting of commonMain and jvmMain, and webtools-http's test fixtures for its jvm tests. webtools-feeds-commoncheck applies id(\"webtools.kotlin-common-check\"), adds ../webtools-feeds/src/commonMain/kotlin as a srcDir, takes webtools-http-commoncheck and kotlinx-coroutines-core 1.10.2 as implementation and holds its own js actuals.",vis:"owned by each module",files:["webtools-http/build.gradle.kts","webtools-http-commoncheck/build.gradle.kts","webtools-feeds/build.gradle.kts","webtools-feeds-commoncheck/build.gradle.kts"],threads:["Gradle daemon"],issues:[]}},
       {id:"levels",side:"wire",vis:"pub",x:440,y:76,w:120,h:132,t:"WebToolsBuild",s:["LEVELS · 7 TestLevels","registerLevelTasks","JAVA_FLOOR = 11","classFileMajor","registerVerifyJavaFloor"],
         d:{role:"A public object in the default package, read by both library plugins and readable from any module script. LEVELS holds the seven levels in order; registerLevelTasks registers gatingTest … uatTest as plain Test tasks in the verification group, each on the JUnit Platform, selecting com.spartanlabs.testing.<level>.* and passing when nothing matches; they are registered lazily and never added to check. JAVA_FLOOR = 11 is the Java release every published artifact targets; classFileMajor maps a release to its class-file major (11 → 55); registerVerifyJavaFloor registers the verifyJavaFloor task, which the plugins wire into check.",vis:"public · object · default package",files:["build-logic/src/main/kotlin/WebToolsBuild.kt"],threads:["Gradle daemon"]}},
       {id:"floor",side:"wire",vis:"pub",x:440,y:224,w:120,h:120,t:"Java floor",s:["VerifyJavaFloor","JavaFloorScan","major ≤ 55 · jvm 11","verifyJavaFloor","in check"],
@@ -960,7 +978,7 @@ const MODEL = {
   },
   // Processes and build services, keyed by name: side, kind, created, runs, sends (unused here), note, issues.
   threads:{
-    "Gradle daemon":{side:"client",kind:"process",daemon:false,created:"when ./gradlew runs: the wrapper starts Gradle 9.7.1, or reuses a running daemon",runs:"configures the settings, build-logic (compiling it on first use) and the five modules; runs the task graph, publishing included.",sends:[],note:"",issues:[]},
+    "Gradle daemon":{side:"client",kind:"process",daemon:false,created:"when ./gradlew runs: the wrapper starts Gradle 9.7.1, or reuses a running daemon",runs:"configures the settings, build-logic (compiling it on first use) and the seven modules; runs the task graph, publishing included.",sends:[],note:"",issues:[]},
     "module test JVM":{side:"client",kind:"process",daemon:false,created:"when a module's test or level task runs: Gradle forks the test worker",runs:"the selected classes of that module on the JUnit Platform.",sends:[],note:"webtools-udp's test, integrationTest, e2eTest and nonfunctionalTest take commonUdpPortLock.",issues:[]},
     "commonUdpPortLock":{side:"client",kind:"build service",daemon:false,created:"at configuration, by webtools-udp/build.gradle.kts",runs:"nothing itself: a BuildService with maxParallelUsages = 1 that webtools-udp's test, integrationTest, e2eTest and nonfunctionalTest use, so Gradle never runs two of them at once and none hits a BindException on UDP 9998.",sends:[],note:"It lives in the module because only that module binds the port.",issues:[]},
     "build-logic test JVM":{side:"wire",kind:"process",daemon:false,created:"when one of build-logic's test tasks runs (./gradlew :build-logic:<task>)",runs:"build-logic's own classes on the JUnit Platform: gating, component and deterministic in seconds; the TestKit classes, which start nested builds.",sends:[],note:"No logback: gradleApi() already carries Gradle's slf4j binding.",issues:[]},
@@ -1056,7 +1074,8 @@ function parseDsl(src){
     const opens=line.endsWith("{"); if(opens) line=line.slice(0,-1).trim();
     const T=tok(line); if(!T.length){ if(opens) stack.push({kind:"anon"}); return; }
     const t0=T[0].t;
-    if(["workspace","model","views","styles"].includes(t0)){ if(opens) stack.push({kind:t0}); return; }
+    /* a block keyword followed by "=" is an identifier assigned an element ("model = component …"), never the block: read it below */
+    if(["workspace","model","views","styles"].includes(t0)&&!(T[1]&&T[1].t==="=")){ if(opens) stack.push({kind:t0}); return; }
     if(t0==="!identifiers") return;
     if(inBlock("styles")){ if(t0==="element"){ const props={}, body=T.slice(2).map(x=>x.t!==undefined?x.t:x.s).filter(x=>x!=="{"&&x!=="}"); for(let i=0;i+1<body.length;i+=2) props[body[i]]=body[i+1]; M.styles.push({tag:T[1].s,props}); } return; }
     if(inBlock("views")){
@@ -1078,8 +1097,10 @@ function parseDsl(src){
   });
   return M;
 }
+/* a count and its noun, "1 view", "2 views" */
+const plural=(n,one,many)=>`${n} ${Number(n)===1?one:(many||one+"s")}`;
 const C4=parseDsl(document.getElementById("dsl").textContent);
-$("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
+$("#dsl-stats").textContent=`${plural(C4.order.length,"element")} · ${plural(C4.rels.length,"relationship")} · ${plural(C4.views.length,"view")}`;
 
 const el=id=>C4.elements[id];
 /* Planned, from the data (system/RULES.md §2, "Planned parts"): a part tied to a DSL element — a structure node through MODEL.c4 or its
@@ -1261,7 +1282,7 @@ function inspectC4(){
   if(!$("#dsl-view").hidden) return showDsl();
   const {v,R}=c4View, [lv,lname]=LEVEL[v.type], sel=$("#svg-c4 .c4el.sel"), cur=$("#svg-c4 .c4rel.cur");
   if(sel) selectC4(sel.dataset.id); else if(cur) selectC4Step(+cur.dataset.num); else if(v.type==="dynamic") c4StepList();
-  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${R.els.length} elements · ${R.rels.length} relationships · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
+  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${plural(R.els.length,"element")} · ${plural(R.rels.length,"relationship")} · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
 }
 function selectC4(id){
   const e=el(id); c4Sel=id;
@@ -1296,7 +1317,7 @@ function showDsl(){
   document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
   $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
   if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
-  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${plural(C4.order.length,"element")} · ${plural(C4.rels.length,"relationship")} · ${plural(C4.views.length,"view")} · ${plural(C4.styles.length,"style")}</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
 }
 (function buildLadderAndKey(){
   const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
@@ -1461,7 +1482,7 @@ function renderState(){
   const old=document.getElementById("chip-amended"); if(old) old.remove();
   const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
   if(!p&&ctx){ p=document.createElement("p"); p.className="amended"; p.id="ctx-amended"; const h2=ctx.querySelector(":scope>h2"); if(h2) h2.after(p); else ctx.prepend(p); }
-  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title)}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
+  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title).replace(/`([^`]*)`/g,"<code>$1</code>")}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
 }
 renderState();
 
@@ -1472,9 +1493,9 @@ renderState();
    data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
 function sectionKeys(){
   document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
-    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${m} units landed"><i style="width:${pct}%"></i></span>`; });
+    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${plural(m,"unit")} landed"><i style="width:${pct}%"></i></span>`; });
   const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
-    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="key"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
+    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="legend"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
   const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
   put(G,"guarantees-key",[swatches(G,"swk"),
@@ -1539,12 +1560,14 @@ show(start);
   if(mq&&mq.addEventListener) mq.addEventListener("change",label);
   if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
   label(); })();
-/* ---------- The inspector switch (GUIDANCE.md §6, "The inspector switch"; §12, "Switch") ----------
-   A switch in the header, left of the theme switch, that shows or hides the inspector (aria-checked while shown). Shown when a board
-   opens until hidden; the choice is remembered across boards and reloads (localStorage "dashboards-inspector", shared by every dashboard
-   of the same origin, applied in the head before the first paint, and again here for a board whose head predates it). Hidden, the tab
-   takes the inspector's width. An item clicked, or pressed with Enter or Space, while the inspector is hidden shows it and flips the
-   switch: whatever that gesture writes into the inspector, a tab or a switch aside, brings it back. */
+/* ---------- The inspector switch and the inspector's Hide button (GUIDANCE.md §6, "The inspector switch"; §12, "Switch") ----------
+   A switch in the header, left of the theme switch, that shows or hides the inspector (aria-checked while shown), and in the inspector's
+   head, right of its heading, the Hide button (an eye struck through and the word "Hide"), which hides it and moves the focus to the switch.
+   Both drive one state, so the switch is always in step. Shown when a board opens until hidden; the choice is remembered across boards
+   and reloads (localStorage "dashboards-inspector", shared by every dashboard of the same origin, applied in the head before the first
+   paint, and again here for a board whose head predates it). Hidden, the tab takes the inspector's width. An item clicked, or pressed with
+   Enter or Space, while the inspector is hidden shows it and flips the switch: whatever that gesture writes into the inspector, a tab, a
+   switch or the Hide button aside, brings it back. An inspector drawn before the Hide button gets it here, its heading wrapped with it. */
 (function inspectorSwitch(){ const KEY="dashboards-inspector", root=document.documentElement, ins=document.getElementById("inspector");
   if(!ins) return;
   let sw=document.getElementById("inspector-switch");
@@ -1556,10 +1579,16 @@ show(start);
   const label=()=>{ const s=shown(); sw.setAttribute("aria-checked",String(s)); sw.title=s?"Inspector shown. Click to hide it.":"Inspector hidden. Click to show it, or click an item."; };
   const set=s=>{ if(s) delete root.dataset.inspector; else root.dataset.inspector="hidden"; try{ localStorage.setItem(KEY,s?"shown":"hidden"); }catch(e){} label(); window.dispatchEvent(new Event("resize")); };
   sw.addEventListener("click",()=>set(!shown()));
+  let hb=document.getElementById("inspector-hide");
+  if(!hb&&ins.querySelector){ const h2=ins.querySelector(":scope>h2"); if(h2&&h2.parentNode){ const hd=document.createElement("div"); hd.className="insp-head"; h2.parentNode.insertBefore(hd,h2); hd.appendChild(h2); hb=document.createElement("button"); hb.id="inspector-hide"; hd.appendChild(hb); } }
+  if(hb){ hb.className="hide-button"; hb.type="button"; hb.setAttribute("aria-controls","inspector"); hb.setAttribute("aria-label","Hide the inspector");
+    hb.title="Hide the inspector. The inspector switch in the header, or a click on an item, shows it again.";
+    if(!hb.querySelector("svg")) hb.innerHTML='<svg class="hide-eye" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M1.5 8s2.4-4.5 6.5-4.5 6.5 4.5 6.5 4.5-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 2.5l11 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span class="hide-word">Hide</span>';
+    hb.addEventListener("click",()=>{ set(false); try{ sw.focus(); }catch(e){} }); }
   let gesture=null;
   const mark=e=>{ if(e.type==="keydown"&&e.key!=="Enter"&&e.key!==" ") return; gesture=e.target; setTimeout(()=>{ gesture=null; },0); };
   document.addEventListener("click",mark,true); document.addEventListener("keydown",mark,true);
-  if(window.MutationObserver) new MutationObserver(()=>{ const g=gesture; if(!g||shown()||!g.closest||g.closest('[role="tab"],[role="switch"]')) return; set(true); }).observe(ins,{childList:true,subtree:true,characterData:true});
+  if(window.MutationObserver) new MutationObserver(()=>{ const g=gesture; if(!g||shown()||!g.closest||g.closest('[role="tab"],[role="switch"],.hide-button')) return; set(true); }).observe(ins,{childList:true,subtree:true,characterData:true});
   label(); })();
 </script>
 </body>
