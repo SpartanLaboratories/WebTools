@@ -3,11 +3,11 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-07T04:18:58Z",
+  "generated": "2026-11-07T04:50:09Z",
   "asOf": "2026-11-07",
   "tree": {
-    "ref": "docs/issue-70-http-architecture-docs",
-    "sha": "45aa548"
+    "ref": "docs/issue-55-close-out",
+    "sha": "c40ff34"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -130,49 +130,48 @@ window.dashboardLive&&window.dashboardLive("board",
           "issue": 16,
           "repo": "SpartanLaboratories/KotlinBottools",
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         },
         {
           "issue": 9,
           "repo": "SpartanLaboratories/KotlinBottools",
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/dashboard.html",
       "folder": "55-http-client-stack/",
       "branch": null,
       "system": null,
-      "step": "implementation",
-      "detail": "10 of 11 units landed; #70 complete, awaiting its landing.",
-      "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-07T04:18:55Z",
+      "step": "landed",
+      "detail": "Landed: 11 of 11 units, the last #70 in PR #97.",
+      "since": "2026-11-07T04:23:32Z",
+      "updated": "2026-11-07T04:48:56Z",
       "qa": [],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 97,
+        "merge": "c40ff34",
+        "version": null,
+        "date": "2026-11-07"
+      },
       "reconciliation": {
-        "state": "partial",
-        "landed": 10,
+        "state": "as-built",
+        "landed": 11,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 10,
+        "landed": 11,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
         "planned": false,
-        "done": false,
-        "current": [
-          {
-            "issue": 70,
-            "slug": "http-docs",
-            "step": null
-          }
-        ],
+        "done": true,
+        "current": [],
         "next": null
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
@@ -1040,7 +1039,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "blocks": [
         {
           "issue": 70,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-07T04:23:33Z",
           "hold": "enables"
         }
       ],
@@ -1096,7 +1097,8 @@ window.dashboardLive&&window.dashboardLive("board",
     {
       "issue": 70,
       "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -1114,14 +1116,14 @@ window.dashboardLive&&window.dashboardLive("board",
       "folder": null,
       "branch": null,
       "system": "webtools",
-      "step": "implementation",
-      "detail": "10 of 11 units landed; #70 complete, awaiting its landing.",
+      "step": null,
+      "detail": "Landed through PR #97 as c40ff34 (#70): `docs/webtools-http-architecture.md` is new, the evergreen description of the stack as built, `webtools-feeds` included: its modules and component map, how the systems compose on a call, where each outbound-URL check runs, the failure model, threads and time, lifecycles and closing, logging, the stability tiers, the test support, the platform reach and the known limitations. The README's final pass adds the `webtools-http` and `webtools-feeds` component tables with their stability notes, the `suspend` note, the outbound-URL policies, the logging rule and the test-layout paragraph, and points the HTTP client stack and Feeds sections at the document. KDoc wording only in `OutboundUrlPolicy` and `RefusalReason`; no executable line changed, no version moved and nothing was released.",
       "qa": [],
       "qaMax": null,
-      "status": "complete",
+      "status": "landed",
       "landed": null,
       "reconciliation": null,
-      "active": true,
+      "active": false,
       "systemName": "WebTools",
       "group": "55",
       "order": 11
@@ -1253,7 +1255,8 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 70,
           "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         }
       ]
     }

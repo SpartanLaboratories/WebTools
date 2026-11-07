@@ -455,6 +455,13 @@ Two subsystems with one seam between them: the policy decides, the transport enf
     protection; "fetch from a private address" is `Trusted`. `Untrusted` refuses a request
     carrying a sensitive-flagged header or one named `Authorization`, `Proxy-Authorization` or
     `Cookie` (`SensitiveHeader`).
+    > **Corrected 2026-11-07 (#70 as built):** `Set-Cookie` is a credential name too: `Untrusted`
+    > refuses a request carrying it (`SensitiveHeader`), and the transport drops it with the other three
+    > once a redirect changes the scheme, host or port. `Untrusted`'s parameters never admit an address
+    > or name its built-in tables deny, but not every parameter only tightens: `allowedPorts = null`
+    > admits any port, a set replaces the default ports, and `mixedAnswers = DropDenied` uses the allowed
+    > addresses of a mixed answer that `Reject` refuses whole. See
+    > `../../webtools-http-architecture.md` §5.
   - `TransportSettings` (factory + builder): call, connect, read and write timeouts; body cap
     (decoded bytes); redirect cap; `allowHttpsToHttp = false`; concurrency (`maxConcurrentRequests`,
     `maxConcurrentRequestsPerHost`); idle-connection TTL (default 4 s, under the 5 s idle
@@ -781,6 +788,11 @@ Two subsystems with one seam between them: the policy decides, the transport enf
   cache, budget, transport, and nothing it was handed. The injected `timeSource`,
   `wallClock` and `dispatcher` reach every owned component, so one virtual clock drives all
   three under test.
+  > **Corrected 2026-11-07 (#70 as built):** they do not reach every owned component. The owned
+  > `CaffeineResponseCache` gets `timeSource` and `dispatcher` (as its `loadDispatcher`), the owned
+  > `WindowedCallBudget` gets `timeSource` and `wallClock`, and the owned `OkHttpTransport` takes none of
+  > them: its calls run on its own dispatcher threads under real-time timeouts. A virtual clock drives
+  > the cache and the budget, not the transport. See `../../webtools-http-architecture.md` §7 and §8.
 - **Logging** (through the seam of §6.2; the site that creates a failure or event logs it
   once): `INFO` on create/close (settings numbers only) and budget restore; `WARN` on a
   budget pause, a hard stop (once per window), a store failure, a policy refusal (reason name,
