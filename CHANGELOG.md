@@ -70,6 +70,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   loopback `mockwebserver3` server; the fetcher owns the matching `LoopbackTransports` transport. `untrusted` relaxes
   the pre-check for loopback exactly as `LoopbackTransports` relaxes the transport, so every other `Untrusted` rule
   stays live; `trusted` forces cleartext on in both and relaxes nothing.
+- `webtools-feeds` (unreleased, `1.0.0`): RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port. The
+  port `FeedParser` (implementing it needs the opt-in) with `FeedInput` and `FeedLimits` (ten bounds that can only be
+  tightened: entries, text, id and link length, categories, enclosures, and the document's depth, attributes per
+  element, elements and distinct namespace URIs); the model `Feed`, `FeedEntry` (an id that is never blank and is frozen:
+  the guid or Atom id, else the link, else a SHA-256 digest `webtools-feeds:v1:…`) and `FeedEnclosure`; the failure group
+  `FeedFailure` (`NotAFeed`, `Malformed`, `Refused`, `LimitExceeded`) with its reasons `NotAFeedReason`, `FeedRefusal`
+  and `FeedLimit`; `FeedValidators` and the sealed `FeedFetch` (`Fetched`, `NotModified`, both reporting the final URL
+  and a permanent move); `FeedFetcher`, a stateless conditional GET over `UrlFetcher` (`If-None-Match` and
+  `If-Modified-Since` verbatim, a `304` as a value, only `200` and `203` parsed, parses bounded by a semaphore and a
+  dispatcher, every `UrlFetcher` failure passed through unchanged, `Closed("feed fetcher")` after `close()`), built with
+  `FeedFetcher(urlFetcher) { }` or, on the JVM, `FeedFetcher.untrusted(userAgent) { }` and
+  `FeedFetcher.untrusted(userAgent, policy) { }`, which own their `UrlFetcher` and close it with the fetcher; and
+  `RomeFeedParser`, the supplied parser over Rome 2.1.0: a DOCTYPE or other markup declaration, an encoding outside the
+  set it reads, a prolog over 64 KiB and a prolog that decodes two ways are refused before any parser runs, the
+  parser's SAX settings are its own per parse, and the four structural limits are enforced in the same pass.
+- `webtools-feeds-commoncheck` (new, unpublished): compiles `webtools-feeds`' `commonMain` for `js` so a JVM API in
+  common code is a compile error; part of `./gradlew build`.
 
 ### Changed
 
