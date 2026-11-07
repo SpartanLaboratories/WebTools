@@ -26,7 +26,7 @@ public class RefusalReason private constructor(
         /** The URL carries user-info. */
         public val UserInfo: RefusalReason = RefusalReason("UserInfo")
 
-        /** The host's form (an IP literal, a single label, a trailing dot, ...) is not allowed. */
+        /** The host's form (a lenient or malformed IP literal such as `127.1`, an empty label, a last label that is a number, ...) is not allowed. */
         public val HostForm: RefusalReason = RefusalReason("HostForm")
 
         /** The host is a reserved or special-use name. */

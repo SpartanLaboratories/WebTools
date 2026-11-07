@@ -17,8 +17,8 @@ private const val PORTS_RANGE_MESSAGE = "allowedPorts must hold only ports from 
  * Which URLs and addresses a fetch may reach, and the [TransportSettings] that go with that choice. A closed pair:
  * [Trusted] for a known upstream, [Untrusted] for a URL a third party supplied.
  *
- * **Stable Core.** `sealed` because the closed pair is the contract; build one with [trusted] or [untrusted]. There is no
- * parameter that lowers `Untrusted`'s protection: to fetch from a private address use [Trusted]. The policy decides; a
+ * **Stable Core.** `sealed` because the closed pair is the contract; build one with [trusted] or [untrusted]. No `Untrusted`
+ * parameter admits an address or name its tables deny: to fetch from a private address use [Trusted]. The policy decides; a
  * transport enforces. A `when` over a policy needs no `else`.
  */
 public sealed class OutboundUrlPolicy {
@@ -92,7 +92,9 @@ public sealed class OutboundUrlPolicy {
      * address; it never uses a proxy; and it refuses a request that carries a sensitive header (`Authorization`,
      * `Proxy-Authorization`, `Cookie`, `Set-Cookie` or any header added as sensitive).
      *
-     * **Stable Core.** Every parameter can only add a denial. Equality is on every property. `toString()` prints the port
+     * **Stable Core.** No parameter admits an address or name the tables deny: [extraDeniedRanges] and
+     * [extraDeniedHostSuffixes] add denials, [allowedPorts] sets the port list (`null` admits any port), and [mixedAnswers]
+     * chooses between refusing a mixed answer and using its allowed addresses. Equality is on every property. `toString()` prints the port
      * set and the number of denied ranges and suffixes, never their values.
      */
     public class Untrusted internal constructor(
