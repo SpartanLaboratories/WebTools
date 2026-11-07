@@ -230,6 +230,11 @@ none fails — [`research/README.md` § Verification](research/README.md)):
   depends on `webtools-http`'s check module for the `js` klib (§6.8), which was not probed. If
   that dependency does not resolve, the feeds check module compiles both `commonMain`
   directories as source.
+  > **Corrected 2026-11-06 (#69 as built):** held. `webtools-feeds-commoncheck` depends on
+  > `webtools-http-commoncheck` and compiles the feeds `commonMain` for `js()` against its output,
+  > with no environment, after every stage of the unit; it declares `kotlinx-coroutines-core`
+  > itself, since the http check module declares it as `implementation`. The source fallback is
+  > not needed. See `69-feeds/consequences.md` §5.
 - **No test requests a JDK toolchain.** The level tests run on the build JDK (requirement 9),
   so foojay 0.8.0 is never consulted and the bump stays #58's.
 
@@ -993,7 +998,7 @@ on 2.2.0; nothing needs one).
 >   has no content, a `206` is a fragment and a `226` a delta.
 > - **A fourth layer of hardening.** `FeedLimits` also bounds the document's structure, tightening-only like its other
 >   members: element depth 256, attributes per element 100, elements 100,000, distinct namespace URIs 64.
->   `RomeFeedParser` enforces them inside its own parser, each failure is `LimitExceeded` with a reason of its own, and
+>   `RomeFeedParser` enforces them inside its own parser, each failure is `LimitExceeded` with a limit of its own, and
 >   the hardening contract holds any parser behind the port to them. Without them a 2 MiB document costs minutes of CPU,
 >   overflows the stack or grows JDOM's JVM-wide namespace cache.
 > - **How `RomeFeedParser` drives Rome.** Through a private `WireFeedInput` subclass with a SAX parser of its own per
@@ -1561,6 +1566,11 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   whose memory amplification on a hostile 2 MiB document is unmeasured. The port, the prolog
   scan and the Level 4c suite under a fixed heap bound the exposure; a streaming parser behind
   the same port is the exit, and rssreader is the documented swap.
+  > **Corrected 2026-11-06 (#69 as built):** the amplification is measured and bounded. Two
+  > parses of a hostile 2 MiB document need 102 to 318 MB of heap without the structural limits
+  > of `FeedLimits` and 43 MB with them; the Level 4c gate runs each memory-loading case in a
+  > child JVM at `-Xmx128m` with two concurrent parses, and every case returns its expected
+  > result. See `69-feeds/final-implementation.md` §4.
 - **Concurrency and performance shape.** Three library-owned contexts: OkHttp's dispatcher
   threads (bounded by the settings, sized to `maxBurst`), the cache's `SupervisorJob` scope on
   an injectable dispatcher, and the budget's `Mutex` with an O(waiters × windows) re-plan on
@@ -1600,6 +1610,8 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   compiled with and without the opt-in is the candidate; not evaluated.
 - **The feeds check module's dependency on the http check module's `js` klib** was not
   probed; the fallback (compile both `commonMain` trees as source) is stated in §3.
+  > **Corrected 2026-11-06 (#69 as built):** settled: the dependency resolves and the fallback is
+  > not needed (the correction in §3). See `69-feeds/consequences.md` §5.
 - **Network behaviour unmeasured:** real provider idle timeouts, HTTP/2 coalescing over real
   TLS, `421` on a coalesced connection, real DNS answers for the bypass catalogue, `Retry-After`
   on a `3xx` (not honoured, as OkHttp does not).
@@ -1607,6 +1619,14 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   StAX reader treats a DOCTYPE with `SUPPORT_DTD` off (decides whether the rssreader swap is
   safe without the prolog scan; until measured, the scan is assumed necessary), Rome's
   Atom date and `xml:base` mappings.
+  > **Corrected 2026-11-06 (#69 as built):** measured, but for the StAX reader. Rome's DOM
+  > amplification is in the correction to the Rome risk of §12. Rome's dates and its `xml:base`
+  > handling were measured (`69-feeds/research/rome-adapter.md` F9 and F10), and the conformance
+  > contract pins what the module makes of them; samples of public feeds (`69-feeds/research/`)
+  > and nine cases against public sites through `FeedFetcher.untrusted` stand in for a corpus.
+  > How the JDK StAX reader treats a DOCTYPE with `SUPPORT_DTD` off stays unmeasured: the prolog
+  > scan belongs to `RomeFeedParser`, and the hardening contract holds a parser behind the port to
+  > refusing a DOCTYPE. See `69-feeds/final-implementation.md` §4.
 - **Calendar-month windows** cannot be expressed with a fixed period; per-window and
   fractional costs are not modelled.
 - **Judgement defaults, not measurements:** every `TransportSettings` number, the 4 s idle

@@ -288,6 +288,17 @@ The repository facts the findings rest on were checked against `master` at `0374
   declaration win in lenient mode, the mode the supplied parser needs (`rome-adapter.md` F4 and claim 6;
   `prolog-scan.md` F1). The design here follows the code.
 
+### Did not hold in the build
+
+- [`conditional-get-and-redirects.md`](conditional-get-and-redirects.md) F11 measured Planet Python's feed behind an
+  `https`-to-`http`-to-`https` chain (`https://planet.python.org/rss20.xml` `301` to `http://planetpython.org/…` `301`
+  to `https://planetpython.org/…`), whose first hop the default policy refuses. On 2026-11-06 the Level 5 pass of the
+  build found that the chain no longer passes through `http`; its case of a feed served over a redirect from `https` to
+  `http` ran against Slashdot instead, and was refused as `RefusedByPolicy(InsecureRedirect)`
+  ([`../final-implementation.md`](../final-implementation.md) §4, P5). What the finding supports holds: under the
+  defaults a redirect from `https` to `http` is refused, and a permanent move to `http` is never reported. Nothing in the
+  build departs from the plan for it.
+
 ## Summary
 
 The five findings files answer every question; the detail, the measurements and the sources are in each file.
