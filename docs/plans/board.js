@@ -3,11 +3,11 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-07T03:02:16Z",
+  "generated": "2026-11-07T04:18:58Z",
   "asOf": "2026-11-07",
   "tree": {
-    "ref": "feat/issue-69-feeds",
-    "sha": "25678cf"
+    "ref": "docs/issue-70-http-architecture-docs",
+    "sha": "45aa548"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -144,9 +144,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "9 of 11 units landed; #69 in progress; #70 up next.",
+      "detail": "10 of 11 units landed; #70 complete, awaiting its landing.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-06T04:27:23Z",
+      "updated": "2026-11-07T04:18:55Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -154,13 +154,13 @@ window.dashboardLive&&window.dashboardLive("board",
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 9,
+        "landed": 10,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 9,
+        "landed": 10,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -168,20 +168,12 @@ window.dashboardLive&&window.dashboardLive("board",
         "done": false,
         "current": [
           {
-            "issue": 69,
-            "slug": "feeds",
-            "step": "document"
+            "issue": 70,
+            "slug": "http-docs",
+            "step": null
           }
         ],
-        "next": {
-          "issue": 70,
-          "slug": "http-docs",
-          "blockedBy": [
-            {
-              "issue": 69
-            }
-          ]
-        }
+        "next": null
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
       "group": "55",
@@ -451,7 +443,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "blocks": [
         {
           "issue": 69,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-07T03:23:44Z",
           "hold": "enables"
         },
         {
@@ -966,7 +960,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "blocks": [
         {
           "issue": 69,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-07T03:23:44Z",
           "hold": "enables"
         }
       ],
@@ -1019,7 +1015,8 @@ window.dashboardLive&&window.dashboardLive("board",
     {
       "issue": 69,
       "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -1044,17 +1041,17 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 70,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/69-feeds/dashboard.html",
       "folder": "55-http-client-stack/69-feeds/",
-      "branch": "feat/issue-69-feeds",
+      "branch": null,
       "system": "webtools-feeds",
-      "step": "document",
-      "detail": "Document: 5 of 7 tasks done; State boards current.",
-      "since": "2026-11-07T01:46:46Z",
-      "updated": "2026-11-07T02:39:35Z",
+      "step": "landed",
+      "detail": "Landed in PR #96.",
+      "since": "2026-11-07T03:23:42Z",
+      "updated": "2026-11-07T03:23:42Z",
       "qa": [
         {
           "pass": 1,
@@ -1078,15 +1075,20 @@ window.dashboardLive&&window.dashboardLive("board",
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 96,
+        "merge": "20d4546",
+        "version": null,
+        "date": "2026-11-07"
+      },
       "reconciliation": {
-        "state": "partial",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "webtools-feeds",
       "group": "55",
       "order": 10
@@ -1100,8 +1102,10 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 69,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-07T03:23:44Z",
+          "build": "clear",
           "locality": "local-repository"
         }
       ],
@@ -1110,20 +1114,14 @@ window.dashboardLive&&window.dashboardLive("board",
       "folder": null,
       "branch": null,
       "system": "webtools",
-      "step": null,
-      "detail": "",
+      "step": "implementation",
+      "detail": "10 of 11 units landed; #70 complete, awaiting its landing.",
       "qa": [],
       "qaMax": null,
-      "status": "next",
+      "status": "complete",
       "landed": null,
       "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [
-        {
-          "issue": 69
-        }
-      ],
+      "active": true,
       "systemName": "WebTools",
       "group": "55",
       "order": 11
@@ -1249,7 +1247,8 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 69,
           "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 70,

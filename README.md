@@ -12,7 +12,10 @@ single-concern artifacts** — depend only on the one you need:
 | `io.github.spartanlaboratories:webtools-feeds` | `com.spartanlabs.webtools.feeds` | Kotlin Multiplatform (JVM target) — RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port (`FeedParser`) with Rome 2.1.0 as the supplied parser (`RomeFeedParser`: DOCTYPE refused before any parser runs, structural limits on depth, attributes, elements and namespaces, text/id/link/entry bounds), a feed model with a frozen entry id, and `FeedFetcher`, a stateless conditional GET over `UrlFetcher` that returns a `304` as a value and a permanent move as a fact; **not yet released** | webtools-http (and its dependencies), rome |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
-to recover.
+to recover. `webtools-http` and `webtools-feeds` are `suspend` APIs: every call that sends a request
+or may wait (`UpstreamClient.call`, `UrlFetcher.fetch`, `FeedFetcher.fetch`, `HttpTransport.execute`,
+`ResponseCache.getOrLoad`, `CallBudget.acquire`, `flush`, `utilisation`) suspends, the supplied
+implementations never block the caller's thread, and there is no blocking variant. Building a component and `close()` do not suspend.
 
 State boards: [`docs/dashboards/`](docs/dashboards/index.html) shows the modules as built at a named commit, with planned systems drawn dashed.
 Work boards: the [repository work board](docs/plans/index.html) shows every planning and development run, and each issue's board under [`docs/plans/`](docs/plans/README.md) traces every part of a change through its gap, the options considered, the verdict and the as-built state, with the work in progress.
@@ -125,18 +128,64 @@ every other public type — is **Stable Core**: breaking changes only in a major
 |------|---------|
 | `Connector` | Single-connection web client: open a URL and read it line by line; plus one-shot `get`, `skrape`, and image `download` helpers. |
 
+For `suspend` calls, timeouts and size caps, an outbound-URL policy, response caching and a call budget, use
+[`webtools-http`](#http-client-stack) instead.
+
 ### `webtools-browser`
 
 | Type | Purpose |
 |------|---------|
 | `WebViewer` | Headless-Chrome screenshot utility — `screenshot(url)` returns a `Result<BufferedImage>`, `getPage(url)` a `Result<File>`. Driver provisioned by Selenium Manager. |
 
+### `webtools-http`
+
+| Type | Purpose |
+|------|---------|
+| `UpstreamClient` | Calls the endpoints of one upstream API from a base URL: the outbound-URL policy's pre-check, then the response cache, then the call budget inside the cache's loader, then the transport. Each call is declared once as an `Endpoint`; `CallSpec` carries the per-call path, query, headers, lane and waits. See [HTTP client stack](#http-client-stack). |
+| `UrlFetcher` | Fetches administrator-supplied URLs: the pre-check, the budget and the transport, no cache. Every status is the response except a throttle. |
+| `OutboundUrlPolicy` | `Trusted` (a known upstream: `https` only unless cleartext is allowed, optional host pins) or `Untrusted` (a URL a third party supplied: lenient host forms, reserved names, denied addresses, other ports and sensitive headers refused), each carrying its `TransportSettings`. See [Outbound-URL policies](#outbound-url-policies). |
+| `OkHttpTransport` | The supplied `HttpTransport`: one request per hop, redirects followed by hand and judged hop by hop, a capped decoded body, never a retry. |
+| `CaffeineResponseCache` / `ResponseCache.Disabled` | The supplied `ResponseCache` (one load per key at a time, per-entry lifetimes, a weight bound, failures never stored) and the pass-through that stores nothing. |
+| `WindowedCallBudget` / `CallBudget.Unlimited` | The supplied `CallBudget` (epoch-aligned rate windows, lane floors, fail-fast waits, pauses from the server's signals, a hard window kept across a restart through a `BudgetStore`) and the budget that grants everything. |
+| `HttpRequest` / `HttpResponse` / `HttpHeaders` / `Url` | The value types. A header added with `addSensitive` is treated as a credential (refused under `Untrusted`, dropped on a cross-origin redirect); `Url.redacted()` is the form the stack logs. |
+| `HttpFailure` | The failure model carried in `Result`: `TransportFailure` (nothing usable came back), `UpstreamFailure` (`RateLimited`, `UpstreamError`), `BudgetExhausted`, `DecodeFailure` and `Closed`. |
+| `ExperimentalForInheritanceWebToolsApi` | The opt-in marker for implementing one of the stack's seams. |
+
+**API stability.** Everything a consumer calls, passes, configures or matches is **Stable Core**,
+the supplied implementations (`OkHttpTransport`, `CaffeineResponseCache`, `WindowedCallBudget`,
+`RateSignalsReader.Standard`, …) included: none of them needs an opt-in. Implementing, delegating to or
+subclassing a seam (`HttpTransport`, `ResponseCache`, `CallBudget`, `Permit`, `RateSignalsReader`, `BudgetStore`,
+`BudgetObserver`, `BudgetEvent`, `WallClock`, and the failure groups `HttpFailure`, `TransportFailure`
+and `UpstreamFailure`) is **Experimental**: it needs `@OptIn(ExperimentalForInheritanceWebToolsApi::class)`
+and may change in a minor release. A seam graduates to `@SupportedExtension` in a feature release once a
+consumer has built against it. The failure groups and the reason vocabularies (`RefusalReason`,
+`ExhaustedReason`, …) may gain members in a feature release; keep an `else` branch in any `when` over
+one of them. The test fixtures are Stable Core with source compatibility only.
+
+### `webtools-feeds`
+
+| Type | Purpose |
+|------|---------|
+| `FeedFetcher` | A stateless conditional GET over `UrlFetcher`: a `304` is `FeedFetch.NotModified`, a feed `FeedFetch.Fetched`. On the JVM, `FeedFetcher.untrusted(userAgent)` builds and owns an `Untrusted` `UrlFetcher`. See [Feeds](#feeds). |
+| `RomeFeedParser` / `FeedParser` | The supplied parser over Rome 2.1.0 (a DOCTYPE refused before any parser runs, structural limits) and the port behind it. |
+| `Feed` / `FeedEntry` / `FeedEnclosure` | The model; an entry's `id` is never blank and never changes for the same entry. |
+| `FeedValidators` / `FeedLimits` | The `ETag` and `Last-Modified` pair the caller stores between polls; the bounds a parser applies, which can only be tightened. |
+| `FeedFailure` | `NotAFeed`, `Malformed`, `Refused` and `LimitExceeded`, under `HttpFailure`. |
+
+**API stability.** Everything a consumer calls, passes, configures or matches is **Stable Core**,
+`RomeFeedParser` included. Implementing `FeedParser` or subclassing `FeedFailure` is **Experimental**, under
+`webtools-http`'s opt-in marker. `FeedFailure` may gain leaves, and its reason vocabularies (`NotAFeedReason`,
+`FeedRefusal`, `FeedLimit`) may gain members, in a feature release; keep an `else` branch.
+
 ## HTTP client stack
 
 `webtools-http` (not yet released) composes a response cache, a call budget and a transport behind two facades.
 **`UpstreamClient`** calls the endpoints of one upstream API; **`UrlFetcher`** fetches URLs an administrator
 supplies. Both are `AutoCloseable`, both return `kotlin.Result`, and neither ever retries: a throttle, a transport
-failure and a `5xx` are each returned once.
+failure and a `5xx` are each returned once. [`docs/webtools-http-architecture.md`](docs/webtools-http-architecture.md)
+describes the stack as built, `webtools-feeds` included: its components, the call path, where each outbound-URL
+check runs, the failure model, the threads, ownership and closing, what is logged, the stability tiers, the test
+support and the known limitations.
 
 ### Calling an upstream
 
@@ -193,6 +242,24 @@ client.close()   // closes what the client built (cache, budget, transport), nev
   `UpstreamClient(transport, baseUrl) { … }` to size it yourself.
 - **Your own cache or budget.** `cache(CaffeineResponseCache { maxWeight = 5_000 })` and `budget(myBudget)` are
   caller-owned: the client never closes them.
+- **Logging.** Each component logs under its own class name in `com.spartanlabs.webtools.http` (`UpstreamClient`,
+  `UrlFetcher`, `OkHttpTransport`, `CaffeineResponseCache`, `WindowedCallBudget`, and `GuardedDns` at `DEBUG`), never a header value, a body, a
+  query string or a decoded value. A URL is printed with `Url.redacted()`, which hides the query and shows the path,
+  and an endpoint id is printed as given: keep credentials out of path segments, the base URL's path and endpoint ids
+  ([#93](https://github.com/SpartanLaboratories/WebTools/issues/93)).
+
+### Outbound-URL policies
+
+`OutboundUrlPolicy` is a closed pair. `Trusted`, for an upstream you chose, checks the scheme (`https` only unless
+`allowCleartext`), optionally pins hosts and filters no address. `Untrusted`, for a URL a third party supplied, also
+refuses lenient host forms (`127.1`, `2130706433`), single-label names, reserved names (`localhost`, `internal`, …), private, loopback,
+link-local and other special-purpose addresses, whether written as a literal or resolved from a name, ports other
+than 80, 443, 8080 and 8443, and any request carrying a sensitive header; it never uses a proxy. Its parameters can
+never admit a denied address or name (`extraDeniedRanges` and `extraDeniedHostSuffixes` add denials; `allowedPorts`
+sets the port list; `mixedAnswers` chooses between refusing a mixed answer and using its allowed addresses). Each policy
+carries its `TransportSettings`: `Trusted` 30 s per call, 10 s per socket operation, 5 MiB, 5 redirects, 16
+concurrent requests (5 per host); `Untrusted` 15 s, 5 s, 2 MiB, 3 redirects, 8 (2 per host). Change one with
+`OutboundUrlPolicy.untrusted { settings { callTimeout = 20.seconds } }`.
 
 ### Fetching administrator-supplied URLs
 
@@ -234,7 +301,8 @@ For a real exchange over loopback, start a `mockwebserver3.MockWebServer` on `12
 ## Feeds
 
 `webtools-feeds` (not yet released) parses RSS and Atom behind a hardened port and fetches feeds with a **stateless conditional GET** over `UrlFetcher`. It keeps no state: you store the validators it returns and
-hand them back on the next poll.
+hand them back on the next poll. [`docs/webtools-http-architecture.md`](docs/webtools-http-architecture.md) describes the
+fetch path and the hardening layers (§4.5) and the module's known limitations (§13).
 
 ```kotlin
 FeedFetcher.untrusted("my-app/1.0 (+https://example.com/contact)").use { fetcher ->
@@ -270,7 +338,7 @@ FeedFetcher.untrusted("my-app/1.0 (+https://example.com/contact)").use { fetcher
   interrupted.
 - **Other parsers.** `RomeFeedParser` is the default. A `FeedParser` of your own is Experimental to implement (`@OptIn(ExperimentalForInheritanceWebToolsApi::class)`); pass it with `parser = …` in the factory's lambda.
 - **Logging.** `FeedFetcher` logs under `com.spartanlabs.webtools.feeds.FeedFetcher` and prints a feed URL as scheme, host and port only. The `UrlFetcher` it composes, and the transport under it, print `Url.redacted()`,
-  which shows the path: a secret in a feed URL's path appears in their lines.
+  which shows the path: a secret in a feed URL's path appears in their lines ([#93](https://github.com/SpartanLaboratories/WebTools/issues/93)).
 - **Testing.** Over a transport of your own: `FeedFetcher(UrlFetcher(FakeHttpTransport()…, OutboundUrlPolicy.untrusted())) { parseDispatcher = … }`; the pre-check refuses `localhost` and IP literals, so give the fake a
   public-looking host such as `https://feeds.example.test/rss`. For a real exchange over loopback build the `UrlFetcher` with `LoopbackFetchers.untrusted(…)` and pass it to the common factory.
 
@@ -676,14 +744,16 @@ The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webt
 that compiles a multiplatform module's `commonMain` so a JVM API in common code is a compile error. No
 Node.js is needed.
 
-Each module organises its tests by the project's 5-level testing hierarchy: a JVM module under
-`<module>/src/test/kotlin/com/spartanlabs/testing/<level>/webtools/<module>/`, a multiplatform module
-under `<module>/src/commonTest/kotlin/…` (runs on the JVM target) and `<module>/src/jvmTest/kotlin/…`,
-with the same package. A level task selects its tests by package (`com.spartanlabs.testing.<level>.*`)
-from the module's JVM test compilation, so any level can be run or gated on its own; a test class
-outside those packages runs under `test` only. Shared test helpers live under `testing/support/`; the
-published test fixtures of `webtools-http` are a separate source set, `webtools-http/src/jvmTestFixtures`
-(package `com.spartanlabs.webtools.http.testing`).
+Each module organises its tests by the project's 5-level testing hierarchy, in the package
+`com.spartanlabs.testing.<level>.webtools.<name>`, where `<name>` is the module's name without `webtools-`
+(`udp`, `http`, `feeds`, …): a JVM module under `<module>/src/test/kotlin/`, a multiplatform module under
+`<module>/src/commonTest/kotlin/` and `<module>/src/jvmTest/kotlin/`, both of which run on the JVM target. A
+level task selects its tests by package (`com.spartanlabs.testing.<level>.*`) from the module's JVM test
+compilation, so any level can be run or gated on its own; a test class outside those packages runs under
+`test` only. Shared test helpers live under `testing/support/` and are not published. The published test
+fixtures of `webtools-http` are a separate source set, `webtools-http/src/jvmTestFixtures` (package
+`com.spartanlabs.webtools.http.testing`), whose own tests sit in `com.spartanlabs.testing.<level>.webtools.http.testing`;
+`webtools-feeds`' tests use them through `testFixtures(project(":webtools-http"))`.
 
 ### Java floor
 

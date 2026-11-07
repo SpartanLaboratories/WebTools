@@ -433,7 +433,7 @@ footer code{color:var(--ink-2)}
 <header>
   <div class="crumbs"><a href="../index.html">WebTools</a> › <a href="../webtools-http/index.html">webtools-http</a> › webtools-http-url-policy</div>
   <h1>webtools-http-url-policy</h1>
-  <p class="function">The outbound-URL policy of the suspend HTTP stack: it decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters a consumer sets and that can only tighten. A consumer builds an <code>OutboundUrlPolicy</code>: <code>Untrusted</code> for a URL a third party supplies, which refuses lenient numeric hosts, reserved names, every special-purpose address range and ports outside its set, and never uses a proxy; or <code>Trusted</code> for a known upstream, https only unless cleartext is allowed, with optional pinned hosts; each carries its <code>TransportSettings</code>. An internal, JVM-free classifier applies the policy to a hop, a redirect target and an address; internal resolver and socket guards apply it to every resolver answer and every connect. <code>OkHttpTransport</code> applies a policy to every hop, and a refusal reaches the caller as <code>RefusedByPolicy</code> with its <code>RefusalReason</code>.</p>
+  <p class="function">The outbound-URL policy of the suspend HTTP stack: it decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters a consumer sets, none of which admits an address or name the built-in tables deny. A consumer builds an <code>OutboundUrlPolicy</code>: <code>Untrusted</code> for a URL a third party supplies, which refuses lenient numeric hosts, single-label and reserved names, every special-purpose address range and ports outside its set, and never uses a proxy; or <code>Trusted</code> for a known upstream, https only unless cleartext is allowed, with optional pinned hosts; each carries its <code>TransportSettings</code>. An internal, JVM-free classifier applies the policy to a hop, a redirect target and an address; internal resolver and socket guards apply it to every resolver answer and every connect. <code>OkHttpTransport</code> applies a policy to every hop, and a refusal reaches the caller as <code>RefusedByPolicy</code> with its <code>RefusalReason</code>.</p>
   <div class="chips">
     <span class="chip" id="chip-version" hidden></span>
     <span class="chip"><span class="ck">platform</span> <b>Kotlin Multiplatform</b> · <code>commonMain</code> values and classifier · <code>jvmMain</code> guards</span>
@@ -446,12 +446,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi-tile"><div class="l">Source</div><div class="v">14 files</div><div class="s">1,315 lines · <code>commonMain</code> 9 (1,082) · <code>jvmMain</code> 5 (233) · package <code>com.spartanlabs.webtools.http</code></div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">14 files</div><div class="s">1,317 lines · <code>commonMain</code> 9 (1,084) · <code>jvmMain</code> 5 (233) · package <code>com.spartanlabs.webtools.http</code></div></div>
   <div class="kpi-tile"><div class="l">Types</div><div class="v">9 public</div><div class="s">4 top-level: <code>OutboundUrlPolicy</code>, <code>TransportSettings</code>, <code>CidrBlock</code>, <code>MixedAnswers</code> · 5 nested: <code>Trusted</code>, <code>Untrusted</code>, three builders · 16 internal: 10 in common code, 6 on the JVM</div></div>
   <div class="kpi-tile"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">built and judged on the caller's thread; the guards run on the thread OkHttp resolves or connects on</div></div>
-  <div class="kpi-tile"><div class="l">Contracts</div><div class="v">only tighten</div><div class="s">no parameter lets a denied address, a reserved name or a malformed host through · 10 transport settings in 2 default sets · refusals as the core's 9 <code>RefusalReason</code>s</div></div>
+  <div class="kpi-tile"><div class="l">Contracts</div><div class="v">tables hold</div><div class="s">no parameter admits an address or name the built-in tables deny; <code>allowedPorts</code> sets the port list · 10 transport settings in 2 default sets · refusals as the core's 9 <code>RefusalReason</code>s</div></div>
   <div class="kpi-tile"><div class="l">Tests</div><div class="v">34 classes</div><div class="s">228 tests across 5 testing levels · 22 classes in <code>commonTest</code>, 12 in <code>jvmTest</code>, all run on the JVM</div></div>
-  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">2</div><div class="s">1 planned unit that pre-checks a URL with it · 1 docs · 0 unscheduled</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">1</div><div class="s">1 docs unit, landing with this board · 0 unscheduled</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -543,7 +543,7 @@ footer code{color:var(--ink-2)}
     <div class="lgrid">
       <div class="card"><h3>Building a policy <small>configuration values</small></h3>
         <ol class="steps"><li class="ph1"><code>OutboundUrlPolicy.untrusted { }</code> starts from ports 80, 443, 8080 and 8443, <code>MixedAnswers.Reject</code> and <code>TransportSettings.UntrustedDefaults</code>; <code>trusted { }</code> from no pins, no cleartext and <code>TrustedDefaults</code></li><li class="ph1"><code>settings { }</code> inside the block derives new settings from the policy's current ones</li><li class="ph2">the block's end validates every value and throws <code>IllegalArgumentException</code>: an empty port set or a port outside 1..65535, a pinned host or a suffix that is not a host, a timeout outside 1 ms to <code>Int.MAX_VALUE</code> ms, a cap or a concurrency below 1, a negative redirect limit</li><li class="ph2"><code>untrusted(from) { }</code> and <code>trusted(from) { }</code> derive a new policy; policies and settings compare by value</li></ol>
-        <div class="callout"><b>No parameter lets a denied address, a reserved name or a malformed host through:</b> <code>extraDeniedRanges</code> and <code>extraDeniedHostSuffixes</code> only add denials, and the one relaxation, loopback for tests, is internal and reached only through the fixtures.</div></div>
+        <div class="callout"><b>No parameter admits an address or name the built-in tables deny</b> (the special-purpose address table and the reserved names): <code>extraDeniedRanges</code> and <code>extraDeniedHostSuffixes</code> add denials, <code>allowedPorts</code> sets the port list (<code>null</code> admits any port), and <code>mixedAnswers</code> chooses between refusing a mixed answer and using its allowed addresses. The one relaxation, loopback for tests, is internal and reached only through the fixtures.</div></div>
       <div class="card"><h3>One call through the guards <small>internal · applied by the OkHttp transport</small></h3>
         <ol class="steps"><li class="ph1">the classifier judges the request before any call: an IP-literal host is judged here and never reaches the resolver; for <code>Untrusted</code> a sensitive header refuses it</li><li class="ph2"><code>GuardedDns.lookup</code> judges every resolver answer: <code>Reject</code> refuses it whole, <code>DropDenied</code> keeps the allowed addresses in order</li><li class="ph2"><code>GuardedSocket.connect</code>, a <code>Socket(Proxy.NO_PROXY)</code> that ignores a JVM-wide SOCKS setting, judges every target before any I/O</li><li class="ph2">a redirect target is parsed and judged as a hop, with the downgrade rule against the hop before it</li><li class="ph3">a refusal ends the call as <code>PolicyRefusedUnknownHost</code> or <code>PolicyRefusedIo</code>, constant messages with no stack trace, which <code>policyRefusal()</code> finds through the causes and the suppressed lists; the transport returns it as <code>RefusedByPolicy</code></li></ol>
         <div class="callout"><b>Measured through a real <code>OkHttpClient</code> and the real transport</b> in the module's Level 3 tests on JDK 23.0.2 and Windows 11, on loopback.</div></div>
@@ -597,18 +597,18 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-05</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-07</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="8" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="10" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/64" target="_blank" rel="noopener">#64</a><span><a data-board="64">webtools-http: outbound-URL policies <code>Trusted</code>/<code>Untrusted</code>, <code>TransportSettings</code> and the common address classifier</a> <small>unit 5 · this board's system · landed in 53965c8</small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/65" target="_blank" rel="noopener">#65</a><span><a data-board="65">webtools-http: <code>OkHttpTransport</code> with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories</a> <small>unit 6 · applies the policy to every hop; the refusal markers' shared walk · landed in e8f0a88</small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · pre-checks a fetched URL with the classifier</small></span><span class="tags"><span class="badge planned">planned unit</span><span class="badge">open</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · pre-checks every request with the classifier · landed in 0374c8d</small></span><span class="tags"><span class="badge">closed</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · documents the policy in the architecture document's §5, landing with this board</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
           </ul>
           <p class="more">7 more of its issues touch other systems: #61 and #47 the build, #62 the common core, #63 the test fixtures, #66 the cache, #67 the call budget, #69 webtools-feeds.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>0 open · 2026-11-05</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>0 open · 2026-11-07</small></h3>
       <ul class="issues">
         <li><span>No open issue outside the roadmap touches the outbound-URL policy.</span></li>
       </ul></div>
@@ -616,9 +616,10 @@ footer code{color:var(--ink-2)}
       <ul class="docs">
         <li>Issue boards that amended this system: <a data-issue="64">#64</a> url-policy — gap, options, verdict and as built · <a data-issue="65">#65</a> okhttp-transport — the guards applied, the refusal walk shared · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
         <li><a href="../../plans/55-http-client-stack/64-url-policy/plan.md">#64 plan</a> · <a href="../../plans/55-http-client-stack/64-url-policy/final-implementation.md">as built</a> — every measurement, the bypass vectors, the manual pass and the known gaps · <a href="../../plans/55-http-client-stack/64-url-policy/impact.md">impact</a> — what the transport and the facades build on · <a href="../../plans/55-http-client-stack/64-url-policy/research/README.md">research</a></li>
+        <li><a href="../../webtools-http-architecture.md">webtools-http architecture</a> — the stack as built: §5 where each outbound-URL check runs, §5.1 the transport settings, §5.2 the testing relaxation, §6 the failure model, §13 the known limitations</li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.3.1 the outbound-URL policy, §9 extension and stability · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
-        <li><a href="../../../README.md">README</a> — the <code>webtools-http</code> row, which names the outbound-URL policies, marked not yet released</li>
-        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board · built on the <a href="../webtools-http-core/index.html">common core</a> · applied by the <a href="../webtools-http-transport/index.html">OkHttp transport</a></li>
+        <li><a href="../../../README.md">README</a> — the <code>webtools-http</code> row, which names the outbound-URL policies, marked not yet released, and the "Outbound-URL policies" section of "HTTP client stack"</li>
+        <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · the module it ships in: the <a href="../webtools-http/index.html">webtools-http</a> board · built on the <a href="../webtools-http-core/index.html">common core</a> · applied by the <a href="../webtools-http-transport/index.html">OkHttp transport</a> · pre-checked by the <a href="../webtools-http-facades/index.html">call facades</a></li>
         <li><a data-workboard>Repository work board</a> — every planning and development run in the repository</li>
       </ul></div>
   </div>
@@ -630,7 +631,10 @@ footer code{color:var(--ink-2)}
      2. The Threads tab says the policy starts no thread and lists the caller's thread and the threads OkHttp runs the guards on.
      3. The three sides are the policy's public values, its internal classifier in common code, and its internal guards on the JVM.
      4. An eighth guarantee card, "What Untrusted refuses", states the host, address and port rules.
-     Nothing is removed. -->
+     Nothing is removed.
+     Refreshed at docs/issue-70-http-architecture-docs 45aa548 (2026-11-07): the parameters' contract worded as the code's KDoc states it (no parameter admits
+     what the built-in tables deny; allowedPorts sets the port list; mixedAnswers chooses), the call facades' pre-check drawn (a container and its
+     relationship in the DSL, the structure note), the figures recounted, the Context brought to the tracker, the architecture document linked. -->
 </footer>
 </div>
 
@@ -640,9 +644,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-http-url-policy",
   "version": "1.0.0",
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 65, "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories", "sha": "db82470"},
-  "written": {"sha": "5f221ce"}
+  "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
+  "lastAmended": {"issue": 70, "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections", "sha": "45aa548"},
+  "written": {"sha": "45aa548"}
 }
 </script>
 
@@ -650,7 +654,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http-url-policy — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http-url-policy/index.html.
-// As-is at WebTools master 5f221ce (2026-11-05), the outbound-URL policy inside webtools-http 1.0.0 (new, unreleased): the Trusted and Untrusted policies with TransportSettings, CidrBlock and MixedAnswers, the internal JVM-free classifier, and the internal JVM resolver and socket guards that OkHttpTransport applies. Code is authoritative on any conflict.
+// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), the outbound-URL policy inside webtools-http 1.0.0 (new, unreleased): the Trusted and Untrusted policies with TransportSettings, CidrBlock and MixedAnswers, the internal JVM-free classifier, and the internal JVM resolver and socket guards that OkHttpTransport applies. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -660,7 +664,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         web = softwareSystem "Resolvers and servers" "The system resolver and the hosts a URL names, local, private and public." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            policy = container "webtools-http-url-policy" "Decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters that can only tighten. Public configuration values; an internal classifier in commonMain; internal guards in jvmMain." "Kotlin Multiplatform · commonMain, jvmMain · webtools-http 1.0.0 unreleased" {
+            policy = container "webtools-http-url-policy" "Decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters that never admit an address or name the built-in tables deny. Public configuration values; an internal classifier in commonMain; internal guards in jvmMain." "Kotlin Multiplatform · commonMain, jvmMain · webtools-http 1.0.0 unreleased" {
                 // ---- public configuration values ----
                 policies  = component "OutboundUrlPolicy" "A sealed policy with two final leaves, Trusted and Untrusted, built with trusted { } and untrusted { } or their from(...) forms; every value validated when the block ends. Value equality; toString() prints counts, never a host." "sealed class · final leaves · builders" "Public"
                 settings  = component "TransportSettings" "The ten transport settings a policy carries, with TrustedDefaults and UntrustedDefaults; TransportSettings(from) { } derives and validates." "final class · factory · builder" "Public"
@@ -680,6 +684,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             }
             core      = container "webtools-http-core" "What the policy uses from the common core: Url, RefusalReason, the WebToolsDsl marker and the Log seam." "commonMain"
             okhttp    = container "webtools-http-transport" "OkHttpTransport: applies a policy to every hop, judges the request and every redirect target, and returns a refusal as TransportFailure.RefusedByPolicy." "jvmMain · okhttp-jvm 5.5.0"
+            facades   = container "webtools-http-facades" "UpstreamClient and UrlFetcher: pre-check every request with the policy before the cache and the budget; their JVM owning factories hand it to the transport they build." "commonMain · jvmMain owning factories"
             fixtures  = container "webtools-http-test-fixtures" "LoopbackTransports: the real transport with the loopback relaxation, for a consumer's tests." "jvmTestFixtures · test classpath only"
             check     = container "webtools-http-commoncheck" "Compiles webtools-http's commonMain for js, the classifier included, so it stays JVM-free. Unpublished; a part of the Gradle build." "Kotlin/JS klib · check only" "Internal"
         }
@@ -710,6 +715,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.okhttp -> webtools.policy.guard "Judges the request and every redirect target before any socket"
         webtools.okhttp -> webtools.policy.enforce "Applies it to its client"
         webtools.okhttp -> webtools.policy.refusals "Finds a refusal through policyRefusal()"
+        webtools.facades -> webtools.policy.guard "Pre-checks every request with checkRequest, before the cache and the budget"
         webtools.fixtures -> webtools.policy.relax "Builds the loopback transport with LoopbackForTests"
         webtools.check -> webtools.policy "Compiles its common part for js"
     }
@@ -723,7 +729,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.policy "Components" "The outbound-URL policy as built at master 5f221ce." {
+        component webtools.policy "Components" "The outbound-URL policy as built at docs/issue-70-http-architecture-docs 45aa548." {
             include *
             autoLayout tb
         }
@@ -781,7 +787,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","68":"../../plans/55-http-client-stack/68-call-facades/dashboard.html","69":"../../plans/55-http-client-stack/69-feeds/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -845,12 +851,12 @@ const MODEL = {
   structure: {
     h:480,
     lanes:[["THE POLICY · commonMain",40,44,"start"],["THE CLASSIFIER · internal",40,240,"start"],["THE GUARDS · jvmMain",960,44,"end"]],
-    notes:[{x:40,y:434,lines:["Applied by OkHttpTransport, on its own board, to the request, every redirect target, every resolver answer and every connect;","a refusal reaches the caller as the common core's TransportFailure.RefusedByPolicy with its RefusalReason."]}],
+    notes:[{x:40,y:434,lines:["Applied by the facades' pre-check and by OkHttpTransport to the request, every redirect target, resolver answer and connect;","a refusal reaches the caller as the common core's TransportFailure.RefusedByPolicy with its RefusalReason."]}],
     nodes:[
       {id:"polBox",side:"server",vis:"pub",container:true,x:40,y:56,w:640,h:166,t:"Policies and settings",s:"public configuration values · factories and builders · Stable Core",
         d:{role:"Decides, for every hop and every resolved address, whether a fetch may proceed, from data parameters a consumer sets. The public part is configuration only; the classifier that applies it is internal common code, and the guards internal JVM code.",vis:"public · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt","commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt","commonMain/kotlin/com/spartanlabs/webtools/http/CidrBlock.kt","commonMain/kotlin/com/spartanlabs/webtools/http/MixedAnswers.kt"],threads:["the caller's thread or coroutine"]}},
       {id:"pol",side:"server",vis:"pub",x:56,y:96,w:190,h:56,t:"OutboundUrlPolicy",s:["sealed · Trusted · Untrusted","untrusted { } · trusted { }"],
-        d:{role:"A sealed policy with two final leaves. Untrusted, for a URL a third party supplies: ports 80, 443, 8080 and 8443 by default (any when allowedPorts is null), extraDeniedRanges and extraDeniedHostSuffixes that only add denials, mixedAnswers (Reject by default) and UntrustedDefaults. Trusted, for a known upstream: https only unless allowCleartext, optional pinnedHosts matched by exact canonical equality, and TrustedDefaults. Built with untrusted { }, trusted { } or their from(…) forms; each builder's settings { } derives the settings; every value is validated when the block ends. Value equality; toString() prints counts, never a host.",vis:"public · sealed class, final leaves · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"],threads:["the caller's thread or coroutine"]}},
+        d:{role:"A sealed policy with two final leaves. Untrusted, for a URL a third party supplies: ports 80, 443, 8080 and 8443 by default (any when allowedPorts is null), extraDeniedRanges and extraDeniedHostSuffixes, which add denials (no parameter admits what the built-in tables deny), mixedAnswers (Reject by default) and UntrustedDefaults. Trusted, for a known upstream: https only unless allowCleartext, optional pinnedHosts matched by exact canonical equality, and TrustedDefaults. Built with untrusted { }, trusted { } or their from(…) forms; each builder's settings { } derives the settings; every value is validated when the block ends. Value equality; toString() prints counts, never a host.",vis:"public · sealed class, final leaves · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt"],threads:["the caller's thread or coroutine"]}},
       {id:"set",side:"server",vis:"pub",x:254,y:96,w:190,h:56,t:"TransportSettings",s:["10 settings · 2 default sets","TransportSettings(from) { }"],
         d:{role:"The ten transport settings a policy carries: call, connect, read and write timeouts, the response-body cap, the redirect limit, https-to-http downgrades, total and per-host concurrency, and the idle-connection TTL. TransportSettings(from) { } validates every value: a timeout from 1 ms to Int.MAX_VALUE ms, a cap and concurrency of at least 1, the per-host limit within the total.",vis:"public · final class · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt"]}},
       {id:"cidr",side:"server",vis:"pub",x:452,y:96,w:106,h:56,t:"CidrBlock",s:["parse(text)","Result · canonical"],
@@ -862,9 +868,9 @@ const MODEL = {
       {id:"builders",side:"server",vis:"pub",x:364,y:162,w:300,h:48,t:"Trusted.Builder · Untrusted.Builder · Builder",s:["@WebToolsDsl · validated when the block ends","settings { } derives from the policy's"],
         d:{role:"The three builders a consumer's lambda receives, each marked with the common core's WebToolsDsl, so inside settings { } the policy's builder is reached only through its label (this@untrusted.allowedPorts). Not thread-safe: confined to the factory's lambda.",vis:"public · final classes · Stable Core",files:["commonMain/kotlin/com/spartanlabs/webtools/http/OutboundUrlPolicy.kt","commonMain/kotlin/com/spartanlabs/webtools/http/TransportSettings.kt"],threads:["the caller's thread or coroutine"]}},
       {id:"clsBox",side:"wire",vis:"int",container:true,x:40,y:252,w:640,h:150,t:"Address classifier",s:"internal · pure · JVM-free · compiled for js by the check module",
-        d:{role:"Applies one policy to a hop, a request, a redirect target, an address and a resolver answer. Common code with no I/O and no logging, so the check module compiles it for js and the planned facades can pre-check a URL with it.",vis:"internal · commonMain",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt","commonMain/kotlin/com/spartanlabs/webtools/http/HostRules.kt","commonMain/kotlin/com/spartanlabs/webtools/http/AddressRanges.kt","commonMain/kotlin/com/spartanlabs/webtools/http/StrictIp.kt","commonMain/kotlin/com/spartanlabs/webtools/http/GuardRelaxation.kt"]}},
+        d:{role:"Applies one policy to a hop, a request, a redirect target, an address and a resolver answer. Common code with no I/O and no logging, so the check module compiles it for js and the call facades pre-check every request with it before the cache and the budget.",vis:"internal · commonMain",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt","commonMain/kotlin/com/spartanlabs/webtools/http/HostRules.kt","commonMain/kotlin/com/spartanlabs/webtools/http/AddressRanges.kt","commonMain/kotlin/com/spartanlabs/webtools/http/StrictIp.kt","commonMain/kotlin/com/spartanlabs/webtools/http/GuardRelaxation.kt"]}},
       {id:"guard",side:"wire",vis:"int",x:56,y:292,w:200,h:52,t:"UrlGuard",s:["checkHop · checkRequest","admitRedirect · judgeAnswer"],
-        d:{role:"Applies one policy. checkHop judges a URL (Untrusted: the host form, a literal's address or a name's reserved suffixes, then the port, then the downgrade; Trusted: the scheme, the pins, the downgrade); checkRequest adds, for Untrusted, the sensitive-header rule on hop 1; admitRedirect parses and judges a redirect target; checkAddress and judgeAnswer judge resolved addresses under MixedAnswers. Pure and immutable after construction, safe to share, never logs.",vis:"internal · class · pure",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"],threads:["the caller's thread or coroutine","OkHttpTransport's dispatcher"]}},
+        d:{role:"Applies one policy. checkHop judges a URL (Untrusted: the host form, a literal's address or a name's reserved suffixes, then the port, then the downgrade; Trusted: the scheme, the pins, the downgrade); checkRequest adds, for Untrusted, the sensitive-header rule on hop 1; admitRedirect parses and judges a redirect target, refusing one it cannot parse as UserInfo, Scheme or Port where the parse names one and HostForm otherwise (the only HostForm a Trusted policy returns); checkAddress and judgeAnswer judge resolved addresses under MixedAnswers. Pure and immutable after construction, safe to share, never logs.",vis:"internal · class · pure",files:["commonMain/kotlin/com/spartanlabs/webtools/http/UrlGuard.kt"],threads:["the caller's thread or coroutine","OkHttpTransport's dispatcher"]}},
       {id:"relax",side:"wire",vis:"int",x:264,y:292,w:190,h:52,t:"GuardRelaxation",s:["None · LoopbackForTests","tests only"],
         d:{role:"None changes nothing and is the only production value. LoopbackForTests exempts exactly the host localhost from the reserved-name rule, 127.0.0.0/8 and ::1 (and a mapped 127.0.0.0/8 address) from the table, and the port rule for localhost, 127.0.0.1 and ::1; every other rule, extraDeniedRanges and the policy's suffixes included, stays live. Reachable only from the test fixtures and the module's tests.",vis:"internal · class",files:["commonMain/kotlin/com/spartanlabs/webtools/http/GuardRelaxation.kt"]}},
       {id:"verdicts",side:"wire",vis:"int",x:462,y:292,w:202,h:52,t:"GuardRefusal · verdicts",s:["a reason · a range class","RedirectAdmission · AnswerVerdict"],
