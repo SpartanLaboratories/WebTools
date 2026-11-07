@@ -987,6 +987,36 @@ on 2.2.0; nothing needs one).
   the gate for the Rome default. `webtools-feeds` 1.0.0 publishes no test-fixtures variant;
   the suite is published as one in the feature release that graduates `FeedParser` (§9).
 
+> **Corrected 2026-11-06 (#69 plan):** the unit's plan refines this section in these points, each resting on its
+> research:
+> - **Statuses.** A `200` or a `203` is parsed; every other `2xx` is `UpstreamError(status)`, because a `204` or `205`
+>   has no content, a `206` is a fragment and a `226` a delta.
+> - **A fourth layer of hardening.** `FeedLimits` also bounds the document's structure, tightening-only like its other
+>   members: element depth 256, attributes per element 100, elements 100,000, distinct namespace URIs 64.
+>   `RomeFeedParser` enforces them inside its own parser, each failure is `LimitExceeded` with a reason of its own, and
+>   the hardening contract holds any parser behind the port to them. Without them a 2 MiB document costs minutes of CPU,
+>   overflows the stack or grows JDOM's JVM-wide namespace cache.
+> - **How `RomeFeedParser` drives Rome.** Through a private `WireFeedInput` subclass with a SAX parser of its own per
+>   parse (`SAXParserFactory.newDefaultInstance()`, Rome's hardening features set directly so that a missing one fails
+>   the parse, the limits as JAXP properties under their URL names), a three-step `XmlReader` recipe, failures mapped by
+>   exception type and JAXP error code, and `dc:subject` read as categories. `SyndFeedInput` is not used: it cannot carry
+>   a limit, and Rome's own builder shares JDOM's process-wide SAX factory. No public signature changes.
+> - **`FeedFetch`** is a sealed interface declaring `validators`, `finalUrl` and `permanentlyMovedTo`, so `NotModified`
+>   reports a permanent move too; `permanentlyMovedTo` is the target of the last hop in the leading run of `301`/`308`
+>   hops, and is null when that target is the requested URL.
+> - **The fetcher's surface.** `fetch(url) { }` and `fetch(url, validators) { }` take `UrlFetcher.fetch`'s per-fetch
+>   block; `FeedFetcher.untrusted(userAgent, policy) { }` joins `FeedFetcher.untrusted(userAgent) { }`; the builder adds
+>   `accept`; the common factory's default parser comes from an `internal expect fun`, with `RomeFeedParser` as the JVM
+>   actual and a `js` actual in the check module.
+> - **Logging.** The fetcher's own lines print a feed URL as scheme, host and port only.
+> - **Identity and refusals.** The id digest is SHA-256 over the first present of title, summary or content, and first
+>   enclosure URL, together with the published date. `Refused` also covers a prolog the scan cannot read the way the
+>   parser reads it.
+> - **The contract** is two abstract classes in `jvmTest`, one per test level: conformance at Level 4a and hardening at
+>   Level 4c; the hardening cases that load memory run in a child JVM with a fixed heap.
+>
+> See `69-feeds/plan.md` and `69-feeds/research/README.md`.
+
 ### 6.11 Documentation
 
 - **Responsibility:** keep `README.md` and an evergreen `docs/webtools-http-architecture.md`
@@ -1471,6 +1501,10 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
     Leaves: a published `FeedParserContract` variant, which ships with the feature release
     that graduates `FeedParser`. *Scope:* one new module built on published seams;
     depending on a sibling module does not make it two systems.
+    > **Corrected 2026-11-06 (#69 plan):** the Level 3 integration tests run through `LoopbackFetchers.untrusted`, the
+    > published `UrlFetcher` over `LoopbackTransports.untrusted` whose pre-check is relaxed for loopback in the same
+    > way, because the common `FeedFetcher` factory takes a `UrlFetcher`; the structural limits and the contract's two
+    > classes are in the correction at the end of §6.10.
 11. **`http-docs`** — Writes `docs/webtools-http-architecture.md` and makes the final README
     pass (the "HTTP client stack" and "Feeds" sections, the stability notes, the test-layout
     paragraph) consistent with what landed. *Scope:* Markdown only; no plan folder.

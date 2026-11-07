@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed version="0.3" xmlns="http://purl.org/atom/ns#">
+  <title>Fixture Atom 0.3</title>
+  <link rel="alternate" type="text/html" href="https://fixtures.example.test/atom03/"/>
+  <tagline>An Atom 0.3 feed</tagline>
+  <modified>2026-11-06T04:25:27Z</modified>
+  <entry>
+    <title>Entry one</title>
+    <link rel="alternate" type="text/html" href="https://fixtures.example.test/atom03/1"/>
+    <id>urn:fixture:atom03:1</id>
+    <issued>2026-11-04T09:30:00Z</issued>
+    <modified>2026-11-05T18:00:00Z</modified>
+    <author><name>Author One</name></author>
+    <summary type="text/plain">Summary one</summary>
+    <content type="text/plain" mode="escaped">Content one</content>
+  </entry>
+  <entry>
+    <title>Entry two</title>
+    <link rel="alternate" type="text/html" href="https://fixtures.example.test/atom03/2"/>
+    <id>urn:fixture:atom03:2</id>
+    <issued>2026-11-04T09:30:00Z</issued>
+  </entry>
+</feed>

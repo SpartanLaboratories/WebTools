@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="0.91">
+  <channel>
+    <title>Fixture 0.91</title>
+    <link>https://fixtures.example.test/rss091/</link>
+    <description>An RSS 0.91 Userland channel</description>
+    <language>en</language>
+    <item>
+      <title>Item one</title>
+      <link>https://fixtures.example.test/rss091/1</link>
+      <description>Plain summary one</description>
+    </item>
+    <item>
+      <title>Item two</title>
+      <link>https://fixtures.example.test/rss091/2</link>
+    </item>
+  </channel>
+</rss>

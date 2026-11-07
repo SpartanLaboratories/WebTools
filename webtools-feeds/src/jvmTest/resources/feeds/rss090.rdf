@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://my.netscape.com/rdf/simple/0.9/">
+  <channel>
+    <title>Fixture 0.90</title>
+    <link>https://fixtures.example.test/rss090/</link>
+    <description>An RSS 0.90 channel</description>
+  </channel>
+  <item>
+    <title>Item one</title>
+    <link>https://fixtures.example.test/rss090/1</link>
+  </item>
+  <item>
+    <title>Item two</title>
+    <link>https://fixtures.example.test/rss090/2</link>
+  </item>
+</rdf:RDF>
