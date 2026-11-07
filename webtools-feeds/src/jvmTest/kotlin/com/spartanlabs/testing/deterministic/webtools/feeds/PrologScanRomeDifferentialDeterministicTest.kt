@@ -17,13 +17,13 @@ import kotlin.test.assertTrue
 /**
  * Level 4a - the prolog scan against the real pipeline (seven `XmlReader` shapes, Rome's repair reader, the hardened JDK SAX
  * build): no catalogue row and no generated document reaches the DOCTYPE while the scan says `NoDoctype`; when the scan says
- * `Empty` or `NotMarkup` no shape parses the document; every catalogue row the research records as parsing is parsed by
+ * `Empty` or `NotMarkup` no shape parses the document; every catalogue row the real XML pipeline parses is read by
  * `RomeFeedParser` when the scan says `NoDoctype`.
  */
 class PrologScanRomeDifferentialDeterministicTest {
 
-    /** The N rows whose pipeline column in the research reads "parses". */
-    private val parsesInFindings = setOf(
+    /** The N rows that the real XML pipeline (an `XmlReader` shape, Rome's repair reader and the JDK SAX build) parses. */
+    private val parsesInPipeline = setOf(
         "N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10", "N11", "N12", "N13", "N14", "N15", "N16",
         "N19", "N22", "N23", "N25", "N26", "N27", "N28", "N29", "N31", "N32",
     )
@@ -79,18 +79,18 @@ class PrologScanRomeDifferentialDeterministicTest {
     }
 
     @Test
-    fun `every catalogue row the findings record as parses is parsed by RomeFeedParser when the scan says NoDoctype`() {
+    fun `every catalogue row the real XML pipeline parses is read by RomeFeedParser when the scan says NoDoctype`() {
         val parser = RomeFeedParser()
-        // "Parses" in the research is the XML pipeline's verdict; a well-formed root that is not a feed format (N19's `<htmlx/>`)
+        // "Parses" is the XML pipeline's verdict; a well-formed root that is not a feed format (N19's `<htmlx/>`)
         // reaches Rome's format detection and is reported as an unknown format, which is the document being read, not refused.
         fun readByRome(result: Result<*>): Boolean =
             result.isSuccess || (result.exceptionOrNull() as? FeedFailure.NotAFeed)?.reason == NotAFeedReason.UnknownFormat
-        val failed = PrologVectors.all.filter { it.id in parsesInFindings }.mapNotNull { row ->
+        val failed = PrologVectors.all.filter { it.id in parsesInPipeline }.mapNotNull { row ->
             val scan = PrologScan.scan(row.bytes, row.contentType)
             val result = parser.parse(FeedFixtures.input(row.bytes, row.contentType))
             if (scan != PrologScanResult.NoDoctype || !readByRome(result)) "${row.id}: scan=$scan, result=${result.exceptionOrNull()?.message ?: "ok"}" else null
         }
-        assertTrue(PrologVectors.all.filter { it.id in parsesInFindings && it.id != "N19" }.all { parser.parse(FeedFixtures.input(it.bytes, it.contentType)).isSuccess })
+        assertTrue(PrologVectors.all.filter { it.id in parsesInPipeline && it.id != "N19" }.all { parser.parse(FeedFixtures.input(it.bytes, it.contentType)).isSuccess })
         assertTrue(failed.isEmpty(), failed.joinToString("\n"))
     }
 
