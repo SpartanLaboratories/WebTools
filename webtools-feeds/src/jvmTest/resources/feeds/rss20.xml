@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Fixture 2.0</title>
+    <link>https://fixtures.example.test/rss20/</link>
+    <description>An RSS 2.0 channel</description>
+    <item>
+      <title>Item one</title>
+      <link>https://fixtures.example.test/rss20/1</link>
+      <guid isPermaLink="false">urn:fixture:rss20:1</guid>
+      <pubDate>Fri, 06 Nov 2026 04:25:27 GMT</pubDate>
+      <author>one@example.test (Author One)</author>
+      <description>Summary one</description>
+      <content:encoded>&lt;p&gt;Content one&lt;/p&gt;</content:encoded>
+      <category>Tech</category>
+      <category>Tech</category>
+      <category>News</category>
+      <enclosure url="https://cdn.example.test/rss20/one.mp3" length="2048" type="audio/mpeg"/>
+    </item>
+    <item>
+      <title>Item two</title>
+      <link>https://fixtures.example.test/rss20/2</link>
+      <dc:creator>Creator Two</dc:creator>
+      <dc:date>2026-11-05T18:00:00Z</dc:date>
+      <description>Summary two</description>
+    </item>
+    <item>
+      <guid>https://fixtures.example.test/rss20/3</guid>
+      <description>Summary three, no title and no link</description>
+    </item>
+  </channel>
+</rss>

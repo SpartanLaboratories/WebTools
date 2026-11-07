@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Fixture Atom 1.0</title>
+  <link rel="self" href="https://fixtures.example.test/atom10/feed.xml"/>
+  <link rel="alternate" href="https://fixtures.example.test/atom10/"/>
+  <subtitle>An Atom 1.0 feed</subtitle>
+  <id>urn:fixture:atom10</id>
+  <updated>2026-11-06T04:25:27Z</updated>
+  <entry>
+    <id>urn:fixture:atom10:1</id>
+    <title>Entry one</title>
+    <link rel="alternate" href="https://fixtures.example.test/atom10/1"/>
+    <link rel="enclosure" href="https://cdn.example.test/atom10/one.mp3" length="4096" type="audio/mpeg"/>
+    <published>2026-11-04T09:30:00Z</published>
+    <updated>2026-11-05T18:00:00Z</updated>
+    <author><name>Author One</name></author>
+    <summary>Summary one</summary>
+    <content type="html">&lt;p&gt;Content one&lt;/p&gt;</content>
+    <category term="tech"/>
+    <category label="News"/>
+  </entry>
+  <entry>
+    <id>urn:fixture:atom10:2</id>
+    <title>Entry two</title>
+    <link href="https://fixtures.example.test/atom10/2"/>
+    <updated>2026-11-05T18:00:00Z</updated>
+  </entry>
+</feed>

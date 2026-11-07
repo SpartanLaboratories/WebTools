@@ -230,6 +230,11 @@ none fails — [`research/README.md` § Verification](research/README.md)):
   depends on `webtools-http`'s check module for the `js` klib (§6.8), which was not probed. If
   that dependency does not resolve, the feeds check module compiles both `commonMain`
   directories as source.
+  > **Corrected 2026-11-06 (#69 as built):** held. `webtools-feeds-commoncheck` depends on
+  > `webtools-http-commoncheck` and compiles the feeds `commonMain` for `js()` against its output,
+  > with no environment, after every stage of the unit; it declares `kotlinx-coroutines-core`
+  > itself, since the http check module declares it as `implementation`. The source fallback is
+  > not needed. See `69-feeds/consequences.md` §5.
 - **No test requests a JDK toolchain.** The level tests run on the build JDK (requirement 9),
   so foojay 0.8.0 is never consulted and the bump stays #58's.
 
@@ -987,6 +992,36 @@ on 2.2.0; nothing needs one).
   the gate for the Rome default. `webtools-feeds` 1.0.0 publishes no test-fixtures variant;
   the suite is published as one in the feature release that graduates `FeedParser` (§9).
 
+> **Corrected 2026-11-06 (#69 plan):** the unit's plan refines this section in these points, each resting on its
+> research:
+> - **Statuses.** A `200` or a `203` is parsed; every other `2xx` is `UpstreamError(status)`, because a `204` or `205`
+>   has no content, a `206` is a fragment and a `226` a delta.
+> - **A fourth layer of hardening.** `FeedLimits` also bounds the document's structure, tightening-only like its other
+>   members: element depth 256, attributes per element 100, elements 100,000, distinct namespace URIs 64.
+>   `RomeFeedParser` enforces them inside its own parser, each failure is `LimitExceeded` with a limit of its own, and
+>   the hardening contract holds any parser behind the port to them. Without them a 2 MiB document costs minutes of CPU,
+>   overflows the stack or grows JDOM's JVM-wide namespace cache.
+> - **How `RomeFeedParser` drives Rome.** Through a private `WireFeedInput` subclass with a SAX parser of its own per
+>   parse (`SAXParserFactory.newDefaultInstance()`, Rome's hardening features set directly so that a missing one fails
+>   the parse, the limits as JAXP properties under their URL names), a three-step `XmlReader` recipe, failures mapped by
+>   exception type and JAXP error code, and `dc:subject` read as categories. `SyndFeedInput` is not used: it cannot carry
+>   a limit, and Rome's own builder shares JDOM's process-wide SAX factory. No public signature changes.
+> - **`FeedFetch`** is a sealed interface declaring `validators`, `finalUrl` and `permanentlyMovedTo`, so `NotModified`
+>   reports a permanent move too; `permanentlyMovedTo` is the target of the last hop in the leading run of `301`/`308`
+>   hops, and is null when that target is the requested URL.
+> - **The fetcher's surface.** `fetch(url) { }` and `fetch(url, validators) { }` take `UrlFetcher.fetch`'s per-fetch
+>   block; `FeedFetcher.untrusted(userAgent, policy) { }` joins `FeedFetcher.untrusted(userAgent) { }`; the builder adds
+>   `accept`; the common factory's default parser comes from an `internal expect fun`, with `RomeFeedParser` as the JVM
+>   actual and a `js` actual in the check module.
+> - **Logging.** The fetcher's own lines print a feed URL as scheme, host and port only.
+> - **Identity and refusals.** The id digest is SHA-256 over the first present of title, summary or content, and first
+>   enclosure URL, together with the published date. `Refused` also covers a prolog the scan cannot read the way the
+>   parser reads it.
+> - **The contract** is two abstract classes in `jvmTest`, one per test level: conformance at Level 4a and hardening at
+>   Level 4c; the hardening cases that load memory run in a child JVM with a fixed heap.
+>
+> See `69-feeds/plan.md` and `69-feeds/research/README.md`.
+
 ### 6.11 Documentation
 
 - **Responsibility:** keep `README.md` and an evergreen `docs/webtools-http-architecture.md`
@@ -1471,6 +1506,10 @@ units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.
     Leaves: a published `FeedParserContract` variant, which ships with the feature release
     that graduates `FeedParser`. *Scope:* one new module built on published seams;
     depending on a sibling module does not make it two systems.
+    > **Corrected 2026-11-06 (#69 plan):** the Level 3 integration tests run through `LoopbackFetchers.untrusted`, the
+    > published `UrlFetcher` over `LoopbackTransports.untrusted` whose pre-check is relaxed for loopback in the same
+    > way, because the common `FeedFetcher` factory takes a `UrlFetcher`; the structural limits and the contract's two
+    > classes are in the correction at the end of §6.10.
 11. **`http-docs`** — Writes `docs/webtools-http-architecture.md` and makes the final README
     pass (the "HTTP client stack" and "Feeds" sections, the stability notes, the test-layout
     paragraph) consistent with what landed. *Scope:* Markdown only; no plan folder.
@@ -1527,6 +1566,11 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   whose memory amplification on a hostile 2 MiB document is unmeasured. The port, the prolog
   scan and the Level 4c suite under a fixed heap bound the exposure; a streaming parser behind
   the same port is the exit, and rssreader is the documented swap.
+  > **Corrected 2026-11-06 (#69 as built):** the amplification is measured and bounded. Two
+  > parses of a hostile 2 MiB document need 102 to 318 MB of heap without the structural limits
+  > of `FeedLimits` and 43 MB with them; the Level 4c gate runs each memory-loading case in a
+  > child JVM at `-Xmx128m` with two concurrent parses, and every case returns its expected
+  > result. See `69-feeds/final-implementation.md` §4.
 - **Concurrency and performance shape.** Three library-owned contexts: OkHttp's dispatcher
   threads (bounded by the settings, sized to `maxBurst`), the cache's `SupervisorJob` scope on
   an injectable dispatcher, and the budget's `Mutex` with an O(waiters × windows) re-plan on
@@ -1566,6 +1610,8 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   compiled with and without the opt-in is the candidate; not evaluated.
 - **The feeds check module's dependency on the http check module's `js` klib** was not
   probed; the fallback (compile both `commonMain` trees as source) is stated in §3.
+  > **Corrected 2026-11-06 (#69 as built):** settled: the dependency resolves and the fallback is
+  > not needed (the correction in §3). See `69-feeds/consequences.md` §5.
 - **Network behaviour unmeasured:** real provider idle timeouts, HTTP/2 coalescing over real
   TLS, `421` on a coalesced connection, real DNS answers for the bypass catalogue, `Retry-After`
   on a `3xx` (not honoured, as OkHttp does not).
@@ -1573,6 +1619,14 @@ stay as filed; the resolution comment names the mechanism (`WebToolsBuild.JAVA_F
   StAX reader treats a DOCTYPE with `SUPPORT_DTD` off (decides whether the rssreader swap is
   safe without the prolog scan; until measured, the scan is assumed necessary), Rome's
   Atom date and `xml:base` mappings.
+  > **Corrected 2026-11-06 (#69 as built):** measured, but for the StAX reader. Rome's DOM
+  > amplification is in the correction to the Rome risk of §12. Rome's dates and its `xml:base`
+  > handling were measured (`69-feeds/research/rome-adapter.md` F9 and F10), and the conformance
+  > contract pins what the module makes of them; samples of public feeds (`69-feeds/research/`)
+  > and nine cases against public sites through `FeedFetcher.untrusted` stand in for a corpus.
+  > How the JDK StAX reader treats a DOCTYPE with `SUPPORT_DTD` off stays unmeasured: the prolog
+  > scan belongs to `RomeFeedParser`, and the hardening contract holds a parser behind the port to
+  > refusing a DOCTYPE. See `69-feeds/final-implementation.md` §4.
 - **Calendar-month windows** cannot be expressed with a fixed period; per-window and
   fractional costs are not modelled.
 - **Judgement defaults, not measurements:** every `TransportSettings` number, the 4 s idle

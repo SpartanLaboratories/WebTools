@@ -1,0 +1,321 @@
+public final class com/spartanlabs/webtools/feeds/Feed {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getEntries ()Ljava/util/List;
+	public final fun getLink ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/Feed$Builder {
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getEntries ()Ljava/util/List;
+	public final fun getLink ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun setDescription (Ljava/lang/String;)V
+	public final fun setEntries (Ljava/util/List;)V
+	public final fun setLink (Ljava/lang/String;)V
+	public final fun setTitle (Ljava/lang/String;)V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedEnclosure {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLengthBytes ()Ljava/lang/Long;
+	public final fun getMimeType ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedEnclosure$Builder {
+	public final fun getLengthBytes ()Ljava/lang/Long;
+	public final fun getMimeType ()Ljava/lang/String;
+	public final fun setLengthBytes (Ljava/lang/Long;)V
+	public final fun setMimeType (Ljava/lang/String;)V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedEnclosureKt {
+	public static final fun FeedEnclosure (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedEnclosure;
+	public static synthetic fun FeedEnclosure$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/FeedEnclosure;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedEntry {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthor ()Ljava/lang/String;
+	public final fun getCategories ()Ljava/util/List;
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getEnclosures ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLink ()Ljava/lang/String;
+	public final fun getPublishedAtEpochMillis ()Ljava/lang/Long;
+	public final fun getSummary ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getUpdatedAtEpochMillis ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedEntry$Builder {
+	public final fun getAuthor ()Ljava/lang/String;
+	public final fun getCategories ()Ljava/util/List;
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getEnclosures ()Ljava/util/List;
+	public final fun getLink ()Ljava/lang/String;
+	public final fun getPublishedAtEpochMillis ()Ljava/lang/Long;
+	public final fun getSummary ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getUpdatedAtEpochMillis ()Ljava/lang/Long;
+	public final fun setAuthor (Ljava/lang/String;)V
+	public final fun setCategories (Ljava/util/List;)V
+	public final fun setContent (Ljava/lang/String;)V
+	public final fun setEnclosures (Ljava/util/List;)V
+	public final fun setLink (Ljava/lang/String;)V
+	public final fun setPublishedAtEpochMillis (Ljava/lang/Long;)V
+	public final fun setSummary (Ljava/lang/String;)V
+	public final fun setTitle (Ljava/lang/String;)V
+	public final fun setUpdatedAtEpochMillis (Ljava/lang/Long;)V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedEntryKt {
+	public static final fun FeedEntry (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedEntry;
+	public static synthetic fun FeedEntry$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/FeedEntry;
+}
+
+public abstract class com/spartanlabs/webtools/feeds/FeedFailure : com/spartanlabs/webtools/http/HttpFailure {
+	protected fun <init> (Ljava/lang/String;)V
+	protected fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFailure$LimitExceeded : com/spartanlabs/webtools/feeds/FeedFailure {
+	public fun <init> (Lcom/spartanlabs/webtools/feeds/FeedLimit;)V
+	public final fun getLimit ()Lcom/spartanlabs/webtools/feeds/FeedLimit;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFailure$Malformed : com/spartanlabs/webtools/feeds/FeedFailure {
+	public fun <init> ()V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFailure$NotAFeed : com/spartanlabs/webtools/feeds/FeedFailure {
+	public fun <init> (Lcom/spartanlabs/webtools/feeds/NotAFeedReason;)V
+	public final fun getReason ()Lcom/spartanlabs/webtools/feeds/NotAFeedReason;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFailure$Refused : com/spartanlabs/webtools/feeds/FeedFailure {
+	public fun <init> (Lcom/spartanlabs/webtools/feeds/FeedRefusal;)V
+	public final fun getReason ()Lcom/spartanlabs/webtools/feeds/FeedRefusal;
+}
+
+public abstract interface class com/spartanlabs/webtools/feeds/FeedFetch {
+	public abstract fun getFinalUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public abstract fun getPermanentlyMovedTo ()Lcom/spartanlabs/webtools/http/Url;
+	public abstract fun getValidators ()Lcom/spartanlabs/webtools/feeds/FeedValidators;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetch$Fetched : com/spartanlabs/webtools/feeds/FeedFetch {
+	public fun <init> (Lcom/spartanlabs/webtools/feeds/Feed;Lcom/spartanlabs/webtools/feeds/FeedValidators;Lcom/spartanlabs/webtools/http/Url;Lcom/spartanlabs/webtools/http/Url;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFeed ()Lcom/spartanlabs/webtools/feeds/Feed;
+	public fun getFinalUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public fun getPermanentlyMovedTo ()Lcom/spartanlabs/webtools/http/Url;
+	public fun getValidators ()Lcom/spartanlabs/webtools/feeds/FeedValidators;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetch$NotModified : com/spartanlabs/webtools/feeds/FeedFetch {
+	public fun <init> (Lcom/spartanlabs/webtools/feeds/FeedValidators;Lcom/spartanlabs/webtools/http/Url;Lcom/spartanlabs/webtools/http/Url;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFinalUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public fun getPermanentlyMovedTo ()Lcom/spartanlabs/webtools/http/Url;
+	public fun getValidators ()Lcom/spartanlabs/webtools/feeds/FeedValidators;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetcher : java/lang/AutoCloseable {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/FeedFetcher$Companion;
+	public fun close ()V
+	public final fun fetch-0E7RQCE (Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fetch-0E7RQCE$default (Lcom/spartanlabs/webtools/feeds/FeedFetcher;Lcom/spartanlabs/webtools/http/Url;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun fetch-BWLJW6A (Lcom/spartanlabs/webtools/http/Url;Lcom/spartanlabs/webtools/feeds/FeedValidators;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fetch-BWLJW6A$default (Lcom/spartanlabs/webtools/feeds/FeedFetcher;Lcom/spartanlabs/webtools/http/Url;Lcom/spartanlabs/webtools/feeds/FeedValidators;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetcher$Companion {
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetcherConfig {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/FeedFetcherConfig$Companion;
+	public static final field DEFAULT_ACCEPT Ljava/lang/String;
+	public static final field DEFAULT_MAX_CONCURRENT_PARSES I
+	public final fun getAccept ()Ljava/lang/String;
+	public final fun getMaxConcurrentParses ()I
+	public final fun getParseDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
+	public final fun getParser ()Lcom/spartanlabs/webtools/feeds/FeedParser;
+	public final fun setAccept (Ljava/lang/String;)V
+	public final fun setMaxConcurrentParses (I)V
+	public final fun setParseDispatcher (Lkotlinx/coroutines/CoroutineDispatcher;)V
+	public final fun setParser (Lcom/spartanlabs/webtools/feeds/FeedParser;)V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetcherConfig$Companion {
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetcherKt {
+	public static final fun FeedFetcher (Lcom/spartanlabs/webtools/http/UrlFetcher;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedFetcher;
+	public static synthetic fun FeedFetcher$default (Lcom/spartanlabs/webtools/http/UrlFetcher;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/FeedFetcher;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedFetcherOwningKt {
+	public static final fun untrusted (Lcom/spartanlabs/webtools/feeds/FeedFetcher$Companion;Ljava/lang/String;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedFetcher;
+	public static final fun untrusted (Lcom/spartanlabs/webtools/feeds/FeedFetcher$Companion;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedFetcher;
+	public static synthetic fun untrusted$default (Lcom/spartanlabs/webtools/feeds/FeedFetcher$Companion;Ljava/lang/String;Lcom/spartanlabs/webtools/http/OutboundUrlPolicy$Untrusted;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/FeedFetcher;
+	public static synthetic fun untrusted$default (Lcom/spartanlabs/webtools/feeds/FeedFetcher$Companion;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/FeedFetcher;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedInput {
+	public fun <init> ([BLjava/lang/String;Lcom/spartanlabs/webtools/http/Url;)V
+	public final fun document ()[B
+	public final fun getBaseUrl ()Lcom/spartanlabs/webtools/http/Url;
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getDocumentSize ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedKt {
+	public static final fun Feed (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/Feed;
+	public static synthetic fun Feed$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/Feed;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedLimit {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/FeedLimit$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedLimit$Companion {
+	public final fun getAttributes ()Lcom/spartanlabs/webtools/feeds/FeedLimit;
+	public final fun getDepth ()Lcom/spartanlabs/webtools/feeds/FeedLimit;
+	public final fun getElements ()Lcom/spartanlabs/webtools/feeds/FeedLimit;
+	public final fun getEntries ()Lcom/spartanlabs/webtools/feeds/FeedLimit;
+	public final fun getNamespaceUris ()Lcom/spartanlabs/webtools/feeds/FeedLimit;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedLimits {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/FeedLimits$Companion;
+	public static final field DEFAULT_MAX_ATTRIBUTES_PER_ELEMENT I
+	public static final field DEFAULT_MAX_CATEGORIES_PER_ENTRY I
+	public static final field DEFAULT_MAX_DEPTH I
+	public static final field DEFAULT_MAX_ELEMENTS I
+	public static final field DEFAULT_MAX_ENCLOSURES_PER_ENTRY I
+	public static final field DEFAULT_MAX_ENTRIES I
+	public static final field DEFAULT_MAX_ID_CHARS I
+	public static final field DEFAULT_MAX_LINK_CHARS I
+	public static final field DEFAULT_MAX_NAMESPACE_URIS I
+	public static final field DEFAULT_MAX_TEXT_CHARS I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxAttributesPerElement ()I
+	public final fun getMaxCategoriesPerEntry ()I
+	public final fun getMaxDepth ()I
+	public final fun getMaxElements ()I
+	public final fun getMaxEnclosuresPerEntry ()I
+	public final fun getMaxEntries ()I
+	public final fun getMaxIdChars ()I
+	public final fun getMaxLinkChars ()I
+	public final fun getMaxNamespaceUris ()I
+	public final fun getMaxTextChars ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedLimits$Builder {
+	public final fun getMaxAttributesPerElement ()I
+	public final fun getMaxCategoriesPerEntry ()I
+	public final fun getMaxDepth ()I
+	public final fun getMaxElements ()I
+	public final fun getMaxEnclosuresPerEntry ()I
+	public final fun getMaxEntries ()I
+	public final fun getMaxIdChars ()I
+	public final fun getMaxLinkChars ()I
+	public final fun getMaxNamespaceUris ()I
+	public final fun getMaxTextChars ()I
+	public final fun setMaxAttributesPerElement (I)V
+	public final fun setMaxCategoriesPerEntry (I)V
+	public final fun setMaxDepth (I)V
+	public final fun setMaxElements (I)V
+	public final fun setMaxEnclosuresPerEntry (I)V
+	public final fun setMaxEntries (I)V
+	public final fun setMaxIdChars (I)V
+	public final fun setMaxLinkChars (I)V
+	public final fun setMaxNamespaceUris (I)V
+	public final fun setMaxTextChars (I)V
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedLimits$Companion {
+	public final fun getDefaults ()Lcom/spartanlabs/webtools/feeds/FeedLimits;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedLimitsKt {
+	public static final fun FeedLimits (Lcom/spartanlabs/webtools/feeds/FeedLimits;Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedLimits;
+	public static final fun FeedLimits (Lkotlin/jvm/functions/Function1;)Lcom/spartanlabs/webtools/feeds/FeedLimits;
+	public static synthetic fun FeedLimits$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/spartanlabs/webtools/feeds/FeedLimits;
+}
+
+public abstract interface class com/spartanlabs/webtools/feeds/FeedParser {
+	public abstract fun parse-IoAF18A (Lcom/spartanlabs/webtools/feeds/FeedInput;)Ljava/lang/Object;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedRefusal {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/FeedRefusal$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedRefusal$Companion {
+	public final fun getAmbiguousProlog ()Lcom/spartanlabs/webtools/feeds/FeedRefusal;
+	public final fun getDoctype ()Lcom/spartanlabs/webtools/feeds/FeedRefusal;
+	public final fun getPrologTooLong ()Lcom/spartanlabs/webtools/feeds/FeedRefusal;
+	public final fun getUnsupportedEncoding ()Lcom/spartanlabs/webtools/feeds/FeedRefusal;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedValidators {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/FeedValidators$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEtag ()Ljava/lang/String;
+	public final fun getLastModified ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/FeedValidators$Companion {
+	public final fun getNone ()Lcom/spartanlabs/webtools/feeds/FeedValidators;
+}
+
+public final class com/spartanlabs/webtools/feeds/NotAFeedReason {
+	public static final field Companion Lcom/spartanlabs/webtools/feeds/NotAFeedReason$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/spartanlabs/webtools/feeds/NotAFeedReason$Companion {
+	public final fun getEmpty ()Lcom/spartanlabs/webtools/feeds/NotAFeedReason;
+	public final fun getHtml ()Lcom/spartanlabs/webtools/feeds/NotAFeedReason;
+	public final fun getNotXml ()Lcom/spartanlabs/webtools/feeds/NotAFeedReason;
+	public final fun getUnknownFormat ()Lcom/spartanlabs/webtools/feeds/NotAFeedReason;
+}
+
+public final class com/spartanlabs/webtools/feeds/RomeFeedParser : com/spartanlabs/webtools/feeds/FeedParser {
+	public fun <init> ()V
+	public fun <init> (Lcom/spartanlabs/webtools/feeds/FeedLimits;)V
+	public fun parse-IoAF18A (Lcom/spartanlabs/webtools/feeds/FeedInput;)Ljava/lang/Object;
+}
+

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="0.92">
+  <channel>
+    <title>Fixture 0.92</title>
+    <link>https://fixtures.example.test/rss092/</link>
+    <description>An RSS 0.92 channel</description>
+    <item>
+      <title>Item one</title>
+      <link>https://fixtures.example.test/rss092/1</link>
+      <description>Summary &lt;b&gt;one&lt;/b&gt;</description>
+      <category domain="https://fixtures.example.test/tags">Tech</category>
+      <category>News</category>
+      <enclosure url="https://cdn.example.test/rss092/one.mp3" length="12345" type="audio/mpeg"/>
+    </item>
+    <item>
+      <title>Item two</title>
+      <link>https://fixtures.example.test/rss092/2</link>
+      <enclosure url="https://cdn.example.test/rss092/two.mp3" length="0" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>

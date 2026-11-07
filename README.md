@@ -9,6 +9,7 @@ single-concern artifacts** — depend only on the one you need:
 | `io.github.spartanlaboratories:webtools-scraping` | `com.spartanlabs.webtools.scraping` | `Connector` — open/read a URL line by line, plus one-shot `get` / `skrape` / image `download` | skrapeit, jsoup, unirest |
 | `io.github.spartanlaboratories:webtools-browser` | `com.spartanlabs.webtools.browser` | `WebViewer` — headless-browser screenshots | selenium-java |
 | `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, the `CallBudget` port with `WindowedCallBudget` (the supplied budget: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from `Retry-After` and reset hints, and a hard window that survives a restart through a `BudgetStore`), `CallBudget.Unlimited`, `RateSignalsReader.Standard` and `RetryAfter.parse`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency), and the call facades `UpstreamClient` (declared `Endpoint`s, a cache, a budget and a transport composed in one fixed order, with an owning JVM factory) and `UrlFetcher` (administrator-supplied URLs checked against the policy first); **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
+| `io.github.spartanlaboratories:webtools-feeds` | `com.spartanlabs.webtools.feeds` | Kotlin Multiplatform (JVM target) — RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port (`FeedParser`) with Rome 2.1.0 as the supplied parser (`RomeFeedParser`: DOCTYPE refused before any parser runs, structural limits on depth, attributes, elements and namespaces, text/id/link/entry bounds), a feed model with a frozen entry id, and `FeedFetcher`, a stateless conditional GET over `UrlFetcher` that returns a `304` as a value and a permanent move as a fact; **not yet released** | webtools-http (and its dependencies), rome |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover.
@@ -28,6 +29,8 @@ dependencies {
     implementation("io.github.spartanlaboratories:webtools-http:1.0.0")
     // tests only (Gradle): fakes, a virtual clock, .http fixtures and a recorder; also not yet on Maven Central
     testImplementation(testFixtures("io.github.spartanlaboratories:webtools-http:1.0.0"))
+    // not yet on Maven Central: webtools-feeds 1.0.0 is released with webtools-http
+    implementation("io.github.spartanlaboratories:webtools-feeds:1.0.0")
 }
 ```
 
@@ -37,6 +40,9 @@ Requires JDK 11 or newer. Built with Kotlin 2.2.
 a Gradle build resolves the right one itself, a Maven build depends on `webtools-http-jvm`. It is not on
 Maven Central yet. Its `okhttp-jvm` 5.5.0 dependency requires `kotlin-stdlib` 2.2.21, so a consumer's
 Kotlin standard library resolves to 2.2.21 or newer.
+
+`webtools-feeds` is a Kotlin Multiplatform module that publishes `webtools-feeds` and `webtools-feeds-jvm` (a Maven build depends on `webtools-feeds-jvm`); it is not on Maven Central yet. It exposes
+`webtools-http` as an `api` dependency and brings Rome 2.1.0 (with `rome-utils` and `jdom2`) at runtime; the fakes for its tests are `webtools-http`'s test fixtures.
 
 The test-fixtures variant of `webtools-http` (capability
 `io.github.spartanlaboratories:webtools-http-test-fixtures`, a `-test-fixtures.jar` beside the module, JVM
@@ -224,6 +230,49 @@ runTest {
 For a real exchange over loopback, start a `mockwebserver3.MockWebServer` on `127.0.0.1` and use
 `LoopbackFetchers.untrusted("test")` (a `UrlFetcher` with every `Untrusted` rule live except the loopback ones) or
 `LoopbackTransports.trusted(…)` with the common `UpstreamClient` factory.
+
+## Feeds
+
+`webtools-feeds` (not yet released) parses RSS and Atom behind a hardened port and fetches feeds with a **stateless conditional GET** over `UrlFetcher`. It keeps no state: you store the validators it returns and
+hand them back on the next poll.
+
+```kotlin
+FeedFetcher.untrusted("my-app/1.0 (+https://example.com/contact)").use { fetcher ->
+    val stored: FeedValidators = loadValidators(feedId)                      // FeedValidators.None on the first poll
+    fetcher.fetch(feedUrl, stored).fold(
+        onSuccess = { fetch ->
+            saveValidators(feedId, fetch.validators)                          // after every response
+            fetch.permanentlyMovedTo?.let { moved -> considerMoving(feedId, moved) }
+            when (fetch) {
+                is FeedFetch.Fetched -> store(fetch.feed.entries)             // new items: entries whose id you have not seen, never by date
+                is FeedFetch.NotModified -> Unit
+            }
+        },
+        onFailure = { failure -> report(failure) },
+    )
+}
+```
+
+- **What you own.** Storing the validators after every response; dropping them when `finalUrl` changes (a validator from one server must not reach another); deciding whether to adopt `permanentlyMovedTo` (it is a fact
+  about the redirect chain: adopt it only when the chain's first request was `https`, or after it was reported on several polls); polling, back-off, `410`, the first poll and "new items".
+- **Failures** are values in the `Result`: the stack's own (`RefusedByPolicy`, `RateLimited`, `BudgetExhausted`, transport failures, `UpstreamError` for any status that is not a feed, `304` to an unconditional request
+  included) pass through unchanged; a document that is not a feed is `FeedFailure.NotAFeed` (a web page, an empty or non-XML body, an unknown format), `Malformed`, `Refused` (a DOCTYPE or another markup declaration, an
+  encoding outside the set the parser reads, a prolog longer than 64 KiB, or a prolog that decodes two ways) or `LimitExceeded`. Keep an `else` when you match.
+- **Limits.** The transport caps a document at 2 MiB under `UrlFetcher`'s `Untrusted` policy and a feed may hold 1,000 entries by default (`FeedLimits`; a value can only be tightened): a larger feed, a podcast with a
+  long back catalogue for one, fails with `BodyTooLarge` or `LimitExceeded(Entries)`. `https` to `http` redirects are refused by default.
+- **Model.** An entry's `id` is never blank and never changes for the same entry: the guid or Atom id, else the link as written, else a digest. Links are absolute `http`/`https` or `null`. `summary` and `content` are
+  untrusted markup. Dates are for display; never decide "new" by date.
+- **Hardening and memory.** A DOCTYPE is refused before any parser runs, external entities and includes are never resolved, and depth, attributes, elements and namespaces are bounded. Each parse has its own SAX
+  parser and sets no process-wide XML configuration; the one shared state it grows is JDOM's process-wide namespace cache, by at most `maxNamespaceUris` (64) new URIs per document. Provide about 128 MB of heap
+  headroom for the default two concurrent parses of one fetcher; the figure grows with the sum of every fetcher's `maxConcurrentParses` in the process.
+- **Closing.** A fetch after `close()` returns `Closed("feed fetcher")`. Closing a fetcher built by `FeedFetcher.untrusted` closes its transport, so a fetch still on the network returns `Closed("transport")`, and a
+  fetch racing `close()` may return the composed `UrlFetcher`'s `Closed("fetcher")`: match `HttpFailure.Closed`. A fetcher over a `UrlFetcher` you built never closes it, and a parse already running is never
+  interrupted.
+- **Other parsers.** `RomeFeedParser` is the default. A `FeedParser` of your own is Experimental to implement (`@OptIn(ExperimentalForInheritanceWebToolsApi::class)`); pass it with `parser = …` in the factory's lambda.
+- **Logging.** `FeedFetcher` logs under `com.spartanlabs.webtools.feeds.FeedFetcher` and prints a feed URL as scheme, host and port only. The `UrlFetcher` it composes, and the transport under it, print `Url.redacted()`,
+  which shows the path: a secret in a feed URL's path appears in their lines.
+- **Testing.** Over a transport of your own: `FeedFetcher(UrlFetcher(FakeHttpTransport()…, OutboundUrlPolicy.untrusted())) { parseDispatcher = … }`; the pre-check refuses `localhost` and IP literals, so give the fake a
+  public-looking host such as `https://feeds.example.test/rss`. For a real exchange over loopback build the `UrlFetcher` with `LoopbackFetchers.untrusted(…)` and pass it to the common factory.
 
 ## UDP transport protocol
 
@@ -601,8 +650,8 @@ server-wide replacement to point a `ReplaceWith` at.
 ## Build & test
 
 The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webtools-scraping`,
-`:webtools-browser`, `:webtools-http` (Kotlin Multiplatform) and `:webtools-http-commoncheck`
-(unpublished). The configuration they share lives in the included `build-logic/` build (see below).
+`:webtools-browser`, `:webtools-http` (Kotlin Multiplatform), `:webtools-http-commoncheck`
+(unpublished), `:webtools-feeds` (Kotlin Multiplatform) and `:webtools-feeds-commoncheck` (unpublished). The configuration they share lives in the included `build-logic/` build (see below).
 
 ```sh
 ./gradlew build                    # compile + full test suite, every module
@@ -617,6 +666,7 @@ The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webt
 ./gradlew uatTest                  # Level 5  - manual acceptance (mostly @Disabled)
 ./gradlew verifyJavaFloor          # the Java 11 floor of every published module's jars, metadata and runtime classpath (part of check)
 ./gradlew :webtools-http-commoncheck:build  # compile webtools-http's commonMain for js (no Node.js needed)
+./gradlew :webtools-feeds-commoncheck:build  # compile webtools-feeds' commonMain for js (no Node.js needed)
 ./gradlew :build-logic:test        # build-logic's pre-commit gate: its gating, component and deterministic checks
 ./gradlew :build-logic:fixturesPublicationCheck  # publish a copy of webtools-http to a temporary repository and resolve its test fixtures from it (also part of webtools-http's check)
 ./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest  # on demand: TestKit checks
@@ -658,7 +708,7 @@ plugins, which a module applies by id in its `plugins {}` block:
 |---|---|
 | `webtools.published-library` | the Maven Central publishing skeleton: signing and the shared POM metadata |
 | `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the level test tasks; applies `webtools.published-library` |
-| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (used by `webtools-http`): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
+| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (used by `webtools-http` and `webtools-feeds`): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
 | `webtools.kotlin-common-check` | an unpublished, check-only `js` module that compiles a sibling's `commonMain` (no publishing, no tests, no Node.js, no Java floor) |
 
 Change shared build behaviour there, not in a module's build file: a module's `build.gradle.kts`

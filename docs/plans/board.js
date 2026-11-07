@@ -3,11 +3,11 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-06T04:16:11Z",
-  "asOf": "2026-11-06",
+  "generated": "2026-11-07T03:02:16Z",
+  "asOf": "2026-11-07",
   "tree": {
-    "ref": "feat/issue-68-call-facades",
-    "sha": "806b489"
+    "ref": "feat/issue-69-feeds",
+    "sha": "25678cf"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -83,8 +83,8 @@ window.dashboardLive&&window.dashboardLive("board",
       "name": "webtools-feeds",
       "slot": 6,
       "top": "webtools-feeds",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-feeds/index.html"
     },
     {
       "slug": "webtools",
@@ -144,9 +144,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "8 of 11 units landed; #68 in progress; #69 up next.",
+      "detail": "9 of 11 units landed; #69 in progress; #70 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-06T00:17:56Z",
+      "updated": "2026-11-06T04:27:23Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -154,13 +154,13 @@ window.dashboardLive&&window.dashboardLive("board",
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 8,
+        "landed": 9,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 8,
+        "landed": 9,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -168,17 +168,17 @@ window.dashboardLive&&window.dashboardLive("board",
         "done": false,
         "current": [
           {
-            "issue": 68,
-            "slug": "call-facades",
+            "issue": 69,
+            "slug": "feeds",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 69,
-          "slug": "feeds",
+          "issue": 70,
+          "slug": "http-docs",
           "blockedBy": [
             {
-              "issue": 68
+              "issue": 69
             }
           ]
         }
@@ -658,7 +658,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
           "hold": "enables"
         }
       ],
@@ -756,7 +758,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
           "hold": "enables"
         }
       ],
@@ -854,7 +858,9 @@ window.dashboardLive&&window.dashboardLive("board",
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
           "hold": "enables"
         }
       ],
@@ -927,7 +933,8 @@ window.dashboardLive&&window.dashboardLive("board",
     {
       "issue": 68,
       "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -960,17 +967,17 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 69,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/68-call-facades/dashboard.html",
       "folder": "55-http-client-stack/68-call-facades/",
-      "branch": "feat/issue-68-call-facades",
+      "branch": null,
       "system": "webtools-http-facades",
-      "step": "document",
-      "detail": "Document: 5 of 7 tasks done; State boards current.",
-      "since": "2026-11-06T03:09:31Z",
-      "updated": "2026-11-06T03:53:14Z",
+      "step": "landed",
+      "detail": "Landed in PR #95.",
+      "since": "2026-11-06T04:22:18Z",
+      "updated": "2026-11-06T04:22:18Z",
       "qa": [
         {
           "pass": 1,
@@ -991,15 +998,20 @@ window.dashboardLive&&window.dashboardLive("board",
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 95,
+        "merge": "0374c8d",
+        "version": null,
+        "date": "2026-11-06"
+      },
       "reconciliation": {
         "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "call facades",
       "group": "55",
       "order": 9
@@ -1013,8 +1025,10 @@ window.dashboardLive&&window.dashboardLive("board",
       "waitsOn": [
         {
           "issue": 68,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
+          "build": "clear",
           "locality": "local-repository"
         },
         {
@@ -1033,24 +1047,46 @@ window.dashboardLive&&window.dashboardLive("board",
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/69-feeds/dashboard.html",
+      "folder": "55-http-client-stack/69-feeds/",
+      "branch": "feat/issue-69-feeds",
       "system": "webtools-feeds",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-07T01:46:46Z",
+      "updated": "2026-11-07T02:39:35Z",
+      "qa": [
         {
-          "issue": 68
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-07",
+          "at": "2026-11-07T00:48:29Z",
+          "findings": {
+            "documentation": 0,
+            "test": 1,
+            "code": 0
+          },
+          "severity": {
+            "minor": 1,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html",
+          "note": "Code review passed on every check: the diff stays inside the two new modules, the ABI dump names no Rome, JDOM, SAX or slf4j type, every plan item is built and both deviations are built as logged. One minor test finding, in the As built row the fix touches, `component-tests`: two Level 2 component tests in `FeedFetcherParseComponentTest` prove their negatives with fixed wall-clock delays instead of a synchronisation point on the gate parser; the delays are replaced by a latch on the gate parser, in place, with no additional review. Suite: 328 tests, 327 passed, 0 failed, 1 skipped (`RomeFeedParserJdk11NonFunctionalTest`, by its assumption: no JDK 11 on the build host); `apiCheck` and the Java floor check passed.",
+          "inPlace": "fixed"
         }
       ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
+      "landed": null,
+      "reconciliation": {
+        "state": "partial",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "webtools-feeds",
       "group": "55",
       "order": 10
@@ -1078,10 +1114,16 @@ window.dashboardLive&&window.dashboardLive("board",
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [
+        {
+          "issue": 69
+        }
+      ],
       "systemName": "WebTools",
       "group": "55",
       "order": 11
@@ -1201,7 +1243,8 @@ window.dashboardLive&&window.dashboardLive("board",
         {
           "issue": 68,
           "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 69,

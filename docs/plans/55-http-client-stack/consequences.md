@@ -183,12 +183,12 @@ Each unit's plan inherits the architecture's open points that fall inside it (§
 | 5 `url-policy` | Settled (#64). The guards below the transport are measured through a real `OkHttpClient` on JDK 23.0.2: a JVM-wide SOCKS setting reaches the default socket factory's sockets even with `proxy(Proxy.NO_PROXY)`, so the socket guard creates its own `Socket(Proxy.NO_PROXY)` sockets; a resolver-guard refusal is the call's exception, unwrapped, and socket-guard refusals reach its `suppressed` list, never as a `ConnectException`; OkHttp 5.5.0's inherited `Dns.newCall` resolves through the guard. Real DNS answers for the bypass catalogue stay unmeasured (architecture §13), and the settings' numbers, the `Untrusted` port set and the reserved names stay judgement defaults ([`64-url-policy/impact.md`](64-url-policy/impact.md) §5 and §8). |
 | 8 `call-budget` | Settled (#67). `close()` completes a budget-owned `Job()` latch without suspending or taking the ledger's lock; each waiter races its conflated wake channel against the latch and returns `Closed("budget")` as a value, as every later `acquire` does. Everything but grants and waits keeps working after it: `utilisation()`, the permits' `complete()` and `release()`, and `flush()`, the exact final write ([`67-call-budget/consequences.md`](67-call-budget/consequences.md) §5). |
 | 9 `call-facades` | Settled (#68). `Endpoint<T : Any>` is invariant, over an `internal` constructor, and built by a generic top-level factory: every consumer-style call binds the factory and infers `T`, measured on Kotlin 2.2.0 from a separate JVM module, and the ABI dump records the factory and no constructor. `RateLimited.retryAfter` keeps the `max`: it is the longer of the server's `Retry-After` and the budget's `pausedFor`, read once after `complete(signals)`, since `pausedFor` is the shorter when the server's value exceeds `maxPause` and the longer when an earlier pause outlasts it ([`68-call-facades/consequences.md`](68-call-facades/consequences.md) §5). |
-| 10 `feeds` | The feeds check module's dependency on the http check module's `js` output, which compiled in a probe under `js()` with no environment ([`62-http-core/research/common-check-plugin.md`](62-http-core/research/common-check-plugin.md) F11; fallback: compile both `commonMain` trees as source); Rome's DOM amplification under the fixed-heap Level 4c suite. |
+| 10 `feeds` | Settled (#69). The feeds check module compiles the feeds `commonMain` for `js()` against the http check module's output, with no environment and no source fallback; Rome's DOM, bounded by the structural limits of `FeedLimits`, passes every memory-loading case of the fixed-heap Level 4c suite at `-Xmx128m` with two concurrent parses ([`69-feeds/consequences.md`](69-feeds/consequences.md) §5). |
 | none | A compile-fail check for the subclass gate: ABI dumps do not record `@SubclassOptInRequired`, so dropping it stays a review item. |
 
-## 8. What the later units build on: units 1 to 9 as built
+## 8. What the later units build on: units 1 to 10 as built
 
-Units 1 to 9 are built.
+Units 1 to 10 are built.
 - **Unit 1, `build-logic` (#61).** Its as-built record is
   [`61-build-logic/final-implementation.md`](61-build-logic/final-implementation.md). The exact
   seams are in [`61-build-logic/plan.md`](61-build-logic/plan.md) §11 and
@@ -225,6 +225,10 @@ Units 1 to 9 are built.
   [`68-call-facades/final-implementation.md`](68-call-facades/final-implementation.md). Its contracts for
   the later units are pinned in [`68-call-facades/plan.md`](68-call-facades/plan.md) §12 and summarised in
   [`68-call-facades/consequences.md`](68-call-facades/consequences.md) §4.
+- **Unit 10, `feeds` (#69).** Its as-built record is
+  [`69-feeds/final-implementation.md`](69-feeds/final-implementation.md). Its contracts for the
+  later units are pinned in [`69-feeds/plan.md`](69-feeds/plan.md) §12 and summarised in
+  [`69-feeds/consequences.md`](69-feeds/consequences.md) §4.
 
 What they settle for the units still to come:
 

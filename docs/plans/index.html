@@ -19,8 +19,8 @@
    closed · not planned (closed on the tracker as not planned: solid, neutral, never landed) and closed · duplicate (closed as a
    duplicate of another issue: solid, neutral, never landed). The same words mark a roadmap item and a depends-on or blocks entry closed
    as not planned (stateReason NOT_PLANNED) or as a duplicate (stateReason DUPLICATE). The columns (dashboards-skill/30): the
-   issue (its title the link to its board), its state (with its branch while it has one), now, its qa passes (every pass recorded and the
-   one running, as ordinals), what it depends on (each dependency with its build state, blocking, clear or pre-built, in the status
+   issue (its title the link to its board), its state (with its branch while it has one), now, its Quality Reviews (every pass recorded and the
+   one running, each "Quality Review N"), what it depends on (each dependency with its build state, blocking, clear or pre-built, in the status
    colours, and its locality, this repository, this organization, the parent organization or external, on a neutral ramp from near to far)
    and what it holds up (blocks while it is open, enables once it is done). */
 :root{
@@ -40,7 +40,12 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);p
 /* wide desktop (16:9 screens): the board uses most of the window, as the issue boards do (GUIDANCE.md §6) */
 @media (min-width:1500px){.page{max-width:min(2400px,100%)}}
 a{color:inherit}
-code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--hair);padding:1px 4px;border-radius:3px}
+/* the code label (GUIDANCE.md §12, "Code"; dashboards-skill/42): every inline code drawn as a label of its own,
+   in both themes, at normal weight inside bold text; inside a chip, a pill or a tile (a label or a figure already: each class carries
+   its type word) it stays plain mono text */
+:is(b,strong,.name,.nm,dt,th) code{font-weight:400}
+:is([class*="chip"],[class*="pill"],[class*="tile"]) code{background:none;border:0;padding:0;border-radius:0}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .crumbs{font-size:12px;color:var(--muted);padding-top:18px}
 .crumbs a{text-decoration:none}
@@ -101,24 +106,24 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
   header>.chips>.chip.wide{flex-basis:100%}
 }
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 18px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
-.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.kpi .v{font-size:22px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
-.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi-tile{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi-tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi-tile .v{font-size:22px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi-tile .s{font-size:12px;color:var(--ink-2);margin-top:2px}
 /* A tile that counts states carries a segmented bar of them, its legend inside the tile (GUIDANCE.md §2, "Figures"): the Runs and the Landed
    tiles. A tile that counts one state (active, waiting, up next, not started) has nothing to segment and carries none. */
-.kpi .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
-.kpi .seg-bar i{display:block;height:100%;background:var(--ink-2)}
+.kpi-tile .seg-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;background:var(--surface-2)}
+.kpi-tile .seg-bar i{display:block;height:100%;background:var(--ink-2)}
 .seg-bar i.good{background:var(--good)}.seg-bar i.warning{background:var(--warning)}.seg-bar i.serious{background:var(--serious)}.seg-bar i.critical{background:var(--critical)}.seg-bar i.neutral{background:var(--muted)}.seg-bar i.accent{background:var(--accent)}
 .seg-bar i.hollow{background:none!important;border:1.5px solid var(--good)}
 .seg-bar i.pln{background:none!important;border:1.5px dashed var(--muted)}
-.kpi .key{margin-top:6px;gap:4px 10px;font-size:11px}
-.key i.segk{width:14px;height:6px;border:0;border-radius:2px;background:var(--sc,var(--ink-2))}
-.key i.segk.good{--sc:var(--good)}.key i.segk.warning{--sc:var(--warning)}.key i.segk.serious{--sc:var(--serious)}.key i.segk.critical{--sc:var(--critical)}.key i.segk.neutral{--sc:var(--muted)}.key i.segk.accent{--sc:var(--accent)}
-.key i.segk.hollow{background:none;border:1.5px solid var(--good);height:7px}
-.key i.segk.pln{background:none;border:1.5px dashed var(--muted);height:7px}
+.kpi-tile .legend{margin-top:6px;gap:4px 10px;font-size:11px}
+.legend i.segk{width:14px;height:6px;border:0;border-radius:2px;background:var(--sc,var(--ink-2))}
+.legend i.segk.good{--sc:var(--good)}.legend i.segk.warning{--sc:var(--warning)}.legend i.segk.serious{--sc:var(--serious)}.legend i.segk.critical{--sc:var(--critical)}.legend i.segk.neutral{--sc:var(--muted)}.legend i.segk.accent{--sc:var(--accent)}
+.legend i.segk.hollow{background:none;border:1.5px solid var(--good);height:7px}
+.legend i.segk.pln{background:none;border:1.5px dashed var(--muted);height:7px}
 /* the Context's legend (GUIDANCE.md §2): the encodings its cards draw */
-.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
+.context>.legend{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
 .tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:600;padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
@@ -126,47 +131,47 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .view{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
 .view h2{font-size:15px;margin:0 0 4px}
 .lede{font-size:13px;color:var(--ink-2);margin:0 0 10px;max-width:90ch}
-.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
-.key span{display:inline-flex;align-items:center;gap:6px}
-.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
-.key i.sbar{border-color:var(--line);border-left:4px solid var(--c)}
-.key i.pln{border-style:dashed;background:none;border-color:var(--muted)}
-.key i.gl{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:inset 0 0 4px 1px color-mix(in srgb,var(--accent) 60%,transparent)}
-.key i.nx{border-color:color-mix(in srgb,var(--accent) 70%,transparent);box-shadow:0 0 6px 2px color-mix(in srgb,var(--accent) 35%,transparent)}
-.vp{--sc:var(--muted);display:inline-flex;align-items:center;gap:5px;font:600 10.5px/1.2 var(--mono);padding:2px 6px;border-radius:3px;border:1px solid var(--line);border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 14%,var(--surface));color:var(--ink);white-space:nowrap}
-.vp i,.key .vp i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.legend i.sbar{border-color:var(--line);border-left:4px solid var(--c)}
+.legend i.pln{border-style:dashed;background:none;border-color:var(--muted)}
+.legend i.gl{border:2px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:inset 0 0 4px 1px color-mix(in srgb,var(--accent) 60%,transparent)}
+.legend i.nx{border-color:color-mix(in srgb,var(--accent) 70%,transparent);box-shadow:0 0 6px 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.verdict-pill{--sc:var(--muted);display:inline-flex;align-items:center;gap:5px;font:600 10.5px/1.2 var(--mono);padding:2px 6px;border-radius:3px;border:1px solid var(--line);border-left:3px solid var(--sc);background:color-mix(in srgb,var(--sc) 14%,var(--surface));color:var(--ink);white-space:nowrap}
+.verdict-pill i,.legend .verdict-pill i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none}
 /* a tracking issue's chain (plan/RULES.md §3, "The chain's progress"): the summary and a thin bar of units landed */
 .chainsum{font-size:12px;color:var(--ink-2);line-height:1.4;min-width:0;overflow-wrap:anywhere}
 .chainsum b{color:var(--ink)}
 .chainsum a{text-decoration:none;border-bottom:1px solid var(--line)}
 .cbar{display:block;height:4px;margin-top:5px;border-radius:2px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;max-width:180px}
 .cbar i{display:block;height:100%;background:var(--good)}
-.key .cbar{display:inline-block;width:40px;margin:0}
-.vp.good{--sc:var(--good)}.vp.warning{--sc:var(--warning)}.vp.serious{--sc:var(--serious)}.vp.critical{--sc:var(--critical)}
-.vp.neutral,.vp.hollow{background:var(--surface)}
+.legend .cbar{display:inline-block;width:40px;margin:0}
+.verdict-pill.good{--sc:var(--good)}.verdict-pill.warning{--sc:var(--warning)}.verdict-pill.serious{--sc:var(--serious)}.verdict-pill.critical{--sc:var(--critical)}
+.verdict-pill.neutral,.verdict-pill.hollow{background:var(--surface)}
 /* Depends on, and Blocks · enables (plan/RULES.md §5; dashboards-skill/30): each issue with a small pill of its state, glyph and word */
 .deps{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
 .dep{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px 5px;min-width:0}
-.dep .vp{font-size:9.5px;padding:1px 5px}
+.dep .verdict-pill{font-size:9.5px;padding:1px 5px}
 /* one pill per dependency, two parts: its build state (a status pill) and its locality (a neutral ramp, faintest near, full ink far) */
 .dep-pill{display:inline-flex;align-items:stretch;border-radius:3px;white-space:nowrap}
-.dep-pill>.vp{border-top-right-radius:0;border-bottom-right-radius:0}
+.dep-pill>.verdict-pill{border-top-right-radius:0;border-bottom-right-radius:0}
 .loc{--lc:var(--muted);display:inline-flex;align-items:center;gap:4px;font:600 9.5px/1.2 var(--mono);padding:1px 5px;border:1px solid var(--line);border-left:3px solid var(--lc);border-radius:3px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
-.dep-pill>.vp+.loc{border-left-width:3px;border-top-left-radius:0;border-bottom-left-radius:0;margin-left:-1px}
+.dep-pill>.verdict-pill+.loc{border-left-width:3px;border-top-left-radius:0;border-bottom-left-radius:0;margin-left:-1px}
 .loc i{font-style:normal;font-weight:700}
 .loc.l1{--lc:color-mix(in srgb,var(--ink) 22%,var(--surface))}.loc.l2{--lc:color-mix(in srgb,var(--ink) 45%,var(--surface))}.loc.l3{--lc:color-mix(in srgb,var(--ink) 70%,var(--surface))}.loc.l4{--lc:var(--ink)}
-.key .loc i,.key .dep-pill i{display:inline;width:auto;height:auto;border:0;background:none;box-shadow:none}
-.vp.dashed{border-style:dashed;color:var(--ink-2)}
+.legend .loc i,.legend .dep-pill i{display:inline;width:auto;height:auto;border:0;background:none;box-shadow:none}
+.verdict-pill.dashed{border-style:dashed;color:var(--ink-2)}
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c,var(--muted));flex:none;vertical-align:-1px;margin-right:5px}
 /* In progress (GUIDANCE.md §1): a solid accent ring with an interior glow that breathes, over an accent wash. With reduced motion
    the interior glow holds still at its middle strength. Up next: the mild outer glow, still, with the UP NEXT tag beside it. */
 @keyframes glow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 3px 1px color-mix(in srgb,var(--accent) 35%,transparent)}50%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 9px 3px color-mix(in srgb,var(--accent) 65%,transparent)}}
-.vp.glow,.glow{animation:glow 2s ease-in-out infinite;background:color-mix(in srgb,var(--accent) 16%,var(--surface));border-color:var(--accent);border-left-color:var(--sc,var(--accent))}
-@media (prefers-reduced-motion:reduce){.vp.glow,.glow{animation:none!important;box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 50%,transparent)}}
+.verdict-pill.glow,.glow{animation:glow 2s ease-in-out infinite;background:color-mix(in srgb,var(--accent) 16%,var(--surface));border-color:var(--accent);border-left-color:var(--sc,var(--accent))}
+@media (prefers-reduced-motion:reduce){.verdict-pill.glow,.glow{animation:none!important;box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 6px 2px color-mix(in srgb,var(--accent) 50%,transparent)}}
 /* A run that waits on you, halted or escalated, keeps its in-progress mark stopped to the ring alone (GUIDANCE.md §1): still. */
-.vp.held{box-shadow:inset 0 0 0 2px var(--accent)}
-.key i.hold{border:2px solid var(--accent)}
+.verdict-pill.held{box-shadow:inset 0 0 0 2px var(--accent)}
+.legend i.hold{border:2px solid var(--accent)}
 .upnext{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--accent) 70%,transparent),0 0 9px 2px color-mix(in srgb,var(--accent) 30%,transparent)}
 .tag-next{display:inline-block;font:700 9.5px/1 var(--mono);letter-spacing:.08em;padding:3px 5px;border-radius:3px;border:1px solid var(--accent);color:var(--accent);background:var(--surface);white-space:nowrap;vertical-align:1px}
 .tags{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:4px}
@@ -195,8 +200,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .tbl .t{font-size:15px;line-height:1.4}
 .tbl .sub{font-size:12.5px;margin-top:3px}
 .tbl small{font-size:12px}
-.tbl .vp{font-size:12px;padding:3px 8px;gap:6px}
-.tbl .dep .vp,.tbl .loc{font-size:11.5px;padding:2px 7px}
+.tbl .verdict-pill{font-size:12px;padding:3px 8px;gap:6px}
+.tbl .dep .verdict-pill,.tbl .loc{font-size:11.5px;padding:2px 7px}
 .tbl .dep{gap:3px 6px}
 .tbl .deps{gap:6px}
 .tbl .tags{gap:5px 7px;margin-top:6px}
@@ -206,7 +211,7 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .tbl td:nth-child(3){font-size:12.5px}
 .tbl td:nth-child(3) .sub{font-size:11.5px}
 .tbl td:nth-child(3) small{font-size:inherit}
-@media (min-width:1500px){.tbl{font-size:15px}.tbl .t{font-size:15.5px}.tbl .vp{font-size:12.5px}.tbl .dep .vp,.tbl .loc{font-size:12px}.tbl .qamark{font-size:12px}.tbl .chainsum{font-size:14px}}
+@media (min-width:1500px){.tbl{font-size:15px}.tbl .t{font-size:15.5px}.tbl .verdict-pill{font-size:12.5px}.tbl .dep .verdict-pill,.tbl .loc{font-size:12px}.tbl .qamark{font-size:12px}.tbl .chainsum{font-size:14px}}
 @media (max-width:879.98px){
   .tbl{min-width:0}
   .tbl,.tbl tbody,.tbl tr.grp,.tbl tr.grp th{display:block}
@@ -219,8 +224,8 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
   .tbl tr.run>td:empty{display:none}
   .tbl tr.run>td:nth-child(2){order:1}.tbl tr.run>td:nth-child(4){order:2}.tbl tr.run>td:nth-child(3){order:3}.tbl tr.run>td:nth-child(5){order:4}.tbl tr.run>td:nth-child(6){order:5}
   .tbl tr.run>td:nth-child(n+2)::before{display:block;font:600 10.5px/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-  .tbl tr.run>td:nth-child(2)::before{content:"State"}.tbl tr.run>td:nth-child(3)::before{content:"Now"}.tbl tr.run>td:nth-child(4)::before{content:"QA"}.tbl tr.run>td:nth-child(5)::before{content:"Depends on"}.tbl tr.run>td:nth-child(6)::before{content:"Blocks · enables"}
-  .tbl .vp,.tbl .qamark,.tbl .dep-pill{white-space:normal;max-width:100%}
+  .tbl tr.run>td:nth-child(2)::before{content:"State"}.tbl tr.run>td:nth-child(3)::before{content:"Now"}.tbl tr.run>td:nth-child(4)::before{content:"Quality Reviews"}.tbl tr.run>td:nth-child(5)::before{content:"Depends on"}.tbl tr.run>td:nth-child(6)::before{content:"Blocks · enables"}
+  .tbl .verdict-pill,.tbl .qamark,.tbl .dep-pill{white-space:normal;max-width:100%}
 }
 @media (min-width:600px) and (max-width:879.98px){
   .tbl tr.run{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -231,10 +236,10 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .qa1{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px 6px;max-width:100%}
 .qamark{display:inline-flex;align-items:center;gap:4px;font:600 10.5px/1.2 var(--mono);padding:2px 6px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--ink-2);white-space:nowrap}
 .tbl .qamark{font-size:11.5px;padding:2px 7px}
-.qamark i,.key .qamark i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;background:none;box-shadow:none}
+.qamark i,.legend .qamark i{font-style:normal;font-weight:700;display:inline;width:auto;height:auto;border:0;background:none;box-shadow:none}
 /* An issue's #n opens its board when it has one (plan/RULES.md §1, §5); the small GitHub link beside it opens the issue. */
 a.gh{font:10.5px var(--mono);color:var(--muted);text-decoration:none;border-bottom:0!important;white-space:nowrap;text-transform:none;letter-spacing:0;font-weight:400}
-.vp a,.kpi .s a{text-decoration:none;border-bottom:1px solid var(--line)}
+.verdict-pill a,.kpi-tile .s a{text-decoration:none;border-bottom:1px solid var(--line)}
 a.gh:hover{color:var(--link);text-decoration:underline}
 pre.src{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:14px;font:12px/1.5 var(--mono);overflow:auto;color:var(--ink);max-height:70vh}
 .context{margin-top:24px}
@@ -276,12 +281,12 @@ footer code{color:var(--ink-2)}
   <h2>Every run, grouped by tracking issue in landing order, then the rest by age</h2>
   <p class="lede" id="runs-lede">Regenerated at each landing, so it may lag; a run's live state is on its own board.</p>
   <div class="scroll"><table class="tbl" id="runs"></table></div>
-  <div class="key" id="runs-key"></div>
+  <div class="legend" id="runs-key"></div>
 </section>
 <section class="view" role="tabpanel" id="p-source" aria-labelledby="t-source" hidden>
   <h2>board.json <small>generated by <code>plan/scripts/board.js</code>, embedded verbatim</small></h2>
   <pre class="src" id="source-view" tabindex="0"></pre>
-  <div class="key" id="source-key"></div>
+  <div class="legend" id="source-key"></div>
 </section>
 <section class="context">
   <h2>Context</h2>
@@ -295,11 +300,11 @@ footer code{color:var(--ink-2)}
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-06T04:16:11Z",
-  "asOf": "2026-11-06",
+  "generated": "2026-11-07T03:02:16Z",
+  "asOf": "2026-11-07",
   "tree": {
-    "ref": "feat/issue-68-call-facades",
-    "sha": "806b489"
+    "ref": "feat/issue-69-feeds",
+    "sha": "25678cf"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -375,8 +380,8 @@ footer code{color:var(--ink-2)}
       "name": "webtools-feeds",
       "slot": 6,
       "top": "webtools-feeds",
-      "status": "planned",
-      "board": null
+      "status": "built",
+      "board": "docs/dashboards/webtools-feeds/index.html"
     },
     {
       "slug": "webtools",
@@ -436,9 +441,9 @@ footer code{color:var(--ink-2)}
       "branch": null,
       "system": null,
       "step": "implementation",
-      "detail": "8 of 11 units landed; #68 in progress; #69 up next.",
+      "detail": "9 of 11 units landed; #69 in progress; #70 up next.",
       "since": "2026-10-22T21:58:56Z",
-      "updated": "2026-11-06T00:17:56Z",
+      "updated": "2026-11-06T04:27:23Z",
       "qa": [],
       "qaMax": 3,
       "status": "building",
@@ -446,13 +451,13 @@ footer code{color:var(--ink-2)}
       "landed": null,
       "reconciliation": {
         "state": "partial",
-        "landed": 8,
+        "landed": 9,
         "total": 11
       },
       "active": false,
       "chain": {
         "total": 11,
-        "landed": 8,
+        "landed": 9,
         "dropped": 0,
         "deferred": 0,
         "left": 0,
@@ -460,17 +465,17 @@ footer code{color:var(--ink-2)}
         "done": false,
         "current": [
           {
-            "issue": 68,
-            "slug": "call-facades",
+            "issue": 69,
+            "slug": "feeds",
             "step": "document"
           }
         ],
         "next": {
-          "issue": 69,
-          "slug": "feeds",
+          "issue": 70,
+          "slug": "http-docs",
           "blockedBy": [
             {
-              "issue": 68
+              "issue": 69
             }
           ]
         }
@@ -950,7 +955,9 @@ footer code{color:var(--ink-2)}
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
           "hold": "enables"
         }
       ],
@@ -1048,7 +1055,9 @@ footer code{color:var(--ink-2)}
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
           "hold": "enables"
         }
       ],
@@ -1146,7 +1155,9 @@ footer code{color:var(--ink-2)}
       "blocks": [
         {
           "issue": 68,
-          "state": "OPEN",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
           "hold": "enables"
         }
       ],
@@ -1219,7 +1230,8 @@ footer code{color:var(--ink-2)}
     {
       "issue": 68,
       "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-22",
       "parent": 55,
       "waitsOn": [
@@ -1252,17 +1264,17 @@ footer code{color:var(--ink-2)}
         {
           "issue": 69,
           "state": "OPEN",
-          "hold": "blocks"
+          "hold": "enables"
         }
       ],
       "board": "55-http-client-stack/68-call-facades/dashboard.html",
       "folder": "55-http-client-stack/68-call-facades/",
-      "branch": "feat/issue-68-call-facades",
+      "branch": null,
       "system": "webtools-http-facades",
-      "step": "document",
-      "detail": "Document: 5 of 7 tasks done; State boards current.",
-      "since": "2026-11-06T03:09:31Z",
-      "updated": "2026-11-06T03:53:14Z",
+      "step": "landed",
+      "detail": "Landed in PR #95.",
+      "since": "2026-11-06T04:22:18Z",
+      "updated": "2026-11-06T04:22:18Z",
       "qa": [
         {
           "pass": 1,
@@ -1283,15 +1295,20 @@ footer code{color:var(--ink-2)}
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 95,
+        "merge": "0374c8d",
+        "version": null,
+        "date": "2026-11-06"
+      },
       "reconciliation": {
         "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "call facades",
       "group": "55",
       "order": 9
@@ -1305,8 +1322,10 @@ footer code{color:var(--ink-2)}
       "waitsOn": [
         {
           "issue": 68,
-          "state": "OPEN",
-          "build": "blocking",
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-11-06T04:22:20Z",
+          "build": "clear",
           "locality": "local-repository"
         },
         {
@@ -1325,24 +1344,46 @@ footer code{color:var(--ink-2)}
           "hold": "blocks"
         }
       ],
-      "board": null,
-      "folder": null,
-      "branch": null,
+      "board": "55-http-client-stack/69-feeds/dashboard.html",
+      "folder": "55-http-client-stack/69-feeds/",
+      "branch": "feat/issue-69-feeds",
       "system": "webtools-feeds",
-      "step": null,
-      "detail": "",
-      "qa": [],
-      "qaMax": null,
-      "status": "next",
-      "landed": null,
-      "reconciliation": null,
-      "active": false,
-      "next": true,
-      "blockedBy": [
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-07T01:46:46Z",
+      "updated": "2026-11-07T02:39:35Z",
+      "qa": [
         {
-          "issue": 68
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-07",
+          "at": "2026-11-07T00:48:29Z",
+          "findings": {
+            "documentation": 0,
+            "test": 1,
+            "code": 0
+          },
+          "severity": {
+            "minor": 1,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html",
+          "note": "Code review passed on every check: the diff stays inside the two new modules, the ABI dump names no Rome, JDOM, SAX or slf4j type, every plan item is built and both deviations are built as logged. One minor test finding, in the As built row the fix touches, `component-tests`: two Level 2 component tests in `FeedFetcherParseComponentTest` prove their negatives with fixed wall-clock delays instead of a synchronisation point on the gate parser; the delays are replaced by a latch on the gate parser, in place, with no additional review. Suite: 328 tests, 327 passed, 0 failed, 1 skipped (`RomeFeedParserJdk11NonFunctionalTest`, by its assumption: no JDK 11 on the build host); `apiCheck` and the Java floor check passed.",
+          "inPlace": "fixed"
         }
       ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
+      "landed": null,
+      "reconciliation": {
+        "state": "partial",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
       "systemName": "webtools-feeds",
       "group": "55",
       "order": 10
@@ -1370,10 +1411,16 @@ footer code{color:var(--ink-2)}
       "detail": "",
       "qa": [],
       "qaMax": null,
-      "status": "not-started",
+      "status": "next",
       "landed": null,
       "reconciliation": null,
       "active": false,
+      "next": true,
+      "blockedBy": [
+        {
+          "issue": 69
+        }
+      ],
       "systemName": "WebTools",
       "group": "55",
       "order": 11
@@ -1493,7 +1540,8 @@ footer code{color:var(--ink-2)}
         {
           "issue": 68,
           "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
-          "state": "OPEN"
+          "state": "CLOSED",
+          "stateReason": "COMPLETED"
         },
         {
           "issue": 69,
@@ -1692,6 +1740,8 @@ const ghUrl=(n,repo)=>`https://github.com/${repo||B.repo}/issues/${n}`;
 const ilabel=(n,repo)=>`${repo&&repo!==B.repo?esc(repo.split("/")[1])+"#":"#"}${esc(n)}`;
 const ilink=(n,repo)=>{ const b=boardOf(n,repo); return b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${ilabel(n,repo)}</a>`:ext(ghUrl(n,repo),ilabel(n,repo)); };
 const codeOnly=s=>String(s==null?"":s).split("`").map((p,i)=>i%2?`<code>${esc(p)}</code>`:esc(p)).join("");
+/* a count and its noun, "1 unit", "2 units" */
+const plural=(n,one,many)=>`${n} ${Number(n)===1?one:(many||one+"s")}`;
 /* every title pair() shows is the issue's own, quoted verbatim and marked data-issue-title (GUIDANCE.md §5; dashboards-skill/28): a work
    level in it is a defect in the issue, which the checks flag (ISSUE TITLE NAMES A WORK LEVEL: #n) rather than fail the board */
 const pair=(n,title,repo)=>{ const b=boardOf(n,repo), t=codeOnly(title), m=` data-issue-title="${esc(n)}"`; return `${ext(ghUrl(n,repo),ilabel(n,repo))} ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board"${m}>${t}</a>`:`<span${m}>${t}</span>`}`; };
@@ -1716,18 +1766,31 @@ const closedWord=x=>x&&x.state==="CLOSED"?(x.stateReason==="NOT_PLANNED"?"closed
 const BLOCKED={g:"⊘",l:"blocked",c:"warning"};
 const TAG_NEXT=`<span class="tag-next">UP NEXT</span>`;
 const QA={approved:{g:"✓",l:"approved",c:"good"},"changes-requested":{g:"✕",l:"changes requested",c:"critical"},running:{g:"…",l:"in progress",c:"neutral",d:1}};
-/* A qa pass's number as an ordinal (1st, 2nd, 3rd, 4th, 11th, 21st), and the passes a row shows: every pass its board records and the one
+/* names:begin. The names the board shows (plan/scripts/passnames.js, the same names; verify/cases-board-wording.js holds the two equal):
+   the qa step "Quality Review", a pass "Quality Review N", one not numbered "review"; the remediation step by its route, "Correction" or
+   "Resolution"; every other step by its name. The ids (qa, remediation) stay in board.json. */
+const PASS_NAME="Quality Review", REVIEW="review", passName=n=>`${PASS_NAME} ${n}`;
+const STEP_NAME={sizing:"Sizing",interview:"Interview",research:"Research",architecture:"Architecture","sub-issues":"Sub-issues",boards:"Boards",plan:"Plan",branch:"Branch",implementation:"Implementation",qa:PASS_NAME,remediation:"Correction",document:"Document",landing:"Landing","state-boards":"State boards",merge:"Merge",landed:"Landed",halted:"Waiting on you",escalated:"Escalated",cancelled:"Cancelled"};
+const ROUTE_NAME={"on-the-spot":"Correction",remediation:"Correction","re-plan-then-remediation":"Resolution"};
+/* the routes' older ids, read as the new ones (dashboards-skill/33): a board.json written before them */
+const ROUTE_OLD={"rookie-dev":"remediation","planner-then-rookie-dev":"re-plan-then-remediation"};
+const routeName=r=>ROUTE_NAME[ROUTE_OLD[r]||r]||ROUTE_NAME.remediation;
+const stepLabel=(s,c)=>!s?"":s==="remediation"?routeName(c&&c.route):STEP_NAME[s]||String(s);
+const inPlaceWords=p=>p&&p.inPlace?`${p.inPlace==="fixing"?"fixing":"fixed"} in place · no additional ${REVIEW}`:"";
+/* names:end */
+/* a row's remediation route: the last pass that requested changes */
+const rowCtx=r=>{ const cr=(Array.isArray(r&&r.qa)?r.qa:[]).filter(p=>p&&p.verdict==="changes-requested"); return {route:(cr[cr.length-1]||{}).route||null}; };
+/* The passes a row shows: every pass its board records and the one
    running (plan/scripts/lib.js qaShown(), which board.js writes into the row; the same rule here for a board.json written before it, from
    the row's step: at qa, the pass after the last recorded one). */
-const ordinal=n=>{ const k=Math.abs(parseInt(n,10)); if(!Number.isFinite(k)) return String(n); const t=k%100,u=k%10; return `${n}${t>=11&&t<=13?"th":u===1?"st":u===2?"nd":u===3?"rd":"th"}`; };
+
 function qaShown(r){ const qa=(Array.isArray(r.qa)?r.qa:[]).filter(p=>p&&typeof p==="object"); if(qa.some(p=>p.verdict==="running")) return qa; const last=qa[qa.length-1];
   if(last&&last.verdict==="approved") return qa; if(r.step==="qa"){ const n=last&&Number.isInteger(last.pass)?last.pass+1:1; if(!(r.qaMax&&n>r.qaMax)) return [...qa,{pass:n,verdict:"running"}]; }
   return last&&!last.inPlace&&last.verdict==="changes-requested"&&last.route==="on-the-spot"?[...qa.slice(0,-1),{...last,inPlace:r.step==="remediation"?"fixing":"fixed"}]:qa; }
 /* The decision not to run another qa pass (dashboards-skill/31; lib.js qaInPlace()): the last pass requested changes and its
    route was on-the-spot, its findings fixed in place with no further pass. A small neutral mark beside the pass, with its glyph and words:
-   "✎ fixed in place · no 2nd pass" ("fixing" while the run is at remediation). Read from the pass's recorded route, never from prose. */
-const INPLACE={g:"✎",desc:{fixed:"the findings were fixed on the spot, and no further qa pass ran",fixing:"the findings are being fixed on the spot; no further qa pass will run"}};
-const inPlaceWords=p=>p&&p.inPlace?`${p.inPlace==="fixing"?"fixing":"fixed"} in place · no ${ordinal((parseInt(p.pass,10)||0)+1)} pass`:"";
+   "✎ fixed in place · no additional review" ("fixing" while the run is at remediation). Read from the pass's recorded route, never from prose. */
+const INPLACE={g:"✎",desc:{fixed:"the findings were fixed on the spot, and no additional review ran",fixing:"the findings are being fixed on the spot; no additional review will run"}};
 const inPlaceMark=p=>p&&p.inPlace?`<span class="qamark" title="${esc(INPLACE.desc[p.inPlace==="fixing"?"fixing":"fixed"])}"><i aria-hidden="true">${INPLACE.g}</i>${esc(inPlaceWords(p))}</span>`:"";
 /* A dependency's two states (board.json waitsOn[]: build and locality, derived by board.js, lib.js depBuild() and depLocality(); a
    board.json written before them carries neither, and the locality is then read from the entry's repository): its build state, in the
@@ -1746,13 +1809,13 @@ const locChip=(L,word)=>`<span class="loc l${LOC[L.k].s}"><i aria-hidden="true">
 const depPill=x=>{ const d=DEP[x.build], L=locOf(x); return d||L?`<span class="dep-pill"${x.why||x.via?` title="${esc(x.why||`a duplicate: the state of ${x.via}`)}"`:""}>${d?pill(d):""}${L?locChip(L):""}</span>`:""; };
 const HOLD={blocks:{g:"⊘",l:"blocks",c:"warning",desc:"this issue is still open: it holds these issues up"},enables:{g:"→",l:"enables",c:"good",desc:"this issue is done: these issues can go ahead"}};
 const holdOf=(x,r)=>HOLD[x.hold]?x.hold:r.state==="CLOSED"||stOf(r)==="landed"?"enables":"blocks";
-const pill=(d,word,extra)=>`<span class="vp ${d.c}${d.d?" dashed":""}${d.h?" hollow":""}${extra||""}"><i aria-hidden="true">${d.g}</i>${esc(word||d.l)}</span>`;
+const pill=(d,word,extra)=>`<span class="verdict-pill ${d.c}${d.d?" dashed":""}${d.h?" hollow":""}${extra||""}"><i aria-hidden="true">${d.g}</i>${esc(word||d.l)}</span>`;
 const stOf=r=>STATUS[r.status]?r.status:"no-board";
 /* A tracking issue's state cell shows its chain's progress instead of a bare "building" (plan/RULES.md §3, "The chain's progress"):
    "1 of 11 landed · #47 in progress (plan) · #62 up next", with a thin bar of units landed; "planned · 11 units" before any unit
    starts; "landed · 11 of 11" once all have landed. A unit whose run waits reads "waiting on you". A halted, escalated or cancelled
    tracking issue keeps its pill above the summary. */
-const unitRunWord=u=>u.step==="halted"?"waiting on you":u.step==="escalated"?"escalated":u.step==="cancelled"?"run cancelled":`in progress${u.step?` (${esc(u.step)})`:""}`;
+const unitRunWord=u=>u.step==="halted"?"waiting on you":u.step==="escalated"?"escalated":u.step==="cancelled"?"run cancelled":`in progress${u.step?` (${esc(stepLabel(u.step))})`:""}`;
 function chainText(c){ const extra=[c.dropped?`${c.dropped} dropped`:"",c.deferred?`${c.deferred} deferred`:"",c.left?`${c.left} left for later`:""].filter(Boolean);
   if(c.done) return [`<b>landed</b> · ${c.landed} of ${c.total}`,...extra].join(" · ");
   if(c.planned) return [`<b>planned</b> · ${c.total?`${c.total} unit${c.total===1?"":"s"}`:"no units yet"}`,...extra].join(" · ");
@@ -1762,7 +1825,7 @@ function chainText(c){ const extra=[c.dropped?`${c.dropped} dropped`:"",c.deferr
    stopped to the ring alone, still (GUIDANCE.md §1), never glowing and never only the yellow pill */
 const heldRow=r=>["halted","escalated"].includes(stOf(r))&&!!(r.board||r.parent);
 const chainCell=(r,st)=>{ const c=r.chain, pct=c.total?Math.round(100*c.landed/c.total):0;
-  return `${["halted","escalated","abandoned"].includes(st)?pill(STATUS[st],"",heldRow(r)?" held":""):""}<div class="chainsum">${chainText(c)}<span class="cbar" role="img" aria-label="${c.landed} of ${c.total} units landed"><i style="width:${pct}%"></i></span></div>`; };
+  return `${["halted","escalated","abandoned"].includes(st)?pill(STATUS[st],"",heldRow(r)?" held":""):""}<div class="chainsum">${chainText(c)}<span class="cbar" role="img" aria-label="${c.landed} of ${plural(c.total,"unit")} landed"><i style="width:${pct}%"></i></span></div>`; };
 /* The impact's reconciliation state of a row's board (plan/RULES.md §2, Impact; §5), as board.json carries it: derived by board.js
    (plan/scripts/lib.js reconciliation()), never by this board, and never stored on a board. Planned is dashed, partly reconciled
    yellow (with the units landed of all on a tracking issue), as built green, each with its glyph and word. */
@@ -1770,7 +1833,7 @@ const RECON={planned:{g:"…",l:"impact planned",c:"neutral",d:1,desc:"the plan'
 const reconOf=r=>r.reconciliation&&RECON[r.reconciliation.state]?r.reconciliation:null;
 const reconTag=r=>{ const x=reconOf(r); if(!x) return ""; const d=RECON[x.state]; return `<div class="tags">${pill(d,x.state==="partial"&&x.total?`${d.l} · ${x.landed} of ${x.total}`:"")}</div>`; };
 /* the "blocked by" tag of the unit up next: each blocker linked like any #n */
-const blockedTag=r=>(r.blockedBy||[]).length?`<span class="vp ${BLOCKED.c}"><i aria-hidden="true">${BLOCKED.g}</i>blocked by ${r.blockedBy.map(x=>ilink(x.issue,x.repo)).join(", ")}</span>`:"";
+const blockedTag=r=>(r.blockedBy||[]).length?`<span class="verdict-pill ${BLOCKED.c}"><i aria-hidden="true">${BLOCKED.g}</i>blocked by ${r.blockedBy.map(x=>ilink(x.issue,x.repo)).join(", ")}</span>`:"";
 
 /* Links to the shared boards (GUIDANCE.md §5; plan/RULES.md §5): board.json "links", set by board.js from the files on disk, each relative
    to this board, absent while its file is not there (check.js fails one that is dead): the repository state board (repoBoard; repoPage on a board written before) and
@@ -1803,20 +1866,20 @@ function render(){
   /* the Runs tile's bar: every run by its state; the Landed tile's: landed, complete, merged, and the closed ones not counted */
   const RUNSEG=[["landed","good","landed"],["merged","good","merged · awaiting close"],["complete","hollow","complete · not merged"],["building","accent","building"],["planning","accent","planning"],["in-progress","accent","in progress, no board"],["halted","warning","waiting on you"],["escalated","serious","escalated"],["next","pln","next · not started"],["not-started","pln","not started"],["no-board","pln","no board"],["abandoned","critical","cancelled"],["not-planned","neutral","closed · not planned"],["duplicate","neutral","closed · duplicate"]];
   const segOf=keys=>{ const parts=RUNSEG.filter(([k])=>keys.includes(k)).map(([k,c,l])=>({n:n(k),c,l:`${STATUS[k].g} ${l}`})).filter(p=>p.n);
-    return parts.length?`<div class="seg-bar" role="img" aria-label="${esc(parts.map(p=>`${p.n} ${p.l}`).join(", "))}">${parts.map(p=>`<i class="${p.c}" style="flex:${p.n}" title="${esc(`${p.n} ${p.l}`)}"></i>`).join("")}</div><div class="key">${[...new Map(parts.map(p=>[p.c+p.l,p])).values()].map(p=>`<span><i class="segk ${p.c}"></i>${esc(p.l)}</span>`).join("")}</div>`:""; };
+    return parts.length?`<div class="seg-bar" role="img" aria-label="${esc(parts.map(p=>`${p.n} ${p.l}`).join(", "))}">${parts.map(p=>`<i class="${p.c}" style="flex:${p.n}" title="${esc(`${p.n} ${p.l}`)}"></i>`).join("")}</div><div class="legend">${[...new Map(parts.map(p=>[p.c+p.l,p])).values()].map(p=>`<span><i class="segk ${p.c}"></i>${esc(p.l)}</span>`).join("")}</div>`:""; };
   const bars={Runs:segOf(RUNSEG.map(x=>x[0])),Landed:segOf(["landed","complete","merged","not-planned","duplicate"])};
-  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on you",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div>${bars[l]||""}</div>`).join("");
-  let h=`<thead><tr><th>Issue</th><th>State</th><th>Now</th><th>QA</th><th>Depends on</th><th>Blocks · enables</th></tr></thead><tbody>`;
+  $("#kpis").innerHTML=[["Runs",ROWS.length,`${(B.roadmap||[]).length} tracking issue${(B.roadmap||[]).length===1?"":"s"}`],["Active now",ROWS.filter(r=>r.active).length,"glowing below"],["Waiting on you",n("halted"),"halted runs"],["Landed",n("landed"),[n("complete")?`${n("complete")} more complete, not merged`:"",n("merged")?`${n("merged")} merged, awaiting close`:"",n("not-planned")?`${n("not-planned")} closed as not planned, not counted`:"",n("duplicate")?`${n("duplicate")} closed as duplicates, not counted`:""].filter(Boolean).join(" · ")||"merged"],["Up next",nexts.length,{html:nexts.length?nexts.map(r=>ilink(r.issue)).join(", ")+" · not started":"no unit named next"}],["Not started",n("not-started")+n("no-board"),(()=>{ const ns=ROWS.filter(r=>["not-started","no-board"].includes(stOf(r))), o=ns.filter(r=>r.tracker||stOf(r)==="no-board").length, u=ns.length-o; return [u?`${u} unit${u===1?"":"s"} of a tracking issue`:"",o?`${o} other issue${o===1?"":"s"}, from the tracker`:""].filter(Boolean).join(" · ")||"none"; })()]].map(([l,v,s])=>`<div class="kpi-tile"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s&&s.html!=null?s.html:esc(s)}</div>${bars[l]||""}</div>`).join("");
+  let h=`<thead><tr><th>Issue</th><th>State</th><th>Now</th><th>${PASS_NAME}s</th><th>Depends on</th><th>Blocks · enables</th></tr></thead><tbody>`;
   (B.groups||[]).forEach(g=>{ const rs=ROWS.filter(r=>r.group===g.key).sort((a,b)=>a.order-b.order); if(!rs.length) return;
     h+=`<tr class="grp"><th colspan="6">${g.issue?pair(g.issue,g.title):esc(g.title)}</th></tr>`;
     rs.forEach(r=>{ const st=stOf(r), qa=qaShown(r);
       /* "closed" beside a clear dependency says nothing its pill does not: only a closing reason is kept there */
       const iss=(x,bub,dep)=>{ const cw=closedWord(x), say=cw&&!(dep&&x.build==="clear"&&cw==="closed"); return `<span class="dep">${ilink(x.issue,x.repo)} ${bub}${say?`<small>${esc(cw)}</small>`:""}</span>`; };
-      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="${r.systemArchived?"sysarch":""}"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}</span>${r.systemArchived?` <span class="archtag">⊟ archived</span>`:""}${r.parent?` · part of ${ilink(r.parent)}`:""}${r.fixOf?` · fix to ${ilink(r.fixOf)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(r.step)}</div>`:""}${r.branch?`<div class="sub">branch <code>${esc(r.branch)}</code></div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.length?`<div class="qas">${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return `<span class="qa1">${pill(d,`${ordinal(p.pass)} · ${d.l}`)}${inPlaceMark(p)}</span>`; }).join("")}</div>`:""}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`<div class="deps">${r.waitsOn.map(x=>iss(x,depPill(x),1)).join("")}</div>`:""}</td><td>${(r.blocks||[]).length?`<div class="deps">${r.blocks.map(x=>iss(x,pill(HOLD[holdOf(x,r)]))).join("")}</div>`:""}</td></tr>`; }); });
+      h+=`<tr class="run${st==="no-board"||st==="not-started"||st==="next"?" nob":""}" data-sys="${esc(r.system||"")}"><td><span class="t">${pair(r.issue,r.title)}</span><div class="sub"><span class="${r.systemArchived?"sysarch":""}"><span class="sw" data-sys="${esc(r.system||"")}"></span>${esc(r.systemName||"no system recorded")}</span>${r.systemArchived?` <span class="archtag">⊟ archived</span>`:""}${r.parent?` · part of ${ilink(r.parent)}`:""}${r.fixOf?` · fix to ${ilink(r.fixOf)}`:""}</div></td><td>${r.chain?chainCell(r,st):pill(STATUS[st],"",r.active?" glow":st==="next"?" upnext":heldRow(r)?" held":"")}${st==="next"?`<div class="tags">${TAG_NEXT}${blockedTag(r)}</div>`:""}${reconTag(r)}${r.tracker&&r.tracker.pr?`<div class="sub">${ext(`https://github.com/${B.repo}/pull/${r.tracker.pr.number}`,`PR #${esc(r.tracker.pr.number)}`)} ${r.tracker.pr.state==="MERGED"?"merged":"open"}</div>`:""}${r.step?`<div class="sub">step ${esc(stepLabel(r.step,rowCtx(r)))}</div>`:""}${r.branch?`<div class="sub">branch <code>${esc(r.branch)}</code></div>`:""}</td><td>${rich(r.detail||"")}${r.landed?`<div class="sub">${[r.landed.pr?`PR #${esc(r.landed.pr)}`:"",r.landed.version?esc(r.landed.version):"",r.landed.date?when(r.landed.date):""].filter(Boolean).join(" · ")}</div>`:""}</td><td>${qa.length?`<div class="qas">${qa.map(p=>{ const d=QA[p.verdict]||QA.running; return `<span class="qa1">${pill(d,`${passName(p.pass)} · ${d.l}`)}${inPlaceMark(p)}</span>`; }).join("")}</div>`:""}${qa.length&&r.qaMax?`<div class="sub">of at most ${esc(r.qaMax)}</div>`:""}</td><td>${(r.waitsOn||[]).length?`<div class="deps">${r.waitsOn.map(x=>iss(x,depPill(x),1)).join("")}</div>`:""}</td><td>${(r.blocks||[]).length?`<div class="deps">${r.blocks.map(x=>iss(x,pill(HOLD[holdOf(x,r)]))).join("")}</div>`:""}</td></tr>`; }); });
   $("#runs").innerHTML=h+"</tbody>"; paint($("#runs"));
   const tops=new Map(); ROWS.filter(r=>!r.systemArchived).forEach(r=>{ const s=sysOf(r.system), k=sysLit(s)?s.slot:0; if(!tops.has(k)) tops.set(k,{c:sysColour(r.system),n:new Set()}); tops.get(k).n.add(k?(s.top||s.name):"no system colour"); });
   const used=new Set(ROWS.filter(r=>!r.chain||["halted","escalated","abandoned"].includes(stOf(r))).map(stOf)), qv=new Set(ROWS.flatMap(r=>qaShown(r).map(p=>p.verdict))), dv=new Set(ROWS.flatMap(r=>(r.waitsOn||[]).map(x=>x.build).filter(k=>DEP[k]))), lv=new Set(ROWS.flatMap(r=>(r.waitsOn||[]).map(locOf).filter(Boolean).map(L=>L.k))), dn=ROWS.some(r=>(r.waitsOn||[]).some(x=>x.why)), hv=new Set(ROWS.flatMap(r=>(r.blocks||[]).map(x=>holdOf(x,r))));
-  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.systemArchived)?`<span><i class="sbar arch" style="--c:var(--muted)"></i><span class="archtag">⊟ archived</span>its system is archived: no longer developed, no colour of its own</span>`:"")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} ${v==="running"?"the qa pass running now":"a qa pass's verdict"}, by its number: 1st, 2nd, 3rd</span>`).join("")+["fixed","fixing"].map(k=>ROWS.flatMap(r=>qaShown(r)).find(p=>p.inPlace===k)).filter(Boolean).map(p=>`<span>${inPlaceMark(p)} ${esc(INPLACE.desc[p.inPlace])}</span>`).join("")+Object.keys(DEP).filter(k=>dv.has(k)).map(k=>`<span>${pill(DEP[k])} a dependency's build state: ${esc(DEP[k].desc)}</span>`).join("")+Object.keys(LOC).filter(k=>lv.has(k)).map(k=>`<span>${locChip({k},k==="external"?"external · name":"")} a dependency's locality: ${esc(LOC[k].desc)}</span>`).join("")+(dn?`<span>a dependency with no build state or locality drawn: no rule fits (its reason on hover)</span>`:"")+Object.keys(HOLD).filter(k=>hv.has(k)).map(k=>`<span>${pill(HOLD[k])} ${esc(HOLD[k].desc)}</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on you</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
+  $("#runs-key").innerHTML=[...tops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("")+(ROWS.some(r=>r.systemArchived)?`<span><i class="sbar arch" style="--c:var(--muted)"></i><span class="archtag">⊟ archived</span>its system is archived: no longer developed, no colour of its own</span>`:"")+(ROWS.some(r=>r.chain)?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units, with its units in progress and the unit up next</span>`:"")+Object.keys(STATUS).filter(k=>used.has(k)).map(k=>`<span>${pill(STATUS[k])}${STATUS[k].desc?` ${esc(STATUS[k].desc)}`:""}</span>`).join("")+[...qv].filter(v=>QA[v]).map(v=>`<span>${pill(QA[v])} ${v==="running"?`the ${REVIEW} running now`:`a ${REVIEW} verdict`}, by its ${PASS_NAME} number</span>`).join("")+["fixed","fixing"].map(k=>ROWS.flatMap(r=>qaShown(r)).find(p=>p.inPlace===k)).filter(Boolean).map(p=>`<span>${inPlaceMark(p)} ${esc(INPLACE.desc[p.inPlace])}</span>`).join("")+Object.keys(DEP).filter(k=>dv.has(k)).map(k=>`<span>${pill(DEP[k])} a dependency's build state: ${esc(DEP[k].desc)}</span>`).join("")+Object.keys(LOC).filter(k=>lv.has(k)).map(k=>`<span>${locChip({k},k==="external"?"external · name":"")} a dependency's locality: ${esc(LOC[k].desc)}</span>`).join("")+(dn?`<span>a dependency with no build state or locality drawn: no rule fits (its reason on hover)</span>`:"")+Object.keys(HOLD).filter(k=>hv.has(k)).map(k=>`<span>${pill(HOLD[k])} ${esc(HOLD[k].desc)}</span>`).join("")+(ROWS.some(r=>r.active)?`<span><i class="gl"></i>interior glow, breathing: being worked on now</span>`:"")+(ROWS.some(heldRow)?`<span><i class="hold"></i>ring alone, still: being worked on, paused while the run waits on you</span>`:"")+(used.has("next")?`<span><i class="nx"></i>${TAG_NEXT} still outer glow: the next unit, not started</span>`:"")+(ROWS.some(r=>stOf(r)==="next"&&(r.blockedBy||[]).length)?`<span>${pill(BLOCKED,"blocked by #n")} a blocker of the next unit has not landed</span>`:"")+(used.has("no-board")||used.has("not-started")||used.has("next")?`<span><i class="pln"></i>dashed: not started</span>`:"")+Object.keys(RECON).filter(k=>ROWS.some(r=>(reconOf(r)||{}).state===k)).map(k=>`<span>${pill(RECON[k])} ${esc(RECON[k].desc)}</span>`).join("")+(ROWS.length?"":`<span><i class="pln"></i>no runs recorded yet</span>`);
   const cards=[];
   cards.push(`<div class="card"><h3>Roadmap <small>${(B.roadmap||[]).length} item${(B.roadmap||[]).length===1?"":"s"} · ${day(B.asOf||"")}</small></h3>${(B.roadmap||[]).length?`<ul class="issues">${B.roadmap.map(m=>`<li><span class="nm">${pair(m.issue,m.title)}</span><ul class="issues">${(m.items||[]).map(i=>`<li><span class="nm">${i.title?pair(i.issue,i.title):ilink(i.issue)} <small>${esc(closedWord(i)||(i.state||"").toLowerCase())}</small></span></li>`).join("")}</ul></li>`).join("")}</ul>`:`<p class="lede">No tracking issue is open.</p>`}</div>`);
   const un=B.unscheduled||[];
@@ -1827,7 +1890,7 @@ function render(){
   const sws=[...$("#context").querySelectorAll(".sw[data-sys]")].map(e=>e.dataset.sys), ctops=new Map();
   sws.forEach(sl=>{ const s=sysOf(sl), k=sysLit(s)?s.slot:0; if(!ctops.has(k)) ctops.set(k,{c:sysColour(sl),n:new Set()}); ctops.get(k).n.add(k?(s.top||s.name):"no system recorded"); });
   let ck=document.getElementById("context-key"); const kh=[...ctops.values()].map(v=>`<span><i class="sbar" style="--c:${v.c}"></i>${esc([...v.n].join(", "))}</span>`).join("");
-  if(!kh){ if(ck) ck.remove(); } else { if(!ck){ ck=document.createElement("div"); ck.className="key"; ck.id="context-key"; $("#context").parentElement.appendChild(ck); } ck.innerHTML=kh; }
+  if(!kh){ if(ck) ck.remove(); } else { if(!ck){ ck=document.createElement("div"); ck.className="legend"; ck.id="context-key"; $("#context").parentElement.appendChild(ck); } ck.innerHTML=kh; }
   /* the footer (GUIDANCE.md §3): what the board corresponds to and what is authoritative; nothing more */
   $("#footer").innerHTML=`Corresponds to <code>docs/plans/${B.live?".live/":""}board.json</code>. Code and the Markdown beside this board are authoritative on any conflict.`;
   $("#source-view").textContent=JSON.stringify(B,(k,v)=>k==="level"?undefined:v,2); /* a work level is never shown (GUIDANCE.md §4) */

@@ -89,8 +89,8 @@ window.dashboardLive&&window.dashboardLive("plan",
       "name": "webtools-feeds",
       "slot": 6,
       "top": "webtools-feeds",
-      "status": "planned",
-      "page": null
+      "status": "built",
+      "page": "docs/dashboards/webtools-feeds/index.html"
     },
     {
       "slug": "webtools",
@@ -104,8 +104,8 @@ window.dashboardLive&&window.dashboardLive("plan",
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-11-06T00:17:56Z",
-    "detail": "8 of 11 units landed; #68 in progress; #69 up next.",
+    "updated": "2026-11-06T04:27:23Z",
+    "detail": "9 of 11 units landed; #69 in progress; #70 up next.",
     "steps": [
       "sizing",
       "interview",
@@ -116,9 +116,9 @@ window.dashboardLive&&window.dashboardLive("plan",
       "landed"
     ],
     "current": [
-      "call-facades.built"
+      "feeds.built"
     ],
-    "next": "feeds",
+    "next": "http-docs",
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -324,6 +324,16 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-05",
       "column": "built",
       "label": "#68 started"
+    },
+    {
+      "date": "2026-11-06",
+      "column": "built",
+      "label": "#68 landed"
+    },
+    {
+      "date": "2026-11-06",
+      "column": "built",
+      "label": "#69 started"
     }
   ],
   "rows": [
@@ -406,7 +416,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -416,7 +426,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -426,7 +436,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -548,7 +558,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -558,7 +568,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -568,7 +578,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -578,7 +588,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -744,7 +754,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -774,7 +784,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -1309,7 +1319,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -3060,7 +3070,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -3070,7 +3080,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -4203,7 +4213,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -6239,7 +6249,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           },
           {
@@ -6249,7 +6259,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -6278,501 +6288,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "branch": null,
         "folder": "68-call-facades/",
         "board": "68-call-facades/dashboard.html",
-        "live": {
-          "step": "document",
-          "since": "2026-11-06T03:09:31Z",
-          "updated": "2026-11-06T04:17:26Z",
-          "detail": "Document: 7 of 7 tasks done; every task done.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "document",
-            "landing",
-            "merge",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-11-06",
-              "at": "2026-11-06T02:52:19Z",
-              "findings": {
-                "test": 16,
-                "code": 2
-              },
-              "severity": {
-                "minor": 18,
-                "other": 0
-              },
-              "route": "on-the-spot",
-              "note": "No test failed and no logic defect was found: the permit rules, the retry delay, the cache interplay, the lifecycle, the owning factories, secrecy and the ABI read clean, and the five recorded deviations are accurate. Eighteen minor findings, being fixed in place with no second pass. Sixteen test findings, second-order, in the test rows and in `logging`, `url-fetcher`, `owning-factories` and `loopback-fetchers`: log branches and check orderings the plan did not list; the public owning fetcher factory never carrying a real request; cleanup on a failing path missing in three test classes; message texts pinned only against their own constants; and no close-race or secrecy suite for the fetcher at Level 4c non-functional. Two code findings, in `readme` and `release`: two sentences of the README and the CHANGELOG that are more accurate than the planned text, to be recorded as deviations. Suite: 1,431 passed, 0 failed, 0 skipped in webtools-http's 261 classes, every test level run; apiCheck passed. webtools-udp, webtools-scraping and webtools-browser are untouched and were not run."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-68-call-facades",
-          "event": {
-            "name": "document",
-            "at": "2026-11-06T04:17:26Z",
-            "note": "7 of 7 tasks done"
-          },
-          "stages": [
-            {
-              "id": "stage-1",
-              "name": "The values: Endpoint, CallSpec, FetchSpec",
-              "state": "done",
-              "rows": [
-                "endpoint",
-                "call-spec",
-                "component-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "stage-2",
-              "name": "The shared call internals and UrlFetcher",
-              "state": "done",
-              "rows": [
-                "call-spec",
-                "upstream-client",
-                "permit-settlement",
-                "rate-limited",
-                "url-fetcher",
-                "factories",
-                "lifecycle",
-                "logging",
-                "component-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "stage-3",
-              "name": "UpstreamClient",
-              "state": "done",
-              "rows": [
-                "upstream-client",
-                "permit-settlement",
-                "rate-limited",
-                "url-fetcher",
-                "factories",
-                "lifecycle",
-                "logging",
-                "component-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "stage-4",
-              "name": "The JVM owning factories, transport sizing and LoopbackFetchers",
-              "state": "done",
-              "rows": [
-                "owning-factories",
-                "lifecycle",
-                "loopback-fetchers",
-                "gating-tests",
-                "component-tests",
-                "integration-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "stage-5",
-              "name": "Non-functional suites, README how-to and CHANGELOG",
-              "state": "done",
-              "rows": [
-                "nonfunctional-tests",
-                "readme",
-                "release"
-              ]
-            }
-          ],
-          "remediation": {
-            "pass": 1,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "Record the wording and test departures in the as-built record",
-                "state": "done"
-              },
-              {
-                "name": "Cleanup on the failing path in three test classes",
-                "state": "done"
-              },
-              {
-                "name": "Stronger and added tests in existing classes",
-                "state": "done"
-              },
-              {
-                "name": "Close-race and secrecy suites for the facades at the non-functional level",
-                "state": "done"
-              }
-            ]
-          },
-          "document": {
-            "tasks": [
-              {
-                "id": "documentation-review",
-                "name": "Documentation review",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-documentation",
-                "name": "Reconcile documentation",
-                "state": "done"
-              },
-              {
-                "id": "dokka-check",
-                "name": "Dokka check",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-plan",
-                "name": "Reconcile plan",
-                "state": "done"
-              },
-              {
-                "id": "readme-changelog",
-                "name": "README and CHANGELOG",
-                "state": "done"
-              },
-              {
-                "id": "state-boards",
-                "name": "State boards",
-                "state": "done"
-              },
-              {
-                "id": "document-landing",
-                "name": "Document-landing commit",
-                "state": "done"
-              }
-            ]
-          },
-          "history": {
-            "sizing": [
-              {
-                "since": null,
-                "ended": "2026-11-05T23:56:38Z",
-                "endedBy": "sized",
-                "to": "plan"
-              }
-            ],
-            "plan": [
-              {
-                "since": "2026-11-05T23:56:38Z",
-                "ended": "2026-11-06T00:13:19Z",
-                "endedBy": "research-planning",
-                "to": "research",
-                "event": {
-                  "name": "sized",
-                  "at": "2026-11-05T23:56:38Z"
-                },
-                "detail": "Unit 9 of the HTTP client stack: Endpoint, CallSpec, FetchSpec, UpstreamClient and UrlFetcher with their configs and factories, composing the landed cache, budget and transport. Additive public API in webtools-http only; no version moves. Next: the detailed plan against the code as it is at 5f221ce.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-05T23:56:38Z"
-                }
-              },
-              {
-                "since": "2026-11-06T01:10:26Z",
-                "ended": "2026-11-06T01:10:35Z",
-                "endedBy": "plan-accepted",
-                "to": "branch",
-                "event": {
-                  "name": "researched",
-                  "at": "2026-11-06T01:10:26Z"
-                },
-                "detail": "Three questions answered and verified: how Endpoint is built (a same-named generic factory over an internal constructor, measured by a compile probe on jvm and js), what delay a rate-limited failure reports (the longer of the server's Retry-After and the budget's pause), and the default wait cap (5 seconds). 35 of 35 load-bearing claims hold, 4 of them only in part with no change to a recommendation.",
-                "plan": {
-                  "state": "writing",
-                  "since": "2026-11-06T01:10:26Z"
-                }
-              }
-            ],
-            "research": [
-              {
-                "since": "2026-11-06T00:13:19Z",
-                "ended": "2026-11-06T01:10:26Z",
-                "endedBy": "researched",
-                "to": "plan",
-                "event": {
-                  "name": "verification-started",
-                  "at": "2026-11-06T00:27:03Z"
-                },
-                "detail": "Research: verifying 3 findings.",
-                "research": {
-                  "phase": "complete",
-                  "drafted": 0,
-                  "since": {
-                    "planning": "2026-11-06T00:13:19Z",
-                    "research": "2026-11-06T00:14:06Z",
-                    "verification": "2026-11-06T00:27:03Z",
-                    "complete": "2026-11-06T01:10:26Z"
-                  }
-                },
-                "questions": [
-                  {
-                    "question": "endpoint-factory-resolution",
-                    "rows": [
-                      "endpoint"
-                    ],
-                    "findings": "research/endpoint-factory-resolution.md",
-                    "state": "complete",
-                    "started": "2026-11-06T00:14:06Z",
-                    "returned": "2026-11-06T00:26:41Z"
-                  },
-                  {
-                    "question": "rate-limited-retry-after",
-                    "rows": [
-                      "rate-limited"
-                    ],
-                    "findings": "research/rate-limited-retry-after.md",
-                    "state": "complete",
-                    "started": "2026-11-06T00:14:06Z",
-                    "returned": "2026-11-06T00:22:40Z"
-                  },
-                  {
-                    "question": "default-wait-cap",
-                    "rows": [
-                      "factories",
-                      "call-spec"
-                    ],
-                    "findings": "research/default-wait-cap.md",
-                    "state": "complete",
-                    "started": "2026-11-06T00:14:06Z",
-                    "returned": "2026-11-06T00:22:40Z"
-                  }
-                ]
-              }
-            ],
-            "branch": [
-              {
-                "since": "2026-11-06T01:10:35Z",
-                "ended": "2026-11-06T01:10:47Z",
-                "endedBy": "branch-cut",
-                "to": "implementation",
-                "event": {
-                  "name": "plan-accepted",
-                  "at": "2026-11-06T01:10:35Z"
-                },
-                "detail": "Two final classes in common code over pure functions. UpstreamClient runs the policy check, then the cache, then a permit taken inside the cache's loader, then the transport. UrlFetcher runs the policy check, the budget and the transport, and returns every status as a response except a throttle. The JVM owning factories build the budget, the transport sized to the budget's burst, and the cache, and close them cache, budget, transport. Permit after a transport failure: only an invalid request is refunded; every other failure stays spent. A rate-limited failure reports the longer of the server's Retry-After and the budget's pause. 34 new test classes with 214 tests are planned; no version moves.",
-                "branch": "feat/issue-68-call-facades"
-              }
-            ],
-            "implementation": [
-              {
-                "since": "2026-11-06T01:10:47Z",
-                "ended": "2026-11-06T02:20:48Z",
-                "endedBy": "qa-pass",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-06T02:20:20Z",
-                  "note": "stage-5 reported done; qa next"
-                },
-                "detail": "Stage 5 built with no deviation: the two non-functional suites (concurrent calls and a close racing calls), the README how-to and the CHANGELOG entries. The manual pass read every new type's KDoc and ran the README's snippets against a loopback server: all compile and behave as the section says. The module's final check passes: 1,431 tests in 261 classes, none failed or skipped, which is the planned 1,429 plus the two tests of D5. The module's diff touches webtools-http, the README, the CHANGELOG and the plan folder only.",
-                "stages": [
-                  {
-                    "id": "stage-1",
-                    "name": "The values: Endpoint, CallSpec, FetchSpec",
-                    "state": "done",
-                    "rows": [
-                      "endpoint",
-                      "call-spec",
-                      "component-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "stage-2",
-                    "name": "The shared call internals and UrlFetcher",
-                    "state": "done",
-                    "rows": [
-                      "call-spec",
-                      "upstream-client",
-                      "permit-settlement",
-                      "rate-limited",
-                      "url-fetcher",
-                      "factories",
-                      "lifecycle",
-                      "logging",
-                      "component-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "stage-3",
-                    "name": "UpstreamClient",
-                    "state": "done",
-                    "rows": [
-                      "upstream-client",
-                      "permit-settlement",
-                      "rate-limited",
-                      "url-fetcher",
-                      "factories",
-                      "lifecycle",
-                      "logging",
-                      "component-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "stage-4",
-                    "name": "The JVM owning factories, transport sizing and LoopbackFetchers",
-                    "state": "done",
-                    "rows": [
-                      "owning-factories",
-                      "lifecycle",
-                      "loopback-fetchers",
-                      "gating-tests",
-                      "component-tests",
-                      "integration-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "stage-5",
-                    "name": "Non-functional suites, README how-to and CHANGELOG",
-                    "state": "done",
-                    "rows": [
-                      "nonfunctional-tests",
-                      "readme",
-                      "release"
-                    ]
-                  }
-                ]
-              }
-            ],
-            "qa": [
-              {
-                "since": "2026-11-06T02:20:48Z",
-                "ended": "2026-11-06T02:52:19Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-06T02:20:48Z",
-                  "note": "Quality Review 1: running"
-                },
-                "detail": "Quality Review 1 running.",
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-06",
-                    "at": "2026-11-06T02:52:19Z",
-                    "findings": {
-                      "test": 16,
-                      "code": 2
-                    },
-                    "severity": {
-                      "minor": 18,
-                      "other": 0
-                    },
-                    "route": "on-the-spot"
-                  }
-                ]
-              }
-            ],
-            "remediation": [
-              {
-                "since": "2026-11-06T02:52:19Z",
-                "ended": "2026-11-06T03:09:31Z",
-                "endedBy": "document",
-                "to": "document",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-06T03:09:04Z",
-                  "note": "4 of 4 remediation sub-steps done"
-                },
-                "detail": "All 18 fixed with no change to production code, the fixtures, the ABI dump, the README or the CHANGELOG. New deviations: D6 the README names the client's signal reader where the planned text named the budget's; D7 the CHANGELOG says which policy each owning fetcher factory builds its transport under; D8 the decode-failure test asserts two debug lines, one per load; D9 tests and assertions beyond the plan's list in thirteen classes (twelve more tests); D10 a third non-functional class, a close racing fetches on the fetcher; D11 a fourth non-functional class, secrecy across both facades. The module's check passes: 1,447 tests in 263 classes, none failed or skipped.",
-                "remediation": {
-                  "pass": 1,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "Record the wording and test departures in the as-built record",
-                      "state": "done"
-                    },
-                    {
-                      "name": "Cleanup on the failing path in three test classes",
-                      "state": "done"
-                    },
-                    {
-                      "name": "Stronger and added tests in existing classes",
-                      "state": "done"
-                    },
-                    {
-                      "name": "Close-race and secrecy suites for the facades at the non-functional level",
-                      "state": "done"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-06",
-                    "at": "2026-11-06T02:52:19Z",
-                    "findings": {
-                      "test": 16,
-                      "code": 2
-                    },
-                    "severity": {
-                      "minor": 18,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "note": "No test failed and no logic defect was found: the permit rules, the retry delay, the cache interplay, the lifecycle, the owning factories, secrecy and the ABI read clean, and the five recorded deviations are accurate. Eighteen minor findings, being fixed in place with no second pass. Sixteen test findings, second-order, in the test rows and in `logging`, `url-fetcher`, `owning-factories` and `loopback-fetchers`: log branches and check orderings the plan did not list; the public owning fetcher factory never carrying a real request; cleanup on a failing path missing in three test classes; message texts pinned only against their own constants; and no close-race or secrecy suite for the fetcher at Level 4c non-functional. Two code findings, in `readme` and `release`: two sentences of the README and the CHANGELOG that are more accurate than the planned text, to be recorded as deviations. Suite: 1,431 passed, 0 failed, 0 skipped in webtools-http's 261 classes, every test level run; apiCheck passed. webtools-udp, webtools-scraping and webtools-browser are untouched and were not run."
-                  }
-                ]
-              }
-            ]
-          },
-          "rowNames": {
-            "endpoint": "`Endpoint<T>` and its builder",
-            "call-spec": "`CallSpec` and `FetchSpec`: the per-call settings and the request they build",
-            "upstream-client": "`UpstreamClient` and its call pipeline",
-            "permit-settlement": "The permit after a transport failure",
-            "rate-limited": "Rate signals and `RateLimited`",
-            "url-fetcher": "`UrlFetcher` and its policy pre-check",
-            "factories": "The common factories and their configs",
-            "owning-factories": "The JVM owning factories and the transport sized to `maxBurst`",
-            "lifecycle": "Ownership and the closing order",
-            "logging": "The facades' logging",
-            "loopback-fetchers": "The fixture `LoopbackFetchers`",
-            "gating-tests": "Level 1 gating tests: the facades with no opt-in",
-            "component-tests": "Level 2 component tests on the fake transport",
-            "integration-tests": "Level 3 integration test: a real call over loopback",
-            "deterministic-tests": "Level 4a deterministic tables",
-            "nonfunctional-tests": "Level 4c non-functional tests on real threads",
-            "readme": "The README how-to",
-            "release": "The ABI dump and the version"
-          },
-          "recon": {
-            "interview": {
-              "reconstructed": true,
-              "ended": null,
-              "trail": [],
-              "milestones": []
-            }
-          }
-        },
         "tests": {
           "updated": "2026-11-06T03:09:04Z",
           "added": [
@@ -10624,14 +10139,57 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "landed",
+        "summary": "Landed through PR #95 as 0374c8d (#68): `webtools-http` gains the call facades, Stable Core with no seam added: `Endpoint`, `CallSpec` and `FetchSpec`, and `UpstreamClient` and `UrlFetcher` with their configurations and common factories in common code, composing the cache, then the budget inside its loader, then the transport; on the JVM the owning factories, the client sizing its transport to the budget's burst and each facade closing what it built. The fixtures gain `LoopbackFetchers`. No dependency or build file changed; no version moved, and `webtools-http` 1.0.0 stays unreleased.",
+        "changes": [
+          {
+            "what": "After a failed send the permit is released for the transport's `InvalidRequest` only; `RefusedByPolicy`, `Closed` and every other failure leave it spent, where §6.6 released it for all three.",
+            "why": "A failure carries no hop number, so only `InvalidRequest` shows that nothing was sent; §6.6 and §7.2 carry dated corrections.",
+            "when": "#68 plan",
+            "ref": "68-call-facades/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The client checks its own policy at construction and before anything is spent on each call, and a declared miss status is checked before a `2xx` is decoded, where §6.6 gave the pre-check to `UrlFetcher` only.",
+            "why": "§6.6 and §7.2 are made concrete against the code as built and carry dated corrections.",
+            "when": "#68 plan",
+            "ref": "68-call-facades/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The cache key carries the full request path and the encoded query pairs, a credential sent as a query pair included; the per-call `DEBUG` line says whether the call's own loader ran, and the refusal line prints the path through `Url.redacted()`.",
+            "why": "The cache port cannot tell a hit from a join, and the plan's logging table gives the refusal line's text; §6.6 carries a dated correction.",
+            "when": "#68 plan",
+            "ref": "68-call-facades/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The owning client builds the budget, then the transport, then the cache, and its sizing raises both concurrency limits to the burst of any `WindowedCallBudget` the client uses; only the client's owning factory sizes.",
+            "why": "The transport's sizing needs the budget's `maxBurst`; §6.3.2 and §7.4 carry dated corrections.",
+            "when": "#68 plan",
+            "ref": "68-call-facades/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "`UpstreamClient.flush()`, `UrlFetcher(userAgent, policy)`, `UrlFetcherConfig.timeSource` and the published `LoopbackFetchers` join the surface, and the defaults §6.6 left open are set: a 5 s `defaultMaxWait`, an endpoint's lane `Interactive`, its `ttl` zero and its `missTtl` following it.",
+            "why": "§6.6 and §6.7 carry dated corrections; none adds a seam or changes a tier.",
+            "when": "#68 plan",
+            "ref": "68-call-facades/consequences.md#5-where-the-design-refines-the-parent-documents"
+          }
+        ],
+        "commits": [
+          "ac3b61d",
+          "0985772",
+          "ab7cbbd",
+          "df7481a",
+          "391b2d9",
+          "f413a47",
+          "80b1c13"
+        ],
+        "verified": "Quality Review 1 changes requested (16 test and 2 code findings, all minor), fixed in place with no second pass; the run of record 1,447 tests, 0 failed, 0 skipped.",
+        "link": "68-call-facades/final-implementation.md"
       }
     },
     {
@@ -10650,8 +10208,1631 @@ window.dashboardLive&&window.dashboardLive("plan",
         ],
         "versions": "webtools-feeds 1.0.0 (new, unreleased)",
         "branch": null,
-        "folder": null,
-        "board": null
+        "folder": "69-feeds/",
+        "board": "69-feeds/dashboard.html",
+        "live": {
+          "step": "document",
+          "since": "2026-11-07T01:46:46Z",
+          "updated": "2026-11-07T03:19:53Z",
+          "detail": "Document: 7 of 7 tasks done; every task done.",
+          "steps": [
+            "sizing",
+            "interview",
+            "research",
+            "plan",
+            "branch",
+            "implementation",
+            "qa",
+            "remediation",
+            "document",
+            "landing",
+            "merge",
+            "landed"
+          ],
+          "waitingOn": null,
+          "resume": null,
+          "qa": [
+            {
+              "pass": 1,
+              "verdict": "changes-requested",
+              "date": "2026-11-07",
+              "at": "2026-11-07T00:48:29Z",
+              "findings": {
+                "documentation": 0,
+                "test": 1,
+                "code": 0
+              },
+              "severity": {
+                "minor": 1,
+                "other": 0
+              },
+              "route": "on-the-spot",
+              "report": "build/reports/tests/index.html",
+              "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html",
+              "note": "Code review passed on every check: the diff stays inside the two new modules, the ABI dump names no Rome, JDOM, SAX or slf4j type, every plan item is built and both deviations are built as logged. One minor test finding, in the As built row the fix touches, `component-tests`: two Level 2 component tests in `FeedFetcherParseComponentTest` prove their negatives with fixed wall-clock delays instead of a synchronisation point on the gate parser; the delays are replaced by a latch on the gate parser, in place, with no additional review. Suite: 328 tests, 327 passed, 0 failed, 1 skipped (`RomeFeedParserJdk11NonFunctionalTest`, by its assumption: no JDK 11 on the build host); `apiCheck` and the Java floor check passed."
+            }
+          ],
+          "qaMax": 3,
+          "status": "building",
+          "branch": "feat/issue-69-feeds",
+          "event": {
+            "name": "document",
+            "at": "2026-11-07T03:19:53Z",
+            "note": "7 of 7 tasks done"
+          },
+          "stages": [
+            {
+              "id": "skeleton-and-vocabulary",
+              "name": "1. Skeleton and vocabulary",
+              "state": "done",
+              "rows": [
+                "module",
+                "commoncheck",
+                "logging",
+                "failures",
+                "parser-port",
+                "model",
+                "validators",
+                "gating-tests",
+                "component-tests",
+                "deterministic-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "prolog-scan-and-rome-parser",
+              "name": "2. Prolog scan and RomeFeedParser",
+              "state": "done",
+              "rows": [
+                "prolog-scan",
+                "rome-parser",
+                "module",
+                "logging",
+                "failures",
+                "parser-port",
+                "model",
+                "component-tests",
+                "deterministic-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "fetcher",
+              "name": "3. The fetcher",
+              "state": "done",
+              "rows": [
+                "fetcher",
+                "untrusted-factory",
+                "validators",
+                "commoncheck",
+                "logging",
+                "gating-tests",
+                "component-tests",
+                "deterministic-tests",
+                "integration-tests",
+                "release"
+              ]
+            },
+            {
+              "id": "hardening-and-documentation",
+              "name": "4. Hardening and documentation",
+              "state": "done",
+              "rows": [
+                "hardening-suite",
+                "readme",
+                "integration-tests",
+                "release"
+              ]
+            }
+          ],
+          "remediation": {
+            "pass": 1,
+            "route": "on-the-spot",
+            "steps": [
+              {
+                "name": "Replace the fixed delays with a latch on the gate parser",
+                "state": "done"
+              }
+            ]
+          },
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applied in this repository)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              },
+              {
+                "id": "document-landing",
+                "name": "Document commit",
+                "state": "done"
+              }
+            ]
+          },
+          "open": [
+            {
+              "text": "The architecture's feeds section says any 2xx is parsed; research shows only 200 and 203 carry a complete feed.",
+              "raised": "halted",
+              "ref": "research/conditional-get-and-redirects.md",
+              "resolved": "2026-11-06T22:05:35Z"
+            },
+            {
+              "text": "The architecture's three hardening layers leave CPU, stack and a JVM-wide namespace cache exposed to a 2 MiB document without a DOCTYPE.",
+              "raised": "halted",
+              "ref": "research/parse-memory.md",
+              "resolved": "2026-11-06T22:05:35Z"
+            },
+            {
+              "text": "The architecture's SyndFeedInput pipeline cannot carry parser limits and shares JDOM's process-wide SAX factory.",
+              "raised": "halted",
+              "ref": "research/rome-adapter.md",
+              "resolved": "2026-11-06T22:05:35Z"
+            }
+          ],
+          "history": {
+            "sizing": [
+              {
+                "since": null,
+                "ended": "2026-11-06T04:27:23Z",
+                "endedBy": "sized",
+                "to": "plan"
+              }
+            ],
+            "plan": [
+              {
+                "since": "2026-11-06T04:27:23Z",
+                "ended": "2026-11-06T04:29:05Z",
+                "endedBy": "halted",
+                "to": "plan",
+                "event": {
+                  "name": "sized",
+                  "at": "2026-11-06T04:27:23Z"
+                },
+                "detail": "Unit 10 of the HTTP client stack: a new webtools-feeds module with an RSS and Atom parser port, a Rome default behind a hardening suite, and a conditional-GET fetcher over UrlFetcher, plus its check-only js module. New public API in a new module; webtools-feeds 1.0.0 is new and unreleased. Next: the detailed plan against the code as it is at 0374c8d.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-06T04:27:23Z"
+                },
+                "held": true
+              },
+              {
+                "since": "2026-11-06T04:35:10Z",
+                "ended": "2026-11-06T04:51:06Z",
+                "endedBy": "halted",
+                "to": "plan",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-06T04:35:10Z"
+                },
+                "detail": "Work on the feeds unit is taken up again at planning: the unit's slice of the architecture is re-validated against the nine landed units before the implementation plan is written.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-06T04:27:23Z"
+                },
+                "held": true
+              },
+              {
+                "since": "2026-11-06T04:52:40Z",
+                "ended": "2026-11-06T04:53:22Z",
+                "endedBy": "research-planning",
+                "to": "research",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-06T04:52:40Z"
+                },
+                "detail": "Answers: runs through LoopbackFetchers.untrusted with one test that the owning factory's real policy refuses a loopback URL; the feeds log lines print scheme, host and port only; the owning factory gains an overload taking an OutboundUrlPolicy.Untrusted; both fetch overloads take a trailing FetchSpec block. Research starts next.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-06T04:27:23Z"
+                }
+              },
+              {
+                "since": "2026-11-06T20:11:46Z",
+                "ended": "2026-11-06T20:13:25Z",
+                "endedBy": "research-started",
+                "to": "research",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-06T20:11:46Z"
+                },
+                "detail": "Research is taken up again. One of the five questions has its findings written; the other four continue from the work saved when the run stopped. Verification and the implementation plan follow.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-06T04:27:23Z"
+                }
+              },
+              {
+                "since": "2026-11-06T22:05:35Z",
+                "ended": "2026-11-06T22:46:50Z",
+                "endedBy": "plan-accepted",
+                "to": "branch",
+                "event": {
+                  "name": "resumed",
+                  "at": "2026-11-06T22:05:35Z"
+                },
+                "detail": "Answers: a 200 or 203 is parsed and every other 2xx is UpstreamError; four structural limits (depth 256, 100 attributes per element, 100,000 elements, 64 namespace URIs) join FeedLimits as tightening-only members enforced by RomeFeedParser and asserted by the hardening contract; RomeFeedParser drives Rome through a private WireFeedInput subclass with its own SAX parser per parse. The implementation plan is written next.",
+                "plan": {
+                  "state": "re-pass",
+                  "from": "parent",
+                  "since": "2026-11-06T04:27:23Z"
+                }
+              }
+            ],
+            "research": [
+              {
+                "since": "2026-11-06T04:53:22Z",
+                "ended": "2026-11-06T05:16:54Z",
+                "endedBy": "halted",
+                "to": "research",
+                "event": {
+                  "name": "research-started",
+                  "at": "2026-11-06T04:57:01Z"
+                },
+                "detail": "Research: 0 of 5 questions returned; open: `rome-adapter`, `parse-memory`, `entry-identity-and-links`, `conditional-get-and-redirects`, `prolog-scan`.",
+                "research": {
+                  "phase": "research",
+                  "drafted": 0,
+                  "since": {
+                    "planning": "2026-11-06T04:53:22Z",
+                    "research": "2026-11-06T04:57:01Z"
+                  }
+                },
+                "questions": [
+                  {
+                    "question": "rome-adapter",
+                    "rows": [
+                      "rome-parser",
+                      "failures",
+                      "model",
+                      "hardening-suite"
+                    ],
+                    "findings": null,
+                    "state": "researching",
+                    "started": "2026-11-06T04:57:01Z"
+                  },
+                  {
+                    "question": "parse-memory",
+                    "rows": [
+                      "hardening-suite",
+                      "fetcher",
+                      "rome-parser"
+                    ],
+                    "findings": null,
+                    "state": "researching",
+                    "started": "2026-11-06T04:57:01Z"
+                  },
+                  {
+                    "question": "entry-identity-and-links",
+                    "rows": [
+                      "model",
+                      "parser-port",
+                      "deterministic-tests"
+                    ],
+                    "findings": null,
+                    "state": "researching",
+                    "started": "2026-11-06T04:57:01Z"
+                  },
+                  {
+                    "question": "conditional-get-and-redirects",
+                    "rows": [
+                      "validators",
+                      "fetcher",
+                      "integration-tests"
+                    ],
+                    "findings": null,
+                    "state": "researching",
+                    "started": "2026-11-06T04:57:01Z"
+                  },
+                  {
+                    "question": "prolog-scan",
+                    "rows": [
+                      "prolog-scan",
+                      "deterministic-tests",
+                      "failures"
+                    ],
+                    "findings": null,
+                    "state": "researching",
+                    "started": "2026-11-06T04:57:01Z"
+                  }
+                ],
+                "held": true
+              },
+              {
+                "since": "2026-11-06T20:13:25Z",
+                "ended": "2026-11-06T20:57:36Z",
+                "endedBy": "halted",
+                "to": "research",
+                "event": {
+                  "name": "verification-started",
+                  "at": "2026-11-06T20:48:42Z"
+                },
+                "detail": "117 load-bearing claims from the five findings files are being re-opened at their sources.",
+                "research": {
+                  "phase": "verification",
+                  "drafted": 0,
+                  "since": {
+                    "planning": "2026-11-06T04:53:22Z",
+                    "research": "2026-11-06T04:57:01Z",
+                    "verification": "2026-11-06T20:48:42Z"
+                  }
+                },
+                "questions": [
+                  {
+                    "question": "rome-adapter",
+                    "rows": [
+                      "rome-parser",
+                      "failures",
+                      "model",
+                      "hardening-suite"
+                    ],
+                    "findings": "research/rome-adapter.md",
+                    "state": "verifying",
+                    "started": "2026-11-06T04:57:01Z",
+                    "returned": "2026-11-06T20:43:56Z"
+                  },
+                  {
+                    "question": "parse-memory",
+                    "rows": [
+                      "hardening-suite",
+                      "fetcher",
+                      "rome-parser"
+                    ],
+                    "findings": "research/parse-memory.md",
+                    "state": "verifying",
+                    "started": "2026-11-06T04:57:01Z",
+                    "returned": "2026-11-06T20:48:26Z"
+                  },
+                  {
+                    "question": "entry-identity-and-links",
+                    "rows": [
+                      "model",
+                      "parser-port",
+                      "deterministic-tests"
+                    ],
+                    "findings": "research/entry-identity-and-links.md",
+                    "state": "verifying",
+                    "started": "2026-11-06T04:57:01Z",
+                    "returned": "2026-11-06T20:35:09Z"
+                  },
+                  {
+                    "question": "conditional-get-and-redirects",
+                    "rows": [
+                      "validators",
+                      "fetcher",
+                      "integration-tests"
+                    ],
+                    "findings": "research/conditional-get-and-redirects.md",
+                    "state": "verifying",
+                    "started": "2026-11-06T04:57:01Z",
+                    "returned": "2026-11-06T20:15:21Z"
+                  },
+                  {
+                    "question": "prolog-scan",
+                    "rows": [
+                      "prolog-scan",
+                      "deterministic-tests",
+                      "failures"
+                    ],
+                    "findings": "research/prolog-scan.md",
+                    "state": "verifying",
+                    "started": "2026-11-06T04:57:01Z",
+                    "returned": "2026-11-06T20:46:08Z"
+                  }
+                ],
+                "held": true
+              }
+            ],
+            "branch": [
+              {
+                "since": "2026-11-06T22:46:50Z",
+                "ended": "2026-11-06T22:58:40Z",
+                "endedBy": "branch-cut",
+                "to": "implementation",
+                "event": {
+                  "name": "plan-accepted",
+                  "at": "2026-11-06T22:46:50Z"
+                },
+                "detail": "webtools-feeds is a new multiplatform module on webtools-http's public seams, with an unpublished check module compiling its common code for js: FeedFetcher does a stateless conditional GET over a UrlFetcher; RomeFeedParser runs the DOCTYPE prolog scan, then Rome with a SAX parser of its own per parse and four structural limits. Four stages, 50 test classes, 328 tests. No Considerations.",
+                "branch": "feat/issue-69-feeds"
+              }
+            ],
+            "implementation": [
+              {
+                "since": "2026-11-06T22:58:40Z",
+                "ended": "2026-11-07T00:23:35Z",
+                "endedBy": "qa-pass",
+                "to": "qa",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-07T00:23:35Z",
+                  "note": "hardening-and-documentation reported done; Quality Review next"
+                },
+                "detail": "The hostile-document generators, the child-JVM launcher and mains, the 39-test hardening contract and the six Level 4c non-functional classes: 53 tests, 52 passing and the JDK 11 smoke test skipped because no JDK 11 is set on this host. Every hostile 2 MiB shape is rejected in under 0.5 s in a child JVM at 128 MB with two concurrent parses; 6,400 parses on 16 threads give zero wrong outcomes. No main code changed and the ABI dump is unchanged. The module's tests now match the plan exactly: 50 classes, 328 tests. One further deviation: the isolation test tightens the attribute limit to 50 against the default 100, since the limit tightens only. The README and CHANGELOG part of this stage is written in the document step from the as-built record.",
+                "stages": [
+                  {
+                    "id": "skeleton-and-vocabulary",
+                    "name": "1. Skeleton and vocabulary",
+                    "state": "done",
+                    "rows": [
+                      "module",
+                      "commoncheck",
+                      "logging",
+                      "failures",
+                      "parser-port",
+                      "model",
+                      "validators",
+                      "gating-tests",
+                      "component-tests",
+                      "deterministic-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "prolog-scan-and-rome-parser",
+                    "name": "2. Prolog scan and RomeFeedParser",
+                    "state": "done",
+                    "rows": [
+                      "prolog-scan",
+                      "rome-parser",
+                      "module",
+                      "logging",
+                      "failures",
+                      "parser-port",
+                      "model",
+                      "component-tests",
+                      "deterministic-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "fetcher",
+                    "name": "3. The fetcher",
+                    "state": "done",
+                    "rows": [
+                      "fetcher",
+                      "untrusted-factory",
+                      "validators",
+                      "commoncheck",
+                      "logging",
+                      "gating-tests",
+                      "component-tests",
+                      "deterministic-tests",
+                      "integration-tests",
+                      "release"
+                    ]
+                  },
+                  {
+                    "id": "hardening-and-documentation",
+                    "name": "4. Hardening and documentation",
+                    "state": "done",
+                    "rows": [
+                      "hardening-suite",
+                      "readme",
+                      "integration-tests",
+                      "release"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "qa": [
+              {
+                "since": "2026-11-07T00:23:35Z",
+                "ended": "2026-11-07T00:48:29Z",
+                "endedBy": "qa-pass",
+                "to": "remediation",
+                "event": {
+                  "name": "qa-pass",
+                  "at": "2026-11-07T00:23:35Z",
+                  "note": "Quality Review 1: running"
+                },
+                "detail": "The change set stays inside one system: the two new modules, the settings include and two .gitattributes lines; nothing in webtools-http changes. The review checks the tests and the code against the plan.",
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-07",
+                    "at": "2026-11-07T00:48:29Z",
+                    "findings": {
+                      "documentation": 0,
+                      "test": 1,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 1,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html"
+                  }
+                ]
+              }
+            ],
+            "remediation": [
+              {
+                "since": "2026-11-07T00:48:29Z",
+                "ended": "2026-11-07T01:46:46Z",
+                "endedBy": "document",
+                "to": "document",
+                "event": {
+                  "name": "implementation-stage",
+                  "at": "2026-11-07T01:43:55Z",
+                  "note": "hardening-and-documentation"
+                },
+                "detail": "The two Level 2 component tests in FeedFetcherParseComponentTest now prove their negatives through signals on the gate parser and a latch on the fake transport, with no fixed wait; 157 component tests pass. The manual Level 5 acceptance pass ran against nine public cases and every one gave the expected outcome (RSS 2.0, Atom 1.0, a conditional 304, a 301 move reported, LimitExceeded(Entries) and BodyTooLarge for long podcasts, RefusedByPolicy for an https-to-http redirect, NotAFeed(Html) for a web page); its results are in final-implementation.md. The IDE checks and the KDoc read as a consumer sees it are left to the maintainer.",
+                "remediation": {
+                  "pass": 1,
+                  "route": "on-the-spot",
+                  "steps": [
+                    {
+                      "name": "Replace the fixed delays with a latch on the gate parser",
+                      "state": "done"
+                    }
+                  ]
+                },
+                "qa": [
+                  {
+                    "pass": 1,
+                    "verdict": "changes-requested",
+                    "date": "2026-11-07",
+                    "at": "2026-11-07T00:48:29Z",
+                    "findings": {
+                      "documentation": 0,
+                      "test": 1,
+                      "code": 0
+                    },
+                    "severity": {
+                      "minor": 1,
+                      "other": 0
+                    },
+                    "route": "on-the-spot",
+                    "report": "build/reports/tests/index.html",
+                    "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html",
+                    "note": "Code review passed on every check: the diff stays inside the two new modules, the ABI dump names no Rome, JDOM, SAX or slf4j type, every plan item is built and both deviations are built as logged. One minor test finding, in the As built row the fix touches, `component-tests`: two Level 2 component tests in `FeedFetcherParseComponentTest` prove their negatives with fixed wall-clock delays instead of a synchronisation point on the gate parser; the delays are replaced by a latch on the gate parser, in place, with no additional review. Suite: 328 tests, 327 passed, 0 failed, 1 skipped (`RomeFeedParserJdk11NonFunctionalTest`, by its assumption: no JDK 11 on the build host); `apiCheck` and the Java floor check passed."
+                  }
+                ]
+              }
+            ]
+          },
+          "rowNames": {
+            "module": "The `webtools-feeds` module and its build",
+            "commoncheck": "`webtools-feeds-commoncheck`, the check-only `js` compile",
+            "parser-port": "The `FeedParser` port, `FeedInput` and `FeedLimits`",
+            "model": "The feed model and its id and link rules",
+            "failures": "`FeedFailure` and its reasons",
+            "validators": "`FeedValidators` and `FeedFetch`: the caller-owned conditional-GET state",
+            "fetcher": "`FeedFetcher` over `UrlFetcher`",
+            "prolog-scan": "The DOCTYPE prolog scan",
+            "rome-parser": "`RomeFeedParser`, the supplied parser",
+            "untrusted-factory": "`FeedFetcher.untrusted`, the owning factory",
+            "logging": "The module's logging seam and helpers",
+            "gating-tests": "Level 1 gating tests: the feeds API with no opt-in",
+            "component-tests": "Level 2 component tests on the fakes",
+            "integration-tests": "Level 3 integration tests over loopback",
+            "deterministic-tests": "Level 4a deterministic tables",
+            "hardening-suite": "Level 4c hardening and conformance suite, `FeedParserContract`",
+            "readme": "The README artifact row, install line and how-to",
+            "release": "The ABI dump and the version"
+          },
+          "recon": {
+            "interview": {
+              "reconstructed": true,
+              "ended": null,
+              "trail": [],
+              "milestones": []
+            }
+          }
+        },
+        "tests": {
+          "updated": "2026-11-07T01:43:55Z",
+          "added": [
+            {
+              "class": "FeedsConsumerGatingTest",
+              "module": "webtools-feeds",
+              "testLevel": "1",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/gating/webtools/feeds/FeedsConsumerGatingTest.kt",
+              "tests": 4,
+              "rows": [
+                "gating-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedLimitsComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedLimitsComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "parser-port",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedValidatorsComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedValidatorsComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "validators",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetchComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetchComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "validators",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "model",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedEntryComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedEntryComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "model",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedEnclosureComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedEnclosureComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "model",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFailureComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFailureComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "failures",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedInputComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedInputComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "parser-port",
+                "component-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "Sha256DeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/Sha256DeterministicTest.kt",
+              "tests": 6,
+              "rows": [
+                "model",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "EntryDigestDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/EntryDigestDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "model",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "EntryIdDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/EntryIdDeterministicTest.kt",
+              "tests": 4,
+              "rows": [
+                "model",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "LinkRuleDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/LinkRuleDeterministicTest.kt",
+              "tests": 8,
+              "rows": [
+                "model",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "TextRulesDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/TextRulesDeterministicTest.kt",
+              "tests": 5,
+              "rows": [
+                "parser-port",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedValidatorsDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/FeedValidatorsDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "validators",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "UrlOriginDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/UrlOriginDeterministicTest.kt",
+              "tests": 3,
+              "rows": [
+                "logging",
+                "deterministic-tests"
+              ],
+              "stage": "skeleton-and-vocabulary",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "PrologScanFailureComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/PrologScanFailureComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "prolog-scan",
+                "component-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "RomeFailureMappingComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/RomeFailureMappingComponentTest.kt",
+              "tests": 12,
+              "rows": [
+                "rome-parser",
+                "failures",
+                "component-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 12,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "CountingSaxHandlerComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/CountingSaxHandlerComponentTest.kt",
+              "tests": 5,
+              "rows": [
+                "rome-parser",
+                "component-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "RomeXmlReaderComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/RomeXmlReaderComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "rome-parser",
+                "component-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "RomeConversionComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/RomeConversionComponentTest.kt",
+              "tests": 14,
+              "rows": [
+                "rome-parser",
+                "model",
+                "component-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 14,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "RomeFeedParserComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/RomeFeedParserComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "rome-parser",
+                "component-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "PrologScanVectorsDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/PrologScanVectorsDeterministicTest.kt",
+              "tests": 7,
+              "rows": [
+                "prolog-scan",
+                "deterministic-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 7,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "PrologScanReadingsDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/PrologScanReadingsDeterministicTest.kt",
+              "tests": 6,
+              "rows": [
+                "prolog-scan",
+                "deterministic-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedParserConformanceContract / RomeFeedParserConformanceTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/FeedParserConformanceContract.kt",
+              "tests": 39,
+              "rows": [
+                "rome-parser",
+                "parser-port",
+                "deterministic-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 39,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "Sha256DifferentialDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/Sha256DifferentialDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "model",
+                "deterministic-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "PrologScanRomeDifferentialDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/PrologScanRomeDifferentialDeterministicTest.kt",
+              "tests": 4,
+              "rows": [
+                "prolog-scan",
+                "rome-parser",
+                "deterministic-tests"
+              ],
+              "stage": "prolog-scan-and-rome-parser",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherConsumerGatingTest",
+              "module": "webtools-feeds",
+              "testLevel": "1",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/gating/webtools/feeds/FeedFetcherConsumerGatingTest.kt",
+              "tests": 5,
+              "rows": [
+                "gating-tests",
+                "fetcher"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherConfigComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherConfigComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "fetcher",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedsDslMarkerComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedsDslMarkerComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "fetcher",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherRequestComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherRequestComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "fetcher",
+                "validators",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherStatusComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherStatusComponentTest.kt",
+              "tests": 12,
+              "rows": [
+                "fetcher",
+                "validators",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 12,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherMovesComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherMovesComponentTest.kt",
+              "tests": 8,
+              "rows": [
+                "fetcher",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 8,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherPassThroughComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherPassThroughComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "fetcher",
+                "failures",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherParseComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherParseComponentTest.kt",
+              "tests": 10,
+              "rows": [
+                "fetcher",
+                "component-tests"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "passed",
+                "passed": 10,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherLifecycleComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherLifecycleComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "fetcher",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherOwningFactoryComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherOwningFactoryComponentTest.kt",
+              "tests": 4,
+              "rows": [
+                "untrusted-factory",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherLoggingComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherLoggingComponentTest.kt",
+              "tests": 6,
+              "rows": [
+                "logging",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 6,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherConfigDefaultsComponentTest",
+              "module": "webtools-feeds",
+              "testLevel": "2",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/component/webtools/feeds/FeedFetcherConfigDefaultsComponentTest.kt",
+              "tests": 2,
+              "rows": [
+                "fetcher",
+                "component-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherLoopbackIntegrationTest",
+              "module": "webtools-feeds",
+              "testLevel": "3",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/feeds/FeedFetcherLoopbackIntegrationTest.kt",
+              "tests": 9,
+              "rows": [
+                "fetcher",
+                "integration-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 9,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherOwningFactoryIntegrationTest",
+              "module": "webtools-feeds",
+              "testLevel": "3",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/integration/webtools/feeds/FeedFetcherOwningFactoryIntegrationTest.kt",
+              "tests": 3,
+              "rows": [
+                "untrusted-factory",
+                "integration-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "ConditionalHeadersDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/ConditionalHeadersDeterministicTest.kt",
+              "tests": 4,
+              "rows": [
+                "validators",
+                "deterministic-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 4,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "ResponseVerdictDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/ResponseVerdictDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "fetcher",
+                "deterministic-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "PermanentMoveDeterministicTest",
+              "module": "webtools-feeds",
+              "testLevel": "4a",
+              "path": "webtools-feeds/src/commonTest/kotlin/com/spartanlabs/testing/deterministic/webtools/feeds/PermanentMoveDeterministicTest.kt",
+              "tests": 2,
+              "rows": [
+                "fetcher",
+                "deterministic-tests"
+              ],
+              "stage": "fetcher",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedParserHardeningContract / RomeFeedParserHardeningTest",
+              "module": "webtools-feeds",
+              "testLevel": "4c",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/feeds/FeedParserHardeningContract.kt",
+              "tests": 39,
+              "rows": [
+                "hardening-suite",
+                "rome-parser",
+                "parser-port"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "passed",
+                "passed": 39,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "HostileParseJvmNonFunctionalTest",
+              "module": "webtools-feeds",
+              "testLevel": "4c",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/feeds/HostileParseJvmNonFunctionalTest.kt",
+              "tests": 3,
+              "rows": [
+                "hardening-suite"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherSecrecyNonFunctionalTest",
+              "module": "webtools-feeds",
+              "testLevel": "4c",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/feeds/FeedFetcherSecrecyNonFunctionalTest.kt",
+              "tests": 5,
+              "rows": [
+                "hardening-suite",
+                "logging"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "passed",
+                "passed": 5,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "RomeFeedParserIsolationNonFunctionalTest",
+              "module": "webtools-feeds",
+              "testLevel": "4c",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/feeds/RomeFeedParserIsolationNonFunctionalTest.kt",
+              "tests": 3,
+              "rows": [
+                "hardening-suite",
+                "rome-parser"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "passed",
+                "passed": 3,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "FeedFetcherCloseRaceNonFunctionalTest",
+              "module": "webtools-feeds",
+              "testLevel": "4c",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/feeds/FeedFetcherCloseRaceNonFunctionalTest.kt",
+              "tests": 2,
+              "rows": [
+                "hardening-suite",
+                "fetcher"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "passed",
+                "passed": 2,
+                "failed": 0,
+                "skipped": 0,
+                "at": "2026-11-07T01:43:55Z"
+              }
+            },
+            {
+              "class": "RomeFeedParserJdk11NonFunctionalTest",
+              "module": "webtools-feeds",
+              "testLevel": "4c",
+              "path": "webtools-feeds/src/jvmTest/kotlin/com/spartanlabs/testing/nonfunctional/webtools/feeds/RomeFeedParserJdk11NonFunctionalTest.kt",
+              "tests": 1,
+              "rows": [
+                "hardening-suite",
+                "rome-parser"
+              ],
+              "stage": "hardening-and-documentation",
+              "result": {
+                "state": "skipped",
+                "passed": 0,
+                "failed": 0,
+                "skipped": 1,
+                "at": "2026-11-07T01:43:55Z",
+                "note": "Skipped by its assumption: no JDK 11 is set on the build host (`WEBTOOLS_JDK11_HOME` unset)."
+              }
+            }
+          ],
+          "amended": [],
+          "relevant": [],
+          "rowNames": {
+            "parser-port": "The `FeedParser` port, `FeedInput` and `FeedLimits`",
+            "model": "The feed model and its id and link rules",
+            "failures": "`FeedFailure` and its reasons",
+            "validators": "`FeedValidators` and `FeedFetch`: the caller-owned conditional-GET state",
+            "fetcher": "`FeedFetcher` over `UrlFetcher`",
+            "prolog-scan": "The DOCTYPE prolog scan",
+            "rome-parser": "`RomeFeedParser`, the supplied parser",
+            "untrusted-factory": "`FeedFetcher.untrusted`, the owning factory",
+            "logging": "The module's logging seam and helpers",
+            "gating-tests": "Level 1 gating tests: the feeds API with no opt-in",
+            "component-tests": "Level 2 component tests on the fakes",
+            "integration-tests": "Level 3 integration tests over loopback",
+            "deterministic-tests": "Level 4a deterministic tables",
+            "hardening-suite": "Level 4c hardening and conformance suite, `FeedParserContract`"
+          }
+        }
       },
       "gap": {
         "kind": "missing",
@@ -10735,7 +11916,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#610-webtools-feeds",
               "heading": "6.10 `webtools-feeds`",
               "paragraph": "Responsibility: parse hostile RSS/Atom documents behind a hardened port and fetch feeds with a stateless conditional GET over `UrlFetcher`. · Placement: `webtools-feeds/`, package `com.spartanlabs.webtools.feeds`, `webtools.kotlin-multiplatform-library`, `explicitApi()`, coordinates `webtools-feeds` and `webtools-feeds-jvm`, version `1.0.0`. `commonMain`: `api(project(\":webtools-http\"))` (the public API names `UrlFetcher`, `Url`, `HttpFailure`, the marker, and `CoroutineDispatcher` through `parseDispatcher`; `kotlinx-coroutines-core` arrives through it as `api`, §6.2). `jvmMain`: `rome` 2.1.0 …",
-              "hash": "5836c304c170"
+              "hash": "df184877efc3"
             }
           },
           {
@@ -10745,7 +11926,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#610-webtools-feeds",
               "heading": "6.10 `webtools-feeds`",
               "paragraph": "Responsibility: parse hostile RSS/Atom documents behind a hardened port and fetch feeds with a stateless conditional GET over `UrlFetcher`. · Placement: `webtools-feeds/`, package `com.spartanlabs.webtools.feeds`, `webtools.kotlin-multiplatform-library`, `explicitApi()`, coordinates `webtools-feeds` and `webtools-feeds-jvm`, version `1.0.0`. `commonMain`: `api(project(\":webtools-http\"))` (the public API names `UrlFetcher`, `Url`, `HttpFailure`, the marker, and `CoroutineDispatcher` through `parseDispatcher`; `kotlinx-coroutines-core` arrives through it as `api`, §6.2). `jvmMain`: `rome` 2.1.0 …",
-              "hash": "5836c304c170"
+              "hash": "df184877efc3"
             }
           },
           {
@@ -10755,7 +11936,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -10830,7 +12011,7 @@ window.dashboardLive&&window.dashboardLive("plan",
               "ref": "architecture.md#11-decomposition",
               "heading": "11. Decomposition",
               "paragraph": "Eleven plannable units. Each is a sub-issue of #55, merges on its own and leaves `master` building with every test green. `webtools-http` and `webtools-feeds` stay unreleased at `1.0.0` until the stack is complete, so the units that build them move no version; the three existing modules move only in `java-floor`. \"Blocked by\" names true dependencies; units 5, 7 and 8 are independent of one another, and 6 needs only 5 and 4.",
-              "hash": "89ad136c2590"
+              "hash": "4e5b98bbb43e"
             }
           }
         ]
@@ -11272,6 +12453,19 @@ window.dashboardLive&&window.dashboardLive("plan",
             "ref": "68-call-facades/consequences.md#8-known-gaps"
           }
         ]
+      },
+      {
+        "unit": "feeds",
+        "basis": "plan",
+        "summary": "`webtools-feeds` 1.0.0, new and unreleased, adds the feed parser port with a hardened Rome default behind a DOCTYPE prolog scan and four structural limits, a caller-owned conditional-GET fetcher over `UrlFetcher` and a frozen entry identity, every type Stable Core but the gated port and failure group; its unpublished check module compiles the common code for `js`. No existing module or version changes, and the HTTP documentation (#70) documents it.",
+        "release": {
+          "bump": "none",
+          "version": null,
+          "note": "`webtools-feeds` 1.0.0 is new and unreleased until #55's stack is complete; this landing is not a release candidate",
+          "unreleased": true
+        },
+        "source": "69-feeds/consequences.md",
+        "link": "69-feeds/consequences.md#1-published-artifacts"
       }
     ],
     "changes": [
@@ -11398,14 +12592,14 @@ window.dashboardLive&&window.dashboardLive("plan",
         "entry": "downstream.1",
         "system": "webtools-http-facades",
         "when": "#68 landing",
-        "ref": "806b489",
+        "ref": "0374c8d",
         "what": "`webtools-http`'s call facades are settled as built: the client checks its own policy before anything is spent, the permit is released only for the transport's `InvalidRequest`, a declared miss status is checked before a `2xx` is decoded, the client's owning factory raises both concurrency limits to the budget's burst, `UrlFetcher(userAgent, policy)` joins the owning factories and `LoopbackFetchers` the fixtures.",
         "why": "#68's consequences §5 states it; `architecture.md` §6.3.2, §6.6, §6.7, §7.2, §7.4, §12 and §13 carry dated corrections. `webtools-http` is unreleased, so no published consumer is affected."
       },
       {
         "unit": "call-facades",
         "when": "#68 landing",
-        "ref": "806b489",
+        "ref": "0374c8d",
         "what": "Unit 9's open point is settled: the generic `Endpoint<T>` factory binds every consumer-style call and infers `T`, measured on Kotlin 2.2.0 from a separate JVM module, and `RateLimited.retryAfter` keeps the `max`, the longer of the server's `Retry-After` and the budget's `pausedFor`.",
         "why": "#68's consequences §5 states it, and the initiative's consequences §7 marks unit 9's row settled."
       }
@@ -11425,6 +12619,7 @@ window.dashboardLive&&window.dashboardLive("plan",
       "webtools-http-cache": "../../dashboards/webtools-http-cache/index.html",
       "webtools-http-budget": "../../dashboards/webtools-http-budget/index.html",
       "webtools-http-facades": "../../dashboards/webtools-http-facades/index.html",
+      "webtools-feeds": "../../dashboards/webtools-feeds/index.html",
       "webtools": "../../dashboards/index.html"
     }
   }

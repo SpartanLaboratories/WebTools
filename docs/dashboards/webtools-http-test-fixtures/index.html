@@ -29,7 +29,12 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .page{max-width:1280px;margin:0 auto}
 a{color:inherit}
-code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--hair);padding:1px 4px;border-radius:3px}
+/* the code label (GUIDANCE.md §12, "Code"; dashboards-skill/42): every inline code drawn as a label of its own,
+   in both themes, at normal weight inside bold text; inside a chip, a pill or a tile (a label or a figure already: each class carries
+   its type word) it stays plain mono text */
+:is(b,strong,.name,.nm,dt,th) code{font-weight:400}
+:is([class*="chip"],[class*="pill"],[class*="tile"]) code{background:none;border:0;padding:0;border-radius:0}
 h1,h2,h3{text-wrap:balance}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
@@ -86,10 +91,10 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0 18px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
-.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
-.kpi .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+.kpi-tile{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.kpi-tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi-tile .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi-tile .s{font-size:12px;color:var(--ink-2);margin-top:2px}
 
 /* tabs + stage */
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;overflow-y:hidden}
@@ -110,6 +115,14 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 :root[data-inspector="hidden"] .stage{grid-template-columns:minmax(0,1fr)}
 :root[data-inspector="hidden"] .inspector{display:none}
 .inspector h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+/* The inspector's head (GUIDANCE.md §6, "The inspector switch"): its heading, and at its right the Hide button, an eye struck through and
+   the word "Hide", which hides the inspector as the header's inspector switch does; a button in the boards' neutrals, never the accent or
+   a status colour, its focus ring the boards' own */
+.inspector .insp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.inspector .insp-head h2{margin:0}
+.hide-button{appearance:none;display:inline-flex;align-items:center;gap:4px;flex:none;font:600 11px/1 var(--mono);padding:3px 7px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.hide-button:hover{color:var(--ink);border-color:var(--ink-2)}
+.hide-button svg{flex:none;width:14px;height:14px}
 .inspector .kicker{font:11px var(--mono);color:var(--muted);letter-spacing:.04em}
 .inspector .name{font-weight:700;font-size:15px;font-family:var(--mono);word-break:break-word}
 .inspector .vis{font-size:12px;color:var(--ink-2);margin:2px 0 8px}
@@ -123,23 +136,23 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .linkbtn:hover{border-color:var(--ink)}
 .tchip{display:inline-block;font:11px var(--mono);padding:3px 6px;border:1px solid var(--line);border-radius:3px;margin:2px 4px 0 0;color:var(--ink-2)}
 .tchip.server{border-left:3px solid var(--server)}.tchip.client{border-left:3px solid var(--client)}
-/* Legends. Every tab carries one .key (the C4 tab's is .c4key): its colour grouping, then its line and shape encodings,
+/* Legends. Every tab carries one .legend (the C4 tab's is .c4-legend): its colour grouping, then its line and shape encodings,
    ending with planned. check-board.js fails a tab without a visible one. */
-.key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
-.key span{display:inline-flex;align-items:center;gap:6px}
-.key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
-.key i.pub{background:var(--surface-2)}.key i.std{border-style:dotted}.key i.pln{border-style:dashed;background:none;opacity:.6}
-.key i.srv{border-color:var(--server)}.key i.cli{border-color:var(--client)}.key i.wir{border-color:var(--wire)}
-.key i.pub.srv{background:var(--server-soft)}.key i.pub.cli{background:var(--client-soft)}.key i.pub.wir{background:var(--wire-soft)}
-.key i.con{border-color:var(--ink)}.key i.ext{border-color:var(--muted);background:var(--surface-2)}
-.key i.bs{border-left:4px solid var(--server)}.key i.bc{border-left:4px solid var(--client)}.key i.bw{border-left:4px solid var(--wire)}
-.key i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.key i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.key i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
-.key i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.key i.ln.dash{border-top-style:dashed}.key i.ln.ret{position:relative;border-top-width:1px;width:20px}.key i.ln.ret::after{content:"";position:absolute;right:0;top:-4px;width:6px;height:6px;border-top:1.2px solid var(--ink-2);border-right:1.2px solid var(--ink-2);transform:rotate(45deg)}.key i.ln.on{border-top:2.5px solid var(--on)}.key i.ln.off{border-top-color:var(--line)}
-.key i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
-.key i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
-.key i.band{border:0;background:var(--surface-2)}
-.key i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
-.key .pill{align-self:center}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0 0;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid var(--ink-2);background:var(--surface);flex:none}
+.legend i.pub{background:var(--surface-2)}.legend i.std{border-style:dotted}.legend i.pln{border-style:dashed;background:none;opacity:.6}
+.legend i.srv{border-color:var(--server)}.legend i.cli{border-color:var(--client)}.legend i.wir{border-color:var(--wire)}
+.legend i.pub.srv{background:var(--server-soft)}.legend i.pub.cli{background:var(--client-soft)}.legend i.pub.wir{background:var(--wire-soft)}
+.legend i.con{border-color:var(--ink)}.legend i.ext{border-color:var(--muted);background:var(--surface-2)}
+.legend i.bs{border-left:4px solid var(--server)}.legend i.bc{border-left:4px solid var(--client)}.legend i.bw{border-left:4px solid var(--wire)}
+.legend i.ph1{background:var(--ph-1);border-color:var(--ph-1)}.legend i.ph2{background:var(--ph-2);border-color:var(--ph-2)}.legend i.ph3{background:var(--ph-3);border-color:var(--ph-3)}
+.legend i.ln{width:18px;height:0;border:0;border-top:2px solid var(--ink-2);border-radius:0;background:none}.legend i.ln.dash{border-top-style:dashed}.legend i.ln.ret{position:relative;border-top-width:1px;width:20px}.legend i.ln.ret::after{content:"";position:absolute;right:0;top:-4px;width:6px;height:6px;border-top:1.2px solid var(--ink-2);border-right:1.2px solid var(--ink-2);transform:rotate(45deg)}.legend i.ln.on{border-top:2.5px solid var(--on)}.legend i.ln.off{border-top-color:var(--line)}
+.legend i.hex{border:0;border-radius:0;background:var(--ink-2);clip-path:polygon(22% 0,78% 0,100% 50%,78% 100%,22% 100%,0 50%)}
+.legend i.end{border-radius:1px;border-color:var(--line);border-left-width:4px;background:var(--surface-2)}
+.legend i.band{border:0;background:var(--surface-2)}
+.legend i.dot{width:10px;height:10px;border:0;border-radius:50%;background:var(--ink)}
+.legend .pill{align-self:center}
 
 /* structure svg */
 .band{fill:var(--surface-2)}
@@ -239,12 +252,12 @@ h1{font-size:28px;margin:4px 0 2px;letter-spacing:-.01em;font-family:var(--mono)
 .c4head .desc{font-size:12.5px;color:var(--ink-2)}
 .c4canvas{border:1px solid var(--line);border-radius:6px;padding:6px;background-color:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1.2px);background-size:22px 22px;overflow-x:auto}
 .c4canvas svg{max-width:none}
-.c4key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
-.c4key span{display:inline-flex;align-items:center;gap:6px}
-.c4key i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
-.c4key i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
-.c4key i.arrow.dashed{border-top-style:dashed}
-.c4key i.frame{background:var(--surface-2);border:1.5px solid var(--line);border-radius:4px}
+.c4-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;font-size:11.5px;color:var(--ink-2)}
+.c4-legend span{display:inline-flex;align-items:center;gap:6px}
+.c4-legend i{display:inline-block;width:16px;height:11px;border-radius:3px;border:1.5px solid rgba(0,0,0,.35)}
+.c4-legend i.arrow{width:18px;height:0;border:0;border-top:1.5px solid var(--rel);border-radius:0}
+.c4-legend i.arrow.dashed{border-top-style:dashed}
+.c4-legend i.frame{background:var(--surface-2);border:1.5px solid var(--line);border-radius:4px}
 .c4el{cursor:pointer}
 .c4el .card{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
 .c4el .hdr{stroke:none}
@@ -370,13 +383,13 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
 .cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
 .cbar i{display:block;height:100%;background:var(--good)}
-.key .cbar{width:40px}
-.key i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
-.key i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
-.key i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
-.key .badge{align-self:center}
+.legend .cbar{width:40px}
+.legend i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
+.legend i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
+.legend i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
+.legend .badge{align-self:center}
 /* the Guarantees' and the Context's legends (GUIDANCE.md §2), generated from what each section draws */
-.guarantees>.key,.context>.key{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
+.guarantees>.legend,.context>.legend{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-top:10px}
 .badge.planned{border-style:dashed}
 .badge.closed{color:var(--muted)}
 .tags{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
@@ -434,12 +447,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi"><div class="l">Source</div><div class="v">27 files</div><div class="s">2,062 lines · 24 of its own (1,848), the call budget's 2 (155) and the call facades' 1 (59) · package <code>com.spartanlabs.webtools.http.testing</code></div></div>
-  <div class="kpi"><div class="l">Types</div><div class="v">22 public</div><div class="s">15 top-level of its own · 4 nested: the gate's two states, <code>Unmatched</code>'s two · the budget's 2 · the facades' 1 · 7 internal · 4 public extension functions</div></div>
-  <div class="kpi"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">the test's scheduler drives the clock and the fake; the recorder writes on <code>Dispatchers.IO</code>; over loopback the transport's own pool</div></div>
-  <div class="kpi"><div class="l">Contracts</div><div class="v">5 implementers</div><div class="s">of gated ports, each with its own opt-in: the fake, the recorder's decorator, the virtual wall clock, the budget's store and observer · 2 published variants</div></div>
-  <div class="kpi"><div class="l">Tests</div><div class="v">29 classes</div><div class="s">197 tests across 5 testing levels, in <code>jvmTest</code> · 2 of them, 19 tests, the budget's fixtures · 2, 8 tests, the facades' · the publication checked at L4b by the build</div></div>
-  <div class="kpi"><div class="l">Open issues</div><div class="v">2</div><div class="s">1 landing with this board · 1 docs · 0 unscheduled</div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">27 files</div><div class="s">2,062 lines · 24 of its own (1,848), the call budget's 2 (155) and the call facades' 1 (59) · package <code>com.spartanlabs.webtools.http.testing</code></div></div>
+  <div class="kpi-tile"><div class="l">Types</div><div class="v">22 public</div><div class="s">15 top-level of its own · 4 nested: the gate's two states, <code>Unmatched</code>'s two · the budget's 2 · the facades' 1 · 7 internal · 4 public extension functions</div></div>
+  <div class="kpi-tile"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">the test's scheduler drives the clock and the fake; the recorder writes on <code>Dispatchers.IO</code>; over loopback the transport's own pool</div></div>
+  <div class="kpi-tile"><div class="l">Contracts</div><div class="v">5 implementers</div><div class="s">of gated ports, each with its own opt-in: the fake, the recorder's decorator, the virtual wall clock, the budget's store and observer · 2 published variants</div></div>
+  <div class="kpi-tile"><div class="l">Tests</div><div class="v">29 classes</div><div class="s">197 tests across 5 testing levels, in <code>jvmTest</code> · 2 of them, 19 tests, the budget's fixtures · 2, 8 tests, the facades' · the publication checked at L4b by the build</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">2</div><div class="s">1 landing with this board · 1 docs · 0 unscheduled</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -457,7 +470,7 @@ footer code{color:var(--ink-2)}
     <h2>Component map</h2>
     <p class="lede">Nesting is ownership. Click a box for its role, files and threads, and its place in the C4 model.</p>
     <svg id="svg-structure" viewBox="0 0 1000 470" role="img" aria-label="Component map of webtools-http-test-fixtures"></svg>
-    <div class="key"><span><i class="pub cli"></i>public · no network: the clock, the fake, the files, the recorder</span><span><i class="cli"></i>internal · their codec and helpers</span><span><i class="pub wir"></i>public · over loopback: the transport and a fetcher</span><span><i class="wir"></i>internal · its resolver</span><span><i class="pub srv"></i>public · the call budget's fixtures</span></div>
+    <div class="legend"><span><i class="pub cli"></i>public · no network: the clock, the fake, the files, the recorder</span><span><i class="cli"></i>internal · their codec and helpers</span><span><i class="pub wir"></i>public · over loopback: the transport and a fetcher</span><span><i class="wir"></i>internal · its resolver</span><span><i class="pub srv"></i>public · the call budget's fixtures</span></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-c4" aria-labelledby="t-c4" hidden>
@@ -468,7 +481,7 @@ footer code{color:var(--ink-2)}
       <div class="c4main">
         <div class="c4head" id="c4-head"></div>
         <div class="c4canvas" id="c4-canvas"><svg id="svg-c4" viewBox="0 0 900 300" role="img" aria-label="C4 view"></svg></div>
-        <div class="c4key" id="c4-key"></div>
+        <div class="c4-legend" id="c4-key"></div>
         <pre class="dsl" id="dsl-view" hidden></pre>
       </div>
     </div>
@@ -487,7 +500,7 @@ footer code{color:var(--ink-2)}
         <div class="thread wire" data-t="OkHttpTransport's dispatcher" tabindex="0" role="button"><span class="n">OkHttpTransport's dispatcher</span><span class="pill lazy">daemon · on demand</span><span class="r">the loopback transport's own pool: every blocking step of a call to the local server</span></div>
       </div>
     </div>
-    <div class="key"><span><i class="bc"></i>no network</span><span><i class="bw"></i>over loopback</span><span><span class="pill eager">the test's</span>runs where the test calls</span><span><span class="pill lazy">on demand</span>a thread started when a call needs one, gone after 60 s idle</span><span><span class="pill cond">only …</span>only under a condition</span><span><i class="dot"></i>does the work (table below)</span></div>
+    <div class="legend"><span><i class="bc"></i>no network</span><span><i class="bw"></i>over loopback</span><span><span class="pill eager">the test's</span>runs where the test calls</span><span><span class="pill lazy">on demand</span>a thread started when a call needs one, gone after 60 s idle</span><span><span class="pill cond">only …</span>only under a condition</span><span><i class="dot"></i>does the work (table below)</span></div>
     <h2 style="margin-top:16px">Who runs what</h2>
     <p class="lede"><code>VirtualClock</code> is for tests with no real I/O: under <code>runTest</code> a pending real call turns <code>withTimeout</code> into a spurious timeout.</p>
     <div class="scroll"><table class="matrix">
@@ -510,7 +523,7 @@ footer code{color:var(--ink-2)}
     <p class="outcome" id="outcome"></p>
     <svg id="svg-flow" viewBox="0 0 980 580" role="img" aria-label="Decision paths of FakeHttpTransport.execute and RecordingGate.evaluate"></svg>
     <!-- generated from the flow on screen: its shapes, the outcome levels its ends use (status colours, each with its label), lit and faded, planned -->
-    <div class="key" id="flow-key"></div>
+    <div class="legend" id="flow-key"></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-reliable" aria-labelledby="t-reliable" hidden>
@@ -524,7 +537,7 @@ footer code{color:var(--ink-2)}
     </div>
     <svg id="svg-seq" viewBox="0 0 1000 600" role="img" aria-label="A test with the fixtures, sequence diagram"></svg>
     <!-- generated: the lifeline owners present (their side's hue, as on Structure and Threads), the line encodings, planned -->
-    <div class="key" id="seq-key"></div>
+    <div class="legend" id="seq-key"></div>
   </section>
 
   <section class="view" role="tabpanel" id="p-lifecycles" aria-labelledby="t-lifecycles" hidden>
@@ -545,7 +558,7 @@ footer code{color:var(--ink-2)}
         <div class="callout"><b>Nothing records a secret.</b> No request header is written; sensitive query values and headers are redacted, five connection headers dropped, every supplied secret replaced in the whole file, and a file in which a form of one survives is refused.</div>
         <div class="callout"><b>Each implementer opts in for itself.</b> The fixtures compilation has no source-set opt-in: each fixture that implements a gated port carries its own <code>@OptIn</code>, as a consumer's implementation would, so the fixtures double as worked examples of the seams.</div></div>
     </div>
-    <div class="key"><span><i class="ph1"></i>start · the clock, the stubs, the server</span><span><i class="ph2"></i>run · calls, steps and their rules</span><span><i class="ph3"></i>stop · close</span></div>
+    <div class="legend"><span><i class="ph1"></i>start · the clock, the stubs, the server</span><span><i class="ph2"></i>run · calls, steps and their rules</span><span><i class="ph3"></i>stop · close</span></div>
   </section>
 </div>
 
@@ -964,7 +977,8 @@ function parseDsl(src){
     const opens=line.endsWith("{"); if(opens) line=line.slice(0,-1).trim();
     const T=tok(line); if(!T.length){ if(opens) stack.push({kind:"anon"}); return; }
     const t0=T[0].t;
-    if(["workspace","model","views","styles"].includes(t0)){ if(opens) stack.push({kind:t0}); return; }
+    /* a block keyword followed by "=" is an identifier assigned an element ("model = component …"), never the block: read it below */
+    if(["workspace","model","views","styles"].includes(t0)&&!(T[1]&&T[1].t==="=")){ if(opens) stack.push({kind:t0}); return; }
     if(t0==="!identifiers") return;
     if(inBlock("styles")){ if(t0==="element"){ const props={}, body=T.slice(2).map(x=>x.t!==undefined?x.t:x.s).filter(x=>x!=="{"&&x!=="}"); for(let i=0;i+1<body.length;i+=2) props[body[i]]=body[i+1]; M.styles.push({tag:T[1].s,props}); } return; }
     if(inBlock("views")){
@@ -986,8 +1000,10 @@ function parseDsl(src){
   });
   return M;
 }
+/* a count and its noun, "1 view", "2 views" */
+const plural=(n,one,many)=>`${n} ${Number(n)===1?one:(many||one+"s")}`;
 const C4=parseDsl(document.getElementById("dsl").textContent);
-$("#dsl-stats").textContent=`${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views`;
+$("#dsl-stats").textContent=`${plural(C4.order.length,"element")} · ${plural(C4.rels.length,"relationship")} · ${plural(C4.views.length,"view")}`;
 
 const el=id=>C4.elements[id];
 /* Planned, from the data (system/RULES.md §2, "Planned parts"): a part tied to a DSL element — a structure node through MODEL.c4 or its
@@ -1169,7 +1185,7 @@ function inspectC4(){
   if(!$("#dsl-view").hidden) return showDsl();
   const {v,R}=c4View, [lv,lname]=LEVEL[v.type], sel=$("#svg-c4 .c4el.sel"), cur=$("#svg-c4 .c4rel.cur");
   if(sel) selectC4(sel.dataset.id); else if(cur) selectC4Step(+cur.dataset.num); else if(v.type==="dynamic") c4StepList();
-  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${R.els.length} elements · ${R.rels.length} relationships · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
+  else inspect(`<div class="kicker">C4 · LEVEL ${lv} · ${lname.toUpperCase()}</div><div class="name">${esc(v.key)}</div><div class="vis">${plural(R.els.length,"element")} · ${plural(R.rels.length,"relationship")} · from workspace.dsl</div><p>${esc(v.desc||"")}</p><p>Hover an element to trace its relationships; click it for its description, technology, tags and what it uses and is used by.</p>`);
 }
 function selectC4(id){
   const e=el(id); c4Sel=id;
@@ -1204,7 +1220,7 @@ function showDsl(){
   document.querySelectorAll("#c4-ladder .rung").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v==="dsl")));
   $("#c4-canvas").hidden=true; $("#c4-head").hidden=true; $("#c4-key").hidden=true; const pre=$("#dsl-view"); pre.hidden=false;
   if(!pre.dataset.done){ pre.dataset.done="1"; pre.innerHTML=document.getElementById("dsl").textContent.trim().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/(\/\/.*)$/gm,'<span class="c">$1</span>').replace(/^(\s*)(workspace|model|views|styles|element|person|softwareSystem|container|component|systemContext|dynamic|include|autoLayout|!identifiers)\b/gm,'$1<span class="k">$2</span>').replace(/("[^"]*")/g,'<span class="s">$1</span>'); }
-  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${C4.order.length} elements · ${C4.rels.length} relationships · ${C4.views.length} views · ${C4.styles.length} styles</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
+  inspect(`<div class="kicker">C4 · SOURCE</div><div class="name">workspace.dsl</div><div class="vis">${plural(C4.order.length,"element")} · ${plural(C4.rels.length,"relationship")} · ${plural(C4.views.length,"view")} · ${plural(C4.styles.length,"style")}</div><p>The committed file. It is edited when a run changes the structure and re-embedded here verbatim, and the views above follow. <code>structurizr-cli export -workspace workspace.dsl -format plantuml</code> renders the same model outside this board.</p>`);
 }
 (function buildLadderAndKey(){
   const host=$("#c4-ladder"), levels=C4.views.filter(v=>v.type!=="dynamic");
@@ -1367,7 +1383,7 @@ function renderState(){
   const old=document.getElementById("chip-amended"); if(old) old.remove();
   const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
   if(!p&&ctx){ p=document.createElement("p"); p.className="amended"; p.id="ctx-amended"; const h2=ctx.querySelector(":scope>h2"); if(h2) h2.after(p); else ctx.prepend(p); }
-  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title)}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
+  if(p){ if(Number.isInteger(la.issue)&&la.issue>0){ p.hidden=false; p.innerHTML=`<span class="ck">last amended by</span> <a href="${ghIssue(la.issue)}" target="_blank" rel="noopener">#${la.issue}</a>${la.title?` <a data-board="${la.issue}">${esc(la.title).replace(/`([^`]*)`/g,"<code>$1</code>")}</a>`:""}${la.sha?` · <code>${esc(la.sha)}</code>`:""}`; } else p.remove(); }
 }
 renderState();
 
@@ -1378,9 +1394,9 @@ renderState();
    data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
 function sectionKeys(){
   document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
-    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${m} units landed"><i style="width:${pct}%"></i></span>`; });
+    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${plural(m,"unit")} landed"><i style="width:${pct}%"></i></span>`; });
   const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
-    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="key"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
+    if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="legend"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
   const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
   put(G,"guarantees-key",[swatches(G,"swk"),
@@ -1445,12 +1461,14 @@ show(start);
   if(mq&&mq.addEventListener) mq.addEventListener("change",label);
   if(window.MutationObserver) new MutationObserver(label).observe(root,{attributes:true,attributeFilter:["data-theme"]});
   label(); })();
-/* ---------- The inspector switch (GUIDANCE.md §6, "The inspector switch"; §12, "Switch") ----------
-   A switch in the header, left of the theme switch, that shows or hides the inspector (aria-checked while shown). Shown when a board
-   opens until hidden; the choice is remembered across boards and reloads (localStorage "dashboards-inspector", shared by every dashboard
-   of the same origin, applied in the head before the first paint, and again here for a board whose head predates it). Hidden, the tab
-   takes the inspector's width. An item clicked, or pressed with Enter or Space, while the inspector is hidden shows it and flips the
-   switch: whatever that gesture writes into the inspector, a tab or a switch aside, brings it back. */
+/* ---------- The inspector switch and the inspector's Hide button (GUIDANCE.md §6, "The inspector switch"; §12, "Switch") ----------
+   A switch in the header, left of the theme switch, that shows or hides the inspector (aria-checked while shown), and in the inspector's
+   head, right of its heading, the Hide button (an eye struck through and the word "Hide"), which hides it and moves the focus to the switch.
+   Both drive one state, so the switch is always in step. Shown when a board opens until hidden; the choice is remembered across boards
+   and reloads (localStorage "dashboards-inspector", shared by every dashboard of the same origin, applied in the head before the first
+   paint, and again here for a board whose head predates it). Hidden, the tab takes the inspector's width. An item clicked, or pressed with
+   Enter or Space, while the inspector is hidden shows it and flips the switch: whatever that gesture writes into the inspector, a tab, a
+   switch or the Hide button aside, brings it back. An inspector drawn before the Hide button gets it here, its heading wrapped with it. */
 (function inspectorSwitch(){ const KEY="dashboards-inspector", root=document.documentElement, ins=document.getElementById("inspector");
   if(!ins) return;
   let sw=document.getElementById("inspector-switch");
@@ -1462,10 +1480,16 @@ show(start);
   const label=()=>{ const s=shown(); sw.setAttribute("aria-checked",String(s)); sw.title=s?"Inspector shown. Click to hide it.":"Inspector hidden. Click to show it, or click an item."; };
   const set=s=>{ if(s) delete root.dataset.inspector; else root.dataset.inspector="hidden"; try{ localStorage.setItem(KEY,s?"shown":"hidden"); }catch(e){} label(); window.dispatchEvent(new Event("resize")); };
   sw.addEventListener("click",()=>set(!shown()));
+  let hb=document.getElementById("inspector-hide");
+  if(!hb&&ins.querySelector){ const h2=ins.querySelector(":scope>h2"); if(h2&&h2.parentNode){ const hd=document.createElement("div"); hd.className="insp-head"; h2.parentNode.insertBefore(hd,h2); hd.appendChild(h2); hb=document.createElement("button"); hb.id="inspector-hide"; hd.appendChild(hb); } }
+  if(hb){ hb.className="hide-button"; hb.type="button"; hb.setAttribute("aria-controls","inspector"); hb.setAttribute("aria-label","Hide the inspector");
+    hb.title="Hide the inspector. The inspector switch in the header, or a click on an item, shows it again.";
+    if(!hb.querySelector("svg")) hb.innerHTML='<svg class="hide-eye" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M1.5 8s2.4-4.5 6.5-4.5 6.5 4.5 6.5 4.5-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 2.5l11 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span class="hide-word">Hide</span>';
+    hb.addEventListener("click",()=>{ set(false); try{ sw.focus(); }catch(e){} }); }
   let gesture=null;
   const mark=e=>{ if(e.type==="keydown"&&e.key!=="Enter"&&e.key!==" ") return; gesture=e.target; setTimeout(()=>{ gesture=null; },0); };
   document.addEventListener("click",mark,true); document.addEventListener("keydown",mark,true);
-  if(window.MutationObserver) new MutationObserver(()=>{ const g=gesture; if(!g||shown()||!g.closest||g.closest('[role="tab"],[role="switch"]')) return; set(true); }).observe(ins,{childList:true,subtree:true,characterData:true});
+  if(window.MutationObserver) new MutationObserver(()=>{ const g=gesture; if(!g||shown()||!g.closest||g.closest('[role="tab"],[role="switch"],.hide-button')) return; set(true); }).observe(ins,{childList:true,subtree:true,characterData:true});
   label(); })();
 </script>
 </body>

@@ -4,3 +4,5 @@
 *.kts  text eol=lf
 # Recorded HTTP fixtures hold response bodies byte for byte; a line-ending conversion would change their size.
 **/fixtures/**/*.http -text
+# Feed test documents hold bytes that tests compare; a line-ending conversion would change them.
+webtools-feeds/src/jvmTest/resources/feeds/** -text
