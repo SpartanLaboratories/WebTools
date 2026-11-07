@@ -8,7 +8,7 @@
   "title": "webtools-feeds",
   "issueTitle": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
   "function": "Unit 10 of 11 in the plan for #55, the HTTP client stack. It adds `webtools-feeds`, a new Kotlin Multiplatform module on `webtools-http` that parses hostile RSS and Atom documents behind a gated `FeedParser` port, with a Rome 2.1.0 default in `jvmMain` locked down by a DOCTYPE prolog scan in common code, field and count limits and a fixed-heap Level 4c hardening suite, and fetches feeds with a stateless conditional GET over `UrlFetcher`, the caller keeping the validators. A check-only `js` module compiles its common code; `webtools-feeds` 1.0.0 is new and stays unreleased until the stack is complete.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-11-06T04:27:23Z",
   "parent": {
     "issue": 55,
@@ -21,7 +21,35 @@
     "sha": "0374c8d",
     "date": "2026-11-05"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "20d4546",
+    "merge": "20d4546",
+    "pr": 96,
+    "date": "2026-11-07",
+    "at": "2026-11-07T03:23:42Z",
+    "commits": [
+      {
+        "sha": "88af7dc",
+        "at": "2026-11-06T04:56:13Z",
+        "step": "research"
+      },
+      {
+        "sha": "066bf17",
+        "at": "2026-11-06T20:49:12Z",
+        "step": "research"
+      },
+      {
+        "sha": "5ae0bda",
+        "at": "2026-11-06T20:56:20Z",
+        "step": "research"
+      },
+      {
+        "sha": "e89d86a",
+        "at": "2026-11-06T22:08:59Z",
+        "step": "research"
+      }
+    ]
+  },
   "systems": [
     {
       "slug": "webtools-feeds",
@@ -41,10 +69,10 @@
     }
   ],
   "wip": {
-    "step": "document",
-    "since": "2026-11-07T01:46:46Z",
-    "updated": "2026-11-07T03:19:53Z",
-    "detail": "Document: 7 of 7 tasks done; every task done.",
+    "step": "landed",
+    "since": "2026-11-07T03:23:42Z",
+    "updated": "2026-11-07T03:23:42Z",
+    "detail": "Landed in PR #96.",
     "steps": [
       "sizing",
       "interview",
@@ -59,9 +87,7 @@
       "merge",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "questions": [],
     "research": null,
     "interview": [],
@@ -162,9 +188,8 @@
       }
     ],
     "event": {
-      "name": "document",
-      "at": "2026-11-07T03:19:53Z",
-      "note": "7 of 7 tasks done"
+      "name": "landed",
+      "at": "2026-11-07T03:23:42Z"
     },
     "history": {
       "sizing": [
@@ -594,6 +619,86 @@
             }
           ]
         }
+      ],
+      "document": [
+        {
+          "since": "2026-11-07T01:46:46Z",
+          "ended": "2026-11-07T03:22:44Z",
+          "endedBy": "landing",
+          "to": "landing",
+          "event": {
+            "name": "document",
+            "at": "2026-11-07T03:19:53Z",
+            "note": "7 of 7 tasks done"
+          },
+          "detail": "Document: 7 of 7 tasks done; every task done.",
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check (not applied in this repository)",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              },
+              {
+                "id": "document-landing",
+                "name": "Document commit",
+                "state": "done"
+              }
+            ]
+          }
+        }
+      ],
+      "landing": [
+        {
+          "since": "2026-11-07T03:22:44Z",
+          "ended": "2026-11-07T03:23:34Z",
+          "endedBy": "merge",
+          "to": "merge",
+          "event": {
+            "name": "landing",
+            "at": "2026-11-07T03:22:44Z",
+            "note": "land accepted"
+          },
+          "detail": "Landing: the land accepted; the branch carries the code, the version bump, the reconciled documents and the state boards."
+        }
+      ],
+      "merge": [
+        {
+          "since": "2026-11-07T03:23:34Z",
+          "ended": "2026-11-07T03:23:42Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-11-07T03:23:42Z"
+          },
+          "detail": "Landed in PR #96."
+        }
       ]
     },
     "next": null,
@@ -727,6 +832,13 @@
       "date": "2026-11-06",
       "ref": "plan.md",
       "note": "four implementation stages on `feat/issue-69-feeds`, then the README and CHANGELOG and the as-built record, in six commits, the first carrying the plan, this folder's consequences and the architecture's dated corrections. A new module on published seams, every type Stable Core but the gated port and failure group; §6 refines #55's architecture §6.10 in nine points. 50 new test classes, 328 tests, from Level 1 gating to Level 4c non-functional, with a Level 5 manual pass. No version moves: `webtools-feeds` 1.0.0 is new and unreleased"
+    },
+    {
+      "column": "built",
+      "label": "Merged",
+      "date": "2026-11-07",
+      "ref": "PR #96",
+      "note": "the research 88af7dc, 066bf17, 5ae0bda and e89d86a; the module, its vocabulary, the prolog scan, `RomeFeedParser` and `FeedFetcher`, stages 1 to 3, e3ecfe2, and the hardening contract and fixed-heap gate 25678cf, the code-landing commit; the as-built record and consequences ac92a59, the README and CHANGELOG e1a98c3, the KDoc and comments 5f9d587, the prolog differential test renamed for the set it parses 32bb375, assertions unchanged, and the boards e55358c; merged as 20d4546. No version moved; `webtools-feeds` 1.0.0 stays unreleased"
     }
   ],
   "trail": [
@@ -918,6 +1030,23 @@
       "date": "2026-11-07",
       "column": "built",
       "label": "Document: every task done"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "Landing: the land accepted"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "Merge: merging it in PR #96",
+      "ref": "PR #96"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "Landed in PR #96, merge 20d4546",
+      "ref": "PR #96"
     }
   ],
   "rows": [
@@ -3729,7 +3858,21 @@
         }
       ],
       "asBuilt": {
-        "state": "pending"
+        "state": "as-planned",
+        "summary": "",
+        "statements": [
+          {
+            "text": "The two abstract contract classes, `FeedParserConformanceContract` and `FeedParserHardeningContract`, stay in `jvmTest`, run against `RomeFeedParser`, and `webtools-feeds` 1.0.0 publishes no test-fixtures variant; their publication stands as the follow-up `feeds-contract-variant`, with the feature release that graduates `FeedParser`.",
+            "state": "as-planned",
+            "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+            "excerpt": {
+              "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+              "heading": "7. Follow-ups this unit leaves",
+              "paragraph": "Each is additive unless noted; `plan.md` §4 and §13 name them.",
+              "hash": "afe13ac1188c"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -3775,7 +3918,43 @@
         }
       ],
       "asBuilt": {
-        "state": "pending"
+        "state": "as-planned",
+        "summary": "",
+        "statements": [
+          {
+            "text": "HTML feed autodiscovery, JSON Feed, the RSS `<redirect>` document and `itunes:new-feed-url` are not built; each stands as a follow-up: `feeds-autodiscovery`, `feeds-json-feed` and `feeds-redirect-documents`.",
+            "state": "as-planned",
+            "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+            "excerpt": {
+              "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+              "heading": "7. Follow-ups this unit leaves",
+              "paragraph": "Each is additive unless noted; `plan.md` §4 and §13 name them.",
+              "hash": "afe13ac1188c"
+            }
+          },
+          {
+            "text": "No poller or new-items tracker is built: the caller owns the stored validators, the subscription URL, polling and new items, and `feeds-poller` stands as the follow-up if a consumer wants one from the library.",
+            "state": "as-planned",
+            "ref": "consequences.md#1-published-artifacts",
+            "excerpt": {
+              "ref": "consequences.md#1-published-artifacts",
+              "heading": "1. Published artifacts",
+              "paragraph": "What lands on a consumer's classpath with `webtools-feeds` 1.0.0: `webtools-http` and, through it, `kotlinx-coroutines-core` 1.10.2 on the compile classpath (`api`); at runtime `rome` 2.1.0 with `rome-utils` 2.1.0 and `jdom2` 2.0.6.1, and `slf4j-api` (Rome asks for 2.0.6; the module declares 2.0.13). Every class is Java 11 bytecode, and both library variants declare `org.gradle.jvm.version` 11. No Rome, JDOM, SAX or slf4j type appears in a public signature.",
+              "hash": "55992b5f6e43"
+            }
+          },
+          {
+            "text": "Tolerance of XML-illegal control characters, a guard against a future-dated `Last-Modified` and the repair of duplicate ids are not built: such documents are `Malformed`, and each stands as a follow-up, `feeds-control-characters`, `feeds-future-last-modified` and `feeds-duplicate-ids`.",
+            "state": "as-planned",
+            "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+            "excerpt": {
+              "ref": "consequences.md#7-follow-ups-this-unit-leaves",
+              "heading": "7. Follow-ups this unit leaves",
+              "paragraph": "Each is additive unless noted; `plan.md` §4 and §13 name them.",
+              "hash": "afe13ac1188c"
+            }
+          }
+        ]
       },
       "verdict": {
         "kind": "leave",
@@ -3816,7 +3995,7 @@
     }
   ],
   "impact": {
-    "basis": "plan",
+    "basis": "as-built",
     "summary": "`webtools-feeds` is a new, unreleased Kotlin Multiplatform artifact on `webtools-http`'s public seams: a gated parser port with a hardened Rome default, a caller-owned conditional-GET fetcher over `UrlFetcher` and a frozen entry identity, with an unpublished check module compiling its common code for `js`. No existing source file changes, the build gains two modules in `settings.gradle.kts` and one `.gitattributes` line, and no version moves.",
     "none": null,
     "release": {
@@ -3974,7 +4153,7 @@
       }
     ],
     "conversion": [],
-    "source": "consequences.md; plan.md R2 for the surface and its tiers",
+    "source": "consequences.md, reconciled with final-implementation.md; plan.md R2 for the surface and its tiers",
     "link": "consequences.md",
     "changes": [
       {

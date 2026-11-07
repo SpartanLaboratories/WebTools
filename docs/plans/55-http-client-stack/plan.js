@@ -104,8 +104,8 @@ window.dashboardLive&&window.dashboardLive("plan",
   "wip": {
     "step": "implementation",
     "since": "2026-10-22T21:58:56Z",
-    "updated": "2026-11-06T04:27:23Z",
-    "detail": "9 of 11 units landed; #69 in progress; #70 up next.",
+    "updated": "2026-11-07T04:18:55Z",
+    "detail": "10 of 11 units landed; #70 complete, awaiting its landing.",
     "steps": [
       "sizing",
       "interview",
@@ -116,9 +116,9 @@ window.dashboardLive&&window.dashboardLive("plan",
       "landed"
     ],
     "current": [
-      "feeds.built"
+      "http-docs.built"
     ],
-    "next": "http-docs",
+    "next": null,
     "qa": [],
     "qaMax": 3,
     "waitingOn": null,
@@ -334,6 +334,16 @@ window.dashboardLive&&window.dashboardLive("plan",
       "date": "2026-11-06",
       "column": "built",
       "label": "#69 started"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "#69 landed"
+    },
+    {
+      "date": "2026-11-07",
+      "column": "built",
+      "label": "#70 complete: the review approved"
     }
   ],
   "rows": [
@@ -10210,649 +10220,6 @@ window.dashboardLive&&window.dashboardLive("plan",
         "branch": null,
         "folder": "69-feeds/",
         "board": "69-feeds/dashboard.html",
-        "live": {
-          "step": "document",
-          "since": "2026-11-07T01:46:46Z",
-          "updated": "2026-11-07T03:19:53Z",
-          "detail": "Document: 7 of 7 tasks done; every task done.",
-          "steps": [
-            "sizing",
-            "interview",
-            "research",
-            "plan",
-            "branch",
-            "implementation",
-            "qa",
-            "remediation",
-            "document",
-            "landing",
-            "merge",
-            "landed"
-          ],
-          "waitingOn": null,
-          "resume": null,
-          "qa": [
-            {
-              "pass": 1,
-              "verdict": "changes-requested",
-              "date": "2026-11-07",
-              "at": "2026-11-07T00:48:29Z",
-              "findings": {
-                "documentation": 0,
-                "test": 1,
-                "code": 0
-              },
-              "severity": {
-                "minor": 1,
-                "other": 0
-              },
-              "route": "on-the-spot",
-              "report": "build/reports/tests/index.html",
-              "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html",
-              "note": "Code review passed on every check: the diff stays inside the two new modules, the ABI dump names no Rome, JDOM, SAX or slf4j type, every plan item is built and both deviations are built as logged. One minor test finding, in the As built row the fix touches, `component-tests`: two Level 2 component tests in `FeedFetcherParseComponentTest` prove their negatives with fixed wall-clock delays instead of a synchronisation point on the gate parser; the delays are replaced by a latch on the gate parser, in place, with no additional review. Suite: 328 tests, 327 passed, 0 failed, 1 skipped (`RomeFeedParserJdk11NonFunctionalTest`, by its assumption: no JDK 11 on the build host); `apiCheck` and the Java floor check passed."
-            }
-          ],
-          "qaMax": 3,
-          "status": "building",
-          "branch": "feat/issue-69-feeds",
-          "event": {
-            "name": "document",
-            "at": "2026-11-07T03:19:53Z",
-            "note": "7 of 7 tasks done"
-          },
-          "stages": [
-            {
-              "id": "skeleton-and-vocabulary",
-              "name": "1. Skeleton and vocabulary",
-              "state": "done",
-              "rows": [
-                "module",
-                "commoncheck",
-                "logging",
-                "failures",
-                "parser-port",
-                "model",
-                "validators",
-                "gating-tests",
-                "component-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "prolog-scan-and-rome-parser",
-              "name": "2. Prolog scan and RomeFeedParser",
-              "state": "done",
-              "rows": [
-                "prolog-scan",
-                "rome-parser",
-                "module",
-                "logging",
-                "failures",
-                "parser-port",
-                "model",
-                "component-tests",
-                "deterministic-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "fetcher",
-              "name": "3. The fetcher",
-              "state": "done",
-              "rows": [
-                "fetcher",
-                "untrusted-factory",
-                "validators",
-                "commoncheck",
-                "logging",
-                "gating-tests",
-                "component-tests",
-                "deterministic-tests",
-                "integration-tests",
-                "release"
-              ]
-            },
-            {
-              "id": "hardening-and-documentation",
-              "name": "4. Hardening and documentation",
-              "state": "done",
-              "rows": [
-                "hardening-suite",
-                "readme",
-                "integration-tests",
-                "release"
-              ]
-            }
-          ],
-          "remediation": {
-            "pass": 1,
-            "route": "on-the-spot",
-            "steps": [
-              {
-                "name": "Replace the fixed delays with a latch on the gate parser",
-                "state": "done"
-              }
-            ]
-          },
-          "document": {
-            "tasks": [
-              {
-                "id": "documentation-review",
-                "name": "Documentation review",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-documentation",
-                "name": "Reconcile documentation",
-                "state": "done"
-              },
-              {
-                "id": "dokka-check",
-                "name": "Dokka check (not applied in this repository)",
-                "state": "done"
-              },
-              {
-                "id": "reconcile-plan",
-                "name": "Reconcile plan",
-                "state": "done"
-              },
-              {
-                "id": "readme-changelog",
-                "name": "README and CHANGELOG",
-                "state": "done"
-              },
-              {
-                "id": "state-boards",
-                "name": "State boards",
-                "state": "done"
-              },
-              {
-                "id": "document-landing",
-                "name": "Document commit",
-                "state": "done"
-              }
-            ]
-          },
-          "open": [
-            {
-              "text": "The architecture's feeds section says any 2xx is parsed; research shows only 200 and 203 carry a complete feed.",
-              "raised": "halted",
-              "ref": "research/conditional-get-and-redirects.md",
-              "resolved": "2026-11-06T22:05:35Z"
-            },
-            {
-              "text": "The architecture's three hardening layers leave CPU, stack and a JVM-wide namespace cache exposed to a 2 MiB document without a DOCTYPE.",
-              "raised": "halted",
-              "ref": "research/parse-memory.md",
-              "resolved": "2026-11-06T22:05:35Z"
-            },
-            {
-              "text": "The architecture's SyndFeedInput pipeline cannot carry parser limits and shares JDOM's process-wide SAX factory.",
-              "raised": "halted",
-              "ref": "research/rome-adapter.md",
-              "resolved": "2026-11-06T22:05:35Z"
-            }
-          ],
-          "history": {
-            "sizing": [
-              {
-                "since": null,
-                "ended": "2026-11-06T04:27:23Z",
-                "endedBy": "sized",
-                "to": "plan"
-              }
-            ],
-            "plan": [
-              {
-                "since": "2026-11-06T04:27:23Z",
-                "ended": "2026-11-06T04:29:05Z",
-                "endedBy": "halted",
-                "to": "plan",
-                "event": {
-                  "name": "sized",
-                  "at": "2026-11-06T04:27:23Z"
-                },
-                "detail": "Unit 10 of the HTTP client stack: a new webtools-feeds module with an RSS and Atom parser port, a Rome default behind a hardening suite, and a conditional-GET fetcher over UrlFetcher, plus its check-only js module. New public API in a new module; webtools-feeds 1.0.0 is new and unreleased. Next: the detailed plan against the code as it is at 0374c8d.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-06T04:27:23Z"
-                },
-                "held": true
-              },
-              {
-                "since": "2026-11-06T04:35:10Z",
-                "ended": "2026-11-06T04:51:06Z",
-                "endedBy": "halted",
-                "to": "plan",
-                "event": {
-                  "name": "resumed",
-                  "at": "2026-11-06T04:35:10Z"
-                },
-                "detail": "Work on the feeds unit is taken up again at planning: the unit's slice of the architecture is re-validated against the nine landed units before the implementation plan is written.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-06T04:27:23Z"
-                },
-                "held": true
-              },
-              {
-                "since": "2026-11-06T04:52:40Z",
-                "ended": "2026-11-06T04:53:22Z",
-                "endedBy": "research-planning",
-                "to": "research",
-                "event": {
-                  "name": "resumed",
-                  "at": "2026-11-06T04:52:40Z"
-                },
-                "detail": "Answers: runs through LoopbackFetchers.untrusted with one test that the owning factory's real policy refuses a loopback URL; the feeds log lines print scheme, host and port only; the owning factory gains an overload taking an OutboundUrlPolicy.Untrusted; both fetch overloads take a trailing FetchSpec block. Research starts next.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-06T04:27:23Z"
-                }
-              },
-              {
-                "since": "2026-11-06T20:11:46Z",
-                "ended": "2026-11-06T20:13:25Z",
-                "endedBy": "research-started",
-                "to": "research",
-                "event": {
-                  "name": "resumed",
-                  "at": "2026-11-06T20:11:46Z"
-                },
-                "detail": "Research is taken up again. One of the five questions has its findings written; the other four continue from the work saved when the run stopped. Verification and the implementation plan follow.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-06T04:27:23Z"
-                }
-              },
-              {
-                "since": "2026-11-06T22:05:35Z",
-                "ended": "2026-11-06T22:46:50Z",
-                "endedBy": "plan-accepted",
-                "to": "branch",
-                "event": {
-                  "name": "resumed",
-                  "at": "2026-11-06T22:05:35Z"
-                },
-                "detail": "Answers: a 200 or 203 is parsed and every other 2xx is UpstreamError; four structural limits (depth 256, 100 attributes per element, 100,000 elements, 64 namespace URIs) join FeedLimits as tightening-only members enforced by RomeFeedParser and asserted by the hardening contract; RomeFeedParser drives Rome through a private WireFeedInput subclass with its own SAX parser per parse. The implementation plan is written next.",
-                "plan": {
-                  "state": "re-pass",
-                  "from": "parent",
-                  "since": "2026-11-06T04:27:23Z"
-                }
-              }
-            ],
-            "research": [
-              {
-                "since": "2026-11-06T04:53:22Z",
-                "ended": "2026-11-06T05:16:54Z",
-                "endedBy": "halted",
-                "to": "research",
-                "event": {
-                  "name": "research-started",
-                  "at": "2026-11-06T04:57:01Z"
-                },
-                "detail": "Research: 0 of 5 questions returned; open: `rome-adapter`, `parse-memory`, `entry-identity-and-links`, `conditional-get-and-redirects`, `prolog-scan`.",
-                "research": {
-                  "phase": "research",
-                  "drafted": 0,
-                  "since": {
-                    "planning": "2026-11-06T04:53:22Z",
-                    "research": "2026-11-06T04:57:01Z"
-                  }
-                },
-                "questions": [
-                  {
-                    "question": "rome-adapter",
-                    "rows": [
-                      "rome-parser",
-                      "failures",
-                      "model",
-                      "hardening-suite"
-                    ],
-                    "findings": null,
-                    "state": "researching",
-                    "started": "2026-11-06T04:57:01Z"
-                  },
-                  {
-                    "question": "parse-memory",
-                    "rows": [
-                      "hardening-suite",
-                      "fetcher",
-                      "rome-parser"
-                    ],
-                    "findings": null,
-                    "state": "researching",
-                    "started": "2026-11-06T04:57:01Z"
-                  },
-                  {
-                    "question": "entry-identity-and-links",
-                    "rows": [
-                      "model",
-                      "parser-port",
-                      "deterministic-tests"
-                    ],
-                    "findings": null,
-                    "state": "researching",
-                    "started": "2026-11-06T04:57:01Z"
-                  },
-                  {
-                    "question": "conditional-get-and-redirects",
-                    "rows": [
-                      "validators",
-                      "fetcher",
-                      "integration-tests"
-                    ],
-                    "findings": null,
-                    "state": "researching",
-                    "started": "2026-11-06T04:57:01Z"
-                  },
-                  {
-                    "question": "prolog-scan",
-                    "rows": [
-                      "prolog-scan",
-                      "deterministic-tests",
-                      "failures"
-                    ],
-                    "findings": null,
-                    "state": "researching",
-                    "started": "2026-11-06T04:57:01Z"
-                  }
-                ],
-                "held": true
-              },
-              {
-                "since": "2026-11-06T20:13:25Z",
-                "ended": "2026-11-06T20:57:36Z",
-                "endedBy": "halted",
-                "to": "research",
-                "event": {
-                  "name": "verification-started",
-                  "at": "2026-11-06T20:48:42Z"
-                },
-                "detail": "117 load-bearing claims from the five findings files are being re-opened at their sources.",
-                "research": {
-                  "phase": "verification",
-                  "drafted": 0,
-                  "since": {
-                    "planning": "2026-11-06T04:53:22Z",
-                    "research": "2026-11-06T04:57:01Z",
-                    "verification": "2026-11-06T20:48:42Z"
-                  }
-                },
-                "questions": [
-                  {
-                    "question": "rome-adapter",
-                    "rows": [
-                      "rome-parser",
-                      "failures",
-                      "model",
-                      "hardening-suite"
-                    ],
-                    "findings": "research/rome-adapter.md",
-                    "state": "verifying",
-                    "started": "2026-11-06T04:57:01Z",
-                    "returned": "2026-11-06T20:43:56Z"
-                  },
-                  {
-                    "question": "parse-memory",
-                    "rows": [
-                      "hardening-suite",
-                      "fetcher",
-                      "rome-parser"
-                    ],
-                    "findings": "research/parse-memory.md",
-                    "state": "verifying",
-                    "started": "2026-11-06T04:57:01Z",
-                    "returned": "2026-11-06T20:48:26Z"
-                  },
-                  {
-                    "question": "entry-identity-and-links",
-                    "rows": [
-                      "model",
-                      "parser-port",
-                      "deterministic-tests"
-                    ],
-                    "findings": "research/entry-identity-and-links.md",
-                    "state": "verifying",
-                    "started": "2026-11-06T04:57:01Z",
-                    "returned": "2026-11-06T20:35:09Z"
-                  },
-                  {
-                    "question": "conditional-get-and-redirects",
-                    "rows": [
-                      "validators",
-                      "fetcher",
-                      "integration-tests"
-                    ],
-                    "findings": "research/conditional-get-and-redirects.md",
-                    "state": "verifying",
-                    "started": "2026-11-06T04:57:01Z",
-                    "returned": "2026-11-06T20:15:21Z"
-                  },
-                  {
-                    "question": "prolog-scan",
-                    "rows": [
-                      "prolog-scan",
-                      "deterministic-tests",
-                      "failures"
-                    ],
-                    "findings": "research/prolog-scan.md",
-                    "state": "verifying",
-                    "started": "2026-11-06T04:57:01Z",
-                    "returned": "2026-11-06T20:46:08Z"
-                  }
-                ],
-                "held": true
-              }
-            ],
-            "branch": [
-              {
-                "since": "2026-11-06T22:46:50Z",
-                "ended": "2026-11-06T22:58:40Z",
-                "endedBy": "branch-cut",
-                "to": "implementation",
-                "event": {
-                  "name": "plan-accepted",
-                  "at": "2026-11-06T22:46:50Z"
-                },
-                "detail": "webtools-feeds is a new multiplatform module on webtools-http's public seams, with an unpublished check module compiling its common code for js: FeedFetcher does a stateless conditional GET over a UrlFetcher; RomeFeedParser runs the DOCTYPE prolog scan, then Rome with a SAX parser of its own per parse and four structural limits. Four stages, 50 test classes, 328 tests. No Considerations.",
-                "branch": "feat/issue-69-feeds"
-              }
-            ],
-            "implementation": [
-              {
-                "since": "2026-11-06T22:58:40Z",
-                "ended": "2026-11-07T00:23:35Z",
-                "endedBy": "qa-pass",
-                "to": "qa",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-07T00:23:35Z",
-                  "note": "hardening-and-documentation reported done; Quality Review next"
-                },
-                "detail": "The hostile-document generators, the child-JVM launcher and mains, the 39-test hardening contract and the six Level 4c non-functional classes: 53 tests, 52 passing and the JDK 11 smoke test skipped because no JDK 11 is set on this host. Every hostile 2 MiB shape is rejected in under 0.5 s in a child JVM at 128 MB with two concurrent parses; 6,400 parses on 16 threads give zero wrong outcomes. No main code changed and the ABI dump is unchanged. The module's tests now match the plan exactly: 50 classes, 328 tests. One further deviation: the isolation test tightens the attribute limit to 50 against the default 100, since the limit tightens only. The README and CHANGELOG part of this stage is written in the document step from the as-built record.",
-                "stages": [
-                  {
-                    "id": "skeleton-and-vocabulary",
-                    "name": "1. Skeleton and vocabulary",
-                    "state": "done",
-                    "rows": [
-                      "module",
-                      "commoncheck",
-                      "logging",
-                      "failures",
-                      "parser-port",
-                      "model",
-                      "validators",
-                      "gating-tests",
-                      "component-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "prolog-scan-and-rome-parser",
-                    "name": "2. Prolog scan and RomeFeedParser",
-                    "state": "done",
-                    "rows": [
-                      "prolog-scan",
-                      "rome-parser",
-                      "module",
-                      "logging",
-                      "failures",
-                      "parser-port",
-                      "model",
-                      "component-tests",
-                      "deterministic-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "fetcher",
-                    "name": "3. The fetcher",
-                    "state": "done",
-                    "rows": [
-                      "fetcher",
-                      "untrusted-factory",
-                      "validators",
-                      "commoncheck",
-                      "logging",
-                      "gating-tests",
-                      "component-tests",
-                      "deterministic-tests",
-                      "integration-tests",
-                      "release"
-                    ]
-                  },
-                  {
-                    "id": "hardening-and-documentation",
-                    "name": "4. Hardening and documentation",
-                    "state": "done",
-                    "rows": [
-                      "hardening-suite",
-                      "readme",
-                      "integration-tests",
-                      "release"
-                    ]
-                  }
-                ]
-              }
-            ],
-            "qa": [
-              {
-                "since": "2026-11-07T00:23:35Z",
-                "ended": "2026-11-07T00:48:29Z",
-                "endedBy": "qa-pass",
-                "to": "remediation",
-                "event": {
-                  "name": "qa-pass",
-                  "at": "2026-11-07T00:23:35Z",
-                  "note": "Quality Review 1: running"
-                },
-                "detail": "The change set stays inside one system: the two new modules, the settings include and two .gitattributes lines; nothing in webtools-http changes. The review checks the tests and the code against the plan.",
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-07",
-                    "at": "2026-11-07T00:48:29Z",
-                    "findings": {
-                      "documentation": 0,
-                      "test": 1,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 1,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html"
-                  }
-                ]
-              }
-            ],
-            "remediation": [
-              {
-                "since": "2026-11-07T00:48:29Z",
-                "ended": "2026-11-07T01:46:46Z",
-                "endedBy": "document",
-                "to": "document",
-                "event": {
-                  "name": "implementation-stage",
-                  "at": "2026-11-07T01:43:55Z",
-                  "note": "hardening-and-documentation"
-                },
-                "detail": "The two Level 2 component tests in FeedFetcherParseComponentTest now prove their negatives through signals on the gate parser and a latch on the fake transport, with no fixed wait; 157 component tests pass. The manual Level 5 acceptance pass ran against nine public cases and every one gave the expected outcome (RSS 2.0, Atom 1.0, a conditional 304, a 301 move reported, LimitExceeded(Entries) and BodyTooLarge for long podcasts, RefusedByPolicy for an https-to-http redirect, NotAFeed(Html) for a web page); its results are in final-implementation.md. The IDE checks and the KDoc read as a consumer sees it are left to the maintainer.",
-                "remediation": {
-                  "pass": 1,
-                  "route": "on-the-spot",
-                  "steps": [
-                    {
-                      "name": "Replace the fixed delays with a latch on the gate parser",
-                      "state": "done"
-                    }
-                  ]
-                },
-                "qa": [
-                  {
-                    "pass": 1,
-                    "verdict": "changes-requested",
-                    "date": "2026-11-07",
-                    "at": "2026-11-07T00:48:29Z",
-                    "findings": {
-                      "documentation": 0,
-                      "test": 1,
-                      "code": 0
-                    },
-                    "severity": {
-                      "minor": 1,
-                      "other": 0
-                    },
-                    "route": "on-the-spot",
-                    "report": "build/reports/tests/index.html",
-                    "reportCopy": "55-http-client-stack/69-feeds/ca070e8d/tests/index.html",
-                    "note": "Code review passed on every check: the diff stays inside the two new modules, the ABI dump names no Rome, JDOM, SAX or slf4j type, every plan item is built and both deviations are built as logged. One minor test finding, in the As built row the fix touches, `component-tests`: two Level 2 component tests in `FeedFetcherParseComponentTest` prove their negatives with fixed wall-clock delays instead of a synchronisation point on the gate parser; the delays are replaced by a latch on the gate parser, in place, with no additional review. Suite: 328 tests, 327 passed, 0 failed, 1 skipped (`RomeFeedParserJdk11NonFunctionalTest`, by its assumption: no JDK 11 on the build host); `apiCheck` and the Java floor check passed."
-                  }
-                ]
-              }
-            ]
-          },
-          "rowNames": {
-            "module": "The `webtools-feeds` module and its build",
-            "commoncheck": "`webtools-feeds-commoncheck`, the check-only `js` compile",
-            "parser-port": "The `FeedParser` port, `FeedInput` and `FeedLimits`",
-            "model": "The feed model and its id and link rules",
-            "failures": "`FeedFailure` and its reasons",
-            "validators": "`FeedValidators` and `FeedFetch`: the caller-owned conditional-GET state",
-            "fetcher": "`FeedFetcher` over `UrlFetcher`",
-            "prolog-scan": "The DOCTYPE prolog scan",
-            "rome-parser": "`RomeFeedParser`, the supplied parser",
-            "untrusted-factory": "`FeedFetcher.untrusted`, the owning factory",
-            "logging": "The module's logging seam and helpers",
-            "gating-tests": "Level 1 gating tests: the feeds API with no opt-in",
-            "component-tests": "Level 2 component tests on the fakes",
-            "integration-tests": "Level 3 integration tests over loopback",
-            "deterministic-tests": "Level 4a deterministic tables",
-            "hardening-suite": "Level 4c hardening and conformance suite, `FeedParserContract`",
-            "readme": "The README artifact row, install line and how-to",
-            "release": "The ABI dump and the version"
-          },
-          "recon": {
-            "interview": {
-              "reconstructed": true,
-              "ended": null,
-              "trail": [],
-              "milestones": []
-            }
-          }
-        },
         "tests": {
           "updated": "2026-11-07T01:43:55Z",
           "added": [
@@ -11942,8 +11309,50 @@ window.dashboardLive&&window.dashboardLive("plan",
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "landed",
+        "summary": "Landed through PR #96 as 20d4546 (#69): `webtools-feeds` is a new Kotlin Multiplatform module on `webtools-http`'s published seams. In common code: the `FeedParser` port, implementing which needs the opt-in, with `FeedInput` and `FeedLimits`; the model `Feed`, `FeedEntry` and `FeedEnclosure` with a frozen entry identity; `FeedValidators` and `FeedFetch`; the `FeedFailure` group, gated to subclass, with its Stable Core leaves; and `FeedFetcher` over a caller's `UrlFetcher`. On the JVM: `RomeFeedParser` behind a DOCTYPE prolog scan and four structural limits, and the owning `FeedFetcher.untrusted` factories. Its unpublished check module compiles the common code for `js`. No existing source file changed; no version moved, and `webtools-feeds` 1.0.0 stays unreleased.",
+        "changes": [
+          {
+            "what": "A `200` or a `203` is parsed and every other `2xx` is `UpstreamError(status)`, where §6.10 parses any `2xx`.",
+            "why": "A `204` or `205` has no content, a `206` is a fragment and a `226` a delta; read as a whole feed, each misleads the caller. §6.10 carries a dated correction.",
+            "when": "#69 plan",
+            "ref": "69-feeds/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "A fourth layer of hardening: `FeedLimits` also bounds depth, attributes per element, elements and distinct namespace URIs, enforced by `RomeFeedParser` in a SAX parser of its own per parse through a private `WireFeedInput` subclass, in place of `SyndFeedInput` with a plain `XmlReader`.",
+            "why": "Without the structural limits a 2 MiB document costs minutes of CPU, overflows the stack or grows JDOM's process-wide namespace cache, and `SyndFeedInput` cannot carry a limit; §6.10 carries a dated correction.",
+            "when": "#69 plan",
+            "ref": "69-feeds/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "`FeedFetch` is a sealed interface declaring `validators`, `finalUrl` and `permanentlyMovedTo`, so `NotModified` reports a permanent move too; both `fetch` overloads take `UrlFetcher.fetch`'s per-fetch block, `FeedFetcher.untrusted(userAgent, policy) { }` joins the owning factories and the builder adds `accept`.",
+            "why": "A reader that skips the move on a `304` never learns it while the feed stays unchanged; §6.10 carries a dated correction, and none adds a seam or changes a tier.",
+            "when": "#69 plan",
+            "ref": "69-feeds/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The module's own lines print a feed URL as scheme, host and port only, and the digest id hashes the first present of title, summary or content, and first enclosure URL, with the published date.",
+            "why": "A feed URL's path can carry a secret, and an RSS 2.0 item may carry only a description; §6.6 and §6.10 carry dated corrections.",
+            "when": "#69 plan",
+            "ref": "69-feeds/consequences.md#5-where-the-design-refines-the-parent-documents"
+          },
+          {
+            "what": "The contract is two abstract classes in `jvmTest`, one per test level, its memory-loading hardening cases each run in a child JVM with a fixed heap, and the Level 3 fixture is `LoopbackFetchers.untrusted`.",
+            "why": "A level's task selects a class by its package, a heap fixed on one test task leaves the rest ungated, and the common factory takes a `UrlFetcher`; §6.10 and §11 unit 10 carry dated corrections.",
+            "when": "#69 plan",
+            "ref": "69-feeds/consequences.md#5-where-the-design-refines-the-parent-documents"
+          }
+        ],
+        "commits": [
+          "e3ecfe2",
+          "25678cf",
+          "ac92a59",
+          "e1a98c3",
+          "5f9d587",
+          "32bb375"
+        ],
+        "verified": "Quality Review 1 changes requested (1 minor test finding), fixed in place with no second pass; the run of record 328 tests, 327 passed, 0 failed, 1 skipped (the JDK 11 test, by its assumption: no JDK 11 on the build host).",
+        "link": "69-feeds/final-implementation.md"
       }
     },
     {
@@ -12017,8 +11426,8 @@ window.dashboardLive&&window.dashboardLive("plan",
         ]
       },
       "asBuilt": {
-        "state": "pending",
-        "summary": ""
+        "state": "complete",
+        "summary": "#70's run: the review approved; it is not merged yet."
       }
     }
   ],
@@ -12456,16 +11865,30 @@ window.dashboardLive&&window.dashboardLive("plan",
       },
       {
         "unit": "feeds",
-        "basis": "plan",
-        "summary": "`webtools-feeds` 1.0.0, new and unreleased, adds the feed parser port with a hardened Rome default behind a DOCTYPE prolog scan and four structural limits, a caller-owned conditional-GET fetcher over `UrlFetcher` and a frozen entry identity, every type Stable Core but the gated port and failure group; its unpublished check module compiles the common code for `js`. No existing module or version changes, and the HTTP documentation (#70) documents it.",
+        "basis": "as-built",
+        "summary": "`webtools-feeds` 1.0.0, new and unreleased, adds the gated feed parser port with a hardened Rome default behind a DOCTYPE prolog scan and four structural limits, a caller-owned conditional-GET fetcher over `UrlFetcher` and a frozen entry identity, every type Stable Core but the gated port and failure group; its unpublished check module compiles the common code for `js`. On a consumer's classpath: `webtools-http` as `api`, and at runtime Rome 2.1.0 with `rome-utils` and `jdom2`, and `slf4j-api`. No existing module or version changes, and the HTTP documentation (#70) documents it.",
         "release": {
           "bump": "none",
           "version": null,
           "note": "`webtools-feeds` 1.0.0 is new and unreleased until #55's stack is complete; this landing is not a release candidate",
           "unreleased": true
         },
-        "source": "69-feeds/consequences.md",
-        "link": "69-feeds/consequences.md#1-published-artifacts"
+        "source": "69-feeds/consequences.md, reconciled with 69-feeds/final-implementation.md",
+        "link": "69-feeds/consequences.md#1-published-artifacts",
+        "changes": [
+          {
+            "what": "A consumer matches `HttpFailure.Closed` around `close()`: a fetch can meet `Closed(\"feed fetcher\")`, `Closed(\"transport\")` or the composed `UrlFetcher`'s `Closed(\"fetcher\")`, where the plan gave `Closed` after `close()`.",
+            "why": "A fetch racing `close()` goes on into the `UrlFetcher` just closed, or is cancelled by the transport's close, and every failure of the `UrlFetcher` passes through unchanged.",
+            "when": "#69 as-built reconciliation",
+            "ref": "69-feeds/final-implementation.md#d5-feedfetchers-kdoc-names-each-closed-a-fetch-can-meet-around-close"
+          },
+          {
+            "what": "The HTTP documentation (#70) takes three statements from the KDoc that go beyond plan §7: the one shared state a parse grows and Rome's own loggers, the `Closed` names around `close()`, and the charset names `RomeFeedParser` reads.",
+            "why": "The KDoc as built names the shared state and the `Closed` outcomes a caller can meet; the documentation that unit writes is read from the KDoc.",
+            "when": "#69 as-built reconciliation",
+            "ref": "69-feeds/consequences.md#4-sibling-units"
+          }
+        ]
       }
     ],
     "changes": [
@@ -12602,6 +12025,22 @@ window.dashboardLive&&window.dashboardLive("plan",
         "ref": "0374c8d",
         "what": "Unit 9's open point is settled: the generic `Endpoint<T>` factory binds every consumer-style call and infers `T`, measured on Kotlin 2.2.0 from a separate JVM module, and `RateLimited.retryAfter` keeps the `max`, the longer of the server's `Retry-After` and the budget's `pausedFor`.",
         "why": "#68's consequences §5 states it, and the initiative's consequences §7 marks unit 9's row settled."
+      },
+      {
+        "unit": "feeds",
+        "entry": "downstream.2",
+        "system": "webtools-feeds",
+        "when": "#69 landing",
+        "ref": "20d4546",
+        "what": "`webtools-feeds` is settled as built: a `200` or `203` is parsed and every other `2xx` is `UpstreamError`, `FeedLimits` adds four structural limits that `RomeFeedParser` enforces in a SAX parser of its own per parse, `FeedFetch` reports a permanent move on `NotModified` too, `FeedFetcher.untrusted` gains a policy overload, and the module's own lines print a feed URL as scheme, host and port only; at runtime `rome-utils` 2.1.0 and `jdom2` 2.0.6.1 sit beside Rome and `slf4j-api`.",
+        "why": "#69's consequences §1 and §5 state it; `architecture.md` §6.10 and §11 unit 10 carry dated corrections. `webtools-feeds` is unreleased, so no published consumer is affected."
+      },
+      {
+        "unit": "feeds",
+        "when": "#69 landing",
+        "ref": "20d4546",
+        "what": "Unit 10's open point is settled: the feeds check module compiles the feeds `commonMain` for `js` against the http check module's output, with no source fallback, and Rome's DOM, bounded by the structural limits, passes every memory-loading case of the fixed-heap Level 4c suite at `-Xmx128m` with two concurrent parses, each in a child JVM.",
+        "why": "#69's consequences §5 states it, the initiative's consequences §7 marks unit 10's row settled, and `architecture.md` §3, §12 and §13 carry dated corrections."
       }
     ],
     "source": "consequences.md",
