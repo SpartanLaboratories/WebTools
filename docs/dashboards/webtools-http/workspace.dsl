@@ -1,5 +1,5 @@
 // webtools-http — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http/index.html.
-// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), webtools-http 1.0.0 (new, unreleased), drawn as the parts it binds, one component each: the common core, the outbound-URL policy, the OkHttp transport, the response cache, the call budget, the call facades and the published test fixtures, each with its own board and model under docs/dashboards/<part>/, and its check-only js module. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09), webtools-http 1.0.0 (new, unreleased), drawn as the parts it binds, one component each: the common core, the outbound-URL policy, the OkHttp transport, the response cache, the call budget, the call facades and the published test fixtures, each with its own board and model under docs/dashboards/<part>/, and its check-only js module. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -57,7 +57,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at docs/issue-70-http-architecture-docs 45aa548, one component per part, each with its own board." {
+        component webtools.http "Components" "webtools-http as built at feat/issue-99-dokka-api-docs 2c634f4, one component per part, each with its own board." {
             include *
             autoLayout tb
         }

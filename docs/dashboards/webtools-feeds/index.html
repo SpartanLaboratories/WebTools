@@ -379,11 +379,30 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
 /* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
 .badge.bug::before{content:"▲ ";color:var(--ink-2)}
-/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, and its units as a StepBar on a line of its own under
+   the roadmap item (dashboards-skill/54) */
 .chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
-.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
-.cbar i{display:block;height:100%;background:var(--good)}
-.legend .cbar{width:40px}
+/* The StepBar (nomenclature/ui.md, StepBar; dashboards-skill/54): the steps of a sequence in order, each a chevron with its name inside,
+   done, current or to come. An ordered list, the current step aria-current="step", each step's state said in words to a screen reader
+   (.sb-st). It stands on a line of its own and wraps inside itself at phone width, never widening the board; a long name wraps inside its
+   chevron. Done: solid, the strong neutral with a faint wash; current: solid, in ink and bold; to come: dashed and muted. Each chevron is
+   its list item clipped to the shape, its edge (::before) and its fill (::after) layered inside it, so a dashed edge and a mark follow the
+   chevron; each nests into the notch of the next. The same rules on every dashboard type that draws one. */
+.stepbar{list-style:none;margin:6px 0 2px;padding:0 0 0 7px;display:flex;flex-wrap:wrap;gap:4px 0;min-width:0;max-width:100%}
+.stepbar>li{--sb-edge:var(--ink-2);--sb-fill:color-mix(in srgb,var(--ink-2) 14%,var(--surface));--sb-w:1.5px;position:relative;z-index:0;display:flex;align-items:center;min-width:0;max-width:calc(100% + 7px);min-height:26px;margin-left:-7px;padding:4px 15px 4px 19px;font:11.5px/1.25 var(--mono);color:var(--ink);overflow-wrap:anywhere;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%,10px 50%)}
+.stepbar>li:first-child{padding-left:11px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%)}
+.stepbar>li::before,.stepbar>li::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--sb-edge)}
+.stepbar>li::after{z-index:-1;inset:var(--sb-w);background:var(--sb-fill);clip-path:polygon(1px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,1px 100%,10.5px 50%)}
+.stepbar>li:first-child::after{clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%)}
+.stepbar>li.cur{--sb-edge:var(--ink);--sb-fill:color-mix(in srgb,var(--ink) 7%,var(--surface));--sb-w:2px;font-weight:700}
+.stepbar>li.todo{--sb-edge:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px);--sb-fill:var(--surface);color:var(--muted)}
+.stepbar .sb-st{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.legend i.sbk{position:relative;z-index:0;width:22px;height:12px;border:0;border-radius:0;background:none;--sb-edge:var(--ink-2);--sb-fill:color-mix(in srgb,var(--ink-2) 14%,var(--surface));--sb-w:1.5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,0 100%,6px 50%)}
+.legend i.sbk::before,.legend i.sbk::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--sb-edge)}
+.legend i.sbk::after{z-index:-1;inset:var(--sb-w);background:var(--sb-fill);clip-path:polygon(1px 0,calc(100% - 5px) 0,100% 50%,calc(100% - 5px) 100%,1px 100%,6.5px 50%)}
+.legend i.sbk.cur{--sb-edge:var(--ink);--sb-fill:color-mix(in srgb,var(--ink) 7%,var(--surface));--sb-w:2px}
+.legend i.sbk.todo{--sb-edge:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 5px);--sb-fill:var(--surface)}
+.roadmap>li>.stepbar{margin:5px 0 3px 14px}
 .legend i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
 .legend i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
 .legend i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
@@ -417,7 +436,7 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .docs li{padding:4px 0;border-top:1px solid var(--hair)}
 .docs a{text-decoration:none;border-bottom:1px solid var(--line)}
 .docs a:hover{border-bottom-color:var(--ink)}
-/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+/* the last amendment, said in the Context Panel (an issue: the part above Context names none) */
 .context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
 .context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
@@ -446,12 +465,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi-tile"><div class="l">Source</div><div class="v">39 files</div><div class="s">2,477 lines · <code>commonMain</code> 30 (2,085) · <code>jvmMain</code> 9 (375) · the check module's <code>js</code> actuals 1 (17) · package <code>com.spartanlabs.webtools.feeds</code></div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">39 files</div><div class="s">2,543 lines · <code>commonMain</code> 30 (2,151) · <code>jvmMain</code> 9 (375) · the check module's <code>js</code> actuals 1 (17) · package <code>com.spartanlabs.webtools.feeds</code></div></div>
   <div class="kpi-tile"><div class="l">Types</div><div class="v">15 public</div><div class="s">14 in <code>commonMain</code>, 1 in <code>jvmMain</code>; 8 factory functions; 4 builders, 4 failure leaves, 2 fetch leaves nested · 16 internal or private</div></div>
   <div class="kpi-tile"><div class="l">Threads</div><div class="v">0 of its own</div><div class="s">a fetch runs on its caller's coroutine, a parse on <code>parseDispatcher</code>; the owned transport's daemon pool is the transport's; <code>close()</code> from any thread</div></div>
   <div class="kpi-tile"><div class="l">Public API</div><div class="v">321 dump lines</div><div class="s">38 classes in <code>api/webtools-feeds.api</code> · no constructor of the model, the limits, the configuration or the fetcher · 2 seams gated Experimental</div></div>
   <div class="kpi-tile"><div class="l">Tests</div><div class="v">50 classes</div><div class="s">328 tests across 5 testing levels · 23 classes in <code>commonTest</code>, 27 in <code>jvmTest</code>, all run on the JVM</div></div>
-  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">3</div><div class="s">1 docs unit, landing with this board · 2 unscheduled</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">3</div><div class="s">all unscheduled · 1 landing with this board</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -591,7 +610,7 @@ footer code{color:var(--ink-2)}
       </div>
       <p>328 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.feeds</code>: gating 9, component 157, integration 12, deterministic 97, non-functional 53; 327 pass and one is skipped. Two abstract contracts, conformance and hardening, run 39 tests each through <code>RomeFeedParser</code>; 18 hardening cases each start a child JVM at <code>-Xmx128m</code> with two concurrent parses. The test reports: <code>webtools-feeds/build/reports/tests/</code>. <span class="gap">No L4b e2e or L5 UAT class. The JDK 11 test is skipped where no JDK 11 is set; measured on Windows 11 with JDK 23.0.2 only.</span></p></div>
     <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
-      <ul><li><code>webtools-feeds</code> <code>1.0.0</code>: new, unreleased, not on Maven Central until the HTTP stack is complete; it moved no version.</li><li>Checked: the ABI dump <code>api/webtools-feeds.api</code>, 321 lines with no Rome, JDOM, SAX or slf4j type, by <code>apiCheck</code> in <code>check</code>; <code>verifyJavaFloor</code> holds the module's jars and Rome's, JDOM's and <code>rome-utils</code>' classes to Java 11; the common code compiles for <code>js</code>.</li><li>Stable Core changes only in a major; an Experimental seam may change in a minor.</li><li><span class="gap">An entry's digest id hashes what the parser produced: a Rome upgrade, another parser or another <code>maxIdChars</code> can change it.</span></li></ul></div>
+      <ul><li><code>webtools-feeds</code> <code>1.0.0</code>: new and not on Maven Central yet; it moved no version. Its javadoc jar holds the Dokka reference.</li><li>Checked: the ABI dump <code>api/webtools-feeds.api</code>, 321 lines with no Rome, JDOM, SAX or slf4j type, by <code>apiCheck</code> in <code>check</code>; <code>verifyJavaFloor</code> holds the module's jars and Rome's, JDOM's and <code>rome-utils</code>' classes to Java 11; the common code compiles for <code>js</code>.</li><li>Stable Core changes only in a major; an Experimental seam may change in a minor.</li><li><span class="gap">An entry's digest id hashes what the parser produced: a Rome upgrade, another parser or another <code>maxIdChars</code> can change it.</span></li></ul></div>
     <div class="guarantee-card"><h3>Thread safety</h3>
       <ul><li>Every member of <code>FeedFetcher</code> may be called concurrently from any thread and coroutine; its closed flag is a completed <code>Job</code>, so <code>close()</code> runs once.</li><li><code>RomeFeedParser</code> is immutable and thread-safe: every parse builds its own reader, input, builder and SAX parser. A <code>FeedParser</code> of your own must be thread-safe too.</li><li><code>Feed</code>, <code>FeedEntry</code>, <code>FeedEnclosure</code>, <code>FeedLimits</code>, <code>FeedValidators</code> and <code>FeedFetch</code> are immutable; <code>FeedInput</code> copies its bytes in and out.</li><li>Confined: <code>FeedFetcherConfig</code> and the builders, each reachable only inside its lambda.</li></ul></div>
     <div class="guarantee-card"><h3>Resources to close</h3>
@@ -608,27 +627,28 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-07</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-09</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="10" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="11" data-total="11"><span data-unit="done">Shared build logic</span><span data-unit="done">Java 11 floor (#47)</span><span data-unit="done">webtools-http common core</span><span data-unit="done">Published test fixtures</span><span data-unit="done">Outbound-URL policy</span><span data-unit="done">OkHttp transport</span><span data-unit="done">Response cache</span><span data-unit="done">Call budget</span><span data-unit="done">Call facades</span><span data-unit="done">webtools-feeds</span><span data-unit="done">HTTP-stack documentation</span></span></span><span class="tags"><span class="badge">closed</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/69" target="_blank" rel="noopener">#69</a><span><a data-board="69">webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over <code>UrlFetcher</code></a> <small>unit 10 · this board's system · landed in 20d4546</small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · documents the fetch path, the hardening layers and the module's limitations in the stack's architecture document, landing with this board</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · landed in c40ff34: the fetch path, the hardening layers and the module's limitations in the stack's architecture document</small></span><span class="tags"><span class="badge">docs</span><span class="badge">closed</span></span></li>
           </ul>
           <p class="more">9 more of its issues touch other systems: #61 and #47 the build, #62 the common core, #63 the test fixtures, #64 the URL policy, #65 the transport, #66 the cache, #67 the call budget, #68 the call facades.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>2 open · 2026-11-07</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>3 open · 2026-11-09</small></h3>
       <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/99" target="_blank" rel="noopener">#99</a><span><a data-board="99">Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation</a> <small>lands with this board: the build note gone, KDoc on every public declaration, the Dokka reference</small></span><span class="tags"><span class="badge">feature</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/93" target="_blank" rel="noopener">#93</a><span><a data-board="93">webtools-http: <code>Url.redacted()</code> shows the path, so a secret carried in a URL's path is logged</a> <small>the gap the Logging and secrets card states</small></span><span class="tags"><span class="badge">enhancement</span><span class="badge">open</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>its CI would run the JDK 11 test and the suites on Linux and macOS</small></span><span class="tags"><span class="badge">docs</span><span class="badge">enhancement</span><span class="badge">open</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>the CI build and test jobs that would run the JDK 11 test and the suites on Linux and macOS; <code>ci.yml</code> has only the <code>docs</code> job today</small></span><span class="tags"><span class="badge">docs</span><span class="badge">enhancement</span><span class="badge">open</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
-        <li>Issue boards that amended this system: <a data-issue="69">#69</a> feeds — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
+        <li>Issue boards that amended this system: <a data-issue="99">#99</a> Dokka and the 1.0.0 preparation · <a data-issue="69">#69</a> feeds — gap, options, verdict and as built · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
         <li><a href="../../plans/55-http-client-stack/69-feeds/plan.md">#69 plan</a> · <a href="../../plans/55-http-client-stack/69-feeds/final-implementation.md">as built</a> — what was built, the deviations, the measurements · <a href="../../plans/55-http-client-stack/69-feeds/consequences.md">consequences</a> — the published artifact, the follow-ups and the known gaps · <a href="../../plans/55-http-client-stack/69-feeds/research/README.md">research</a></li>
         <li><a href="../../webtools-http-architecture.md">webtools-http architecture</a> — the stack as built, this module included: §4.5 the fetch path and the four hardening layers, §6 the failure model, §7 the parse on <code>parseDispatcher</code>, §8 closing, §9 logging, §13 the known limitations</li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.10 feeds, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
-        <li><a href="../../../README.md">README</a> — the <code>webtools-feeds</code> row, the install line and the "Feeds" section; marked not yet released</li>
+        <li><a href="../../../README.md">README</a> — the <code>webtools-feeds</code> row, the install line and the "Feeds" section</li>
         <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it · what it composes: <code>UrlFetcher</code> on the <a href="../webtools-http-facades/index.html">call facades</a> board, inside <a href="../webtools-http/index.html">webtools-http</a> · its check module on the <a href="../gradle-build/index.html">Gradle build</a> board</li>
         <li><a data-workboard>Repository work board</a> — every planning and development run in the repository</li>
       </ul></div>
@@ -653,9 +673,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-feeds",
   "version": "1.0.0",
-  "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
-  "lastAmended": {"issue": 70, "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections", "sha": "45aa548"},
-  "written": {"sha": "45aa548"}
+  "asIs": {"ref": "feat/issue-99-dokka-api-docs", "sha": "2c634f4", "date": "2026-11-09T02:02:04Z"},
+  "lastAmended": {"issue": 99, "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation", "sha": "2c634f4"},
+  "written": {"sha": "2c634f4"}
 }
 </script>
 
@@ -663,7 +683,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-feeds — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-feeds/index.html.
-// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), webtools-feeds 1.0.0 (new, unreleased): the FeedParser port with FeedInput and FeedLimits, the model, the FeedFailure group and its reasons, FeedValidators, FeedFetch and FeedFetcher with its common and two JVM owning factories, and RomeFeedParser over Rome 2.1.0, with their internals. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09), webtools-feeds 1.0.0 (new, unreleased): the FeedParser port with FeedInput and FeedLimits, the model, the FeedFailure group and its reasons, FeedValidators, FeedFetch and FeedFetcher with its common and two JVM owning factories, and RomeFeedParser over Rome 2.1.0, with their internals. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -742,7 +762,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.feeds "Components" "webtools-feeds as built at docs/issue-70-http-architecture-docs 45aa548." {
+        component webtools.feeds "Components" "webtools-feeds as built at feat/issue-99-dokka-api-docs 2c634f4." {
             include *
             autoLayout tb
         }
@@ -798,7 +818,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","69":"../../plans/55-http-client-stack/69-feeds/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","69":"../../plans/55-http-client-stack/69-feeds/dashboard.html","99":"../../plans/99-dokka-api-docs/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -1429,16 +1449,16 @@ $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
 /* ---------- The stamps (state.json) ----------
-   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
-   the board shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
-   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the board
+   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>")
+   and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context Panel, never in the header: the board
    above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the issue board
    (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
 function renderState(){
   const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
   const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
   set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
-  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${when(a.date)}`:"");
   set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
   const old=document.getElementById("chip-amended"); if(old) old.remove();
   const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
@@ -1450,11 +1470,24 @@ renderState();
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
    Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
    planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
-   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
-   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+   chain's StepBar. A section that draws no encoding shows no legend. */
+/* A tracking issue's chain on the roadmap (dashboards-skill/54; nomenclature/ui.md, StepBar), written <span class="chainprog"
+   data-landed="n" data-total="m"> holding one <span data-unit="done|current|todo">its name</span> per unit in landing order: drawn
+   "chain n of m landed" in its place and, on a line of its own under the roadmap item, a StepBar, one chevron per unit with the unit's name
+   inside, done (landed), current (in progress) or to come. A state board draws no work in progress, so the current unit carries no mark.
+   An ordered list, the current units aria-current="step", each state said in words to a screen reader. A chain written before the units
+   (data-landed and data-total alone) is drawn with its units numbered. */
+const SB_STATE={done:"landed",cur:"in progress",todo:"to come"};
+function chainBars(){ document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ if(e.dataset.drawn) return; e.dataset.drawn="1";
+  const n=+e.dataset.landed||0, m=+e.dataset.total||0, named=[...e.querySelectorAll("[data-unit]")].map(u=>({html:u.innerHTML.trim(),st:({done:"done",landed:"done",current:"cur"})[u.dataset.unit]||"todo"}));
+  const us=named.length?named:Array.from({length:m},(x,k)=>({html:`unit ${k+1}`,st:k<n?"done":"todo"}));
+  e.textContent=`chain ${n} of ${m} landed`;
+  const ri=e.closest(".ri"), host=ri&&ri.parentElement; if(!host||!us.length) return;
+  const num=(ri.querySelector("a")||{}).textContent||"", bar=document.createElement("ol"); bar.className="stepbar"; bar.setAttribute("aria-label",`${num?num+": ":""}its units in landing order`);
+  bar.innerHTML=us.map(u=>`<li class="${u.st}"${u.st==="cur"?' aria-current="step"':""}>${u.html}<span class="sb-st">, ${SB_STATE[u.st]}</span></li>`).join("");
+  ri.after(bar); }); }
 function sectionKeys(){
-  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
-    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${plural(m,"unit")} landed"><i style="width:${pct}%"></i></span>`; });
+  chainBars();
   const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
     if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="legend"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
@@ -1469,7 +1502,8 @@ function sectionKeys(){
     states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
     has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
     has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
-    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+    ...(()=>{ const st=new Set(C?[...C.querySelectorAll(".stepbar>li")].map(l=>["done","cur"].find(k=>l.classList.contains(k))||"todo"):[]);
+      return [st.has("done")?`<span><i class="sbk"></i>a tracking issue's unit, in landing order: landed</span>`:"",st.has("cur")?`<span><i class="sbk cur"></i>bold: a unit in progress</span>`:"",st.has("todo")?`<span><i class="sbk todo"></i>dashed: a unit to come</span>`:""]; })()]);
 }
 sectionKeys();
 

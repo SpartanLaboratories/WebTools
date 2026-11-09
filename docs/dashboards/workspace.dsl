@@ -1,5 +1,5 @@
 // WebTools — C4 model as code (Structurizr DSL): the repository's systems and how they interact. Source of truth for docs/dashboards/index.html.
-// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07): webtools-udp 2.0.0a, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), and webtools-feeds 1.0.0 (#69), new and unreleased, each with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62) and the fixtures-publication check (#63). Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09): webtools-udp 2.0.1, webtools-scraping 1.0.0a, webtools-browser 1.0.0a, all Java 11 bytecode; webtools-http 1.0.0's common core (#62), its test-fixtures variant (#63), its outbound-URL policies (#64), its OkHttp transport (#65), its response cache (#66), its call budget (#67) and its call facades (#68), and webtools-feeds 1.0.0 (#69), new and unreleased, each with its check-only js module; the Gradle build (Gradle 9.7.1, Kotlin 2.2.0) with its included build-logic build (#61), the Java 11 floor (#47), the common-check plugin (#62), the fixtures-publication check (#63) and Dokka with the aggregated API reference (#99). Code is authoritative on any conflict.
 // The one element tagged Planned, webtools-common, is the registry's, with no plan yet. It is not built; it is drawn dashed.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
@@ -7,7 +7,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
 
     model {
         consumer   = person "Consumer" "A Kotlin/JVM project that depends on one or more of the published WebTools artifacts."
-        maintainer = person "Maintainer" "Builds, tests and publishes the modules with the Gradle wrapper; the repository has no CI."
+        maintainer = person "Maintainer" "Builds, tests and publishes the modules with the Gradle wrapper; the repository's CI runs only the docs job."
         peer     = softwareSystem "UDP peer" "The other end of a webtools-udp session: another server or client process built on the library." "External"
         web      = softwareSystem "Web servers" "Any HTTP or HTTPS site a caller names by URL." "External"
         chrome   = softwareSystem "Chrome / Chromium" "The host's local browser install, driven headless through Selenium; Selenium Manager resolves the driver at runtime." "External"
@@ -16,7 +16,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
             // ---- built: the three published modules ----
-            udp      = container "webtools-udp" "Multi-client UDP connection layer: a text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels." "Kotlin/JVM library · 2.0.0a (unreleased; Central 2.0.0) · Java 11 bytecode"
+            udp      = container "webtools-udp" "Multi-client UDP connection layer: a text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels." "Kotlin/JVM library · 2.0.1 (unreleased; Central 2.0.0) · Java 11 bytecode"
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a (unreleased; Central 1.0.0) · Java 11 bytecode"
             browser  = container "webtools-browser" "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a (unreleased; Central 1.0.0) · Java 11 bytecode"
 
@@ -63,7 +63,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.gradleBuild.wrapper -> webtools.gradleBuild.settings "Starts Gradle 9.7.1 on the settings"
         webtools.gradleBuild.settings -> webtools.gradleBuild.buildLogic "Includes through pluginManagement, first"
         webtools.gradleBuild.settings -> webtools.gradleBuild.root "Includes the three modules the root script sets group and version on"
-        webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.0a"
+        webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.1"
         webtools.gradleBuild.buildLogic -> webtools.udp "Configures: webtools.kotlin-jvm-library, applied by id"
         webtools.gradleBuild.root -> webtools.scraping "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
         webtools.gradleBuild.buildLogic -> webtools.scraping "Configures: webtools.kotlin-jvm-library, applied by id"
@@ -115,11 +115,11 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Build" "The Gradle build as built at 45aa548, with build-logic, the Java floor and the two check-only js modules." {
+        component webtools.gradleBuild "Build" "The Gradle build as built at 2c634f4, with build-logic, the Java floor and the two check-only js modules." {
             include *
             autoLayout lr
         }
-        component webtools.http "Http" "webtools-http at 45aa548: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
+        component webtools.http "Http" "webtools-http at 2c634f4: its common core, URL policy, OkHttp transport, response cache, call budget, call facades and test fixtures, all built." {
             include *
             autoLayout lr
         }

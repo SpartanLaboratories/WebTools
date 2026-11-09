@@ -1,6 +1,6 @@
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools master 5f221ce (2026-11-05), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09), webtools-udp 2.0.1 (#99: KDoc only in its source, and a javadoc jar of the Dokka reference). #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -13,7 +13,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a"
             browser  = container "webtools-browser"  "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a"
             gradleBuild    = container "Gradle build" "Builds, tests and publishes every module; the included build-logic build holds the convention plugins the modules apply, at the Java 11 floor. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal"
-            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode · wire protocol 2" {
+            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.1 · Java 11 bytecode · wire protocol 2" {
 
                 // ---- public surface ----
                 server      = component "MultiConnectionUDPServer" "Binds the common port 9998; owns the listener and dispatch threads and three lazily created schedulers; exposes start* / pushToAll* / stop; subclass hooks onClientConnect, admit, onClientDisconnect." "abstract class" "Public"
@@ -91,7 +91,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at master 5f221ce; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at feat/issue-99-dokka-api-docs 2c634f4; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }

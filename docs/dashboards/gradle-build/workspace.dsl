@@ -1,37 +1,39 @@
 // gradle-build — the Gradle build: C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/gradle-build/index.html.
-// As-is at WebTools feat/issue-69-feeds 25678cf (2026-11-07): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, the fixtures-publication check from #63, and webtools-feeds with its check module from #69 in the settings. The build publishes nothing of its own. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09): Gradle 9.7.1, Kotlin Gradle plugin 2.2.0, the included build-logic build from #61 with the Java 11 floor and verifyJavaFloor from #47, the webtools.kotlin-common-check plugin from #62, the fixtures-publication check from #63, webtools-feeds with its check module from #69 in the settings, and from #99 Dokka 2.3.0 in webtools.published-library, each module's Dokka javadoc jar and the root project's aggregated reference at build/dokka/html. The build publishes nothing of its own. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
 
     model {
-        maintainer = person "Maintainer" "Builds, tests and publishes the modules with the Gradle wrapper; the repository has no CI."
+        maintainer = person "Maintainer" "Builds, tests and publishes the modules with the Gradle wrapper; the repository's CI runs only the docs job."
         central = softwareSystem "Maven Central" "Hosts the io.github.spartanlaboratories artifacts and serves the build's dependencies." "External"
         portal  = softwareSystem "Gradle Plugin Portal" "Serves the foojay settings plugin and, with Maven Central, the plugin markers build-logic depends on." "External"
+        actions = softwareSystem "GitHub Actions" "Runs the repository's two workflows: ci.yml's docs job on a push or pull request to master, and pages.yml on a push to master, which deploys the project site with the API reference at /api/. Neither workflow belongs to a registered system." "External"
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
-            udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.0a and its UDP-port lock." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode"
+            udp      = container "webtools-udp" "Multi-client UDP connection layer. Its build file applies webtools.kotlin-jvm-library and adds its version 2.0.1 and its UDP-port lock." "Kotlin/JVM library · 2.0.1 · Java 11 bytecode"
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot helpers. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
             browser  = container "webtools-browser" "WebViewer: headless-Chrome screenshots. Its build file applies webtools.kotlin-jvm-library and sets version 1.0.0a." "Kotlin/JVM library · 1.0.0a · Java 11 bytecode"
             feeds    = container "webtools-feeds" "RSS and Atom behind a hardened parser port and a conditional-GET fetcher. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets, webtools-http as api, Rome 2.1.0 and slf4j-api as jvmMain implementation, and webtools-http's test fixtures for its jvm tests." "Kotlin Multiplatform (jvm) · 1.0.0 unreleased"
-            http     = container "webtools-http" "The HTTP stack's common core and its test fixtures. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets, declares the test-fixtures variant (recipe B) with its jar in verifyJavaFloor, and makes check depend on fixturesPublicationCheck when WebTools is the root build; 1.0.0 from the root default, unreleased." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased"
+            http     = container "webtools-http" "The HTTP stack's common core and its test fixtures. Its build file applies webtools.kotlin-multiplatform-library with explicitApi() and the opt-in on its main source sets, declares the test-fixtures variant (recipe B) with its jar in verifyJavaFloor, unsuppresses that source set for Dokka, and makes check depend on fixturesPublicationCheck when WebTools is the root build; 1.0.0 from the root default, unreleased." "Kotlin Multiplatform library · jvm() · 1.0.0 unreleased"
 
             gradleBuild = container "Gradle build" "Builds, tests and publishes every module: the wrapper, the settings, the root script and the included build-logic build with its convention plugins. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal" {
                 // ---- what a module build script may use: the plugin ids and WebToolsBuild ----
-                published = component "webtools.published-library" "Applies vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM. Never calls configure(...)." "precompiled script plugin" "Public"
-                jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library; compiles to the Java floor (jvmTarget, -Xjdk-release, Java compatibility) and puts verifyJavaFloor in check; test dependencies, JUnit Platform, the seven level tasks over the test source set." "precompiled script plugin" "Public"
-                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. webtools-http and webtools-feeds apply it." "precompiled script plugin" "Public"
+                published = component "webtools.published-library" "Applies Dokka 2.3.0 and vanniktech maven-publish 0.36.0, declares mavenCentral(), calls publishToMavenCentral(), signAllPublications() and the shared POM, themes Dokka and sets failOnWarning and reportUndocumented. Never calls configure(...)." "precompiled script plugin" "Public"
+                jvmLib    = component "webtools.kotlin-jvm-library" "Applies Kotlin/JVM 2.2.0 and webtools.published-library and sets the Dokka javadoc jar; compiles to the Java floor (jvmTarget, -Xjdk-release, Java compatibility) and puts verifyJavaFloor in check; test dependencies, JUnit Platform, the seven level tasks over the test source set." "precompiled script plugin" "Public"
+                kmpLib    = component "webtools.kotlin-multiplatform-library" "Kotlin Multiplatform with one jvm() target at the Java floor and TargetJvmVersion 11, the Dokka javadoc jar, verifyJavaFloor in check, binary-compatibility-validator 0.18.2, level tasks over the jvm test compilation, a lifecycle test task. webtools-http and webtools-feeds apply it." "precompiled script plugin" "Public"
                 commonCheck = component "webtools.kotlin-common-check" "The multiplatform plugin with js() and no environment, mavenCentral() of its own, check wired to compileKotlinJs; no publishing, no Java floor. No test task, no Node.js, no root task." "precompiled script plugin" "Public"
-                levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks; JAVA_FLOOR = 11, classFileMajor and registerVerifyJavaFloor." "Kotlin object · default package" "Public"
+                levels    = component "WebToolsBuild" "LEVEL_PACKAGE_ROOT, the ordered LEVELS and registerLevelTasks; JAVA_FLOOR = 11, classFileMajor and registerVerifyJavaFloor; DOKKA_PUBLICATION_TASK, the task whose output is each javadoc jar." "Kotlin object · default package" "Public"
                 floor     = component "Java floor" "WebToolsBuild.JAVA_FLOOR = 11, read by both library plugins; the VerifyJavaFloor task (verifyJavaFloor, in check) and JavaFloorScan read a module's jars, its Gradle Module Metadata and its runtime classpath, and fail on anything above class-file major 55 or a JVM version other than 11." "Gradle task type · Kotlin · default package" "Public"
+                apiDocs   = component "API reference" "Dokka 2.3.0 on the five published modules, themed by docs/dokka/styles/dokka-styles.css and the brand logo, with failOnWarning and reportUndocumented, so a broken KDoc link or an undocumented public declaration fails dokkaGeneratePublicationHtml. Each module's output is its javadoc jar; the root project aggregates the five into build/dokka/html, which pages.yml serves at /api/." "Dokka · Gradle tasks · build output" "Public"
 
                 // ---- internals ----
                 wrapper    = component "Gradle wrapper" "gradlew, gradlew.bat and gradle/wrapper pin Gradle 9.7.1; gradle.properties sets only kotlin.code.style." "Gradle 9.7.1" "Internal"
-                settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, applies foojay-resolver-convention 0.8.0, includes the seven modules: webtools-udp, webtools-scraping, webtools-browser, webtools-http, webtools-http-commoncheck, webtools-feeds and webtools-feeds-commoncheck." "Gradle Kotlin DSL" "Internal"
-                root       = component "build.gradle.kts" "allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No plugins, no subprojects block, no tasks of its own." "Gradle Kotlin DSL" "Internal"
-                logicBuild = component "build-logic build" "A kotlin-dsl build: four plugin markers at literal versions, its own level tasks that fail on an empty run, fixturesPublicationCheck, the testKitHomeLock build service, and the helpers configureNestedBuilds and copiesWebToolsHttp; bcpg-jdk18on 1.86 for its tests' throwaway signing key." "Gradle included build · unpublished" "Internal"
+                settings   = component "settings.gradle.kts" "Includes build-logic through pluginManagement as its first statement, names there the Kotlin 2.2.0 and Dokka 2.3.0 versions the root script applies, applies foojay-resolver-convention 0.8.0, includes the seven modules: webtools-udp, webtools-scraping, webtools-browser, webtools-http, webtools-http-commoncheck, webtools-feeds and webtools-feeds-commoncheck." "Gradle Kotlin DSL" "Internal"
+                root       = component "build.gradle.kts" "Applies the two Kotlin plugins with apply false and Dokka, declares mavenCentral() and the five published modules as dokka dependencies, and themes the aggregated reference; allprojects: group io.github.spartanlaboratories and the default version 1.0.0. No subprojects block." "Gradle Kotlin DSL" "Internal"
+                logicBuild = component "build-logic build" "A kotlin-dsl build: five plugin markers at literal versions, its own level tasks that fail on an empty run, fixturesPublicationCheck, the testKitHomeLock build service, and the helpers configureNestedBuilds and copiesWebToolsHttp; bcpg-jdk18on 1.86 for its tests' throwaway signing key." "Gradle included build · unpublished" "Internal"
                 harness    = component "TestKit harness" "SampleProject, ProjectWorkspace, NestedBuild, TestReports, ModuleMetadata, PomFile, BuildLogicSource, JarClasses, ModuleSource, ResolutionReport, ThrowawayPgpKey: nested Gradle builds of generated projects, for build-logic's Level 3, 4b and 4c tests; every nested build runs with ORG_GRADLE_PROJECT_* removed from its environment." "test sources · Gradle TestKit" "Internal"
-                fixturesCheck = component "fixturesPublicationCheck" "A Level 4b Test task selecting FixturesPublicationEndToEndTest: publishes a copy of webtools-http, signed with a throwaway key, to a file repository in its workspace, and resolves testFixtures(...) from a file repository, through a composite and from an in-build multiplatform module, in ten tests. Not part of build-logic's own check." "Test task · Gradle TestKit" "Internal"
+                fixturesCheck = component "fixturesPublicationCheck" "A Level 4b Test task selecting FixturesPublicationEndToEndTest: publishes a copy of webtools-http, signed with a throwaway key, to a file repository in its workspace, and resolves testFixtures(...) from a file repository, through a composite and from an in-build multiplatform module, in eleven tests. Not part of build-logic's own check." "Test task · Gradle TestKit" "Internal"
                 jsCheck    = component "check-only js modules" "webtools-http-commoncheck and webtools-feeds-commoncheck compile their module's commonMain for js with their own js actuals, publishing nothing, so a JVM API in common code is a compile error; the feeds one takes the http one's js output for the http types." "unpublished module · Kotlin/JS klib" "Internal"
             }
         }
@@ -41,9 +43,9 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         maintainer -> webtools.gradleBuild.harness "Runs :build-logic:test, and the nested-build tasks on demand"
         webtools.gradleBuild.wrapper -> webtools.gradleBuild.settings "Starts Gradle 9.7.1 on the settings"
         webtools.gradleBuild.settings -> webtools.gradleBuild.logicBuild "Includes through pluginManagement, first"
-        webtools.gradleBuild.settings -> webtools.gradleBuild.root "Includes the five modules the root script sets group and version on"
+        webtools.gradleBuild.settings -> webtools.gradleBuild.root "Includes the seven modules the root script sets group and version on"
         webtools.gradleBuild.settings -> portal "Resolves foojay-resolver-convention 0.8.0"
-        webtools.gradleBuild.logicBuild -> portal "Resolves its plugin markers from Maven Central and the Plugin Portal: Kotlin 2.2.0, vanniktech 0.36.0, validator 0.18.2"
+        webtools.gradleBuild.logicBuild -> portal "Resolves its plugin markers from Maven Central and the Plugin Portal: Kotlin 2.2.0, Dokka 2.3.0, vanniktech 0.36.0, validator 0.18.2"
         webtools.gradleBuild.logicBuild -> webtools.gradleBuild.published "Compiles, with its plugin markers on the classpath"
         webtools.gradleBuild.logicBuild -> webtools.gradleBuild.jvmLib "Compiles"
         webtools.gradleBuild.logicBuild -> webtools.gradleBuild.kmpLib "Compiles"
@@ -51,13 +53,16 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
         webtools.gradleBuild.kmpLib -> webtools.gradleBuild.published "Applies"
         webtools.gradleBuild.jvmLib -> webtools.gradleBuild.levels "registerLevelTasks over the test source set"
         webtools.gradleBuild.kmpLib -> webtools.gradleBuild.levels "registerLevelTasks over the jvm test compilation"
-        webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.0a"
+        webtools.gradleBuild.root -> webtools.udp "Sets group; version 1.0.0, which the module overrides with 2.0.1"
         webtools.gradleBuild.root -> webtools.scraping "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
         webtools.gradleBuild.root -> webtools.browser "Sets group; version 1.0.0, which the module overrides with 1.0.0a"
         webtools.gradleBuild.jvmLib -> webtools.udp "Configures: applied by id in its plugins block"
         webtools.gradleBuild.jvmLib -> webtools.scraping "Configures: applied by id in its plugins block"
         webtools.gradleBuild.jvmLib -> webtools.browser "Configures: applied by id in its plugins block"
         webtools.gradleBuild.published -> central "Publishes signed artifacts: publishToMavenCentral"
+        webtools.gradleBuild.published -> webtools.gradleBuild.apiDocs "Applies Dokka to each published module; its output is the javadoc jar"
+        webtools.gradleBuild.root -> webtools.gradleBuild.apiDocs "Aggregates the five published modules in build/dokka/html"
+        actions -> webtools.gradleBuild.wrapper "ci.yml and pages.yml run ./gradlew dokkaGeneratePublicationHtml"
         webtools.gradleBuild.harness -> webtools.gradleBuild.jvmLib "Applies it to generated projects through TestKit"
         webtools.gradleBuild.harness -> webtools.gradleBuild.kmpLib "Applies it to generated projects through TestKit"
         webtools.gradleBuild.harness -> webtools.gradleBuild.logicBuild "Copies its sources into an end-to-end composite"
@@ -90,7 +95,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.gradleBuild "Components" "The Gradle build as built at feat/issue-69-feeds 25678cf." {
+        component webtools.gradleBuild "Components" "The Gradle build as built at feat/issue-99-dokka-api-docs 2c634f4." {
             include *
             autoLayout tb
         }

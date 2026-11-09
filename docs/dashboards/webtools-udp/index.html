@@ -379,11 +379,30 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
 /* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
 .badge.bug::before{content:"▲ ";color:var(--ink-2)}
-/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, and its units as a StepBar on a line of its own under
+   the roadmap item (dashboards-skill/54) */
 .chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
-.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
-.cbar i{display:block;height:100%;background:var(--good)}
-.legend .cbar{width:40px}
+/* The StepBar (nomenclature/ui.md, StepBar; dashboards-skill/54): the steps of a sequence in order, each a chevron with its name inside,
+   done, current or to come. An ordered list, the current step aria-current="step", each step's state said in words to a screen reader
+   (.sb-st). It stands on a line of its own and wraps inside itself at phone width, never widening the board; a long name wraps inside its
+   chevron. Done: solid, the strong neutral with a faint wash; current: solid, in ink and bold; to come: dashed and muted. Each chevron is
+   its list item clipped to the shape, its edge (::before) and its fill (::after) layered inside it, so a dashed edge and a mark follow the
+   chevron; each nests into the notch of the next. The same rules on every dashboard type that draws one. */
+.stepbar{list-style:none;margin:6px 0 2px;padding:0 0 0 7px;display:flex;flex-wrap:wrap;gap:4px 0;min-width:0;max-width:100%}
+.stepbar>li{--sb-edge:var(--ink-2);--sb-fill:color-mix(in srgb,var(--ink-2) 14%,var(--surface));--sb-w:1.5px;position:relative;z-index:0;display:flex;align-items:center;min-width:0;max-width:calc(100% + 7px);min-height:26px;margin-left:-7px;padding:4px 15px 4px 19px;font:11.5px/1.25 var(--mono);color:var(--ink);overflow-wrap:anywhere;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%,10px 50%)}
+.stepbar>li:first-child{padding-left:11px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%)}
+.stepbar>li::before,.stepbar>li::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--sb-edge)}
+.stepbar>li::after{z-index:-1;inset:var(--sb-w);background:var(--sb-fill);clip-path:polygon(1px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,1px 100%,10.5px 50%)}
+.stepbar>li:first-child::after{clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%)}
+.stepbar>li.cur{--sb-edge:var(--ink);--sb-fill:color-mix(in srgb,var(--ink) 7%,var(--surface));--sb-w:2px;font-weight:700}
+.stepbar>li.todo{--sb-edge:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px);--sb-fill:var(--surface);color:var(--muted)}
+.stepbar .sb-st{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.legend i.sbk{position:relative;z-index:0;width:22px;height:12px;border:0;border-radius:0;background:none;--sb-edge:var(--ink-2);--sb-fill:color-mix(in srgb,var(--ink-2) 14%,var(--surface));--sb-w:1.5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,0 100%,6px 50%)}
+.legend i.sbk::before,.legend i.sbk::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--sb-edge)}
+.legend i.sbk::after{z-index:-1;inset:var(--sb-w);background:var(--sb-fill);clip-path:polygon(1px 0,calc(100% - 5px) 0,100% 50%,calc(100% - 5px) 100%,1px 100%,6.5px 50%)}
+.legend i.sbk.cur{--sb-edge:var(--ink);--sb-fill:color-mix(in srgb,var(--ink) 7%,var(--surface));--sb-w:2px}
+.legend i.sbk.todo{--sb-edge:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 5px);--sb-fill:var(--surface)}
+.roadmap>li>.stepbar{margin:5px 0 3px 14px}
 .legend i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
 .legend i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
 .legend i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
@@ -417,7 +436,7 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .docs li{padding:4px 0;border-top:1px solid var(--hair)}
 .docs a{text-decoration:none;border-bottom:1px solid var(--line)}
 .docs a:hover{border-bottom-color:var(--ink)}
-/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+/* the last amendment, said in the Context Panel (an issue: the part above Context names none) */
 .context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
 .context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
@@ -448,12 +467,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi-tile"><div class="l">Source</div><div class="v">36 files</div><div class="s">5,326 lines · one package</div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">36 files</div><div class="s">5,337 lines · one package</div></div>
   <div class="kpi-tile"><div class="l">Types</div><div class="v">18 public</div><div class="s">21 internal</div><div class="seg-bar" aria-hidden="true"><i style="width:46%;background:var(--ink)"></i><i style="width:54%;background:var(--line)"></i></div></div>
   <div class="kpi-tile"><div class="l">Threads</div><div class="v">11 named</div><div class="s">6 server · 5 client · all daemon</div><div class="seg-bar" aria-hidden="true"><i style="width:55%;background:var(--server)"></i><i style="width:45%;background:var(--client)"></i></div></div>
   <div class="kpi-tile"><div class="l">Datagram tags</div><div class="v">6 in use</div><div class="s">0x80 · 0x81 · 0x82 · 0x90 · 0xA0 · 0xA1</div></div>
   <div class="kpi-tile"><div class="l">Tests</div><div class="v">92 classes</div><div class="s">across all 7 testing levels</div></div>
-  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">10</div><div class="s">7 bugs · 1 planned system · 2 untyped</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">11</div><div class="s">7 bugs · 1 planned system · 2 untyped · 1 landing with this board</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -623,10 +642,10 @@ footer code{color:var(--ink-2)}
       <p>Packages <code>com.spartanlabs.testing.&lt;level&gt;.webtools.udp</code>; <code>./gradlew gatingTest</code>, <code>componentTest</code>, … run one level, each selecting its package (the level tasks come from <code>webtools.kotlin-jvm-library</code>). <span class="gap">No test report is committed.</span></p></div>
     <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
       <ul>
-        <li><code>2.0.0a</code> in the build, unpublished (Central's latest is <code>2.0.0</code>), wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
-        <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a), the third number for an addition, the major for a break.</li>
+        <li><code>2.0.1</code> in the build, unpublished (Central's latest is <code>2.0.0</code>), its javadoc jar the Dokka reference in place of a placeholder, wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
+        <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a), the third number for an addition (2.0.0a → 2.0.1 moved it for the new javadoc jar), the major for a break.</li>
         <li>Deprecate, don't break: the eight members deprecated in 2.0.0 (with <code>ReplaceWith</code>) work through 2.x and go at 3.0.0.</li>
-        <li>Java 11 floor: 2.0.0a is Java 11 bytecode (major 55) compiled against the Java 11 API and declares <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>. Central's 2.0.0 is Java 23 bytecode, and 2.0.0a orders below it, so a consumer requests 2.0.0a <code>strictly</code> once it is published.</li>
+        <li>Java 11 floor: 2.0.1 is Java 11 bytecode (major 55) compiled against the Java 11 API and declares <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>. Central's 2.0.0 is Java 23 bytecode; 2.0.1 orders above it, so a consumer on 2.0.0 moves up with a plain version request once it is published.</li>
         <li><span class="gap">Not checked: the build keeps no ABI dump.</span></li>
       </ul></div>
     <div class="guarantee-card"><h3>Thread safety</h3>
@@ -648,7 +667,7 @@ footer code{color:var(--ink-2)}
         <li>Who consumes it: other organizations too (visibility public).</li>
         <li><code>org.slf4j:slf4j-api:2.0.13</code> — <code>api</code> in the module's own build file; no backend ships (logback is test-only), so bring one.</li>
         <li><code>org.jetbrains.kotlin:kotlin-stdlib:2.2.0</code> — from the Kotlin/JVM plugin, which <code>webtools.kotlin-jvm-library</code> applies; compile scope in the generated POM.</li>
-        <li>Nothing else. The jar is Java 11 bytecode and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, so it resolves and loads on JDK 11 or newer (2.0.0a; the published 2.0.0 declares 23).</li>
+        <li>Nothing else. The jar is Java 11 bytecode and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, so it resolves and loads on JDK 11 or newer (2.0.1; the published 2.0.0 declares 23).</li>
       </ul></div>
   </div>
 </section>
@@ -656,17 +675,18 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-10-25</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-09</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small></span><span class="tags"><span class="badge">closed</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/47" target="_blank" rel="noopener">#47</a><span><a data-board="47">webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+</a> <small>landed in 3949b52: this module compiles to the Java 11 floor; its 2.0.0a note names it; source unchanged</small></span><span class="tags"><span class="badge bug">bug · docs</span><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/61" target="_blank" rel="noopener">#61</a><span><a data-board="61">Build: move shared configuration into an included <code>build-logic</code> build with convention plugins and package-selected level tasks</a> <small>landed in 1e27071: this module's build file now applies <code>webtools.kotlin-jvm-library</code>; published output identical</small></span><span class="tags"><span class="badge">closed</span></span></li>
           </ul>
-          <p class="more">Its nine other sub-issues, #62–#70 (#62 landed), belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
+          <p class="more">Its nine other sub-issues, #62–#70, all closed, belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>10 open · 2026-10-25</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>11 open · 2026-11-09</small></h3>
       <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/99" target="_blank" rel="noopener">#99</a><span><a data-board="99">Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation</a> <small>lands with this board: the module at 2.0.1 and its Dokka javadoc jar, KDoc only in its source</small></span><span class="tags"><span class="badge">feature</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="tags"><span class="badge bug">bug</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="tags"><span class="badge bug">bug</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a><span>A throwing onClientConnect kills the server's listener thread</span><span class="tags"><span class="badge bug">bug</span></span></li>
@@ -685,7 +705,7 @@ footer code{color:var(--ink-2)}
         <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/14-reliable-ordered-channel/architecture.md" target="_blank" rel="noopener">#14 reliable-ordered channel</a> — the design that added the reliable plane, in four stages</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/34-probe-cadence/plan.md" target="_blank" rel="noopener">#34 probe cadence</a> · <a href="https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans/38-handshake-empty-name" target="_blank" rel="noopener">#38 handshake empty name</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/40-channel-byte-guard/plan.md" target="_blank" rel="noopener">#40 channel-byte guard</a></li>
-        <li>Plan boards that amended this module: <a data-issue="47">#47</a> Java 11 floor — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a data-issue="61">#61</a> build-logic — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li>Plan boards that amended this module: <a data-issue="99">#99</a> Dokka — its javadoc jar, KDoc only in its source, version 2.0.1 · <a data-issue="47">#47</a> Java 11 floor — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a data-issue="61">#61</a> build-logic — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
         <li>The <a href="../gradle-build/index.html">Gradle build</a> board — the convention plugin, the Java floor and its guard, level tasks and publishing this module is built with</li>
         <li>Earlier plans: #3 public client handshake · #5 prune stale registrations · #8 binary datagram path · #9 receive buffer · #10 connection liveness · #11 handshake refusal and credential · #12 scheduled keepalive · #13 link-quality probe · #15 split into three modules</li>
       </ul></div>
@@ -711,10 +731,10 @@ footer code{color:var(--ink-2)}
 <script type="application/json" id="state">
 {
   "slug": "webtools-udp",
-  "version": "2.0.0a",
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 47, "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+", "sha": "e249f52"},
-  "written": {"sha": "7de8207"}
+  "version": "2.0.1",
+  "asIs": {"ref": "feat/issue-99-dokka-api-docs", "sha": "2c634f4", "date": "2026-11-09T02:02:04Z"},
+  "lastAmended": {"issue": 99, "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation", "sha": "2c634f4"},
+  "written": {"sha": "2c634f4"}
 }
 </script>
 
@@ -723,7 +743,7 @@ footer code{color:var(--ink-2)}
 <script type="text/plain" id="dsl">
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools master 5f221ce (2026-11-05), webtools-udp 2.0.0a. The module's source is unchanged since 806ce8e; #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09), webtools-udp 2.0.1 (#99: KDoc only in its source, and a javadoc jar of the Dokka reference). #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -736,7 +756,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a"
             browser  = container "webtools-browser"  "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a"
             gradleBuild    = container "Gradle build" "Builds, tests and publishes every module; the included build-logic build holds the convention plugins the modules apply, at the Java 11 floor. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal"
-            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.0a · Java 11 bytecode · wire protocol 2" {
+            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.1 · Java 11 bytecode · wire protocol 2" {
 
                 // ---- public surface ----
                 server      = component "MultiConnectionUDPServer" "Binds the common port 9998; owns the listener and dispatch threads and three lazily created schedulers; exposes start* / pushToAll* / stop; subclass hooks onClientConnect, admit, onClientDisconnect." "abstract class" "Public"
@@ -814,7 +834,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at master 5f221ce; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at feat/issue-99-dokka-api-docs 2c634f4; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }
@@ -875,7 +895,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"38":"../../plans/38-handshake-empty-name/dashboard.html","47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"38":"../../plans/38-handshake-empty-name/dashboard.html","47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","99":"../../plans/99-dokka-api-docs/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -1503,16 +1523,16 @@ $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
 /* ---------- The stamps (state.json) ----------
-   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
-   the board shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
-   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the board
+   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>")
+   and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context Panel, never in the header: the board
    above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the issue board
    (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
 function renderState(){
   const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
   const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
   set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
-  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${when(a.date)}`:"");
   set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
   const old=document.getElementById("chip-amended"); if(old) old.remove();
   const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
@@ -1524,11 +1544,24 @@ renderState();
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
    Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
    planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
-   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
-   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+   chain's StepBar. A section that draws no encoding shows no legend. */
+/* A tracking issue's chain on the roadmap (dashboards-skill/54; nomenclature/ui.md, StepBar), written <span class="chainprog"
+   data-landed="n" data-total="m"> holding one <span data-unit="done|current|todo">its name</span> per unit in landing order: drawn
+   "chain n of m landed" in its place and, on a line of its own under the roadmap item, a StepBar, one chevron per unit with the unit's name
+   inside, done (landed), current (in progress) or to come. A state board draws no work in progress, so the current unit carries no mark.
+   An ordered list, the current units aria-current="step", each state said in words to a screen reader. A chain written before the units
+   (data-landed and data-total alone) is drawn with its units numbered. */
+const SB_STATE={done:"landed",cur:"in progress",todo:"to come"};
+function chainBars(){ document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ if(e.dataset.drawn) return; e.dataset.drawn="1";
+  const n=+e.dataset.landed||0, m=+e.dataset.total||0, named=[...e.querySelectorAll("[data-unit]")].map(u=>({html:u.innerHTML.trim(),st:({done:"done",landed:"done",current:"cur"})[u.dataset.unit]||"todo"}));
+  const us=named.length?named:Array.from({length:m},(x,k)=>({html:`unit ${k+1}`,st:k<n?"done":"todo"}));
+  e.textContent=`chain ${n} of ${m} landed`;
+  const ri=e.closest(".ri"), host=ri&&ri.parentElement; if(!host||!us.length) return;
+  const num=(ri.querySelector("a")||{}).textContent||"", bar=document.createElement("ol"); bar.className="stepbar"; bar.setAttribute("aria-label",`${num?num+": ":""}its units in landing order`);
+  bar.innerHTML=us.map(u=>`<li class="${u.st}"${u.st==="cur"?' aria-current="step"':""}>${u.html}<span class="sb-st">, ${SB_STATE[u.st]}</span></li>`).join("");
+  ri.after(bar); }); }
 function sectionKeys(){
-  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
-    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${plural(m,"unit")} landed"><i style="width:${pct}%"></i></span>`; });
+  chainBars();
   const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
     if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="legend"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
@@ -1543,7 +1576,8 @@ function sectionKeys(){
     states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
     has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
     has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
-    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+    ...(()=>{ const st=new Set(C?[...C.querySelectorAll(".stepbar>li")].map(l=>["done","cur"].find(k=>l.classList.contains(k))||"todo"):[]);
+      return [st.has("done")?`<span><i class="sbk"></i>a tracking issue's unit, in landing order: landed</span>`:"",st.has("cur")?`<span><i class="sbk cur"></i>bold: a unit in progress</span>`:"",st.has("todo")?`<span><i class="sbk todo"></i>dashed: a unit to come</span>`:""]; })()]);
 }
 sectionKeys();
 

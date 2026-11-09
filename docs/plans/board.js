@@ -3,17 +3,25 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-07T04:50:09Z",
-  "asOf": "2026-11-07",
+  "generated": "2026-11-09T02:39:38Z",
+  "asOf": "2026-11-09",
   "tree": {
-    "ref": "docs/issue-55-close-out",
-    "sha": "c40ff34"
+    "ref": "feat/issue-99-dokka-api-docs",
+    "sha": "2c634f4"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
     "readme": "README.md"
   },
   "systems": [
+    {
+      "slug": "webtools-udp",
+      "name": "webtools-udp",
+      "slot": 1,
+      "top": "webtools-udp",
+      "status": "built",
+      "board": "docs/dashboards/webtools-udp/index.html"
+    },
     {
       "slug": "gradle-build",
       "name": "Gradle build",
@@ -95,21 +103,13 @@ window.dashboardLive&&window.dashboardLive("board",
       "board": "docs/dashboards/index.html"
     },
     {
-      "slug": "webtools-udp",
-      "name": "webtools-udp",
-      "slot": 1,
-      "top": "webtools-udp",
-      "status": "built",
-      "board": "docs/dashboards/webtools-udp/index.html"
+      "slug": "Gradle build",
+      "name": "Gradle build",
+      "slot": 0,
+      "top": "Gradle build"
     }
   ],
   "groups": [
-    {
-      "key": "55",
-      "issue": 55,
-      "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
-      "board": "55-http-client-stack/dashboard.html"
-    },
     {
       "key": "other",
       "issue": null,
@@ -119,9 +119,134 @@ window.dashboardLive&&window.dashboardLive("board",
   ],
   "rows": [
     {
+      "issue": 38,
+      "title": "Handshake parsing accepts an empty peer name on extra whitespace",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "created": "2026-09-24",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": "38-handshake-empty-name/dashboard.html",
+      "folder": "38-handshake-empty-name/",
+      "branch": null,
+      "system": "webtools-udp",
+      "step": "landed",
+      "detail": "Merged through PR #59 as 806ce8e; the board was written after the fact as the worked example.",
+      "since": "2026-10-20",
+      "updated": "2026-10-20",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "findings": {
+            "documentation": 10,
+            "test": 8
+          },
+          "note": "Stage C added to the plan"
+        },
+        {
+          "pass": 2,
+          "verdict": "changes-requested",
+          "findings": {
+            "documentation": 4,
+            "test": 1
+          },
+          "note": "5 LOW items; Stage D added; no third review run, by the maintainer's decision"
+        }
+      ],
+      "qaMax": null,
+      "status": "landed",
+      "fixOf": null,
+      "landed": {
+        "pr": 59,
+        "merge": "806ce8e",
+        "version": "webtools-udp 2.0.0a",
+        "date": "2026-10-20"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
+      "systemName": "webtools-udp",
+      "group": "other",
+      "order": 0
+    },
+    {
+      "issue": 47,
+      "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "created": "2026-09-28",
+      "parent": 55,
+      "waitsOn": [
+        {
+          "issue": 61,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-22T21:58:58Z",
+          "build": "clear",
+          "locality": "local-repository"
+        }
+      ],
+      "blocks": [
+        {
+          "issue": 62,
+          "state": "CLOSED",
+          "stateReason": "COMPLETED",
+          "closedAt": "2026-10-25T11:51:41Z",
+          "hold": "enables"
+        }
+      ],
+      "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
+      "folder": "55-http-client-stack/47-java-23-bytecode/",
+      "branch": null,
+      "system": "gradle-build",
+      "step": "landed",
+      "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. The as-built record and the impact were reconciled after the landing (PR #78). Unit 3 of #55, #62, is no longer blocked by this issue.",
+      "since": "2026-10-23T02:21:55Z",
+      "updated": "2026-10-23T20:07:49Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-10-23",
+          "findings": {
+            "documentation": 7,
+            "test": 2,
+            "code": 0
+          },
+          "route": "on-the-spot",
+          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass",
+          "inPlace": "fixed"
+        }
+      ],
+      "qaMax": 3,
+      "status": "landed",
+      "fixOf": null,
+      "landed": {
+        "pr": 76,
+        "merge": "3949b52",
+        "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
+        "date": "2026-10-23"
+      },
+      "reconciliation": {
+        "state": "as-built",
+        "landed": null,
+        "total": null
+      },
+      "active": false,
+      "systemName": "Gradle build",
+      "group": "other",
+      "order": 1
+    },
+    {
       "issue": 55,
       "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-10-20",
       "parent": null,
       "waitsOn": [],
@@ -172,11 +297,79 @@ window.dashboardLive&&window.dashboardLive("board",
         "planned": false,
         "done": true,
         "current": [],
-        "next": null
+        "next": null,
+        "units": [
+          {
+            "n": 1,
+            "issue": 61,
+            "name": "Shared build logic",
+            "state": "done"
+          },
+          {
+            "n": 2,
+            "issue": 47,
+            "name": "Java 11 floor (#47)",
+            "state": "done"
+          },
+          {
+            "n": 3,
+            "issue": 62,
+            "name": "webtools-http common core",
+            "state": "done"
+          },
+          {
+            "n": 4,
+            "issue": 63,
+            "name": "Published test fixtures",
+            "state": "done"
+          },
+          {
+            "n": 5,
+            "issue": 64,
+            "name": "Outbound-URL policy",
+            "state": "done"
+          },
+          {
+            "n": 6,
+            "issue": 65,
+            "name": "OkHttp transport",
+            "state": "done"
+          },
+          {
+            "n": 7,
+            "issue": 66,
+            "name": "Response cache",
+            "state": "done"
+          },
+          {
+            "n": 8,
+            "issue": 67,
+            "name": "Call budget",
+            "state": "done"
+          },
+          {
+            "n": 9,
+            "issue": 68,
+            "name": "Call facades",
+            "state": "done"
+          },
+          {
+            "n": 10,
+            "issue": 69,
+            "name": "webtools-feeds",
+            "state": "done"
+          },
+          {
+            "n": 11,
+            "issue": 70,
+            "name": "HTTP-stack documentation",
+            "state": "done"
+          }
+        ]
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
-      "group": "55",
-      "order": 0
+      "group": "other",
+      "order": 2
     },
     {
       "issue": 61,
@@ -250,76 +443,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "Gradle build",
-      "group": "55",
-      "order": 1
-    },
-    {
-      "issue": 47,
-      "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
-      "state": "CLOSED",
-      "stateReason": "COMPLETED",
-      "created": "2026-09-28",
-      "parent": 55,
-      "waitsOn": [
-        {
-          "issue": 61,
-          "state": "CLOSED",
-          "stateReason": "COMPLETED",
-          "closedAt": "2026-10-22T21:58:58Z",
-          "build": "clear",
-          "locality": "local-repository"
-        }
-      ],
-      "blocks": [
-        {
-          "issue": 62,
-          "state": "CLOSED",
-          "stateReason": "COMPLETED",
-          "closedAt": "2026-10-25T11:51:41Z",
-          "hold": "enables"
-        }
-      ],
-      "board": "55-http-client-stack/47-java-23-bytecode/dashboard.html",
-      "folder": "55-http-client-stack/47-java-23-bytecode/",
-      "branch": null,
-      "system": "gradle-build",
-      "step": "landed",
-      "detail": "Merged through PR #76 as 3949b52; #47 closed. Every module now compiles to the Java 11 floor and `verifyJavaFloor` guards it in `check`. `webtools-scraping` and `webtools-browser` are at 1.0.0a and `webtools-udp` stays at 2.0.0a, none published; the README's install block names the versions on Maven Central. The as-built record and the impact were reconciled after the landing (PR #78). Unit 3 of #55, #62, is no longer blocked by this issue.",
-      "since": "2026-10-23T02:21:55Z",
-      "updated": "2026-10-23T20:07:49Z",
-      "qa": [
-        {
-          "pass": 1,
-          "verdict": "changes-requested",
-          "date": "2026-10-23",
-          "findings": {
-            "documentation": 7,
-            "test": 2,
-            "code": 0
-          },
-          "route": "on-the-spot",
-          "note": "7 doc items and 2 test gaps, fixed on the spot; no second pass",
-          "inPlace": "fixed"
-        }
-      ],
-      "qaMax": 3,
-      "status": "landed",
-      "fixOf": null,
-      "landed": {
-        "pr": 76,
-        "merge": "3949b52",
-        "version": "webtools-scraping 1.0.0a · webtools-browser 1.0.0a · webtools-udp 2.0.0a (none published)",
-        "date": "2026-10-23"
-      },
-      "reconciliation": {
-        "state": "as-built",
-        "landed": null,
-        "total": null
-      },
-      "active": false,
-      "systemName": "Gradle build",
-      "group": "55",
-      "order": 2
+      "group": "other",
+      "order": 3
     },
     {
       "issue": 62,
@@ -419,8 +544,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "webtools-http common core",
-      "group": "55",
-      "order": 3
+      "group": "other",
+      "order": 4
     },
     {
       "issue": 63,
@@ -530,8 +655,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "published test fixtures",
-      "group": "55",
-      "order": 4
+      "group": "other",
+      "order": 5
     },
     {
       "issue": 64,
@@ -620,8 +745,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "outbound-URL policy",
-      "group": "55",
-      "order": 5
+      "group": "other",
+      "order": 6
     },
     {
       "issue": 65,
@@ -720,8 +845,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "OkHttp transport",
-      "group": "55",
-      "order": 6
+      "group": "other",
+      "order": 7
     },
     {
       "issue": 66,
@@ -820,8 +945,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "response cache",
-      "group": "55",
-      "order": 7
+      "group": "other",
+      "order": 8
     },
     {
       "issue": 67,
@@ -920,8 +1045,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "call budget",
-      "group": "55",
-      "order": 8
+      "group": "other",
+      "order": 9
     },
     {
       "issue": 68,
@@ -1008,8 +1133,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "call facades",
-      "group": "55",
-      "order": 9
+      "group": "other",
+      "order": 10
     },
     {
       "issue": 69,
@@ -1091,8 +1216,8 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "active": false,
       "systemName": "webtools-feeds",
-      "group": "55",
-      "order": 10
+      "group": "other",
+      "order": 11
     },
     {
       "issue": 70,
@@ -1125,143 +1250,99 @@ window.dashboardLive&&window.dashboardLive("board",
       "reconciliation": null,
       "active": false,
       "systemName": "WebTools",
-      "group": "55",
-      "order": 11
+      "group": "other",
+      "order": 12
     },
     {
-      "issue": 38,
-      "title": "Handshake parsing accepts an empty peer name on extra whitespace",
-      "state": "CLOSED",
-      "stateReason": "COMPLETED",
-      "created": "2026-09-24",
+      "issue": 99,
+      "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation",
+      "state": "OPEN",
+      "created": "2026-11-08",
       "parent": null,
       "waitsOn": [],
       "blocks": [],
-      "board": "38-handshake-empty-name/dashboard.html",
-      "folder": "38-handshake-empty-name/",
-      "branch": null,
-      "system": "webtools-udp",
-      "step": "landed",
-      "detail": "Merged through PR #59 as 806ce8e; the board was written after the fact as the worked example.",
-      "since": "2026-10-20",
-      "updated": "2026-10-20",
+      "board": "99-dokka-api-docs/dashboard.html",
+      "folder": "99-dokka-api-docs/",
+      "branch": "feat/issue-99-dokka-api-docs",
+      "system": "gradle-build",
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-09T02:28:41Z",
+      "updated": "2026-11-09T02:29:25Z",
       "qa": [
         {
           "pass": 1,
           "verdict": "changes-requested",
+          "date": "2026-11-09",
+          "at": "2026-11-09T00:19:24Z",
           "findings": {
-            "documentation": 10,
-            "test": 8
+            "test": 8,
+            "code": 1
           },
-          "note": "Stage C added to the plan"
+          "severity": {
+            "minor": 4,
+            "other": 5
+          },
+          "route": "re-plan-then-remediation"
         },
         {
           "pass": 2,
           "verdict": "changes-requested",
+          "date": "2026-11-09",
+          "at": "2026-11-09T01:25:50Z",
           "findings": {
-            "documentation": 4,
-            "test": 1
+            "test": 9,
+            "code": 5
           },
-          "note": "5 LOW items; Stage D added; no third review run, by the maintainer's decision"
+          "severity": {
+            "minor": 13,
+            "other": 1
+          },
+          "route": "re-plan-then-remediation"
+        },
+        {
+          "pass": 3,
+          "verdict": "changes-requested",
+          "date": "2026-11-09",
+          "at": "2026-11-09T01:57:15Z",
+          "findings": {
+            "test": 4,
+            "code": 3
+          },
+          "severity": {
+            "minor": 7,
+            "other": 0
+          },
+          "route": "on-the-spot",
+          "inPlace": "fixed"
         }
       ],
-      "qaMax": null,
-      "status": "landed",
+      "qaMax": 3,
+      "status": "building",
       "fixOf": null,
-      "landed": {
-        "pr": 59,
-        "merge": "806ce8e",
-        "version": "webtools-udp 2.0.0a",
-        "date": "2026-10-20"
-      },
+      "landed": null,
       "reconciliation": {
-        "state": "as-built",
+        "state": "planned",
         "landed": null,
         "total": null
       },
-      "active": false,
-      "systemName": "webtools-udp",
+      "active": true,
+      "systemName": "Gradle build",
       "group": "other",
-      "order": 0
+      "order": 13
     }
   ],
-  "roadmap": [
-    {
-      "issue": 55,
-      "title": "HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes",
-      "state": "OPEN",
-      "board": "55-http-client-stack/dashboard.html",
-      "items": [
-        {
-          "issue": 61,
-          "title": "Build: move shared configuration into an included `build-logic` build with convention plugins and package-selected level tasks",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 47,
-          "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 62,
-          "title": "webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only `js` compile",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 63,
-          "title": "webtools-http: published test-fixtures variant with the fake transport, virtual clock, `.http` fixtures, recorder and the publication check",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 64,
-          "title": "webtools-http: outbound-URL policies `Trusted`/`Untrusted`, `TransportSettings` and the common address classifier",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 65,
-          "title": "webtools-http: `OkHttpTransport` with manual redirects, the one-exchange guard, the resolver and socket guards, and the loopback test factories",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 66,
-          "title": "webtools-http: `ResponseCache` port and `CaffeineResponseCache` default",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 67,
-          "title": "webtools-http: `CallBudget` port, `WindowedCallBudget`, rate signals, the persistence and observer seams and their fakes",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 68,
-          "title": "webtools-http: `UpstreamClient` and `UrlFetcher` composing cache, budget and transport",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 69,
-          "title": "webtools-feeds: RSS/Atom parser port with the Rome default, hardening suite, and a conditional-GET fetcher over `UrlFetcher`",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        },
-        {
-          "issue": 70,
-          "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections",
-          "state": "CLOSED",
-          "stateReason": "COMPLETED"
-        }
-      ]
-    }
-  ],
+  "roadmap": [],
   "unscheduled": [
+    {
+      "issue": 99,
+      "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation",
+      "labels": [
+        "type: feature"
+      ],
+      "created": "2026-11-08",
+      "system": "Gradle build"
+    },
     {
       "issue": 93,
       "title": "webtools-http: `Url.redacted()` shows the path, so a secret carried in a URL's path is logged",
