@@ -53,6 +53,10 @@ public class Redaction(
     /** Whether the decoded query name [decodedName] is redacted: the token rule or [extra], unless in [keep]. */
     internal fun isSensitiveQuery(decodedName: String): Boolean = SensitiveNames.isSensitiveQuery(decodedName, extra, keep)
 
+    /**
+     * A diagnostic string for logs: the three list sizes, never a name or a secret. Its format is not part of the API
+     * and may change.
+     */
     override fun toString(): String = "Redaction(keep=${keep.size}, extra=${extra.size}, secrets=${secretValues.size})"
 
     /** The defaults. */

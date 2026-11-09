@@ -11,6 +11,7 @@ package com.spartanlabs.webtools.http.testing
 public sealed interface Unmatched {
     /** Throw an [UnmatchedRequestError]; the call is recorded with `matched = false`. */
     public object Fail : Unmatched {
+        /** A diagnostic string for logs: the name of the policy. Its format is not part of the API and may change. */
         override fun toString(): String = "Unmatched.Fail"
     }
 
@@ -23,6 +24,7 @@ public sealed interface Unmatched {
         /** The step served to an unmatched request. */
         public val step: Step,
     ) : Unmatched {
+        /** A diagnostic string for logs: the policy and its [step]. Its format is not part of the API and may change. */
         override fun toString(): String = "Unmatched.Respond($step)"
     }
 }

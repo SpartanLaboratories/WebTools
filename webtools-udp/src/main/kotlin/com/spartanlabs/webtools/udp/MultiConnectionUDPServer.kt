@@ -560,6 +560,10 @@ abstract class MultiConnectionUDPServer @JvmOverloads protected constructor(
             .flatMap { retransmitStopped }.flatMap { executorStopped }
     }
 
+    /**
+     * The server's constants: [COMMON_LISTEN_PORT], the receive-buffer bounds and default ([MAX_UDP_PAYLOAD_BYTES],
+     * [MIN_RECEIVE_BUFFER_BYTES], [DEFAULT_RECEIVE_BUFFER_BYTES]) and [DISABLED_IDLE_TIMEOUT].
+     */
     companion object {
         /** Shared slf4j logger for all [MultiConnectionUDPServer] instances. */
         private val log = LoggerFactory.getLogger(MultiConnectionUDPServer::class.java)

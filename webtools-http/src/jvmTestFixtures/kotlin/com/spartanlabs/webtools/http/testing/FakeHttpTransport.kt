@@ -138,6 +138,10 @@ public class FakeHttpTransport(
         synchronized(lock) { closed = true }
     }
 
+    /**
+     * A diagnostic string for logs: the stub count, the call count and the closed flag, nothing else. Its format is not
+     * part of the API and may change.
+     */
     override fun toString(): String = synchronized(lock) { "FakeHttpTransport(stubs=${stubs.size}, calls=${callLog.size}, closed=$closed)" }
 
     // Everything that needs the lock happens here, in one non-suspending function.

@@ -36,11 +36,20 @@ public class CacheKey<V : Any>(
         hash = 31 * endpointId.hashCode() + this.params.hashCode()
     }
 
+    /** Two [CacheKey]s are equal when their [endpointId] and [params] are equal; the type parameter takes no part. */
     override fun equals(other: Any?): Boolean =
         this === other || (other is CacheKey<*> && other.hash == hash && other.endpointId == endpointId && other.params == params)
 
+    /**
+     * Returns a hash code consistent with [equals]: it is computed from the same properties. It is computed once, at
+     * construction.
+     */
     override fun hashCode(): Int = hash
 
     // Names only, never a value: the key is logged.
+    /**
+     * A diagnostic string for logs: [endpointId] and the parameter **names**, never a value. Its format is not part of
+     * the API and may change.
+     */
     override fun toString(): String = "CacheKey(endpointId=$endpointId, params=[${params.joinToString(", ") { it.first }}])"
 }

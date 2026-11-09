@@ -30,6 +30,10 @@ public sealed interface RecordingGate {
         /** How an existing file is treated. */
         public val mode: RecordMode,
     ) : RecordingGate {
+        /**
+         * A diagnostic string for logs: the [mode], never a value from the environment. Its format is not part of the
+         * API and may change.
+         */
         override fun toString(): String = "RecordingGate.Enabled($mode)"
     }
 
@@ -43,6 +47,10 @@ public sealed interface RecordingGate {
         /** Why recording is off. */
         public val reason: String,
     ) : RecordingGate {
+        /**
+         * A diagnostic string for logs: the [reason], never a value from the environment. Its format is not part of the
+         * API and may change.
+         */
         override fun toString(): String = "RecordingGate.Disabled($reason)"
     }
 

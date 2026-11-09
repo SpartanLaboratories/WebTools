@@ -49,6 +49,7 @@ public interface RateSignalsReader {
         private fun parseLine(line: String, nowEpochMillis: Long, serverDate: Long?): Result<Duration> =
             if (serverDate != null) RetryAfter.parse(line, nowEpochMillis, serverDate) else RetryAfter.parse(line, nowEpochMillis)
 
+        /** Returns the fixed text `RateSignalsReader.Standard`, for diagnostics and logs. */
         override fun toString(): String = "RateSignalsReader.Standard"
     }
 }

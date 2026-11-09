@@ -163,6 +163,10 @@ public class FeedFetcher internal constructor(parts: FeedFetcherParts) : AutoClo
         log.info("closed")
     }
 
+    /**
+     * A diagnostic string for logs: the parser's kind, `maxConcurrentParses`, whether this fetcher owns its
+     * `UrlFetcher` and whether it is closed, never a URL. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "FeedFetcher(parser=${kindOf(parser)}, maxConcurrentParses=$maxConcurrentParses, ownsUrlFetcher=$ownsUrlFetcher, closed=${closing.isCompleted})"
 

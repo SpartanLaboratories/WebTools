@@ -58,14 +58,23 @@ public class WindowUtilisation(
     /** The raw usage, `used / limit`; may exceed 1.0 when a server reading raised the count above the limit. */
     public val fraction: Double get() = used.toDouble() / limit
 
+    /**
+     * Two [WindowUtilisation]s are equal when their [name], [used], [queued], [limit], [published],
+     * [windowStartEpochMillis], [resetsAtEpochMillis], [hard] and [elapsedFraction] are equal.
+     */
     override fun equals(other: Any?): Boolean =
         other is WindowUtilisation && other.name == name && other.used == used && other.queued == queued && other.limit == limit &&
             other.published == published && other.windowStartEpochMillis == windowStartEpochMillis && other.resetsAtEpochMillis == resetsAtEpochMillis &&
             other.hard == hard && other.elapsedFraction == elapsedFraction
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int =
         listOf(name, used, queued, limit, published, windowStartEpochMillis, resetsAtEpochMillis, hard, elapsedFraction).fold(0) { acc, v -> 31 * acc + v.hashCode() }
 
+    /**
+     * A diagnostic string for logs: [name], [used], [queued], [limit], [published], [windowStartEpochMillis],
+     * [resetsAtEpochMillis], [hard] and [elapsedFraction]. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "WindowUtilisation(name=$name, used=$used, queued=$queued, limit=$limit, published=$published, windowStart=$windowStartEpochMillis, " +
             "resetsAt=$resetsAtEpochMillis, hard=$hard, elapsedFraction=$elapsedFraction)"

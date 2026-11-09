@@ -93,6 +93,10 @@ public class UrlFetcher internal constructor(parts: FetcherParts) : AutoCloseabl
         log.info("closed")
     }
 
+    /**
+     * A diagnostic string for logs: the policy's kind, the budget's kind, whether this fetcher owns its transport and
+     * whether it is closed. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "UrlFetcher(policy=${policyKind(guard.policy)}, budget=${kindOf(budget)}, ownsTransport=$ownsTransport, closed=${closing.isCompleted})"
 }

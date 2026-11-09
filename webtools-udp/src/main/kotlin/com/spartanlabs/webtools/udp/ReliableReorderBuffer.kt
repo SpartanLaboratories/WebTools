@@ -23,16 +23,16 @@ package com.spartanlabs.webtools.udp
 internal class ReliableReorderBuffer(private val windowSize: Int = 256) {
     /** The outcome of [onReceive]. */
     sealed interface ReceiveOutcome {
-        /** [seq] was the next in-order message; [messages] is it plus any now-contiguous drained successors. */
+        /** `seq` was the next in-order message; [messages] is it plus any now-contiguous drained successors. */
         data class Delivered(val messages: List<ByteArray>) : ReceiveOutcome
 
-        /** [seq] was ahead of [cursor] but within the window; stored, not yet deliverable. */
+        /** `seq` was ahead of [cursor] but within the window; stored, not yet deliverable. */
         data object Buffered : ReceiveOutcome
 
-        /** [seq] was already delivered or is already buffered — a duplicate/retransmit. */
+        /** `seq` was already delivered or is already buffered — a duplicate/retransmit. */
         data object DuplicateOrOld : ReceiveOutcome
 
-        /** [seq] was too far ahead of [cursor] to buffer; dropped, relying on the sender's retransmit. */
+        /** `seq` was too far ahead of [cursor] to buffer; dropped, relying on the sender's retransmit. */
         data object OutOfWindow : ReceiveOutcome
     }
 

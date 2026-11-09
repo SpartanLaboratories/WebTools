@@ -62,6 +62,7 @@ enum class DatagramType(val tag: Byte) {
     /** `0xA1` — a standalone reliable ack (no seq, no payload). */
     RELIABLE_ACK(0xA1.toByte());
 
+    /** The lookup from a datagram's first byte to its type: [ofTagByte]. */
     companion object {
         private val byTag: Map<Byte, DatagramType> = entries.associateBy { it.tag }
 

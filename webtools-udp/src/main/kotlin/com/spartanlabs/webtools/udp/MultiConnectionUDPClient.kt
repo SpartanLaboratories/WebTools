@@ -34,7 +34,7 @@ import java.util.concurrent.Executors
  * -> switch on the [DatagramType] tag (byte 0) -> drop a keepalive/probe or strip
  * the `0x90` frame and hand the payload to the
  * dispatch executor. The dispatch executor is a single daemon thread
- * (`mcupc-dispatch`) that invokes the caller's [onMessage] callback passed to
+ * (`mcupc-dispatch`) that invokes the caller's `onMessage` callback passed to
  * [start], so a slow callback cannot stall the socket read loop.
  *
  * [handshake] itself remains a **blocking** one-shot call, mirroring the

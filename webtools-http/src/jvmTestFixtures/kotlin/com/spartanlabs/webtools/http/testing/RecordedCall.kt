@@ -23,5 +23,9 @@ public class RecordedCall internal constructor(
     /** Whether a stub accepted the request; `false` for an unmatched one. */
     public val matched: Boolean,
 ) {
+    /**
+     * A diagnostic string for logs: the method, the URL in its redacted form (`Url.redacted`), [receivedAt] and
+     * [matched], never the query, a header value or the body. Its format is not part of the API and may change.
+     */
     override fun toString(): String = "RecordedCall(${request.method} ${request.url.redacted()}, receivedAt=$receivedAt, matched=$matched)"
 }

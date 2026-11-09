@@ -30,10 +30,13 @@ public class CidrBlock private constructor(
      */
     internal fun contains(address: ByteArray): Boolean = address.size == bytes.size && matchesPrefix(bytes, address, prefixLength)
 
+    /** Two [CidrBlock]s are equal when their family, address bytes and prefix length are equal. */
     override fun equals(other: Any?): Boolean = other is CidrBlock && other.prefixLength == prefixLength && other.bytes.contentEquals(bytes)
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = bytes.contentHashCode() * 31 + prefixLength
 
     // IPv6 is printed by StrictIp.formatV6 (RFC 5952 hex groups; never a dotted IPv4 inside IPv6).
+    /** Returns the canonical block, for example `10.0.0.0/8` or `fd00::/8`. */
     override fun toString(): String =
         (if (isIpv4) bytes.joinToString(".") { (it.toInt() and 0xFF).toString() } else StrictIp.formatV6(bytes)) + "/" + prefixLength
 

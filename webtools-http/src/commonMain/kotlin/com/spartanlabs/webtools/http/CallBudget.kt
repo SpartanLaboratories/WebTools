@@ -94,6 +94,7 @@ public interface CallBudget : AutoCloseable {
         }
 
         override suspend fun utilisation(): BudgetUtilisation = BudgetUtilisation(emptyList(), Duration.ZERO, 0)
+        /** Returns the fixed text `CallBudget.Unlimited`, for diagnostics and logs. */
         override fun toString(): String = "CallBudget.Unlimited"
     }
 }

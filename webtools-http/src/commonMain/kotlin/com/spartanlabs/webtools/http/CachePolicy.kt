@@ -21,8 +21,11 @@ public class CachePolicy internal constructor(
         require(!missTtl.isNegative()) { "missTtl must not be negative" }
     }
 
+    /** Two [CachePolicy]s are equal when their [ttl] and [missTtl] are equal. */
     override fun equals(other: Any?): Boolean = other is CachePolicy && other.ttl == ttl && other.missTtl == missTtl
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = 31 * ttl.hashCode() + missTtl.hashCode()
+    /** A diagnostic string for logs: [ttl] and [missTtl]. Its format is not part of the API and may change. */
     override fun toString(): String = "CachePolicy(ttl=$ttl, missTtl=$missTtl)"
 
     /**

@@ -47,6 +47,11 @@ public class TransportSettings internal constructor(
     /** How long an idle pooled connection is kept; the same bounds as [callTimeout]. */
     public val idleConnectionTtl: Duration,
 ) {
+    /**
+     * Two [TransportSettings] are equal when all ten of their settings are equal: [callTimeout], [connectTimeout],
+     * [readTimeout], [writeTimeout], [maxResponseBytes], [maxRedirects], [allowHttpsToHttp], [maxConcurrentRequests],
+     * [maxConcurrentRequestsPerHost] and [idleConnectionTtl].
+     */
     override fun equals(other: Any?): Boolean =
         other is TransportSettings &&
             other.callTimeout == callTimeout && other.connectTimeout == connectTimeout &&
@@ -55,6 +60,7 @@ public class TransportSettings internal constructor(
             other.allowHttpsToHttp == allowHttpsToHttp && other.maxConcurrentRequests == maxConcurrentRequests &&
             other.maxConcurrentRequestsPerHost == maxConcurrentRequestsPerHost && other.idleConnectionTtl == idleConnectionTtl
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int {
         var hash = callTimeout.hashCode()
         hash = 31 * hash + connectTimeout.hashCode()
@@ -69,6 +75,7 @@ public class TransportSettings internal constructor(
         return hash
     }
 
+    /** A diagnostic string for logs: every setting. Its format is not part of the API and may change. */
     override fun toString(): String =
         "TransportSettings(callTimeout=$callTimeout, connectTimeout=$connectTimeout, readTimeout=$readTimeout, " +
             "writeTimeout=$writeTimeout, maxResponseBytes=$maxResponseBytes, maxRedirects=$maxRedirects, " +

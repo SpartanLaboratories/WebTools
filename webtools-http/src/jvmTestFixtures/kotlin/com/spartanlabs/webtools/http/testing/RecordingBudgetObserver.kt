@@ -35,10 +35,15 @@ public class RecordingBudgetObserver(private val onEach: (BudgetEvent) -> Unit =
         recorded.clear()
     }
 
+    /**
+     * Records [event], in arrival order, for later inspection through [events], then runs [onEach] with it on the
+     * calling thread.
+     */
     override fun onEvent(event: BudgetEvent) {
         recorded += event
         onEach(event)
     }
 
+    /** A diagnostic string for logs: the number of recorded events. Its format is not part of the API and may change. */
     override fun toString(): String = "RecordingBudgetObserver(events=${recorded.size})"
 }

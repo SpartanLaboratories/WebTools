@@ -109,6 +109,10 @@ public class FixtureRecorder(
         return RecordingHttpTransport(delegate) { request, response -> record(request, response, group, nameFor) }
     }
 
+    /**
+     * A diagnostic string for logs: the directory, the mode and the counts of files written, kept and refused. Its
+     * format is not part of the API and may change.
+     */
     override fun toString(): String =
         synchronized(lock) { "FixtureRecorder(directory=$directory, mode=$mode, written=${writtenFiles.size}, kept=${keptFiles.size}, refused=${refusedFiles.size})" }
 

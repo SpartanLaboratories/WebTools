@@ -24,9 +24,15 @@ public class WindowSnapshot(
         require(used >= 0) { "used must not be negative" }
     }
 
+    /** Two [WindowSnapshot]s are equal when their [window], [windowStartEpochMillis] and [used] are equal. */
     override fun equals(other: Any?): Boolean =
         other is WindowSnapshot && other.window == window && other.windowStartEpochMillis == windowStartEpochMillis && other.used == used
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = (window.hashCode() * 31 + windowStartEpochMillis.hashCode()) * 31 + used
+    /**
+     * A diagnostic string for logs: [window], [windowStartEpochMillis] and [used]. Its format is not part of the API
+     * and may change.
+     */
     override fun toString(): String = "WindowSnapshot(window=$window, windowStart=$windowStartEpochMillis, used=$used)"
 }

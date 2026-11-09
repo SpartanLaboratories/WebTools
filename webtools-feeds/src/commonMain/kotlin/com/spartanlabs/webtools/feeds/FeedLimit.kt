@@ -14,8 +14,11 @@ public class FeedLimit private constructor(
     /** The limit's name, as its constant is spelled. */
     public val name: String,
 ) {
+    /** Two [FeedLimit]s are equal when their [name]s are equal. */
     override fun equals(other: Any?): Boolean = other is FeedLimit && other.name == name
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = name.hashCode()
+    /** Returns the constant's [name]. */
     override fun toString(): String = name
 
     /** The limits that fail a parse. */

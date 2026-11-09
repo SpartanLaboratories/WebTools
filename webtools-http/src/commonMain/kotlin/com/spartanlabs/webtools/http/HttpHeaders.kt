@@ -55,8 +55,14 @@ public class HttpHeaders internal constructor(entries: List<Entry>) {
      */
     public fun entries(): List<Entry> = items.toList()
 
+    /** Two [HttpHeaders] are equal when their ordered entries are equal: name spelling, value and sensitivity. */
     override fun equals(other: Any?): Boolean = other is HttpHeaders && other.items == items
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = items.hashCode()
+    /**
+     * A diagnostic string for logs: the header names in order, with `*` after each sensitive entry, never a value. Its
+     * format is not part of the API and may change.
+     */
     override fun toString(): String =
         items.joinToString(separator = ", ", prefix = "HttpHeaders(", postfix = ")") { it.name + if (it.isSensitive) "*" else "" }
 
@@ -77,9 +83,12 @@ public class HttpHeaders internal constructor(entries: List<Entry>) {
         /** True when the entry was added as sensitive or its name is a credential header name. */
         public val isSensitive: Boolean get() = flagged || HttpSyntax.isCredentialName(name)
 
+        /** Two [Entry]s are equal when their [name], [value] and [isSensitive] are equal. */
         override fun equals(other: Any?): Boolean =
             other is Entry && other.name == name && other.value == value && other.isSensitive == isSensitive
+        /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
         override fun hashCode(): Int = (name.hashCode() * 31 + value.hashCode()) * 31 + isSensitive.hashCode()
+        /** Returns `Entry(<name>)`, or `Entry(<name>, sensitive)` for a sensitive entry, never the value. */
         override fun toString(): String = if (isSensitive) "Entry($name, sensitive)" else "Entry($name)"
     }
 

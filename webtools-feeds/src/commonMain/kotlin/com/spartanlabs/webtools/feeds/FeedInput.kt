@@ -33,6 +33,11 @@ public class FeedInput(
     // For this module's own parsers: the stored array itself, never to be modified.
     internal fun documentView(): ByteArray = bytes
 
+    /**
+     * A diagnostic string for logs: the document's size, whether a content type is present and the [baseUrl] as scheme,
+     * host and port, never the content, the content type's value or a path. Its format is not part of the API and may
+     * change.
+     */
     override fun toString(): String =
         "FeedInput(documentSize=${bytes.size}, contentType=${if (contentType == null) "none" else "present"}, baseUrl=${baseUrl?.origin() ?: "none"})"
 }

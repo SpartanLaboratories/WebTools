@@ -115,6 +115,11 @@ public class UpstreamClient internal constructor(parts: ClientParts) : AutoClose
         log.info("closed")
     }
 
+    /**
+     * A diagnostic string for logs: the [baseUrl] in its redacted form (`Url.redacted`), the policy's kind, the kinds
+     * of the cache and the budget, which components this client owns and whether it is closed. Its format is not part
+     * of the API and may change.
+     */
     override fun toString(): String =
         "UpstreamClient(baseUrl=${baseUrl.redacted()}, policy=${policyKind(policy)}, cache=${kindOf(cache)}, budget=${kindOf(budget)}, owned=${owned.names()}, closed=${closing.isCompleted})"
 

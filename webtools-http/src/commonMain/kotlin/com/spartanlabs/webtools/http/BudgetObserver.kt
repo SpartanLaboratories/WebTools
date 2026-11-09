@@ -26,6 +26,7 @@ public interface BudgetObserver {
      */
     public object None : BudgetObserver {
         override fun onEvent(event: BudgetEvent) {}
+        /** Returns the fixed text `BudgetObserver.None`, for diagnostics and logs. */
         override fun toString(): String = "BudgetObserver.None"
     }
 }

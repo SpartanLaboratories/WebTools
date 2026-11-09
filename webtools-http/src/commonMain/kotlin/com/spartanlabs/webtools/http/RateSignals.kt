@@ -26,10 +26,16 @@ public class RateSignals internal constructor(
         require(readings.keys.none { it.isBlank() }) { "a reading's window name must not be blank" }
     }
 
+    /** Two [RateSignals] are equal when their [throttled], [retryAfter] and [readings] are equal. */
     override fun equals(other: Any?): Boolean =
         other is RateSignals && other.throttled == throttled && other.retryAfter == retryAfter && other.readings == readings
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = (throttled.hashCode() * 31 + (retryAfter?.hashCode() ?: 0)) * 31 + readings.hashCode()
+    /**
+     * A diagnostic string for logs: [throttled], [retryAfter] and the window names only, never a reading. Its format is
+     * not part of the API and may change.
+     */
     override fun toString(): String = "RateSignals(throttled=$throttled, retryAfter=$retryAfter, windows=${readings.keys})"
 
     /**

@@ -13,8 +13,11 @@ public class PauseSource private constructor(
     /** The source's name, as its constant is spelled. */
     public val name: String,
 ) {
+    /** Two [PauseSource]s are equal when their [name]s are equal. */
     override fun equals(other: Any?): Boolean = other is PauseSource && other.name == name
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = name.hashCode()
+    /** Returns the source's [name]. */
     override fun toString(): String = name
 
     /** The sources. */

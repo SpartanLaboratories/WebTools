@@ -18,11 +18,17 @@ public class FeedEnclosure internal constructor(
     /** The declared size in bytes, positive, or `null` when unknown. */
     public val lengthBytes: Long?,
 ) {
+    /** Two [FeedEnclosure]s are equal when their [url], [mimeType] and [lengthBytes] are equal. */
     override fun equals(other: Any?): Boolean =
         other is FeedEnclosure && other.url == url && other.mimeType == mimeType && other.lengthBytes == lengthBytes
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = listOf(url, mimeType, lengthBytes).fold(0) { acc, v -> 31 * acc + v.hashCode() }
 
+    /**
+     * A diagnostic string for logs: the [url] as scheme, host and port, and whether [mimeType] and [lengthBytes] are
+     * present, never their values. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "FeedEnclosure(url=${originOfLink(url)}, mimeType=${presence(mimeType)}, lengthBytes=${presence(lengthBytes)})"
 

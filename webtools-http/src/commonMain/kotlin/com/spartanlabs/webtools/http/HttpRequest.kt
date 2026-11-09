@@ -34,6 +34,10 @@ public class HttpRequest internal constructor(
         }
     }
 
+    /**
+     * A diagnostic string for logs: [method], the [url] in its redacted form (`Url.redacted`), the [headers]' names and
+     * the [body]'s size, never a header value or the body. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "HttpRequest(method=$method, url=${url.redacted()}, headers=$headers, body=${body ?: "none"})"
 

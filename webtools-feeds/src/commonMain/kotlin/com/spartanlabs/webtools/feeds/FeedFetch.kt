@@ -43,12 +43,19 @@ public sealed interface FeedFetch {
         override val finalUrl: Url,
         override val permanentlyMovedTo: Url?,
     ) : FeedFetch {
+        /** Two [Fetched]s are equal when their [feed], [validators], [finalUrl] and [permanentlyMovedTo] are equal. */
         override fun equals(other: Any?): Boolean =
             other is Fetched && other.feed == feed && other.validators == validators && other.finalUrl == finalUrl &&
                 other.permanentlyMovedTo == permanentlyMovedTo
 
+        /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
         override fun hashCode(): Int = listOf(feed, validators, finalUrl, permanentlyMovedTo).fold(0) { acc, v -> 31 * acc + v.hashCode() }
 
+        /**
+         * A diagnostic string for logs: the number of entries in [feed], the [validators] (presence only), and
+         * [finalUrl] and [permanentlyMovedTo] as scheme, host and port. Its format is not part of the API and may
+         * change.
+         */
         override fun toString(): String =
             "Fetched(entries=${feed.entries.size}, validators=$validators, finalUrl=${finalUrl.origin()}, " +
                 "permanentlyMovedTo=${permanentlyMovedTo?.origin() ?: "none"})"
@@ -69,11 +76,17 @@ public sealed interface FeedFetch {
         override val finalUrl: Url,
         override val permanentlyMovedTo: Url?,
     ) : FeedFetch {
+        /** Two [NotModified]s are equal when their [validators], [finalUrl] and [permanentlyMovedTo] are equal. */
         override fun equals(other: Any?): Boolean =
             other is NotModified && other.validators == validators && other.finalUrl == finalUrl && other.permanentlyMovedTo == permanentlyMovedTo
 
+        /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
         override fun hashCode(): Int = listOf(validators, finalUrl, permanentlyMovedTo).fold(0) { acc, v -> 31 * acc + v.hashCode() }
 
+        /**
+         * A diagnostic string for logs: the [validators] (presence only), and [finalUrl] and [permanentlyMovedTo] as
+         * scheme, host and port. Its format is not part of the API and may change.
+         */
         override fun toString(): String =
             "NotModified(validators=$validators, finalUrl=${finalUrl.origin()}, permanentlyMovedTo=${permanentlyMovedTo?.origin() ?: "none"})"
     }
