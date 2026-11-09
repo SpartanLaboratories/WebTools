@@ -2,6 +2,9 @@
 # so an editor that rewrites a file with CRLF cannot inflate its diff.
 *.kt   text eol=lf
 *.kts  text eol=lf
+# gradlew and the workflow files are run by a Linux runner; a carriage return in either breaks them.
+gradlew text eol=lf
+.github/workflows/*.yml text eol=lf
 # Recorded HTTP fixtures hold response bodies byte for byte; a line-ending conversion would change their size.
 **/fixtures/**/*.http -text
 # Feed test documents hold bytes that tests compare; a line-ending conversion would change them.
