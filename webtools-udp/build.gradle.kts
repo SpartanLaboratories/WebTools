@@ -113,7 +113,9 @@ dependencies {
 // (major 55) built against the Java 11 API, and the Gradle Module Metadata declares
 // org.gradle.jvm.version 11, where 2.0.0 shipped Java 23 bytecode (major 67) declaring 23, which
 // consumers on JDK 11 to 22 could not load. No source or public API change.
-version = "2.0.0a"
+// 2.0.1: the javadoc jar carries the Dokka API reference in place of an empty placeholder. No source or
+// public API change.
+version = "2.0.1"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
