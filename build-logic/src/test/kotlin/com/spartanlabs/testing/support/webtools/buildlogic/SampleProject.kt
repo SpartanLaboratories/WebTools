@@ -742,7 +742,7 @@ class SampleProject private constructor(val files: Map<String, String>) {
             include(":webtools-http", ":$FIXTURES_KMP_CONSUMER")
             """.trimIndent() + "\n"
 
-        // Appended to the repository's root build script: every publishing module also publishes to
+        // Appended to the repository's `allprojects` block: every publishing module also publishes to
         // build/repo of the producer. No Sign change: the producer signs with the throwaway key.
         //language=kotlin
         private val PRODUCER_TEST_FOLDER: String = "\n" + """

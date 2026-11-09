@@ -38,6 +38,8 @@ public class RecordingBudgetObserver(private val onEach: (BudgetEvent) -> Unit =
     /**
      * Records [event], in arrival order, for later inspection through [events], then runs [onEach] with it on the
      * calling thread.
+     *
+     * @param event the event to record.
      */
     override fun onEvent(event: BudgetEvent) {
         recorded += event

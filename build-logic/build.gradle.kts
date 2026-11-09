@@ -47,11 +47,13 @@ val testKitProjects: String = layout.buildDirectory.dir("testkit/projects").get(
 val testKitHome: String = layout.buildDirectory.dir("testkit/home").get().asFile.absolutePath
 
 // Read by the harness as BuildLogicSource.SOURCE_PROPERTY: the end-to-end check copies this build's
-// sources from here into a generated composite.
+// sources from here into a generated composite, and gatingTest and test set it too, for
+// RootScriptsAgreementGatingTest, which reads this build's and the root's scripts from here.
 val buildLogicDir: String = layout.projectDirectory.asFile.absolutePath
 
 // Read by the harness as ModuleSource.MODULE_PROPERTY: the fixtures-publication check copies the module's
-// build file and three source trees from here (and the repository's root settings and build files next to it).
+// build file and three source trees from here, and the end-to-end checks read blocks of the repository's root
+// settings and build files next to it.
 val webToolsHttpDir: String = layout.projectDirectory.dir("../webtools-http").asFile.absolutePath
 
 // The nested-build tasks (the three level tasks and fixturesPublicationCheck) share that one TestKit home,
@@ -134,7 +136,8 @@ registerBuildLogicLevelTest(
     // The check copies these files into its composite, so they are inputs of the task.
     inputs.files("settings.gradle.kts", "build.gradle.kts").withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.dir("src/main").withPathSensitivity(PathSensitivity.RELATIVE)
-    // e2e also selects the fixtures-publication check's class, so it copies the module too.
+    // e2e also selects the fixtures-publication check's class, so it copies the module too;
+    // DokkaAggregationEndToEndTest needs the same property for ModuleSource.rootBlock.
     copiesWebToolsHttp()
 }
 registerBuildLogicLevelTest(

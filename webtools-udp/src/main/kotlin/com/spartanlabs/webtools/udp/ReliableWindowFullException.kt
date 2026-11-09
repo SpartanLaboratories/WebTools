@@ -21,6 +21,8 @@ class ReliableWindowFullException(val inFlight: Int) : ReliableSendFailure(
     /**
      * Returns this exception without recording a stack trace: it is only ever the payload of a [Result.failure], so a
      * trace would name nothing useful and cost a capture on every rejected send.
+     *
+     * @return this exception.
      */
     override fun fillInStackTrace(): Throwable = this
 }

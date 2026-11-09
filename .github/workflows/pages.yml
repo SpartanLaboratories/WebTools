@@ -10,6 +10,8 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# actions/deploy-pages needs `pages: write` and `id-token: write`. They are set at workflow level, so the `build` job
+# inherits them too.
 permissions:
   contents: read
   pages: write
@@ -30,6 +32,7 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
+          # The JDK that runs Gradle (see ci.yml).
           java-version: "23"
       # setup-gradle stays on v5 (see ci.yml).
       - uses: gradle/actions/setup-gradle@v5

@@ -1,6 +1,7 @@
 /* WebTools - project site
    Single stylesheet, no build step. Tokens live on :root and are redefined for the
-   light theme; every colour in the sheet goes through one of them.
+   light theme; every theme colour goes through one of them. The code-card chrome, white
+   text on brand surfaces and a few fixed shades (shadows, hover overlays, one gradient stop) are literal values.
    Palette: the Spartan Laboratories brand shared with the Dokka API reference
    (docs/dokka/styles/dokka-styles.css) - navy + bronze on deep navy ink / warm parchment. */
 

@@ -33,7 +33,8 @@ import kotlin.streams.asSequence
  * Multiplatform consumer), the **file-repository consumer** (a Kotlin/JVM and a Kotlin Multiplatform module
  * resolving the published artifacts) and the **composite consumer** (`includeBuild("../producer")`). Each
  * consumer compiles and runs one test that uses `VirtualClock`, `FakeHttpTransport`, `kotlinx-coroutines-test`
- * and `mockwebserver3`, and the Dokka javadoc jars carry the fixtures' reference. The producer build runs the real
+ * and `mockwebserver3`. The jvm javadoc jar carries the fixtures' Dokka reference; the root javadoc jar is checked only for
+ * `index.html`. The producer build runs the real
  * module's Dokka task with `failOnWarning`, so this class also proves the module's KDoc is warning-free.
  *
  * It is the only check on the experimental `adhocSoftwareComponent` publishing API and the only run that signs

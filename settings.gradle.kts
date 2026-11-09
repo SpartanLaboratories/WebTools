@@ -1,3 +1,6 @@
+// ModuleSource.rootBlock reads the pluginManagement block into the generated builds of the build-logic checks, so its
+// opening line and closing brace stay at column 0. RootScriptsAgreementGatingTest checks that its versions equal the
+// marker dependencies in build-logic/build.gradle.kts.
 pluginManagement {
     includeBuild("build-logic")
     // The versions of the plugins the root build script applies by id (it applies the two Kotlin plugins

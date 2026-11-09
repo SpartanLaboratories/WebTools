@@ -112,7 +112,9 @@ class DokkaAggregationEndToEndTest {
     @Test
     fun `the real dokka block sets the aggregate's name, empty version and footer`() {
         val index = Files.readString(output.resolve("index.html"))
+        //language=RegExp
         assertTrue(Regex("""<a class="library-name--link"[^>]*>\s*WebTools\s*</a>""").containsMatchIn(index), "the aggregate is not named WebTools:\n$index")
+        //language=RegExp
         assertTrue(Regex("""<div class="library-version" id="library-version">\s*</div>""").containsMatchIn(index), "the aggregate names a version:\n$index")
         assertTrue(index.contains("<div>&copy; 2026 Spartan Laboratories</div>"), "the aggregate index has no footer:\n$index")
     }

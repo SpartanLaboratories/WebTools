@@ -87,6 +87,9 @@ public class FakeBudgetStore(initial: BudgetSnapshot = BudgetSnapshot.Empty) : B
      * Counts the call in [loadCount], waits [loadDelay] (virtual under a test scheduler), then returns [snapshot], or
      * delivers the failure armed by [failLoads]: returned in the `Result`, or thrown when it was armed with `thrown =
      * true`.
+     *
+     * @return [snapshot], or a failure holding the cause armed by [failLoads].
+     * @throws Throwable the cause armed by [failLoads], when it was armed with `thrown = true`.
      */
     override suspend fun load(): Result<BudgetSnapshot> {
         val failure = synchronized(lock) { loads++; consume(loadFailure) { loadFailure = null } }      // armed use chosen now, delivered after the delay
@@ -98,6 +101,10 @@ public class FakeBudgetStore(initial: BudgetSnapshot = BudgetSnapshot.Empty) : B
      * Counts the call in [saveAttemptCount], waits [saveDelay] (virtual under a test scheduler), then stores [snapshot]
      * and records it in [saves], or delivers the failure armed by [failSaves] and stores nothing: returned in the
      * `Result`, or thrown when it was armed with `thrown = true`. A save cancelled during the delay stores nothing.
+     *
+     * @param snapshot the snapshot to store.
+     * @return success, or a failure holding the cause armed by [failSaves].
+     * @throws Throwable the cause armed by [failSaves], when it was armed with `thrown = true`.
      */
     override suspend fun save(snapshot: BudgetSnapshot): Result<Unit> {
         val failure = synchronized(lock) { saveAttempts++; consume(saveFailure) { saveFailure = null } }

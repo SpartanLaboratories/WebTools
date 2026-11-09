@@ -1,5 +1,8 @@
 name: CI
 
+# The `docs` job is the gate for broken KDoc links and undocumented public declarations: the Dokka task fails on either
+# through `failOnWarning` and `reportUndocumented`. It is the only job for now; build and test jobs are left to issue #58.
+
 on:
   push:
     branches: [master]
@@ -9,6 +12,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
+  # A new push to a pull request replaces the run of its old head. A run in progress on master is left to finish; a run
+  # still queued behind it is replaced by a newer push.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -23,6 +28,8 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
+          # The JDK that runs Gradle; the build accepts 17 to 26 (the README's Java floor section). It does not set the
+          # published bytecode: the convention plugins compile to WebToolsBuild.JAVA_FLOOR (11) on whatever JDK runs the build.
           java-version: "23"
       # setup-gradle stays on v5: v6 moved its caching into a separately licensed component whose
       # Terms of Use must be accepted on upgrade; v5 is MIT-licensed and needs no acceptance.

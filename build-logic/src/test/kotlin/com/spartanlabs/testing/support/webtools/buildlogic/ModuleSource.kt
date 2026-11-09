@@ -60,6 +60,7 @@ object ModuleSource {
         moduleDir().mapCatching { module ->
             val file = module.resolve("..").resolve(fileName).normalize()
             if (!Files.isRegularFile(file)) throw NoSuchFileException(file.toString())
+            //language=RegExp
             Regex("""(?ms)^${Regex.escape(blockName)} \{.*?^\}$""").find(Files.readString(file))?.value
                 ?: throw IllegalStateException("$fileName has no top-level block '$blockName { ... }' closed at column 0")
         }.onSuccess { log.debug("read block {} of {} ({} chars)", blockName, fileName, it.length) }
