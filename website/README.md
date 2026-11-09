@@ -7,8 +7,8 @@ directory are published as they are.
 | File | What it is |
 |---|---|
 | `index.html` | The whole page - hero, features, architecture, modules, install, quick start, testing, links |
-| `assets/styles.css` | One stylesheet. Colours are CSS custom properties on `:root`, redefined for `[data-theme="light"]` |
-| `assets/site.js` | Theme toggle, mobile nav, install tabs, copy buttons, scroll-spy, and a ~60-line syntax highlighter. The page stays readable if it never loads |
+| `assets/styles.css` | One stylesheet. Theme colours are CSS custom properties on `:root`, redefined for `[data-theme="light"]` |
+| `assets/site.js` | Theme toggle, mobile nav, install tabs, copy buttons, scroll-spy, and a small syntax highlighter. The page stays readable if it never loads |
 | `assets/favicon.svg` | Favicon |
 | `assets/brand/` | **Not committed here.** The Spartan Laboratories logo for the header, copied from [`docs/brand/`](../docs/brand/) at publish time. That folder is the one home of the Spartan Laboratories brand assets, shared with the Dokka theme |
 | `404.html` | Not-found page (absolute `/WebTools/...` paths, because GitHub serves it from any depth) |

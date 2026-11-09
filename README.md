@@ -8,8 +8,8 @@ single-concern artifacts** — depend only on the one you need:
 | `io.github.spartanlaboratories:webtools-udp` | `com.spartanlabs.webtools.udp` | Multi-client UDP connection layer + NAT-traversal handshake | none (slf4j-api only) |
 | `io.github.spartanlaboratories:webtools-scraping` | `com.spartanlabs.webtools.scraping` | `Connector` — open/read a URL line by line, plus one-shot `get` / `skrape` / image `download` | skrapeit, jsoup, unirest |
 | `io.github.spartanlaboratories:webtools-browser` | `com.spartanlabs.webtools.browser` | `WebViewer` — headless-browser screenshots | selenium-java |
-| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, the `CallBudget` port with `WindowedCallBudget` (the supplied budget: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from `Retry-After` and reset hints, and a hard window that survives a restart through a `BudgetStore`), `CallBudget.Unlimited`, `RateSignalsReader.Standard` and `RetryAfter.parse`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency), and the call facades `UpstreamClient` (declared `Endpoint`s, a cache, a budget and a transport composed in one fixed order, with an owning JVM factory) and `UrlFetcher` (administrator-supplied URLs checked against the policy first); **not yet released** | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
-| `io.github.spartanlaboratories:webtools-feeds` | `com.spartanlabs.webtools.feeds` | Kotlin Multiplatform (JVM target) — RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port (`FeedParser`) with Rome 2.1.0 as the supplied parser (`RomeFeedParser`: DOCTYPE refused before any parser runs, structural limits on depth, attributes, elements and namespaces, text/id/link/entry bounds), a feed model with a frozen entry id, and `FeedFetcher`, a stateless conditional GET over `UrlFetcher` that returns a `304` as a value and a permanent move as a fact; **not yet released** | webtools-http (and its dependencies), rome |
+| `io.github.spartanlaboratories:webtools-http` | `com.spartanlabs.webtools.http` | Kotlin Multiplatform (JVM target) — request/response types, a `Url` that reads like OkHttp's, a typed failure model, the transport and wall-clock ports of a suspend HTTP client stack, `OkHttpTransport` (the supplied transport: one request per hop, manual redirects, a capped decoded body, never a retry), the `ResponseCache` port with `CaffeineResponseCache` (the supplied cache: one load per key at a time, per-entry lifetimes, a weight bound, a per-call `maxAge`, failures never stored) and the pass-through `ResponseCache.Disabled`, the `CallBudget` port with `WindowedCallBudget` (the supplied budget: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from `Retry-After` and reset hints, and a hard window that survives a restart through a `BudgetStore`), `CallBudget.Unlimited`, `RateSignalsReader.Standard` and `RetryAfter.parse`, and the `Trusted`/`Untrusted` outbound-URL policies with their transport settings (timeouts, size and redirect caps, concurrency), and the call facades `UpstreamClient` (declared `Endpoint`s, a cache, a budget and a transport composed in one fixed order, with an owning JVM factory) and `UrlFetcher` (administrator-supplied URLs checked against the policy first) | okhttp-jvm, caffeine, kotlinx-coroutines-core, slf4j-api |
+| `io.github.spartanlaboratories:webtools-feeds` | `com.spartanlabs.webtools.feeds` | Kotlin Multiplatform (JVM target) — RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port (`FeedParser`) with Rome 2.1.0 as the supplied parser (`RomeFeedParser`: DOCTYPE refused before any parser runs, structural limits on depth, attributes, elements and namespaces, text/id/link/entry bounds), a feed model with a frozen entry id, and `FeedFetcher`, a stateless conditional GET over `UrlFetcher` that returns a `304` as a value and a permanent move as a fact | webtools-http (and its dependencies), rome |
 
 Every fallible operation returns `kotlin.Result` rather than throwing, so callers decide how
 to recover. `webtools-http` and `webtools-feeds` are `suspend` APIs: every call that sends a request
@@ -19,32 +19,30 @@ implementations never block the caller's thread, and there is no blocking varian
 
 State boards: [`docs/dashboards/`](docs/dashboards/index.html) shows the modules as built at a named commit, with planned systems drawn dashed.
 Work boards: the [repository work board](docs/plans/index.html) shows every planning and development run, and each issue's board under [`docs/plans/`](docs/plans/README.md) traces every part of a change through its gap, the options considered, the verdict and the as-built state, with the work in progress.
+API reference and project site: <https://spartanlaboratories.github.io/WebTools/> (landing page) and <https://spartanlaboratories.github.io/WebTools/api/> (the Dokka reference of the five published modules).
 
 ## Install
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:2.0.0")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.1")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
-    // not yet on Maven Central: webtools-http 1.0.0 is released when the HTTP client stack is complete
     implementation("io.github.spartanlaboratories:webtools-http:1.0.0")
-    // tests only (Gradle): fakes, a virtual clock, .http fixtures and a recorder; also not yet on Maven Central
+    // tests only (Gradle): fakes, a virtual clock, .http fixtures and a recorder
     testImplementation(testFixtures("io.github.spartanlaboratories:webtools-http:1.0.0"))
-    // not yet on Maven Central: webtools-feeds 1.0.0 is released with webtools-http
     implementation("io.github.spartanlaboratories:webtools-feeds:1.0.0")
 }
 ```
 
-Requires JDK 11 or newer. Built with Kotlin 2.2.
+Requires JDK 11 or newer (`webtools-scraping` and `webtools-browser` 1.0.0: JDK 23 or newer). Built with Kotlin 2.2.
 
 `webtools-http` is a Kotlin Multiplatform module that publishes `webtools-http` and `webtools-http-jvm`;
-a Gradle build resolves the right one itself, a Maven build depends on `webtools-http-jvm`. It is not on
-Maven Central yet. Its `okhttp-jvm` 5.5.0 dependency requires `kotlin-stdlib` 2.2.21, so a consumer's
-Kotlin standard library resolves to 2.2.21 or newer.
+a Gradle build resolves the right one itself, a Maven build depends on `webtools-http-jvm`. Its `okhttp-jvm`
+5.5.0 dependency requires `kotlin-stdlib` 2.2.21, so a consumer's Kotlin standard library resolves to 2.2.21 or newer.
 
-`webtools-feeds` is a Kotlin Multiplatform module that publishes `webtools-feeds` and `webtools-feeds-jvm` (a Maven build depends on `webtools-feeds-jvm`); it is not on Maven Central yet. It exposes
+`webtools-feeds` is a Kotlin Multiplatform module that publishes `webtools-feeds` and `webtools-feeds-jvm` (a Maven build depends on `webtools-feeds-jvm`). It exposes
 `webtools-http` as an `api` dependency and brings Rome 2.1.0 (with `rome-utils` and `jdom2`) at runtime; the fakes for its tests are `webtools-http`'s test fixtures.
 
 The test-fixtures variant of `webtools-http` (capability
@@ -63,14 +61,12 @@ Recording is off unless `WEBTOOLS_HTTP_RECORD` has a recognised value, and never
 (`CI`, `GITHUB_ACTIONS`, ...) is set; a build that records declares the variable as an input of its test tasks,
 or Gradle skips them as up to date when only the variable changed.
 
-The Java 11 floor starts with `webtools-udp` 2.0.0a and `webtools-scraping` / `webtools-browser`
-1.0.0a: Java 11 bytecode (class-file major 55), compiled against the Java 11 API. The releases
-already on Maven Central — `webtools-udp` 1.0.0, 1.1.0 and 2.0.0, `webtools-scraping` 1.0.0 and
-`webtools-browser` 1.0.0 — are Java 23 bytecode and fail to load on JDK 22 or older with
-`UnsupportedClassVersionError`. Gradle orders a lettered version below the same version without
-the letter (`1.0.0a` below `1.0.0`, `2.0.0a` below `2.0.0`), so a dependency graph that also asks
-for the plain version keeps the Java 23 build unless it requests the lettered version
-`strictly`. Building the repository needs a JDK 17 to 26; see [Java floor](#java-floor).
+The Java 11 floor starts with `webtools-udp` 2.0.1: Java 11 bytecode (class-file major 55), compiled
+against the Java 11 API, as are `webtools-http` and `webtools-feeds`. The earlier releases on Maven
+Central — `webtools-udp` 1.0.0, 1.1.0 and 2.0.0, `webtools-scraping` 1.0.0 and `webtools-browser`
+1.0.0 — are Java 23 bytecode and fail to load on JDK 22 or older with
+`UnsupportedClassVersionError`. The Java 11 builds of the two archived modules are `1.0.0a` in this
+repository and have not been published. Building the repository needs a JDK 17 to 26; see [Java floor](#java-floor).
 
 `webtools-udp 2.0.0` is a **wire break** for everything after the handshake — see [Migrating to
 2.0](#migrating-to-20). Both ends of a connection must be on `2.0.0`+; a `1.x` ↔ `2.x` pairing
@@ -179,7 +175,7 @@ one of them. The test fixtures are Stable Core with source compatibility only.
 
 ## HTTP client stack
 
-`webtools-http` (not yet released) composes a response cache, a call budget and a transport behind two facades.
+`webtools-http` composes a response cache, a call budget and a transport behind two facades.
 **`UpstreamClient`** calls the endpoints of one upstream API; **`UrlFetcher`** fetches URLs an administrator
 supplies. Both are `AutoCloseable`, both return `kotlin.Result`, and neither ever retries: a throttle, a transport
 failure and a `5xx` are each returned once. [`docs/webtools-http-architecture.md`](docs/webtools-http-architecture.md)
@@ -300,7 +296,7 @@ For a real exchange over loopback, start a `mockwebserver3.MockWebServer` on `12
 
 ## Feeds
 
-`webtools-feeds` (not yet released) parses RSS and Atom behind a hardened port and fetches feeds with a **stateless conditional GET** over `UrlFetcher`. It keeps no state: you store the validators it returns and
+`webtools-feeds` parses RSS and Atom behind a hardened port and fetches feeds with a **stateless conditional GET** over `UrlFetcher`. It keeps no state: you store the validators it returns and
 hand them back on the next poll. [`docs/webtools-http-architecture.md`](docs/webtools-http-architecture.md) describes the
 fetch path and the hardening layers (§4.5) and the module's known limitations (§13).
 
@@ -738,7 +734,13 @@ The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webt
 ./gradlew :build-logic:test        # build-logic's pre-commit gate: its gating, component and deterministic checks
 ./gradlew :build-logic:fixturesPublicationCheck  # publish a copy of webtools-http to a temporary repository and resolve its test fixtures from it (also part of webtools-http's check)
 ./gradlew :build-logic:integrationTest :build-logic:e2eTest :build-logic:nonfunctionalTest  # on demand: TestKit checks
+./gradlew dokkaGeneratePublicationHtml  # the API reference of the five published modules, aggregated in build/dokka/html; fails on a broken KDoc link or an undocumented public declaration (the CI "docs" job runs it)
 ```
+
+Each published module's javadoc jar is its Dokka output, and the root project aggregates the five modules into one
+reference. The theme is `docs/dokka/styles/dokka-styles.css`, with the logo in `docs/brand/`, and `webtools-http`'s test
+fixtures are part of the reference. The Dokka versions in `settings.gradle.kts` (`pluginManagement.plugins`) and
+`build-logic/build.gradle.kts` must agree.
 
 `./gradlew build` and `check` also compile every `*-commoncheck` module for `js`: an unpublished module
 that compiles a multiplatform module's `commonMain` so a JVM API in common code is a compile error. No
@@ -776,9 +778,9 @@ plugins, which a module applies by id in its `plugins {}` block:
 
 | Plugin id | Configures |
 |---|---|
-| `webtools.published-library` | the Maven Central publishing skeleton: signing and the shared POM metadata |
-| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the level test tasks; applies `webtools.published-library` |
-| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (used by `webtools-http` and `webtools-feeds`): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
+| `webtools.published-library` | the Maven Central publishing skeleton: signing, the shared POM metadata and Dokka (theme, source links, `failOnWarning`, `reportUndocumented`) |
+| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the level test tasks, javadoc jar from Dokka; applies `webtools.published-library` |
+| `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (used by `webtools-http` and `webtools-feeds`): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`, javadoc jar from Dokka; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
 | `webtools.kotlin-common-check` | an unpublished, check-only `js` module that compiles a sibling's `commonMain` (no publishing, no tests, no Node.js, no Java floor) |
 
 Change shared build behaviour there, not in a module's build file: a module's `build.gradle.kts`

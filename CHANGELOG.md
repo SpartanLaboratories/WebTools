@@ -7,15 +7,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-08
+
 ### Added
 
-- `webtools-http` (unreleased, `1.0.0`): `OkHttpTransport`, the supplied `HttpTransport`, and its factory
+- The Dokka API reference of every published module, at <https://spartanlaboratories.github.io/WebTools/api/>, with the
+  project site at <https://spartanlaboratories.github.io/WebTools/>.
+- A CI job that generates the reference on every push and pull request and fails on a broken KDoc link or an undocumented
+  public declaration.
+
+### Changed
+
+- `webtools-udp`: the javadoc jar carries the Dokka API reference in place of an empty placeholder.
+
+### Fixed
+
+`webtools-udp` 2.0.1 supersedes 2.0.0a, which was never published, and carries its two fixes. No public API change.
+
+- `webtools-udp`: the server answers an `Iam` whose name slot is missing or empty, or whose credential slot is present but
+  empty, with `REFUSED malformed` from any origin. 2.0.0 registered the empty-name and empty-credential shapes and left a
+  bare `Iam` unanswered. On the wire only those three malformed shapes change (Issue #38).
+- `webtools-udp`: the class files are Java 11 bytecode built against the Java 11 API, and the Gradle Module Metadata
+  declares `org.gradle.jvm.version` 11. 2.0.0 shipped Java 23 bytecode, which consumers on JDK 11 to 22 could not load
+  (Issue #47).
+
+## [1.0.0] - 2026-11-08
+
+### Added
+
+- `webtools-http`: `OkHttpTransport`, the supplied `HttpTransport`, and its factory
   `OkHttpTransport(userAgent, policy)`. It sends one request per hop and never retries; follows `301 302 303 307 308`
   itself for `GET` and `HEAD` under one deadline, judging every hop with the outbound-URL policy and stripping
   sensitive headers on an origin change; reads a capped, decoded body inside the callback so cancelling the caller
   stops the read; refuses twelve request headers the transport controls; maps every OkHttp failure onto
   `TransportFailure`; and closes with `close()`.
-- `webtools-http` (unreleased, `1.0.0`): the response cache. The port `ResponseCache` (`getOrLoad` with and without
+- `webtools-http`: the response cache. The port `ResponseCache` (`getOrLoad` with and without
   a per-call `maxAge`, `invalidate`, `invalidateAll`, `stats`, `close`; implementing it needs the opt-in) with its
   values `CacheKey`, `CachePolicy` (built with `CachePolicy(ttl) { missTtl = … }`), `Lookup` (`Found`, with a weight
   of at least 1, and `Missing`) and `CacheStats`; `ResponseCache.Disabled`, the pass-through that stores and shares
@@ -25,7 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   a loader's `Error` reaches every waiter, `close()` ends every waiting call with `Closed`, and one `DEBUG` line per
   load end says whether the result was stored or why not. Its `timeSource`, `loadDispatcher` and
   `maintenanceExecutor` are builder properties, so one virtual clock drives it under test.
-- `webtools-http` (unreleased, `1.0.0`): the call budget. The port `CallBudget` (`acquire` with a fail-fast `maxWait`,
+- `webtools-http`: the call budget. The port `CallBudget` (`acquire` with a fail-fast `maxWait`,
   `utilisation`, `flush`, `close`; implementing it needs the opt-in) with `Permit` (`complete`, `complete(signals)`,
   `release`), `withPermit`, `CallBudget.Unlimited`, and the vocabulary `Lane`, `RateWindow` (built with
   `RateWindow(name, published, period) { margin = …; hard = … }`), `RateSignals`, `WindowReading`, `BudgetUtilisation`
@@ -48,7 +74,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `webtools-http` test fixtures: `RecordingBudgetObserver` and `FakeBudgetStore`, a scripted `BudgetStore` with
   `loadDelay` and `saveDelay` in virtual time and failures injected by `failLoads` and `failSaves` (each takes a
   `times` of at least 1).
-- `webtools-http` (unreleased, `1.0.0`): the call facades. `Endpoint`, declared once with
+- `webtools-http`: the call facades. `Endpoint`, declared once with
   `Endpoint(id, decode) { ttl = …; missTtl = …; cost = …; lane = …; misses(404) }` (the decoder is the second argument;
   `missTtl` follows `ttl` unless set), and the per-call `CallSpec` and `FetchSpec`. `UpstreamClient` calls the endpoints
   of one upstream from a base URL: it checks each request against the outbound-URL policy first (a refusal costs
@@ -70,7 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   loopback `mockwebserver3` server; the fetcher owns the matching `LoopbackTransports` transport. `untrusted` relaxes
   the pre-check for loopback exactly as `LoopbackTransports` relaxes the transport, so every other `Untrusted` rule
   stays live; `trusted` forces cleartext on in both and relaxes nothing.
-- `webtools-feeds` (unreleased, `1.0.0`): RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port. The
+- `webtools-feeds`: RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind a hardened parser port. The
   port `FeedParser` (implementing it needs the opt-in) with `FeedInput` and `FeedLimits` (ten bounds that can only be
   tightened: entries, text, id and link length, categories, enclosures, and the document's depth, attributes per
   element, elements and distinct namespace URIs); the model `Feed`, `FeedEntry` (an id that is never blank and is frozen:
