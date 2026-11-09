@@ -13,7 +13,7 @@ package com.spartanlabs.webtools.udp
  *
  * ### The optional credential slot
  * A client may append one **optional**, whitespace-free token to its handshake:
- * `Iam <name> <credential>`. The library never parses [credential] - it is an
+ * `Iam <name> <credential>`. The library never parses `credential` - it is an
  * opaque string handed verbatim to [MultiConnectionUDPServer.admit]. A caller
  * with a structured or binary credential encodes it first (base64url is the
  * recommendation). An absent credential is delivered to `admit` as the empty

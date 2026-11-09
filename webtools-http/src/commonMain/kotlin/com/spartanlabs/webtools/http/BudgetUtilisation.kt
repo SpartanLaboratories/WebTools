@@ -29,9 +29,12 @@ public class BudgetUtilisation(
         require(waiting >= 0) { "waiting must not be negative" }
     }
 
+    /** Two [BudgetUtilisation]s are equal when their [windows], [pausedFor] and [waiting] are equal. */
     override fun equals(other: Any?): Boolean =
         other is BudgetUtilisation && other.windows == windows && other.pausedFor == pausedFor && other.waiting == waiting
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = (windows.hashCode() * 31 + pausedFor.hashCode()) * 31 + waiting
+    /** A diagnostic string for logs: [windows], [pausedFor] and [waiting]. Its format is not part of the API and may change. */
     override fun toString(): String = "BudgetUtilisation(windows=$windows, pausedFor=$pausedFor, waiting=$waiting)"
 }

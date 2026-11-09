@@ -39,11 +39,17 @@ public sealed class OutboundUrlPolicy {
         public val allowCleartext: Boolean,
         override val settings: TransportSettings,
     ) : OutboundUrlPolicy() {
+        /** Two [Trusted] policies are equal when their [pinnedHosts], [allowCleartext] and [settings] are equal. */
         override fun equals(other: Any?): Boolean =
             other is Trusted && other.pinnedHosts == pinnedHosts && other.allowCleartext == allowCleartext && other.settings == settings
 
+        /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
         override fun hashCode(): Int = (pinnedHosts.hashCode() * 31 + allowCleartext.hashCode()) * 31 + settings.hashCode()
 
+        /**
+         * A diagnostic string for logs: the number of [pinnedHosts], never a host, [allowCleartext] and [settings]. Its
+         * format is not part of the API and may change.
+         */
         override fun toString(): String = "Trusted(pinnedHosts=${pinnedHosts.size}, allowCleartext=$allowCleartext, settings=$settings)"
 
         /**
@@ -114,11 +120,16 @@ public sealed class OutboundUrlPolicy {
         public val mixedAnswers: MixedAnswers,
         override val settings: TransportSettings,
     ) : OutboundUrlPolicy() {
+        /**
+         * Two [Untrusted] policies are equal when their [allowedPorts], [extraDeniedRanges], [extraDeniedHostSuffixes],
+         * [mixedAnswers] and [settings] are equal.
+         */
         override fun equals(other: Any?): Boolean =
             other is Untrusted && other.allowedPorts == allowedPorts && other.extraDeniedRanges == extraDeniedRanges &&
                 other.extraDeniedHostSuffixes == extraDeniedHostSuffixes && other.mixedAnswers == mixedAnswers &&
                 other.settings == settings
 
+        /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
         override fun hashCode(): Int {
             var hash = allowedPorts.hashCode()
             hash = 31 * hash + extraDeniedRanges.hashCode()
@@ -128,6 +139,11 @@ public sealed class OutboundUrlPolicy {
             return hash
         }
 
+        /**
+         * A diagnostic string for logs: the [allowedPorts], the numbers of [extraDeniedRanges] and
+         * [extraDeniedHostSuffixes], never their values, [mixedAnswers] and [settings]. Its format is not part of the
+         * API and may change.
+         */
         override fun toString(): String =
             "Untrusted(allowedPorts=${allowedPorts?.sorted() ?: "any"}, extraDeniedRanges=${extraDeniedRanges.size}, " +
                 "extraDeniedHostSuffixes=${extraDeniedHostSuffixes.size}, mixedAnswers=$mixedAnswers, settings=$settings)"

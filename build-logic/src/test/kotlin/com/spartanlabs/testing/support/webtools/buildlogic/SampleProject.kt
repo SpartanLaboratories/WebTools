@@ -113,8 +113,10 @@ class SampleProject private constructor(val files: Map<String, String>) {
          * It holds `settings.gradle.kts` (the root project name and `mavenCentral()`),
          * `build.gradle.kts` (the plugin, `group = "sample.webtools"`, `version = "1.0.0"`),
          * `gradle.properties` (configuration cache on, file-system watching off, in-process Kotlin
-         * compiler, nested daemon heap), the public class `sample.Greeter` in `commonMain`, and the
-         * three test classes [COMMON_TEST_CLASS], [JVM_TEST_CLASS] and [UNLEVELED_TEST_CLASS].
+         * compiler, nested daemon heap), the public class `sample.Greeter` in `commonMain`, the
+         * three test classes [COMMON_TEST_CLASS], [JVM_TEST_CLASS] and [UNLEVELED_TEST_CLASS], and the two
+         * theme files every Dokka task requires (`docs/dokka/styles/dokka-styles.css` and
+         * `docs/brand/spartan-laboratories-logo.png`, placeholders).
          *
          * @param rootProjectName the root project's name, which also names the ABI dump
          *   `api/<rootProjectName>.api`.
@@ -132,7 +134,7 @@ class SampleProject private constructor(val files: Map<String, String>) {
                     "src/commonTest/kotlin/com/spartanlabs/testing/component/sample/CommonSourceSetTest.kt" to COMMON_TEST,
                     "src/jvmTest/kotlin/com/spartanlabs/testing/integration/sample/JvmSourceSetTest.kt" to JVM_TEST,
                     "src/jvmTest/kotlin/sample/UnleveledTest.kt" to UNLEVELED_TEST,
-                ),
+                ) + DOKKA_THEME_FILES,
             )
         }
 
@@ -142,9 +144,10 @@ class SampleProject private constructor(val files: Map<String, String>) {
          * plugin).
          *
          * It holds `settings.gradle.kts`, `build.gradle.kts` (the plugin, `group = "sample.webtools"`,
-         * `version = "1.0.0"`), `gradle.properties`, the public class `sample.Greeter` in `main`, and
+         * `version = "1.0.0"`), `gradle.properties`, the public class `sample.Greeter` in `main`,
          * the three test classes [JVM_COMPONENT_TEST_CLASS], [JVM_INTEGRATION_TEST_CLASS] and
-         * [UNLEVELED_TEST_CLASS] in `test`.
+         * [UNLEVELED_TEST_CLASS] in `test`, and the two theme files every Dokka task requires
+         * (`docs/dokka/styles/dokka-styles.css` and `docs/brand/spartan-laboratories-logo.png`, placeholders).
          *
          * @param rootProjectName the root project's name, which also names the published artifact.
          * @return the project description.
@@ -161,7 +164,7 @@ class SampleProject private constructor(val files: Map<String, String>) {
                     "src/test/kotlin/com/spartanlabs/testing/component/sample/JvmComponentTest.kt" to JVM_COMPONENT_TEST,
                     "src/test/kotlin/com/spartanlabs/testing/integration/sample/JvmIntegrationTest.kt" to JVM_INTEGRATION_TEST,
                     "src/test/kotlin/sample/UnleveledTest.kt" to UNLEVELED_TEST,
-                ),
+                ) + DOKKA_THEME_FILES,
             )
         }
 
@@ -190,15 +193,45 @@ class SampleProject private constructor(val files: Map<String, String>) {
                     "settings.gradle.kts" to compositeSettings(rootProjectName),
                     "build.gradle.kts" to COMPOSITE_ROOT_BUILD_SCRIPT,
                     "gradle.properties" to GRADLE_PROPERTIES,
-                    "$COMPOSITE_JVM_MODULE/build.gradle.kts" to COMPOSITE_JVM_BUILD_SCRIPT,
-                    "$COMPOSITE_JVM_MODULE/src/main/kotlin/sample/Greeter.kt" to GREETER,
-                    "$COMPOSITE_JVM_MODULE/src/test/kotlin/com/spartanlabs/testing/component/sample/JvmLibComponentTest.kt" to
-                        COMPOSITE_JVM_COMPONENT_TEST,
-                    "$COMPOSITE_MULTIPLATFORM_MODULE/build.gradle.kts" to COMPOSITE_MULTIPLATFORM_BUILD_SCRIPT,
-                    "$COMPOSITE_MULTIPLATFORM_MODULE/src/commonMain/kotlin/sample/Greeter.kt" to GREETER,
-                    "$COMPOSITE_MULTIPLATFORM_MODULE/src/commonTest/kotlin/com/spartanlabs/testing/component/sample/KmpLibComponentTest.kt" to
-                        COMPOSITE_MULTIPLATFORM_COMPONENT_TEST,
-                ),
+                ) + compositeModuleFiles(),
+            )
+        }
+
+        /**
+         * A two-module composite for the Dokka aggregation: the shape of [includedBuildComposite] (modules
+         * [COMPOSITE_JVM_MODULE] and [COMPOSITE_MULTIPLATFORM_MODULE], each with `sample.Greeter` and one component-level test
+         * class) with a root built from the repository's own blocks: [rootPlugins] and [rootDokka] are its real `plugins` and
+         * `dokka` blocks, verbatim, and only `repositories { mavenCentral() }`, `dokka(project(":jvm-lib"))`,
+         * `dokka(project(":kmp-lib"))` and the sample's `allprojects { group; version }` are generated. Its
+         * `settings.gradle.kts` is [rootPluginManagement] (the repository's real block, which includes `build-logic` and
+         * carries the plugin versions) followed by the root project name and the two `include`s. The two theme files are at the
+         * root. `build-logic/` is not part of this description; [BuildLogicSource.copyInto] adds it.
+         *
+         * @param rootProjectName the composite's root project name.
+         * @param rootPluginManagement the repository's `pluginManagement` block text.
+         * @param rootPlugins the repository's root `plugins` block text.
+         * @param rootDokka the repository's root `dokka` block text.
+         * @return the project description.
+         * @throws IllegalArgumentException if any argument is blank.
+         */
+        fun dokkaAggregationComposite(rootProjectName: String, rootPluginManagement: String, rootPlugins: String, rootDokka: String): SampleProject {
+            require(rootProjectName.isNotBlank()) { "A sample project needs a non-blank root project name" }
+            require(rootPluginManagement.isNotBlank()) { "The aggregation composite needs the repository's pluginManagement block" }
+            require(rootPlugins.isNotBlank()) { "The aggregation composite needs the repository's plugins block" }
+            require(rootDokka.isNotBlank()) { "The aggregation composite needs the repository's dokka block" }
+            return SampleProject(
+                mapOf(
+                    "settings.gradle.kts" to rootPluginManagement.trimEnd() + "\n\n" +
+                        "rootProject.name = \"$rootProjectName\"\n\n" +
+                        "include(\":$COMPOSITE_JVM_MODULE\", \":$COMPOSITE_MULTIPLATFORM_MODULE\")\n",
+                    "build.gradle.kts" to listOf(
+                        rootPlugins.trimEnd(),
+                        DOKKA_AGGREGATION_GENERATED_DEPENDENCIES.trimEnd(),
+                        rootDokka.trimEnd(),
+                        DOKKA_AGGREGATION_GENERATED_ALLPROJECTS.trimEnd(),
+                    ).joinToString("\n\n") + "\n",
+                    "gradle.properties" to GRADLE_PROPERTIES,
+                ) + compositeModuleFiles() + DOKKA_THEME_FILES,
             )
         }
 
@@ -236,28 +269,30 @@ class SampleProject private constructor(val files: Map<String, String>) {
          * in-build Kotlin Multiplatform module [FIXTURES_KMP_CONSUMER], which declares
          * `jvmTestImplementation(testFixtures(project(":webtools-http")))` and runs [FIXTURES_CONSUMER_TEST_CLASS].
          * Its `settings.gradle.kts` has no `pluginManagement`: the convention plugins are injected. Its root
-         * `build.gradle.kts` is [rootBuildScript] (the repository's own, so `group` and `version` are the
-         * repository's) followed by a `testFolder` publishing repository under `build/repo`. Its
-         * `gradle.properties` is the shared file plus [signingProperties]. Every file is under [FIXTURES_PRODUCER].
+         * `build.gradle.kts` is [rootAllprojectsBlock] (the repository's `allprojects` block, so `group` and `version`
+         * are the repository's) followed by a `testFolder` publishing repository under `build/repo`. Its
+         * `gradle.properties` is the shared file plus [signingProperties]. It also holds the two theme files every
+         * Dokka task requires (`docs/dokka/styles/dokka-styles.css` and `docs/brand/spartan-laboratories-logo.png`,
+         * placeholders). Every file is under [FIXTURES_PRODUCER].
          *
-         * @param rootBuildScript the repository's root `build.gradle.kts` text.
+         * @param rootAllprojectsBlock the repository's root `allprojects` block text.
          * @param signingProperties the `signingInMemoryKey` and `signingInMemoryKeyPassword` lines.
          * @return the project description.
          * @throws IllegalArgumentException if either argument is blank.
          */
-        fun fixturesProducer(rootBuildScript: String, signingProperties: String): SampleProject {
-            require(rootBuildScript.isNotBlank()) { "The producer needs a root build script" }
+        fun fixturesProducer(rootAllprojectsBlock: String, signingProperties: String): SampleProject {
+            require(rootAllprojectsBlock.isNotBlank()) { "The producer needs the repository's allprojects block" }
             require(signingProperties.isNotBlank()) { "The producer needs signing properties" }
             return SampleProject(
                 mapOf(
                     "$FIXTURES_PRODUCER/settings.gradle.kts" to PRODUCER_SETTINGS,
-                    "$FIXTURES_PRODUCER/build.gradle.kts" to rootBuildScript.trimEnd() + "\n" + PRODUCER_TEST_FOLDER,
+                    "$FIXTURES_PRODUCER/build.gradle.kts" to rootAllprojectsBlock.trimEnd() + "\n" + PRODUCER_TEST_FOLDER,
                     "$FIXTURES_PRODUCER/gradle.properties" to GRADLE_PROPERTIES + signingProperties.trimEnd() + "\n",
                     "$FIXTURES_PRODUCER/resolution-report.gradle.kts" to RESOLUTION_REPORT,
                     "$FIXTURES_PRODUCER/$FIXTURES_KMP_CONSUMER/build.gradle.kts" to kmpConsumerScript(FIXTURES_KMP_CONSUMER, "project(\":webtools-http\")"),
                     "$FIXTURES_PRODUCER/$FIXTURES_KMP_CONSUMER/src/commonMain/kotlin/sample/Marker.kt" to MARKER,
                     "$FIXTURES_PRODUCER/$FIXTURES_KMP_CONSUMER/src/jvmTest/kotlin/consumer/UsesFixturesTest.kt" to USES_FIXTURES_TEST,
-                ),
+                ) + DOKKA_THEME_FILES.mapKeys { (path, _) -> "$FIXTURES_PRODUCER/$path" },
             )
         }
 
@@ -317,20 +352,24 @@ class SampleProject private constructor(val files: Map<String, String>) {
 
         /**
          * The root build of the check-wiring proof, in this repository's shape: a `settings.gradle.kts` of
-         * `pluginManagement { includeBuild("build-logic") }`, `rootProject.name = "webtools"` and
-         * `include(":webtools-http")`; [rootBuildScript] as its `build.gradle.kts`; the shared `gradle.properties`.
-         * `build-logic/` and `webtools-http/` are not part of this description: [BuildLogicSource.copyInto] and
-         * [ModuleSource.copyInto] add them.
+         * [rootPluginManagement] (the repository's real block, so the root's plugin versions are the real ones),
+         * `rootProject.name = "webtools"` and `include(":webtools-http")`; [rootBuildScript] as its `build.gradle.kts`;
+         * the shared `gradle.properties`. `build-logic/` and `webtools-http/` are not part of this description:
+         * [BuildLogicSource.copyInto] and [ModuleSource.copyInto] add them.
          *
-         * @param rootBuildScript the repository's root `build.gradle.kts` text.
+         * @param rootPluginManagement the repository's `pluginManagement` block text.
+         * @param rootBuildScript the root `build.gradle.kts` text.
          * @return the project description.
-         * @throws IllegalArgumentException if [rootBuildScript] is blank.
+         * @throws IllegalArgumentException if either argument is blank.
          */
-        fun fixturesWiringRoot(rootBuildScript: String): SampleProject {
+        fun fixturesWiringRoot(rootPluginManagement: String, rootBuildScript: String): SampleProject {
+            require(rootPluginManagement.isNotBlank()) { "The wiring root needs the repository's pluginManagement block" }
             require(rootBuildScript.isNotBlank()) { "The wiring root needs a root build script" }
             return SampleProject(
                 mapOf(
-                    "settings.gradle.kts" to WIRING_ROOT_SETTINGS,
+                    "settings.gradle.kts" to rootPluginManagement.trimEnd() + "\n\n" +
+                        "rootProject.name = \"webtools\"\n\n" +
+                        "include(\":webtools-http\")\n",
                     "build.gradle.kts" to rootBuildScript,
                     "gradle.properties" to GRADLE_PROPERTIES,
                 ),
@@ -355,6 +394,27 @@ class SampleProject private constructor(val files: Map<String, String>) {
                 ),
             )
         }
+        //endregion
+
+        //region shared files
+        // The two theme files every Dokka task requires; a missing one fails the task (NoSuchFileException). Dokka
+        // copies both without reading them, so a text placeholder is enough.
+        private val DOKKA_THEME_FILES: Map<String, String> = mapOf(
+            "docs/dokka/styles/dokka-styles.css" to "/* theme placeholder */\n",
+            "docs/brand/spartan-laboratories-logo.png" to "placeholder\n",
+        )
+
+        // The modules of the two-module composites.
+        private fun compositeModuleFiles(): Map<String, String> = mapOf(
+            "$COMPOSITE_JVM_MODULE/build.gradle.kts" to COMPOSITE_JVM_BUILD_SCRIPT,
+            "$COMPOSITE_JVM_MODULE/src/main/kotlin/sample/Greeter.kt" to GREETER,
+            "$COMPOSITE_JVM_MODULE/src/test/kotlin/com/spartanlabs/testing/component/sample/JvmLibComponentTest.kt" to
+                COMPOSITE_JVM_COMPONENT_TEST,
+            "$COMPOSITE_MULTIPLATFORM_MODULE/build.gradle.kts" to COMPOSITE_MULTIPLATFORM_BUILD_SCRIPT,
+            "$COMPOSITE_MULTIPLATFORM_MODULE/src/commonMain/kotlin/sample/Greeter.kt" to GREETER,
+            "$COMPOSITE_MULTIPLATFORM_MODULE/src/commonTest/kotlin/com/spartanlabs/testing/component/sample/KmpLibComponentTest.kt" to
+                COMPOSITE_MULTIPLATFORM_COMPONENT_TEST,
+        )
         //endregion
 
         //region script templates
@@ -404,6 +464,25 @@ class SampleProject private constructor(val files: Map<String, String>) {
 
         //language=kotlin
         private val COMPOSITE_ROOT_BUILD_SCRIPT: String = """
+            allprojects {
+                group = "sample.webtools"
+                version = "1.0.0"
+            }
+            """.trimIndent() + "\n"
+
+        // The parts of the aggregation composite's root script that are not the repository's own blocks.
+        //language=kotlin
+        private val DOKKA_AGGREGATION_GENERATED_DEPENDENCIES: String = """
+            repositories { mavenCentral() }
+
+            dependencies {
+                dokka(project(":$COMPOSITE_JVM_MODULE"))
+                dokka(project(":$COMPOSITE_MULTIPLATFORM_MODULE"))
+            }
+            """.trimIndent() + "\n"
+
+        //language=kotlin
+        private val DOKKA_AGGREGATION_GENERATED_ALLPROJECTS: String = """
             allprojects {
                 group = "sample.webtools"
                 version = "1.0.0"
@@ -495,7 +574,9 @@ class SampleProject private constructor(val files: Map<String, String>) {
         private val GREETER: String = """
             package sample
 
+            /** Greets by name. */
             class Greeter {
+                /** Returns the greeting for [name]. */
                 fun greet(name: String): String = "Hello, " + name
             }
             """.trimIndent() + "\n"
@@ -661,7 +742,7 @@ class SampleProject private constructor(val files: Map<String, String>) {
             include(":webtools-http", ":$FIXTURES_KMP_CONSUMER")
             """.trimIndent() + "\n"
 
-        // Appended to the repository's root build script: every publishing module also publishes to
+        // Appended to the repository's `allprojects` block: every publishing module also publishes to
         // build/repo of the producer. No Sign change: the producer signs with the throwaway key.
         //language=kotlin
         private val PRODUCER_TEST_FOLDER: String = "\n" + """
@@ -819,19 +900,6 @@ class SampleProject private constructor(val files: Map<String, String>) {
                     MockWebServer().use { server -> assertEquals(0, server.requestCount) }
                 }
             }
-            """.trimIndent() + "\n"
-
-        // The check-wiring root: the repository's own shape, so webtools-http's build file sees gradle.parent == null
-        // and an included build named build-logic.
-        //language=kotlin
-        private val WIRING_ROOT_SETTINGS: String = """
-            pluginManagement {
-                includeBuild("build-logic")
-            }
-
-            rootProject.name = "webtools"
-
-            include(":webtools-http")
             """.trimIndent() + "\n"
 
         // The check-wiring consumer: includes the root as `webtools`, so inside it gradle.parent != null.

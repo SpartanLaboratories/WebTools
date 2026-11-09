@@ -20,8 +20,14 @@ public class FeedValidators(etag: String?, lastModified: String?) {
     /** The `Last-Modified` date, verbatim, or `null`. */
     public val lastModified: String? = sanitised(lastModified, LAST_MODIFIED_MAX_CHARS, rejectStar = false)
 
+    /** Two [FeedValidators] are equal when their [etag] and [lastModified] are equal. */
     override fun equals(other: Any?): Boolean = other is FeedValidators && other.etag == etag && other.lastModified == lastModified
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = 31 * etag.hashCode() + lastModified.hashCode()
+    /**
+     * A diagnostic string for logs: whether [etag] and [lastModified] are present, never a value. Its format is not
+     * part of the API and may change.
+     */
     override fun toString(): String =
         "FeedValidators(etag=${if (etag == null) "absent" else "present"}, lastModified=${if (lastModified == null) "absent" else "present"})"
 

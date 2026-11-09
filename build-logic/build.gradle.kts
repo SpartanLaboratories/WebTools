@@ -8,9 +8,11 @@ plugins {
 
 dependencies {
     // Plugin marker artifacts, so the convention plugins can apply these by id with no version.
-    // Each Kotlin marker's POM has exactly one dependency, kotlin-gradle-plugin:2.2.0.
+    // Each Kotlin marker's POM has exactly one dependency, kotlin-gradle-plugin:2.2.0. Dokka's marker
+    // pulls dokka-gradle-plugin.
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.2.0")
     implementation("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:2.2.0")
+    implementation("org.jetbrains.dokka:org.jetbrains.dokka.gradle.plugin:2.3.0")
     implementation("com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin:0.36.0")
     implementation("org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin:0.18.2")
 
@@ -45,11 +47,13 @@ val testKitProjects: String = layout.buildDirectory.dir("testkit/projects").get(
 val testKitHome: String = layout.buildDirectory.dir("testkit/home").get().asFile.absolutePath
 
 // Read by the harness as BuildLogicSource.SOURCE_PROPERTY: the end-to-end check copies this build's
-// sources from here into a generated composite.
+// sources from here into a generated composite, and gatingTest and test set it too, for
+// RootScriptsAgreementGatingTest, which reads this build's and the root's scripts from here.
 val buildLogicDir: String = layout.projectDirectory.asFile.absolutePath
 
 // Read by the harness as ModuleSource.MODULE_PROPERTY: the fixtures-publication check copies the module's
-// build file and three source trees from here (and the repository's root build file next to it).
+// build file and three source trees from here, and the end-to-end checks read blocks of the repository's root
+// settings and build files next to it.
 val webToolsHttpDir: String = layout.projectDirectory.dir("../webtools-http").asFile.absolutePath
 
 // The nested-build tasks (the three level tasks and fixturesPublicationCheck) share that one TestKit home,
@@ -74,17 +78,31 @@ fun Test.configureNestedBuilds() {
     timeout.set(Duration.ofMinutes(30))
 }
 
-// The check copies exactly these files into its generated builds, so they are inputs of the task. A
-// directory is declared as a fileTree (inputs.dir fails the task when the directory is missing).
+// The checks copy the module's files into their generated builds and read the repository's root
+// settings.gradle.kts and build.gradle.kts for their pluginManagement, plugins, dokka and allprojects blocks, so all
+// of them are inputs of the task. A directory is declared as a fileTree (inputs.dir fails the task when the
+// directory is missing).
 fun Test.copiesWebToolsHttp() {
     systemProperty("webtools.http.dir", webToolsHttpDir)
-    inputs.files("../webtools-http/build.gradle.kts", "../build.gradle.kts")
+    inputs.files("../webtools-http/build.gradle.kts", "../build.gradle.kts", "../settings.gradle.kts")
         .withPropertyName("webToolsHttpBuildFiles").withPathSensitivity(PathSensitivity.RELATIVE)
     listOf("commonMain", "jvmMain", "jvmTestFixtures").forEach { tree ->
         inputs.files(fileTree("../webtools-http/src/$tree"))
             .withPropertyName("webToolsHttp" + tree.replaceFirstChar(Char::uppercaseChar))
             .withPathSensitivity(PathSensitivity.RELATIVE)
     }
+}
+
+// The Level 1 gate compares the root scripts with this build's marker dependencies, the modules' build files and the
+// two workflows, so the files it reads are inputs of the tasks that run it. It finds them through the same property as
+// the end-to-end checks.
+fun Test.readsRootScripts() {
+    systemProperty("webtools.buildlogic.dir", buildLogicDir)
+    inputs.files(
+        "build.gradle.kts", "../settings.gradle.kts", "../build.gradle.kts",
+        "../.github/workflows/ci.yml", "../.github/workflows/pages.yml",
+        fileTree("..") { include("webtools-*/build.gradle.kts") },
+    ).withPropertyName("rootScripts").withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 fun registerBuildLogicLevelTest(level: String, summary: String, startsNestedBuilds: Boolean): TaskProvider<Test> =
@@ -101,7 +119,7 @@ fun registerBuildLogicLevelTest(level: String, summary: String, startsNestedBuil
         if (startsNestedBuilds) configureNestedBuilds()
     }
 
-registerBuildLogicLevelTest("gating", "Level 1 - build-logic's pre-commit gating checks.", startsNestedBuilds = false)
+registerBuildLogicLevelTest("gating", "Level 1 - build-logic's pre-commit gating checks.", startsNestedBuilds = false).configure { readsRootScripts() }
 registerBuildLogicLevelTest("component", "Level 2 - WebToolsBuild in isolation.", startsNestedBuilds = false)
 registerBuildLogicLevelTest(
     "integration",
@@ -111,14 +129,15 @@ registerBuildLogicLevelTest(
 registerBuildLogicLevelTest("deterministic", "Level 4a - pure checks of the level list.", startsNestedBuilds = false)
 registerBuildLogicLevelTest(
     "e2e",
-    "Level 4b - the included-build path, the fixtures publication and the check's wiring, end to end (nested builds; first run needs the network).",
+    "Level 4b - the included-build path, the Dokka aggregation, the fixtures publication and the check's wiring, end to end (nested builds; first run needs the network).",
     startsNestedBuilds = true,
 ).configure {
     systemProperty("webtools.buildlogic.dir", buildLogicDir)
     // The check copies these files into its composite, so they are inputs of the task.
     inputs.files("settings.gradle.kts", "build.gradle.kts").withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.dir("src/main").withPathSensitivity(PathSensitivity.RELATIVE)
-    // e2e also selects the fixtures-publication check's class, so it copies the module too.
+    // e2e also selects the fixtures-publication check's class, so it copies the module too;
+    // DokkaAggregationEndToEndTest needs the same property for ModuleSource.rootBlock.
     copiesWebToolsHttp()
 }
 registerBuildLogicLevelTest(
@@ -151,6 +170,7 @@ tasks.register<Test>("fixturesPublicationCheck") {
 // `test` is the fast aggregate and build-logic's pre-commit gate: the levels that start no nested
 // build. It fails on an empty run too.
 tasks.named<Test>("test") {
+    readsRootScripts()
     useJUnitPlatform()
     filter {
         includeTestsMatching("com.spartanlabs.testing.gating.*")

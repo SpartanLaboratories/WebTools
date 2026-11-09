@@ -294,6 +294,7 @@ class Connector {
         response { responseBody }
     }
 
+    /** Holds the logger and the private constants the instances share; it exposes no public member. */
     companion object {
         /** Shared slf4j logger for all [Connector] instances. */
         private val log = LoggerFactory.getLogger(Connector::class.java)

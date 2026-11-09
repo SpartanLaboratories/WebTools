@@ -26,6 +26,7 @@ public interface WallClock {
      */
     public object System : WallClock {
         override fun nowEpochMillis(): Long = epochMillisNow()
+        /** Returns the fixed text `WallClock.System`, for diagnostics and logs. */
         override fun toString(): String = "WallClock.System"
     }
 }

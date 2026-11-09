@@ -1,0 +1,246 @@
+/*
+ * Spartan Laboratories theme for the WebTools Dokka API reference.
+ *
+ * Loaded by the root build.gradle.kts and by webtools.published-library via
+ * `pluginsConfiguration.html.customStyleSheets`, which Dokka links AFTER its own style.css /
+ * main.css / ui-kit.min.css - so a same-specificity rule here wins. Almost everything in Dokka 2.x
+ * is driven by CSS custom properties, so the theme is mostly token overrides; the handful of element
+ * rules below cover what the tokens don't reach.
+ *
+ * Palette: Spartan Laboratories navy and bronze on deep navy ink (dark) and warm parchment (light).
+ * Dokka toggles dark mode by adding `.theme-dark` to <html>; both blocks are needed because
+ * ui-kit and style.css each redefine their tokens there.
+ */
+
+/* region tokens - light (default) */
+:root {
+    /* brand */
+    --sl-navy: #103050;
+    --sl-navy-hover: #1a4673;
+    --sl-navy-50: rgba(16, 48, 80, 0.5);
+    --sl-bronze: #907040;
+    --sl-bronze-soft: #C0A080;
+    --sl-ink: #0e1c2e;
+    --sl-ink-raised: #16263a;
+
+    /* ui-kit key colour: active sidebar row, focus rings, tabs, search highlights */
+    --color-key-blue: var(--sl-navy);
+    --color-key-blue-hover: var(--sl-navy-hover);
+    --color-key-blue-50: var(--sl-navy-50);
+
+    /* chrome */
+    --color-background-nav: var(--sl-ink);
+    --color-background-nav-dt: var(--sl-ink);
+    --color-background-page: #f7f5ef;
+    --color-background-page-dt: #101a26;
+    --color-background-footer: #e9e3d4;
+    --color-background-footer-dt: var(--sl-ink-raised);
+    --background-color: var(--color-background-page);
+    --color-text: #14202e;
+    --default-font-color: #14202e;
+    --color-text-light: rgba(20, 32, 46, 0.72);
+
+    /* style.css accents */
+    --hover-link-color: var(--sl-navy);
+    --active-section-color: var(--sl-navy);
+    --sidemenu-section-active-color: var(--sl-navy);
+    --active-tab-border-color: var(--sl-navy);
+    --border-color: rgba(144, 112, 64, 0.28);
+    --navigation-highlight-color: rgba(144, 112, 64, 0.10);
+    --blockquote-background: rgba(144, 112, 64, 0.08);
+    --color-background-inline-code: rgba(16, 48, 80, 0.07);
+    --color-background-code-block: rgba(144, 112, 64, 0.06);
+    --toc-hover-color: rgba(144, 112, 64, 0.12);
+
+    /* code tokens (light) */
+    --color-cd-keyword: #103050;
+    --color-cd-builtin: #2f6f3e;
+    --color-cd-function: #7a5a28;
+    --color-cd-number: #6b2fa0;
+    --color-cd-operator: #6b5a40;
+
+    /* logo: Dokka copies customAssets into images/, stylesheets into styles/ */
+    --dokka-logo-image-url: url('../images/spartan-laboratories-logo.png');
+    --dokka-logo-height: 56px;
+    --dokka-logo-width: 56px;
+}
+/* endregion */
+
+/* region tokens - dark */
+.theme-dark {
+    /* ui-kit key colour: the active row, focus rings and tabs; navy would vanish on the dark page */
+    --color-key-blue: #3b6ea8;
+    --color-key-blue-hover: #4a80bd;
+    --color-key-blue-50: rgba(59, 110, 168, 0.5);
+
+    --background-color: var(--color-background-page-dt);
+    --color-background: var(--color-background-page-dt);
+    --default-font-color: #e8edf3;
+    --color-text-dt: #e8edf3;
+    --color-text-light-dt: rgba(232, 237, 243, 0.68);
+
+    --hover-link-color: var(--sl-bronze-soft);
+    --active-section-color: var(--sl-bronze-soft);
+    --sidemenu-section-active-color: var(--sl-bronze-soft);
+    --border-color: rgba(192, 160, 128, 0.20);
+    --navigation-highlight-color: rgba(192, 160, 128, 0.08);
+    --blockquote-background: rgba(192, 160, 128, 0.06);
+    --color-background-inline-code: rgba(192, 160, 128, 0.12);
+    --color-background-code-block: #0b131d;
+    --toc-hover-color: rgba(192, 160, 128, 0.10);
+
+    /* code tokens (dark) - Dokka reads the *-alternative set in dark mode */
+    --color-cd-keyword-alternative: #8fb8e0;
+    --color-cd-builtin-alternative: #a8d8a0;
+    --color-cd-function-alternative: #f0d9a8;
+    --color-cd-operator-alternative: #b4c0ce;
+    --color-cd-number-alternative: #c49bf0;
+}
+/* endregion */
+
+/* region chrome */
+
+/* Top bar: bronze rule under the navy-black header. */
+.navigation {
+    border-bottom: 2px solid var(--sl-bronze);
+    box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.8);
+}
+
+.library-name--link {
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ui-kit caps the logo at 36px tall / 120px wide and sizes it with min(); lift the cap so the
+   --dokka-logo-* tokens above are honoured as-is. */
+.library-name--link:before {
+    max-height: none;
+    max-width: none;
+    background-size: var(--dokka-logo-width) var(--dokka-logo-height);
+}
+
+/* Desktop only: trim ui-kit's 12px vertical padding so the 56px logo doesn't grow the bar past
+   its usual ~64px height. Below 900px ui-kit already zeroes the padding and wraps the bar. */
+@media (min-width: 900px) {
+    .navigation {
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+}
+
+.library-name--link:hover {
+    color: var(--sl-bronze-soft);
+}
+
+/* Sidebar: bronze edge instead of Dokka's grey hairline. */
+.sidebar {
+    border-right: 1px solid var(--border-color);
+}
+
+.toc--part[data-active] > .toc--row .toc--link,
+.toc--part[data-active] > .toc--row .toc--button {
+    box-shadow: inset 3px 0 0 var(--sl-bronze);
+}
+
+/* Footer: bronze top rule so the copyright line reads as a deliberate sign-off. */
+.footer {
+    border-top: 2px solid var(--sl-bronze);
+}
+
+/* endregion */
+
+/* region content */
+
+.main-content :is(h1, h2),
+h1.cover {
+    color: var(--sl-navy);
+}
+
+.theme-dark .main-content :is(h1, h2),
+.theme-dark h1.cover {
+    color: var(--sl-bronze-soft);
+}
+
+/* Content links. Matches ui-kit's `.main-content a:not([data-name])` so the specificity ties
+   and this later sheet wins; that rule otherwise paints links in plain body text colour. */
+.main-content a:not([data-name]) {
+    color: var(--sl-navy);
+    border-bottom-color: rgba(16, 48, 80, 0.3);
+}
+
+.main-content a:not([data-name]):hover {
+    color: var(--sl-navy-hover);
+    border-bottom-color: var(--sl-navy-hover);
+}
+
+.theme-dark .main-content a:not([data-name]) {
+    color: var(--sl-bronze-soft);
+    border-bottom-color: rgba(192, 160, 128, 0.3);
+}
+
+.theme-dark .main-content a:not([data-name]):hover {
+    color: #e0c9ac;
+    border-bottom-color: #e0c9ac;
+}
+
+blockquote {
+    border-left: 4px solid var(--sl-bronze);
+}
+
+/* Code blocks: a thin bronze edge sets them apart from prose in both themes. */
+.sample-container,
+code.block.monospace {
+    border-left: 3px solid var(--sl-bronze);
+}
+
+/* endregion */
+
+/* region backgrounds
+ * One calm treatment per surface, distinct but from the same navy/bronze family:
+ *   header  - slow horizontal wash, ink into a deep navy tint
+ *   logo    - soft bronze/cream glow so the navy lettering stays legible on the always-dark header
+ *   sidebar - faint Greek-key (meander) texture over a slightly deeper tone
+ *   content - gentle vertical gradient, fixed while the page scrolls
+ * Every layer stays low-contrast so text and code keep their normal legibility.
+ */
+:root {
+    --sl-header-bg: linear-gradient(90deg, #0a1420 0%, #0e1c2e 55%, #103050 100%);
+    --sl-logo-glow: radial-gradient(circle closest-side, rgba(238, 226, 204, 0.78), rgba(192, 160, 128, 0.32) 62%, transparent 100%);
+    --sl-sidebar-tone: #f1ede2;
+    --sl-meander: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 36H36V4H8V28H28V12H16V20' fill='none' stroke='%23907040' stroke-opacity='0.10' stroke-width='2'/%3E%3C/svg%3E");
+    --sl-content-bg: linear-gradient(180deg, #f7f5ef 0%, #f2eee3 55%, #ece6d6 100%);
+}
+
+.theme-dark {
+    --sl-header-bg: linear-gradient(90deg, #08111b 0%, #0c1828 55%, #0e2540 100%);
+    --sl-logo-glow: radial-gradient(circle closest-side, rgba(238, 226, 204, 0.78), rgba(192, 160, 128, 0.32) 62%, transparent 100%);
+    --sl-sidebar-tone: #0b131d;
+    --sl-meander: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M0 36H36V4H8V28H28V12H16V20' fill='none' stroke='%23C0A080' stroke-opacity='0.07' stroke-width='2'/%3E%3C/svg%3E");
+    --sl-content-bg: linear-gradient(180deg, #101a26 0%, #122033 55%, #16263a 100%);
+}
+
+.navigation {
+    background-image: var(--sl-header-bg);
+}
+
+/* The glow is painted behind the logo image itself: the logo's own background layer comes
+   first (on top), the glow second. */
+.library-name--link:before {
+    background: var(--dokka-logo-image-url) center / var(--dokka-logo-width) var(--dokka-logo-height) no-repeat,
+                var(--sl-logo-glow) center / 100% 100% no-repeat;
+    /* No border-radius: it would clip the logo's corners. The glow already fades out
+       before the box edge, so the square box never shows. */
+    border-radius: 0;
+}
+
+.sidebar {
+    background-color: var(--sl-sidebar-tone);
+    background-image: var(--sl-meander);
+}
+
+#main {
+    background-image: var(--sl-content-bg);
+    background-attachment: fixed;
+}
+
+/* endregion */

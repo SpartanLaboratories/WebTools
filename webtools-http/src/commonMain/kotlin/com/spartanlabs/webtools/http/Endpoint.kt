@@ -53,6 +53,10 @@ public class Endpoint<T : Any> internal constructor(
         require(this.misses.all { it in 100..599 && it != 429 }) { MSG_ENDPOINT_MISSES }
     }
 
+    /**
+     * A diagnostic string for logs: [id], [name], [ttl], [missTtl], [cost], the [lane]'s name and the sorted [misses],
+     * never the decoder. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "Endpoint(id=$id, name=$name, ttl=$ttl, missTtl=$missTtl, cost=$cost, lane=${lane.name}, misses=${this.misses.sorted()})"
 

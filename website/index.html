@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebTools - internet I/O for Kotlin/JVM, one artifact per concern</title>
+<meta name="description" content="WebTools is a collection of Kotlin/JVM internet I/O helpers published as independent artifacts: an HTTP client stack, RSS and Atom feeds, and a UDP connection layer. Apache-2.0, on Maven Central.">
+<link rel="canonical" href="https://spartanlaboratories.github.io/WebTools/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WebTools - internet I/O for Kotlin/JVM, one artifact per concern">
+<meta property="og:description" content="WebTools is a collection of Kotlin/JVM internet I/O helpers published as independent artifacts: an HTTP client stack, RSS and Atom feeds, and a UDP connection layer. Apache-2.0, on Maven Central.">
+<meta property="og:url" content="https://spartanlaboratories.github.io/WebTools/">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0e1c2e">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header" id="top">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top">
+      <img class="brand-mark" src="assets/brand/spartan-laboratories-logo.png" alt="" width="56" height="56">
+      <span>WebTools</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="site-nav" id="site-nav" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#modules">Modules</a>
+      <a href="#install">Install</a>
+      <a href="#quickstart">Quick start</a>
+      <a href="api/" class="nav-api">API docs</a>
+      <a class="nav-gh" href="https://github.com/SpartanLaboratories/WebTools" rel="noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        <span>GitHub</span>
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></g></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Kotlin / JVM &middot; Apache-2.0 &middot; Maven Central</p>
+        <h1>Internet I/O in <span class="grad">single-concern artifacts</span>.</h1>
+        <p class="lede">
+          A small Kotlin/JVM collection of internet I/O helpers, published as independent, single-concern artifacts:
+          depend only on the one you need. Every fallible operation returns <code>kotlin.Result</code> rather than
+          throwing, so callers decide how to recover.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#install">Get started</a>
+          <a class="btn btn-ghost" href="api/">Browse the API docs</a>
+        </div>
+        <ul class="hero-badges">
+          <li><a href="https://github.com/SpartanLaboratories/WebTools/actions/workflows/ci.yml" rel="noopener"><img src="https://github.com/SpartanLaboratories/WebTools/actions/workflows/ci.yml/badge.svg" alt="CI status" loading="lazy" width="90" height="20"></a></li>
+          <li><a href="https://central.sonatype.com/artifact/io.github.spartanlaboratories/webtools-udp" rel="noopener"><img src="https://img.shields.io/maven-central/v/io.github.spartanlaboratories/webtools-udp?label=Maven%20Central&amp;color=103050" alt="Latest version on Maven Central" loading="lazy" width="150" height="20"></a></li>
+          <li><a href="https://kotlinlang.org" rel="noopener"><img src="https://img.shields.io/badge/Kotlin-2.2-103050?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.2" loading="lazy" width="90" height="20"></a></li>
+          <li><a href="https://www.apache.org/licenses/LICENSE-2.0.txt" rel="noopener"><img src="https://img.shields.io/badge/License-Apache%202.0-907040.svg" alt="Apache 2.0 licence" loading="lazy" width="125" height="20"></a></li>
+        </ul>
+      </div>
+
+      <div class="hero-code">
+        <figure class="code-card">
+          <figcaption class="code-head">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="code-title">PollFeed.kt</span>
+            <button class="copy" type="button" data-copy>Copy</button>
+          </figcaption>
+<pre><code data-lang="kotlin">FeedFetcher.untrusted("my-app/1.0 (+https://example.com/contact)").use { fetcher -&gt;
+    val stored: FeedValidators = loadValidators(feedId)                      // FeedValidators.None on the first poll
+    fetcher.fetch(feedUrl, stored).fold(
+        onSuccess = { fetch -&gt;
+            saveValidators(feedId, fetch.validators)                          // after every response
+            fetch.permanentlyMovedTo?.let { moved -&gt; considerMoving(feedId, moved) }
+            when (fetch) {
+                is FeedFetch.Fetched -&gt; store(fetch.feed.entries)             // new items: entries whose id you have not seen, never by date
+                is FeedFetch.NotModified -&gt; Unit
+            }
+        },
+        onFailure = { failure -&gt; report(failure) },
+    )
+}</code></pre>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="strip">
+    <div class="wrap strip-grid">
+      <div><strong>5</strong><span>independently published artifacts</span></div>
+      <div><strong>11</strong><span>Java bytecode floor of every JVM module</span></div>
+      <div><strong>0</strong><span>retries: a throttle, a transport failure and a <code>5xx</code> are each returned once</span></div>
+      <div><strong>7</strong><span>test-level tasks, each runnable on its own</span></div>
+    </div>
+  </section>
+
+  <section id="features" class="section">
+    <div class="wrap">
+      <h2 class="section-title">What you get</h2>
+      <p class="section-lede">Each artifact adds one concern, so you can take the parts you want and leave the rest.</p>
+
+      <div class="cards">
+        <article class="card">
+          <h3>A typed failure model</h3>
+          <p>Every fallible operation returns <code>kotlin.Result</code>. <code>HttpFailure</code> carries <code>TransportFailure</code> (nothing usable came back), <code>UpstreamFailure</code> (<code>RateLimited</code>, <code>UpstreamError</code>), <code>BudgetExhausted</code>, <code>DecodeFailure</code> and <code>Closed</code>.</p>
+        </article>
+
+        <article class="card">
+          <h3>One fixed call path</h3>
+          <p><code>UpstreamClient</code> checks each call against the outbound-URL policy, then the response cache, then the call budget, then the transport. A hit costs nothing, and N concurrent callers of one key cost one permit and one request.</p>
+        </article>
+
+        <article class="card">
+          <h3>Outbound-URL policies</h3>
+          <p><code>Trusted</code> for an upstream you chose, <code>Untrusted</code> for a URL a third party supplied: lenient host forms, reserved names, denied addresses, other ports and sensitive headers are refused.</p>
+        </article>
+
+        <article class="card">
+          <h3>A response cache</h3>
+          <p><code>CaffeineResponseCache</code>: one load per key at a time, per-entry lifetimes, a weight bound, a per-call <code>maxAge</code>, failures never stored. <code>ResponseCache.Disabled</code> stores and shares nothing.</p>
+        </article>
+
+        <article class="card">
+          <h3>A call budget</h3>
+          <p><code>WindowedCallBudget</code>: epoch-aligned rate windows with a boundary guard, per-lane floors, first-come-first-served waits that fail fast or are refunded and re-planned, pauses from <code>Retry-After</code>, and a hard window that survives a restart through a <code>BudgetStore</code>.</p>
+        </article>
+
+        <article class="card">
+          <h3>Hardened feeds</h3>
+          <p>RSS 0.90 to 2.0, RSS 1.0 and Atom 0.3 and 1.0 behind <code>FeedParser</code>. <code>RomeFeedParser</code> refuses a DOCTYPE before any parser runs and bounds depth, attributes, elements and namespaces; <code>FeedFetcher</code> does a stateless conditional GET and returns a <code>304</code> as a value.</p>
+        </article>
+
+        <article class="card">
+          <h3>UDP with a reliable channel</h3>
+          <p><code>MultiConnectionUDPServer</code> multiplexes every client over one socket after a NAT-traversal handshake. <code>UdpChannel</code> gives each connection an <code>UNRELIABLE</code> or a <code>RELIABLE_ORDERED</code> delivery mode.</p>
+        </article>
+
+        <article class="card">
+          <h3>Test support</h3>
+          <p><code>webtools-http</code>'s test fixtures (Gradle <code>testFixtures(...)</code>): <code>FakeHttpTransport</code>, <code>VirtualClock</code>, <code>.http</code> fixtures, a recorder, <code>LoopbackFetchers</code> and <code>FakeBudgetStore</code>.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture" class="section section-alt">
+    <div class="wrap">
+      <h2 class="section-title">Architecture</h2>
+      <p class="section-lede">Five artifacts, one concern each. Only <code>webtools-feeds</code> depends on another.</p>
+
+      <div class="arch">
+        <div class="arch-diagram">
+          <svg viewBox="0 0 420 360" role="img" aria-labelledby="arch-title arch-desc">
+            <title id="arch-title">How the five WebTools artifacts relate</title>
+            <desc id="arch-desc">webtools-feeds builds on webtools-http. webtools-udp stands alone. webtools-scraping and webtools-browser are archived.</desc>
+
+            <g class="layer accent" transform="translate(30 20)"><rect width="360" height="64" rx="12"/>
+              <text class="n" x="18" y="27">webtools-feeds</text><text class="m" x="18" y="48">FeedFetcher · RomeFeedParser · Feed</text></g>
+            <path class="edge" d="M210 84 V112"/><text class="m" x="222" y="103">api dependency</text>
+            <g class="layer accent" transform="translate(30 112)"><rect width="360" height="64" rx="12"/>
+              <text class="n" x="18" y="27">webtools-http</text><text class="m" x="18" y="48">UpstreamClient · UrlFetcher · OkHttpTransport</text></g>
+            <g class="layer world" transform="translate(30 214)"><rect width="360" height="64" rx="12"/>
+              <text class="n" x="18" y="27">webtools-udp</text><text class="m" x="18" y="48">MultiConnectionUDPServer · MultiConnectionUDPClient · UdpChannel</text></g>
+            <g class="layer archived" transform="translate(30 296)"><rect width="175" height="54" rx="12"/>
+              <text class="n" x="12" y="24">webtools-scraping</text><text class="m" x="12" y="43">Connector · archived</text></g>
+            <g class="layer archived" transform="translate(215 296)"><rect width="175" height="54" rx="12"/>
+              <text class="n" x="12" y="24">webtools-browser</text><text class="m" x="12" y="43">WebViewer · archived</text></g>
+          </svg>
+        </div>
+
+        <div class="arch-table-wrap">
+          <table class="table">
+            <caption class="sr-only">Responsibility of each artifact</caption>
+            <thead><tr><th scope="col">Artifact</th><th scope="col">Responsibility</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><code>webtools-http</code></th><td>The suspend HTTP client stack: request and response types, a typed failure model, the transport, cache, budget and outbound-URL policy ports with their supplied implementations, and the <code>UpstreamClient</code> and <code>UrlFetcher</code> facades.</td></tr>
+              <tr><th scope="row"><code>webtools-feeds</code></th><td>RSS and Atom behind a hardened parser port, the feed model with a frozen entry id, and <code>FeedFetcher</code>, a stateless conditional GET over <code>UrlFetcher</code>. Exposes <code>webtools-http</code> as an <code>api</code> dependency.</td></tr>
+              <tr><th scope="row"><code>webtools-udp</code></th><td>A multi-client UDP connection layer: one common port, a NAT-traversal handshake, framed datagrams, keepalive, a link-quality probe and a reliable-ordered channel. Depends on <code>slf4j-api</code> only.</td></tr>
+              <tr><th scope="row"><code>webtools-scraping</code></th><td><code>Connector</code>: open a URL and read it line by line, plus one-shot <code>get</code>, <code>skrape</code> and image <code>download</code> helpers. Archived.</td></tr>
+              <tr><th scope="row"><code>webtools-browser</code></th><td><code>WebViewer</code>: headless-browser screenshots through Selenium Manager. Archived.</td></tr>
+            </tbody>
+          </table>
+          <p class="fineprint">Read how each is built: <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-http-architecture.md" rel="noopener">the HTTP stack and feeds</a>, <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-architecture.md" rel="noopener">the UDP components, threads and lifecycles</a> and <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-protocol.md" rel="noopener">the UDP wire protocol</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="modules" class="section">
+    <div class="wrap">
+      <h2 class="section-title">Modules</h2>
+      <p class="section-lede">Depend on the one artifact you need.</p>
+
+      <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Artifact</th><th scope="col">Coordinates</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">API</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>webtools-udp</code></th><td><code>io.github.spartanlaboratories:webtools-udp</code></td><td><span data-version>2.0.1</span></td><td>Stable Core</td><td><a href="api/webtools-udp/">API</a></td></tr>
+          <tr><th scope="row"><code>webtools-http</code></th><td><code>io.github.spartanlaboratories:webtools-http</code></td><td><span data-version>1.0.0</span></td><td>Stable Core</td><td><a href="api/webtools-http/">API</a></td></tr>
+          <tr><th scope="row"><code>webtools-feeds</code></th><td><code>io.github.spartanlaboratories:webtools-feeds</code></td><td><span data-version>1.0.0</span></td><td>Stable Core</td><td><a href="api/webtools-feeds/">API</a></td></tr>
+          <tr><th scope="row"><code>webtools-scraping</code></th><td><code>io.github.spartanlaboratories:webtools-scraping</code></td><td><span data-version>1.0.0</span></td><td>archived</td><td><a href="api/webtools-scraping/">API</a></td></tr>
+          <tr><th scope="row"><code>webtools-browser</code></th><td><code>io.github.spartanlaboratories:webtools-browser</code></td><td><span data-version>1.0.0</span></td><td>archived</td><td><a href="api/webtools-browser/">API</a></td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <p class="fineprint">Everything a consumer calls, passes, configures or matches is Stable Core. Implementing a seam of <code>webtools-http</code> or <code>webtools-feeds</code> (a <code>HttpTransport</code>, <code>ResponseCache</code>, <code>CallBudget</code>, <code>FeedParser</code>, ...) is Experimental and needs <code>@OptIn(ExperimentalForInheritanceWebToolsApi::class)</code>.</p>
+    </div>
+  </section>
+
+  <section id="install" class="section section-alt">
+    <div class="wrap narrow">
+      <h2 class="section-title">Install</h2>
+      <p class="section-lede">Published to Maven Central. Requires JDK 11 or newer; built with Kotlin 2.2.</p>
+
+      <div class="tabs" data-tabs>
+        <div class="tablist" role="tablist" aria-label="Build tool">
+          <button role="tab" id="tab-kts" aria-controls="panel-kts" aria-selected="true" type="button">Gradle (Kotlin)</button>
+          <button role="tab" id="tab-groovy" aria-controls="panel-groovy" aria-selected="false" tabindex="-1" type="button">Gradle (Groovy)</button>
+          <button role="tab" id="tab-maven" aria-controls="panel-maven" aria-selected="false" tabindex="-1" type="button">Maven</button>
+        </div>
+
+        <div role="tabpanel" id="panel-kts" aria-labelledby="tab-kts" tabindex="0">
+          <figure class="code-card">
+            <figcaption class="code-head"><span class="code-title">build.gradle.kts</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="kotlin">dependencies {
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.1")
+    // and/or
+    implementation("io.github.spartanlaboratories:webtools-http:1.0.0")
+    implementation("io.github.spartanlaboratories:webtools-feeds:1.0.0")
+    // tests only (Gradle): fakes, a virtual clock, .http fixtures and a recorder
+    testImplementation(testFixtures("io.github.spartanlaboratories:webtools-http:1.0.0"))
+}</code></pre>
+          </figure>
+        </div>
+
+        <div role="tabpanel" id="panel-groovy" aria-labelledby="tab-groovy" tabindex="0" hidden>
+          <figure class="code-card">
+            <figcaption class="code-head"><span class="code-title">build.gradle</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="kotlin">dependencies {
+    implementation 'io.github.spartanlaboratories:webtools-udp:2.0.1'
+    implementation 'io.github.spartanlaboratories:webtools-http:1.0.0'
+    implementation 'io.github.spartanlaboratories:webtools-feeds:1.0.0'
+    testImplementation testFixtures('io.github.spartanlaboratories:webtools-http:1.0.0')
+}</code></pre>
+          </figure>
+        </div>
+
+        <div role="tabpanel" id="panel-maven" aria-labelledby="tab-maven" tabindex="0" hidden>
+          <figure class="code-card">
+            <figcaption class="code-head"><span class="code-title">pom.xml</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.github.spartanlaboratories&lt;/groupId&gt;
+    &lt;artifactId&gt;webtools-udp&lt;/artifactId&gt;
+    &lt;version&gt;2.0.1&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;io.github.spartanlaboratories&lt;/groupId&gt;
+    &lt;artifactId&gt;webtools-http-jvm&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;io.github.spartanlaboratories&lt;/groupId&gt;
+    &lt;artifactId&gt;webtools-feeds-jvm&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+          </figure>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <h3>Maven and the -jvm artifacts</h3>
+          <p><code>webtools-http</code> and <code>webtools-feeds</code> are Kotlin Multiplatform modules that publish <code>webtools-http</code> and <code>webtools-http-jvm</code> (likewise for feeds). A Gradle build resolves the right one itself; a Maven build depends on the <code>-jvm</code> artifact. <code>testFixtures(...)</code> is Gradle-only.</p>
+        </div>
+        <div class="note">
+          <h3>Kotlin standard library</h3>
+          <p><code>webtools-http</code>'s <code>okhttp-jvm</code> 5.5.0 dependency requires <code>kotlin-stdlib</code> 2.2.21, so a consumer's Kotlin standard library resolves to 2.2.21 or newer.</p>
+        </div>
+        <div class="note">
+          <h3>The archived modules</h3>
+          <p><code>webtools-scraping</code> and <code>webtools-browser</code> are archived. Their install lines and the Java 11 floor notes for their older releases are in the <a href="https://github.com/SpartanLaboratories/WebTools#install" rel="noopener">README</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="quickstart" class="section">
+    <div class="wrap">
+      <h2 class="section-title">Quick start</h2>
+      <p class="section-lede">A call to an upstream, a UDP session, and a test without a network.</p>
+
+      <div class="quick-grid">
+        <figure class="code-card">
+          <figcaption class="code-head"><span class="code-title">Upstream.kt</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="kotlin">val client = UpstreamClient(Url.parse("https://api.example.com/v2/").getOrThrow(), "my-app/1.0 (+https://example.com/contact)") {
+    headers = HttpHeaders { addSensitive("Authorization", "Bearer $token") }      // default headers; credentials are never printed
+    budget(listOf(RateWindow("minute", 60, 1.minutes) { margin = 10 }))              // built and owned by the client
+}
+
+// Declare each call once: a stable id, a decoder, how long to keep the answer, which status means "nothing there".
+val player = Endpoint("player", ::decodePlayer) {
+    ttl = 10.minutes
+    misses(404)
+}
+
+val result: Result&lt;Lookup&lt;Player&gt;&gt; = client.call(player) {
+    path("players", id)              // raw segments; each is encoded, so "a/b" stays one segment
+    query("region", "eu")
+    maxAge = 1.minutes               // accept a cached answer no older than this
+}
+
+result.fold(
+    onSuccess = { lookup -&gt; when (lookup) { is Lookup.Found -&gt; show(lookup.value); Lookup.Missing -&gt; showNotFound() } },
+    onFailure = { failure -&gt; when (failure) {
+        is UpstreamFailure.RateLimited -&gt; backOff(failure.retryAfter)        // wait this long, then call
+        is HttpFailure.BudgetExhausted -&gt; backOff(failure.wait)
+        else -&gt; report(failure)                                              // keep an else: new failure types may be added
+    } },
+)
+
+client.flush()   // the exact final write of a budget with a persistent store
+client.close()   // closes what the client built (cache, budget, transport), never what it was handed</code></pre>
+        </figure>
+
+        <figure class="code-card">
+          <figcaption class="code-head"><span class="code-title">UdpClient.kt</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="kotlin">val client = MultiConnectionUDPClient(serverAddress)
+client.handshake("alice").getOrThrow()
+val unreliable = client.channel(DeliveryMode.UNRELIABLE)
+unreliable.actuate { message -&gt; /* handle inbound data; runs on client's dispatch thread */ }
+unreliable.send("hello")
+// client.start { ... } / client.send("hello") - the pre-2.0-channel spelling, deprecated but
+// still fully functional; channel(UNRELIABLE) is the recommended replacement (see Migrating to 2.0)
+client.startKeepAlive()   // library times it; no caller timer needed
+// client.sendKeepAlive() is still available for callers who want to drive the cadence themselves
+
+// or, for a binary protocol:
+unreliable.actuateBytes { bytes -&gt; /* exact datagram body, no decode, no trim */ }
+unreliable.send(byteArrayOf(0x01, 0x02, 0x03))   // any bytes, no reserved first byte needed
+// ...
+client.stop()</code></pre>
+        </figure>
+
+        <figure class="code-card">
+          <figcaption class="code-head"><span class="code-title">FakeTransportTest.kt</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="kotlin">runTest {
+    val clock = virtualClock()
+    val fake = FakeHttpTransport(clock.timeSource).on(RequestMatch.get("/v2/players/7"), Step.respond(200, body = """{"name":"Ada"}"""))
+    UpstreamClient(fake, baseUrl) { timeSource = clock.timeSource; wallClock = clock.wallClock }.use { client -&gt;
+        assertEquals(Lookup.Found(Player("Ada")), client.call(player) { path("players", "7") }.getOrThrow())
+        assertEquals(1, fake.calls.size)
+    }
+}</code></pre>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="testing" class="section section-alt">
+    <div class="wrap narrow">
+      <h2 class="section-title">Testing &amp; building</h2>
+      <p class="section-lede">Seven level tasks, each independently runnable so CI can gate them separately. Building needs a JDK 17 to 26; every JVM module compiles to Java 11 bytecode against the Java 11 API.</p>
+
+      <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Gradle task</th><th scope="col">Level</th><th scope="col">Scope</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>gatingTest</code></th><td>1 - Gating</td><td>Fast pre-commit checks</td></tr>
+          <tr><th scope="row"><code>componentTest</code></th><td>2 - Component</td><td>Isolated component behaviour</td></tr>
+          <tr><th scope="row"><code>integrationTest</code></th><td>3 - Integration</td><td>Real sockets and external interfaces</td></tr>
+          <tr><th scope="row"><code>deterministicTest</code></th><td>4a - Deterministic</td><td>Pure input-to-output mappings</td></tr>
+          <tr><th scope="row"><code>e2eTest</code></th><td>4b - End-to-end</td><td>Full-stack flows</td></tr>
+          <tr><th scope="row"><code>nonfunctionalTest</code></th><td>4c - Non-functional</td><td>Robustness and security properties</td></tr>
+          <tr><th scope="row"><code>uatTest</code></th><td>5 - Acceptance</td><td>Manual acceptance (mostly <code>@Disabled</code>)</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <figure class="code-card">
+        <figcaption class="code-head"><span class="code-title">Terminal</span><button class="copy" type="button" data-copy>Copy</button></figcaption>
+<pre><code data-lang="bash">./gradlew build                          # compile + full test suite, every module
+./gradlew :webtools-udp:build            # one module only
+./gradlew componentTest                  # just the isolated component tests
+./gradlew verifyJavaFloor                # the Java 11 floor of every published module
+./gradlew :build-logic:test              # build-logic's pre-commit gate
+./gradlew dokkaGeneratePublicationHtml   # generate this site's API reference</code></pre>
+      </figure>
+    </div>
+  </section>
+
+  <section id="resources" class="section">
+    <div class="wrap">
+      <h2 class="section-title">Go deeper</h2>
+      <div class="links">
+        <a class="link-card" href="api/">
+          <h3>API reference</h3>
+          <p>The full Dokka documentation for every published module, regenerated on each push to <code>master</code>.</p>
+        </a>
+        <a class="link-card" href="https://github.com/SpartanLaboratories/WebTools" rel="noopener">
+          <h3>GitHub</h3>
+          <p>Source, issues and pull requests.</p>
+        </a>
+        <a class="link-card" href="https://github.com/SpartanLaboratories/WebTools/blob/master/CHANGELOG.md" rel="noopener">
+          <h3>Changelog</h3>
+          <p>Every release, in Keep a Changelog form.</p>
+        </a>
+        <a class="link-card" href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-http-architecture.md" rel="noopener">
+          <h3>HTTP stack and feeds</h3>
+          <p>The stack as built: components, call path, failure model, threads, stability tiers and known limitations.</p>
+        </a>
+        <a class="link-card" href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-architecture.md" rel="noopener">
+          <h3>UDP architecture</h3>
+          <p>Components, threads and lifecycles.</p>
+        </a>
+        <a class="link-card" href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-protocol.md" rel="noopener">
+          <h3>UDP wire protocol</h3>
+          <p>Every datagram's byte layout and the handling of malformed input.</p>
+        </a>
+        <a class="link-card" href="https://central.sonatype.com/namespace/io.github.spartanlaboratories" rel="noopener">
+          <h3>Maven Central</h3>
+          <p>Every published artifact and version.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>
+      Built by <a href="https://github.com/SpaSinghOut" rel="noopener">Spartak Singh</a> under
+      <a href="https://github.com/SpartanLaboratories" rel="noopener">Spartan Laboratories</a>.
+      Licensed under <a href="https://www.apache.org/licenses/LICENSE-2.0.txt" rel="noopener">Apache 2.0</a>.
+    </p>
+    <p class="footer-links">
+      <a href="https://github.com/SpartanLaboratories/WebTools" rel="noopener">GitHub</a>
+      <a href="api/">API docs</a>
+    </p>
+  </div>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>

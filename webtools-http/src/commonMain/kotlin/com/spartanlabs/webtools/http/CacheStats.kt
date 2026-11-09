@@ -28,10 +28,16 @@ public class CacheStats(
         require(failedLoads >= 0) { "failedLoads must not be negative" }
     }
 
+    /** Two [CacheStats] are equal when their [hits], [misses], [evictions] and [failedLoads] are equal. */
     override fun equals(other: Any?): Boolean =
         other is CacheStats && other.hits == hits && other.misses == misses && other.evictions == evictions && other.failedLoads == failedLoads
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = listOf(hits, misses, evictions, failedLoads).fold(0) { acc, n -> 31 * acc + n.hashCode() }
+    /**
+     * A diagnostic string for logs: [hits], [misses], [evictions] and [failedLoads]. Its format is not part of the API
+     * and may change.
+     */
     override fun toString(): String = "CacheStats(hits=$hits, misses=$misses, evictions=$evictions, failedLoads=$failedLoads)"
 
     /** The value of an empty cache. */

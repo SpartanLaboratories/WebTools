@@ -442,6 +442,10 @@ public class WindowedCallBudget internal constructor(
         if (closing.complete()) budgetLog.info("closed")           // thread-safe, idempotent, never suspends; no lock; no handler of ours runs
     }
 
+    /**
+     * A diagnostic string for logs: the names of the windows and whether the budget is closed. Its format is not part
+     * of the API and may change.
+     */
     override fun toString(): String = "WindowedCallBudget(windows=${ledger.windows.map { it.name }}, closed=${closing.isCompleted})"
     //endregion
 

@@ -33,7 +33,9 @@ import kotlin.streams.asSequence
  * Multiplatform consumer), the **file-repository consumer** (a Kotlin/JVM and a Kotlin Multiplatform module
  * resolving the published artifacts) and the **composite consumer** (`includeBuild("../producer")`). Each
  * consumer compiles and runs one test that uses `VirtualClock`, `FakeHttpTransport`, `kotlinx-coroutines-test`
- * and `mockwebserver3`.
+ * and `mockwebserver3`. The jvm javadoc jar carries the fixtures' Dokka reference; the root javadoc jar is checked only for
+ * `index.html`. The producer build runs the real
+ * module's Dokka task with `failOnWarning`, so this class also proves the module's KDoc is warning-free.
  *
  * It is the only check on the experimental `adhocSoftwareComponent` publishing API and the only run that signs
  * a multiplatform publication carrying an adhoc variant before a release. The published version is read from
@@ -57,7 +59,9 @@ class FixturesPublicationEndToEndTest {
         workspace = ProjectWorkspace.create("fixtures").getOrThrow()
         passphrase = UUID.randomUUID().toString()
         key = ThrowawayPgpKey.generate(passphrase).getOrThrow()
-        workspace.write(SampleProject.fixturesProducer(ModuleSource.rootBuildFile().getOrThrow(), signingProperties(key, passphrase))).getOrThrow()
+        workspace.write(
+            SampleProject.fixturesProducer(ModuleSource.rootBlock("build.gradle.kts", "allprojects").getOrThrow(), signingProperties(key, passphrase)),
+        ).getOrThrow()
         ModuleSource.copyInto(workspace, "${SampleProject.FIXTURES_PRODUCER}/webtools-http").getOrThrow()
         producer = NestedBuild(workspace, projectDir = workspace.resolve(SampleProject.FIXTURES_PRODUCER)).build(
             ":webtools-http:publishAllPublicationsToTestFolderRepository",
@@ -189,6 +193,19 @@ class FixturesPublicationEndToEndTest {
         }
     }
     //endregion
+
+    @Test
+    fun `11 - the published javadoc jars hold the Dokka reference and the jvm one includes the test fixtures`() {
+        val jvmEntries = JarClasses.entries(repository.jvmModuleDir(version).resolve("webtools-http-jvm-$version-javadoc.jar")).getOrThrow()
+        val rootEntries = JarClasses.entries(repository.rootModuleDir(version).resolve("webtools-http-$version-javadoc.jar")).getOrThrow()
+        assertTrue(jvmEntries.any { it.endsWith("index.html") }, "the jvm javadoc jar holds no index.html: $jvmEntries")
+        assertTrue(rootEntries.any { it.endsWith("index.html") }, "the root javadoc jar holds no index.html: $rootEntries")
+        assertTrue(jvmEntries.any { "com.spartanlabs.webtools.http.testing/" in it }, "the jvm javadoc jar holds no pages of the fixtures package: $jvmEntries")
+        assertTrue(
+            jvmEntries.any { it.endsWith("com.spartanlabs.webtools.http.testing/-fake-http-transport/index.html") },
+            "the jvm javadoc jar holds no FakeHttpTransport page: $jvmEntries",
+        )
+    }
 
     // The main classpaths must not see the fixtures, the test classpaths must see exactly one fixtures variant.
     private fun assertConsumer(projectDir: String, configurations: Configurations, source: String, testTask: String) {

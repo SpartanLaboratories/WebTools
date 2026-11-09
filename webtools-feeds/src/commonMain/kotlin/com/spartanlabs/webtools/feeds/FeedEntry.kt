@@ -52,15 +52,25 @@ public class FeedEntry internal constructor(
     /** The enclosures, in document order. */
     public val enclosures: List<FeedEnclosure> = enclosures.toList()
 
+    /**
+     * Two [FeedEntry]s are equal when their [id], [title], [link], [summary], [content], [author],
+     * [publishedAtEpochMillis], [updatedAtEpochMillis], [categories] and [enclosures] are equal.
+     */
     override fun equals(other: Any?): Boolean =
         other is FeedEntry && other.id == id && other.title == title && other.link == link && other.summary == summary &&
             other.content == content && other.author == author && other.publishedAtEpochMillis == publishedAtEpochMillis &&
             other.updatedAtEpochMillis == updatedAtEpochMillis && other.categories == categories && other.enclosures == enclosures
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int =
         listOf(id, title, link, summary, content, author, publishedAtEpochMillis, updatedAtEpochMillis, categories, enclosures)
             .fold(0) { acc, v -> 31 * acc + v.hashCode() }
 
+    /**
+     * A diagnostic string for logs: the length of [id], the [link] as scheme, host and port, the numbers of
+     * [categories] and [enclosures], and whether each other optional field is present, never any text. Its format is
+     * not part of the API and may change.
+     */
     override fun toString(): String =
         "FeedEntry(idChars=${id.length}, title=${presence(title)}, link=${link?.let(::originOfLink) ?: "none"}, " +
             "summary=${presence(summary)}, content=${presence(content)}, author=${presence(author)}, " +

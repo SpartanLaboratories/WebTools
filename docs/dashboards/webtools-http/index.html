@@ -379,11 +379,30 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .badge{font:10px/1 var(--mono);padding:3px 6px;border-radius:3px;border:1px solid var(--line);white-space:nowrap;color:var(--ink-2)}
 /* a bug is a label, not an outcome: neutral, told by its ▲ and its word (no status colour, GUIDANCE.md §1) */
 .badge.bug::before{content:"▲ ";color:var(--ink-2)}
-/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, with a thin green bar */
+/* a tracking issue's chain on the roadmap (GUIDANCE.md §5): units landed of all units, and its units as a StepBar on a line of its own under
+   the roadmap item (dashboards-skill/54) */
 .chainprog{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--ink-2);white-space:nowrap}
-.cbar{display:inline-block;width:60px;height:5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;vertical-align:middle}
-.cbar i{display:block;height:100%;background:var(--good)}
-.legend .cbar{width:40px}
+/* The StepBar (nomenclature/ui.md, StepBar; dashboards-skill/54): the steps of a sequence in order, each a chevron with its name inside,
+   done, current or to come. An ordered list, the current step aria-current="step", each step's state said in words to a screen reader
+   (.sb-st). It stands on a line of its own and wraps inside itself at phone width, never widening the board; a long name wraps inside its
+   chevron. Done: solid, the strong neutral with a faint wash; current: solid, in ink and bold; to come: dashed and muted. Each chevron is
+   its list item clipped to the shape, its edge (::before) and its fill (::after) layered inside it, so a dashed edge and a mark follow the
+   chevron; each nests into the notch of the next. The same rules on every dashboard type that draws one. */
+.stepbar{list-style:none;margin:6px 0 2px;padding:0 0 0 7px;display:flex;flex-wrap:wrap;gap:4px 0;min-width:0;max-width:100%}
+.stepbar>li{--sb-edge:var(--ink-2);--sb-fill:color-mix(in srgb,var(--ink-2) 14%,var(--surface));--sb-w:1.5px;position:relative;z-index:0;display:flex;align-items:center;min-width:0;max-width:calc(100% + 7px);min-height:26px;margin-left:-7px;padding:4px 15px 4px 19px;font:11.5px/1.25 var(--mono);color:var(--ink);overflow-wrap:anywhere;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%,10px 50%)}
+.stepbar>li:first-child{padding-left:11px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%)}
+.stepbar>li::before,.stepbar>li::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--sb-edge)}
+.stepbar>li::after{z-index:-1;inset:var(--sb-w);background:var(--sb-fill);clip-path:polygon(1px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,1px 100%,10.5px 50%)}
+.stepbar>li:first-child::after{clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%)}
+.stepbar>li.cur{--sb-edge:var(--ink);--sb-fill:color-mix(in srgb,var(--ink) 7%,var(--surface));--sb-w:2px;font-weight:700}
+.stepbar>li.todo{--sb-edge:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px);--sb-fill:var(--surface);color:var(--muted)}
+.stepbar .sb-st{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.legend i.sbk{position:relative;z-index:0;width:22px;height:12px;border:0;border-radius:0;background:none;--sb-edge:var(--ink-2);--sb-fill:color-mix(in srgb,var(--ink-2) 14%,var(--surface));--sb-w:1.5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,0 100%,6px 50%)}
+.legend i.sbk::before,.legend i.sbk::after{content:"";position:absolute;inset:0;z-index:-2;background:var(--sb-edge)}
+.legend i.sbk::after{z-index:-1;inset:var(--sb-w);background:var(--sb-fill);clip-path:polygon(1px 0,calc(100% - 5px) 0,100% 50%,calc(100% - 5px) 100%,1px 100%,6.5px 50%)}
+.legend i.sbk.cur{--sb-edge:var(--ink);--sb-fill:color-mix(in srgb,var(--ink) 7%,var(--surface));--sb-w:2px}
+.legend i.sbk.todo{--sb-edge:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 5px);--sb-fill:var(--surface)}
+.roadmap>li>.stepbar{margin:5px 0 3px 14px}
 .legend i.swk{width:10px;height:10px;border:0;border-radius:2px;background:var(--c,var(--muted))}
 .legend i.barsk{height:6px;border:0;border-radius:0 3px 3px 0;background:var(--ink-2)}
 .legend i.gapk{border:0;background:none;width:auto;height:auto;font-style:italic;color:var(--muted)}
@@ -417,7 +436,7 @@ pre.dsl .c{color:var(--muted)} pre.dsl .k{color:var(--server);font-weight:600} p
 .docs li{padding:4px 0;border-top:1px solid var(--hair)}
 .docs a{text-decoration:none;border-bottom:1px solid var(--line)}
 .docs a:hover{border-bottom-color:var(--ink)}
-/* the last amendment, said in the Context section (an issue: the part above Context names none) */
+/* the last amendment, said in the Context Panel (an issue: the part above Context names none) */
 .context .amended{font-size:12.5px;color:var(--ink-2);margin:-4px 0 10px;overflow-wrap:anywhere}
 .context .amended .ck{font:700 10px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .context .amended a{text-decoration:none;border-bottom:1px solid var(--line)}
@@ -447,12 +466,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi-tile"><div class="l">Source</div><div class="v">131 files</div><div class="s">10,168 lines · commonMain 79 · jvmMain 24 · jvmTestFixtures 27 · the check module's jsMain 1</div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">131 files</div><div class="s">10,430 lines · commonMain 79 · jvmMain 24 · jvmTestFixtures 27 · the check module's jsMain 1</div></div>
   <div class="kpi-tile"><div class="l">Parts</div><div class="v">7 built</div><div class="s">each on its own board: the core 27 files · the policy 14 · the transport 13 · the cache 8 · the budget 28 · the facades 16 · the fixtures 24</div></div>
   <div class="kpi-tile"><div class="l">Types</div><div class="v">71 public</div><div class="s">top-level: 53 in the main variant · 18 in the fixtures · two flat packages</div></div>
   <div class="kpi-tile"><div class="l">Threads</div><div class="v">1 daemon pool</div><div class="s">per <code>OkHttpTransport</code>, on demand; the cache, the budget and the facades own none; every other call runs on the caller's thread or coroutine</div></div>
   <div class="kpi-tile"><div class="l">Tests</div><div class="v">263 classes</div><div class="s">1,447 tests across 5 testing levels, on the JVM · the core 38 · the policy 34 · the transport 50 · the cache 33 · the budget 47 · the facades 36 · the fixtures 25</div></div>
-  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">5</div><div class="s">1 docs unit, landing with this board · 4 unscheduled</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">5</div><div class="s">all unscheduled · 1 landing with this board</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -600,7 +619,7 @@ footer code{color:var(--ink-2)}
       </div>
       <p>1,447 tests in <code>com.spartanlabs.testing.&lt;level&gt;.webtools.http</code>, in <code>commonTest</code> and <code>jvmTest</code>, all run on the JVM: gating 40, component 920, integration 124, deterministic 317, non-functional 46. Each part's board breaks its share down. No L4b e2e or L5 UAT class here: the fixtures' publication is tested at L4b by the Gradle build's <code>fixturesPublicationCheck</code>, in this module's <code>check</code>. The test report: <code>webtools-http/build/reports/tests/</code>. <span class="gap">On <code>js</code> the code is compiled, never tested; items of each part's manual L5 pass were not performed; the transport, the cache and the facades are measured only on Windows 11 with JDK 23.0.2 on loopback. Four classes set JVM-wide properties or <code>System.err</code> and run isolated.</span></p></div>
     <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
-      <ul><li>Version <code>1.0.0</code>, from the root default: new, unreleased, not on Maven Central until the HTTP stack is complete.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (1,031 lines, the call facades the last addition) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code> or <code>sealed</code>.</span></li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>); no dump covers it, and <code>fixturesPublicationCheck</code> asserts its publication.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
+      <ul><li>Version <code>1.0.0</code>, from the root default: new and not on Maven Central yet. Its javadoc jar holds the Dokka reference, the test fixtures included.</li><li>Checked: the ABI dump <code>api/webtools-http.api</code> (1,031 lines, the call facades the last addition) by <code>apiCheck</code>, and the Java 11 floor by <code>verifyJavaFloor</code>, both in <code>check</code>. <span class="gap">The dump does not record <code>@SubclassOptInRequired</code> or <code>sealed</code>.</span></li><li>The test-fixtures variant rides in the same <code>1.0.0</code> (capability <code>webtools-http-test-fixtures</code>); no dump covers it, and <code>fixturesPublicationCheck</code> asserts its publication.</li><li>Experimental seams may change in a minor release; Stable Core changes only in a major.</li></ul></div>
     <div class="guarantee-card"><h3>Thread safety</h3>
       <ul><li>Every value type is immutable; every port may be called concurrently, as its contract states.</li><li><code>OkHttpTransport</code> is safe to share and main-safe; <code>CaffeineResponseCache</code>, <code>WindowedCallBudget</code>, <code>UpstreamClient</code> and <code>UrlFetcher</code> take any number of concurrent callers; the policy's classifier and guards are stateless.</li><li>Confined: a builder, reachable only inside its factory's lambda.</li></ul></div>
     <div class="guarantee-card"><h3>Resources to close</h3>
@@ -613,9 +632,9 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-07</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-09</small></h3>
       <ol class="roadmap">
-        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="10" data-total="11"></span></span><span class="tags"><span class="badge">open</span></span></div>
+        <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small> <span class="chainprog" data-landed="11" data-total="11"><span data-unit="done">Shared build logic</span><span data-unit="done">Java 11 floor (#47)</span><span data-unit="done">webtools-http common core</span><span data-unit="done">Published test fixtures</span><span data-unit="done">Outbound-URL policy</span><span data-unit="done">OkHttp transport</span><span data-unit="done">Response cache</span><span data-unit="done">Call budget</span><span data-unit="done">Call facades</span><span data-unit="done">webtools-feeds</span><span data-unit="done">HTTP-stack documentation</span></span></span><span class="tags"><span class="badge">closed</span></span></div>
           <ul class="issues">
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/62" target="_blank" rel="noopener">#62</a><span><a data-board="62">webtools-http: module skeleton, opt-in marker, failure model, request/response types, transport and wall-clock ports, logging seam and the check-only <code>js</code> compile</a> <small>unit 3 · landed in 7de8207: the <a href="../webtools-http-core/index.html">common core</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/63" target="_blank" rel="noopener">#63</a><span><a data-board="63">webtools-http: published test-fixtures variant with the fake transport, virtual clock, <code>.http</code> fixtures, recorder and the publication check</a> <small>unit 4 · landed in 4fcc6e0: the <a href="../webtools-http-test-fixtures/index.html">test fixtures</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
@@ -624,21 +643,22 @@ footer code{color:var(--ink-2)}
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/66" target="_blank" rel="noopener">#66</a><span><a data-board="66">webtools-http: <code>ResponseCache</code> port and <code>CaffeineResponseCache</code> default</a> <small>unit 7 · landed in 8122af7: the <a href="../webtools-http-cache/index.html">response cache</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/67" target="_blank" rel="noopener">#67</a><span><a data-board="67">webtools-http: <code>CallBudget</code> port, <code>WindowedCallBudget</code>, rate signals, the persistence and observer seams and their fakes</a> <small>unit 8 · landed in 5f221ce: the <a href="../webtools-http-budget/index.html">call budget</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
             <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/68" target="_blank" rel="noopener">#68</a><span><a data-board="68">webtools-http: <code>UpstreamClient</code> and <code>UrlFetcher</code> composing cache, budget and transport</a> <small>unit 9 · landed in 0374c8d: the <a href="../webtools-http-facades/index.html">call facades</a></small></span><span class="tags"><span class="badge">closed</span></span></li>
-            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · the stack's architecture document, landing with this board</small></span><span class="tags"><span class="badge">docs</span><span class="badge">open</span></span></li>
+            <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/70" target="_blank" rel="noopener">#70</a><span><a data-board="70">Docs: evergreen <code>docs/webtools-http-architecture.md</code> and the README's HTTP-stack and feeds sections</a> <small>unit 11 · landed in c40ff34: the stack's architecture document</small></span><span class="tags"><span class="badge">docs</span><span class="badge">closed</span></span></li>
           </ul>
           <p class="more">3 more of its issues touch other systems: #61 and #47 the build, #69 webtools-feeds.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>4 open · 2026-11-07</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>5 open · 2026-11-09</small></h3>
       <ul class="issues">
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/99" target="_blank" rel="noopener">#99</a><span><a data-board="99">Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation</a> <small>lands with this board: the build note gone, KDoc on every public declaration, the Dokka reference with the fixtures</small></span><span class="tags"><span class="badge">feature</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/93" target="_blank" rel="noopener">#93</a><span><a data-board="93">webtools-http: <code>Url.redacted()</code> shows the path, so a secret carried in a URL's path is logged</a> <small>the common core's redaction, which the transport's and the facades' log lines use</small></span><span class="tags"><span class="badge">enhancement</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/91" target="_blank" rel="noopener">#91</a><span><a data-board="91">webtools-http: save a hard window when a server reading or a clock step raises its count</a> <small>the call budget</small></span><span class="tags"><span class="badge bug">▲ bug</span><span class="badge">open</span></span></li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/87" target="_blank" rel="noopener">#87</a><span><a data-board="87">webtools-http: UrlParseLinearTimeNonFunctionalTest exceeds its 100x bound when the level test tasks run in parallel</a> <small>the common core: one failure in a forced concurrent run; it passes on its own</small></span><span class="tags"><span class="badge bug">▲ bug</span><span class="badge">open</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>the first CI to run <code>apiCheck</code> and the differentials, which must keep the four isolated classes isolated and needs a JDK for the child-JVM test; the release waits on it</small></span><span class="tags"><span class="badge">docs · enhancement</span><span class="badge">open</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/58" target="_blank" rel="noopener">#58</a><span><a data-board="58">Repository practices: CI, CONTRIBUTING.md, CHANGELOG.md, release tags, and the foojay resolver for Gradle 9</a> <small>the CI build and test jobs that would run <code>apiCheck</code> and the differentials, which must keep the four isolated classes isolated and needs a JDK for the child-JVM test; <code>ci.yml</code> has only the <code>docs</code> job today</small></span><span class="tags"><span class="badge">docs · enhancement</span><span class="badge">open</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
         <li>The parts' own boards: <a href="../webtools-http-core/index.html">webtools-http-core</a> · <a href="../webtools-http-url-policy/index.html">webtools-http-url-policy</a> · <a href="../webtools-http-transport/index.html">webtools-http-transport</a> · <a href="../webtools-http-cache/index.html">webtools-http-cache</a> · <a href="../webtools-http-budget/index.html">webtools-http-budget</a> · <a href="../webtools-http-facades/index.html">webtools-http-facades</a> · <a href="../webtools-http-test-fixtures/index.html">webtools-http-test-fixtures</a>, each with its plan, as-built record and consequences</li>
-        <li>Issue boards that amended this system: <a data-issue="68">#68</a> call-facades · <a data-issue="67">#67</a> call-budget · <a data-issue="66">#66</a> response-cache · <a data-issue="65">#65</a> okhttp-transport · <a data-issue="64">#64</a> url-policy · <a data-issue="63">#63</a> test-support · <a data-issue="62">#62</a> http-core · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
+        <li>Issue boards that amended this system: <a data-issue="99">#99</a> Dokka and the 1.0.0 preparation · <a data-issue="68">#68</a> call-facades · <a data-issue="67">#67</a> call-budget · <a data-issue="66">#66</a> response-cache · <a data-issue="65">#65</a> okhttp-transport · <a data-issue="64">#64</a> url-policy · <a data-issue="63">#63</a> test-support · <a data-issue="62">#62</a> http-core · <a data-issue="55">#55</a> the tracking board, the eleven units in landing order</li>
         <li><a href="../../webtools-http-architecture.md">webtools-http architecture</a> — the stack as built, <code>webtools-feeds</code> included: its modules and components, how they compose on a call, where each outbound-URL check runs, the failure model, the threads, closing, logging, the stability tiers, the test support and the known limitations</li>
         <li><a href="../../plans/55-http-client-stack/architecture.md">#55 architecture</a> — §6.2 to §6.7 the parts built, §6.8 the check-only js modules, §9 extension and stability, §11 the decomposition · <a href="../../plans/55-http-client-stack/consequences.md">#55 consequences</a></li>
         <li><a href="../../../README.md">README</a> — the artifact row, which names the call facades, <code>OkHttpTransport</code>, the response cache, the call budget and the outbound-URL policies, its "HTTP client stack" section, and the install lines, the <code>testFixtures(…)</code> line among them, marked not yet released; "Build &amp; test"</li>
@@ -671,9 +691,9 @@ footer code{color:var(--ink-2)}
 {
   "slug": "webtools-http",
   "version": "1.0.0",
-  "asIs": {"ref": "docs/issue-70-http-architecture-docs", "sha": "45aa548", "date": "2026-11-07T03:52:35Z"},
-  "lastAmended": {"issue": 70, "title": "Docs: evergreen `docs/webtools-http-architecture.md` and the README's HTTP-stack and feeds sections", "sha": "45aa548"},
-  "written": {"sha": "45aa548"}
+  "asIs": {"ref": "feat/issue-99-dokka-api-docs", "sha": "2c634f4", "date": "2026-11-09T02:02:04Z"},
+  "lastAmended": {"issue": 99, "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation", "sha": "2c634f4"},
+  "written": {"sha": "2c634f4"}
 }
 </script>
 
@@ -681,7 +701,7 @@ footer code{color:var(--ink-2)}
      and the C4 tab is parsed from this text at load, so what the tab shows is what the file says. -->
 <script type="text/plain" id="dsl">
 // webtools-http — C4 model as code (Structurizr DSL). Source of truth for the structure shown on docs/dashboards/webtools-http/index.html.
-// As-is at WebTools docs/issue-70-http-architecture-docs 45aa548 (2026-11-07), webtools-http 1.0.0 (new, unreleased), drawn as the parts it binds, one component each: the common core, the outbound-URL policy, the OkHttp transport, the response cache, the call budget, the call facades and the published test fixtures, each with its own board and model under docs/dashboards/<part>/, and its check-only js module. Code is authoritative on any conflict.
+// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09), webtools-http 1.0.0 (new, unreleased), drawn as the parts it binds, one component each: the common core, the outbound-URL policy, the OkHttp transport, the response cache, the call budget, the call facades and the published test fixtures, each with its own board and model under docs/dashboards/<part>/, and its check-only js module. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin internet I/O helpers, published as independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -739,7 +759,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
             include *
             autoLayout lr
         }
-        component webtools.http "Components" "webtools-http as built at docs/issue-70-http-architecture-docs 45aa548, one component per part, each with its own board." {
+        component webtools.http "Components" "webtools-http as built at feat/issue-99-dokka-api-docs 2c634f4, one component per part, each with its own board." {
             include *
             autoLayout tb
         }
@@ -794,7 +814,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","66":"../../plans/55-http-client-stack/66-response-cache/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html","68":"../../plans/55-http-client-stack/68-call-facades/dashboard.html","69":"../../plans/55-http-client-stack/69-feeds/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line
+const BOARDS={"55":"../../plans/55-http-client-stack/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","63":"../../plans/55-http-client-stack/63-test-support/dashboard.html","64":"../../plans/55-http-client-stack/64-url-policy/dashboard.html","65":"../../plans/55-http-client-stack/65-okhttp-transport/dashboard.html","66":"../../plans/55-http-client-stack/66-response-cache/dashboard.html","67":"../../plans/55-http-client-stack/67-call-budget/dashboard.html","68":"../../plans/55-http-client-stack/68-call-facades/dashboard.html","69":"../../plans/55-http-client-stack/69-feeds/dashboard.html","99":"../../plans/99-dokka-api-docs/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -1350,16 +1370,16 @@ $("#seq-next").addEventListener("click",()=>gotoStep(seq.cur+1));
 $("#seq-play").addEventListener("click",e=>{ const b=e.currentTarget; if(seq.timer){ clearInterval(seq.timer); seq.timer=null; b.textContent="play"; b.setAttribute("aria-pressed","false"); } else { seq.timer=setInterval(()=>gotoStep(seq.cur+1),1600); b.textContent="pause"; b.setAttribute("aria-pressed","true"); } });
 
 /* ---------- The stamps (state.json) ----------
-   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>", or "<branch> @ <sha> · not yet landed" while
-   the board shows a feature branch) and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
-   with nothing to say is removed. The last amendment names an issue, so it is said in the Context section, never in the header: the board
+   The header's chips: the version (a system board), the as-is stamp ("<ref> @ <sha> · <date>")
+   and, while the panels were written at another commit than the stamp names, "written at <sha>". A chip
+   with nothing to say is removed. The last amendment names an issue, so it is said in the Context Panel, never in the header: the board
    above Context is as-is and names no issue (system/RULES.md §2, §6); its number opens the GitHub issue, its title the issue board
    (linkIssues() resolves it at load). A header chip for it left by an older template is removed. */
 function renderState(){
   const S=STATE||{}, a=S.asIs||{}, la=S.lastAmended||{}, w=S.written||{};
   const set=(id,html)=>{ const e=document.getElementById(id); if(!e) return; if(!html){ e.remove(); return; } e.hidden=false; e.innerHTML=html; };
   set("chip-version",S.version?`<span class="ck">version</span> <b>${esc(S.version)}</b>`:"");
-  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${a.landed===false?"not yet landed":when(a.date)}`:"");
+  set("chip-asis",a.sha?`<span class="ck">as-is at</span> <b>${esc(a.ref||"?")} @ ${esc(a.sha)}</b> · ${when(a.date)}`:"");
   set("chip-written",w.sha&&a.sha&&w.sha!==a.sha?`<span class="ck">written at</span> <b>${esc(w.sha)}</b>`:"");
   const old=document.getElementById("chip-amended"); if(old) old.remove();
   const ctx=document.querySelector("section.context"); let p=document.getElementById("ctx-amended");
@@ -1371,11 +1391,24 @@ renderState();
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
    Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
    planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
-   chain bar. A section that draws no encoding shows no legend. A tracking issue's chain, written <span class="chainprog"
-   data-landed="n" data-total="m"></span>, is drawn here: "chain n of m landed" and its bar. */
+   chain's StepBar. A section that draws no encoding shows no legend. */
+/* A tracking issue's chain on the roadmap (dashboards-skill/54; nomenclature/ui.md, StepBar), written <span class="chainprog"
+   data-landed="n" data-total="m"> holding one <span data-unit="done|current|todo">its name</span> per unit in landing order: drawn
+   "chain n of m landed" in its place and, on a line of its own under the roadmap item, a StepBar, one chevron per unit with the unit's name
+   inside, done (landed), current (in progress) or to come. A state board draws no work in progress, so the current unit carries no mark.
+   An ordered list, the current units aria-current="step", each state said in words to a screen reader. A chain written before the units
+   (data-landed and data-total alone) is drawn with its units numbered. */
+const SB_STATE={done:"landed",cur:"in progress",todo:"to come"};
+function chainBars(){ document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ if(e.dataset.drawn) return; e.dataset.drawn="1";
+  const n=+e.dataset.landed||0, m=+e.dataset.total||0, named=[...e.querySelectorAll("[data-unit]")].map(u=>({html:u.innerHTML.trim(),st:({done:"done",landed:"done",current:"cur"})[u.dataset.unit]||"todo"}));
+  const us=named.length?named:Array.from({length:m},(x,k)=>({html:`unit ${k+1}`,st:k<n?"done":"todo"}));
+  e.textContent=`chain ${n} of ${m} landed`;
+  const ri=e.closest(".ri"), host=ri&&ri.parentElement; if(!host||!us.length) return;
+  const num=(ri.querySelector("a")||{}).textContent||"", bar=document.createElement("ol"); bar.className="stepbar"; bar.setAttribute("aria-label",`${num?num+": ":""}its units in landing order`);
+  bar.innerHTML=us.map(u=>`<li class="${u.st}"${u.st==="cur"?' aria-current="step"':""}>${u.html}<span class="sb-st">, ${SB_STATE[u.st]}</span></li>`).join("");
+  ri.after(bar); }); }
 function sectionKeys(){
-  document.querySelectorAll(".chainprog[data-total]").forEach(e=>{ const n=+e.dataset.landed||0, m=+e.dataset.total||0, pct=m?Math.round(100*n/m):0;
-    e.innerHTML=`chain ${n} of ${m} landed <span class="cbar" role="img" aria-label="${n} of ${plural(m,"unit")} landed"><i style="width:${pct}%"></i></span>`; });
+  chainBars();
   const put=(sec,id,entries)=>{ if(!sec) return; let k=document.getElementById(id); const html=entries.filter(Boolean).join("");
     if(!html){ if(k) k.remove(); return; } if(!k){ k=document.createElement("div"); k.className="legend"; k.id=id; sec.appendChild(k); } k.innerHTML=html; };
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
@@ -1390,7 +1423,8 @@ function sectionKeys(){
     states.length?`<span>${states.map(s=>`<span class="badge">${esc(s)}</span>`).join(" ")} the issue's state on the tracker</span>`:"",
     has(C,".badge.bug")?`<span><span class="badge bug">bug</span>labelled a bug on the tracker</span>`:"",
     has(C,".badge.planned")?`<span><span class="badge planned">planned</span>dashed: planned, not started</span>`:"",
-    has(C,".chainprog")?`<span><span class="cbar"><i style="width:40%"></i></span>a tracking issue's chain: units landed of all units</span>`:""]);
+    ...(()=>{ const st=new Set(C?[...C.querySelectorAll(".stepbar>li")].map(l=>["done","cur"].find(k=>l.classList.contains(k))||"todo"):[]);
+      return [st.has("done")?`<span><i class="sbk"></i>a tracking issue's unit, in landing order: landed</span>`:"",st.has("cur")?`<span><i class="sbk cur"></i>bold: a unit in progress</span>`:"",st.has("todo")?`<span><i class="sbk todo"></i>dashed: a unit to come</span>`:""]; })()]);
 }
 sectionKeys();
 

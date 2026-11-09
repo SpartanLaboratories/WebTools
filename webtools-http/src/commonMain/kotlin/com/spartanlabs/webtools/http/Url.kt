@@ -50,7 +50,12 @@ public class Url private constructor(
     /** The full canonical URL, **query included**; use [redacted] for logs and messages. */
     override fun toString(): String = text
 
+    /**
+     * Two [Url]s are equal when their canonical text, query included, is equal. See the class description for what
+     * makes two texts different.
+     */
     override fun equals(other: Any?): Boolean = other is Url && other.text == text
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = text.hashCode()
 
     /** The parser. */

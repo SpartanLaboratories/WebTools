@@ -17,8 +17,11 @@ public class Lane(
         require(name.isNotBlank()) { "name must not be blank" }
     }
 
+    /** Two [Lane]s are equal when their [name]s are equal, case-sensitively. */
     override fun equals(other: Any?): Boolean = other is Lane && other.name == name
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = name.hashCode()
+    /** A diagnostic string for logs: the lane's [name]. Its format is not part of the API and may change. */
     override fun toString(): String = "Lane($name)"
 
     /** The two lanes the stack names. */

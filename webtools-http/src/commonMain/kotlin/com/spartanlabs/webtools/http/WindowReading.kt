@@ -29,7 +29,10 @@ public class WindowReading(
         require(resetIn == null || !resetIn.isNegative()) { "resetIn must not be negative" }
     }
 
+    /** Two [WindowReading]s are equal when their [remaining] and [resetIn] are equal. */
     override fun equals(other: Any?): Boolean = other is WindowReading && other.remaining == remaining && other.resetIn == resetIn
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = 31 * remaining + (resetIn?.hashCode() ?: 0)
+    /** A diagnostic string for logs: [remaining] and [resetIn]. Its format is not part of the API and may change. */
     override fun toString(): String = "WindowReading(remaining=$remaining, resetIn=$resetIn)"
 }

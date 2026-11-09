@@ -2,7 +2,7 @@ package com.spartanlabs.webtools.http
 
 /**
  * The module's logging seam: slf4j on the JVM, a no-op on js. Each message takes `{}` placeholders for
- * [args]; a trailing [Throwable] among the arguments is the exception, as slf4j reads it.
+ * `args`; a trailing [Throwable] among the arguments is the exception, as slf4j reads it.
  */
 internal interface Log {
     fun debug(message: String, vararg args: Any?)

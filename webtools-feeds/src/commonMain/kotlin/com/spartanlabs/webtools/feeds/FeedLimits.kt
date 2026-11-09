@@ -47,6 +47,11 @@ public class FeedLimits internal constructor(
     /** The most distinct namespace URIs in a document; more fail the parse. */
     public val maxNamespaceUris: Int,
 ) {
+    /**
+     * Two [FeedLimits] are equal when all ten of their limits are equal: [maxEntries], [maxTextChars], [maxIdChars],
+     * [maxLinkChars], [maxCategoriesPerEntry], [maxEnclosuresPerEntry], [maxDepth], [maxAttributesPerElement],
+     * [maxElements] and [maxNamespaceUris].
+     */
     override fun equals(other: Any?): Boolean =
         other is FeedLimits &&
             other.maxEntries == maxEntries && other.maxTextChars == maxTextChars && other.maxIdChars == maxIdChars &&
@@ -55,12 +60,14 @@ public class FeedLimits internal constructor(
             other.maxAttributesPerElement == maxAttributesPerElement && other.maxElements == maxElements &&
             other.maxNamespaceUris == maxNamespaceUris
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int =
         listOf(
             maxEntries, maxTextChars, maxIdChars, maxLinkChars, maxCategoriesPerEntry, maxEnclosuresPerEntry,
             maxDepth, maxAttributesPerElement, maxElements, maxNamespaceUris,
         ).fold(0) { acc, v -> 31 * acc + v }
 
+    /** A diagnostic string for logs: all ten limits. Its format is not part of the API and may change. */
     override fun toString(): String =
         "FeedLimits(maxEntries=$maxEntries, maxTextChars=$maxTextChars, maxIdChars=$maxIdChars, maxLinkChars=$maxLinkChars, " +
             "maxCategoriesPerEntry=$maxCategoriesPerEntry, maxEnclosuresPerEntry=$maxEnclosuresPerEntry, maxDepth=$maxDepth, " +

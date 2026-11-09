@@ -36,6 +36,10 @@ public abstract class BudgetEvent protected constructor() {
             require(!waited.isNegative()) { "waited must not be negative" }
         }
 
+        /**
+         * A diagnostic string for logs: the [lane]'s name, [cost] and [waited]. Its format is not part of the API and
+         * may change.
+         */
         override fun toString(): String = "Granted(lane=${lane.name}, cost=$cost, waited=$waited)"
     }
 
@@ -70,6 +74,10 @@ public abstract class BudgetEvent protected constructor() {
             require(window == null || window.isNotBlank()) { "window must be null or not blank" }
         }
 
+        /**
+         * A diagnostic string for logs: the [lane]'s name, [cost], [wait], the [reason]'s name and [window]. Its format
+         * is not part of the API and may change.
+         */
         override fun toString(): String = "Refused(lane=${lane.name}, cost=$cost, wait=$wait, reason=${reason.name}, window=$window)"
     }
 
@@ -97,6 +105,10 @@ public abstract class BudgetEvent protected constructor() {
             require(!length.isNegative()) { "length must not be negative" }
         }
 
+        /**
+         * A diagnostic string for logs: [untilEpochMillis], [length] and the [source]'s name. Its format is not part of
+         * the API and may change.
+         */
         override fun toString(): String = "Paused(until=$untilEpochMillis, length=$length, source=${source.name})"
     }
 
@@ -119,6 +131,7 @@ public abstract class BudgetEvent protected constructor() {
             require(window.isNotBlank()) { "window must not be blank" }
         }
 
+        /** A diagnostic string for logs: [window] and [resetsAtEpochMillis]. Its format is not part of the API and may change. */
         override fun toString(): String = "HardStop(window=$window, resetsAt=$resetsAtEpochMillis)"
     }
 
@@ -146,6 +159,10 @@ public abstract class BudgetEvent protected constructor() {
             require(raisedBy >= 1) { "raisedBy must be at least 1" }
         }
 
+        /**
+         * A diagnostic string for logs: [window], [serverUsed] and [raisedBy]. Its format is not part of the API and
+         * may change.
+         */
         override fun toString(): String = "Reconciled(window=$window, serverUsed=$serverUsed, raisedBy=$raisedBy)"
     }
 
@@ -164,6 +181,10 @@ public abstract class BudgetEvent protected constructor() {
         /** What the store reported; for diagnostics. */
         public val cause: Throwable,
     ) : BudgetEvent() {
+        /**
+         * A diagnostic string for logs: the [operation]'s name and the [cause]'s simple class name, never its message.
+         * Its format is not part of the API and may change.
+         */
         override fun toString(): String = "StoreFailed(operation=${operation.name}, cause=${cause::class.simpleName})"
     }
 
@@ -192,6 +213,10 @@ public abstract class BudgetEvent protected constructor() {
             require(windowsDropped >= 0) { "windowsDropped must not be negative" }
         }
 
+        /**
+         * A diagnostic string for logs: [windowsRestored], [windowsDropped] and [ignoredForSkew]. Its format is not
+         * part of the API and may change.
+         */
         override fun toString(): String = "Restored(windowsRestored=$windowsRestored, windowsDropped=$windowsDropped, ignoredForSkew=$ignoredForSkew)"
     }
 }

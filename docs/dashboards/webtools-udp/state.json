@@ -1,7 +1,7 @@
 {
   "slug": "webtools-udp",
-  "version": "2.0.0a",
-  "asIs": {"ref": "master", "sha": "5f221ce", "date": "2026-11-05T23:52:25Z"},
-  "lastAmended": {"issue": 47, "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+", "sha": "e249f52"},
-  "written": {"sha": "7de8207"}
+  "version": "2.0.1",
+  "asIs": {"ref": "feat/issue-99-dokka-api-docs", "sha": "2c634f4", "date": "2026-11-09T02:02:04Z"},
+  "lastAmended": {"issue": 99, "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation", "sha": "2c634f4"},
+  "written": {"sha": "2c634f4"}
 }

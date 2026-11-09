@@ -15,5 +15,6 @@ public class InMemoryBudgetStore : BudgetStore {
 
     override suspend fun load(): Result<BudgetSnapshot> = lock.withLock { Result.success(stored) }
     override suspend fun save(snapshot: BudgetSnapshot): Result<Unit> = lock.withLock { stored = snapshot; Result.success(Unit) }
+    /** Returns the fixed text `InMemoryBudgetStore`, for diagnostics and logs. */
     override fun toString(): String = "InMemoryBudgetStore"
 }

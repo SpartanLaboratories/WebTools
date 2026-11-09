@@ -79,12 +79,18 @@ public class Fixture(
         return HttpMessageCodec.write(status, headers, data, comments)
     }
 
+    /** Two [Fixture]s are equal when their [status], [headers] and body bytes are equal. */
     override fun equals(other: Any?): Boolean =
         other is Fixture && other.status == status && other.headers == headers && other.data.contentEquals(data)
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = (status * 31 + headers.hashCode()) * 31 + data.contentHashCode()
 
     // Header names only (HttpHeaders prints no value); never the body.
+    /**
+     * A diagnostic string for logs: [status], the [headers]' names and the body size, never a header value or the body.
+     * Its format is not part of the API and may change.
+     */
     override fun toString(): String = "Fixture(status=$status, headers=$headers, bodySize=${data.size})"
 
     /** The parser. */

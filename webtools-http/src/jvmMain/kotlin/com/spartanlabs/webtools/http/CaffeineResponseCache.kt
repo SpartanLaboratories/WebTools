@@ -268,6 +268,10 @@ public class CaffeineResponseCache internal constructor(
         cacheLog.info("closed")
     }
 
+    /**
+     * A diagnostic string for logs: the maximum weight and whether the cache is closed. Its format is not part of the
+     * API and may change.
+     */
     override fun toString(): String = "CaffeineResponseCache(maxWeight=$maxWeight, closed=${closed.get()})"
 
     //region internal test seams

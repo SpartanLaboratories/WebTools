@@ -14,8 +14,11 @@ public class RefusalReason private constructor(
     /** The reason's name, as its constant is spelled. */
     public val name: String,
 ) {
+    /** Two [RefusalReason]s are equal when their [name]s are equal. */
     override fun equals(other: Any?): Boolean = other is RefusalReason && other.name == name
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = name.hashCode()
+    /** Returns the reason's [name]. */
     override fun toString(): String = name
 
     /** The reasons. */

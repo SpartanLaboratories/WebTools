@@ -86,6 +86,10 @@ public class VirtualClock(
         scheduler.runCurrent()              // ... so run them now
     }
 
+    /**
+     * A diagnostic string for logs: the start instant and the elapsed virtual time, nothing else. Its format is not
+     * part of the API and may change.
+     */
     override fun toString(): String = "VirtualClock(start=${Instant.ofEpochMilli(startEpochMillis)}, elapsed=$elapsed)"
 
     // The one implementer of a gated port in this file; the @OptIn is the line a consumer's own WallClock needs.

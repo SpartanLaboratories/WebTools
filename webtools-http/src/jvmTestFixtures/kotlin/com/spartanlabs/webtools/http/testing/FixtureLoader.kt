@@ -51,6 +51,7 @@ public class FixtureLoader(
             .getOrThrow()
     }
 
+    /** A diagnostic string for logs: the root only. Its format is not part of the API and may change. */
     override fun toString(): String = "FixtureLoader(root=$root)"
 
     private fun read(resource: String): Result<ByteArray> =

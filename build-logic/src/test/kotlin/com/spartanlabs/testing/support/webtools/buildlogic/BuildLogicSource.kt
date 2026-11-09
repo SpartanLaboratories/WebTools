@@ -13,7 +13,8 @@ import kotlin.streams.asSequence
  * `pluginManagement { includeBuild("build-logic") }`, with no injected plugin classpath.
  *
  * The source directory comes from the system property [SOURCE_PROPERTY], which `:build-logic:e2eTest`
- * sets to this build's project directory. Only `settings.gradle.kts`, `build.gradle.kts` and
+ * sets to this build's project directory; `:build-logic:gatingTest` and `:build-logic:test` set it too, for
+ * `RootScriptsAgreementGatingTest`, which reads the scripts from there and copies nothing. Only `settings.gradle.kts`, `build.gradle.kts` and
  * `src/main/` are copied, never `build/`, `.gradle/` or the tests, so no nested build works in the
  * directory the outer build is executing in.
  */

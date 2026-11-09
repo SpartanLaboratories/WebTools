@@ -42,11 +42,20 @@ public class BudgetSnapshot(
         require(pausedUntilEpochMillis >= 0) { "pausedUntilEpochMillis must not be negative" }
     }
 
+    /**
+     * Two [BudgetSnapshot]s are equal when their [version], [takenAtEpochMillis], [windows] and
+     * [pausedUntilEpochMillis] are equal.
+     */
     override fun equals(other: Any?): Boolean =
         other is BudgetSnapshot && other.version == version && other.takenAtEpochMillis == takenAtEpochMillis && other.windows == windows &&
             other.pausedUntilEpochMillis == pausedUntilEpochMillis
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = listOf(version, takenAtEpochMillis, windows, pausedUntilEpochMillis).fold(0) { acc, v -> 31 * acc + v.hashCode() }
+    /**
+     * A diagnostic string for logs: [version], [takenAtEpochMillis], the number of [windows] and
+     * [pausedUntilEpochMillis]. Its format is not part of the API and may change.
+     */
     override fun toString(): String = "BudgetSnapshot(version=$version, takenAt=$takenAtEpochMillis, windows=${windows.size}, pausedUntil=$pausedUntilEpochMillis)"
 
     /** The layout version and the empty snapshot. */

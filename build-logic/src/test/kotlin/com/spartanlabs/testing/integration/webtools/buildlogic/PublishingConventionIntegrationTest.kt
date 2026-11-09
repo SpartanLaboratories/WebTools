@@ -20,8 +20,8 @@ import java.util.zip.ZipFile
  * library plugins apply it. It checks four things:
  * - every published POM carries the shared metadata;
  * - the Maven Central repository and one signing task per publication are registered;
- * - the Kotlin/JVM publication ships a sources jar and a javadoc jar;
- * - the multiplatform `jvm` publication ships a sources jar and an empty javadoc jar.
+ * - the Kotlin/JVM publication ships a sources jar and a Dokka javadoc jar;
+ * - the multiplatform `jvm` publication ships a sources jar and a Dokka javadoc jar.
  *
  * Each sample publishes only to a folder inside its own project, with its `Sign` tasks disabled:
  * nothing reaches a remote repository, and nothing is signed.
@@ -114,23 +114,32 @@ class PublishingConventionIntegrationTest {
         assertSharedPom(multiplatformWorkspace.resolve("$repoDir/sample-jvm/1.0.0/sample-jvm-1.0.0.pom"))
     }
 
-    @Test
-    fun `the Kotlin JVM publication ships a sources jar and a javadoc jar`() {
-        listOf("sample-1.0.0.jar", "sample-1.0.0-sources.jar", "sample-1.0.0-javadoc.jar").forEach { name ->
-            assertTrue(Files.isRegularFile(jvmWorkspace.resolve("$repoDir/sample/1.0.0/$name")), "$name was not published")
+    // The names of a jar's non-directory entries, as read from the zip.
+    private fun javadocEntries(jar: Path): List<String> =
+        ZipFile(jar.toFile()).use { zip -> zip.entries().asSequence().filterNot { it.isDirectory }.map { it.name }.toList() }
+
+    private fun assertDokkaJar(jar: Path) {
+        val entries = javadocEntries(jar)
+        listOf("index.html", "navigation.html").forEach { name ->
+            assertTrue(entries.any { it == name }, "$name is not an entry of $jar: $entries")
         }
     }
 
     @Test
-    fun `the multiplatform jvm publication ships a sources jar and an empty javadoc jar`() {
+    fun `the Kotlin JVM publication ships a sources jar and a Dokka javadoc jar`() {
+        listOf("sample-1.0.0.jar", "sample-1.0.0-sources.jar", "sample-1.0.0-javadoc.jar").forEach { name ->
+            assertTrue(Files.isRegularFile(jvmWorkspace.resolve("$repoDir/sample/1.0.0/$name")), "$name was not published")
+        }
+        assertDokkaJar(jvmWorkspace.resolve("$repoDir/sample/1.0.0/sample-1.0.0-javadoc.jar"))
+    }
+
+    @Test
+    fun `the multiplatform jvm publication ships a sources jar and a Dokka javadoc jar`() {
         val dir = "$repoDir/sample-jvm/1.0.0"
         assertTrue(
             Files.isRegularFile(multiplatformWorkspace.resolve("$dir/sample-jvm-1.0.0-sources.jar")),
             "sample-jvm-1.0.0-sources.jar was not published",
         )
-        val javadocEntries = ZipFile(multiplatformWorkspace.resolve("$dir/sample-jvm-1.0.0-javadoc.jar").toFile()).use { zip ->
-            zip.entries().toList().map { it.name }.filterNot { it == "META-INF/" || it == "META-INF/MANIFEST.MF" }
-        }
-        assertEquals(emptyList<String>(), javadocEntries, "the javadoc jar is not empty")
+        assertDokkaJar(multiplatformWorkspace.resolve("$dir/sample-jvm-1.0.0-javadoc.jar"))
     }
 }

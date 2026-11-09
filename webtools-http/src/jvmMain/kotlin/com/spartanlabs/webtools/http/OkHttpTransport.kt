@@ -137,6 +137,10 @@ public class OkHttpTransport internal constructor(
         transportLog.info("closed")
     }
 
+    /**
+     * A diagnostic string for logs: the policy's kind and whether the transport is closed. Its format is not part of
+     * the API and may change.
+     */
     override fun toString(): String = "OkHttpTransport(policy=$policyKind, closed=${closed.get()})"
 
     //region the call

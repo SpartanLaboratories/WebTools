@@ -39,6 +39,11 @@ public class HttpResponse internal constructor(
      */
     public fun body(): ByteArray = data.copyOf()
 
+    /**
+     * A diagnostic string for logs: [status], the [url] in its redacted form (`Url.redacted`), the [headers]' names,
+     * the body size and the number of redirects, never a header value or the body. Its format is not part of the API
+     * and may change.
+     */
     override fun toString(): String =
         "HttpResponse(status=$status, url=${url.redacted()}, headers=$headers, bodySize=${data.size}, redirects=${redirectChain.size})"
 

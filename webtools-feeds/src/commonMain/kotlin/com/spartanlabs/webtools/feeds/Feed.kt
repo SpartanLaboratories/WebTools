@@ -22,11 +22,17 @@ public class Feed internal constructor(
     /** The entries, in document order. */
     public val entries: List<FeedEntry> = entries.toList()
 
+    /** Two [Feed]s are equal when their [title], [link], [description] and [entries] are equal. */
     override fun equals(other: Any?): Boolean =
         other is Feed && other.title == title && other.link == link && other.description == description && other.entries == entries
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = listOf(title, link, description, entries).fold(0) { acc, v -> 31 * acc + v.hashCode() }
 
+    /**
+     * A diagnostic string for logs: whether [title] and [description] are present, the number of [entries] and the
+     * [link] as scheme, host and port, never any text. Its format is not part of the API and may change.
+     */
     override fun toString(): String =
         "Feed(title=${presence(title)}, link=${link?.let(::originOfLink) ?: "none"}, description=${presence(description)}, entries=${entries.size})"
 

@@ -17,9 +17,10 @@ import org.junit.jupiter.api.TestInstance
  * Level 4b - both branches of the edge from `webtools-http`'s `check` to `:build-logic:fixturesPublicationCheck`
  * (plan R10), proved by dry runs on a copy of the root build.
  *
- * The **root** workspace has the repository's shape: `pluginManagement { includeBuild("build-logic") }`, the
- * real root `build.gradle.kts`, a copy of `build-logic` ([BuildLogicSource]) and of the module ([ModuleSource]);
- * `:webtools-http:check --dry-run` there must schedule the publication check. The **consumer** workspace includes
+ * The **root** workspace has the repository's shape: the repository's real `pluginManagement` block (read from
+ * `settings.gradle.kts`) and its real `plugins` and `allprojects` blocks of the root `build.gradle.kts`, a copy of
+ * `build-logic` ([BuildLogicSource]) and of the module ([ModuleSource]), so an including build is still proved
+ * against the real root; `:webtools-http:check --dry-run` there must schedule the publication check. The **consumer** workspace includes
  * that root as `webtools`, the shape of a downstream development composite; `:webtools:webtools-http:check --dry-run`
  * there must not schedule it (`gradle.parent != null`). Neither run executes a task.
  *
@@ -37,7 +38,10 @@ class FixturesCheckWiringEndToEndTest {
     @BeforeAll
     fun runDryRuns() {
         root = ProjectWorkspace.create("wiring").getOrThrow()
-        root.write(SampleProject.fixturesWiringRoot(ModuleSource.rootBuildFile().getOrThrow())).getOrThrow()
+        val pluginManagement = ModuleSource.rootBlock("settings.gradle.kts", "pluginManagement").getOrThrow()
+        val plugins = ModuleSource.rootBlock("build.gradle.kts", "plugins").getOrThrow()
+        val allprojects = ModuleSource.rootBlock("build.gradle.kts", "allprojects").getOrThrow()
+        root.write(SampleProject.fixturesWiringRoot(pluginManagement, plugins + "\n\n" + allprojects)).getOrThrow()
         BuildLogicSource.copyInto(root).getOrThrow()
         ModuleSource.copyInto(root, "webtools-http").getOrThrow()
         rootRun = NestedBuild(root, injectPluginClasspath = false).build(":webtools-http:check", "--dry-run")

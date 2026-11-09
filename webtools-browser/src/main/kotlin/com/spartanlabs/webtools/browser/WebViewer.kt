@@ -76,6 +76,7 @@ class WebViewer(private val pageSettleMillis: Long = DEFAULT_PAGE_SETTLE_MILLIS)
             .addArguments("--no-sandbox")
             .addArguments("--remote-allow-origins=*")
 
+    /** Holds [DEFAULT_PAGE_SETTLE_MILLIS] and the logger the instances share. */
     companion object {
         private val log = LoggerFactory.getLogger(WebViewer::class.java)
 

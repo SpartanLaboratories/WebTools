@@ -15,8 +15,11 @@ public class HttpMethod private constructor(
 ) {
     internal val permitsBody: Boolean get() = name != "GET" && name != "HEAD" && name != "TRACE"
 
+    /** Two [HttpMethod]s are equal when their [name]s are equal. */
     override fun equals(other: Any?): Boolean = other is HttpMethod && other.name == name
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = name.hashCode()
+    /** Returns the method token [name]. */
     override fun toString(): String = name
 
     /** The common methods and the factory. */

@@ -37,8 +37,11 @@ public sealed interface Lookup<out V : Any> {
             require(weight >= 1) { WEIGHT_MESSAGE }
         }
 
+        /** Two [Found]s are equal when their [value] and [weight] are equal. */
         override fun equals(other: Any?): Boolean = other is Found<*> && other.value == value && other.weight == weight
+        /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
         override fun hashCode(): Int = 31 * value.hashCode() + weight
+        /** A diagnostic string for logs: the [weight], never the [value]. Its format is not part of the API and may change. */
         override fun toString(): String = "Found(weight=$weight)"
     }
 
@@ -48,6 +51,7 @@ public sealed interface Lookup<out V : Any> {
      * **Stable Core.** `toString()` is `Missing`.
      */
     public object Missing : Lookup<Nothing> {
+        /** Returns the fixed text `Missing`, for diagnostics and logs. */
         override fun toString(): String = "Missing"
     }
 }

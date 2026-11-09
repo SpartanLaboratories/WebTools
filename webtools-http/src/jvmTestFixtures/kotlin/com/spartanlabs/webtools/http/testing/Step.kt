@@ -32,6 +32,10 @@ public class Step private constructor(
         require(!delay.isNegative()) { "delay must not be negative" }
     }
 
+    /**
+     * A diagnostic string for logs: the step's kind and [delay], never a header value or a body. Its format is not part
+     * of the API and may change.
+     */
     override fun toString(): String = "Step($kind, delay=$delay)"
 
     /** The factories. */

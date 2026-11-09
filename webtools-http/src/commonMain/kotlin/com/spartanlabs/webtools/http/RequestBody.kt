@@ -36,5 +36,9 @@ public class RequestBody(
      */
     public fun bytes(): ByteArray = data.copyOf()
 
+    /**
+     * A diagnostic string for logs: the [size] and whether a content type is set, never the bytes. Its format is not
+     * part of the API and may change.
+     */
     override fun toString(): String = "RequestBody(size=${data.size}, hasContentType=${contentType != null})"
 }

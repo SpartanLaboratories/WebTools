@@ -22,7 +22,13 @@ public class RedirectHop(
         require(status in 300..399) { "Redirect status must be in 300..399" }
     }
 
+    /** Two [RedirectHop]s are equal when their [url] and [status] are equal. */
     override fun equals(other: Any?): Boolean = other is RedirectHop && other.url == url && other.status == status
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = url.hashCode() * 31 + status
+    /**
+     * A diagnostic string for logs: the [url] in its redacted form (`Url.redacted`) and [status]. Its format is not
+     * part of the API and may change.
+     */
     override fun toString(): String = "RedirectHop(${url.redacted()}, $status)"
 }

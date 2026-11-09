@@ -10,7 +10,8 @@ import java.util.Properties
 /**
  * Level 1 - build-logic's pre-commit gate: the build compiled and exposes its four convention
  * plugins, and the plugin-under-test metadata that the TestKit checks inject carries the plugins
- * those convention plugins apply. It reads classpath resources only and starts no nested build.
+ * those convention plugins apply (Kotlin, vanniktech, binary-compatibility-validator and dokka). It
+ * reads classpath resources only and starts no nested build.
  */
 class BuildLogicPluginsGatingTest {
 
@@ -26,6 +27,7 @@ class BuildLogicPluginsGatingTest {
         "kotlin-gradle-plugin-",
         "gradle-maven-publish-plugin-",
         "binary-compatibility-validator-",
+        "dokka-gradle-plugin-",
     )
 
     private fun loadProperties(resource: String): Properties =

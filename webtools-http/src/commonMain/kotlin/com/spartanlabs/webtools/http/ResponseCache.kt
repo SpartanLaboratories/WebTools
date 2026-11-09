@@ -114,6 +114,7 @@ public interface ResponseCache : AutoCloseable {
         override fun invalidate(key: CacheKey<*>) {}
         override fun invalidateAll() {}
         override fun stats(): CacheStats = CacheStats.Empty
+        /** Returns the fixed text `ResponseCache.Disabled`, for diagnostics and logs. */
         override fun toString(): String = "ResponseCache.Disabled"
     }
 }

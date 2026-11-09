@@ -36,10 +36,16 @@ public class RateWindow internal constructor(
     /** The enforced limit: [published] minus [margin]. */
     public val limit: Int get() = published - margin
 
+    /** Two [RateWindow]s are equal when their [name], [published], [period], [margin] and [hard] are equal. */
     override fun equals(other: Any?): Boolean =
         other is RateWindow && other.name == name && other.published == published && other.period == period && other.margin == margin && other.hard == hard
 
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = listOf(name, published, period, margin, hard).fold(0) { acc, v -> 31 * acc + v.hashCode() }
+    /**
+     * A diagnostic string for logs: [name], [published], [period], [margin] and [hard]. Its format is not part of the
+     * API and may change.
+     */
     override fun toString(): String = "RateWindow(name=$name, published=$published, period=$period, margin=$margin, hard=$hard)"
 
     /**

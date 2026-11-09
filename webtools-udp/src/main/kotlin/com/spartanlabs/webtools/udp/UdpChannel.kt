@@ -51,6 +51,7 @@ interface UdpChannel {
     fun actuate(onMessage: (message: String) -> Unit): Result<Unit> =
         actuateBytes { onMessage(String(it, Charsets.UTF_8).trim()) }
 
+    /** The reliable message-size constants: [DEFAULT_MAX_RELIABLE_MESSAGE_BYTES] and [MAX_RELIABLE_MESSAGE_BYTES]. */
     companion object {
         /** Default maximum reliable application payload, in bytes (design D5). */
         const val DEFAULT_MAX_RELIABLE_MESSAGE_BYTES = 1024

@@ -12,8 +12,11 @@ public class StoreOperation private constructor(
     /** The operation's name, as its constant is spelled. */
     public val name: String,
 ) {
+    /** Two [StoreOperation]s are equal when their [name]s are equal. */
     override fun equals(other: Any?): Boolean = other is StoreOperation && other.name == name
+    /** Returns a hash code consistent with [equals]: it is computed from the same properties. */
     override fun hashCode(): Int = name.hashCode()
+    /** Returns the operation's [name]. */
     override fun toString(): String = name
 
     /** The operations. */

@@ -193,6 +193,7 @@ class UDPSendReceiveServer @JvmOverloads constructor(
         shutDown()
     }
 
+    /** Holds the logger and the private constant the instances share; it exposes no public member. */
     companion object {
         /** Shared slf4j logger for all [UDPSendReceiveServer] instances. */
         private val log = LoggerFactory.getLogger(UDPSendReceiveServer::class.java)

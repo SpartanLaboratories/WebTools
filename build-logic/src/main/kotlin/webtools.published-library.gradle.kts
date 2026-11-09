@@ -1,9 +1,8 @@
 // Convention plugin: the Maven Central publishing skeleton shared by every published WebTools
 // module. Per-module coordinates(...) and pom { name / description } stay in each module.
 // Applies vanniktech, declares mavenCentral(), publishes to Central and signs every publication.
-// It never calls configure(...): vanniktech's own afterEvaluate picks KotlinJvm(Javadoc(), Sources())
-// for a Kotlin/JVM module, which is what every module published before this plugin existed (an
-// explicit configure(KotlinJvm()) would switch to an empty javadoc jar in 0.36.0).
+// This plugin applies Dokka and themes it; each library plugin sets the platform with its Dokka javadoc
+// jar (mavenPublishing { configure(...) } is a per-platform call, KotlinJvm versus KotlinMultiplatform).
 // A release needs, never committed: the Central credentials mavenCentralUsername and
 // mavenCentralPassword, and a signing key - signing.keyId, signing.password and
 // signing.secretKeyRingFile, or signingInMemoryKey with signingInMemoryKeyId and
@@ -13,6 +12,7 @@
 // disabled or its version ends in -SNAPSHOT.
 
 plugins {
+    id("org.jetbrains.dokka")
     id("com.vanniktech.maven.publish")
 }
 
@@ -48,3 +48,31 @@ mavenPublishing {
         }
     }
 }
+
+//region API documentation
+// Each module renders its own pages with its OWN html plugin configuration; the root build's block only
+// styles the aggregate's index page, so the theme is applied here too. The paths resolve against the root
+// project, where docs/ lives. A missing theme file fails the Dokka task (NoSuchFileException), by design.
+// failOnWarning and reportUndocumented make a broken KDoc link and an undocumented public declaration
+// fail dokkaGenerateModuleHtml and dokkaGeneratePublicationHtml.
+dokka {
+    pluginsConfiguration.html {
+        val root = isolated.rootProject.projectDirectory
+        customStyleSheets.from(root.file("docs/dokka/styles/dokka-styles.css"))
+        customAssets.from(root.file("docs/brand/spartan-laboratories-logo.png"))
+        footerMessage.set("&copy; 2026 Spartan Laboratories")
+    }
+    dokkaPublications.configureEach {
+        failOnWarning.set(true)
+    }
+    dokkaSourceSets.configureEach {
+        reportUndocumented.set(true)
+        // "View source" links: each source set's directory is src/<set>/kotlin, in this module's folder on GitHub.
+        sourceLink {
+            localDirectory.set(file("src/$name/kotlin"))
+            remoteUrl("https://github.com/SpartanLaboratories/WebTools/blob/master/${project.name}/src/$name/kotlin")
+            remoteLineSuffix.set("#L")
+        }
+    }
+}
+//endregion
