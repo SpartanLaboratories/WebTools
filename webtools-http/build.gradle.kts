@@ -4,10 +4,6 @@
 // Caffeine implementations. It publishes webtools-http and webtools-http-jvm (a Maven build depends on
 // webtools-http-jvm).
 //
-// 1.0.0 is the version inherited from the root build, and it is UNRELEASED: webtools-http is new, and it
-// stays unpublished until the whole stack (issue #55) is complete. It is not a release candidate while
-// the units of that work land one by one. Remove this note when 1.0.0 is released.
-//
 // Everything shared (the jvm() target at the Java floor, the test dependencies, the level tasks,
 // publishing, binary-compatibility-validator and verifyJavaFloor) comes from the convention plugin. This
 // file adds explicitApi(), the dependencies, the module-wide opt-in, the coordinates and the POM name and
@@ -83,10 +79,18 @@ kotlin {
     }
 }
 
+// The fixtures are published API (the -test-fixtures jar), and Dokka documents only published compilations by
+// default: unsuppress the source set so the reference and the javadoc jar include com.spartanlabs.webtools.http.testing.
+dokka {
+    dokkaSourceSets.named("jvmTestFixtures") {
+        suppress.set(false)
+    }
+}
+
 val fixturesCompilation = kotlin.jvm().compilations.getByName("testFixtures")
 
-// explicitApi() does not reach this compilation; the flag enforces visibility and return types. KDoc on the
-// fixtures stays a review item.
+// explicitApi() does not reach this compilation; the flag enforces visibility and return types. The convention
+// plugin's reportUndocumented and failOnWarning require KDoc on the fixtures.
 tasks.named<KotlinJvmCompile>("compileTestFixturesKotlinJvm") {
     compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
 }

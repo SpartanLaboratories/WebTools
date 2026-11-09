@@ -1,9 +1,13 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
+import com.vanniktech.maven.publish.SourcesJar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // Convention plugin: a published Kotlin/JVM library module. Applies the Kotlin/JVM plugin and
-// webtools.published-library, compiles to the Java floor (WebToolsBuild.JAVA_FLOOR) and guards it
-// with verifyJavaFloor in check, adds the shared test dependencies, runs every Test task on the JUnit
-// Platform and registers the seven level test tasks over the `test` source set. A module adds its
+// webtools.published-library, sets the Dokka javadoc jar, compiles to the Java floor
+// (WebToolsBuild.JAVA_FLOOR) and guards it with verifyJavaFloor in check, adds the shared test
+// dependencies, runs every Test task on the JUnit Platform and registers the seven level test tasks
+// over the `test` source set. A module adds its
 // dependencies (api(slf4j-api) included), its coordinates, its POM name and description, and any
 // configuration that belongs to it alone (for example webtools-udp's version and UDP-port lock).
 // explicitApi() is never set here.
@@ -11,7 +15,15 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("org.jetbrains.kotlin.jvm")
     id("webtools.published-library")
+    id("com.vanniktech.maven.publish")   // listed again so this script's own mavenPublishing {} accessor is generated; re-applying is idempotent
 }
+
+//region publishing
+mavenPublishing {
+    // The javadoc jar is the module's Dokka output, never an empty placeholder (the org standard).
+    configure(KotlinJvm(javadocJar = JavadocJar.Dokka(WebToolsBuild.DOKKA_PUBLICATION_TASK), sourcesJar = SourcesJar.Sources()))
+}
+//endregion
 
 //region java floor
 // Every published class is Java 11 bytecode (class-file major 55) built against the Java 11 API, on

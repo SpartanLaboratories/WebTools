@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: API docs (Dokka)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "23"
+      # setup-gradle stays on v5: v6 moved its caching into a separately licensed component whose
+      # Terms of Use must be accepted on upgrade; v5 is MIT-licensed and needs no acceptance.
+      - uses: gradle/actions/setup-gradle@v5
+      - run: ./gradlew dokkaGeneratePublicationHtml --stacktrace

@@ -81,9 +81,9 @@ tasks.register("test") {
 
 //region publishing
 mavenPublishing {
-    // Equals vanniktech's auto-detected choice for a multiplatform module (sources jars and an empty
-    // javadoc jar), pinned so that it stays the same if a Dokka plugin is ever applied.
-    configure(KotlinMultiplatform(javadocJar = JavadocJar.Empty(), sourcesJar = SourcesJar.Sources()))
+    // The javadoc jar is the module's Dokka output, never an empty placeholder; the jvm and the root
+    // publication both take the same dokkaGeneratePublicationHtml output.
+    configure(KotlinMultiplatform(javadocJar = JavadocJar.Dokka(WebToolsBuild.DOKKA_PUBLICATION_TASK), sourcesJar = SourcesJar.Sources()))
 }
 //endregion
 

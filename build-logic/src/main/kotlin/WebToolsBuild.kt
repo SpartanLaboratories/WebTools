@@ -47,6 +47,13 @@ object WebToolsBuild {
     /** The task name `verifyJavaFloor`, registered by both library plugins and wired into `check`. */
     const val VERIFY_JAVA_FLOOR_TASK: String = "verifyJavaFloor"
 
+    /**
+     * The task name `dokkaGeneratePublicationHtml`: the Dokka task whose output is each published module's
+     * javadoc jar. Both library convention plugins pass it to `JavadocJar.Dokka(...)`; the root project, the
+     * CI job and the Pages workflow run the same task.
+     */
+    const val DOKKA_PUBLICATION_TASK: String = "dokkaGeneratePublicationHtml"
+
     /** The seven levels of the test hierarchy, in order, as a read-only list. */
     val LEVELS: List<TestLevel> = listOf(
         TestLevel("gating", "Level 1 - local pre-commit gating tests"),

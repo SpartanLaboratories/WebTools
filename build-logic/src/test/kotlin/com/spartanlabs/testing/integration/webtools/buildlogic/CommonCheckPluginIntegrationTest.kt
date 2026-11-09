@@ -124,11 +124,11 @@ class CommonCheckPluginIntegrationTest {
     }
 
     @Test
-    fun `the module has no publishing or signing task`() {
+    fun `the module has no publishing, signing or dokka task`() {
         val names = taskNames(allTasks.output) + taskNames(dryRun.output)
         assertTrue(names.isNotEmpty(), "no task names were read from:\n${allTasks.output}")
         val publishing = names.map { it.substringAfterLast(':') }.filter { name ->
-            listOf("publish", "sign", "generatePomFile", "generateMetadataFile").any { name.startsWith(it) }
+            listOf("publish", "sign", "generatePomFile", "generateMetadataFile", "dokka").any { name.startsWith(it) }
         }
         assertEquals(emptyList<String>(), publishing)
     }

@@ -7,7 +7,43 @@
 // Each module's own build.gradle.kts applies one of them and adds its dependencies, its coordinates,
 // its POM name and description, and any configuration that belongs to it alone (for example
 // webtools-udp's version and UDP-port lock); only the group and the default version every module
-// shares are set here.
+// shares are set here. The root also aggregates the API reference of the five published modules into one
+// Dokka publication (build/dokka/html); everything else stays in a module build file or a convention plugin.
+
+plugins {
+    // Dokka and the Kotlin Gradle plugin must share ONE plugin classloader, or every module renders an
+    // empty reference: Dokka (applied here) would sit in the root classloader while the Kotlin plugin
+    // (applied to the modules by the convention plugins) sat in per-module child classloaders and Dokka
+    // could not load KotlinBasePlugin (Gradle issues 25616 and 35117). The root has no source, so both
+    // Kotlin plugins are applied `apply false`, only to put them on the root plugin classpath.
+    id("org.jetbrains.kotlin.jvm") apply false
+    id("org.jetbrains.kotlin.multiplatform") apply false
+    id("org.jetbrains.dokka")
+}
+
+// The Dokka generator resolves its own dependencies from the project's repositories; the modules get
+// theirs from webtools.published-library.
+repositories { mavenCentral() }
+
+dependencies {
+    dokka(project(":webtools-udp"))
+    dokka(project(":webtools-scraping"))
+    dokka(project(":webtools-browser"))
+    dokka(project(":webtools-http"))
+    dokka(project(":webtools-feeds"))
+}
+
+dokka {
+    moduleName.set("WebTools")
+    moduleVersion.set("")   // the five modules version independently, so the aggregate names no version of its own
+    dokkaPublications.configureEach { failOnWarning.set(true) }
+    pluginsConfiguration.html {
+        customStyleSheets.from(file("docs/dokka/styles/dokka-styles.css"))
+        customAssets.from(file("docs/brand/spartan-laboratories-logo.png"))
+        footerMessage.set("&copy; 2026 Spartan Laboratories")
+    }
+}
+
 allprojects {
     group = "io.github.spartanlaboratories"
     version = "1.0.0"

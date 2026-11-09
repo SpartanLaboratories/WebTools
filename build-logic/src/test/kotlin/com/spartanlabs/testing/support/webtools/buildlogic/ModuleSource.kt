@@ -18,7 +18,7 @@ import kotlin.streams.asSequence
  * module's `build.gradle.kts` and its `src/commonMain`, `src/jvmMain` and `src/jvmTestFixtures` trees are
  * copied (regular files only), never `build/`, `.gradle/`, the tests or `api/`, so no nested build works in
  * the directory the outer build is executing in. All three trees must exist: a missing one would let the
- * check pass without the fixtures. The repository's root build file is the module directory's sibling.
+ * check pass without the fixtures. The repository's root files are the module directory's siblings.
  */
 object ModuleSource {
     /** The system property naming the module's directory. */
@@ -46,18 +46,23 @@ object ModuleSource {
             .map { }
 
     /**
-     * The text of the repository's root `build.gradle.kts`, the module directory's sibling (the module sits
-     * directly under the repository root).
+     * The text of the top-level block `blockName { ... }` of the repository-root file [fileName] (a sibling of the
+     * module directory): from the line that starts with `blockName {` at column 0 to the first line that is a lone
+     * `}` at column 0, both included.
      *
-     * @return the file's text, or a failure: an [IllegalStateException] when [MODULE_PROPERTY] is unset, a
-     *   [NoSuchFileException] when the file is missing, or the I/O error.
+     * @param fileName the root file, for example `build.gradle.kts` or `settings.gradle.kts`.
+     * @param blockName the block's name, for example `pluginManagement`, `plugins` or `allprojects`.
+     * @return the block's text, or a failure: an [IllegalStateException] when [MODULE_PROPERTY] is unset or the file
+     *   has no such block (a programmer error: the root file lost the block's shape), a [NoSuchFileException] when the
+     *   file is missing, or the I/O error.
      */
-    fun rootBuildFile(): Result<String> =
+    fun rootBlock(fileName: String, blockName: String): Result<String> =
         moduleDir().mapCatching { module ->
-            val file = module.resolve("..").resolve("build.gradle.kts").normalize()
+            val file = module.resolve("..").resolve(fileName).normalize()
             if (!Files.isRegularFile(file)) throw NoSuchFileException(file.toString())
-            Files.readString(file)
-        }
+            Regex("""(?ms)^${Regex.escape(blockName)} \{.*?^\}$""").find(Files.readString(file))?.value
+                ?: throw IllegalStateException("$fileName has no top-level block '$blockName { ... }' closed at column 0")
+        }.onSuccess { log.debug("read block {} of {} ({} chars)", blockName, fileName, it.length) }
 
     private fun moduleDir(): Result<Path> =
         System.getProperty(MODULE_PROPERTY)
