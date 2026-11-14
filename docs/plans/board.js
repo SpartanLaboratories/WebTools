@@ -3,11 +3,11 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-09T02:39:38Z",
-  "asOf": "2026-11-09",
+  "generated": "2026-11-14T03:14:24Z",
+  "asOf": "2026-11-14",
   "tree": {
-    "ref": "feat/issue-99-dokka-api-docs",
-    "sha": "2c634f4"
+    "ref": "docs/rule-rework-vocabulary",
+    "sha": "37cd027"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -101,12 +101,6 @@ window.dashboardLive&&window.dashboardLive("board",
       "top": "WebTools",
       "status": "built",
       "board": "docs/dashboards/index.html"
-    },
-    {
-      "slug": "Gradle build",
-      "name": "Gradle build",
-      "slot": 0,
-      "top": "Gradle build"
     }
   ],
   "groups": [
@@ -1256,19 +1250,20 @@ window.dashboardLive&&window.dashboardLive("board",
     {
       "issue": 99,
       "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation",
-      "state": "OPEN",
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
       "created": "2026-11-08",
       "parent": null,
       "waitsOn": [],
       "blocks": [],
       "board": "99-dokka-api-docs/dashboard.html",
       "folder": "99-dokka-api-docs/",
-      "branch": "feat/issue-99-dokka-api-docs",
+      "branch": null,
       "system": "gradle-build",
-      "step": "document",
-      "detail": "Document: 5 of 7 tasks done; State boards current.",
-      "since": "2026-11-09T02:28:41Z",
-      "updated": "2026-11-09T02:29:25Z",
+      "step": "landed",
+      "detail": "Landed in PR #100.",
+      "since": "2026-11-09T02:49:57Z",
+      "updated": "2026-11-09T02:49:57Z",
       "qa": [
         {
           "pass": 1,
@@ -1318,15 +1313,20 @@ window.dashboardLive&&window.dashboardLive("board",
         }
       ],
       "qaMax": 3,
-      "status": "building",
+      "status": "landed",
       "fixOf": null,
-      "landed": null,
+      "landed": {
+        "pr": 100,
+        "merge": "77dedde91d9aec4e549e20475cced7a51d1ef6a9",
+        "version": null,
+        "date": "2026-11-09"
+      },
       "reconciliation": {
-        "state": "planned",
+        "state": "as-built",
         "landed": null,
         "total": null
       },
-      "active": true,
+      "active": false,
       "systemName": "Gradle build",
       "group": "other",
       "order": 13
@@ -1335,13 +1335,11 @@ window.dashboardLive&&window.dashboardLive("board",
   "roadmap": [],
   "unscheduled": [
     {
-      "issue": 99,
-      "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation",
-      "labels": [
-        "type: feature"
-      ],
-      "created": "2026-11-08",
-      "system": "Gradle build"
+      "issue": 101,
+      "title": "pages.yml grants pages: write and id-token: write to the build job that runs Gradle",
+      "labels": [],
+      "created": "2026-11-09",
+      "system": null
     },
     {
       "issue": 93,

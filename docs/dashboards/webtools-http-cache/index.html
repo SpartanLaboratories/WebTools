@@ -445,6 +445,8 @@ footer code{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* an archived system holds no colour (GUIDANCE.md §1): the board's three sides neutral, the sides told apart by their labels */
 :root:has(.chip[data-sys-status="archived"]){--server:var(--muted);--client:var(--muted);--wire:var(--muted);--server-soft:var(--surface-2);--client-soft:var(--surface-2);--wire-soft:var(--surface-2)}
+/* a system under Internal Tooling takes no colour (GUIDANCE.md §1): the three sides in the plain ink, told apart by their labels; state.colour "plain" sets the attribute */
+:root[data-sys-colour="plain"]{--server:var(--ink);--client:var(--ink);--wire:var(--ink);--server-soft:var(--surface-2);--client-soft:var(--surface-2);--wire-soft:var(--surface-2)}
 </style>
 </head>
 <body>
@@ -641,7 +643,7 @@ footer code{color:var(--ink-2)}
 <footer>Corresponds to <code>workspace.dsl</code>. Code is authoritative on any conflict.<!-- Divergences from the system-board template (2026-11-05, the board's first writing at master 5f221ce):
      None in the template parts: the board's CSS, tab set, script before MODEL and renderer are the template's. What it fills in:
      1. The core tabs are named for what they show: "getOrLoad" (the decision path: the Caffeine default and Disabled, two variants) and "One load" (the sequence: two callers and one load).
-     2. The Threads tab says the cache owns no thread and lists the caller's coroutine, its load scope and its maintenance executor.
+     2. The Threads tab says the cache owns no thread and lists the caller's coroutine, its load scope and its maintenanceExecutor.
      3. Two of the three sides are used: the port with its values in common code, and the Caffeine default on the JVM.
      Nothing is removed. -->
 </footer>
@@ -798,13 +800,14 @@ window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
 /* The board's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
    restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
 const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
+if(STATE.colour==="plain") document.documentElement.dataset.sysColour="plain";
 const ghIssue=n=>`${REPO}/issues/${n}`;
 const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
 const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
   /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
-     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-board.js (ISSUE TITLE NAMES
-     A WORK LEVEL: #n), never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
+     its board, or plain text while it has none): a sizing named in it is a defect in the issue, flagged by check-board.js,
+     never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
   r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
   r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its issue board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
@@ -857,7 +860,7 @@ const MODEL = {
   threads:{
     "the caller's coroutine":{side:"server",kind:"the caller's",daemon:false,created:"never by the cache: every call runs where the caller makes it",runs:"CaffeineResponseCache.getOrLoad's claim and its await, which only waits; ResponseCache.Disabled's loader; invalidate, invalidateAll, stats and close().",sends:[],note:"A caller's cancellation is thrown and cancels only that caller: the load goes on for the others."},
     "the cache's load scope":{side:"client",kind:"only during a load",daemon:true,created:"never by the cache: a coroutine scope with its own SupervisorJob, named webtools-http-cache-load, on the builder's loadDispatcher, Dispatchers.Default by default",runs:"each load's loader, then the rule for how long its outcome is stored, the shared future's completion and the load-end DEBUG line. A caller's dispatcher, CoroutineName and other context elements do not reach it.",sends:[],note:"close() cancels the scope. A loader must not wait for a load of its own key. daemon applies to the default dispatcher; another is the consumer's."},
-    "the cache's maintenanceExecutor":{side:"client",kind:"only for maintenance",daemon:true,created:"never by the cache: the Executor its builder names, ForkJoinPool.commonPool() by default",runs:"Caffeine's maintenance: expiry and size eviction, with the listener that counts size removals.",sends:[],note:"The cache sets no Scheduler, so it keeps no timer; it never shuts this executor down, and the executor must outlive the cache's last write. daemon applies to the default pool; another is the consumer's."}
+    "the cache's maintenanceExecutor":{side:"client",kind:"only for maintenance",daemon:true,created:"never by the cache: the maintenanceExecutor its builder names, ForkJoinPool.commonPool() by default",runs:"Caffeine's maintenance: expiry and size eviction, with the listener that counts size removals.",sends:[],note:"The cache sets no Scheduler, so it keeps no timer; it never shuts its maintenanceExecutor down, which must outlive the cache's last write. daemon applies to the default pool; another is the consumer's."}
   },
   flows:[
     {id:"cache",label:"CaffeineResponseCache.getOrLoad",kicker:"RESPONSE CACHE",runsOn:"the caller's coroutine, which only awaits; a load runs in the cache's load scope",foot:"one shared future per key · a failure, a zero TTL or a value over maxWeight is delivered and never stored",
@@ -1385,7 +1388,7 @@ renderState();
 
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
    Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
-   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   planned (dashed, faded) row, a gap, the one neutral series of the test-set bars, the badges and their meaning, a tracking issue's
    chain's StepBar. A section that draws no encoding shows no legend. */
 /* A tracking issue's chain on the roadmap (dashboards-skill/54; nomenclature/ui.md, StepBar), written <span class="chainprog"
    data-landed="n" data-total="m"> holding one <span data-unit="done|current|todo">its name</span> per unit in landing order: drawn
@@ -1409,7 +1412,7 @@ function sectionKeys(){
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
   const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
   put(G,"guarantees-key",[swatches(G,"swk"),
-    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per set: one series, one neutral fill</span>`:"",
     has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
     has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",
     has(G,".badge")?`<span><span class="badge">tier</span>a fact: a stability tier, a marker, neutral</span>`:""]);

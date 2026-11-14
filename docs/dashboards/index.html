@@ -14,7 +14,7 @@
 /* Supersystem / repository state board template (dashboards skill, system set: system/RULES.md): the Systems tab first, then the six core tabs adapted to the
    level (how the systems compose, run, decide, interact and live), the guarantee cards with one row per system, then Context.
    Draft A2: the C4 model tab is rendered at runtime from the Structurizr DSL embedded below (a verbatim copy of workspace.dsl).
-   Colour plan: --sys-1..6 are the systems' slots (registry order, see sysColour), --ph-1..3 the ordinal phase ramp
+   Colour plan: --sys-1..12 are the systems' slots (registry order, see sysColour), --ph-1..3 the ordinal phase ramp
    (Lifecycles), --good / --warning / --serious / --critical are status (outcomes only, always beside a label). Dashed = planned, and nothing else: lifelines, returns and frames are solid. */
 :root{
   --bg:#f3f5f8; --surface:#fcfcfd; --surface-2:#eef1f6; --ink:#0e1420; --ink-2:#4a5468; --muted:#7d879a;
@@ -451,12 +451,12 @@ footer code{color:var(--ink-2)}
 </style>
 <style>
 /* System colours: one categorical slot per top-level system, in registry order (sysColour below); a child system takes its
-   top-level ancestor's slot, and the seventh top-level system on folds into the neutral --muted. Everything drawn for a system
+   top-level ancestor's slot, and the thirteenth top-level system on folds into the neutral --muted. Everything drawn for a system
    sets --c from its slot, so a system keeps one colour on every tab. Palette slots 7 and 8 stay unused here: violet is the
    phase ramp, red sits next to critical. */
-:root{--sys-1:#2a78d6;--sys-2:#653184;--sys-3:#0d7680;--sys-4:#1d2660;--sys-5:#9656aa;--sys-6:#1a9ec7}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sys-1:#3987e5;--sys-2:#8a44d8;--sys-3:#1f8089;--sys-4:#b4bef5;--sys-5:#a86fb8;--sys-6:#31b5f4}}
-:root[data-theme="dark"]{--sys-1:#3987e5;--sys-2:#8a44d8;--sys-3:#1f8089;--sys-4:#b4bef5;--sys-5:#a86fb8;--sys-6:#31b5f4}
+:root{--sys-1:#2a78d6;--sys-2:#653184;--sys-3:#0d7680;--sys-4:#1d2660;--sys-5:#9656aa;--sys-6:#1a9ec7;--sys-7:#203d4b;--sys-8:#7700c7;--sys-9:#008a81;--sys-10:#7780f8;--sys-11:#271ea9;--sys-12:#09534e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sys-1:#3987e5;--sys-2:#8a44d8;--sys-3:#1f8089;--sys-4:#b4bef5;--sys-5:#a86fb8;--sys-6:#31b5f4;--sys-7:#9ae2f4;--sys-8:#c790d0;--sys-9:#11978e;--sys-10:#245eff;--sys-11:#8365bd;--sys-12:#00c7ba}}
+:root[data-theme="dark"]{--sys-1:#3987e5;--sys-2:#8a44d8;--sys-3:#1f8089;--sys-4:#b4bef5;--sys-5:#a86fb8;--sys-6:#31b5f4;--sys-7:#9ae2f4;--sys-8:#c790d0;--sys-9:#11978e;--sys-10:#245eff;--sys-11:#8365bd;--sys-12:#00c7ba}
 .syscards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .syscard{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0;border-top:3px solid var(--c,var(--muted))}
 .syscard:hover{border-color:var(--ink-2)}
@@ -1272,8 +1272,8 @@ const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc
 const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
   /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
-     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-board.js (ISSUE TITLE NAMES
-     A WORK LEVEL: #n), never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
+     its board, or plain text while it has none): a sizing named in it is a defect in the issue, flagged by check-board.js,
+     never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
   r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
   r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its issue board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
@@ -1283,16 +1283,19 @@ $("#sys-count").textContent=`${SYSTEMS.filter(s=>s.status==="built").length} bui
 /* ---------- System colours ----------
    One categorical slot per top-level system (one whose parent is not itself on this board), by its place in registry order; a child takes its
    top-level ancestor's slot. An archived system holds no slot and is drawn neutral, solid and faded; what its place frees goes to the next
-   system with none (a seventh top-level system on), so archiving one moves no other system's colour (system/scripts/palette.js colourSlots(),
+   system with none (a thirteenth top-level system on), so archiving one moves no other system's colour (system/scripts/palette.js colourSlots(),
    the same rule). Six slots: a system with none left, and any slug the registry does not know, fold into the neutral "other". Every element drawn for a system sets --c from here — paintSystems() does it for hand-written [data-sys]
    elements — so a system keeps one colour on every tab. */
-const SLOTS=6, bySlug=slug=>SYSTEMS.find(s=>s.slug===slug);
-function sysTop(slug){ const s=bySlug(slug); if(!s||s.status==="archived") return null; let h=s,c=s; while(bySlug(c.parent)){ c=bySlug(c.parent); if(c.status!=="archived") h=c; } return h; }
-const TOPS=SYSTEMS.filter(s=>!bySlug(s.parent));
+const SLOTS=12, bySlug=slug=>SYSTEMS.find(s=>s.slug===slug);
+/* a system named Internal Tooling, and every system under it, takes no slot and no place, and is drawn in the plain ink (GUIDANCE.md §1; palette.js isPlainName()) */
+function sysPlainOf(slug){ let c=bySlug(slug), n=0; if(!c||c.status==="archived") return null; while(c&&n++<64){ if(c.status!=="archived"&&/^internal tooling$/i.test(String(c.name||"").trim())) return c; c=bySlug(c.parent); } return null; }
+function sysPlain(slug){ return !!sysPlainOf(slug); }
+function sysTop(slug){ const s=bySlug(slug); if(!s||s.status==="archived"||sysPlain(slug)) return null; let h=s,c=s; while(bySlug(c.parent)){ c=bySlug(c.parent); if(c.status!=="archived") h=c; } return h; }
+const TOPS=SYSTEMS.filter(s=>!bySlug(s.parent)&&!sysPlain(s.slug));
 const SLOT_OF=(()=>{ const m=new Map(), hs=[...new Set(SYSTEMS.map(s=>sysTop(s.slug)).filter(Boolean))]; hs.forEach(h=>{ const i=TOPS.indexOf(h); if(i>=0&&i<SLOTS) m.set(h.slug,i+1); });
   const free=[]; for(let n=1;n<=SLOTS;n++) if(![...m.values()].includes(n)) free.push(n); hs.filter(h=>!m.has(h.slug)).forEach(h=>{ if(free.length) m.set(h.slug,free.shift()); }); return m; })();
 const sysSlot=slug=>{ const h=sysTop(slug); return (h&&SLOT_OF.get(h.slug))||0; };
-function sysColour(slug){ const n=sysSlot(slug); return n?`var(--sys-${n})`:"var(--muted)"; }
+function sysColour(slug){ if(sysPlain(slug)) return "var(--ink)"; const n=sysSlot(slug); return n?`var(--sys-${n})`:"var(--muted)"; }
 const isArchivedSys=slug=>{ const s=bySlug(slug); return !!s&&s.status==="archived"; };
 /* Planned, from the data (system/RULES.md §2, "Planned parts"): an item tied to a system (sys:"slug" on a structure box, a thread, a flow's
    end, a lifeline; data-part="sys:<slug>" on hand-written HTML) is planned while the registry says the system is, so apply-state.js
@@ -1307,8 +1310,8 @@ function applyParts(root){ (root||document).querySelectorAll("[data-part]").forE
   document.querySelectorAll(".thread[data-t]").forEach(e=>{ const t=MODEL.threads[e.dataset.t]; if(t) e.classList.toggle("planned",isPlanned(t)); }); }
 function paintSystems(root){ (root||document).querySelectorAll("[data-sys]").forEach(e=>{ e.style.setProperty("--c",sysColour(e.dataset.sys)); e.classList.toggle("archived",isArchivedSys(e.dataset.sys)); }); }
 /* Legend entries for a set of systems: one per top-level system, in slot order, then "other" when any folded. */
-function sysKey(slugs,cls){ const hs=[...new Set(slugs.map(sysTop).filter(Boolean))].filter(h=>sysSlot(h.slug)).sort((a,b)=>sysSlot(a.slug)-sysSlot(b.slug)), arch=slugs.some(isArchivedSys), more=slugs.some(s=>!sysSlot(s)&&!isArchivedSys(s));
-  return hs.map(t=>`<span><i class="${cls||"sys"}" style="--c:${sysColour(t.slug)}"></i>${esc(t.name)}</span>`).join("")+(arch?`<span><i class="${cls||"sys"} archived" style="--c:var(--muted)"></i><span class="archtag">⊟ archived</span> neutral, no colour of its own</span>`:"")+(more?`<span><i class="${cls||"sys"}" style="--c:var(--muted)"></i>other systems</span>`:""); }
+function sysKey(slugs,cls){ const hs=[...new Set(slugs.map(sysTop).filter(Boolean))].filter(h=>sysSlot(h.slug)).sort((a,b)=>sysSlot(a.slug)-sysSlot(b.slug)), arch=slugs.some(isArchivedSys), more=slugs.some(s=>!sysSlot(s)&&!isArchivedSys(s)&&!sysPlain(s)), plain=[...new Set(slugs.map(sysPlainOf).filter(Boolean))];
+  return hs.map(t=>`<span><i class="${cls||"sys"}" style="--c:${sysColour(t.slug)}"></i>${esc(t.name)}</span>`).join("")+plain.map(t=>`<span><i class="${cls||"sys"}" style="--c:var(--ink)"></i>${esc(t.name)}</span>`).join("")+(arch?`<span><i class="${cls||"sys"} archived" style="--c:var(--muted)"></i><span class="archtag">⊟ archived</span> neutral, no colour of its own</span>`:"")+(more?`<span><i class="${cls||"sys"}" style="--c:var(--muted)"></i>other systems</span>`:""); }
 
 /* The Systems tab (system/RULES.md §3, §7; dashboards-skill/35, promoted from the WebTools repository state board): the systems
    grouped by their visibility (the registry's "visibility": public, consumed by another organization; internal-org, consumed only by other
@@ -1416,11 +1419,11 @@ const MODEL = {
     "feeds-caller":{sys:"webtools-feeds",kind:"thread",created:"never by the module: FeedFetcher starts no thread",runs:"FeedFetcher.fetch on the caller's coroutine: the closed check, the GET with Accept and the stored validators, UrlFetcher.fetch up to its response, the status verdict, the wait for a parse permit and the log line; close() on any thread.",note:"Built. A caller cancelled during its parse sees the cancellation when the parse returns.",issues:[]},
     "feeds-parse":{sys:"webtools-feeds",kind:"thread",created:"by the fetcher's parseDispatcher, Dispatchers.Default unless the configuration sets another, only when a 200 or 203 is parsed",runs:"one parse under one of maxConcurrentParses permits (2 by default): the prolog scan, Rome over a SAX parser of its own under the structural limits, and the conversion; RomeFeedParser.parse called directly runs on its caller's thread.",note:"Built. CPU-bound and not cancellable.",issues:[]},
     "mcups-listener":{sys:"webtools-udp",kind:"thread",created:"eagerly, in the server's constructor",runs:"receives on UDP 9998; accept() and the tag switch; the handshake including admit and onClientConnect; inline probe replies; reliable ack processing.",note:"A throwing onClientConnect kills this thread.",issues:[54,57]},
-    "mcups-dispatch":{sys:"webtools-udp",kind:"thread",created:"its executor at construction; the JDK starts the thread on the first handler dispatched",runs:"every message handler, unreliable and reliable, and onClientDisconnect — one thread, so per-client order holds.",note:""},
+    "mcups-dispatch":{sys:"webtools-udp",kind:"thread",created:"its one-thread dispatch pool at construction; the JDK starts the thread on the first handler dispatched",runs:"every message handler, unreliable and reliable, and onClientDisconnect — one thread, so per-client order holds.",note:""},
     "mcups-liveness":{sys:"webtools-udp",kind:"thread",created:"at construction, only if idleTimeoutMillis > 0",runs:"the idle sweep; a failing sweep is logged and detection continues.",note:""},
-    "mcups-schedulers":{sys:"webtools-udp",kind:"thread",created:"lazily: each PeriodicScheduler creates its executor on first use",runs:"mcups-keepalive: scheduled keepalives · mcups-probe: link-quality probes · mcups-retransmit: reliable resends and standalone acks.",note:"Three daemon threads, one per scheduler."},
+    "mcups-schedulers":{sys:"webtools-udp",kind:"thread",created:"lazily: each PeriodicScheduler creates its one-thread scheduled pool on first use",runs:"mcups-keepalive: scheduled keepalives · mcups-probe: link-quality probes · mcups-retransmit: reliable resends and standalone acks.",note:"Three daemon threads, one per scheduler."},
     "mcupc-listener":{sys:"webtools-udp",kind:"thread",created:"lazily, on the first start, startBytes or channel(...).actuate*",runs:"receives the session after the handshake; inline probe replies; reliable ack processing.",note:"Origin is checked only on the reliable branch.",issues:[39]},
-    "mcupc-dispatch":{sys:"webtools-udp",kind:"thread",created:"its executor at construction; the JDK starts the thread on the first handler dispatched",runs:"the session's handlers.",note:""},
+    "mcupc-dispatch":{sys:"webtools-udp",kind:"thread",created:"its one-thread dispatch pool at construction; the JDK starts the thread on the first handler dispatched",runs:"the session's handlers.",note:""},
     "mcupc-schedulers":{sys:"webtools-udp",kind:"thread",created:"lazily, on first use",runs:"mcupc-keepalive · mcupc-probe · mcupc-retransmit, as on the server.",note:""},
     "unirest-monitor":{sys:"webtools-scraping",kind:"thread",created:"in every Connector() constructor: Unirest.setTimeouts(0, 0) re-runs Unirest's Options.refresh(), which starts a new SyncIdleConnectionMonitorThread (daemon, default Thread-N name); Unirest's own class initialisation starts one more",runs:"every 5 s, closes expired and 30 s-idle connections of the HTTP client pool built with it.",note:"The previous monitor and client are never stopped, so each Connector() leaves one more daemon thread and pool behind. Read from unirest-java 1.4.9's sources."},
     "chromedriver":{sys:"webtools-browser",kind:"process",created:"per getPage or screenshot call, by ChromeDriverService.createDefaultService()",runs:"the WebDriver server Selenium talks to; its output goes to a webviewer-chromedriver*.log temp file.",note:"Ended by driver.quit() in a finally block. Selenium's own threads are not enumerated here."},
@@ -1428,9 +1431,9 @@ const MODEL = {
     "gradle":{sys:"gradle-build",kind:"process",created:"when ./gradlew runs",runs:"the Gradle daemon configures build-logic and the three modules; test tasks run in forked test JVMs; build-logic's nested-build tests start a TestKit Gradle daemon.",note:"webtools-udp's test, integrationTest, e2eTest and nonfunctionalTest share one build service with maxParallelUsages = 1, so two never bind UDP 9998 at once; build-logic's integrationTest, e2eTest and nonfunctionalTest share another, for the TestKit home."},
     "http-caller":{sys:"webtools-http",kind:"thread",created:"never by this path: only OkHttpTransport starts threads",runs:"Url.parse, HttpMethod.of, the factories and their builders, the policy and settings factories and the internal guard's checks, WallClock.System and catchNonFatal, on the caller's thread or coroutine, with OkHttpTransport's preflight, each hop's Call, a cache call up to its await and a facade's call or fetch (a call's loader runs in the cache's load scope); HttpTransport's contract asks every implementation to be main-safe and to allow concurrent calls.",note:"Built.",issues:[]},
     "http-dispatcher":{sys:"webtools-http-transport",kind:"thread",created:"by the pool each OkHttpTransport owns, on demand: daemon threads named webtools-http-dispatcher-<n>, gone after 60 s idle",runs:"every blocking step of execute: DNS, connect, TLS, the write and, inside onResponse, the redirect decision and the capped body read, so cancelling the caller stops the read at once.",note:"Built. A transport never closed does not keep the JVM alive; close() cancels the calls in flight and shuts the pool down.",issues:[]},
-    "http-fixtures":{sys:"webtools-http-test-fixtures",kind:"thread",created:"never: the fixtures start no thread; VirtualClock's dispatcher is a test dispatcher on the scheduler it is given",runs:"In a consumer's tests: VirtualClock's dispatcher and inline executor and a FakeHttpTransport step's delay, on the test's scheduler; FixtureRecorder's serialise, scrub and write on kotlinx.coroutines' shared Dispatchers.IO, only while its gate allows recording.",note:"Built.",issues:[]},
+    "http-fixtures":{sys:"webtools-http-test-fixtures",kind:"thread",created:"never: the fixtures start no thread; VirtualClock's dispatcher is a test dispatcher on the scheduler it is given",runs:"In a consumer's tests: VirtualClock's dispatcher and inline maintenanceExecutor and a FakeHttpTransport step's delay, on the test's scheduler; FixtureRecorder's serialise, scrub and write on kotlinx.coroutines' shared Dispatchers.IO, only while its gate allows recording.",note:"Built.",issues:[]},
     "http-budget":{sys:"webtools-http-budget",kind:"thread",created:"never by the budget: it owns no thread, scope or timer",runs:"acquire, a queued call's wait on the close latch and its wake signal, Permit.complete and release, and the store calls inside its lock, all on the caller's coroutine; BudgetObserver.onEvent after the lock, on the thread of the call that made the event; close() on any thread.",sends:[],note:""},
-    "http-cache":{sys:"webtools-http-cache",kind:"thread",created:"never by the cache: a coroutine scope with its own SupervisorJob on its loadDispatcher, Dispatchers.Default by default, and Caffeine's maintenance on its maintenanceExecutor, ForkJoinPool.commonPool() by default",runs:"each load's loader, in the cache's own scope and not the caller's context; expiry and size eviction.",note:"Built. The cache owns no thread, timer or pool: close() cancels its loads and never shuts the executor down."}
+    "http-cache":{sys:"webtools-http-cache",kind:"thread",created:"never by the cache: a coroutine scope with its own SupervisorJob on its loadDispatcher, Dispatchers.Default by default, and Caffeine's maintenance on its maintenanceExecutor, ForkJoinPool.commonPool() by default",runs:"each load's loader, in the cache's own scope and not the caller's context; expiry and size eviction.",note:"Built. The cache owns no thread, timer or pool: close() cancels its loads and never shuts the maintenanceExecutor down."}
   },
   // The decision path: which artifact a consumer depends on. Ends with sys take that system's colour; NONE is grey.
   flows:[
@@ -1855,7 +1858,7 @@ function renderFlow(){
 /* The legend for the flow on screen: shapes, then each end colour with the systems or levels that use it, lit and faded, and planned
    only where a node is (an edge is drawn planned only beside a planned node). */
 function flowKey(F){
-  const ends=new Map(); Object.values(F.nodes).filter(n=>n.k==="t").forEach(n=>{ const c=endCol(n), l=ends.get(c)||[], name=n.sys?((sysTop(n.sys)||{}).name||n.sys):n.lvl; if(name&&!l.includes(name)) l.push(name); ends.set(c,l); });
+  const ends=new Map(); Object.values(F.nodes).filter(n=>n.k==="t").forEach(n=>{ const c=endCol(n), l=ends.get(c)||[], name=n.sys?((sysPlainOf(n.sys)||sysTop(n.sys)||{}).name||n.sys):n.lvl; if(name&&!l.includes(name)) l.push(name); ends.set(c,l); });
   $("#flow-key").innerHTML=`<span><i class="hex"></i>decision</span><span><i></i>step</span>`+[...ends].map(([c,l])=>`<span><i class="end" style="border-left-color:${c}"></i>ends · ${esc(l.join(" · ")||"outcome")}</span>`).join("")+`<span><i class="ln on"></i>the path these inputs take</span><span><i class="ln off"></i>not taken</span>`+(Object.values(F.nodes).some(isPlanned)?`<span><i class="pln"></i>planned, not built</span>`:"");
 }
 function highlightFlow(){
@@ -1926,7 +1929,7 @@ renderState();
 
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
    Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
-   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   planned (dashed, faded) row, a gap, the one neutral series of the test-set bars, the badges and their meaning, a tracking issue's
    chain's StepBar. A section that draws no encoding shows no legend. */
 /* A tracking issue's chain on the roadmap (dashboards-skill/54; nomenclature/ui.md, StepBar), written <span class="chainprog"
    data-landed="n" data-total="m"> holding one <span data-unit="done|current|todo">its name</span> per unit in landing order: drawn
@@ -1950,7 +1953,7 @@ function sectionKeys(){
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
   const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
   put(G,"guarantees-key",[swatches(G,"swk"),
-    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per set: one series, one neutral fill</span>`:"",
     has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
     has(G,".archived")?`<span><span class="archtag">⊟ archived</span> solid, faded: an archived system, no longer developed</span>`:"",
     has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",

@@ -1002,7 +1002,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
   "title": "Dokka API docs",
   "issueTitle": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation",
   "function": "Give the published WebTools modules generated API documentation and prepare `webtools-http` 1.0.0 for release: Dokka output as the javadoc jars, one aggregated reference checked in CI and served beside a landing page on GitHub Pages, and the changelog section and build note that still mark 1.0.0 as unreleased.",
-  "status": "building",
+  "status": "built",
   "sized": "2026-11-08T22:05:00Z",
   "parent": null,
   "fixOf": null,
@@ -1012,7 +1012,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     "sha": "5ae9734",
     "date": "2026-11-06"
   },
-  "asBuilt": null,
+  "asBuilt": {
+    "sha": "77dedde91d9aec4e549e20475cced7a51d1ef6a9",
+    "merge": "77dedde91d9aec4e549e20475cced7a51d1ef6a9",
+    "pr": 100,
+    "date": "2026-11-09",
+    "at": "2026-11-09T02:49:57Z"
+  },
   "systems": [
     {
       "slug": "gradle-build",
@@ -1044,10 +1050,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     }
   ],
   "wip": {
-    "step": "document",
-    "since": "2026-11-09T02:28:41Z",
-    "updated": "2026-11-09T02:42:09Z",
-    "detail": "Document: 7 of 7 tasks done; every task done.",
+    "step": "landed",
+    "since": "2026-11-09T02:49:57Z",
+    "updated": "2026-11-09T02:49:57Z",
+    "detail": "Landed in PR #100.",
     "steps": [
       "sizing",
       "interview",
@@ -1062,9 +1068,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "merge",
       "landed"
     ],
-    "current": [
-      "built"
-    ],
+    "current": [],
     "questions": [],
     "research": null,
     "interview": [],
@@ -1119,9 +1123,8 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     },
     "open": [],
     "event": {
-      "name": "document",
-      "at": "2026-11-09T02:42:09Z",
-      "note": "7 of 7 tasks done"
+      "name": "landed",
+      "at": "2026-11-09T02:49:57Z"
     },
     "history": {
       "sizing": [
@@ -1557,6 +1560,84 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
               "answered": "2026-11-09T02:28:41Z"
             }
           ]
+        },
+        {
+          "since": "2026-11-09T02:28:41Z",
+          "ended": "2026-11-09T02:45:09Z",
+          "endedBy": "landing",
+          "to": "landing",
+          "event": {
+            "name": "document",
+            "at": "2026-11-09T02:42:09Z",
+            "note": "7 of 7 tasks done"
+          },
+          "detail": "Document: 7 of 7 tasks done; every task done.",
+          "document": {
+            "tasks": [
+              {
+                "id": "documentation-review",
+                "name": "Documentation review",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-documentation",
+                "name": "Reconcile documentation",
+                "state": "done"
+              },
+              {
+                "id": "dokka-check",
+                "name": "Dokka check",
+                "state": "done"
+              },
+              {
+                "id": "reconcile-plan",
+                "name": "Reconcile plan",
+                "state": "done"
+              },
+              {
+                "id": "readme-changelog",
+                "name": "README and CHANGELOG",
+                "state": "done"
+              },
+              {
+                "id": "state-boards",
+                "name": "State boards",
+                "state": "done"
+              },
+              {
+                "id": "document-landing",
+                "name": "Document commit",
+                "state": "done"
+              }
+            ]
+          }
+        }
+      ],
+      "landing": [
+        {
+          "since": "2026-11-09T02:45:09Z",
+          "ended": "2026-11-09T02:45:52Z",
+          "endedBy": "merge",
+          "to": "merge",
+          "event": {
+            "name": "landing",
+            "at": "2026-11-09T02:45:09Z",
+            "note": "land accepted"
+          },
+          "detail": "Landing: the land accepted; the branch carries the code, the version bump, the reconciled documents and the state boards."
+        }
+      ],
+      "merge": [
+        {
+          "since": "2026-11-09T02:45:52Z",
+          "ended": "2026-11-09T02:49:57Z",
+          "endedBy": "landed",
+          "to": "landed",
+          "event": {
+            "name": "landed",
+            "at": "2026-11-09T02:49:57Z"
+          },
+          "detail": "Landed in PR #100."
         }
       ]
     },
@@ -1748,6 +1829,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "date": "2026-11-09",
       "ref": "plan.md",
       "note": "four implementation stages, the KDoc pass, Dokka in the build, the line-ending pins and the website, then the version bump and the README and CHANGELOG, in six commits on `feat/issue-99-dokka-api-docs`. One system, the Gradle build, with no consumer-facing API change: `webtools-udp` moves to `2.0.1`, the only version move, and `webtools-http` and `webtools-feeds` stay at `1.0.0`, prepared for release"
+    },
+    {
+      "column": "built",
+      "label": "Landed in PR #100",
+      "date": "2026-11-09",
+      "ref": "PR #100",
+      "note": "merged at `77dedde`; the site's first deployment, on that push, succeeded; nothing is released yet"
     }
   ],
   "trail": [
@@ -1876,6 +1964,23 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "date": "2026-11-09",
       "column": "built",
       "label": "Document: every task done"
+    },
+    {
+      "date": "2026-11-09",
+      "column": "built",
+      "label": "Landing: the land accepted"
+    },
+    {
+      "date": "2026-11-09",
+      "column": "built",
+      "label": "Merge: merging it in PR #100",
+      "ref": "PR #100"
+    },
+    {
+      "date": "2026-11-09",
+      "column": "built",
+      "label": "Landed in PR #100, merge 77dedde",
+      "ref": "PR #100"
     }
   ],
   "rows": [
@@ -1990,12 +2095,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
           {
             "text": "Each of the 155 undocumented public declarations got its own KDoc block, with two departures from the plan's writing guidance: the `toString` of the 17 types whose class KDoc fixes the exact string omits the \"may change\" clause, and `UdpChannel.Companion` names its reliable message-size constants.",
             "state": "amended",
-            "ref": "final-implementation.md#deviations",
+            "ref": "final-implementation.md#2-deviations",
             "excerpt": {
-              "ref": "final-implementation.md#deviations",
-              "heading": "Deviations",
-              "paragraph": "`toString` KDoc of the types whose class KDoc fixes the exact string (section 6 D, writing guidance, `toString` row). The member KDoc of these 17 overrides states the string the class already promises and omits the \"format is not part of the API and may change\" clause, because the class KDoc makes the exact text part of the contract and the clause would contradict it: the eight name types (`FeedLimit`, `FeedRefusal`, `NotAFeedReason`, `ExhaustedReason`, `PauseSource`, `RefusalReason`, `StoreOperation`, `HttpMethod`: `toString()` is the name), the seven fixed literals (`BudgetObserver.None`, …",
-              "hash": "64a454e8fc59"
+              "ref": "final-implementation.md#2-deviations",
+              "heading": "2. Deviations",
+              "paragraph": "Each departs from the section of `plan.md` it names. No research or parent architecture stands behind these sections, so the plan is the only basis.",
+              "hash": "8611225f55c3"
             }
           },
           {
@@ -2008,13 +2113,13 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "what": "The member KDoc of 17 `toString` overrides states the string the class already promises and omits the \"format is not part of the API and may change\" clause.",
             "why": "The class KDoc of those types makes the exact text part of the contract, so the clause would contradict it. Every other `toString` carries the clause.",
             "when": "Implementation, stage kdoc",
-            "ref": "final-implementation.md#deviations"
+            "ref": "final-implementation.md#d1-tostring-kdoc-of-the-types-whose-class-kdoc-fixes-the-exact-string"
           },
           {
             "what": "The KDoc of `UdpChannel.Companion` names the reliable message-size constants the companion declares, `DEFAULT_MAX_RELIABLE_MESSAGE_BYTES` and `MAX_RELIABLE_MESSAGE_BYTES`.",
             "why": "The plan's example calls them channel-numbering constants, which the companion does not hold.",
             "when": "Implementation, stage kdoc",
-            "ref": "final-implementation.md#deviations"
+            "ref": "final-implementation.md#d2-udpchannelcompanion-kdoc"
           }
         ]
       }
@@ -2495,11 +2600,22 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ]
       },
       "asBuilt": {
-        "state": "partially-built",
+        "state": "as-planned",
         "files": [
-          ".gitattributes"
+          ".gitattributes",
+          "gradlew"
         ],
-        "summary": "`.gitattributes` pins LF for `gradlew` and the workflow files. `gradlew` is still mode `100644` in the index: the plan makes the move to `100755` when the change is committed (`plan.md` §6 H and §11), since no working-tree edit can carry it, and it has not been made yet."
+        "summary": null,
+        "statements": [
+          {
+            "text": "`gradlew` moved from mode `100644` to `100755` in `7d61d02`, a mode-only change, and stands at `100755` in the index at the merge.",
+            "state": "as-planned"
+          },
+          {
+            "text": "`.gitattributes` pins LF for `gradlew` and the workflow files.",
+            "state": "as-planned"
+          }
+        ]
       }
     },
     {
@@ -2627,25 +2743,25 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "state": "as-planned"
           },
           {
-            "text": "`RootScriptsAgreementGatingTest`, which also holds the root's `failOnWarning` and both workflows' Dokka task, `DokkaConventionIntegrationTest`, `DokkaAggregationEndToEndTest` and `DokkaConfigurationCacheReuseNonFunctionalTest` are new, and the four failure cases of `DokkaConventionIntegrationTest` assert that `:dokkaGeneratePublicationHtml` fails, the task that runs in those single-project samples.",
+            "text": "`RootScriptsAgreementGatingTest`, which also holds the root's `failOnWarning` and both workflows' Dokka task, `DokkaConventionIntegrationTest`, `DokkaAggregationEndToEndTest` and `DokkaConfigurationCacheReuseNonFunctionalTest` are new, and the four failure cases of `DokkaConventionIntegrationTest` assert that `:dokkaGeneratePublicationHtml` fails, the task that runs in those single-project samples. The gate reads its files more strictly than the plan's patterns: it drops line comments before matching, anchors its matches at the start of a line, and takes `include(...)` with or without the leading colon.",
             "state": "amended",
-            "ref": "final-implementation.md#deviations",
+            "ref": "final-implementation.md#d4-dokkaconventionintegrationtest-asserts-the-publication-task-in-its-failure-cases",
             "excerpt": {
-              "ref": "final-implementation.md#deviations",
-              "heading": "Deviations",
-              "paragraph": "`toString` KDoc of the types whose class KDoc fixes the exact string (section 6 D, writing guidance, `toString` row). The member KDoc of these 17 overrides states the string the class already promises and omits the \"format is not part of the API and may change\" clause, because the class KDoc makes the exact text part of the contract and the clause would contradict it: the eight name types (`FeedLimit`, `FeedRefusal`, `NotAFeedReason`, `ExhaustedReason`, `PauseSource`, `RefusalReason`, `StoreOperation`, `HttpMethod`: `toString()` is the name), the seven fixed literals (`BudgetObserver.None`, …",
-              "hash": "64a454e8fc59"
+              "ref": "final-implementation.md#d4-dokkaconventionintegrationtest-asserts-the-publication-task-in-its-failure-cases",
+              "heading": "D4. `DokkaConventionIntegrationTest` asserts the publication task in its failure cases",
+              "paragraph": "*Plan: section 9, the Level 3 row.* Each of the four failure tests asserts that `:dokkaGeneratePublicationHtml` is `FAILED`, not `:dokkaGenerateModuleHtml`: in these single-project samples the publication task is the one that runs and fails, and `:dokkaGenerateModuleHtml` has no outcome. The module task is asserted where it runs, in the multi-module composite of `DokkaAggregationEndToEndTest`.",
+              "hash": "e928bd218d96"
             }
           },
           {
             "text": "The publishing integration test expects a Dokka javadoc jar, `CommonCheckPluginIntegrationTest` also shows the check-only modules have no Dokka task, and the class KDoc of `BuildLogicPluginsGatingTest` names the plugins in a parenthesis, as it had no list to add to.",
             "state": "amended",
-            "ref": "final-implementation.md#deviations",
+            "ref": "final-implementation.md#d3-buildlogicpluginsgatingtest-class-kdoc",
             "excerpt": {
-              "ref": "final-implementation.md#deviations",
-              "heading": "Deviations",
-              "paragraph": "`toString` KDoc of the types whose class KDoc fixes the exact string (section 6 D, writing guidance, `toString` row). The member KDoc of these 17 overrides states the string the class already promises and omits the \"format is not part of the API and may change\" clause, because the class KDoc makes the exact text part of the contract and the clause would contradict it: the eight name types (`FeedLimit`, `FeedRefusal`, `NotAFeedReason`, `ExhaustedReason`, `PauseSource`, `RefusalReason`, `StoreOperation`, `HttpMethod`: `toString()` is the name), the seven fixed literals (`BudgetObserver.None`, …",
-              "hash": "64a454e8fc59"
+              "ref": "final-implementation.md#d3-buildlogicpluginsgatingtest-class-kdoc",
+              "heading": "D3. `BuildLogicPluginsGatingTest` class KDoc",
+              "paragraph": "*Plan: section 6 I.* The class KDoc had no list of plugins to add \"dokka\" to, so it now names the plugins in a parenthesis (\"Kotlin, vanniktech, binary-compatibility-validator and dokka\").",
+              "hash": "293909ea3534"
             }
           }
         ],
@@ -2654,13 +2770,19 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "what": "The class KDoc of `BuildLogicPluginsGatingTest` names the plugins in a parenthesis: \"Kotlin, vanniktech, binary-compatibility-validator and dokka\".",
             "why": "The plan adds \"dokka\" to the class KDoc's list of plugins, and the class KDoc had no such list.",
             "when": "Implementation, stage dokka-build",
-            "ref": "final-implementation.md#deviations"
+            "ref": "final-implementation.md#d3-buildlogicpluginsgatingtest-class-kdoc"
           },
           {
             "what": "The four failure cases of `DokkaConventionIntegrationTest` assert that `:dokkaGeneratePublicationHtml` is `FAILED`, not `:dokkaGenerateModuleHtml`.",
             "why": "In these single-project samples the publication task is the one that runs and fails, and `:dokkaGenerateModuleHtml` has no outcome. The module task is asserted where it runs, in the multi-module composite of `DokkaAggregationEndToEndTest`.",
             "when": "Resolution",
-            "ref": "final-implementation.md#deviations"
+            "ref": "final-implementation.md#d4-dokkaconventionintegrationtest-asserts-the-publication-task-in-its-failure-cases"
+          },
+          {
+            "what": "`RootScriptsAgreementGatingTest` drops `//` line comments before matching, anchors its marker-version and plugin-id matches at the start of a line, and takes each `include(...)` statement and argument with or without the leading colon.",
+            "why": "The plan's patterns could count commented-out text and missed two statements on one line and a module named without its colon, both of which Gradle accepts, so a version mismatch or a dropped module could pass.",
+            "when": "During the Quality Reviews",
+            "ref": "final-implementation.md#d5-rootscriptsagreementgatingtest-reads-its-files-more-strictly-than-the-plans-text"
           }
         ]
       }
@@ -2682,7 +2804,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "source": "issue #99, Proposed change"
       },
       "asBuilt": {
-        "state": "as-planned",
+        "state": "amended",
         "files": [
           "website/",
           ".github/workflows/pages.yml",
@@ -2690,8 +2812,15 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ],
         "statements": [
           {
-            "text": "`website/` holds a landing page, its `404.html`, `robots.txt`, `sitemap.xml` and assets, adapted from MyGameTools', and its hero code card holds the `FeedFetcher.untrusted(...)` example, `README.md:308-321`.",
-            "state": "as-planned"
+            "text": "`website/` holds a landing page, its `404.html`, `robots.txt`, `sitemap.xml` and assets, adapted from MyGameTools', and its hero code card holds the `FeedFetcher.untrusted(...)` example, `README.md:308-321`. The Modules table names `1.0.0` for `webtools-scraping` and `webtools-browser`, the version Maven Central holds, where the plan named `1.0.0a`.",
+            "state": "amended",
+            "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+            "excerpt": {
+              "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+              "heading": "D7. `README.md`, the site and the CHANGELOG state what Maven Central holds",
+              "paragraph": "*Plan: sections 6 F and 8.* The plan took the lettered versions in the build files for published ones. Maven Central holds `webtools-udp` up to `2.0.0`, and `webtools-scraping` and `webtools-browser` at `1.0.0` only; `2.0.0a` and `1.0.0a` were never published. So the site's Modules table names `1.0.0` for those two modules where section 6 F says `1.0.0a`; the README's Install note and Java floor paragraph say the floor starts with `webtools-udp` 2.0.1 and that the two archived modules' published builds need JDK 23 or newer; and the CHANGELOG's `[2.0.1]` section lists what it carries from …",
+              "hash": "4ce70d4a1ef0"
+            }
           },
           {
             "text": "`.github/workflows/pages.yml` runs the root Dokka task, assembles `website/`, `docs/brand/` and `build/dokka/html` as `api/` into `_site`, and deploys it on each push to `master`; `RootScriptsAgreementGatingTest` holds it to the task's name.",
@@ -2706,7 +2835,20 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
             "state": "as-planned"
           }
         ],
-        "changes": []
+        "changes": [
+          {
+            "what": "The site's Modules table names `1.0.0` for `webtools-scraping` and `webtools-browser`.",
+            "why": "The plan took the lettered versions in the build files for published ones. Maven Central holds those two modules at `1.0.0` only; `1.0.0a` was never published.",
+            "when": "Document",
+            "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds"
+          },
+          {
+            "what": "`pages.yml` is in the Dokka commit `f2ca518`, not in the website commit `c3e3500`, and the five commits land together rather than each standing alone.",
+            "why": "`RootScriptsAgreementGatingTest` reads both workflows and fails on a tree without one; `f2ca518` needs the KDoc of `0cf4e2c`, and its workflows run on Linux only after `7d61d02` makes `gradlew` executable.",
+            "when": "Code landing",
+            "ref": "final-implementation.md#d6-the-commits-landed-in-a-different-grouping"
+          }
+        ]
       },
       "options": [
         {
@@ -2990,7 +3132,52 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ]
       },
       "asBuilt": {
-        "state": "pending"
+        "state": "deviated",
+        "files": [
+          "README.md"
+        ],
+        "statements": [
+          {
+            "text": "The top of the README gained the site and reference links, and its build section the Dokka command with a short paragraph on the reference.",
+            "state": "as-planned"
+          },
+          {
+            "text": "The \"not yet on Maven Central\" and \"not yet released\" lines for `webtools-http` and `webtools-feeds` came out and the Install block names `webtools-udp:2.0.1`; the Install note and the Java floor paragraph also say the floor starts with `webtools-udp` 2.0.1 and that the published builds of the two archived modules need JDK 23 or newer.",
+            "state": "amended",
+            "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+            "excerpt": {
+              "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+              "heading": "D7. `README.md`, the site and the CHANGELOG state what Maven Central holds",
+              "paragraph": "*Plan: sections 6 F and 8.* The plan took the lettered versions in the build files for published ones. Maven Central holds `webtools-udp` up to `2.0.0`, and `webtools-scraping` and `webtools-browser` at `1.0.0` only; `2.0.0a` and `1.0.0a` were never published. So the site's Modules table names `1.0.0` for those two modules where section 6 F says `1.0.0a`; the README's Install note and Java floor paragraph say the floor starts with `webtools-udp` 2.0.1 and that the two archived modules' published builds need JDK 23 or newer; and the CHANGELOG's `[2.0.1]` section lists what it carries from …",
+              "hash": "4ce70d4a1ef0"
+            }
+          },
+          {
+            "text": "The README kept \"about a minute\" for the fixtures-publication check, which measured 52 to 60 s on a warm run, instead of a measured time.",
+            "state": "deviated",
+            "ref": "final-implementation.md#d8-the-readme-keeps-about-a-minute-for-the-fixtures-publication-check",
+            "excerpt": {
+              "ref": "final-implementation.md#d8-the-readme-keeps-about-a-minute-for-the-fixtures-publication-check",
+              "heading": "D8. The README keeps \"about a minute\" for the fixtures-publication check",
+              "paragraph": "*Plan: section 8, `README.md` item 7.* The sentence stays instead of being replaced with a measured time: the check measured 52 to 60 s warm, so it is still true.",
+              "hash": "01834f69116e"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "what": "The Install note and the Java floor paragraph say the Java 11 floor starts with `webtools-udp` 2.0.1, and that the published builds of `webtools-scraping` and `webtools-browser` need JDK 23 or newer.",
+            "why": "The plan took the lettered versions in the build files for published ones. Maven Central holds `webtools-udp` up to `2.0.0` and the two archived modules at `1.0.0` only.",
+            "when": "Document",
+            "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds"
+          },
+          {
+            "what": "The sentence \"about a minute\" stays, where the plan replaced it with the time measured on the check's first warm run.",
+            "why": "The check measured 52 to 60 s warm, so the sentence is still true.",
+            "when": "Document",
+            "ref": "final-implementation.md#d8-the-readme-keeps-about-a-minute-for-the-fixtures-publication-check"
+          }
+        ]
       }
     },
     {
@@ -3008,7 +3195,17 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "source": "issue #99, Proposed change"
       },
       "asBuilt": {
-        "state": "pending"
+        "state": "as-planned",
+        "statements": [
+          {
+            "text": "GitHub Pages was enabled with `build_type` `workflow`, and the site's first deployment, on the merge's push, succeeded.",
+            "state": "as-planned"
+          },
+          {
+            "text": "It was done once, before the merge, as a repository setting outside the change set.",
+            "state": "as-planned"
+          }
+        ]
       },
       "options": [
         {
@@ -3085,7 +3282,39 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "source": "issue #99, Problem"
       },
       "asBuilt": {
-        "state": "pending"
+        "state": "amended",
+        "files": [
+          "CHANGELOG.md"
+        ],
+        "statements": [
+          {
+            "text": "`## [Unreleased]` stands as an empty heading, and its content moved into `## [1.0.0] - 2026-11-08` with the \"(unreleased, `1.0.0`)\" markers dropped.",
+            "state": "as-planned"
+          },
+          {
+            "text": "`## [2.0.1] - 2026-11-08` records the reference, the site, the CI job and `webtools-udp`'s populated javadoc jar, and also the two fixes it carries from the never-published `2.0.0a` (#38, #47).",
+            "state": "amended",
+            "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+            "excerpt": {
+              "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+              "heading": "D7. `README.md`, the site and the CHANGELOG state what Maven Central holds",
+              "paragraph": "*Plan: sections 6 F and 8.* The plan took the lettered versions in the build files for published ones. Maven Central holds `webtools-udp` up to `2.0.0`, and `webtools-scraping` and `webtools-browser` at `1.0.0` only; `2.0.0a` and `1.0.0a` were never published. So the site's Modules table names `1.0.0` for those two modules where section 6 F says `1.0.0a`; the README's Install note and Java floor paragraph say the floor starts with `webtools-udp` 2.0.1 and that the two archived modules' published builds need JDK 23 or newer; and the CHANGELOG's `[2.0.1]` section lists what it carries from …",
+              "hash": "4ce70d4a1ef0"
+            }
+          },
+          {
+            "text": "No entry names `webtools-scraping` or `webtools-browser`.",
+            "state": "as-planned"
+          }
+        ],
+        "changes": [
+          {
+            "what": "The `[2.0.1]` section lists what it carries from `2.0.0a`, the malformed-handshake refusal (#38) and the Java 11 floor (#47), which the plan's section leaves out.",
+            "why": "`2.0.0a` was never published, so `2.0.1` is the first release of those two fixes on Maven Central.",
+            "when": "Document",
+            "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds"
+          }
+        ]
       },
       "options": [
         {
@@ -3319,7 +3548,28 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "risks": []
       },
       "asBuilt": {
-        "state": "pending"
+        "state": "amended",
+        "files": [
+          "webtools-udp/build.gradle.kts"
+        ],
+        "statements": [
+          {
+            "text": "`webtools-udp` moved from `2.0.0a` to `2.0.1` in the `build:` commit of its own, `2c634f4`, after the code; a two-line comment above the version line says what `2.0.1` carries.",
+            "state": "amended"
+          },
+          {
+            "text": "No other `version =` line changed.",
+            "state": "as-planned"
+          }
+        ],
+        "changes": [
+          {
+            "what": "A two-line comment above the version line says what `2.0.1` carries, where the plan changed the version line alone.",
+            "why": "The comments above that line record what each version carries, and the new version takes its entry.",
+            "when": "Code landing",
+            "ref": "2c634f4"
+          }
+        ]
       }
     },
     {
@@ -3391,7 +3641,24 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ]
       },
       "asBuilt": {
-        "state": "pending"
+        "state": "as-planned",
+        "statements": [
+          {
+            "text": "`webtools-scraping` and `webtools-browser` stayed at `1.0.0a` in their build files, with no re-release and no CHANGELOG entry of their own; each gained one KDoc comment.",
+            "state": "as-planned"
+          },
+          {
+            "text": "Their later release stays a follow-up, so their `1.0.0` on Maven Central keeps its placeholder javadoc jar.",
+            "state": "as-planned",
+            "ref": "consequences.md#7-follow-ups",
+            "excerpt": {
+              "ref": "consequences.md#7-follow-ups",
+              "heading": "7. Follow-ups",
+              "paragraph": "All open. The first five are `plan.md`, section 12.",
+              "hash": "ac1dd41a052d"
+            }
+          }
+        ]
       }
     },
     {
@@ -3437,26 +3704,39 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         ]
       },
       "asBuilt": {
-        "state": "pending"
+        "state": "as-planned",
+        "statements": [
+          {
+            "text": "`ci.yml` holds the one `docs` job; the build and test jobs, `CONTRIBUTING.md`, tags and a release workflow stayed with #58, still open.",
+            "state": "as-planned",
+            "ref": "consequences.md#5-neighbouring-issues",
+            "excerpt": {
+              "ref": "consequences.md#5-neighbouring-issues",
+              "heading": "5. Neighbouring issues",
+              "paragraph": "#58 (repository practices): `ci.yml` now exists with the `docs` job, so #58's build and test jobs extend that file instead of creating it. Its `CHANGELOG.md` request is already met; its `CONTRIBUTING.md`, tags, release workflow and foojay bump are untouched. #58 stays open. · #55 and #69 (closed): the build notes that held `webtools-http` and `webtools-feeds` back until the stack was complete are removed.",
+              "hash": "13292e1694c7"
+            }
+          }
+        ]
       }
     }
   ],
   "impact": {
-    "basis": "plan",
-    "summary": "A build and documentation change to the published modules: each javadoc jar carries its Dokka reference, one aggregated reference is served at `/api/` beside a landing page on GitHub Pages, and `webtools-http` and `webtools-feeds` are prepared for their `1.0.0` release. No published module changes its API, behaviour or runtime dependencies. Every future change to a published module is gated on KDoc.",
+    "basis": "as-built",
+    "summary": "A build and documentation change to the published modules: each javadoc jar carries its Dokka reference, one aggregated reference is served at `/api/` beside a landing page on GitHub Pages, and `webtools-http` and `webtools-feeds` are prepared for their `1.0.0` release, not released yet. No published module changes its API or runtime dependencies; `webtools-udp` 2.0.1 is also the first release of the two fixes `2.0.0a` held. Every future change to a published module is gated on KDoc.",
     "none": null,
     "release": {
       "bump": "feat",
       "version": "webtools-udp 2.0.1",
-      "note": "the only version move, because its javadoc jar is the artifact that changes; `webtools-http` and `webtools-feeds` stay at `1.0.0`, `webtools-scraping` and `webtools-browser` at `1.0.0a`"
+      "note": "the only version move, as `webtools-udp`'s javadoc jar is the artifact that changes. None of `webtools-udp` 2.0.1, `webtools-http` 1.0.0 or `webtools-feeds` 1.0.0 is released yet: the publish has not run and waits on the maintainer. `webtools-scraping` and `webtools-browser` stay at `1.0.0a` in the build files, never published; Maven Central holds `1.0.0`."
     },
     "downstream": [
       {
         "who": "`webtools-udp`",
         "kind": "artifact",
         "system": "gradle-build",
-        "effect": "additive",
-        "summary": "The javadoc jar carries the Dokka reference in place of an empty placeholder, at `2.0.1`, a candidate for the release after the landing. KDoc comments only in the source; no public API change.",
+        "effect": "behaviour",
+        "summary": "The javadoc jar carries the Dokka reference in place of an empty placeholder, at `2.0.1`. `2.0.1` is also the first release of what the never-published `2.0.0a` holds: the malformed-handshake refusal (#38) and the Java 11 floor (#47), so three malformed handshake shapes change on the wire against Maven Central's `2.0.0`. No public API change. Not released yet: the publish has not run and waits on the maintainer.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -3464,7 +3744,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "kind": "artifact",
         "system": "gradle-build",
         "effect": "additive",
-        "summary": "The javadoc jars carry the Dokka reference, the published test fixtures included. KDoc comments only in the source and the ABI dump is identical. `1.0.0` is unchanged, the \"UNRELEASED\" build note goes, and it is a candidate for the release after the landing.",
+        "summary": "The javadoc jars carry the Dokka reference, the published test fixtures included. KDoc comments only in the source and the ABI dump is identical. `1.0.0` is unchanged and the \"UNRELEASED\" build note is gone. Not released yet: the publish has not run and waits on the maintainer.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -3472,7 +3752,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "kind": "artifact",
         "system": "gradle-build",
         "effect": "additive",
-        "summary": "The javadoc jars carry the Dokka reference, with KDoc comments only in the source and an identical ABI dump. It is prepared with `webtools-http` because the two release together, at an unchanged `1.0.0`.",
+        "summary": "The javadoc jars carry the Dokka reference, with KDoc comments only in the source and an identical ABI dump. It is prepared with `webtools-http`, as the two release together, at an unchanged `1.0.0`, and the \"UNRELEASED\" build note is gone. Not released yet: the publish has not run and waits on the maintainer.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -3480,7 +3760,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "kind": "artifact",
         "system": "gradle-build",
         "effect": "none",
-        "summary": "They get Dokka and appear at `/api/`, and each gains one KDoc comment. Nothing is republished: Maven Central's `1.0.0a` keeps its placeholder javadoc jar.",
+        "summary": "They get Dokka and appear at `/api/`, and each gains one KDoc comment. Nothing is republished: Maven Central keeps `1.0.0`, with its Java 23 bytecode and placeholder javadoc jar. `1.0.0a` in the build files is unchanged and was never published.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -3488,15 +3768,15 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "kind": "artifact",
         "system": "gradle-build",
         "effect": "additive",
-        "summary": "A landing page and the API reference at `/api/`, on GitHub Pages at `https://spartanlaboratories.github.io/WebTools/`, deployed from `master` by the repository's first workflows.",
+        "summary": "A landing page and the API reference at `/api/`, on GitHub Pages at `https://spartanlaboratories.github.io/WebTools/`, deployed from `master` by the repository's first workflows. The first deployment, on the merge's push, succeeded. Its hand-written Install snippets name versions that do not resolve until the releases.",
         "link": "consequences.md#repository"
       },
       {
         "who": "Consumers of the published modules",
         "kind": "consumer",
         "system": null,
-        "effect": "none",
-        "summary": "No published module changes its API, behaviour or runtime dependencies. A consumer of `webtools-udp` 2.0.1 sees a populated javadoc jar and nothing else.",
+        "effect": "behaviour",
+        "summary": "No published module changes its API or runtime dependencies. A consumer moving from Maven Central's `webtools-udp` 2.0.0 to 2.0.1 gets the populated javadoc jar and the two fixes of `2.0.0a`, listed in the CHANGELOG's `[2.0.1]` section; three malformed handshake shapes change on the wire.",
         "link": "consequences.md#1-published-artifacts"
       },
       {
@@ -3534,14 +3814,40 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
         "who": "The repository's GitHub settings",
         "system": "gradle-build",
         "need": "required",
-        "summary": "GitHub Pages is enabled once with GitHub Actions as its source, before the merge.",
+        "summary": "GitHub Pages is enabled with GitHub Actions as its source, a repository setting outside the change set, made once before the merge.",
         "link": "consequences.md#repository"
       }
     ],
     "api": [],
     "conversion": [],
-    "source": "consequences.md; plan.md §1 and §10",
-    "link": "consequences.md"
+    "source": "consequences.md; final-implementation.md; plan.md §1 and §10",
+    "link": "consequences.md",
+    "changes": [
+      {
+        "what": "`webtools-udp` 2.0.1 is also the first release of the two fixes of the never-published `2.0.0a`, so three malformed handshake shapes change on the wire against Maven Central's `2.0.0`, where the plan recorded a populated javadoc jar alone.",
+        "why": "The plan took the lettered versions in the build files for published ones. Maven Central holds `webtools-udp` up to `2.0.0`.",
+        "when": "Document",
+        "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+        "entry": "downstream.0",
+        "system": "gradle-build"
+      },
+      {
+        "what": "Maven Central holds `webtools-scraping` and `webtools-browser` at `1.0.0`, with its Java 23 bytecode, not the `1.0.0a` the plan named; `1.0.0a` was never published.",
+        "why": "The plan took the lettered versions in the build files for published ones.",
+        "when": "Document",
+        "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+        "entry": "downstream.3",
+        "system": "gradle-build"
+      },
+      {
+        "what": "A consumer moving from Maven Central's `webtools-udp` 2.0.0 sees the two fixes as well as the javadoc jar, so the entry's effect is a behaviour change, not none.",
+        "why": "`2.0.1` is the first published version holding what `2.0.0a` carries.",
+        "when": "Document",
+        "ref": "final-implementation.md#d7-readmemd-the-site-and-the-changelog-state-what-maven-central-holds",
+        "entry": "downstream.5",
+        "system": null
+      }
+    ]
   },
   "tests": {
     "updated": "2026-11-09T01:57:15Z",
@@ -3943,6 +4249,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "name": "standard-fail-on-warning",
       "note": "the organization standard's \"a broken KDoc link fails it\" holds only with `failOnWarning`, and MyGameTools does not set it: a default Dokka run with broken links succeeds"
+    },
+    {
+      "name": "pages-permissions-scope",
+      "note": "`pages.yml` grants `pages: write` and `id-token: write` at workflow level, so the `build` job inherits them: scoping them to the `deploy` job would be least privilege"
     }
   ],
   "documents": [
@@ -3964,7 +4274,7 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
     {
       "label": "As built",
       "path": "final-implementation.md",
-      "note": "the four deviations from the plan: the `toString` wording, the `UdpChannel` companion wording, the gating test's class KDoc and the task the Dokka convention test's failure cases assert"
+      "note": "the eight deviations from the plan: the `toString` wording, the `UdpChannel` companion wording, the gating test's class KDoc, the task the Dokka convention test's failure cases assert, the agreement gate's stricter reading, the commit grouping, what the README, site and CHANGELOG state about Maven Central, and the README's \"about a minute\""
     }
   ],
   "notes": {
@@ -3992,6 +4302,10 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       {
         "what": "`dokka-ci` and `project-site`: their tests follow the re-passed plan (`plan.md` §9): the missing theme file is now two failure cases, a missing stylesheet and a missing logo, and the gate holds both workflows to the Dokka task's name.",
         "when": "2026-11-09"
+      },
+      {
+        "what": "`kdoc-pass` and `dokka-test-harness`: the as-built references to `final-implementation.md` now name its numbered sections (`#2-deviations`, `#d1-…` to `#d5-…`), the headings it holds since its reconciliation.",
+        "when": "2026-11-09"
       }
     ]
   },
@@ -4004,6 +4318,12 @@ footer a{text-decoration:none;border-bottom:1px solid var(--line)}
       "webtools-http": "../../dashboards/webtools-http/index.html",
       "webtools-feeds": "../../dashboards/webtools-feeds/index.html"
     }
+  },
+  "issueBoards": {
+    "38": "../38-handshake-empty-name/dashboard.html",
+    "47": "../55-http-client-stack/47-java-23-bytecode/dashboard.html",
+    "55": "../55-http-client-stack/dashboard.html",
+    "69": "../55-http-client-stack/69-feeds/dashboard.html"
   }
 }
 </script>
