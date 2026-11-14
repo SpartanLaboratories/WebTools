@@ -27,7 +27,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
                 coordinator = component "HandshakeCoordinator" "The server's handshake state machine and tag-byte router; implements ClientChannel; owns Registrations." "internal class" "Internal"
                 registry    = component "Registrations" "Copy-on-write registry of connected clients: one Registration per peer with handlers, liveness stamps and per-peer state." "internal class" "Internal"
                 engine      = component "ReliableChannelEngine" "One reliable plane per connection: send, ack processing, retransmit tick, reorder, close. Parts: RetransmitBuffer, ReorderBuffer, RtoEstimator, SerialSequence." "internal · @Synchronized · lock order engine → buffer" "Internal"
-                scheduler   = component "PeriodicScheduler" "Per-endpoint repeating-task seam: schedule (poll-divided, keepalive) and scheduleTick (exact cadence, probe and retransmit), each on one lazily created daemon executor." "internal class" "Internal"
+                scheduler   = component "PeriodicScheduler" "Per-endpoint repeating-task seam: schedule (poll-divided, keepalive) and scheduleTick (exact cadence, probe and retransmit), each on one lazily created daemon thread." "internal class" "Internal"
                 quality     = component "LinkQualityTracker" "The probe's RTT and loss estimator (Rtt maths); snapshot exposed as LinkQuality." "internal class" "Internal"
                 timing      = component "Timing rules" "KeepAlive, Liveness and HandshakeProtocol — pure timing and parsing rules." "internal" "Internal"
 

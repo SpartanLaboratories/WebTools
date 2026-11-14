@@ -445,6 +445,8 @@ footer code{color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* an archived system holds no colour (GUIDANCE.md §1): the board's three sides neutral, the sides told apart by their labels */
 :root:has(.chip[data-sys-status="archived"]){--server:var(--muted);--client:var(--muted);--wire:var(--muted);--server-soft:var(--surface-2);--client-soft:var(--surface-2);--wire-soft:var(--surface-2)}
+/* a system under Internal Tooling takes no colour (GUIDANCE.md §1): the three sides in the plain ink, told apart by their labels; state.colour "plain" sets the attribute */
+:root[data-sys-colour="plain"]{--server:var(--ink);--client:var(--ink);--wire:var(--ink);--server-soft:var(--surface-2);--client-soft:var(--surface-2);--wire-soft:var(--surface-2)}
 </style>
 </head>
 <body>
@@ -511,7 +513,7 @@ footer code{color:var(--ink-2)}
     <p class="lede">The fixtures start no thread: they run on the test's. Click a row.</p>
     <div class="threads">
       <div class="tside"><h3>No network · in a consumer's tests</h3>
-        <div class="thread client" data-t="the test's scheduler" tabindex="0" role="button"><span class="n">the test's scheduler</span><span class="pill eager">the test's</span><span class="r"><code>VirtualClock</code>'s dispatcher and executor, a fake's delay, <code>advanceBy</code></span></div>
+        <div class="thread client" data-t="the test's scheduler" tabindex="0" role="button"><span class="n">the test's scheduler</span><span class="pill eager">the test's</span><span class="r"><code>VirtualClock</code>'s dispatcher and <code>maintenanceExecutor</code>, a fake's delay, <code>advanceBy</code></span></div>
         <div class="thread client" data-t="the caller's thread or coroutine" tabindex="0" role="button"><span class="n">the caller's thread or coroutine</span><span class="pill eager">the caller's</span><span class="r">the fake's lookup and log, loading and parsing a fixture, the gate</span></div>
         <div class="thread client" data-t="Dispatchers.IO" tabindex="0" role="button"><span class="n">Dispatchers.IO</span><span class="pill cond">recording only</span><span class="r">the recorder's serialise, scrub and write, off the caller's thread</span></div>
       </div>
@@ -564,7 +566,7 @@ footer code{color:var(--ink-2)}
     <p class="lede">A test with the fixtures, a recording, a loopback test, and the rules the fixtures hold to.</p>
     <div class="lgrid">
       <div class="card"><h3>A test with the fixtures <small>no network</small></h3>
-        <ol class="steps"><li class="ph1"><code>runTest { val clock = virtualClock() }</code>: one scheduler drives the time source, the wall clock, the dispatcher and the executor</li><li class="ph1"><code>FakeHttpTransport(clock.timeSource).on(match, steps…)</code>: the latest stub that matches wins; its steps run in order and the last repeats</li><li class="ph2"><code>execute(request)</code>: recorded with a virtual stamp, then the step's delay; an unmatched request throws <code>UnmatchedRequestError</code></li><li class="ph2"><code>clock.advanceBy(d)</code>: moves every clock at once and runs what fell due</li><li class="ph3"><code>close()</code>: idempotent; every later call returns <code>Closed("transport")</code></li></ol>
+        <ol class="steps"><li class="ph1"><code>runTest { val clock = virtualClock() }</code>: one scheduler drives the time source, the wall clock, the dispatcher and the <code>maintenanceExecutor</code></li><li class="ph1"><code>FakeHttpTransport(clock.timeSource).on(match, steps…)</code>: the latest stub that matches wins; its steps run in order and the last repeats</li><li class="ph2"><code>execute(request)</code>: recorded with a virtual stamp, then the step's delay; an unmatched request throws <code>UnmatchedRequestError</code></li><li class="ph2"><code>clock.advanceBy(d)</code>: moves every clock at once and runs what fell due</li><li class="ph3"><code>close()</code>: idempotent; every later call returns <code>Closed("transport")</code></li></ol>
         <div class="callout"><b>Never with real I/O:</b> under <code>runTest</code> a pending real call turns <code>withTimeout</code> into a spurious timeout, as the clock's KDoc says.</div></div>
       <div class="card"><h3>Recording a fixture <small>behind the gate</small></h3>
         <ol class="steps"><li class="ph1"><code>RecordingGate.evaluate()</code>: off unless <code>WEBTOOLS_HTTP_RECORD</code> allows it; refused when any of twelve CI variables is set</li><li class="ph1"><code>FixtureRecorder(directory, gate)</code> takes only <code>RecordingGate.Enabled</code></li><li class="ph2"><code>wrap(live, group)</code>: each successful response is redacted, scrubbed of the supplied secrets and written; no request header is written</li><li class="ph2">a file in which a secret's form survives is refused, listed in <code>refused</code>, never written</li><li class="ph3">the wrapper's <code>close()</code> closes the live transport</li></ol>
@@ -681,7 +683,7 @@ workspace "WebTools" "Kotlin internet I/O helpers, published as independent sing
 
         webtools = softwareSystem "WebTools" "Gradle multi-module build publishing io.github.spartanlaboratories artifacts to Maven Central." {
             fixtures = container "webtools-http-test-fixtures" "webtools-http's published test-fixtures variant, package com.spartanlabs.webtools.http.testing: a JVM-only compilation associated with main and published beside it, on a consumer's test classpath only." "Kotlin · jvmTestFixtures · capability webtools-http-test-fixtures · webtools-http 1.0.0 unreleased" {
-                clock    = component "VirtualClock" "One virtual clock for a test: a time source, a wall clock, a dispatcher and a maintenance executor, all driven by one TestCoroutineScheduler; TestScope.virtualClock() builds one." "final class" "Public"
+                clock    = component "VirtualClock" "One virtual clock for a test: a time source, a wall clock, a dispatcher and a maintenanceExecutor, all driven by one TestCoroutineScheduler; TestScope.virtualClock() builds one." "final class" "Public"
                 fake     = component "FakeHttpTransport" "A scripted HttpTransport: stubs matched latest first, steps in order with the last repeating, virtual-time delays, a call log, the body cap and close(); with RequestMatch, Step, Unmatched, RecordedCall and UnmatchedRequestError." "final class" "Public"
                 files    = component "Fixture · FixtureLoader" "Fixture holds a status, headers and a body, parsed from a .http file and written back; FixtureLoader reads one from the consumer's own classpath." "final classes" "Public"
                 codec    = component "HttpMessageCodec" "The .http codec: a strict UTF-8 head, the body verbatim, each fault a FixtureError naming the origin and line, never a value." "internal object" "Internal"
@@ -822,13 +824,14 @@ window.addEventListener("DOMContentLoaded",()=>linkWorkBoard());
 /* The board's state (system/RULES.md §2): a verbatim copy of state.json, its stamp, version and last amendment, which apply-state.js
    restamps on a feature branch and at the landing; renderState() draws the header's chips from it. */
 const STATE=(()=>{ try{ return JSON.parse(document.getElementById("state").textContent)||{}; }catch(e){ return {}; } })();
+if(STATE.colour==="plain") document.documentElement.dataset.sysColour="plain";
 const ghIssue=n=>`${REPO}/issues/${n}`;
 const ilink=n=>{ const b=boardOf(n); return b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">#${esc(n)}</a>`:`<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a>`; };
 const pair=(n,title)=>{ const b=boardOf(n); return `<a href="${ghIssue(n)}" target="_blank" rel="noopener">#${esc(n)}</a> ${b?`<a href="${esc(b)}" title="#${esc(n)}: its issue board">${esc(title)}</a>`:esc(title)}`; };
 function linkIssues(root){ const r=root||document;
   /* a title written <a data-board="N"> is the issue's own, quoted verbatim, and keeps its mark, data-issue-title, once resolved (a link to
-     its board, or plain text while it has none): a work level in it is a defect in the issue, flagged by check-board.js (ISSUE TITLE NAMES
-     A WORK LEVEL: #n), never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
+     its board, or plain text while it has none): a sizing named in it is a defect in the issue, flagged by check-board.js,
+     never shown as the board's (GUIDANCE.md §5; dashboards-skill/28) */
   r.querySelectorAll("a[data-board]").forEach(a=>{ const n=a.dataset.board, b=boardOf(n); if(b){ a.href=b; a.title=`#${n}: its issue board`; a.dataset.issueTitle=n; } else { const t=document.createElement("span"); t.dataset.issueTitle=n; t.append(...a.childNodes); a.replaceWith(t); } });
   r.querySelectorAll("a[data-issue]").forEach(a=>{ const n=a.dataset.issue, b=boardOf(n); a.href=b||ghIssue(n); if(b) a.title=`#${n}: its issue board`; else { a.target="_blank"; a.rel="noopener"; } }); }
 window.addEventListener("DOMContentLoaded",()=>linkIssues());
@@ -961,7 +964,7 @@ const MODEL = {
     lifelines:[{n:"consumer's test",side:"consumer"},{n:"VirtualClock",side:"client"},{n:"FixtureLoader",side:"client"},{n:"FakeHttpTransport",side:"client"},{n:"code under test",side:"external"}],
     phases:[["ARRANGE",0,3],["ACT",4,8],["ASSERT",9,10]],
     steps:[
-      {f:0,t:1,l:"runTest { val clock = virtualClock() }",n:"One TestCoroutineScheduler drives the time source, the wall clock, the dispatcher and the executor."},
+      {f:0,t:1,l:"runTest { val clock = virtualClock() }",n:"One TestCoroutineScheduler drives the time source, the wall clock, the dispatcher and the maintenanceExecutor."},
       {f:0,t:2,l:"FixtureLoader().load(\"quotes/aapl.http\")",n:"Read from the consumer's own classpath, under fixtures/ by default; a fault is a FixtureError naming the resource and line, never a value."},
       {f:2,t:0,l:"Fixture(status, headers, body)",ret:true,n:"The same file can be served over loopback with MockWebServer.enqueue(fixture, method)."},
       {f:0,t:3,l:"FakeHttpTransport(clock.timeSource).on(match, Step.fixture(fixture))",n:"The latest stub that matches wins; its steps run in order and the last repeats."},
@@ -1408,7 +1411,7 @@ renderState();
 
 /* ---------- The Guarantees' and the Context's legends (GUIDANCE.md §2) ----------
    Generated from what each section draws, so a hand-written guarantee card or card needs no legend of its own: the system swatches present, a
-   planned (dashed, faded) row, a gap, the one neutral series of the test-level bars, the badges and their meaning, a tracking issue's
+   planned (dashed, faded) row, a gap, the one neutral series of the test-set bars, the badges and their meaning, a tracking issue's
    chain's StepBar. A section that draws no encoding shows no legend. */
 /* A tracking issue's chain on the roadmap (dashboards-skill/54; nomenclature/ui.md, StepBar), written <span class="chainprog"
    data-landed="n" data-total="m"> holding one <span data-unit="done|current|todo">its name</span> per unit in landing order: drawn
@@ -1432,7 +1435,7 @@ function sectionKeys(){
   const G=document.querySelector("section.guarantees"), C=document.querySelector("section.context"), has=(s,q)=>!!(s&&s.querySelector(q));
   const swatches=(s,cls)=>typeof sysKey==="function"&&s?sysKey([...new Set([...s.querySelectorAll("[data-sys]")].map(e=>e.dataset.sys))],cls):"";
   put(G,"guarantees-key",[swatches(G,"swk"),
-    has(G,".bars")?`<span><i class="barsk"></i>test classes per level: one series, one neutral fill</span>`:"",
+    has(G,".bars")?`<span><i class="barsk"></i>test classes per set: one series, one neutral fill</span>`:"",
     has(G,".planned")?`<span><i class="pln"></i>dashed, faded: about a planned part, nothing built yet</span>`:"",
     has(G,".gap")?`<span><i class="gapk">gap</i>italic, muted: not established, said as a gap</span>`:"",
     has(G,".badge")?`<span><span class="badge">tier</span>a fact: a stability tier, a marker, neutral</span>`:""]);
