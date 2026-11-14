@@ -600,7 +600,7 @@ and `UpstreamClient` lines and printed by the `toString()` of `HttpRequest`,
   The dump does not record `@SubclassOptInRequired`, so dropping the gate from a
   seam would pass `apiCheck`; no automated check covers the gate.
 
-## 11. Test support and test levels
+## 11. Test support and test sets
 
 ### 11.1 The published fixtures
 
@@ -612,17 +612,17 @@ published as the variants `testFixturesApiElements` and
 
 | Fixture | For | What it is |
 |---|---|---|
-| `VirtualClock`, `TestScope.virtualClock()` | Level 2 | one `TestCoroutineScheduler` behind a `timeSource`, a `wallClock`, a `dispatcher` and an inline `maintenanceExecutor`, so the cache, the budget and `delay` move together on `advanceBy`; never at Level 3 |
-| `FakeHttpTransport`, `RequestMatch`, `Step`, `Unmatched` | Level 2 | a scripted transport: the most recent matching stub wins, steps run in order and the last repeats, every call is recorded with a virtual stamp; an unmatched request throws `UnmatchedRequestError` by default (`Unmatched.Fail`); mirrors `Closed` and `BodyTooLarge`, nothing else (no policy, DNS, TLS, redirects or timeouts). The worked example of implementing `HttpTransport` |
-| `Fixture`, `FixtureLoader` | Levels 2 and 3 | the `.http` file format (provenance comments, a status line, headers, a blank line, the body verbatim) and body-only files typed by extension, loaded from the consumer's own classpath; the jar ships none |
+| `VirtualClock`, `TestScope.virtualClock()` | component | one `TestCoroutineScheduler` behind a `timeSource`, a `wallClock`, a `dispatcher` and an inline `maintenanceExecutor`, so the cache, the budget and `delay` move together on `advanceBy`; never in integration tests |
+| `FakeHttpTransport`, `RequestMatch`, `Step`, `Unmatched` | component | a scripted transport: the most recent matching stub wins, steps run in order and the last repeats, every call is recorded with a virtual stamp; an unmatched request throws `UnmatchedRequestError` by default (`Unmatched.Fail`); mirrors `Closed` and `BodyTooLarge`, nothing else (no policy, DNS, TLS, redirects or timeouts). The worked example of implementing `HttpTransport` |
+| `Fixture`, `FixtureLoader` | component and integration | the `.http` file format (provenance comments, a status line, headers, a blank line, the body verbatim) and body-only files typed by extension, loaded from the consumer's own classpath; the jar ships none |
 | `FixtureRecorder`, `RecordingGate`, `Redaction`, `RecordMode` | recording | a decorating transport that writes live responses as `.http` files; only constructible from `RecordingGate.Enabled`, which needs `WEBTOOLS_HTTP_RECORD` and no CI variable; request headers are never written, sensitive response headers and supplied secrets are redacted, and a file in which a secret survives is refused |
-| `LoopbackTransports`, `LoopbackFetchers`, `MockWebServer.webtoolsUrl`, `Fixture.toMockResponse`, `MockWebServer.enqueue(fixture)` | Level 3 | the real `OkHttpTransport`, or a `UrlFetcher` over it, against a loopback `mockwebserver3` server with every policy rule live except the loopback ones (§5.2) |
-| `RecordingBudgetObserver`, `FakeBudgetStore` | Level 2 | the worked examples of `BudgetObserver` and `BudgetStore`; the store scripts failures and virtual-time delays |
+| `LoopbackTransports`, `LoopbackFetchers`, `MockWebServer.webtoolsUrl`, `Fixture.toMockResponse`, `MockWebServer.enqueue(fixture)` | integration | the real `OkHttpTransport`, or a `UrlFetcher` over it, against a loopback `mockwebserver3` server with every policy rule live except the loopback ones (§5.2) |
+| `RecordingBudgetObserver`, `FakeBudgetStore` | component | the worked examples of `BudgetObserver` and `BudgetStore`; the store scripts failures and virtual-time delays |
 
 Each fixture that implements a gated seam carries its own `@OptIn`, which is the
-line a consumer's own implementation needs. Level 3 tests start and close the
-`mockwebserver3` server by hand under `runBlocking`: real I/O under `runTest`
-turns a timeout into a spurious one.
+line a consumer's own implementation needs. Integration tests start and close
+the `mockwebserver3` server by hand under `runBlocking`: real I/O under
+`runTest` turns a timeout into a spurious one.
 
 The fixtures-publication check (`:build-logic:fixturesPublicationCheck`,
 wired into `webtools-http`'s `check` when WebTools is the root build) publishes
@@ -634,24 +634,24 @@ variant lists the test libraries.
 ### 11.2 The modules' own tests
 
 Both modules keep their tests in `commonTest` (run on the JVM target) and
-`jvmTest`, in the packages `com.spartanlabs.testing.<level>.webtools.http` and
-`com.spartanlabs.testing.<level>.webtools.feeds` (the fixtures' own tests in
-`...webtools.http.testing`); the level tasks select by package.
+`jvmTest`, in the packages `com.spartanlabs.testing.<set>.webtools.http` and
+`com.spartanlabs.testing.<set>.webtools.feeds` (the fixtures' own tests in
+`...webtools.http.testing`); the set tasks select by package.
 `webtools-feeds`' tests use `webtools-http`'s fixtures through
 `testFixtures(project(":webtools-http"))`.
 
-| Level | What it holds here |
+| Set | What it holds here |
 |---|---|
-| 1 gating | consumer-shaped compile checks, without any opt-in: a consumer names, passes and matches the gated types, uses the supplied defaults and builds through the DSL |
-| 2 component | each component against fakes and `VirtualClock`: the cache, the budget, the facades, the transport's parts, the fetcher, the Rome adapter |
-| 3 integration | the real transport and the facades against loopback `mockwebserver3` servers: redirects, caps, cancellation, the guards, conditional GETs |
-| 4a deterministic | pure mappings: the classifier, `Url` parsing (with a differential against OkHttp's `HttpUrl`), `RetryAfter` (against `java.time`), the ledger, the prolog scan, the feed conformance contract `FeedParserConformanceContract` |
-| 4c nonfunctional | secrecy suites over log lines, messages and `toString()`; linear-time and garbage-input checks; close races and contention; the feed hardening contract `FeedParserHardeningContract`, whose memory-loading cases run in a child JVM at `-Xmx128m` |
+| gating | consumer-shaped compile checks, without any opt-in: a consumer names, passes and matches the gated types, uses the supplied defaults and builds through the DSL |
+| component | each component against fakes and `VirtualClock`: the cache, the budget, the facades, the transport's parts, the fetcher, the Rome adapter |
+| integration | the real transport and the facades against loopback `mockwebserver3` servers: redirects, caps, cancellation, the guards, conditional GETs |
+| deterministic | pure mappings: the classifier, `Url` parsing (with a differential against OkHttp's `HttpUrl`), `RetryAfter` (against `java.time`), the ledger, the prolog scan, the feed conformance contract `FeedParserConformanceContract` |
+| nonfunctional | secrecy suites over log lines, messages and `toString()`; linear-time and garbage-input checks; close races and contention; the feed hardening contract `FeedParserHardeningContract`, whose memory-loading cases run in a child JVM at `-Xmx128m` |
 
-There are no Level 4b or Level 5 tests in these modules. Two Level 4c checks
+There are no e2e or uat tests in these modules. Two nonfunctional checks
 are environment-bound: the JDK 11 parser check of `webtools-feeds` runs only
 where `WEBTOOLS_JDK11_HOME` names a JDK 11, and the URL parser's linear-time
-check exceeds its bound when the level tasks run in parallel
+check exceeds its bound when the set tasks run in parallel
 ([#87](https://github.com/SpartanLaboratories/WebTools/issues/87)).
 
 ## 12. Platform reach

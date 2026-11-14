@@ -720,14 +720,14 @@ The repo is a Gradle multi-module build; the modules are `:webtools-udp`, `:webt
 ```sh
 ./gradlew build                    # compile + full test suite, every module
 ./gradlew :webtools-udp:build      # one module only
-./gradlew test                     # every test level, one JVM per module
-./gradlew gatingTest               # Level 1  - fast pre-commit checks (all modules)
-./gradlew componentTest            # Level 2  - isolated component behaviour
-./gradlew integrationTest          # Level 3  - real sockets / external interfaces
-./gradlew deterministicTest        # Level 4a - pure input->output mappings
-./gradlew e2eTest                  # Level 4b - full-stack flows
-./gradlew nonfunctionalTest        # Level 4c - robustness / security properties
-./gradlew uatTest                  # Level 5  - manual acceptance (mostly @Disabled)
+./gradlew test                     # every test set, one JVM per module
+./gradlew gatingTest               # gating        - fast pre-commit checks (all modules)
+./gradlew componentTest            # component     - isolated component behaviour
+./gradlew integrationTest          # integration   - real sockets / external interfaces
+./gradlew deterministicTest        # deterministic - pure input->output mappings
+./gradlew e2eTest                  # e2e           - full-stack flows
+./gradlew nonfunctionalTest        # nonfunctional - robustness / security properties
+./gradlew uatTest                  # uat           - manual acceptance (mostly @Disabled)
 ./gradlew verifyJavaFloor          # the Java 11 floor of every published module's jars, metadata and runtime classpath (part of check)
 ./gradlew :webtools-http-commoncheck:build  # compile webtools-http's commonMain for js (no Node.js needed)
 ./gradlew :webtools-feeds-commoncheck:build  # compile webtools-feeds' commonMain for js (no Node.js needed)
@@ -746,22 +746,22 @@ fixtures are part of the reference. The Dokka versions in `settings.gradle.kts` 
 that compiles a multiplatform module's `commonMain` so a JVM API in common code is a compile error. No
 Node.js is needed.
 
-Each module organises its tests by the project's 5-level testing hierarchy, in the package
-`com.spartanlabs.testing.<level>.webtools.<name>`, where `<name>` is the module's name without `webtools-`
+Each module organises its tests by the project's named test sets, in the package
+`com.spartanlabs.testing.<set>.webtools.<name>`, where `<name>` is the module's name without `webtools-`
 (`udp`, `http`, `feeds`, …): a JVM module under `<module>/src/test/kotlin/`, a multiplatform module under
 `<module>/src/commonTest/kotlin/` and `<module>/src/jvmTest/kotlin/`, both of which run on the JVM target. A
-level task selects its tests by package (`com.spartanlabs.testing.<level>.*`) from the module's JVM test
-compilation, so any level can be run or gated on its own; a test class outside those packages runs under
+set's task selects its tests by package (`com.spartanlabs.testing.<set>.*`) from the module's JVM test
+compilation, so any set can be run or gated on its own; a test class outside those packages runs under
 `test` only. Shared test helpers live under `testing/support/` and are not published. The published test
 fixtures of `webtools-http` are a separate source set, `webtools-http/src/jvmTestFixtures` (package
-`com.spartanlabs.webtools.http.testing`), whose own tests sit in `com.spartanlabs.testing.<level>.webtools.http.testing`;
+`com.spartanlabs.webtools.http.testing`), whose own tests sit in `com.spartanlabs.testing.<set>.webtools.http.testing`;
 `webtools-feeds`' tests use them through `testFixtures(project(":webtools-http"))`.
 
 ### Java floor
 
 Every JVM module compiles to Java 11 bytecode against the Java 11 API, which is what the install
 section's `Requires JDK 11 or newer` rests on. Building needs a JDK 17 to 26, the range Gradle
-9.7.1 runs on, and the level tests run on that JDK too; no JDK 11 is involved. The convention
+9.7.1 runs on, and the tests of every set run on that JDK too; no JDK 11 is involved. The convention
 plugins set `jvmTarget`, `-Xjdk-release` and the Java compatibility from one constant,
 `WebToolsBuild.JAVA_FLOOR`, so the result does not depend on which of those JDKs builds.
 `verifyJavaFloor`, part of `check`, fails the build when a built jar holds a class above Java 11
@@ -779,7 +779,7 @@ plugins, which a module applies by id in its `plugins {}` block:
 | Plugin id | Configures |
 |---|---|
 | `webtools.published-library` | the Maven Central publishing skeleton: signing, the shared POM metadata and Dokka (theme, source links, `failOnWarning`, `reportUndocumented`) |
-| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the level test tasks, javadoc jar from Dokka; applies `webtools.published-library` |
+| `webtools.kotlin-jvm-library` | a Kotlin/JVM library: the Java floor and `verifyJavaFloor`, test dependencies, JUnit Platform, the test tasks of each set, javadoc jar from Dokka; applies `webtools.published-library` |
 | `webtools.kotlin-multiplatform-library` | a Kotlin Multiplatform library with a `jvm()` target (used by `webtools-http` and `webtools-feeds`): the Java floor, the `TargetJvmVersion` attribute and `verifyJavaFloor`, javadoc jar from Dokka; applies binary-compatibility-validator — commit `api/<module>.api` — and `webtools.published-library` |
 | `webtools.kotlin-common-check` | an unpublished, check-only `js` module that compiles a sibling's `commonMain` (no publishing, no tests, no Node.js, no Java floor) |
 
@@ -788,14 +788,14 @@ adds its dependencies, its coordinates, its POM name and description, and any co
 belongs to it alone (for example `webtools-udp`'s version and its UDP-port lock, or `webtools-http`'s
 test-fixtures variant).
 
-`build-logic`'s own tests use the same level packages, and each of its levels with tests has a task
+`build-logic`'s own tests use the same set packages, and each of its sets with tests has a task
 of the same name (`./gradlew :build-logic:gatingTest`, …). `./gradlew build` runs none of them, with one
 exception: `webtools-http`'s `check` (so `build`, `check` and `:webtools-http:check`) runs
 `:build-logic:fixturesPublicationCheck`, which publishes a copy of the module with a throwaway signing key
 to a temporary repository and resolves its test fixtures from three build shapes. It takes about a minute
 when its inputs changed and is `UP-TO-DATE` otherwise; its first run needs the network. It is wired only
 when WebTools is the root build, so a build that includes WebTools never runs it.
-`:build-logic:test` runs the levels that start no nested build, in seconds.
+`:build-logic:test` runs the sets that start no nested build, in seconds.
 `:build-logic:integrationTest`, `:build-logic:e2eTest` and `:build-logic:nonfunctionalTest` run
 nested Gradle builds against generated projects; their first run downloads the Kotlin compiler and
 the test dependencies into `build-logic/build/testkit/home`, so it needs the network.
