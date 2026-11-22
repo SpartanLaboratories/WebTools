@@ -31,10 +31,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);p
 a{color:inherit}
 code{font-family:var(--mono);font-size:.92em;overflow-wrap:anywhere;background:var(--surface-2);border:1px solid var(--hair);padding:1px 4px;border-radius:3px}
 /* the code label (GUIDANCE.md §12, "Code"; dashboards-skill/42): every inline code drawn as a label of its own,
-   in both themes, at normal weight inside bold text; inside a chip, a pill or a tile (a label or a figure already: each class carries
-   its type word) it stays plain mono text */
+   in both themes, at normal weight inside bold text; inside a chip, a pill, a tile, a badge or a tag (a label or a figure already: each
+   class carries its type word, a tag's a whole part of the class, so .stage, .outage and .tags are not taken) it stays plain mono text */
 :is(b,strong,.name,.nm,dt,th) code{font-weight:400}
-:is([class*="chip"],[class*="pill"],[class*="tile"]) code{background:none;border:0;padding:0;border-radius:0}
+:is([class*="chip"],[class*="pill"],[class*="tile"],[class*="badge"],[class*="tag-"],[class$="tag"],[class*="tag "]) code{background:none;border:0;padding:0;border-radius:0}
 h1,h2,h3{text-wrap:balance}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
@@ -457,7 +457,7 @@ footer code{color:var(--ink-2)}
   <p class="function">A multi-connection UDP transport for the JVM: many clients handshake onto one server port, then exchange framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probing and idle detection.</p>
   <div class="chips">
     <span class="chip" id="chip-version" hidden></span>
-    <span class="chip"><span class="ck">Maven Central</span> <b>2.0.0</b></span>
+    <span class="chip"><span class="ck">Maven Central</span> <b>2.0.1</b></span>
     <span class="chip"><span class="ck">wire protocol</span> <b>2</b></span>
     <span class="chip"><span class="ck">common port</span> <b>9998</b></span>
     <span class="chip"><span class="ck">platform</span> <b>Kotlin/JVM</b> · Java 11 bytecode</span>
@@ -469,12 +469,12 @@ footer code{color:var(--ink-2)}
 </header>
 
 <section class="kpis" aria-label="Key figures">
-  <div class="kpi-tile"><div class="l">Source</div><div class="v">36 files</div><div class="s">5,337 lines · one package</div></div>
+  <div class="kpi-tile"><div class="l">Source</div><div class="v">36 files</div><div class="s">5,348 lines · one package</div></div>
   <div class="kpi-tile"><div class="l">Types</div><div class="v">18 public</div><div class="s">21 internal</div><div class="seg-bar" aria-hidden="true"><i style="width:46%;background:var(--ink)"></i><i style="width:54%;background:var(--line)"></i></div></div>
   <div class="kpi-tile"><div class="l">Threads</div><div class="v">11 named</div><div class="s">6 server · 5 client · all daemon</div><div class="seg-bar" aria-hidden="true"><i style="width:55%;background:var(--server)"></i><i style="width:45%;background:var(--client)"></i></div></div>
   <div class="kpi-tile"><div class="l">Datagram tags</div><div class="v">6 in use</div><div class="s">0x80 · 0x81 · 0x82 · 0x90 · 0xA0 · 0xA1</div></div>
-  <div class="kpi-tile"><div class="l">Tests</div><div class="v">92 classes</div><div class="s">across all 7 testing levels</div></div>
-  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">11</div><div class="s">7 bugs · 1 planned system · 2 untyped · 1 landing with this board</div></div>
+  <div class="kpi-tile"><div class="l">Tests</div><div class="v">94 classes</div><div class="s">across all 7 test sets</div></div>
+  <div class="kpi-tile"><div class="l">Open issues</div><div class="v">14</div><div class="s">9 bugs · 1 planned system · 3 untyped · 1 landing with this board</div></div>
 </section>
 
 <div class="tabs" role="tablist" aria-label="Views">
@@ -522,7 +522,7 @@ footer code{color:var(--ink-2)}
         <div class="thread server" data-t="mcups-retransmit" tabindex="0" role="button"><span class="n">mcups-retransmit</span><span class="pill lazy">lazy · first engine</span><span class="r">the retransmit tick, exact cadence (50 ms)</span></div>
       </div>
       <div class="tside"><h3>Client · mcupc-*</h3>
-        <div class="thread client" data-t="mcupc-listener" tabindex="0" role="button"><span class="n">mcupc-listener</span><span class="pill lazy">lazy · ensureListening()</span><span class="r">receive · tag switch · inline 0x82 replies · reliable ack processing</span></div>
+        <div class="thread client" data-t="mcupc-listener" tabindex="0" role="button"><span class="n">mcupc-listener</span><span class="pill lazy">lazy · ensureListening()</span><span class="r">receive · origin screen · tag switch · inline 0x82 replies · reliable ack processing</span></div>
         <div class="thread client" data-t="mcupc-dispatch" tabindex="0" role="button"><span class="n">mcupc-dispatch</span><span class="pill lazy">lazy · first dispatch</span><span class="r">handlers</span></div>
         <div class="thread client" data-t="mcupc-keepalive" tabindex="0" role="button"><span class="n">mcupc-keepalive</span><span class="pill lazy">lazy</span><span class="r">the keepalive tick</span></div>
         <div class="thread client" data-t="mcupc-probe" tabindex="0" role="button"><span class="n">mcupc-probe</span><span class="pill lazy">lazy</span><span class="r">the probe tick</span></div>
@@ -631,23 +631,23 @@ footer code{color:var(--ink-2)}
         <li>Open sets that may grow without a major: <code>ReliableSendFailure</code> subtypes; <code>DeliveryMode</code>, <code>DatagramType</code>, <code>DisconnectReason</code> entries — keep an <code>else</code>.</li>
         <li>All <span class="badge">Stable Core</span>; the module has no <code>@SupportedExtension</code> or <code>@RequiresOptIn</code> marker.</li>
       </ul></div>
-    <div class="guarantee-card"><h3>Test levels <small>92 classes</small></h3>
-      <div class="bars" role="table" aria-label="Test classes per testing level">
-        <span class="lbl">L1 gating</span><span class="trk"><span class="fil" style="width:90%"></span></span><span class="val">19</span>
-        <span class="lbl">L2 component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">21</span>
-        <span class="lbl">L3 integration</span><span class="trk"><span class="fil" style="width:95%"></span></span><span class="val">20</span>
-        <span class="lbl">L4a deterministic</span><span class="trk"><span class="fil" style="width:43%"></span></span><span class="val">9</span>
-        <span class="lbl">L4b e2e</span><span class="trk"><span class="fil" style="width:52%"></span></span><span class="val">11</span>
-        <span class="lbl">L4c non-functional</span><span class="trk"><span class="fil" style="width:52%"></span></span><span class="val">11</span>
-        <span class="lbl">L5 UAT</span><span class="trk"><span class="fil" style="width:5%"></span></span><span class="val">1</span>
+    <div class="guarantee-card"><h3>Test sets <small>94 classes</small></h3>
+      <div class="bars" role="table" aria-label="Test classes per test set">
+        <span class="lbl">gating</span><span class="trk"><span class="fil" style="width:91%"></span></span><span class="val">20</span>
+        <span class="lbl">component</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="val">22</span>
+        <span class="lbl">integration</span><span class="trk"><span class="fil" style="width:91%"></span></span><span class="val">20</span>
+        <span class="lbl">deterministic</span><span class="trk"><span class="fil" style="width:41%"></span></span><span class="val">9</span>
+        <span class="lbl">e2e</span><span class="trk"><span class="fil" style="width:50%"></span></span><span class="val">11</span>
+        <span class="lbl">nonfunctional</span><span class="trk"><span class="fil" style="width:50%"></span></span><span class="val">11</span>
+        <span class="lbl">uat</span><span class="trk"><span class="fil" style="width:5%"></span></span><span class="val">1</span>
       </div>
-      <p>Packages <code>com.spartanlabs.testing.&lt;level&gt;.webtools.udp</code>; <code>./gradlew gatingTest</code>, <code>componentTest</code>, … run one level, each selecting its package (the level tasks come from <code>webtools.kotlin-jvm-library</code>). <span class="gap">No test report is committed.</span></p></div>
+      <p>Packages <code>com.spartanlabs.testing.&lt;set&gt;.webtools.udp</code>; <code>./gradlew gatingTest</code>, <code>componentTest</code>, … run one set each, selecting its package (the set tasks come from <code>webtools.kotlin-jvm-library</code>). The test report, build/reports/tests/index.html, is a build output and is not committed.</p></div>
     <div class="guarantee-card"><h3>Compatibility &amp; versioning</h3>
       <ul>
-        <li><code>2.0.1</code> in the build, unpublished (Central's latest is <code>2.0.0</code>), its javadoc jar the Dokka reference in place of a placeholder, wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>.</li>
-        <li>A trailing letter for a bug fix (2.0.0 → 2.0.0a), the third number for an addition (2.0.0a → 2.0.1 moved it for the new javadoc jar), the major for a break.</li>
+        <li><code>2.0.1a</code> in the build, not released (Central's latest is <code>2.0.1</code>); wire protocol 2: a 1.x peer fails <code>handshake()</code> with <code>IncompatibleProtocolException</code>. From 2.0.1a a server must reply from the address and port the client sent to: the client drops anything else.</li>
+        <li>A trailing letter for a bug fix (2.0.1 → 2.0.1a, the client's origin screen), the third number for an addition (2.0.0a → 2.0.1, the Dokka javadoc jar), the major for a break. A letter orders below the plain version, so a consumer asks for 2.0.1a <code>strictly</code>.</li>
         <li>Deprecate, don't break: the eight members deprecated in 2.0.0 (with <code>ReplaceWith</code>) work through 2.x and go at 3.0.0.</li>
-        <li>Java 11 floor: 2.0.1 is Java 11 bytecode (major 55) compiled against the Java 11 API and declares <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>. Central's 2.0.0 is Java 23 bytecode; 2.0.1 orders above it, so a consumer on 2.0.0 moves up with a plain version request once it is published.</li>
+        <li>Java 11 floor: 2.0.1 and 2.0.1a are Java 11 bytecode (major 55) compiled against the Java 11 API and declare <code>org.gradle.jvm.version</code> 11, guarded by <code>verifyJavaFloor</code> in <code>check</code>; Central's 2.0.0 and older are Java 23 bytecode.</li>
         <li><span class="gap">Not checked: the build keeps no ABI dump.</span></li>
       </ul></div>
     <div class="guarantee-card"><h3>Thread safety</h3>
@@ -669,7 +669,7 @@ footer code{color:var(--ink-2)}
         <li>Who consumes it: other organizations too (visibility public).</li>
         <li><code>org.slf4j:slf4j-api:2.0.13</code> — <code>api</code> in the module's own build file; no backend ships (logback is test-only), so bring one.</li>
         <li><code>org.jetbrains.kotlin:kotlin-stdlib:2.2.0</code> — from the Kotlin/JVM plugin, which <code>webtools.kotlin-jvm-library</code> applies; compile scope in the generated POM.</li>
-        <li>Nothing else. The jar is Java 11 bytecode and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, so it resolves and loads on JDK 11 or newer (2.0.1; the published 2.0.0 declares 23).</li>
+        <li>Nothing else. The jar is Java 11 bytecode and its API and runtime variants declare <code>org.gradle.jvm.version</code> 11, so it resolves and loads on JDK 11 or newer (since 2.0.1; 2.0.0 and older declare 23).</li>
       </ul></div>
   </div>
 </section>
@@ -677,7 +677,7 @@ footer code{color:var(--ink-2)}
 <section class="context">
   <h2>Context</h2>
   <div class="cards">
-    <div class="card"><h3>Roadmap <small>1 item · 2026-11-09</small></h3>
+    <div class="card"><h3>Roadmap <small>1 item · 2026-11-21</small></h3>
       <ol class="roadmap">
         <li><div class="ri"><a href="https://github.com/SpartanLaboratories/WebTools/issues/55" target="_blank" rel="noopener">#55</a><span><a data-board="55">HTTP client stack for BotTools: suspend transport, outbound-URL guard, response cache, call budget and test fakes</a> <small>tracking issue</small></span><span class="tags"><span class="badge">closed</span></span></div>
           <ul class="issues">
@@ -686,19 +686,22 @@ footer code{color:var(--ink-2)}
           </ul>
           <p class="more">Its nine other sub-issues, #62–#70, all closed, belong to webtools-http, webtools-feeds, the build and their docs.</p></li>
       </ol></div>
-    <div class="card"><h3>Unscheduled issues <small>11 open · 2026-11-09</small></h3>
+    <div class="card"><h3>Unscheduled issues <small>14 open · 2026-11-21</small></h3>
       <ul class="issues">
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/99" target="_blank" rel="noopener">#99</a><span><a data-board="99">Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation</a> <small>lands with this board: the module at 2.0.1 and its Dokka javadoc jar, KDoc only in its source</small></span><span class="tags"><span class="badge">feature</span><span class="badge">open</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a><span>A throwing onClientConnect kills the server's listener thread</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/53" target="_blank" rel="noopener">#53</a><span>Server accepts handshake names and credentials containing tabs, CR/LF or other non-space whitespace</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/52" target="_blank" rel="noopener">#52</a><span>Client sends malformed or misparsed handshakes for an empty or whitespace-containing name or credential</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/50" target="_blank" rel="noopener">#50</a><span>Multiplatform protocol core and a datagram-transport seam for a future web client</span><span class="tags"><span class="badge planned">planned system</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/49" target="_blank" rel="noopener">#49</a><span>Handshake registration orphaned when the REGISTERED send fails</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/48" target="_blank" rel="noopener">#48</a><span>MultiConnectionUDPServer.stop() blocks ~1 s joining the listener before closing the socket</span><span class="tags"><span class="badge bug">bug</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/41" target="_blank" rel="noopener">#41</a><span>Rate-bound the per-datagram-drop WARN logs on server and client</span><span class="tags"><span class="badge">untyped</span></span></li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/39" target="_blank" rel="noopener">#39</a><span>Client only checks datagram origin on the reliable-channel receive branch</span><span class="tags"><span class="badge">untyped</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/111" target="_blank" rel="noopener">#111</a><span>webtools-udp tests: captureLogsOf exposes logback's unsynchronised event list while listener threads append to it</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/110" target="_blank" rel="noopener">#110</a><span>Client handshake() accepts the first datagram that arrives, whatever its source</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/106" target="_blank" rel="noopener">#106</a><span>Log through kotlin-logging instead of slf4j directly</span><span class="tags"><span class="badge">untyped</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/104" target="_blank" rel="noopener">#104</a><span>webtools-udp: add an ABI dump and explicit-API mode, as webtools-http and webtools-feeds have</span><span class="tags"><span class="badge">untyped</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/57" target="_blank" rel="noopener">#57</a><span>Server answers handshakes from unverified source addresses with no rate limit (reflection)</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/56" target="_blank" rel="noopener">#56</a><span>Handshake from a registered origin gets REGISTERED 2 even when it names a different client</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/54" target="_blank" rel="noopener">#54</a><span>A throwing onClientConnect kills the server's listener thread</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/53" target="_blank" rel="noopener">#53</a><span>Server accepts handshake names and credentials containing tabs, CR/LF or other non-space whitespace</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/52" target="_blank" rel="noopener">#52</a><span>Client sends malformed or misparsed handshakes for an empty or whitespace-containing name or credential</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/50" target="_blank" rel="noopener">#50</a><span>webtools-udp: multiplatform protocol core and a datagram-transport seam for a future web client</span><span class="tags"><span class="badge planned">planned system</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/49" target="_blank" rel="noopener">#49</a><span>Handshake registration orphaned when the REGISTERED send fails</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/48" target="_blank" rel="noopener">#48</a><span>MultiConnectionUDPServer.stop() blocks ~1 s joining the listener before closing the socket</span><span class="tags"><span class="badge bug">▲ bug</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/41" target="_blank" rel="noopener">#41</a><span>webtools-udp: rate-bound the per-datagram-drop WARN logs on server and client</span><span class="tags"><span class="badge">untyped</span></span></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/issues/39" target="_blank" rel="noopener">#39</a><span><a data-board="39">Client only checks datagram origin on the reliable-channel receive branch</a> <small>lands with this board: the client drops every datagram not from its server before reading its tag; version 2.0.1a</small></span><span class="tags"><span class="badge">untyped</span><span class="badge">open</span></span></li>
       </ul></div>
     <div class="card"><h3>Plans and documents</h3>
       <ul class="docs">
@@ -706,8 +709,8 @@ footer code{color:var(--ink-2)}
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/webtools-udp-protocol.md" target="_blank" rel="noopener">webtools-udp-protocol.md</a> — the bytes</li>
         <li><code>workspace.dsl</code> — the C4 model beside this board; the C4 tab is rendered from it</li>
         <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/14-reliable-ordered-channel/architecture.md" target="_blank" rel="noopener">#14 reliable-ordered channel</a> — the design that added the reliable plane, in four stages</li>
-        <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/34-probe-cadence/plan.md" target="_blank" rel="noopener">#34 probe cadence</a> · <a href="https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans/38-handshake-empty-name" target="_blank" rel="noopener">#38 handshake empty name</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/40-channel-byte-guard/plan.md" target="_blank" rel="noopener">#40 channel-byte guard</a></li>
-        <li>Plan boards that amended this module: <a data-issue="99">#99</a> Dokka — its javadoc jar, KDoc only in its source, version 2.0.1 · <a data-issue="47">#47</a> Java 11 floor — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a data-issue="61">#61</a> build-logic — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
+        <li><a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/34-probe-cadence/plan.md" target="_blank" rel="noopener">#34 probe cadence</a> · <a href="https://github.com/SpartanLaboratories/WebTools/tree/master/docs/plans/38-handshake-empty-name" target="_blank" rel="noopener">#38 handshake empty name</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/39-client-origin-screening/plan.md" target="_blank" rel="noopener">#39 client origin screening</a> · <a href="https://github.com/SpartanLaboratories/WebTools/blob/master/docs/plans/40-channel-byte-guard/plan.md" target="_blank" rel="noopener">#40 channel-byte guard</a></li>
+        <li>Plan boards that amended this module: <a data-issue="39">#39</a> client origin screening — the screen ahead of the listener's tag switch, version 2.0.1a, gap to as built · <a data-issue="99">#99</a> Dokka — its javadoc jar, KDoc only in its source, version 2.0.1 · <a data-issue="47">#47</a> Java 11 floor — its bytecode onto Java 11 and the floor in its 2.0.0a note · <a data-issue="61">#61</a> build-logic — its build file onto the convention plugin · <a href="../../plans/38-handshake-empty-name/dashboard.html">#38 handshake empty name</a> — the malformed <code>Iam</code> refusal, gap to as built · all runs on the <a href="../../plans/index.html">work board</a></li>
         <li>The <a href="../gradle-build/index.html">Gradle build</a> board — the convention plugin, the Java floor and its guard, level tasks and publishing this module is built with</li>
         <li>Earlier plans: #3 public client handshake · #5 prune stale registrations · #8 binary datagram path · #9 receive buffer · #10 connection liveness · #11 handshake refusal and credential · #12 scheduled keepalive · #13 link-quality probe · #15 split into three modules</li>
       </ul></div>
@@ -733,10 +736,10 @@ footer code{color:var(--ink-2)}
 <script type="application/json" id="state">
 {
   "slug": "webtools-udp",
-  "version": "2.0.1",
-  "asIs": {"ref": "feat/issue-99-dokka-api-docs", "sha": "2c634f4", "date": "2026-11-09T02:02:04Z"},
-  "lastAmended": {"issue": 99, "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation", "sha": "2c634f4"},
-  "written": {"sha": "2c634f4"}
+  "version": "2.0.1a",
+  "asIs": {"ref": "fix/issue-39-client-datagram-origin-check", "sha": "2cd0cfe", "date": "2026-11-22T03:27:53Z"},
+  "lastAmended": {"issue": 39, "title": "Client only checks datagram origin on the reliable-channel receive branch", "sha": "2cd0cfe"},
+  "written": {"sha": "2cd0cfe"}
 }
 </script>
 
@@ -745,7 +748,7 @@ footer code{color:var(--ink-2)}
 <script type="text/plain" id="dsl">
 // webtools-udp — C4 model as code (Structurizr DSL).
 // Source of truth for the structure shown on docs/dashboards/webtools-udp/. The page's C4 tab is rendered from this file.
-// As-is at WebTools feat/issue-99-dokka-api-docs 2c634f4 (2026-11-09), webtools-udp 2.0.1 (#99: KDoc only in its source, and a javadoc jar of the Dokka reference). #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
+// As-is at WebTools fix/issue-39-client-datagram-origin-check 2cd0cfe (2026-11-22), webtools-udp 2.0.1a (#39: the client drops every datagram not from its server before reading its tag; #99 before it added the javadoc jar of the Dokka reference). #61 moved its build file onto the webtools.kotlin-jvm-library convention plugin, and #47 compiles it to the Java 11 floor. Code is authoritative on any conflict.
 workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three independent single-concern artifacts and built by one Gradle build." {
 
     !identifiers hierarchical
@@ -758,11 +761,11 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             scraping = container "webtools-scraping" "Connector: open a URL and read it line by line, plus one-shot get, skrape and image download helpers." "Kotlin/JVM library · 1.0.0a"
             browser  = container "webtools-browser"  "WebViewer: renders a URL in headless Chrome and returns the screenshot." "Kotlin/JVM library · 1.0.0a"
             gradleBuild    = container "Gradle build" "Builds, tests and publishes every module; the included build-logic build holds the convention plugins the modules apply, at the Java 11 floor. Publishes nothing of its own." "Gradle 9.7.1 · Kotlin 2.2.0 · Java floor 11" "Internal"
-            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.1 · Java 11 bytecode · wire protocol 2" {
+            udp      = container "webtools-udp" "Multi-connection UDP transport: text handshake onto one common port, then framed datagrams over unreliable and reliable-ordered channels, with opt-in keepalive, link-quality probe and idle detection." "Kotlin/JVM library · 2.0.1a · Java 11 bytecode · wire protocol 2" {
 
                 // ---- public surface ----
                 server      = component "MultiConnectionUDPServer" "Binds the common port 9998; owns the listener and dispatch threads and three lazily created schedulers; exposes start* / pushToAll* / stop; subclass hooks onClientConnect, admit, onClientDisconnect." "abstract class" "Public"
-                client      = component "MultiConnectionUDPClient" "One socket; handshake(); channel(mode); keepalive and probe conveniences; at most one reliable engine and one link-quality tracker." "class" "Public"
+                client      = component "MultiConnectionUDPClient" "One socket; handshake(); channel(mode); keepalive and probe conveniences; at most one reliable engine and one link-quality tracker; its listener accepts a datagram only from serverEndpoint." "class" "Public"
                 connection  = component "UDPConnection" "One named peer as the server sees it: channel(mode), terminate, keepalive and probe control. Owns no socket — delegates to ClientChannel." "class · implements Connection" "Public"
                 channel     = component "UdpChannel" "The delivery-mode-scoped send/bind view returned by channel(mode); DeliveryMode is UNRELIABLE or RELIABLE_ORDERED." "interface · 3 implementations" "Public"
                 wire        = component "Wire formats" "HandshakeWireFormat (UTF-8 text), TransportWireFormat (framed control + unreliable), ReliableWireFormat (0xA0 / 0xA1), DatagramType tag-byte enum." "codecs" "Public"
@@ -817,6 +820,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
         webtools.udp.client -> peer "UDP datagrams"
         webtools.udp.engine -> peer "0xA0 / 0xA1 frames"
         peer -> webtools.udp.server "Datagrams arrive on mcups-listener"
+        peer -> webtools.udp.client "Datagrams arrive on mcupc-listener, dropped unless from serverEndpoint"
 
         // The build
         webtools.gradleBuild -> webtools.udp "Configures: webtools.kotlin-jvm-library (Kotlin/JVM at the Java 11 floor, verifyJavaFloor, test dependencies, level tasks, publishing)"
@@ -836,7 +840,7 @@ workspace "WebTools" "Kotlin/JVM internet I/O helpers, published as three indepe
             autoLayout lr
         }
 
-        component webtools.udp "Components" "webtools-udp as built at feat/issue-99-dokka-api-docs 2c634f4; the planned protocol core is drawn dashed." {
+        component webtools.udp "Components" "webtools-udp as built at fix/issue-39-client-datagram-origin-check 2cd0cfe; the planned protocol core is drawn dashed." {
             include *
             autoLayout tb
         }
@@ -897,7 +901,7 @@ const flink=f=>`<a href="${SRC}${f}" target="_blank" rel="noopener">${f}</a>`;
    and the title opens the board, written <a data-board="N">title</a> by hand, plain text while the issue has none. A lone #n opens
    the board when one exists and the GitHub issue otherwise: ilink(n), or <a data-issue="N">#N</a> by hand. linkIssues() resolves
    the hand-written ones at load. */
-const BOARDS={"38":"../../plans/38-handshake-empty-name/dashboard.html","47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","99":"../../plans/99-dokka-api-docs/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
+const BOARDS={"38":"../../plans/38-handshake-empty-name/dashboard.html","39":"../../plans/39-client-origin-screening/dashboard.html","47":"../../plans/55-http-client-stack/47-java-23-bytecode/dashboard.html","55":"../../plans/55-http-client-stack/dashboard.html","61":"../../plans/55-http-client-stack/61-build-logic/dashboard.html","62":"../../plans/55-http-client-stack/62-http-core/dashboard.html","99":"../../plans/99-dokka-api-docs/dashboard.html"}; // fill: issue number → its issue board relative to this board, on this one line, e.g. {"38":"../../plans/38-slug/dashboard.html"}
 /* the newest board of each issue on this machine (plan/RULES.md §1, "The newest board on this machine"): docs/plans/.live/boards.js, beside the
    live marker, which board.js --live writes in every checkout; opened from disk, an issue's link opens it (a run in flight in a worktree,
    a landed issue's live view copy) before BOARDS, the boards as committed; a published copy has no marker */
@@ -956,12 +960,12 @@ const MODEL = {
   c4:{srv:"webtools.udp.server",cli:"webtools.udp.client",coord:"webtools.udp.coordinator",regs:"webtools.udp.registry",reg:"webtools.udp.registry",engS:"webtools.udp.engine",engC:"webtools.udp.engine",lqS:"webtools.udp.quality",lqC:"webtools.udp.quality",conn:"webtools.udp.connection",sched:"webtools.udp.scheduler",schedS:"webtools.udp.scheduler",schedC:"webtools.udp.scheduler",codecs:"webtools.udp.wire",rules:"webtools.udp.timing",iface:"webtools.udp.channel",chanimpl:"webtools.udp.channel",sr:"webtools.udp.sendreceive",iam:"webtools.udp.wire",t80:"webtools.udp.wire",t81:"webtools.udp.wire",t82:"webtools.udp.wire",t90:"webtools.udp.wire",tA0:"webtools.udp.wire",tA1:"webtools.udp.wire"},
   structure: {
     lanes:[["SERVER ENDPOINT",40,44,"start"],["CLIENT ENDPOINT",580,44,"start"],["WIRE",500,44,"middle"],["SHARED INTERNALS",40,474,"start"]],
-    notes:[{x:596,y:168,lines:["At most one reliable engine and one link-quality","tracker: the client holds a single server session.","No registration table — only the reliable branch","screens origin, an open issue. The REGISTERED / REFUSED","reply is read inside handshake(), before the","listener starts."]}],
+    notes:[{x:596,y:168,lines:["At most one reliable engine and one link-quality","tracker: the client holds a single server session.","No registration table: the listener drops a datagram","not from serverEndpoint before reading its tag.","The REGISTERED / REFUSED reply is read inside","handshake(), unscreened — an open issue."]}],
     nodes:[
       {id:"srv",side:"server",vis:"pub",container:true,x:40,y:56,w:380,h:384,t:"MultiConnectionUDPServer",s:"abstract · binds the common port 9998 · owns the listener and dispatch threads",
         d:{role:"Binds the common port; owns the listener and dispatch threads and the three lazily created schedulers; exposes start* / pushToAll* / stop. Subclass hooks: onClientConnect, admit (screen or refuse a handshake, validate an opaque credential), onClientDisconnect; idleTimeoutMillis turns on idle detection.",vis:"public · abstract class",files:["MultiConnectionUDPServer.kt"],threads:["mcups-listener","mcups-dispatch","mcups-liveness","mcups-keepalive","mcups-probe","mcups-retransmit"],issues:[57,56,54,53,49,48]}},
       {id:"cli",side:"client",vis:"pub",container:true,x:580,y:56,w:380,h:384,t:"MultiConnectionUDPClient",s:"one socket · handshake() · channel(mode) · its own listener and dispatch threads",
-        d:{role:"One socket; handshake(); its own listener and dispatch threads; channel(mode) is the entry point; startKeepAlive / startProbe / linkQuality conveniences; at most one reliable engine and one link-quality tracker.",vis:"public · class",files:["MultiConnectionUDPClient.kt"],threads:["mcupc-listener","mcupc-dispatch","mcupc-keepalive","mcupc-probe","mcupc-retransmit"],issues:[52,39]}},
+        d:{role:"One socket; handshake(); its own listener and dispatch threads; channel(mode) is the entry point; startKeepAlive / startProbe / linkQuality conveniences; at most one reliable engine and one link-quality tracker. The socket is unconnected, so the listener accepts a datagram only from serverEndpoint, the server address and port it was constructed with, and drops any other at DEBUG before reading its tag. The reply handshake() waits for is not screened.",vis:"public · class",files:["MultiConnectionUDPClient.kt"],threads:["mcupc-listener","mcupc-dispatch","mcupc-keepalive","mcupc-probe","mcupc-retransmit"],issues:[52,110]}},
       {id:"coord",side:"server",vis:"int",container:true,x:56,y:152,w:348,h:276,t:"HandshakeCoordinator",s:"handshake state machine · tag-byte router · implements ClientChannel",
         d:{role:"The server's handshake state machine, tag-byte router and ClientChannel implementation. Every inbound datagram passes through it on the listener thread; it owns Registrations.",vis:"internal",files:["HandshakeCoordinator.kt","ClientChannel.kt"],threads:["mcups-listener"],issues:[57,56,53,49]}},
       {id:"regs",side:"server",vis:"int",container:true,x:72,y:196,w:316,h:216,t:"Registrations",s:"copy-on-write registry of connected clients",d:{role:"Copy-on-write registry of connected clients and their per-peer state.",vis:"internal",files:["Registrations.kt"],threads:["mcups-listener","mcups-liveness"]}},
@@ -976,8 +980,8 @@ const MODEL = {
       {id:"lqC",side:"client",vis:"int",x:780,y:304,w:164,h:60,t:"LinkQualityTracker",s:"0..1",d:{role:"The probe's estimator for the server session.",vis:"internal",files:["LinkQualityTracker.kt"],threads:["mcupc-listener","mcupc-probe"]}},
       {id:"iam",side:"wire",vis:"pub",chip:true,x:455,y:60,w:90,h:34,t:"Iam …",s:"text handshake",d:{role:"The plain UTF-8 handshake line the client sends first; the server answers REGISTERED 2 or REFUSED. Byte 0 is below 0x80, which is how the listener tells it from a framed datagram.",vis:"HandshakeWireFormat · public",files:["HandshakeWireFormat.kt","HandshakeProtocol.kt"],issues:[57,56,53,52,49]}},
       {id:"t80",side:"wire",vis:"pub",chip:true,x:455,y:108,w:90,h:34,t:"0x80",s:"KEEPALIVE",d:{role:"Keepalive. Its only effect on arrival is the liveness stamp in accept(); then it is dropped at TRACE.",vis:"DatagramType · public",files:["DatagramType.kt","KeepAlive.kt"]}},
-      {id:"t81",side:"wire",vis:"pub",chip:true,x:455,y:156,w:90,h:34,t:"0x81",s:"PROBE_PING",d:{role:"Probe ping; answered inline on the listener thread with 0x82. The server answers only a registered origin; the client answers every valid ping.",vis:"DatagramType · public",files:["DatagramType.kt","LinkQualityTracker.kt"],issues:[39]}},
-      {id:"t82",side:"wire",vis:"pub",chip:true,x:455,y:204,w:90,h:34,t:"0x82",s:"PROBE_PONG",d:{role:"Probe pong; completeProbe(seq) on the origin's LinkQualityTracker.",vis:"DatagramType · public",files:["DatagramType.kt"],issues:[39]}},
+      {id:"t81",side:"wire",vis:"pub",chip:true,x:455,y:156,w:90,h:34,t:"0x81",s:"PROBE_PING",d:{role:"Probe ping; answered inline on the listener thread with 0x82. The server answers only a registered origin; the client only its server.",vis:"DatagramType · public",files:["DatagramType.kt","LinkQualityTracker.kt"]}},
+      {id:"t82",side:"wire",vis:"pub",chip:true,x:455,y:204,w:90,h:34,t:"0x82",s:"PROBE_PONG",d:{role:"Probe pong; completeProbe(seq) on the origin's LinkQualityTracker. The client takes one only from its server.",vis:"DatagramType · public",files:["DatagramType.kt"]}},
       {id:"t90",side:"wire",vis:"pub",chip:true,x:455,y:252,w:90,h:34,t:"0x90",s:"UNRELIABLE",d:{role:"Unreliable data: tag, channel byte, payload. Channel byte must be 0x00 (the channel-byte guard); the stripped payload goes to the dispatch thread.",vis:"TransportWireFormat · public",files:["TransportWireFormat.kt"]}},
       {id:"tA0",side:"wire",vis:"pub",chip:true,x:455,y:300,w:90,h:34,t:"0xA0",s:"RELIABLE data",d:{role:"Reliable-ordered data: seq, ack, ackBits, payload. Acks are processed first, then the reorder buffer releases in-order payloads.",vis:"ReliableWireFormat · public",files:["ReliableWireFormat.kt","SerialSequence.kt"]}},
       {id:"tA1",side:"wire",vis:"pub",chip:true,x:455,y:348,w:90,h:34,t:"0xA1",s:"RELIABLE ack",d:{role:"A standalone ack, sent by the retransmit tick when ackPending is set and nothing is due for resend.",vis:"ReliableWireFormat · public",files:["ReliableWireFormat.kt"]}},
@@ -999,7 +1003,7 @@ const MODEL = {
     "mcups-keepalive":{side:"server",created:"lazily, on the first startKeepAlive",runs:"the keepalive tick, poll-divided (KeepAlive.pollIntervalMillis).",sends:["scheduled 0x80 keepalives"]},
     "mcups-probe":{side:"server",created:"lazily, on the first startProbe",runs:"the probe tick, exact cadence (scheduleTick).",sends:["scheduled 0x81 probes"],issues:[]},
     "mcups-retransmit":{side:"server",created:"lazily, on the first reliable engine",runs:"the retransmit tick every 50 ms: resend due 0xA0 (at most 32 per tick, RTO doubled up to 5 s), else a standalone 0xA1 if ackPending, else nothing.",sends:["retransmitted 0xA0","standalone 0xA1"]},
-    "mcupc-listener":{side:"client",created:"lazily, on the first ensureListening() — start, startBytes, or any channel(...).actuate*",runs:"receive; the tag switch; inline 0x82 replies; reliable ack processing. No liveness stamp, no handshake branch.",sends:["inline 0x82 probe replies"],issues:[39]},
+    "mcupc-listener":{side:"client",created:"lazily, on the first ensureListening() — start, startBytes, or any channel(...).actuate*",runs:"receive; the origin screen (a datagram not from serverEndpoint is dropped at DEBUG before its tag is read); the tag switch; inline 0x82 replies; reliable ack processing. No liveness stamp, no handshake branch.",sends:["inline 0x82 probe replies, to the server only"]},
     "mcupc-dispatch":{side:"client",created:"lazily, on the first dispatch — a payload for a bound handler",runs:"handlers.",sends:[]},
     "mcupc-keepalive":{side:"client",created:"lazily",runs:"the keepalive tick.",sends:["scheduled 0x80 keepalives"]},
     "mcupc-probe":{side:"client",created:"lazily",runs:"the probe tick.",sends:["scheduled 0x81 probes"]},
@@ -1060,35 +1064,37 @@ const MODEL = {
      names:{iam:"Iam … (text handshake)",text:"other text (byte 0 < 0x80)","80":"0x80 KEEPALIVE","81":"0x81 PROBE_PING","82":"0x82 PROBE_PONG","90":"0x90 UNRELIABLE",A0:"0xA0 RELIABLE data",A1:"0xA1 RELIABLE ack",rsv:"reserved tag"},
      nodes:{
       RX:{c:0,r:0,k:"p",t:["receive()","on the client socket"]},
-      TAG:{c:1,r:0,k:"d",t:["byte 0","≥ 0x80?"]},
-      DROPT:{c:1,r:1,k:"t",lvl:"WARN",t:["drop: no handshake","branch in the session"]},
-      SWITCH:{c:2,r:0,k:"d",t:["DatagramType","ofTagByte"]},
-      KA:{c:3,r:0,k:"t",lvl:"TRACE",t:["drop keepalive"]},
-      PING:{c:3,r:1,k:"p",t:["reply 0x82 inline","any origin"]},
-      PONG:{c:3,r:2,k:"p",t:["completeProbe(seq)","any origin"]},
-      CHU:{c:3,r:3,k:"d",t:["channel byte","0x00?"]},
-      DISPU:{c:4,r:3,k:"t",lvl:"DELIVER",t:["stripped payload","→ mcupc-dispatch"]},
-      DROPCU:{c:3,r:4,k:"t",lvl:"WARN",t:["drop · names the","actual origin"]},
-      ORIGIN:{c:3,r:5,k:"d",t:["origin ==","serverEndpoint?"]},
+      ORIGIN:{c:1,r:0,k:"d",t:["origin ==","serverEndpoint?"]},
+      DROPO:{c:1,r:1,k:"t",lvl:"DEBUG",t:["drop · whatever","its tag"]},
+      TAG:{c:2,r:0,k:"d",t:["byte 0","≥ 0x80?"]},
+      DROPT:{c:2,r:1,k:"t",lvl:"WARN",t:["drop: no handshake","branch in the session"]},
+      SWITCH:{c:3,r:0,k:"d",t:["DatagramType","ofTagByte"]},
+      KA:{c:4,r:0,k:"t",lvl:"TRACE",t:["drop keepalive"]},
+      PING:{c:4,r:1,k:"p",t:["reply 0x82 inline","to the server"]},
+      PONG:{c:4,r:2,k:"p",t:["completeProbe(seq)","on the client's tracker"]},
+      CHU:{c:4,r:3,k:"d",t:["channel byte","0x00?"]},
+      DISPU:{c:5,r:3,k:"t",lvl:"DELIVER",t:["stripped payload","→ mcupc-dispatch"]},
+      DROPCU:{c:4,r:4,k:"t",lvl:"WARN",t:["drop"]},
       CHR:{c:4,r:5,k:"d",t:["channel byte","0x00?"]},
       ENGINE:{c:5,r:5,k:"p",t:["reliableEngine()","created here if none"]},
-      DROPR:{c:3,r:6,k:"t",lvl:"DEBUG",t:["drop · no engine"]},
       DROPCR:{c:4,r:6,k:"t",lvl:"WARN",t:["drop · no engine"]},
       ACK:{c:5,r:6,k:"p",t:["onInboundDatagram:","acks first, then reorder"]},
       DISPR:{c:5,r:7,k:"t",lvl:"DELIVER",t:["in-order payloads","→ mcupc-dispatch"]},
-      DROP:{c:3,r:7,k:"t",lvl:"DEBUG",t:["drop reserved tag"]}},
-     edges:[["RX","TAG"],["TAG","DROPT","no"],["TAG","SWITCH","yes"],["SWITCH","KA","0x80"],["SWITCH","PING","0x81"],["SWITCH","PONG","0x82"],["SWITCH","CHU","0x90"],["SWITCH","ORIGIN","0xA0 · 0xA1"],["SWITCH","DROP","reserved"],["CHU","DROPCU","no"],["CHU","DISPU","yes"],["ORIGIN","DROPR","no"],["ORIGIN","CHR","yes"],["CHR","DROPCR","no"],["CHR","ENGINE","yes"],["ENGINE","ACK"],["ACK","DISPR"]],
+      DROP:{c:4,r:7,k:"t",lvl:"DEBUG",t:["drop reserved tag"]}},
+     edges:[["RX","ORIGIN"],["ORIGIN","DROPO","no"],["ORIGIN","TAG","yes"],["TAG","DROPT","no"],["TAG","SWITCH","yes"],["SWITCH","KA","0x80"],["SWITCH","PING","0x81"],["SWITCH","PONG","0x82"],["SWITCH","CHU","0x90"],["SWITCH","CHR","0xA0 · 0xA1"],["SWITCH","DROP","reserved"],["CHU","DROPCU","no"],["CHU","DISPU","yes"],["CHR","DROPCR","no"],["CHR","ENGINE","yes"],["ENGINE","ACK"],["ACK","DISPR"]],
      rules(s){
-       const p=["RX","TAG"], reg=s.origin==="yes", chz=s.ch==="yes", R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
-       if(s.tag==="iam"||s.tag==="text"){ p.push("DROPT"); return R("A byte-0 < 0x80 datagram during the session is WARN-dropped: the REGISTERED / REFUSED reply was read inside handshake(), before the listener started.",["origin","ch"]); }
+       const p=["RX","ORIGIN"], reg=s.origin==="yes", chz=s.ch==="yes", R=(outcome,irrelevant)=>({path:p,outcome,irrelevant:irrelevant||[]});
+       if(!reg){ p.push("DROPO"); return R("Not from serverEndpoint: dropped at DEBUG before byte 0 is read, whatever its tag. Nothing is answered, completed, delivered or created for it, and no WARN is logged. The check compares an address and port nothing authenticates, so a datagram forged with the server's own passes.",["tag","ch"]); }
+       p.push("TAG");
+       if(s.tag==="iam"||s.tag==="text"){ p.push("DROPT"); return R("From the server, a byte-0 < 0x80 datagram during the session is WARN-dropped: the REGISTERED / REFUSED reply was read inside handshake(), before the listener started, and that read checks no source: an open issue.",["ch"]); }
        p.push("SWITCH");
        switch(s.tag){
-         case "80": p.push("KA"); return R("Keepalive: dropped at TRACE. No origin screening on the client: an open issue.",["origin","ch"]);
-         case "81": p.push("PING"); return R("Every valid ping is answered inline with 0x82 — whatever its source: an open issue.",["origin","ch"]);
-         case "82": p.push("PONG"); return R("completeProbe(seq) on the client's tracker — no origin screening: an open issue.",["origin","ch"]);
-         case "90": p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: WARN naming the datagram's actual origin. The check applies to every 0x90, whatever its source.",["origin"]); } p.push("DISPU"); return R("Handed to mcupc-dispatch — from any source: the 0x90 branch has no origin screening: an open issue.",["origin"]);
-         case "A0": case "A1": p.push("ORIGIN"); if(!reg){ p.push("DROPR"); return R("Not from serverEndpoint: dropped at DEBUG whatever its channel byte; no engine is created.",["ch"]); } p.push("CHR"); if(!chz){ p.push("DROPCR"); return R("Non-zero channel byte: dropped at WARN; no engine is created."); } p.push("ENGINE","ACK"); if(s.tag==="A0"){ p.push("DISPR"); return R("The engine is created on this first channel-0x00 inbound if none exists — not on actuate*. Acks first, then the reorder buffer releases in-order payloads to mcupc-dispatch."); } return R("A standalone ack from the server: acks are processed; nothing is delivered.");
-         default: p.push("DROP"); return R("Reserved tag: dropped at DEBUG on the client (WARN on the server).",["origin","ch"]);
+         case "80": p.push("KA"); return R("Keepalive from the server: dropped at TRACE.",["ch"]);
+         case "81": p.push("PING"); return R("A ping from the server is answered inline with 0x82, on mcupc-listener; a malformed one is WARN-dropped.",["ch"]);
+         case "82": p.push("PONG"); return R("completeProbe(seq) on the client's LinkQualityTracker; a malformed pong is ignored.",["ch"]);
+         case "90": p.push("CHU"); if(!chz){ p.push("DROPCU"); return R("Non-zero channel byte: dropped at WARN — the channel-byte guard."); } p.push("DISPU"); return R("The stripped payload is handed to mcupc-dispatch, where the bound handler runs.");
+         case "A0": case "A1": p.push("CHR"); if(!chz){ p.push("DROPCR"); return R("Non-zero channel byte: dropped at WARN; no engine is created."); } p.push("ENGINE","ACK"); if(s.tag==="A0"){ p.push("DISPR"); return R("The engine is created on this first channel-0x00 inbound if none exists — not on actuate*. Acks first, then the reorder buffer releases in-order payloads to mcupc-dispatch."); } return R("A standalone ack from the server: acks are processed; nothing is delivered.");
+         default: p.push("DROP"); return R("Reserved tag from the server: dropped at DEBUG on the client (WARN on the server).",["ch"]);
        }
      }}
   ],
