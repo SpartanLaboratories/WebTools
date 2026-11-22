@@ -25,7 +25,7 @@ API reference and project site: <https://spartanlaboratories.github.io/WebTools/
 
 ```kotlin
 dependencies {
-    implementation("io.github.spartanlaboratories:webtools-udp:2.0.1")
+    implementation("io.github.spartanlaboratories:webtools-udp:2.0.1a")
     // and/or
     implementation("io.github.spartanlaboratories:webtools-scraping:1.0.0")
     implementation("io.github.spartanlaboratories:webtools-browser:1.0.0")
@@ -37,6 +37,7 @@ dependencies {
 ```
 
 Requires JDK 11 or newer (`webtools-scraping` and `webtools-browser` 1.0.0: JDK 23 or newer). Built with Kotlin 2.2.
+Gradle sorts `webtools-udp` `2.0.1a` below `2.0.1`, so request it `strictly` if another dependency asks for `2.0.1`.
 
 `webtools-http` is a Kotlin Multiplatform module that publishes `webtools-http` and `webtools-http-jvm`;
 a Gradle build resolves the right one itself, a Maven build depends on `webtools-http-jvm`. Its `okhttp-jvm`

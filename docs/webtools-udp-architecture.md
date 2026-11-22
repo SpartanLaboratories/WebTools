@@ -139,14 +139,15 @@ Client differences, in prose (flowcharts have no note syntax):
 - The client's loop runs on `mcupc-listener`.
 - There is no liveness stamp and no handshake branch. The client reads its
   one `REGISTERED`/`REFUSED` reply inside `handshake()`, before the listener
-  starts, so a byte-0 `< 0x80` datagram in the session is simply
-  WARN-dropped.
+  starts, so a byte-0 `< 0x80` datagram from `serverEndpoint` in the
+  session is simply WARN-dropped.
 - There is no per-origin registration table: the client has one peer of
   record. **Every** datagram, of any tag, is first checked against
   `serverEndpoint` (`origin == serverEndpoint`); one from any other source is
   dropped at DEBUG before its tag is read, so nothing is delivered, answered,
   completed or created for it. The one read that is not checked is the reply
-  `handshake()` waits for.
+  `handshake()` waits for
+  ([#110](https://github.com/SpartanLaboratories/WebTools/issues/110)).
 - The channel-byte check runs on both data branches, after that origin check,
   so a non-server source is dropped at DEBUG whatever its channel byte.
 - The client answers a valid `0x81` from `serverEndpoint`.
