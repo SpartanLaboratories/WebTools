@@ -115,7 +115,9 @@ dependencies {
 // consumers on JDK 11 to 22 could not load. No source or public API change.
 // 2.0.1: the javadoc jar carries the Dokka API reference in place of an empty placeholder. No source or
 // public API change.
-version = "2.0.1"
+// 2.0.1a: the multi-connection client drops a datagram whose origin is not its server (Issue #39). No public
+// API change.
+version = "2.0.1a"
 
 // Serialises the test tasks that bind the fixed common UDP port (9998) - `test`,
 // `integrationTest`, `e2eTest`, and `nonfunctionalTest` - so Gradle never runs two of
