@@ -141,21 +141,15 @@ Client differences, in prose (flowcharts have no note syntax):
   one `REGISTERED`/`REFUSED` reply inside `handshake()`, before the listener
   starts, so a byte-0 `< 0x80` datagram in the session is simply
   WARN-dropped.
-- There is no per-origin registration table, so the "origin registered?"
-  branches do not apply. **Only the reliable branch screens origin**
-  (`origin == serverEndpoint`). The `0x80`, `0x81`, `0x82` and `0x90`
-  branches have **no origin screening at all** — any source's datagram is
-  processed (the gap tracked as
-  [#39](https://github.com/SpartanLaboratories/WebTools/issues/39)).
-- The channel-byte check runs on both data branches, but differently:
-  - **reliable branch:** inside the `serverEndpoint` check, before the engine
-    is touched, so a non-server source is still dropped at DEBUG whatever
-    its channel byte;
-  - **`0x90` branch:** it has no origin screening to come after, so the check
-    applies to **every** `0x90`, whatever its source. A stranger's
-    non-zero-channel `0x90` therefore gets the channel WARN, which names the
-    datagram's actual origin.
-- The client answers every valid `0x81`.
+- There is no per-origin registration table: the client has one peer of
+  record. **Every** datagram, of any tag, is first checked against
+  `serverEndpoint` (`origin == serverEndpoint`); one from any other source is
+  dropped at DEBUG before its tag is read, so nothing is delivered, answered,
+  completed or created for it. The one read that is not checked is the reply
+  `handshake()` waits for.
+- The channel-byte check runs on both data branches, after that origin check,
+  so a non-server source is dropped at DEBUG whatever its channel byte.
+- The client answers a valid `0x81` from `serverEndpoint`.
 - The client's reserved-tag drop is DEBUG, not WARN.
 
 ## 7. Lifecycles

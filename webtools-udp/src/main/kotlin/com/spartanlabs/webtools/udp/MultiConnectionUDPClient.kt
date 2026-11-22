@@ -28,14 +28,20 @@ import java.util.concurrent.Executors
  * handshake reply would arrive on a different local port than the one this
  * client's NAT mapping was opened from.
  *
+ * ### Datagram origin
+ * The socket is unconnected, so the listener accepts a datagram only from the server's address and
+ * port (the constructor's `serverAddress` and `serverPort`) and drops one from any other source at
+ * DEBUG, whatever its tag, before reading it. A server must therefore reply from the address and
+ * port the client sent to. The one read that does not check is the reply [handshake] waits for.
+ *
  * ### Concurrency
  * Mirrors [MultiConnectionUDPServer]'s own listener-thread + dispatch-executor
  * split: one background daemon listener thread only *demultiplexes* - `receive()`
- * -> switch on the [DatagramType] tag (byte 0) -> drop a keepalive/probe or strip
- * the `0x90` frame and hand the payload to the
- * dispatch executor. The dispatch executor is a single daemon thread
- * (`mcupc-dispatch`) that invokes the caller's `onMessage` callback passed to
- * [start], so a slow callback cannot stall the socket read loop.
+ * -> drop a datagram whose source is not the server endpoint -> switch on the
+ * [DatagramType] tag (byte 0) -> drop a keepalive/probe or strip the `0x90` frame
+ * and hand the payload to the dispatch executor. The dispatch executor is a single
+ * daemon thread (`mcupc-dispatch`) that invokes the caller's `onMessage` callback
+ * passed to [start], so a slow callback cannot stall the socket read loop.
  *
  * [handshake] itself remains a **blocking** one-shot call, mirroring the
  * server's own handshake state machine running synchronously rather than
@@ -54,8 +60,8 @@ import java.util.concurrent.Executors
  * See docs/plans/13-link-quality-probe/plan.md §2.9.
  *
  * A fifth daemon thread (`mcupc-retransmit`, also a `ScheduledExecutorService`)
- * exists **only once a reliable channel is opened** - either a
- * `channel(RELIABLE_ORDERED).send`/`actuate*` call or an inbound `0xA0`/`0xA1`;
+ * exists **only once a reliable channel is opened** - by the first reliable `send`
+ * or the first inbound `0xA0`/`0xA1` on channel `0x00` from the server;
  * it retransmits unacked `0xA0` frames and emits standalone `0xA1` acks, runs no
  * application code, and is shut by [stop].
  *
@@ -66,7 +72,8 @@ import java.util.concurrent.Executors
  * - [socket] is received on only by the listener thread, but sent on from any
  *   thread ([send], [sendKeepAlive], the `mcupc-keepalive` tick, the `mcupc-probe`
  *   tick, the `mcupc-retransmit` tick); the listener thread itself never sends
- *   application data - it answers an inbound `0x81` probe with an `0x82` reply inline.
+ *   application data - it answers an inbound `0x81` probe from the server endpoint with
+ *   an `0x82` reply inline.
  *
  * ### Construction side effects
  * Instantiating this class **binds an ephemeral OS UDP port** immediately - a
@@ -169,7 +176,7 @@ class MultiConnectionUDPClient internal constructor(
      * The public client constructor - unchanged three-parameter surface plus the
      * new [reliableMaxMessageBytes] knob. Delegates to the `internal` seam
      * constructor with real [PeriodicScheduler] instances (`mcupc-keepalive`,
-     * `mcupc-probe`, `mcupc-retransmit`), whose executors/threads stay lazy until
+     * `mcupc-probe`, `mcupc-retransmit`), whose scheduler threads stay lazy until
      * the first [startKeepAlive] / [startProbe] / reliable channel use.
      */
     @JvmOverloads
@@ -506,9 +513,10 @@ class MultiConnectionUDPClient internal constructor(
     }
 
     /**
-     * Body of the listener thread: switch on the [DatagramType] tag and deliver the stripped
-     * payload of a `0x90` on channel `0x00`; a `0x90`, `0xA0` or `0xA1` on any other channel is
-     * dropped with a WARN, before any delivery, acknowledgement processing or engine creation.
+     * Body of the listener thread: drop a datagram whose source is not [serverEndpoint], then
+     * switch on the [DatagramType] tag and deliver the stripped payload of a `0x90` on channel
+     * `0x00`; a `0x90`, `0xA0` or `0xA1` on any other channel is dropped with a WARN, before any
+     * delivery, acknowledgement processing or engine creation.
      */
     private fun receiveLoop() {
         val buffer = ByteArray(receiveBufferBytes)
@@ -525,10 +533,21 @@ class MultiConnectionUDPClient internal constructor(
                 }
                 // Exact-length copy: the next receive() reuses buffer, so a slice handed
                 // to the dispatch executor would be a data race. Origin is captured here too -
-                // packet itself must not escape this block, and the reliable branch below needs
-                // it to screen against serverEndpoint (§12 B2).
+                // packet itself must not escape this block, and the screen below needs it to
+                // check the source against serverEndpoint.
                 packet.data.copyOf(packet.length) to packet.socketAddress as InetSocketAddress
             }.onSuccess { (bytes, origin) ->
+                // The socket is unconnected, so any host that can reach its port can send to it.
+                // Every datagram is checked against the one server endpoint before its tag is read,
+                // so a stray or spoofed source is never answered (0x81), never completes a probe
+                // (0x82), never reaches the application (0x90), never mints the reliable engine
+                // (0xA0/0xA1) and never draws a WARN (a malformed, unframed or non-zero-channel
+                // frame). One check ahead of the switch, not one per branch, so a tag added to the
+                // switch later is screened without a check of its own.
+                if (origin != serverEndpoint) {
+                    log.debug("Datagram from unexpected origin {} (expected {}), dropped", origin, serverEndpoint)
+                    return@onSuccess
+                }
                 // Byte 0 is the DatagramType tag - the session is fully framed post-handshake.
                 when (DatagramType.ofTagByte(bytes.getOrNull(0))) {
                     DatagramType.KEEPALIVE -> log.trace("Dropped keepalive from server")
@@ -553,8 +572,7 @@ class MultiConnectionUDPClient internal constructor(
                         when {
                             payload == null -> log.warn("Malformed 0x90 datagram from server, dropping")
 
-                            // Issue #40: this branch has no origin screen (#39), so the channel check
-                            // applies to every 0x90. After the malformed check, before delivery.
+                            // Issue #40: after the malformed check, before delivery.
                             // Duplicated verbatim at the other three receive-branch channel checks -
                             // HandshakeCoordinator.deliverData and its RELIABLE_DATA/RELIABLE_ACK
                             // branch, and this listener's reliable branch below - rather than
@@ -571,17 +589,8 @@ class MultiConnectionUDPClient internal constructor(
                     }
 
                     DatagramType.RELIABLE_DATA, DatagramType.RELIABLE_ACK -> {
-                        // Client-side counterpart of the server's registrations.findByOrigin guard
-                        // (§12 B2): the socket is unconnected, so a stray/spoofed reliable datagram
-                        // must not mint the engine or reach the application handler.
                         val channel = ReliableWireFormat.reliableChannelOf(bytes)
                         when {
-                            origin != serverEndpoint ->
-                                log.debug(
-                                    "Reliable datagram from unexpected origin {} (expected {}), dropped",
-                                    origin, serverEndpoint,
-                                )
-
                             // Issue #40: after origin screening, before engine creation/ack
                             // processing. Duplicated verbatim at the other three receive-branch
                             // channel checks - HandshakeCoordinator.deliverData and its

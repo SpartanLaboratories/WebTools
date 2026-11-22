@@ -1,7 +1,9 @@
 package com.spartanlabs.testing.component.webtools.udp
 
+import ch.qos.logback.classic.Level
 import com.spartanlabs.testing.support.webtools.udp.FakePeriodicSchedule
 import com.spartanlabs.testing.support.webtools.udp.captureLogsOf
+import com.spartanlabs.testing.support.webtools.udp.hasEventAt
 import com.spartanlabs.testing.support.webtools.udp.hasWarnContaining
 import com.spartanlabs.webtools.udp.DeliveryMode
 import com.spartanlabs.webtools.udp.MultiConnectionUDPClient
@@ -154,33 +156,27 @@ class MultiConnectionUDPClientFramingTest {
     }
 
     @Test
-    fun `a channel-0x01 0x90 from a foreign socket is dropped with a WARN naming the actual sender - pins the no-origin-screen behaviour (issue 39)`() {
+    fun `a channel-0x01 0x90 from a foreign socket keeps the DEBUG unexpected-origin drop, with no channel WARN`() {
         val peer = fakePeer()
         val client = newClient(peer.localPort)
         val received = CopyOnWriteArrayList<ByteArray>()
         assertTrue(client.channel(DeliveryMode.UNRELIABLE).actuateBytes(received::add).isSuccess)
         val foreign = fakePeer()
 
-        captureLogsOf(MultiConnectionUDPClient::class.java) { events ->
+        captureLogsOf(MultiConnectionUDPClient::class.java, Level.DEBUG) { events ->
             val nonZero = TransportWireFormat.unreliableDatagram(byteArrayOf(1), channel = 0x01)
             foreign.send(DatagramPacket(nonZero, nonZero.size, loopback, client.localPort))
 
             val deadline = System.currentTimeMillis() + 2_000
-            while (!events.hasWarnContaining("on unsupported channel") && System.currentTimeMillis() < deadline) {
+            while (!events.hasEventAt(Level.DEBUG, "Datagram from unexpected origin") &&
+                System.currentTimeMillis() < deadline
+            ) {
                 Thread.sleep(20)
             }
 
-            // This test intentionally pins today's behaviour: the client 0x90 branch has no
-            // origin screen (#39), so the WARN names whatever socket actually sent the frame,
-            // not "server". #39's own fix will change what this test asserts.
-            assertTrue(
-                events.hasWarnContaining("Unreliable datagram on unsupported channel 0x1 from") &&
-                    events.hasWarnContaining(":" + foreign.localPort),
-                "the WARN must name the actual (unscreened) sender, not \"server\"",
-            )
+            assertTrue(events.hasEventAt(Level.DEBUG, "Datagram from unexpected origin"))
+            assertTrue(events.none { it.formattedMessage.contains("on unsupported channel") })
         }
-        // The WARN branch and the delivery branch are exclusive, so once the WARN is logged this
-        // frame can no longer be delivered - no extra sleep is needed before the negative check.
         assertTrue(received.isEmpty(), "nothing must be delivered")
     }
 }
