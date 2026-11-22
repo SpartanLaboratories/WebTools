@@ -31,17 +31,21 @@ import java.util.concurrent.Executors
  * ### Datagram origin
  * The socket is unconnected, so the listener accepts a datagram only from the server's address and
  * port (the constructor's `serverAddress` and `serverPort`) and drops one from any other source at
- * DEBUG, whatever its tag, before reading it. A server must therefore reply from the address and
- * port the client sent to. The one read that does not check is the reply [handshake] waits for.
+ * DEBUG before reading its tag. A server must therefore reply from the address and port the client
+ * sent to. The one read that does not check is the reply [handshake] waits for. This filters by
+ * source address and port, which nothing authenticates, so it is not authentication: a datagram
+ * forged with the server's own address and port gets through. A stray datagram that fills a lowered
+ * `receiveBufferBytes` still logs the truncation WARN before it is dropped.
  *
  * ### Concurrency
  * Mirrors [MultiConnectionUDPServer]'s own listener-thread + dispatch-executor
  * split: one background daemon listener thread only *demultiplexes* - `receive()`
  * -> drop a datagram whose source is not the server endpoint -> switch on the
- * [DatagramType] tag (byte 0) -> drop a keepalive/probe or strip the `0x90` frame
- * and hand the payload to the dispatch executor. The dispatch executor is a single
- * daemon thread (`mcupc-dispatch`) that invokes the caller's `onMessage` callback
- * passed to [start], so a slow callback cannot stall the socket read loop.
+ * [DatagramType] tag (byte 0) -> drop a keepalive, answer an `0x81` and complete an
+ * `0x82` inline, pass an `0xA0`/`0xA1` to the reliable engine, or strip the `0x90`
+ * frame and hand the payload to the dispatch executor. The dispatch executor is a
+ * single daemon thread (`mcupc-dispatch`) that invokes the caller's `onMessage`
+ * callback passed to [start], so a slow callback cannot stall the socket read loop.
  *
  * [handshake] itself remains a **blocking** one-shot call, mirroring the
  * server's own handshake state machine running synchronously rather than
@@ -102,7 +106,7 @@ import java.util.concurrent.Executors
  * racing a concurrent [stop] does not throw: it either completes normally or
  * observes the now-closed socket and returns [Result.failure]. [start] and
  * [handshake] themselves are not safe to race against each other or against a
- * second concurrent call to either - see the "Ordering contract" below.
+ * second concurrent call to either - see the "Ordering contract" above.
  * [startKeepAlive] / [stopKeepAlive] are safe from any thread and may race [stop]:
  * a [startKeepAlive] after [stop] fails its [Result]; an in-flight keepalive tick
  * either sends or observes the closed socket and fails its own [Result].
@@ -173,11 +177,24 @@ class MultiConnectionUDPClient internal constructor(
     private val reliableMaxMessageBytes: Int,
 ) {
     /**
-     * The public client constructor - unchanged three-parameter surface plus the
-     * new [reliableMaxMessageBytes] knob. Delegates to the `internal` seam
-     * constructor with real [PeriodicScheduler] instances (`mcupc-keepalive`,
-     * `mcupc-probe`, `mcupc-retransmit`), whose scheduler threads stay lazy until
-     * the first [startKeepAlive] / [startProbe] / reliable channel use.
+     * The public client constructor. Binds an ephemeral OS UDP port immediately; its
+     * scheduler threads (`mcupc-keepalive`, `mcupc-probe`, `mcupc-retransmit`) start
+     * lazily, on the first [startKeepAlive], the first [startProbe] and the first
+     * reliable send or inbound `0xA0`/`0xA1` on channel `0x00` from the server
+     * respectively.
+     *
+     * @param serverAddress the server's address to hand shake with and send to
+     * @param serverPort the server's common listen port; defaults to
+     * [MultiConnectionUDPServer.COMMON_LISTEN_PORT]
+     * @param receiveBufferBytes size of the datagram receive buffer, 512..65507;
+     * defaults to 65507 so no well-formed datagram is truncated. A datagram larger
+     * than this is delivered truncated, not rejected (a WARN is logged).
+     * @param reliableMaxMessageBytes the reliable-channel application-payload cap, in
+     * bytes; defaults to [UdpChannel.DEFAULT_MAX_RELIABLE_MESSAGE_BYTES] (1024) and
+     * must be in `1..`[UdpChannel.MAX_RELIABLE_MESSAGE_BYTES] (8192)
+     * @throws java.net.SocketException if an ephemeral local port could not be bound
+     * @throws IllegalArgumentException if [receiveBufferBytes] is outside 512..65507, or if
+     * [reliableMaxMessageBytes] is outside 1..8192
      */
     @JvmOverloads
     constructor(
@@ -226,7 +243,10 @@ class MultiConnectionUDPClient internal constructor(
     @Volatile
     private var lastOutboundAtNanos: Long = System.nanoTime()
 
-    /** The fixed server endpoint - the keepalive and probe schedules' key. */
+    /**
+     * The fixed server endpoint: the only source the listener accepts a datagram from, and
+     * the key of the keepalive, probe and retransmit schedules.
+     */
     private val serverEndpoint = InetSocketAddress(serverAddress, serverPort)
 
     /**
@@ -260,10 +280,11 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * This client's reliable-ordered engine, or `null` until one is first
-     * needed - either an app-thread `channel(RELIABLE_ORDERED).send`/`actuate*`
-     * call or an inbound `0xA0`/`0xA1` creates it lazily (mirrors
-     * [HandshakeCoordinator]'s per-connection engine). Read by the listener,
-     * app, and retransmit threads, hence `@Volatile`.
+     * needed - created lazily (as [HandshakeCoordinator]'s per-connection engine
+     * is) by the first reliable send or the first inbound `0xA0`/`0xA1` on channel
+     * `0x00` from [serverEndpoint]; binding a handler alone creates nothing, unlike
+     * the server, where binding one does. Read by the listener, app, and retransmit
+     * threads, hence `@Volatile`.
      */
     @Volatile
     private var reliableEngine: ReliableChannelEngine? = null
@@ -282,7 +303,8 @@ class MultiConnectionUDPClient internal constructor(
     /**
      * Sends `Iam <name>` (or `Iam <name> <credential>`) and blocks (up to
      * [timeoutMillis]) for the server's reply, on this same socket. One-shot;
-     * call once, before [start].
+     * call once, before [start]. The reply is the first datagram to arrive on the
+     * socket, whatever its source: it is not checked against the server endpoint.
      *
      * This call is one-shot: a [HandshakeRefusedException] raised for a bad
      * credential will recur on a retry with the same credential; a refusal for
@@ -335,17 +357,19 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * Starts the background listener thread (if not already running): receives
-     * datagrams on [socket] until [stop] is called, drops `0x80` keepalive and
-     * `0x81`/`0x82` probe datagrams silently, and dispatches every `0x90` frame's
-     * stripped payload (decoded to text) to [onMessage] on the single-threaded
-     * dispatch executor (never on the listener thread itself), so a slow
-     * [onMessage] cannot stall the read loop.
+     * datagrams on [socket] until [stop] is called and dispatches the stripped
+     * payload (decoded as UTF-8 and `.trim()`ed) of every channel-`0x00` `0x90` from the server
+     * endpoint to [onMessage] on the single-threaded dispatch executor (never on
+     * the listener thread itself), so a slow [onMessage] cannot stall the read loop.
+     * A datagram from any other source is dropped (see the class's "Datagram
+     * origin" section). A keepalive or probe datagram is never delivered: an `0x80`
+     * is dropped, a server `0x81` is answered inline and an `0x82` completes a probe.
      *
      * Call after [handshake] has succeeded. Idempotent: calling this (or
      * [startBytes], or `channel(UNRELIABLE).actuate*`) again rebinds the
      * unreliable handler rather than starting a second listener thread.
-     * @param onMessage invoked with the decoded text of every non-keepalive datagram;
-     * runs on the dispatch executor, not the caller's thread, so it must return quickly.
+     * @param onMessage invoked with the UTF-8-decoded, `.trim()`ed text of every channel-`0x00` `0x90`
+     * payload from the server endpoint; runs on the dispatch executor, not the caller's thread, so it must return quickly.
      * An exception thrown by [onMessage] is caught, logged, and does not stop the
      * listener or later dispatches.
      * @return [Result.success] once the listener thread is running, or the failure
@@ -362,18 +386,22 @@ class MultiConnectionUDPClient internal constructor(
 
     /**
      * Raw-bytes counterpart to [start]: dispatches an exact-length, undecoded,
-     * untrimmed copy of every non-keepalive datagram to [onMessage]. Mutually
+     * untrimmed copy of the stripped payload of every channel-`0x00` `0x90` from the
+     * server endpoint to [onMessage]. Mutually
      * exclusive with [start] - last call wins - and idempotent in the same way:
      * calling this (or [start], or `channel(UNRELIABLE).actuate*`) again rebinds
      * the unreliable handler rather than starting a second listener thread. Call
      * after [handshake].
      *
-     * Control datagrams (`0x80` keepalive, `0x81`/`0x82` probe) are classified out
-     * by their [DatagramType] tag; every `0x90` frame's stripped payload is
-     * delivered verbatim, so any payload bytes ride intact - there is no reserved
-     * first byte. The delivered copy is at most 65507 bytes; a larger inbound
+     * A datagram from any other source is dropped (see the class's "Datagram
+     * origin" section). Control datagrams (`0x80` keepalive, `0x81`/`0x82` probe)
+     * are classified out by their [DatagramType] tag and never delivered: an `0x80`
+     * is dropped, a server `0x81` is answered inline and an `0x82` completes a
+     * probe. The payload is delivered verbatim, so any payload bytes ride intact -
+     * there is no reserved first byte. The delivered copy is at most 65507 bytes; a larger inbound
      * datagram is delivered truncated to that length, not rejected.
-     * @param onMessage invoked with the raw body of every non-keepalive datagram;
+     * @param onMessage invoked with the raw payload of every channel-`0x00` `0x90`
+     * from the server endpoint;
      * runs on the dispatch executor, not the caller's thread. A thrown exception is
      * caught, logged, and does not stop the listener.
      * @return [Result.success] once the listener thread is running, or the failure
@@ -539,11 +567,11 @@ class MultiConnectionUDPClient internal constructor(
             }.onSuccess { (bytes, origin) ->
                 // The socket is unconnected, so any host that can reach its port can send to it.
                 // Every datagram is checked against the one server endpoint before its tag is read,
-                // so a stray or spoofed source is never answered (0x81), never completes a probe
-                // (0x82), never reaches the application (0x90), never mints the reliable engine
-                // (0xA0/0xA1) and never draws a WARN (a malformed, unframed or non-zero-channel
-                // frame). One check ahead of the switch, not one per branch, so a tag added to the
-                // switch later is screened without a check of its own.
+                // so a datagram from any address other than the server's is never answered (0x81),
+                // never completes a probe (0x82), never reaches the application (0x90), never mints
+                // the reliable engine (0xA0/0xA1) and never draws the malformed, unframed or
+                // non-zero-channel WARN. Keep this check ahead of the switch so it covers every
+                // tag, one added later included.
                 if (origin != serverEndpoint) {
                     log.debug("Datagram from unexpected origin {} (expected {}), dropped", origin, serverEndpoint)
                     return@onSuccess
