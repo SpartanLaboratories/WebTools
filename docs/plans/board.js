@@ -3,11 +3,11 @@ window.dashboardLive&&window.dashboardLive("board",
 {
   "schema": "work-board/1",
   "repo": "SpartanLaboratories/WebTools",
-  "generated": "2026-11-14T03:14:24Z",
-  "asOf": "2026-11-14",
+  "generated": "2026-11-22T04:20:51Z",
+  "asOf": "2026-11-22",
   "tree": {
-    "ref": "docs/rule-rework-vocabulary",
-    "sha": "37cd027"
+    "ref": "fix/issue-39-client-datagram-origin-check",
+    "sha": "2cd0cfe"
   },
   "links": {
     "repoBoard": "../dashboards/index.html",
@@ -169,6 +169,58 @@ window.dashboardLive&&window.dashboardLive("board",
       "order": 0
     },
     {
+      "issue": 39,
+      "title": "Client only checks datagram origin on the reliable-channel receive branch",
+      "state": "OPEN",
+      "created": "2026-09-24",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": "39-client-origin-screening/dashboard.html",
+      "folder": "39-client-origin-screening/",
+      "branch": "fix/issue-39-client-datagram-origin-check",
+      "system": "webtools-udp",
+      "step": "document",
+      "detail": "Document: 5 of 7 tasks done; State boards current.",
+      "since": "2026-11-22T03:26:12Z",
+      "updated": "2026-11-22T04:06:16Z",
+      "qa": [
+        {
+          "pass": 1,
+          "verdict": "changes-requested",
+          "date": "2026-11-22",
+          "at": "2026-11-22T03:21:12Z",
+          "findings": {
+            "documentation": 0,
+            "test": 3,
+            "code": 1
+          },
+          "severity": {
+            "minor": 3,
+            "other": 1
+          },
+          "route": "on-the-spot",
+          "report": "build/reports/tests/index.html",
+          "reportCopy": "39-client-origin-screening/ca070e8d/tests/index.html",
+          "note": "The fix is correct, and its regression tests fail before it for the right reasons. Three minor items are fixed on the spot: component cases for an off-origin reserved tag, a malformed `0x81`, a malformed `0x90` and an empty datagram, and a wait on the drop line in place of a fixed sleep in the older off-origin `0xA0` test (Off-origin receive tests); and a §9 row in the protocol document for clients before this release (Client receive-loop origin screening). The fourth item, component tests on real loopback sockets, is the module's standing pattern: changing it needs a socket-free receive seam, so it is not changed here.",
+          "inPlace": "fixed"
+        }
+      ],
+      "qaMax": 3,
+      "status": "building",
+      "fixOf": null,
+      "landed": null,
+      "reconciliation": {
+        "state": "planned",
+        "landed": null,
+        "total": null
+      },
+      "active": true,
+      "systemName": "webtools-udp",
+      "group": "other",
+      "order": 1
+    },
+    {
       "issue": 47,
       "title": "webtools-udp 2.0.0 ships Java 23 bytecode but README claims JDK 11+",
       "state": "CLOSED",
@@ -234,7 +286,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "Gradle build",
       "group": "other",
-      "order": 1
+      "order": 2
     },
     {
       "issue": 55,
@@ -363,7 +415,7 @@ window.dashboardLive&&window.dashboardLive("board",
       },
       "systemName": "Gradle build, webtools-http, webtools-feeds, WebTools",
       "group": "other",
-      "order": 2
+      "order": 3
     },
     {
       "issue": 61,
@@ -438,7 +490,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "Gradle build",
       "group": "other",
-      "order": 3
+      "order": 4
     },
     {
       "issue": 62,
@@ -539,7 +591,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "webtools-http common core",
       "group": "other",
-      "order": 4
+      "order": 5
     },
     {
       "issue": 63,
@@ -650,7 +702,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "published test fixtures",
       "group": "other",
-      "order": 5
+      "order": 6
     },
     {
       "issue": 64,
@@ -740,7 +792,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "outbound-URL policy",
       "group": "other",
-      "order": 6
+      "order": 7
     },
     {
       "issue": 65,
@@ -840,7 +892,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "OkHttp transport",
       "group": "other",
-      "order": 7
+      "order": 8
     },
     {
       "issue": 66,
@@ -940,7 +992,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "response cache",
       "group": "other",
-      "order": 8
+      "order": 9
     },
     {
       "issue": 67,
@@ -1040,7 +1092,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "call budget",
       "group": "other",
-      "order": 9
+      "order": 10
     },
     {
       "issue": 68,
@@ -1128,7 +1180,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "call facades",
       "group": "other",
-      "order": 10
+      "order": 11
     },
     {
       "issue": 69,
@@ -1211,7 +1263,7 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "webtools-feeds",
       "group": "other",
-      "order": 11
+      "order": 12
     },
     {
       "issue": 70,
@@ -1245,7 +1297,70 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "WebTools",
       "group": "other",
-      "order": 12
+      "order": 13
+    },
+    {
+      "issue": 80,
+      "title": "docs: generalise the machine-local JAVA_HOME path in #47's final-implementation.md",
+      "state": "OPEN",
+      "created": "2026-10-23",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 14
+    },
+    {
+      "issue": 81,
+      "title": "webtools-localhook: local authenticated callback server",
+      "state": "OPEN",
+      "created": "2026-10-25",
+      "parent": null,
+      "waitsOn": [],
+      "blocks": [
+        {
+          "issue": 1,
+          "repo": "SpartanLaboratories/.github",
+          "state": "OPEN",
+          "hold": "blocks"
+        }
+      ],
+      "board": null,
+      "folder": null,
+      "branch": null,
+      "system": null,
+      "unassigned": true,
+      "step": null,
+      "detail": "",
+      "qa": [],
+      "status": "not-started",
+      "tracker": {
+        "branch": null,
+        "pr": null
+      },
+      "active": false,
+      "landed": null,
+      "reconciliation": null,
+      "systemName": "no system",
+      "group": "other",
+      "order": 15
     },
     {
       "issue": 99,
@@ -1329,17 +1444,78 @@ window.dashboardLive&&window.dashboardLive("board",
       "active": false,
       "systemName": "Gradle build",
       "group": "other",
-      "order": 13
+      "order": 16
     }
   ],
   "roadmap": [],
   "unscheduled": [
     {
+      "issue": 111,
+      "title": "webtools-udp tests: captureLogsOf exposes logback's unsynchronised event list while listener threads append to it",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-11-22",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 110,
+      "title": "Client handshake() accepts the first datagram that arrives, whatever its source",
+      "labels": [
+        "type: bug"
+      ],
+      "created": "2026-11-22",
+      "system": "webtools-udp"
+    },
+    {
+      "issue": 109,
+      "title": "Group imports as the Commenting page sets out",
+      "labels": [],
+      "created": "2026-11-21",
+      "system": null
+    },
+    {
+      "issue": 108,
+      "title": "Keep dependency and plugin versions in a version catalog",
+      "labels": [],
+      "created": "2026-11-21",
+      "system": "gradle-build"
+    },
+    {
+      "issue": 107,
+      "title": "Split each multiplatform library into a core module and device-family modules",
+      "labels": [],
+      "created": "2026-11-21",
+      "system": null
+    },
+    {
+      "issue": 106,
+      "title": "Log through kotlin-logging instead of slf4j directly",
+      "labels": [],
+      "created": "2026-11-21",
+      "system": null
+    },
+    {
+      "issue": 105,
+      "title": "Nothing checks that the inheritance-gated types keep their opt-in gate",
+      "labels": [],
+      "created": "2026-11-21",
+      "system": null
+    },
+    {
+      "issue": 104,
+      "title": "webtools-udp: add an ABI dump and explicit-API mode, as webtools-http and webtools-feeds have",
+      "labels": [],
+      "created": "2026-11-21",
+      "system": "webtools-udp"
+    },
+    {
       "issue": 101,
       "title": "pages.yml grants pages: write and id-token: write to the build job that runs Gradle",
       "labels": [],
       "created": "2026-11-09",
-      "system": null
+      "system": null,
+      "unassigned": true
     },
     {
       "issue": 93,

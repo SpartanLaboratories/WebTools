@@ -1,7 +1,7 @@
 {
   "slug": "webtools-udp",
-  "version": "2.0.1",
-  "asIs": {"ref": "feat/issue-99-dokka-api-docs", "sha": "2c634f4", "date": "2026-11-09T02:02:04Z"},
-  "lastAmended": {"issue": 99, "title": "Generate API docs with Dokka: javadoc jars, GitHub Pages site and 1.0.0 release preparation", "sha": "2c634f4"},
-  "written": {"sha": "2c634f4"}
+  "version": "2.0.1a",
+  "asIs": {"ref": "fix/issue-39-client-datagram-origin-check", "sha": "2cd0cfe", "date": "2026-11-22T03:27:53Z"},
+  "lastAmended": {"issue": 39, "title": "Client only checks datagram origin on the reliable-channel receive branch", "sha": "2cd0cfe"},
+  "written": {"sha": "2cd0cfe"}
 }

@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.0.1a] - 2026-11-21
+
+### Fixed
+
+- `webtools-udp`: the client accepts a datagram only from the server endpoint it handshook with, on every receive
+  branch. 2.0.1 screened the source on the reliable channel's branch alone, so a datagram from any other address was
+  acted on as if the server had sent it: an `0x81` probe was answered, an `0x82` completed an in-flight probe in the
+  link-quality estimate, and an `0x90` reached the unreliable handler. Such a datagram is now dropped before its tag is
+  read, with one DEBUG line naming both addresses. A server whose replies leave from another address than the one the
+  client sent to loses its inbound keepalive, probe and unreliable datagrams to this, as it already lost its reliable
+  ones. The reply `handshake()` waits for stays unscreened, tracked as
+  [#110](https://github.com/SpartanLaboratories/WebTools/issues/110). Gradle orders `2.0.1a` below `2.0.1`, so a
+  dependency graph that also asks for `2.0.1` resolves to the unfixed `2.0.1` unless `2.0.1a` is requested `strictly`.
+  No public API or wire change (Issue #39).
+
 ## [2.0.1] - 2026-11-08
 
 ### Added

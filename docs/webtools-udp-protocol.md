@@ -1,6 +1,6 @@
 # webtools-udp wire protocol
 
-Applies to `webtools-udp` `2.x` as of `2.0.0a` — wire protocol version `2`; §9
+Applies to `webtools-udp` `2.x` as of `2.0.1a` — wire protocol version `2`; §9
 lists where an earlier release behaves differently. This is a
 descriptive reference, not an RFC-2119 normative specification: it states
 what the code does, including its as-built quirks, and marks tuning values
@@ -40,10 +40,15 @@ carry an explicit *Informative* marker and live only in §7.
 `9998` (`MultiConnectionUDPServer.COMMON_LISTEN_PORT`,
 `MultiConnectionUDPServer.kt:571`), and serves every client on it. The
 client uses exactly one socket for the handshake and the whole session
-(`MultiConnectionUDPClient.kt:16-29,200-201`). Every server datagram is
-addressed to the client's **observed post-NAT source** address and port,
-never to anything carried in a payload (`CommonChannel.kt:71,89-91`) —
-which is what lets the session traverse NAT.
+(`MultiConnectionUDPClient.kt:16-29,224-225`). That socket is unconnected,
+so the client's listener checks every datagram's source against the server
+endpoint before it reads the tag (`MultiConnectionUDPClient.kt:575-578`),
+so a server must reply from the address and port the client sent to. The
+one read it does not check is the reply `handshake()` waits for
+([#110](https://github.com/SpartanLaboratories/WebTools/issues/110)). Every
+server datagram is addressed to the client's **observed post-NAT source**
+address and port, never to anything carried in a payload
+(`CommonChannel.kt:71,89-91`) — which is what lets the session traverse NAT.
 
 **Size limits.** One application message is one datagram — there is no
 fragmentation at any layer of this protocol. The largest UDP payload over
@@ -105,7 +110,7 @@ refreshes that registration's liveness stamp and clears its idle-timeout latch w
 idle detection is on (§5, `0x80` KEEPALIVE). A peer that is mid-session can
 therefore receive an unframed
 `REFUSED malformed`: the library client's session listener drops it with a WARN
-(`MultiConnectionUDPClient.kt:611-618`), and a third-party client may read it as a
+(`MultiConnectionUDPClient.kt:648-655`), and a third-party client may read it as a
 disconnect while the server keeps it registered. A genuine retransmit repeats the
 registering line byte for byte, so it is well-formed and still gets `REGISTERED 2`.
 
@@ -162,7 +167,7 @@ it), then registers the new origin, replies `REGISTERED 2`, and fires
 `onClientConnect` inline.
 
 Client `handshake()` is one-shot and blocking, default timeout 4000 ms
-(`MultiConnectionUDPClient.kt:835`), no built-in retry. `REFUSED` →
+(`MultiConnectionUDPClient.kt:872`), no built-in retry. `REFUSED` →
 `HandshakeRefusedException`; `REGISTERED 2` → success; bare `REGISTERED`, or
 `REGISTERED n` with `n != 2` → `IncompatibleProtocolException(remote, local=2)`;
 anything else → `IllegalStateException`.
@@ -225,13 +230,11 @@ its liveness before classification (`HandshakeCoordinator.kt:165-172`).
 (`scheduleTick`, since Issue #34) — `intervalMillis` must be `>=
 TransportWireFormat.MIN_PROBE_INTERVAL_MILLIS` (250 ms; a lower value is
 **rejected** with `IllegalArgumentException`, not clamped); default 1000 ms.
-The server answers a valid `0x81` only from a registered origin — an
-unregistered one is dropped at DEBUG with no reply
-(`HandshakeCoordinator.kt:182-193`); **the client answers every valid `0x81`
-inline, with no origin check** (`MultiConnectionUDPClient.kt:536-540`) — part
-of the client origin-screening gap tracked as
-[#39](https://github.com/SpartanLaboratories/WebTools/issues/39); described
-here only. RTT estimator constants (informative tuning, §7): loss horizon 3
+Each side answers a valid `0x81` only from its peer of record: the server
+from a registered origin, the client from `serverEndpoint`. A `0x81` from any
+other source is dropped at DEBUG with no reply
+(`HandshakeCoordinator.kt:182-193`; `MultiConnectionUDPClient.kt:575-578`),
+and a `0x82` from any other source completes no probe. RTT estimator constants (informative tuning, §7): loss horizon 3
 intervals (`Rtt.LOSS_HORIZON_INTERVALS`); EWMA α = 1/8, β = 1/4 (`Rtt.kt:11-18`).
 
 ### `0x90` UNRELIABLE
@@ -245,9 +248,10 @@ intervals (`Rtt.LOSS_HORIZON_INTERVALS`); EWMA α = 1/8, β = 1/4 (`Rtt.kt:11-18
 Minimum size 2 (an empty payload is allowed). Malformed (< 2 bytes): WARN,
 dropped, on both sides. The payload goes to the bytes handler verbatim, or
 the text handler UTF-8-decoded and `.trim()`ed
-(`HandshakeCoordinator.kt:203-210,408-442`; `MultiConnectionUDPClient.kt:547-571`).
+(`HandshakeCoordinator.kt:203-210,408-442`; `MultiConnectionUDPClient.kt:594-617`).
 Server: from an unregistered origin → DEBUG, dropped
-(`HandshakeCoordinator.kt:409-410`).
+(`HandshakeCoordinator.kt:409-410`). Client: from a source other than
+`serverEndpoint` → DEBUG, dropped.
 
 ### `0xA0` RELIABLE_DATA
 
@@ -290,12 +294,11 @@ and logs it at WARN; the log line names the channel byte and the datagram's
 origin. It takes no other action: nothing is delivered, no acknowledgement
 in it is processed, and no reliable channel is created for it.
 
-Where the receiver screens a datagram's origin — every server branch, and
-the client's reliable branch — the check comes after that screening, so a
+Both receivers screen a datagram's origin (the server's probe and data
+branches against the registrations, every client branch against
+`serverEndpoint`), and the channel check comes after that screening, so a
 datagram from an unknown source is still dropped at DEBUG whatever its
-channel byte. The client's `0x90` branch does no origin screening (an open
-defect, see [#39](https://github.com/SpartanLaboratories/WebTools/issues/39)),
-so there the check applies to every `0x90`, whatever its source.
+channel byte.
 
 A future multi-channel feature must not send a non-zero channel to a peer
 that has not signalled support for it — a `2.x` peer without it drops that
@@ -320,7 +323,7 @@ ahead-within-window buffers, beyond-window drops (sender retransmits),
 duplicate drops (still re-acked); teardown (`terminate()`, a supersede,
 `stop()` on either side) closes the engine and discards every in-flight or
 buffered message; a client reliable send after `stop()` →
-`IllegalStateException("client stopped")` (`MultiConnectionUDPClient.kt:493`);
+`IllegalStateException("client stopped")` (`MultiConnectionUDPClient.kt:528`);
 a server reliable send to an unregistered peer → `IllegalStateException`
 (`HandshakeCoordinator.kt:595-596`); idle `TIMEOUT` only notifies, the
 engine stays intact; retransmits never refresh the peer's inbound liveness.
@@ -397,20 +400,18 @@ values, the wire layouts and byte order above, `FRAMED_PROTOCOL_VERSION = 2`,
 | Reserved tag (`0x83`–`0x8F`, `0x91`–`0x9F`, `0xA2`–`0xAF`, `0xB0`–`0xFF`) | WARN, dropped | DEBUG, dropped |
 | Byte 0 `< 0x80` and the first space-separated token is not exactly `Iam` (`Iam<TAB>bob` included) | WARN ("sender may be pre-2.0"), dropped, no reply | WARN, dropped |
 | `Iam` with a missing name (a bare `Iam`), an empty name slot, or a present-but-empty credential slot, from any origin | WARN (origin, defect label, whether the origin is registered — never the line), nothing registered, no `admit`, no `onClientConnect`; reply `REFUSED malformed` (informative text, not contract) | *(the client never receives `Iam`)*; a handshaking client sees the reply as `HandshakeRefusedException` with `reason == "malformed"` |
-| The same malformed `Iam` from an origin that already holds a registration | as above; the registration is not torn down, superseded or re-screened (like any inbound datagram, the line refreshes its liveness stamp when idle detection is on, §5) | a library client's session listener drops the unframed `REFUSED malformed` with a WARN (`MultiConnectionUDPClient.kt:611-618`); a third-party client may read it as a disconnect |
+| The same malformed `Iam` from an origin that already holds a registration | as above; the registration is not torn down, superseded or re-screened (like any inbound datagram, the line refreshes its liveness stamp when idle detection is on, §5) | a library client's session listener drops the unframed `REFUSED malformed` with a WARN (`MultiConnectionUDPClient.kt:648-655`); a third-party client may read it as a disconnect |
 | `Iam` with a name and, optionally, a non-empty credential, followed by any further tokens (empty ones included) | extra tokens ignored at DEBUG; accepted (a registered origin gets `REGISTERED 2` again, whatever name the line carries: [#56](https://github.com/SpartanLaboratories/WebTools/issues/56)) | *(not applicable)* |
 | `0x81` malformed (not exactly 9 bytes) | WARN, dropped | WARN, dropped |
 | `0x82` malformed | silently ignored | silently ignored |
 | `0x90` malformed (< 2 bytes) | WARN, dropped | WARN, dropped |
 | `0xA0` malformed (< 10 bytes) | engine WARN, dropped; never throws | engine WARN, dropped; never throws |
 | `0xA1` malformed (`!= 8` bytes) | engine WARN, dropped | engine WARN, dropped |
-| `0x90` from an unregistered origin | DEBUG, dropped | *(client has no per-origin registration)* |
-| `0xA0`/`0xA1` from an unregistered origin | DEBUG, dropped, no engine created | *(as above)* |
-| `0x90`/`0xA0`/`0xA1` whose channel byte is not `0x00` | after origin screening: WARN, dropped; no delivery, no ack processing, no engine created | reliable: after the `serverEndpoint` check, WARN, dropped, no engine created; `0x90`: every such datagram (no origin screening, [#39](https://github.com/SpartanLaboratories/WebTools/issues/39)), WARN, dropped |
-| Datagram from an origin other than the peer of record | *(server addresses per-registration; not applicable)* | only the **reliable** (`0xA0`/`0xA1`) branch checks `origin == serverEndpoint`; `0x80`/`0x81`/`0x82`/`0x90` are processed regardless of source — an open defect, tracked as [#39](https://github.com/SpartanLaboratories/WebTools/issues/39) |
-| Datagram larger than the configured receive buffer | delivered truncated, WARN | delivered truncated, WARN |
-
-Describes the origin-screening gap only — this stage does not fix it.
+| `0x90` from an unregistered origin | DEBUG, dropped | from a source other than `serverEndpoint`: DEBUG, dropped |
+| `0xA0`/`0xA1` from an unregistered origin | DEBUG, dropped, no engine created | from a source other than `serverEndpoint`: DEBUG, dropped, no engine created |
+| `0x90`/`0xA0`/`0xA1` whose channel byte is not `0x00` | after origin screening: WARN, dropped; no delivery, no ack processing, no engine created | after the `serverEndpoint` check: WARN, dropped; no delivery, no ack processing, no engine created |
+| Datagram from an origin other than the peer of record | *(server addresses per-registration; not applicable)* | every datagram, of any tag, is checked first: from a source other than `serverEndpoint` it is dropped at DEBUG, and nothing is delivered, answered, completed or created for it; the one exception is the reply `handshake()` waits for, which takes the first datagram to arrive |
+| Datagram larger than the configured receive buffer | delivered truncated, WARN | from `serverEndpoint`: delivered truncated, WARN; from any other source: the truncation WARN, then dropped at DEBUG |
 
 Which drop wins when a datagram is **both truncated and on a non-zero
 channel**:
@@ -429,6 +430,7 @@ channel**:
 | `2.0` | `1.x` | client `handshake()` fails with `IncompatibleProtocolException(remote=1, local=2)` |
 | `1.x` | `2.0` | client fails with `IllegalStateException`, but **the server has already registered it and fired `onClientConnect`** — that transient registration is removed only by idle detection, a supersede, or `terminate()` |
 | any | before `2.0.0a` (every `1.x`, and `2.0.0`) | a malformed `Iam` is not refused: `Iam  x` registers the name `""`, `Iam bob  tok` registers `bob` with credential `""` (the token after the empty slot is ignored), and a bare `Iam` gets no reply, so the client's `handshake()` times out. `REFUSED malformed` comes from `2.0.0a` on (§3) |
+| `2.0.0` to `2.0.1` | any | only the `0xA0`/`0xA1` branch screens the source; a `0x81` from any source is answered, an `0x82` completes a probe, a `0x90` is delivered, and an unframed datagram draws a WARN (§5, §8) |
 
 Source: `HandshakeWireFormat.kt:32-36` (rows 1-3), `:41-44` (row 4).
 

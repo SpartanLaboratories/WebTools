@@ -183,9 +183,16 @@ class MultiConnectionUDPClientReliableTest {
         // connected to (§12 B2) - the client-side counterpart of the server's findByOrigin guard.
         val foreign = fakePeer()
         val framed = ReliableWireFormat.reliableDataDatagram(seq = 0, ack = 0xFFFF, ackBitfield = 0, payload = byteArrayOf(9))
-        foreign.send(DatagramPacket(framed, framed.size, loopback, client.localPort))
-        Thread.sleep(300)
+        captureLogsOf(MultiConnectionUDPClient::class.java, Level.DEBUG) { events ->
+            fun originDrops() = events.count {
+                it.level == Level.DEBUG && it.formattedMessage.contains("Datagram from unexpected origin")
+            }
+            foreign.send(DatagramPacket(framed, framed.size, loopback, client.localPort))
+            val dropDeadline = System.currentTimeMillis() + 2_000
+            while (originDrops() != 1 && System.currentTimeMillis() < dropDeadline) Thread.sleep(20)
 
+            assertEquals(1, originDrops(), "the listener must log one unexpected-origin drop for the foreign datagram")
+        }
         assertTrue(received.isEmpty(), "a foreign origin's reliable datagram must not be delivered")
         assertTrue(retransmit.scheduleCalls.isEmpty(), "a foreign origin's reliable datagram must not mint the engine")
 
@@ -297,13 +304,13 @@ class MultiConnectionUDPClientReliableTest {
             // Wait for the specific DEBUG drop, not merely "any event": at DEBUG this logger may
             // emit other lines, and the assertions below must run only after this frame is handled.
             val deadline = System.currentTimeMillis() + 2_000
-            while (!events.hasEventAt(Level.DEBUG, "Reliable datagram from unexpected origin") &&
+            while (!events.hasEventAt(Level.DEBUG, "Datagram from unexpected origin") &&
                 System.currentTimeMillis() < deadline
             ) {
                 Thread.sleep(20)
             }
 
-            assertTrue(events.hasEventAt(Level.DEBUG, "Reliable datagram from unexpected origin"))
+            assertTrue(events.hasEventAt(Level.DEBUG, "Datagram from unexpected origin"))
             assertTrue(events.none { it.formattedMessage.contains("on unsupported channel") })
         }
         assertTrue(retransmit.scheduleCalls.isEmpty())
